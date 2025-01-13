@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, GameController, Bookmark, Users2, Settings, Edit } from "lucide-react";
+import { Trophy, Gamepad2, Bookmark, Users2, Settings, Edit } from "lucide-react";
 import { toast } from "sonner";
 
 const Profile = () => {
@@ -58,7 +58,7 @@ const Profile = () => {
         <Tabs defaultValue="games" className="w-full">
           <TabsList className="grid w-full grid-cols-4 gap-4">
             <TabsTrigger value="games">
-              <GameController className="w-4 h-4 mr-2" /> Games
+              <Gamepad2 className="w-4 h-4 mr-2" /> Games
             </TabsTrigger>
             <TabsTrigger value="achievements">
               <Trophy className="w-4 h-4 mr-2" /> Achievements
