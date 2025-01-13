@@ -1,36 +1,42 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { Gamepad2, Mail, Lock, User, Github } from "lucide-react";
+import { Gamepad2, Mail, Lock, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { signIn, signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await signIn(email, password);
+      navigate("/");
+    } catch (error) {
+      // Error is handled in the auth context
+    } finally {
       setIsLoading(false);
-      toast.success("Login successful! This is a demo.");
-    }, 1000);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await signUp(email, password);
+    } catch (error) {
+      // Error is handled in the auth context
+    } finally {
       setIsLoading(false);
-      toast.success("Registration successful! This is a demo.");
-    }, 1000);
-  };
-
-  const handleSocialLogin = (provider: string) => {
-    toast.info(`${provider} login coming soon!`);
+    }
   };
 
   return (
@@ -58,14 +64,28 @@ const Login = () => {
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="email" type="email" placeholder="Enter your email" className="pl-9" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    className="pl-9"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="password" type="password" placeholder="Enter your password" className="pl-9" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    className="pl-9"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
               </div>
               <Button className="w-full gaming-button" disabled={isLoading}>
@@ -77,24 +97,31 @@ const Login = () => {
           <TabsContent value="register">
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="username" placeholder="Choose a username" className="pl-9" />
-                </div>
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="register-email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="register-email" type="email" placeholder="Enter your email" className="pl-9" />
+                  <Input
+                    id="register-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    className="pl-9"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="register-password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="register-password" type="password" placeholder="Choose a password" className="pl-9" />
+                  <Input
+                    id="register-password"
+                    type="password"
+                    placeholder="Choose a password"
+                    className="pl-9"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
               </div>
               <Button className="w-full gaming-button" disabled={isLoading}>
@@ -102,32 +129,6 @@ const Login = () => {
               </Button>
             </form>
           </TabsContent>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gaming-700/50"></div>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Button 
-              variant="outline" 
-              onClick={() => handleSocialLogin("GitHub")}
-              className="gaming-button-outline"
-            >
-              <Github className="mr-2 h-4 w-4" /> GitHub
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => handleSocialLogin("Email")}
-              className="gaming-button-outline"
-            >
-              <Mail className="mr-2 h-4 w-4" /> Email
-            </Button>
-          </div>
         </Tabs>
       </div>
     </div>
