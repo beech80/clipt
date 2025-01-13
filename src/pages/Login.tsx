@@ -1,15 +1,17 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AuthError } from '@supabase/supabase-js';
 
 const Login = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -25,6 +27,10 @@ const Login = () => {
       }
       if (event === 'SIGNED_OUT') {
         navigate('/login');
+      }
+      if (event === 'AUTH_ERROR') {
+        setError('Authentication error occurred. Please try again.');
+        toast.error('Authentication error occurred. Please try again.');
       }
     });
 
