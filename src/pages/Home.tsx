@@ -3,33 +3,35 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Heart, MessageCircle, Share2, Bookmark, MoreVertical, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const Home = () => {
   const [newPost, setNewPost] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
-  const posts = [
+  const shorts = [
     {
       id: 1,
-      author: "ProGamer123",
+      author: "GamingPro",
       avatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
-      content: "Just achieved a new personal best in Fortnite! 🎮 #Gaming #Victory",
-      image: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?w=300&h=200&fit=crop",
-      likes: 42,
-      comments: 12,
-      shares: 5,
-      timeAgo: "2h ago"
+      video: "https://assets.mixkit.co/videos/preview/mixkit-gaming-logo-3d-animation-12981-large.mp4",
+      description: "Check out this epic gaming moment! 🎮",
+      likes: 1234,
+      comments: 88,
+      shares: 45
     },
     {
       id: 2,
-      author: "GameMaster",
+      author: "StreamQueen",
       avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop",
-      content: "Who's up for some Minecraft building challenges? Drop your gamertag below! 🏗️",
-      likes: 28,
-      comments: 15,
-      shares: 3,
-      timeAgo: "4h ago"
+      video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-gaming-console-42537-large.mp4",
+      description: "New game review coming up! 🎯",
+      likes: 892,
+      comments: 56,
+      shares: 23
     }
   ];
 
@@ -59,24 +61,13 @@ const Home = () => {
     }
   };
 
-  const handleLike = (postId: number) => {
-    toast.success("Post liked!");
-  };
-
-  const handleComment = (postId: number) => {
-    toast.info("Comments coming soon!");
-  };
-
-  const handleShare = (postId: number) => {
-    toast.success("Post shared!");
-  };
-
-  const handleSave = (postId: number) => {
-    toast.success("Post saved!");
+  const handleVideoEnd = () => {
+    setCurrentVideoIndex((prev) => (prev + 1) % shorts.length);
   };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {/* Create Post Section */}
       <div className="gaming-card">
         <form onSubmit={handlePostSubmit} className="space-y-4">
           <Textarea
@@ -129,6 +120,69 @@ const Home = () => {
         </form>
       </div>
 
+      {/* Shorts Feed */}
+      <ScrollArea className="h-[calc(100vh-200px)] w-full">
+        <div className="space-y-2">
+          {shorts.map((short, index) => (
+            <div 
+              key={short.id} 
+              className={cn(
+                "relative w-full aspect-[9/16] rounded-lg overflow-hidden bg-black",
+                "transition-all duration-300"
+              )}
+            >
+              <video
+                className="w-full h-full object-cover"
+                src={short.video}
+                autoPlay={index === currentVideoIndex}
+                loop
+                playsInline
+                muted
+                onEnded={handleVideoEnd}
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                <div className="flex items-center gap-3 mb-2">
+                  <img
+                    src={short.avatar}
+                    alt={short.author}
+                    className="w-10 h-10 rounded-full border-2 border-white"
+                  />
+                  <span className="text-white font-semibold">{short.author}</span>
+                </div>
+                <p className="text-white mb-4">{short.description}</p>
+                <div className="flex justify-between items-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:text-gaming-400"
+                    onClick={() => toast.success("Liked!")}
+                  >
+                    <Heart className="w-4 h-4 mr-2" /> {short.likes}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:text-gaming-400"
+                    onClick={() => toast.info("Comments coming soon!")}
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" /> {short.comments}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:text-gaming-400"
+                    onClick={() => toast.success("Shared!")}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" /> {short.shares}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+
+      {/* Regular Posts */}
       {posts.map((post) => (
         <div key={post.id} className="gaming-card space-y-4">
           <div className="flex items-center justify-between">
