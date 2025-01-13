@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { AuthError, AuthChangeEvent } from '@supabase/supabase-js';
+import { AuthError, AuthChangeEvent, AuthApiError } from '@supabase/supabase-js';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Login = () => {
       navigate('/');
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session) => {
       if (event === 'SIGNED_IN') {
         navigate('/');
       }
@@ -34,8 +34,39 @@ const Login = () => {
       }
     });
 
+    // Handle initial session error
+    const checkSession = async () => {
+      const { error } = await supabase.auth.getSession();
+      if (error) {
+        handleAuthError(error);
+      }
+    };
+    
+    checkSession();
     return () => subscription.unsubscribe();
   }, [user, navigate]);
+
+  const handleAuthError = (error: AuthError) => {
+    let errorMessage = 'An error occurred during authentication.';
+    
+    if (error instanceof AuthApiError) {
+      switch (error.status) {
+        case 400:
+          if (error.message.includes('Invalid login credentials')) {
+            errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+          }
+          break;
+        case 422:
+          errorMessage = 'Invalid email format. Please enter a valid email address.';
+          break;
+        default:
+          errorMessage = error.message;
+      }
+    }
+    
+    setError(errorMessage);
+    toast.error(errorMessage);
+  };
 
   return (
     <div className="mx-auto max-w-md space-y-6 pt-12">
