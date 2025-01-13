@@ -15,6 +15,20 @@ const Login = () => {
     if (user) {
       navigate('/');
     }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        navigate('/');
+      }
+      if (event === 'USER_UPDATED' && session?.user) {
+        navigate('/');
+      }
+      if (event === 'SIGNED_OUT') {
+        navigate('/login');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [user, navigate]);
 
   return (
@@ -45,9 +59,6 @@ const Login = () => {
           }}
           providers={[]}
           redirectTo={window.location.origin}
-          onError={(error) => {
-            toast.error(error.message);
-          }}
         />
       </div>
     </div>
