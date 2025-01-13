@@ -1,131 +1,115 @@
-import { Settings, Edit, Grid, Bookmark, Trophy, Users } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trophy, GameController, Bookmark, Users2, Settings, Edit } from "lucide-react";
 import { toast } from "sonner";
 
-const MOCK_USER = {
-  username: "ProGamer123",
-  bio: "Professional Fortnite player | Content Creator",
-  followers: 1234,
-  following: 567,
-  posts: 89,
-  avatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
-  banner: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200&h=400&fit=crop",
-};
-
-const MOCK_POSTS = [
-  { id: 1, image: "https://images.unsplash.com/photo-1542751110-97427bbecf20?w=300&h=300&fit=crop" },
-  { id: 2, image: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?w=300&h=300&fit=crop" },
-  { id: 3, image: "https://images.unsplash.com/photo-1587573089734-09cb69c0f2b4?w=300&h=300&fit=crop" },
-];
-
 const Profile = () => {
-  const handleEditProfile = () => {
-    toast.info("Edit profile coming soon!");
+  const [isEditing, setIsEditing] = useState(false);
+
+  const userStats = {
+    followers: 1234,
+    following: 567,
+    gamesPlayed: 89,
+    achievements: 45
   };
 
-  const handleSettings = () => {
-    toast.info("Settings coming soon!");
+  const userGames = [
+    { id: 1, name: "Fortnite", hours: 156, lastPlayed: "2 days ago" },
+    { id: 2, name: "Minecraft", hours: 89, lastPlayed: "1 week ago" },
+    { id: 3, name: "Call of Duty", hours: 234, lastPlayed: "3 days ago" }
+  ];
+
+  const achievements = [
+    { id: 1, name: "First Victory", description: "Won your first game", date: "2024-01-15" },
+    { id: 2, name: "Social Butterfly", description: "Made 100 friends", date: "2024-02-01" },
+    { id: 3, name: "Stream Star", description: "Reached 1000 viewers", date: "2024-02-15" }
+  ];
+
+  const handleEditProfile = () => {
+    setIsEditing(true);
+    toast.info("Profile editing coming soon!");
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      {/* Banner */}
-      <div className="relative h-48 rounded-lg overflow-hidden">
-        <img 
-          src={MOCK_USER.banner}
-          alt="Profile banner"
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      {/* Profile Info */}
-      <div className="gaming-card relative -mt-20 z-10">
-        <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <div className="gaming-card">
+        <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="h-24 w-24 rounded-full bg-gaming-700 ring-4 ring-background overflow-hidden">
-              <img 
-                src={MOCK_USER.avatar}
-                alt={MOCK_USER.username}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <img
+              src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop"
+              alt="Profile"
+              className="w-24 h-24 rounded-full border-4 border-gaming-500"
+            />
             <div>
-              <h1 className="text-2xl font-bold">{MOCK_USER.username}</h1>
-              <p className="text-sm text-muted-foreground">{MOCK_USER.bio}</p>
+              <h1 className="text-2xl font-bold">ProGamer123</h1>
+              <p className="text-muted-foreground">Joined January 2024</p>
+              <div className="flex gap-4 mt-2">
+                <span className="text-sm">{userStats.followers} Followers</span>
+                <span className="text-sm">{userStats.following} Following</span>
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleEditProfile}>
-              <Edit className="h-4 w-4 mr-2" /> Edit Profile
-            </Button>
-            <Button variant="outline" size="icon" onClick={handleSettings}>
-              <Settings className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-4 text-center mb-6">
-          <div className="gaming-card p-4">
-            <div className="text-2xl font-bold">{MOCK_USER.posts}</div>
-            <div className="text-sm text-muted-foreground">Posts</div>
-          </div>
-          <div className="gaming-card p-4">
-            <div className="text-2xl font-bold">{MOCK_USER.followers}</div>
-            <div className="text-sm text-muted-foreground">Followers</div>
-          </div>
-          <div className="gaming-card p-4">
-            <div className="text-2xl font-bold">{MOCK_USER.following}</div>
-            <div className="text-sm text-muted-foreground">Following</div>
-          </div>
+          <Button onClick={handleEditProfile} className="gaming-button">
+            <Edit className="w-4 h-4 mr-2" /> Edit Profile
+          </Button>
         </div>
 
-        <Tabs defaultValue="posts">
-          <TabsList className="grid w-full grid-cols-4 mb-4">
-            <TabsTrigger value="posts">
-              <Grid className="h-4 w-4 mr-2" /> Posts
-            </TabsTrigger>
-            <TabsTrigger value="saved">
-              <Bookmark className="h-4 w-4 mr-2" /> Saved
+        <Tabs defaultValue="games" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 gap-4">
+            <TabsTrigger value="games">
+              <GameController className="w-4 h-4 mr-2" /> Games
             </TabsTrigger>
             <TabsTrigger value="achievements">
-              <Trophy className="h-4 w-4 mr-2" /> Achievements
+              <Trophy className="w-4 h-4 mr-2" /> Achievements
             </TabsTrigger>
-            <TabsTrigger value="following">
-              <Users className="h-4 w-4 mr-2" /> Following
+            <TabsTrigger value="saved">
+              <Bookmark className="w-4 h-4 mr-2" /> Saved
+            </TabsTrigger>
+            <TabsTrigger value="friends">
+              <Users2 className="w-4 h-4 mr-2" /> Friends
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="posts">
-            <div className="grid grid-cols-3 gap-4">
-              {MOCK_POSTS.map((post) => (
-                <div key={post.id} className="aspect-square rounded-lg overflow-hidden">
-                  <img 
-                    src={post.image}
-                    alt="Post"
-                    className="w-full h-full object-cover hover:scale-105 transition-transform"
-                  />
+          <TabsContent value="games" className="space-y-4">
+            {userGames.map(game => (
+              <div key={game.id} className="flex items-center justify-between p-4 gaming-card hover:border-gaming-500">
+                <div>
+                  <h3 className="font-semibold">{game.name}</h3>
+                  <p className="text-sm text-muted-foreground">Last played {game.lastPlayed}</p>
                 </div>
-              ))}
-            </div>
+                <div className="text-right">
+                  <p className="font-medium">{game.hours} hours</p>
+                  <Button variant="outline" size="sm">Play Now</Button>
+                </div>
+              </div>
+            ))}
           </TabsContent>
 
-          <TabsContent value="saved">
-            <div className="text-center py-8 text-muted-foreground">
-              No saved posts yet
-            </div>
+          <TabsContent value="achievements" className="space-y-4">
+            {achievements.map(achievement => (
+              <div key={achievement.id} className="flex items-center gap-4 p-4 gaming-card hover:border-gaming-500">
+                <Trophy className="w-8 h-8 text-gaming-400" />
+                <div>
+                  <h3 className="font-semibold">{achievement.name}</h3>
+                  <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                  <p className="text-xs text-muted-foreground">Achieved on {achievement.date}</p>
+                </div>
+              </div>
+            ))}
           </TabsContent>
 
-          <TabsContent value="achievements">
-            <div className="text-center py-8 text-muted-foreground">
-              Achievements coming soon
-            </div>
+          <TabsContent value="saved" className="text-center py-8">
+            <Bookmark className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold">No saved items yet</h3>
+            <p className="text-muted-foreground">Items you save will appear here</p>
           </TabsContent>
 
-          <TabsContent value="following">
-            <div className="text-center py-8 text-muted-foreground">
-              Following list coming soon
-            </div>
+          <TabsContent value="friends" className="text-center py-8">
+            <Users2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold">Connect with Gamers</h3>
+            <p className="text-muted-foreground">Find and add friends to play together</p>
+            <Button className="gaming-button mt-4">Find Friends</Button>
           </TabsContent>
         </Tabs>
       </div>

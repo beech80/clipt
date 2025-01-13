@@ -1,34 +1,45 @@
-import { Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Heart, MessageCircle, Share2, Bookmark, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 
-const MOCK_POSTS = [
-  {
-    id: 1,
-    username: "ProGamer123",
-    game: "Fortnite",
-    content: "Just got my first Victory Royale of the season! 🏆",
-    likes: 234,
-    comments: 18,
-    image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&h=500&fit=crop",
-    saved: false,
-    userImage: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
-  },
-  {
-    id: 2,
-    username: "GameMaster",
-    game: "Minecraft",
-    content: "Built this castle in survival mode! What do you think? 🏰",
-    likes: 567,
-    comments: 42,
-    image: "https://images.unsplash.com/photo-1542751110-97427bbecf20?w=500&h=500&fit=crop",
-    saved: true,
-    userImage: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop",
-  },
-];
-
 const Home = () => {
+  const [newPost, setNewPost] = useState("");
+
+  const posts = [
+    {
+      id: 1,
+      author: "ProGamer123",
+      avatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
+      content: "Just achieved a new personal best in Fortnite! 🎮 #Gaming #Victory",
+      image: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?w=300&h=200&fit=crop",
+      likes: 42,
+      comments: 12,
+      shares: 5,
+      timeAgo: "2h ago"
+    },
+    {
+      id: 2,
+      author: "GameMaster",
+      avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop",
+      content: "Who's up for some Minecraft building challenges? Drop your gamertag below! 🏗️",
+      likes: 28,
+      comments: 15,
+      shares: 3,
+      timeAgo: "4h ago"
+    }
+  ];
+
+  const handlePostSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPost.trim()) {
+      toast.success("Post created successfully!");
+      setNewPost("");
+    }
+  };
+
   const handleLike = (postId: number) => {
     toast.success("Post liked!");
   };
@@ -38,96 +49,94 @@ const Home = () => {
   };
 
   const handleShare = (postId: number) => {
-    toast.success("Link copied to clipboard!");
+    toast.success("Post shared!");
   };
 
   const handleSave = (postId: number) => {
-    toast.success("Post saved to your collection!");
+    toast.success("Post saved!");
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="h-12 w-12 rounded-full bg-gaming-700/50 ring-2 ring-gaming-500/50 p-0.5">
-          <img 
-            src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop" 
-            alt="Your profile"
-            className="w-full h-full rounded-full object-cover"
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div className="gaming-card">
+        <form onSubmit={handlePostSubmit} className="space-y-4">
+          <Textarea
+            placeholder="Share your gaming moments..."
+            value={newPost}
+            onChange={(e) => setNewPost(e.target.value)}
+            className="min-h-[100px]"
           />
-        </div>
-        <Input 
-          placeholder="Share your gaming moment..."
-          className="flex-1"
-          onClick={() => toast.info("Post creation coming soon!")}
-        />
-        <Button className="gaming-button">Post</Button>
+          <div className="flex justify-end">
+            <Button type="submit" className="gaming-button">
+              Post
+            </Button>
+          </div>
+        </form>
       </div>
-      
-      {MOCK_POSTS.map((post) => (
-        <article key={post.id} className="gaming-card animate-glow group">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-gaming-700/50 ring-2 ring-gaming-500/50 p-0.5 overflow-hidden">
-                <img 
-                  src={post.userImage} 
-                  alt={post.username}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              </div>
+
+      {posts.map((post) => (
+        <div key={post.id} className="gaming-card space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img
+                src={post.avatar}
+                alt={post.author}
+                className="w-10 h-10 rounded-full"
+              />
               <div>
-                <h3 className="font-semibold text-gaming-100 group-hover:text-gaming-400 transition-colors">
-                  {post.username}
-                </h3>
-                <p className="text-sm text-muted-foreground">Playing {post.game}</p>
+                <h3 className="font-semibold">{post.author}</h3>
+                <p className="text-sm text-muted-foreground">{post.timeAgo}</p>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => handleSave(post.id)}
-              className={post.saved ? "text-gaming-400" : ""}
-            >
-              <Bookmark className="h-5 w-5" />
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="w-4 h-4" />
             </Button>
           </div>
-          
-          <div className="relative rounded-lg overflow-hidden mb-6">
+
+          <p>{post.content}</p>
+
+          {post.image && (
             <img
               src={post.image}
-              alt="Game screenshot"
-              className="aspect-video w-full object-cover transition-transform group-hover:scale-105"
+              alt="Post content"
+              className="rounded-lg w-full object-cover max-h-[300px]"
             />
-          </div>
-          
-          <p className="mb-6 text-sm text-gray-300">{post.content}</p>
-          
-          <div className="flex gap-6">
-            <Button 
-              variant="ghost" 
-              className="flex items-center gap-2 text-sm hover:text-gaming-400"
+          )}
+
+          <div className="flex items-center justify-between pt-4 border-t border-gaming-700/50">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => handleLike(post.id)}
+              className="flex items-center gap-2"
             >
-              <Heart className="h-5 w-5" />
-              {post.likes}
+              <Heart className="w-4 h-4" /> {post.likes}
             </Button>
-            <Button 
+            <Button
               variant="ghost"
-              className="flex items-center gap-2 text-sm hover:text-gaming-400"
+              size="sm"
               onClick={() => handleComment(post.id)}
+              className="flex items-center gap-2"
             >
-              <MessageCircle className="h-5 w-5" />
-              {post.comments}
+              <MessageCircle className="w-4 h-4" /> {post.comments}
             </Button>
-            <Button 
+            <Button
               variant="ghost"
-              className="flex items-center gap-2 text-sm hover:text-gaming-400"
+              size="sm"
               onClick={() => handleShare(post.id)}
+              className="flex items-center gap-2"
             >
-              <Share2 className="h-5 w-5" />
-              Share
+              <Share2 className="w-4 h-4" /> {post.shares}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSave(post.id)}
+            >
+              <Bookmark className="w-4 h-4" />
             </Button>
           </div>
-        </article>
+        </div>
       ))}
     </div>
   );
