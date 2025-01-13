@@ -12,6 +12,32 @@ const Home = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
+  // Add sample posts data
+  const posts = [
+    {
+      id: 1,
+      author: "JohnDoe",
+      avatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
+      content: "Just achieved a new high score in my favorite game! 🎮",
+      image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&h=300&fit=crop",
+      timeAgo: "2h ago",
+      likes: 120,
+      comments: 15,
+      shares: 5
+    },
+    {
+      id: 2,
+      author: "JaneSmith",
+      avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop",
+      content: "Check out my new gaming setup! 🖥️",
+      image: "https://images.unsplash.com/photo-1598550476439-6847785fcea6?w=500&h=300&fit=crop",
+      timeAgo: "4h ago",
+      likes: 89,
+      comments: 8,
+      shares: 2
+    }
+  ];
+
   const shorts = [
     {
       id: 1,
@@ -63,6 +89,23 @@ const Home = () => {
 
   const handleVideoEnd = () => {
     setCurrentVideoIndex((prev) => (prev + 1) % shorts.length);
+  };
+
+  // Add handler functions
+  const handleLike = (postId: number) => {
+    toast.success("Post liked!");
+  };
+
+  const handleComment = (postId: number) => {
+    toast.info("Comments feature coming soon!");
+  };
+
+  const handleShare = (postId: number) => {
+    toast.success("Post shared!");
+  };
+
+  const handleSave = (postId: number) => {
+    toast.success("Post saved!");
   };
 
   return (
