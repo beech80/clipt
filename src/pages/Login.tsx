@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Gamepad2, Mail, Lock, User, Github, Mail2 } from "lucide-react";
+import { Gamepad2, Mail, Lock, User, Github } from "lucide-react";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -125,7 +125,7 @@ const Login = () => {
               onClick={() => handleSocialLogin("Email")}
               className="gaming-button-outline"
             >
-              <Mail2 className="mr-2 h-4 w-4" /> Email
+              <Mail className="mr-2 h-4 w-4" /> Email
             </Button>
           </div>
         </Tabs>
