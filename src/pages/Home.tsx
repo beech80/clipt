@@ -23,37 +23,43 @@ const MOCK_POSTS = [
 
 const Home = () => {
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="gaming-gradient text-2xl font-bold">GameShare Feed</h1>
+    <div className="mx-auto max-w-2xl space-y-8">
+      <h1 className="gaming-gradient text-3xl font-bold tracking-tight">GameShare Feed</h1>
       
       {MOCK_POSTS.map((post) => (
-        <article key={post.id} className="gaming-card animate-glow">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-10 w-10 rounded-full bg-gaming-700" />
+        <article key={post.id} className="gaming-card animate-glow group">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-12 w-12 rounded-full bg-gaming-700/50 ring-2 ring-gaming-500/50 p-0.5">
+              <div className="w-full h-full rounded-full bg-gaming-800" />
+            </div>
             <div>
-              <h3 className="font-semibold text-gaming-100">{post.username}</h3>
+              <h3 className="font-semibold text-gaming-100 group-hover:text-gaming-400 transition-colors">
+                {post.username}
+              </h3>
               <p className="text-sm text-muted-foreground">Playing {post.game}</p>
             </div>
           </div>
           
-          <img
-            src={post.image}
-            alt="Game screenshot"
-            className="aspect-square w-full rounded-lg object-cover mb-4"
-          />
+          <div className="relative rounded-lg overflow-hidden mb-6">
+            <img
+              src={post.image}
+              alt="Game screenshot"
+              className="aspect-video w-full object-cover transition-transform group-hover:scale-105"
+            />
+          </div>
           
-          <p className="mb-4 text-sm text-gray-300">{post.content}</p>
+          <p className="mb-6 text-sm text-gray-300">{post.content}</p>
           
           <div className="flex gap-6">
-            <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gaming-400">
+            <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gaming-400 transition-colors">
               <Heart className="h-5 w-5" />
               {post.likes}
             </button>
-            <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gaming-400">
+            <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gaming-400 transition-colors">
               <MessageCircle className="h-5 w-5" />
               {post.comments}
             </button>
-            <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gaming-400">
+            <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-gaming-400 transition-colors">
               <Share2 className="h-5 w-5" />
               Share
             </button>

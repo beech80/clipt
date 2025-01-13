@@ -9,52 +9,62 @@ export function MainNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gaming-700/50 bg-background p-2 backdrop-blur-lg md:top-0 md:bottom-auto md:border-b md:border-t-0">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gaming-700/50 bg-background/80 p-2 backdrop-blur-xl md:top-0 md:bottom-auto md:border-b md:border-t-0">
       <div className="mx-auto flex max-w-screen-xl items-center justify-around px-4">
         <Link
           to="/"
-          className={`flex flex-col items-center p-2 transition-colors hover:text-gaming-400 ${
-            isActive("/") ? "text-gaming-500" : "text-muted-foreground"
+          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+            isActive("/") 
+              ? "text-gaming-400 scale-110" 
+              : "text-muted-foreground"
           }`}
         >
           <Home className="h-6 w-6" />
-          <span className="text-xs">Home</span>
+          <span className="text-xs font-medium">Home</span>
         </Link>
         <Link
           to="/discover"
-          className={`flex flex-col items-center p-2 transition-colors hover:text-gaming-400 ${
-            isActive("/discover") ? "text-gaming-500" : "text-muted-foreground"
+          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+            isActive("/discover")
+              ? "text-gaming-400 scale-110"
+              : "text-muted-foreground"
           }`}
         >
           <Compass className="h-6 w-6" />
-          <span className="text-xs">Discover</span>
+          <span className="text-xs font-medium">Discover</span>
         </Link>
         <Link
           to="/messages"
-          className={`flex flex-col items-center p-2 transition-colors hover:text-gaming-400 ${
-            isActive("/messages") ? "text-gaming-500" : "text-muted-foreground"
+          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+            isActive("/messages")
+              ? "text-gaming-400 scale-110"
+              : "text-muted-foreground"
           }`}
         >
           <MessageSquare className="h-6 w-6" />
-          <span className="text-xs">Messages</span>
+          <span className="text-xs font-medium">Messages</span>
         </Link>
         <Link
           to="/profile"
-          className={`flex flex-col items-center p-2 transition-colors hover:text-gaming-400 ${
-            isActive("/profile") ? "text-gaming-500" : "text-muted-foreground"
+          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+            isActive("/profile")
+              ? "text-gaming-400 scale-110"
+              : "text-muted-foreground"
           }`}
         >
           <User className="h-6 w-6" />
-          <span className="text-xs">Profile</span>
+          <span className="text-xs font-medium">Profile</span>
         </Link>
         <Link
           to="/login"
-          className={`flex flex-col items-center p-2 transition-colors hover:text-gaming-400 ${
-            isActive("/login") ? "text-gaming-500" : "text-muted-foreground"
+          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+            isActive("/login")
+              ? "text-gaming-400 scale-110"
+              : "text-muted-foreground"
           }`}
         >
           <LogIn className="h-6 w-6" />
-          <span className="text-xs">Login</span>
+          <span className="text-xs font-medium">Login</span>
         </Link>
       </div>
     </nav>

@@ -23,7 +23,7 @@
     --border: 240 4% 16%;
     --input: 240 4% 16%;
     --ring: 252 87% 67%;
-    --radius: 0.75rem;
+    --radius: 1rem;
   }
 }
 
@@ -33,17 +33,30 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: 
+      radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+    background-attachment: fixed;
   }
 }
 
 .gaming-card {
-  @apply relative overflow-hidden rounded-lg border border-gaming-700/50 bg-black/20 p-4 transition-all hover:border-gaming-500;
+  @apply relative overflow-hidden rounded-xl border border-gaming-700/50 bg-black/20 p-4 transition-all hover:border-gaming-500 backdrop-blur-sm;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
 }
 
 .gaming-gradient {
-  @apply bg-gradient-to-r from-gaming-700 via-gaming-500 to-gaming-700 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-gaming-500 via-gaming-400 to-gaming-500 bg-clip-text text-transparent;
 }
 
 .gaming-button {
-  @apply inline-flex items-center justify-center rounded-lg bg-gaming-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gaming-700 focus:outline-none focus:ring-2 focus:ring-gaming-500 focus:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50;
+  @apply inline-flex items-center justify-center rounded-lg bg-gaming-600/90 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-gaming-500 hover:shadow-lg hover:shadow-gaming-500/20 focus:outline-none focus:ring-2 focus:ring-gaming-500 focus:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50 backdrop-blur-sm;
+}
+
+.glass-card {
+  @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl;
+}
+
+.hover-glow {
+  @apply transition-all hover:shadow-lg hover:shadow-gaming-500/20;
 }
