@@ -77,7 +77,7 @@ const Login = () => {
           </div>
         </div>
         <h1 className="gaming-gradient text-4xl font-bold">GameShare</h1>
-        <p className="text-muted-foreground">Connect with fellow gamers</p>
+        <p className="text-white">Connect with fellow gamers</p>
       </div>
 
       <div className="gaming-card">
