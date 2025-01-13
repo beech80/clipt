@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, MessageCircle, Share2, Bookmark, MoreVertical } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, MoreVertical, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
 const Home = () => {
   const [newPost, setNewPost] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const posts = [
     {
@@ -32,11 +33,29 @@ const Home = () => {
     }
   ];
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5000000) { // 5MB limit
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handlePostSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPost.trim()) {
+    if (newPost.trim() || selectedImage) {
       toast.success("Post created successfully!");
       setNewPost("");
+      setSelectedImage(null);
+    } else {
+      toast.error("Please add some content to your post");
     }
   };
 
@@ -66,11 +85,47 @@ const Home = () => {
             onChange={(e) => setNewPost(e.target.value)}
             className="min-h-[100px]"
           />
-          <div className="flex justify-end">
+          
+          {selectedImage && (
+            <div className="relative">
+              <img 
+                src={selectedImage} 
+                alt="Selected" 
+                className="w-full rounded-lg max-h-[300px] object-cover"
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="absolute top-2 right-2"
+                onClick={() => setSelectedImage(null)}
+              >
+                Remove
+              </Button>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-gaming-400"
+            >
+              <ImagePlus className="w-4 h-4 mr-2" />
+              Add Image
+            </Button>
             <Button type="submit" className="gaming-button">
               Post
             </Button>
           </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
         </form>
       </div>
 
