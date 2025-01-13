@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { AuthError } from '@supabase/supabase-js';
+import { AuthError, AuthChangeEvent } from '@supabase/supabase-js';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Login = () => {
       navigate('/');
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session) => {
       if (event === 'SIGNED_IN') {
         navigate('/');
       }
@@ -28,9 +28,9 @@ const Login = () => {
       if (event === 'SIGNED_OUT') {
         navigate('/login');
       }
-      if (event === 'AUTH_ERROR') {
-        setError('Authentication error occurred. Please try again.');
-        toast.error('Authentication error occurred. Please try again.');
+      if (event === 'PASSWORD_RECOVERY') {
+        setError('Please check your email to reset your password.');
+        toast.info('Please check your email to reset your password.');
       }
     });
 
