@@ -16,6 +16,9 @@ const TopClips = () => {
             username,
             avatar_url
           ),
+          likes:likes (
+            count
+          ),
           clip_votes:clip_votes (
             count
           )
@@ -47,7 +50,14 @@ const TopClips = () => {
           </div>
         ) : (
           topPosts?.map((post) => (
-            <PostItem key={post.id} post={post} />
+            <PostItem 
+              key={post.id} 
+              post={{
+                ...post,
+                likes_count: post.likes?.[0]?.count || 0,
+                clip_votes: post.clip_votes || []
+              }} 
+            />
           ))
         )}
       </ScrollArea>
