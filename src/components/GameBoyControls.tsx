@@ -58,6 +58,21 @@ const GameBoyControls = () => {
     setTimeout(() => setActiveDirection('neutral'), 300);
   };
 
+  const getJoystickTransform = () => {
+    switch (activeDirection) {
+      case 'up':
+        return 'translateY(-8px)';
+      case 'down':
+        return 'translateY(8px)';
+      case 'left':
+        return 'translateX(-8px)';
+      case 'right':
+        return 'translateX(8px)';
+      default:
+        return 'translate(0, 0)';
+    }
+  };
+
   const renderActionButtons = () => {
     return (
       <>
@@ -101,7 +116,7 @@ const GameBoyControls = () => {
   ];
 
   return (
-    <div className="gameboy-container h-[120px] sm:h-[140px] bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50">
+    <div className="gameboy-container h-[140px] sm:h-[160px] bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50">
       {/* Bottom Center Navigation Menu */}
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet>
@@ -130,10 +145,13 @@ const GameBoyControls = () => {
       </div>
 
       {/* D-Pad with Xbox-style joystick */}
-      <div className="fixed left-4 sm:left-8 bottom-4 sm:bottom-6 w-28 sm:w-32 h-28 sm:h-32">
-        <div className="relative w-full h-full bg-gaming-400/5 rounded-full border-2 border-gaming-400/30 backdrop-blur-sm shadow-lg">
-          {/* Solid black joystick */}
-          <div className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg"></div>
+      <div className="fixed left-4 sm:left-8 bottom-8 sm:bottom-10 w-28 sm:w-32 h-28 sm:h-32">
+        <div className="relative w-full h-full bg-gaming-400/10 rounded-full border-2 border-gaming-400/30 backdrop-blur-sm shadow-xl">
+          {/* Solid black joystick with animation */}
+          <div 
+            className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg transition-transform duration-200"
+            style={{ transform: getJoystickTransform() }}
+          ></div>
           
           {/* Directional Buttons */}
           <button 
@@ -164,7 +182,7 @@ const GameBoyControls = () => {
       </div>
 
       {/* Action Buttons */}
-      <div className="fixed right-4 sm:right-8 bottom-4 sm:bottom-6 w-28 sm:w-32 h-28 sm:h-32 flex flex-col items-center justify-center">
+      <div className="fixed right-4 sm:right-8 bottom-8 sm:bottom-10 w-28 sm:w-32 h-28 sm:h-32 flex flex-col items-center justify-center">
         {renderActionButtons()}
       </div>
     </div>
