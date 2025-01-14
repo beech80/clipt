@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
-import { ThumbsUp, Share2, MessageSquare, Trophy } from 'lucide-react';
+import { 
+  ThumbsUp, Share2, MessageSquare, Trophy,
+  Play, Pause, Forward, Rewind,
+  Home, Search, Bell, User,
+  Compass, Video, BookMarked, Users
+} from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const GameBoyControls = () => {
   const [joystickPosition, setJoystickPosition] = useState<string>('neutral');
   const [isDragging, setIsDragging] = useState(false);
+  const location = useLocation();
 
   const handleAction = (action: string) => {
     toast.success(`${action} action triggered!`);
@@ -69,9 +76,140 @@ const GameBoyControls = () => {
     handlePointerMove(pointerEvent as unknown as React.PointerEvent);
   };
 
+  const renderActionButtons = () => {
+    switch (location.pathname) {
+      case '/streaming':
+        return (
+          <>
+            <button 
+              className="action-button transition-transform hover:scale-110 active:scale-95"
+              onClick={() => handleAction('Play/Pause')}
+            >
+              <Play className="w-6 h-6" />
+            </button>
+            <div className="flex gap-16 my-4">
+              <button 
+                className="action-button transition-transform hover:scale-110 active:scale-95"
+                onClick={() => handleAction('Rewind')}
+              >
+                <Rewind className="w-6 h-6" />
+              </button>
+              <button 
+                className="action-button transition-transform hover:scale-110 active:scale-95"
+                onClick={() => handleAction('Forward')}
+              >
+                <Forward className="w-6 h-6" />
+              </button>
+            </div>
+            <button 
+              className="action-button transition-transform hover:scale-110 active:scale-95"
+              onClick={() => handleAction('Save')}
+            >
+              <BookMarked className="w-6 h-6" />
+            </button>
+          </>
+        );
+
+      case '/discover':
+        return (
+          <>
+            <button 
+              className="action-button transition-transform hover:scale-110 active:scale-95"
+              onClick={() => handleAction('Search')}
+            >
+              <Search className="w-6 h-6" />
+            </button>
+            <div className="flex gap-16 my-4">
+              <button 
+                className="action-button transition-transform hover:scale-110 active:scale-95"
+                onClick={() => handleAction('Explore')}
+              >
+                <Compass className="w-6 h-6" />
+              </button>
+              <button 
+                className="action-button transition-transform hover:scale-110 active:scale-95"
+                onClick={() => handleAction('Community')}
+              >
+                <Users className="w-6 h-6" />
+              </button>
+            </div>
+            <button 
+              className="action-button transition-transform hover:scale-110 active:scale-95"
+              onClick={() => handleAction('Notifications')}
+            >
+              <Bell className="w-6 h-6" />
+            </button>
+          </>
+        );
+
+      case '/messages':
+        return (
+          <>
+            <button 
+              className="action-button transition-transform hover:scale-110 active:scale-95"
+              onClick={() => handleAction('New Message')}
+            >
+              <MessageSquare className="w-6 h-6" />
+            </button>
+            <div className="flex gap-16 my-4">
+              <button 
+                className="action-button transition-transform hover:scale-110 active:scale-95"
+                onClick={() => handleAction('Share')}
+              >
+                <Share2 className="w-6 h-6" />
+              </button>
+              <button 
+                className="action-button transition-transform hover:scale-110 active:scale-95"
+                onClick={() => handleAction('Users')}
+              >
+                <Users className="w-6 h-6" />
+              </button>
+            </div>
+            <button 
+              className="action-button transition-transform hover:scale-110 active:scale-95"
+              onClick={() => handleAction('Profile')}
+            >
+              <User className="w-6 h-6" />
+            </button>
+          </>
+        );
+
+      default:
+        return (
+          <>
+            <button 
+              className="action-button transition-transform hover:scale-110 active:scale-95"
+              onClick={() => handleAction('Like')}
+            >
+              <ThumbsUp className="w-6 h-6" />
+            </button>
+            <div className="flex gap-16 my-4">
+              <button 
+                className="action-button transition-transform hover:scale-110 active:scale-95"
+                onClick={() => handleAction('Share')}
+              >
+                <Share2 className="w-6 h-6" />
+              </button>
+              <button 
+                className="action-button transition-transform hover:scale-110 active:scale-95"
+                onClick={() => handleAction('Rank')}
+              >
+                <Trophy className="w-6 h-6" />
+              </button>
+            </div>
+            <button 
+              className="action-button transition-transform hover:scale-110 active:scale-95"
+              onClick={() => handleAction('Comment')}
+            >
+              <MessageSquare className="w-6 h-6" />
+            </button>
+          </>
+        );
+    }
+  };
+
   return (
     <div className="gameboy-container">
-      {/* Joystick */}
       <div 
         className="joystick-base"
         onPointerDown={handlePointerDown}
@@ -93,39 +231,8 @@ const GameBoyControls = () => {
         </div>
       </div>
 
-      {/* Action Buttons in Xbox Layout */}
       <div className="action-buttons-container">
-        {/* Top Button (Y) */}
-        <button 
-          className="action-button transition-transform hover:scale-110 active:scale-95"
-          onClick={() => handleAction('Like')}
-        >
-          <ThumbsUp className="w-6 h-6" />
-        </button>
-        
-        {/* Middle Row (X and B) */}
-        <div className="flex gap-16 my-4">
-          <button 
-            className="action-button transition-transform hover:scale-110 active:scale-95"
-            onClick={() => handleAction('Share')}
-          >
-            <Share2 className="w-6 h-6" />
-          </button>
-          <button 
-            className="action-button transition-transform hover:scale-110 active:scale-95"
-            onClick={() => handleAction('Rank')}
-          >
-            <Trophy className="w-6 h-6" />
-          </button>
-        </div>
-        
-        {/* Bottom Button (A) */}
-        <button 
-          className="action-button transition-transform hover:scale-110 active:scale-95"
-          onClick={() => handleAction('Comment')}
-        >
-          <MessageSquare className="w-6 h-6" />
-        </button>
+        {renderActionButtons()}
       </div>
     </div>
   );
