@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const Home = () => {
@@ -22,8 +22,8 @@ const Home = () => {
                 className="gaming-button flex gap-2 items-center"
                 size="lg"
               >
-                <PlusCircle className="w-5 h-5" />
-                Create Post
+                <Upload className="w-5 h-5" />
+                Post Clip
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">

@@ -2,7 +2,9 @@ import { useState } from "react";
 import PostContent from "./post/PostContent";
 import CommentList from "./post/CommentList";
 import { useAuth } from "@/contexts/AuthContext";
-import { Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
+import { MessageSquare, UserPlus, ThumbsUp, Share2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface PostItemProps {
   post: {
@@ -24,6 +26,36 @@ const PostItem = ({ post }: PostItemProps) => {
   const [showComments, setShowComments] = useState(false);
   const voteCount = post.clip_votes?.[0]?.count || 0;
   const { user } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  const handleFollow = async () => {
+    if (!user) {
+      toast.error("Please login to follow users");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('follows')
+        .insert({
+          follower_id: user.id,
+          following_id: post.user_id
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          toast.error("You're already following this user!");
+        } else {
+          throw error;
+        }
+      } else {
+        setIsFollowing(true);
+        toast.success("Following user!");
+      }
+    } catch (error) {
+      toast.error("Error following user");
+    }
+  };
 
   return (
     <div className="relative h-full w-full bg-black">
@@ -34,24 +66,27 @@ const PostItem = ({ post }: PostItemProps) => {
       
       {/* Vertical action buttons */}
       <div className="absolute right-4 bottom-24 flex flex-col gap-6 items-center">
-        <button className="p-2 hover:scale-110 transition-transform">
-          <Heart className="w-8 h-8 text-white" />
-          <span className="text-xs text-white mt-1">{post.likes_count}</span>
-        </button>
         <button 
           className="p-2 hover:scale-110 transition-transform"
           onClick={() => setShowComments(!showComments)}
         >
-          <MessageCircle className="w-8 h-8 text-white" />
-          <span className="text-xs text-white mt-1">Comments</span>
+          <MessageSquare className="w-8 h-8 text-white" />
+          <span className="text-xs text-white mt-1">Comment</span>
+        </button>
+        <button 
+          className="p-2 hover:scale-110 transition-transform"
+          onClick={handleFollow}
+        >
+          <UserPlus className={`w-8 h-8 ${isFollowing ? 'text-gaming-400' : 'text-white'}`} />
+          <span className="text-xs text-white mt-1">Follow</span>
+        </button>
+        <button className="p-2 hover:scale-110 transition-transform">
+          <ThumbsUp className="w-8 h-8 text-white" />
+          <span className="text-xs text-white mt-1">Vote ({voteCount})</span>
         </button>
         <button className="p-2 hover:scale-110 transition-transform">
           <Share2 className="w-8 h-8 text-white" />
           <span className="text-xs text-white mt-1">Share</span>
-        </button>
-        <button className="p-2 hover:scale-110 transition-transform">
-          <Bookmark className="w-8 h-8 text-white" />
-          <span className="text-xs text-white mt-1">Save</span>
         </button>
       </div>
 
