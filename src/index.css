@@ -78,34 +78,14 @@
   box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.3);
 }
 
-.joystick-base {
-  @apply absolute left-8 bottom-8 w-32 h-32 cursor-grab active:cursor-grabbing;
-  perspective: 1000px;
+.action-buttons-container {
+  @apply absolute right-8 bottom-8 flex flex-col items-center justify-center w-40 h-40;
 }
 
-.joystick {
-  @apply absolute w-8 h-24 bg-[#9b87f5]/50 rounded-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 backdrop-blur-sm;
-  transform-origin: bottom center;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.5);
+.action-button {
+  @apply w-12 h-12 rounded-full bg-[#1A1F2C] hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border-2 border-[#9b87f5] flex items-center justify-center text-white;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
-
-.joystick.up { transform: rotateX(-30deg); }
-.joystick.down { transform: rotateX(30deg); }
-.joystick.left { transform: rotateZ(-30deg); }
-.joystick.right { transform: rotateZ(30deg); }
-
-.joystick-ball {
-  @apply absolute top-0 left-1/2 w-12 h-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#1A1F2C] border-2 border-[#9b87f5] flex items-center justify-center;
-  box-shadow: 0 0 20px rgba(155, 135, 245, 0.6);
-}
-
-.joystick-hitbox { @apply absolute inset-0; }
-.joystick-area { @apply absolute w-16 h-16 opacity-0; }
-.joystick-area.top { @apply top-0 left-1/2 -translate-x-1/2; }
-.joystick-area.bottom { @apply bottom-0 left-1/2 -translate-x-1/2; }
-.joystick-area.left { @apply left-0 top-1/2 -translate-y-1/2; }
-.joystick-area.right { @apply right-0 top-1/2 -translate-y-1/2; }
 
 .clip-button {
   @apply text-8xl font-bold tracking-wider;
@@ -134,13 +114,4 @@
   background: #1A1F2C;
   border-radius: 12px;
   z-index: -1;
-}
-
-.action-buttons-container {
-  @apply absolute right-8 bottom-8 flex flex-col items-center justify-center w-40 h-40;
-}
-
-.action-button {
-  @apply w-12 h-12 rounded-full bg-[#1A1F2C] hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border-2 border-[#9b87f5] flex items-center justify-center text-white;
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }

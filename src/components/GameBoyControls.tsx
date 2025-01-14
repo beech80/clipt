@@ -7,16 +7,13 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowLeft,
-  ArrowRight,
-  Joystick
+  ArrowRight
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const GameBoyControls = () => {
-  const [joystickPosition, setJoystickPosition] = useState<string>('neutral');
-  const [isDragging, setIsDragging] = useState(false);
-  const location = useLocation();
+  const [activeDirection, setActiveDirection] = useState<string>('neutral');
   const navigate = useNavigate();
 
   const handleAction = (action: string) => {
@@ -27,8 +24,8 @@ const GameBoyControls = () => {
     }
   };
 
-  const handleJoystickMove = (direction: string) => {
-    setJoystickPosition(direction);
+  const handleDirectionClick = (direction: string) => {
+    setActiveDirection(direction);
     switch (direction) {
       case 'up':
         navigate('/streaming');
@@ -45,60 +42,7 @@ const GameBoyControls = () => {
       default:
         break;
     }
-    setTimeout(() => setJoystickPosition('neutral'), 300);
-  };
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    setIsDragging(true);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerUp = () => {
-    setIsDragging(false);
-    setJoystickPosition('neutral');
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging) return;
-
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const x = e.clientX - rect.left - centerX;
-    const y = e.clientY - rect.top - centerY;
-
-    const angle = Math.atan2(y, x);
-    const distance = Math.min(Math.sqrt(x * x + y * y), 50);
-
-    if (distance < 10) {
-      setJoystickPosition('neutral');
-      return;
-    }
-
-    const deg = angle * (180 / Math.PI);
-    if (deg > -45 && deg <= 45) handleJoystickMove('right');
-    else if (deg > 45 && deg <= 135) handleJoystickMove('down');
-    else if (deg > 135 || deg <= -135) handleJoystickMove('left');
-    else handleJoystickMove('up');
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const target = e.currentTarget;
-    const rect = target.getBoundingClientRect();
-    
-    const pointerEvent = new PointerEvent('pointermove', {
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-      bubbles: true
-    });
-    
-    Object.defineProperty(pointerEvent, 'currentTarget', {
-      get: () => target
-    });
-    
-    handlePointerMove(pointerEvent as unknown as React.PointerEvent);
+    setTimeout(() => setActiveDirection('neutral'), 300);
   };
 
   const renderActionButtons = () => {
@@ -142,48 +86,59 @@ const GameBoyControls = () => {
         <div className="absolute top-[60px] left-1/2 h-[calc(100%-120px)] w-0.5 bg-gradient-to-b from-gaming-400/20 via-gaming-400/40 to-gaming-400/20"></div>
       </div>
 
-      <div 
-        className="joystick-base"
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerMove={handlePointerMove}
-        onPointerLeave={handlePointerUp}
-        onTouchStart={(e) => {
-          e.preventDefault();
-          handlePointerDown(e as unknown as React.PointerEvent);
-        }}
-        onTouchEnd={(e) => {
-          e.preventDefault();
-          handlePointerUp();
-        }}
-        onTouchMove={handleTouchMove}
-      >
+      <div className="absolute left-8 bottom-8 w-32 h-32">
         {/* Direction Labels */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex flex-col items-center gap-2">
-            <div className="flex items-center gap-1">
-              <ArrowUp className="w-4 h-4" />
-              Streaming
-            </div>
-            <div className="flex items-center gap-1">
-              <ArrowDown className="w-4 h-4" />
-              Profile
-            </div>
-            <div className="flex items-center gap-1">
-              <ArrowLeft className="w-4 h-4" />
-              Discover
-            </div>
-            <div className="flex items-center gap-1">
-              Messages
-              <ArrowRight className="w-4 h-4" />
-            </div>
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex flex-col items-center gap-2">
+          <div className="flex items-center gap-1">
+            <ArrowUp className="w-4 h-4" />
+            Streaming
+          </div>
+          <div className="flex items-center gap-1">
+            <ArrowDown className="w-4 h-4" />
+            Profile
+          </div>
+          <div className="flex items-center gap-1">
+            <ArrowLeft className="w-4 h-4" />
+            Discover
+          </div>
+          <div className="flex items-center gap-1">
+            Messages
+            <ArrowRight className="w-4 h-4" />
           </div>
         </div>
 
-        <div className={`joystick ${joystickPosition.toLowerCase()}`}>
-          <div className="joystick-ball">
-            <Joystick className="w-6 h-6 text-gaming-400" />
+        {/* New Circular D-Pad */}
+        <div className="relative w-full h-full">
+          {/* Center Button */}
+          <div className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-gradient-to-br from-[#333] to-[#111] shadow-lg border border-gaming-400/30">
+            <div className="absolute inset-0 rounded-full bg-black/20"></div>
           </div>
+          
+          {/* Directional Buttons */}
+          <button 
+            onClick={() => handleDirectionClick('up')}
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full 
+              ${activeDirection === 'up' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+              hover:bg-gaming-400/30 transition-colors`}
+          />
+          <button 
+            onClick={() => handleDirectionClick('right')}
+            className={`absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full 
+              ${activeDirection === 'right' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+              hover:bg-gaming-400/30 transition-colors`}
+          />
+          <button 
+            onClick={() => handleDirectionClick('down')}
+            className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full 
+              ${activeDirection === 'down' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+              hover:bg-gaming-400/30 transition-colors`}
+          />
+          <button 
+            onClick={() => handleDirectionClick('left')}
+            className={`absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full 
+              ${activeDirection === 'left' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+              hover:bg-gaming-400/30 transition-colors`}
+          />
         </div>
       </div>
 
