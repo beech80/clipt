@@ -14,9 +14,12 @@ const Home = () => {
 
   return (
     <div className="max-w-3xl mx-auto h-[calc(100vh-200px)] relative pt-10">
-      <div className="absolute top-0 left-0 right-0 z-20 text-center py-1">
-        <h1 className="text-3xl font-bold gaming-gradient">
+      <div className="absolute -top-2 left-0 right-0 z-20 text-center">
+        <h1 className="text-3xl font-bold gaming-gradient relative inline-block transform -translate-y-2">
           CLIPS
+          <div className="absolute inset-0 blur-sm opacity-50 gaming-gradient">
+            CLIPS
+          </div>
         </h1>
       </div>
       
