@@ -135,27 +135,19 @@ const Joystick = ({ onDirectionChange }: JoystickProps) => {
       
       <button 
         onClick={() => handleDirectionClick('up')}
-        className={`absolute top-0 left-1/2 -translate-x-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full 
-          ${activeDirection === 'up' ? 'bg-gaming-400/50' : 'bg-transparent'} 
-          hover:bg-gaming-400/30 transition-all duration-300 -translate-y-1`}
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent -translate-y-1"
       />
       <button 
         onClick={() => handleDirectionClick('right')}
-        className={`absolute right-0 top-1/2 -translate-y-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full 
-          ${activeDirection === 'right' ? 'bg-gaming-400/50' : 'bg-transparent'} 
-          hover:bg-gaming-400/30 transition-all duration-300 translate-x-1`}
+        className="absolute right-0 top-1/2 -translate-y-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent translate-x-1"
       />
       <button 
         onClick={() => handleDirectionClick('down')}
-        className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full 
-          ${activeDirection === 'down' ? 'bg-gaming-400/50' : 'bg-transparent'} 
-          hover:bg-gaming-400/30 transition-all duration-300 translate-y-1`}
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent translate-y-1"
       />
       <button 
         onClick={() => handleDirectionClick('left')}
-        className={`absolute left-0 top-1/2 -translate-y-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full 
-          ${activeDirection === 'left' ? 'bg-gaming-400/50' : 'bg-transparent'} 
-          hover:bg-gaming-400/30 transition-all duration-300 -translate-x-1`}
+        className="absolute left-0 top-1/2 -translate-y-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent -translate-x-1"
       />
     </div>
   );
