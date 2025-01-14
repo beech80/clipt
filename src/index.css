@@ -32,16 +32,11 @@
     @apply border-border;
   }
   body {
-    @apply bg-gameboy-darkest text-gameboy-lightest;
+    @apply bg-[#1A1F2C] text-white;
     background-image: 
-      radial-gradient(at 100% 0%, rgba(139, 172, 15, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(139, 172, 15, 0.15) 0px, transparent 50%);
+      radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
     background-attachment: fixed;
-  }
-
-  @font-face {
-    font-family: 'Press Start 2P';
-    src: url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
   }
 }
 
@@ -144,6 +139,35 @@
 
 .joystick-area.right {
   @apply right-0 top-1/2 -translate-y-1/2;
+}
+
+.clip-button {
+  @apply text-5xl font-bold tracking-wider;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E5E7EB 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(155, 135, 245, 0.5);
+  position: relative;
+}
+
+.clip-button::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(90deg, #9b87f5 0%, #8B5CF6 100%);
+  border-radius: 16px;
+  z-index: -1;
+  filter: blur(8px);
+  opacity: 0.7;
+}
+
+.clip-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #1A1F2C;
+  border-radius: 12px;
+  z-index: -1;
 }
 
 .action-buttons-container {

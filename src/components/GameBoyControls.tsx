@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  ThumbsUp, Share2, MessageSquare, Trophy,
-  Play, Pause, Forward, Rewind,
-  Home, Search, Bell, User,
-  Compass, Video, BookMarked, Users
+  Video, MessageSquare, User, Compass
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -19,8 +16,6 @@ const GameBoyControls = () => {
       const route = action.split(':')[1];
       navigate(route);
       toast.success(`Navigating to ${route}`);
-    } else {
-      toast.success(`${action} action triggered!`);
     }
   };
 
@@ -99,103 +94,36 @@ const GameBoyControls = () => {
   };
 
   const renderActionButtons = () => {
-    switch (location.pathname) {
-      case '/streaming':
-        return (
-          <>
-            <button 
-              className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('navigate:/discover')}
-            >
-              <Compass className="w-6 h-6" />
-            </button>
-            <div className="flex gap-16 my-4">
-              <button 
-                className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('navigate:/messages')}
-              >
-                <MessageSquare className="w-6 h-6" />
-              </button>
-              <button 
-                className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('navigate:/profile')}
-              >
-                <User className="w-6 h-6" />
-              </button>
-            </div>
-            <button 
-              className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('navigate:/streaming')}
-            >
-              <Video className="w-6 h-6" />
-            </button>
-          </>
-        );
-
-      case '/discover':
-        return (
-          <>
-            <button 
-              className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('navigate:/streaming')}
-            >
-              <Video className="w-6 h-6" />
-            </button>
-            <div className="flex gap-16 my-4">
-              <button 
-                className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('navigate:/messages')}
-              >
-                <MessageSquare className="w-6 h-6" />
-              </button>
-              <button 
-                className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('navigate:/profile')}
-              >
-                <User className="w-6 h-6" />
-              </button>
-            </div>
-            <button 
-              className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('navigate:/discover')}
-            >
-              <Compass className="w-6 h-6" />
-            </button>
-          </>
-        );
-
-      default:
-        return (
-          <>
-            <button 
-              className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('navigate:/streaming')}
-            >
-              <Video className="w-6 h-6" />
-            </button>
-            <div className="flex gap-16 my-4">
-              <button 
-                className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('navigate:/messages')}
-              >
-                <MessageSquare className="w-6 h-6" />
-              </button>
-              <button 
-                className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('navigate:/profile')}
-              >
-                <User className="w-6 h-6" />
-              </button>
-            </div>
-            <button 
-              className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('navigate:/discover')}
-            >
-              <Compass className="w-6 h-6" />
-            </button>
-          </>
-        );
-    }
+    return (
+      <>
+        <button 
+          className="action-button transition-transform hover:scale-110 active:scale-95"
+          onClick={() => handleAction('navigate:/streaming')}
+        >
+          <Video className="w-6 h-6" />
+        </button>
+        <div className="flex gap-16 my-4">
+          <button 
+            className="action-button transition-transform hover:scale-110 active:scale-95"
+            onClick={() => handleAction('navigate:/messages')}
+          >
+            <MessageSquare className="w-6 h-6" />
+          </button>
+          <button 
+            className="action-button transition-transform hover:scale-110 active:scale-95"
+            onClick={() => handleAction('navigate:/profile')}
+          >
+            <User className="w-6 h-6" />
+          </button>
+        </div>
+        <button 
+          className="action-button transition-transform hover:scale-110 active:scale-95"
+          onClick={() => handleAction('navigate:/discover')}
+        >
+          <Compass className="w-6 h-6" />
+        </button>
+      </>
+    );
   };
 
   return (
@@ -223,9 +151,7 @@ const GameBoyControls = () => {
 
       <button 
         onClick={() => handleAction('navigate:/')}
-        className="clip-button absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                   bg-gaming-500 text-white px-6 py-2 rounded-full font-bold
-                   hover:bg-gaming-600 transition-colors shadow-lg"
+        className="clip-button absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 px-8 py-4"
       >
         CLIP
       </button>
