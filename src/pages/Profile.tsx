@@ -50,8 +50,13 @@ const Profile = () => {
               </div>
             </div>
           </div>
-          <Button onClick={handleEditProfile} className="gaming-button">
-            <Edit className="w-4 h-4 mr-2" /> Edit Profile
+          <Button 
+            onClick={handleEditProfile} 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-gaming-500/20"
+          >
+            <Edit className="w-5 h-5" />
           </Button>
         </div>
 
