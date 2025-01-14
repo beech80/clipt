@@ -7,6 +7,7 @@ import { StreamControls } from "@/components/streaming/StreamControls";
 import { StreamInfoCards } from "@/components/streaming/StreamInfoCards";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
 import { StreamChat } from "@/components/streaming/StreamChat";
+import { StreamSettings } from "@/components/streaming/StreamSettings";
 
 const Streaming = () => {
   const { user } = useAuth();
@@ -58,6 +59,8 @@ const Streaming = () => {
     }));
   };
 
+  if (!user) return null;
+
   return (
     <div className="mx-auto max-w-7xl px-4 space-y-8">
       <div className="gaming-card">
@@ -66,7 +69,7 @@ const Streaming = () => {
         </h1>
         
         <StreamControls 
-          userId={user?.id || ''} 
+          userId={user.id} 
           onStreamUpdate={handleStreamUpdate}
         />
         
@@ -80,10 +83,6 @@ const Streaming = () => {
             <div className="glass-card p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">Stream Preview</h3>
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
               </div>
               <StreamPlayer 
                 streamUrl={streamData.streamUrl}
@@ -99,6 +98,10 @@ const Streaming = () => {
               />
             )}
           </div>
+        </div>
+
+        <div className="mt-8">
+          <StreamSettings userId={user.id} />
         </div>
       </div>
     </div>
