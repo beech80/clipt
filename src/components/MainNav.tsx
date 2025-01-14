@@ -3,11 +3,13 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function MainNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const isMobile = useIsMobile();
   
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -44,83 +46,136 @@ export function MainNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gaming-700/50 bg-background/80 p-2 backdrop-blur-xl md:top-0 md:bottom-auto md:border-b md:border-t-0">
-      <div className="mx-auto flex max-w-screen-xl items-center justify-around px-4">
-        <Link
-          to="/"
-          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
-            isActive("/") 
-              ? "text-gaming-400 scale-110" 
-              : "text-muted-foreground"
-          }`}
-        >
-          <Home className="h-6 w-6" />
-          <span className="text-xs font-medium">Home</span>
-        </Link>
-        <Link
-          to="/discover"
-          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
-            isActive("/discover")
-              ? "text-gaming-400 scale-110"
-              : "text-muted-foreground"
-          }`}
-        >
-          <Compass className="h-6 w-6" />
-          <span className="text-xs font-medium">Discover</span>
-        </Link>
-        <Link
-          to="/streaming"
-          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
-            isActive("/streaming")
-              ? "text-gaming-400 scale-110"
-              : "text-muted-foreground"
-          }`}
-        >
-          <Video className="h-6 w-6" />
-          <span className="text-xs font-medium">Stream</span>
-        </Link>
-        <Link
-          to="/top-clips"
-          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
-            isActive("/top-clips")
-              ? "text-gaming-400 scale-110"
-              : "text-muted-foreground"
-          }`}
-        >
-          <Trophy className="h-6 w-6" />
-          <span className="text-xs font-medium">Top Clips</span>
-        </Link>
-        <Link
-          to="/messages"
-          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
-            isActive("/messages")
-              ? "text-gaming-400 scale-110"
-              : "text-muted-foreground"
-          }`}
-        >
-          <MessageSquare className="h-6 w-6" />
-          <span className="text-xs font-medium">Messages</span>
-        </Link>
-        <Link
-          to="/profile"
-          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
-            isActive("/profile")
-              ? "text-gaming-400 scale-110"
-              : "text-muted-foreground"
-          }`}
-        >
-          <User className="h-6 w-6" />
-          <span className="text-xs font-medium">Profile</span>
-        </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleSignOut}
-          className="flex flex-col items-center p-2 transition-all hover:text-gaming-400 text-muted-foreground"
-        >
-          <LogOut className="h-6 w-6" />
-          <span className="text-xs font-medium">Logout</span>
-        </Button>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gaming-700/50 bg-background/80 backdrop-blur-xl md:top-0 md:bottom-auto md:border-b md:border-t-0">
+      <div className="mx-auto flex max-w-screen-xl items-center justify-around px-2 py-1">
+        {isMobile ? (
+          // Mobile view with simplified icons and no text
+          <>
+            <Link
+              to="/"
+              className={`p-2 transition-all hover:text-gaming-400 ${
+                isActive("/") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <Home className="h-5 w-5" />
+            </Link>
+            <Link
+              to="/discover"
+              className={`p-2 transition-all hover:text-gaming-400 ${
+                isActive("/discover") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <Compass className="h-5 w-5" />
+            </Link>
+            <Link
+              to="/streaming"
+              className={`p-2 transition-all hover:text-gaming-400 ${
+                isActive("/streaming") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <Video className="h-5 w-5" />
+            </Link>
+            <Link
+              to="/top-clips"
+              className={`p-2 transition-all hover:text-gaming-400 ${
+                isActive("/top-clips") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <Trophy className="h-5 w-5" />
+            </Link>
+            <Link
+              to="/messages"
+              className={`p-2 transition-all hover:text-gaming-400 ${
+                isActive("/messages") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <MessageSquare className="h-5 w-5" />
+            </Link>
+            <Link
+              to="/profile"
+              className={`p-2 transition-all hover:text-gaming-400 ${
+                isActive("/profile") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <User className="h-5 w-5" />
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className="p-2 transition-all hover:text-gaming-400 text-muted-foreground"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </>
+        ) : (
+          // Desktop view with text labels
+          <>
+            <Link
+              to="/"
+              className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+                isActive("/") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <Home className="h-6 w-6" />
+              <span className="text-xs font-medium">Home</span>
+            </Link>
+            <Link
+              to="/discover"
+              className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+                isActive("/discover") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <Compass className="h-6 w-6" />
+              <span className="text-xs font-medium">Discover</span>
+            </Link>
+            <Link
+              to="/streaming"
+              className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+                isActive("/streaming") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <Video className="h-6 w-6" />
+              <span className="text-xs font-medium">Stream</span>
+            </Link>
+            <Link
+              to="/top-clips"
+              className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+                isActive("/top-clips") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <Trophy className="h-6 w-6" />
+              <span className="text-xs font-medium">Top Clips</span>
+            </Link>
+            <Link
+              to="/messages"
+              className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+                isActive("/messages") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <MessageSquare className="h-6 w-6" />
+              <span className="text-xs font-medium">Messages</span>
+            </Link>
+            <Link
+              to="/profile"
+              className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+                isActive("/profile") ? "text-gaming-400 scale-110" : "text-muted-foreground"
+              }`}
+            >
+              <User className="h-6 w-6" />
+              <span className="text-xs font-medium">Profile</span>
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className="flex flex-col items-center p-2 transition-all hover:text-gaming-400 text-muted-foreground"
+            >
+              <LogOut className="h-6 w-6" />
+              <span className="text-xs font-medium">Logout</span>
+            </Button>
+          </>
+        )}
       </div>
     </nav>
   );
