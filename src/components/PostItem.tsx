@@ -1,9 +1,12 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Share2, Bookmark, MoreVertical } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, MoreVertical, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PostItemProps {
   post: {
@@ -15,12 +18,46 @@ interface PostItemProps {
       username: string;
       avatar_url: string;
     };
+    clip_votes?: { count: number }[];
   };
 }
 
 const PostItem = ({ post }: PostItemProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const voteCount = post.clip_votes?.[0]?.count || 0;
+
+  const handleVote = async () => {
+    if (!user) {
+      toast.error("Please login to vote!");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('clip_votes')
+        .insert({
+          post_id: post.id,
+          user_id: user.id
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          // Unique violation - user already voted
+          toast.error("You've already voted for this clip!");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Vote recorded!");
+        queryClient.invalidateQueries({ queryKey: ['top-posts'] });
+      }
+    } catch (error) {
+      toast.error("Error recording vote");
+    }
+  };
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -112,6 +149,15 @@ const PostItem = ({ post }: PostItemProps) => {
             className={cn("flex items-center gap-2", isSaved && "text-gaming-600")}
           >
             <Bookmark className={cn("w-4 h-4", isSaved && "fill-current")} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleVote}
+            className="flex items-center gap-2"
+          >
+            <ThumbsUp className="w-4 h-4" />
+            <span className="text-sm">{voteCount}</span>
           </Button>
         </div>
       </div>

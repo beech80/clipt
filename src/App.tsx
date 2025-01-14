@@ -11,6 +11,7 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Streaming from "./pages/Streaming";
+import TopClips from "./pages/TopClips";
 import React from 'react';
 
 const queryClient = new QueryClient({
@@ -41,6 +42,7 @@ const App = () => {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/streaming" element={<Streaming />} />
+                    <Route path="/top-clips" element={<TopClips />} />
                   </Routes>
                 </main>
               </BrowserRouter>
