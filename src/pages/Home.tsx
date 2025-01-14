@@ -20,8 +20,8 @@ const Home = () => {
         </h1>
       </div>
       
-      <div className="absolute top-12 left-0 right-0 z-10 bg-black/50 backdrop-blur-sm p-3">
-        <div className="flex justify-between items-center">
+      <div className="absolute top-12 left-0 right-0 z-10 bg-black/50 backdrop-blur-sm">
+        <div className="flex justify-between items-center px-4 py-3">
           <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
             <DialogTrigger asChild>
               <Button 
