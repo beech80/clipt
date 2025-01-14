@@ -1,39 +1,113 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
-const MOCK_CHATS = [
-  {
-    id: 1,
-    username: "ProGamer123",
-    lastMessage: "GG! That was an amazing play!",
-    time: "2m ago",
-    unread: 2,
-    avatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
-    online: true,
-  },
-  {
-    id: 2,
-    username: "GameMaster",
-    lastMessage: "Want to team up for the next match?",
-    time: "1h ago",
-    unread: 0,
-    avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop",
-    online: false,
-  },
-];
+interface Message {
+  id: string;
+  content: string;
+  sender_id: string;
+  receiver_id: string;
+  created_at: string;
+  read: boolean;
+}
+
+interface ChatUser {
+  id: number;
+  username: string;
+  lastMessage: string;
+  time: string;
+  unread: number;
+  avatar: string;
+  online: boolean;
+}
 
 const Messages = () => {
+  const { user } = useAuth();
   const [selectedChat, setSelectedChat] = useState<number | null>(null);
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [chats, setChats] = useState<ChatUser[]>(MOCK_CHATS);
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      toast.success("Message sent!");
-      setMessage("");
+  useEffect(() => {
+    if (!selectedChat || !user) return;
+
+    // Subscribe to new messages
+    const channel = supabase
+      .channel('messages_channel')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newMessage = payload.new as Message;
+          setMessages((prev) => [...prev, newMessage]);
+          toast({
+            title: "New message",
+            description: "You have received a new message",
+          });
+        }
+      )
+      .subscribe();
+
+    // Fetch existing messages
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch messages",
+        });
+        return;
+      }
+
+      setMessages(data || []);
+    };
+
+    fetchMessages();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedChat, user]);
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !user || !selectedChat) return;
+
+    const newMessage = {
+      content: message,
+      sender_id: user.id,
+      receiver_id: selectedChat.toString(),
+      read: false,
+    };
+
+    const { error } = await supabase
+      .from('messages')
+      .insert([newMessage]);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send message",
+      });
+      return;
     }
+
+    setMessage("");
   };
 
   return (
@@ -47,7 +121,7 @@ const Messages = () => {
           </div>
           
           <div className="space-y-2">
-            {MOCK_CHATS.map((chat) => (
+            {chats.map((chat) => (
               <button
                 key={chat.id}
                 className={`w-full p-3 rounded-lg hover:bg-gaming-700/20 transition-colors text-left flex items-center gap-3 ${
@@ -88,10 +162,28 @@ const Messages = () => {
         <div className="col-span-2 flex flex-col h-[600px]">
           {selectedChat ? (
             <>
-              <div className="flex-1 p-4">
-                <div className="text-center text-sm text-muted-foreground">
-                  Messages will appear here
-                </div>
+              <div className="flex-1 p-4 overflow-y-auto">
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`mb-4 ${
+                      msg.sender_id === user?.id ? "text-right" : "text-left"
+                    }`}
+                  >
+                    <div
+                      className={`inline-block p-3 rounded-lg ${
+                        msg.sender_id === user?.id
+                          ? "bg-gaming-400 text-white"
+                          : "bg-gaming-700/20"
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {new Date(msg.created_at).toLocaleTimeString()}
+                    </div>
+                  </div>
+                ))}
               </div>
               <div className="p-4 border-t border-gaming-700/50">
                 <div className="flex gap-2">
@@ -120,5 +212,26 @@ const Messages = () => {
     </div>
   );
 };
+
+const MOCK_CHATS = [
+  {
+    id: 1,
+    username: "ProGamer123",
+    lastMessage: "GG! That was an amazing play!",
+    time: "2m ago",
+    unread: 2,
+    avatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
+    online: true,
+  },
+  {
+    id: 2,
+    username: "GameMaster",
+    lastMessage: "Want to team up for the next match?",
+    time: "1h ago",
+    unread: 0,
+    avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop",
+    online: false,
+  },
+];
 
 export default Messages;
