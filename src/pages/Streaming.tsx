@@ -5,15 +5,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { StreamControls } from "@/components/streaming/StreamControls";
 import { StreamInfoCards } from "@/components/streaming/StreamInfoCards";
+import { StreamPlayer } from "@/components/streaming/StreamPlayer";
 
 const Streaming = () => {
   const { user } = useAuth();
   const [streamData, setStreamData] = useState<{
     isLive: boolean;
     streamKey: string | null;
+    streamUrl: string | null;
   }>({
     isLive: false,
     streamKey: null,
+    streamUrl: null,
   });
 
   useEffect(() => {
@@ -36,6 +39,7 @@ const Streaming = () => {
         setStreamData({
           isLive: stream.is_live || false,
           streamKey: stream.stream_key,
+          streamUrl: stream.stream_url,
         });
       }
     } catch (error) {
@@ -68,13 +72,10 @@ const Streaming = () => {
               Settings
             </Button>
           </div>
-          <div className="aspect-video w-full bg-gaming-900/50 rounded-lg">
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              {streamData.isLive ? 
-                'Live Preview' : 
-                'Preview will appear here when streaming'}
-            </div>
-          </div>
+          <StreamPlayer 
+            streamUrl={streamData.streamUrl}
+            isLive={streamData.isLive}
+          />
         </div>
       </div>
     </div>

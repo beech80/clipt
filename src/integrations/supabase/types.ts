@@ -293,6 +293,45 @@ export type Database = {
         }
         Relationships: []
       }
+      stream_chat: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          stream_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          stream_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          stream_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_chat_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_chat_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_settings: {
         Row: {
           chat_enabled: boolean | null
@@ -339,6 +378,7 @@ export type Database = {
       }
       streams: {
         Row: {
+          chat_enabled: boolean | null
           created_at: string
           description: string | null
           ended_at: string | null
@@ -346,12 +386,14 @@ export type Database = {
           is_live: boolean | null
           started_at: string | null
           stream_key: string
+          stream_url: string | null
           thumbnail_url: string | null
           title: string
           user_id: string
           viewer_count: number | null
         }
         Insert: {
+          chat_enabled?: boolean | null
           created_at?: string
           description?: string | null
           ended_at?: string | null
@@ -359,12 +401,14 @@ export type Database = {
           is_live?: boolean | null
           started_at?: string | null
           stream_key: string
+          stream_url?: string | null
           thumbnail_url?: string | null
           title: string
           user_id: string
           viewer_count?: number | null
         }
         Update: {
+          chat_enabled?: boolean | null
           created_at?: string
           description?: string | null
           ended_at?: string | null
@@ -372,6 +416,7 @@ export type Database = {
           is_live?: boolean | null
           started_at?: string | null
           stream_key?: string
+          stream_url?: string | null
           thumbnail_url?: string | null
           title?: string
           user_id?: string
