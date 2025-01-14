@@ -76,8 +76,9 @@
 }
 
 .gameboy-container {
-  @apply fixed bottom-0 left-0 right-0 bg-gameboy-dark border-t-4 border-gameboy-light p-4;
+  @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/90 border-t-2 border-[#9b87f5] p-4;
   height: 200px;
+  box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.3);
 }
 
 .joystick-base {
@@ -86,67 +87,40 @@
 }
 
 .joystick {
-  @apply absolute w-8 h-24 bg-gameboy-darkest rounded-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2;
+  @apply absolute w-8 h-24 bg-[#9b87f5] rounded-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2;
   transform-origin: bottom center;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.5);
 }
 
-.joystick.up {
-  transform: rotateX(-30deg);
-}
-
-.joystick.down {
-  transform: rotateX(30deg);
-}
-
-.joystick.left {
-  transform: rotateZ(-30deg);
-}
-
-.joystick.right {
-  transform: rotateZ(30deg);
-}
+.joystick.up { transform: rotateX(-30deg); }
+.joystick.down { transform: rotateX(30deg); }
+.joystick.left { transform: rotateZ(-30deg); }
+.joystick.right { transform: rotateZ(30deg); }
 
 .joystick-ball {
-  @apply absolute top-0 left-1/2 w-12 h-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gameboy-light border-2 border-gameboy-lightest transition-all duration-300;
-  box-shadow: inset -2px -2px 0 rgba(0,0,0,0.2);
+  @apply absolute top-0 left-1/2 w-12 h-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8B5CF6] border-2 border-[#9b87f5] transition-all duration-300;
+  box-shadow: 0 0 20px rgba(155, 135, 245, 0.6);
 }
 
 .joystick:hover .joystick-ball {
-  @apply shadow-gameboy-light/50;
-  filter: brightness(1.1);
+  @apply shadow-[#9b87f5]/50;
+  filter: brightness(1.2);
 }
 
-.joystick-hitbox {
-  @apply absolute inset-0;
-}
-
-.joystick-area {
-  @apply absolute w-16 h-16 opacity-0;
-}
-
-.joystick-area.top {
-  @apply top-0 left-1/2 -translate-x-1/2;
-}
-
-.joystick-area.bottom {
-  @apply bottom-0 left-1/2 -translate-x-1/2;
-}
-
-.joystick-area.left {
-  @apply left-0 top-1/2 -translate-y-1/2;
-}
-
-.joystick-area.right {
-  @apply right-0 top-1/2 -translate-y-1/2;
-}
+.joystick-hitbox { @apply absolute inset-0; }
+.joystick-area { @apply absolute w-16 h-16 opacity-0; }
+.joystick-area.top { @apply top-0 left-1/2 -translate-x-1/2; }
+.joystick-area.bottom { @apply bottom-0 left-1/2 -translate-x-1/2; }
+.joystick-area.left { @apply left-0 top-1/2 -translate-y-1/2; }
+.joystick-area.right { @apply right-0 top-1/2 -translate-y-1/2; }
 
 .clip-button {
-  @apply text-5xl font-bold tracking-wider;
+  @apply text-7xl font-bold tracking-wider;
   background: linear-gradient(180deg, #FFFFFF 0%, #E5E7EB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 20px rgba(155, 135, 245, 0.5);
+  text-shadow: 0 0 30px rgba(155, 135, 245, 0.8);
   position: relative;
 }
 
@@ -157,8 +131,8 @@
   background: linear-gradient(90deg, #9b87f5 0%, #8B5CF6 100%);
   border-radius: 16px;
   z-index: -1;
-  filter: blur(8px);
-  opacity: 0.7;
+  filter: blur(12px);
+  opacity: 0.8;
 }
 
 .clip-button::after {
@@ -175,5 +149,6 @@
 }
 
 .action-button {
-  @apply w-12 h-12 rounded-full bg-gameboy-dark hover:bg-gameboy-light/20 active:bg-gameboy-light/40 transition-all duration-300 border-2 border-gameboy-light flex items-center justify-center text-gameboy-lightest;
+  @apply w-12 h-12 rounded-full bg-[#1A1F2C] hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border-2 border-[#9b87f5] flex items-center justify-center text-white;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }

@@ -31,7 +31,7 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
-            <div className="min-h-screen bg-background pb-48 md:pb-48 md:pt-16">
+            <div className="min-h-screen bg-[#1A1F2C] pb-48 md:pb-48 md:pt-16">
               <Toaster />
               <Sonner />
               <BrowserRouter>
