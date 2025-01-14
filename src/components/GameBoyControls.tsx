@@ -5,21 +5,43 @@ import {
   Home, Search, Bell, User,
   Compass, Video, BookMarked, Users
 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const GameBoyControls = () => {
   const [joystickPosition, setJoystickPosition] = useState<string>('neutral');
   const [isDragging, setIsDragging] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleAction = (action: string) => {
-    toast.success(`${action} action triggered!`);
+    if (action.startsWith('navigate:')) {
+      const route = action.split(':')[1];
+      navigate(route);
+      toast.success(`Navigating to ${route}`);
+    } else {
+      toast.success(`${action} action triggered!`);
+    }
   };
 
   const handleJoystickMove = (direction: string) => {
     setJoystickPosition(direction);
-    handleAction(direction);
+    switch (direction) {
+      case 'up':
+        navigate('/streaming');
+        break;
+      case 'right':
+        navigate('/messages');
+        break;
+      case 'down':
+        navigate('/profile');
+        break;
+      case 'left':
+        navigate('/discover');
+        break;
+      default:
+        break;
+    }
     setTimeout(() => setJoystickPosition('neutral'), 300);
   };
 
@@ -142,38 +164,6 @@ const GameBoyControls = () => {
           </>
         );
 
-      case '/messages':
-        return (
-          <>
-            <button 
-              className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('New Message')}
-            >
-              <MessageSquare className="w-6 h-6" />
-            </button>
-            <div className="flex gap-16 my-4">
-              <button 
-                className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('Share')}
-              >
-                <Share2 className="w-6 h-6" />
-              </button>
-              <button 
-                className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('Users')}
-              >
-                <Users className="w-6 h-6" />
-              </button>
-            </div>
-            <button 
-              className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('Profile')}
-            >
-              <User className="w-6 h-6" />
-            </button>
-          </>
-        );
-
       default:
         return (
           <>
@@ -230,6 +220,16 @@ const GameBoyControls = () => {
           <div className="joystick-ball" />
         </div>
       </div>
+
+      <button 
+        onClick={() => handleAction('navigate:/')}
+        className="clip-button absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                   bg-gaming-500 text-white px-6 py-2 rounded-full font-bold
+                   hover:bg-gaming-600 transition-colors shadow-lg"
+      >
+        <Home className="w-6 h-6" />
+        <span className="ml-2">CLIP</span>
+      </button>
 
       <div className="action-buttons-container">
         {renderActionButtons()}
