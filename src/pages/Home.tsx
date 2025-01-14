@@ -1,6 +1,5 @@
 import PostForm from "@/components/PostForm";
 import PostList from "@/components/PostList";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -13,45 +12,29 @@ const Home = () => {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-8 px-4">
         <div className="max-w-2xl text-center space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-gaming-600 to-gaming-800">
-            Welcome to Clip
+          <h1 className="text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-purple-800 animate-pulse">
+            CLIP
           </h1>
-          <p className="text-xl text-muted-foreground">
-            Share your gaming moments, connect with fellow gamers.
+          <p className="text-xl text-purple-300">
+            Share your gaming moments
           </p>
-          <Button 
-            size="lg" 
+          <button 
             onClick={() => navigate("/login")}
-            className="mt-4"
+            className="mt-8 px-8 py-4 text-xl bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 animate-glow"
           >
-            Get Started <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl w-full mt-8">
-          <img
-            src="https://images.unsplash.com/photo-1542751371-adc38448a05e"
-            alt="Gaming Setup"
-            className="rounded-lg shadow-lg object-cover h-48 w-full"
-          />
-          <img
-            src="https://images.unsplash.com/photo-1511512578047-dfb367046420"
-            alt="Gaming Community"
-            className="rounded-lg shadow-lg object-cover h-48 w-full"
-          />
-          <img
-            src="https://images.unsplash.com/photo-1493711662062-fa541adb3fc8"
-            alt="Gaming Moment"
-            className="rounded-lg shadow-lg object-cover h-48 w-full"
-          />
+            Get Started <ArrowRight className="inline-block ml-2 h-6 w-6" />
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-[500px] mx-auto h-[calc(100vh-80px)] relative">
       <PostForm />
-      <PostList />
+      <div className="mt-4 snap-y snap-mandatory overflow-y-auto h-full">
+        <PostList />
+      </div>
     </div>
   );
 };

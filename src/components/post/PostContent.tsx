@@ -5,18 +5,18 @@ interface PostContentProps {
 
 const PostContent = ({ content, imageUrl }: PostContentProps) => {
   return (
-    <>
-      <p className="mt-4 whitespace-pre-wrap">{content}</p>
+    <div className="relative h-full">
       {imageUrl && (
-        <div className="mt-4 -mx-4">
-          <img
-            src={imageUrl}
-            alt="Post content"
-            className="w-full object-cover max-h-[500px]"
-          />
-        </div>
+        <img
+          src={imageUrl}
+          alt="Post content"
+          className="w-full h-full object-cover"
+        />
       )}
-    </>
+      <p className="absolute bottom-20 left-4 right-4 text-white text-lg z-10 line-clamp-2">
+        {content}
+      </p>
+    </div>
   );
 };
 

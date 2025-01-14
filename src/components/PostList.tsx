@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "./PostItem";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const PostList = () => {
-  const { data: posts, refetch: refetchPosts } = useQuery({
+  const { data: posts } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -30,18 +29,19 @@ const PostList = () => {
   });
 
   return (
-    <ScrollArea className="h-[calc(100vh-200px)] w-full">
+    <div className="space-y-1">
       {posts?.map((post) => (
-        <PostItem 
-          key={post.id} 
-          post={{
-            ...post,
-            likes_count: post.likes?.[0]?.count || 0,
-            clip_votes: post.clip_votes || []
-          }} 
-        />
+        <div key={post.id} className="snap-start snap-always h-[calc(100vh-120px)]">
+          <PostItem 
+            post={{
+              ...post,
+              likes_count: post.likes?.[0]?.count || 0,
+              clip_votes: post.clip_votes || []
+            }} 
+          />
+        </div>
       ))}
-    </ScrollArea>
+    </div>
   );
 };
 

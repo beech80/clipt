@@ -28,27 +28,29 @@ const PostItem = ({ post }: PostItemProps) => {
   const { user } = useAuth();
 
   return (
-    <Card className="mb-4 overflow-hidden">
-      <div className="p-4">
-        <PostHeader
-          avatarUrl={post.profiles?.avatar_url}
-          username={post.profiles?.username}
-          createdAt={post.created_at}
-          postId={post.id}
-          userId={post.user_id}
-          content={post.content}
-        />
+    <Card className="h-full overflow-hidden bg-black border border-purple-500/20">
+      <div className="relative h-full">
         <PostContent
           content={post.content}
           imageUrl={post.image_url}
         />
-        <PostActions
-          postId={post.id}
-          voteCount={voteCount}
-          onCommentClick={() => setShowComments(!showComments)}
-          showComments={showComments}
-        />
-        {showComments && <CommentList postId={post.id} />}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+          <PostHeader
+            avatarUrl={post.profiles?.avatar_url}
+            username={post.profiles?.username}
+            createdAt={post.created_at}
+            postId={post.id}
+            userId={post.user_id}
+            content={post.content}
+          />
+          <PostActions
+            postId={post.id}
+            voteCount={voteCount}
+            onCommentClick={() => setShowComments(!showComments)}
+            showComments={showComments}
+          />
+          {showComments && <CommentList postId={post.id} />}
+        </div>
       </div>
     </Card>
   );
