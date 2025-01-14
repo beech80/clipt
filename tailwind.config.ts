@@ -52,12 +52,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        gameboy: {
-          darkest: "#0f380f",
-          dark: "#306230",
-          light: "#8bac0f",
-          lightest: "#9bbc0f",
-        },
         gaming: {
           100: "#e0e7ff",
           200: "#c7d2fe",
@@ -86,10 +80,10 @@ export default {
         },
         glow: {
           "0%, 100%": {
-            boxShadow: "0 0 15px rgba(139, 172, 15, 0.5)",
+            boxShadow: "0 0 15px rgba(155, 135, 245, 0.5)",
           },
           "50%": {
-            boxShadow: "0 0 30px rgba(139, 172, 15, 0.8)",
+            boxShadow: "0 0 30px rgba(155, 135, 245, 0.8)",
           },
         },
         scanline: {
