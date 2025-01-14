@@ -1,41 +1,71 @@
 import { useState, useEffect } from "react";
-import { Search, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { Message, ChatUser } from "@/types/message";
+import { MessageBubble } from "@/components/messages/MessageBubble";
+import { ChatList } from "@/components/messages/ChatList";
 
-interface Message {
-  id: string;
-  content: string;
-  sender_id: string;
-  receiver_id: string;
-  created_at: string;
-  read: boolean;
-}
-
-interface ChatUser {
-  id: number;
-  username: string;
-  lastMessage: string;
-  time: string;
-  unread: number;
-  avatar: string;
-  online: boolean;
-}
-
-const Messages = () => {
+export default function Messages() {
   const { user } = useAuth();
-  const [selectedChat, setSelectedChat] = useState<number | null>(null);
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chats, setChats] = useState<ChatUser[]>(MOCK_CHATS);
+  const [chats, setChats] = useState<ChatUser[]>([]);
 
+  // Fetch chats (users with messages)
   useEffect(() => {
-    if (!selectedChat || !user) return;
+    if (!user) return;
 
-    // Subscribe to new messages
+    const fetchChats = async () => {
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select(`
+          content,
+          sender_id,
+          receiver_id,
+          profiles!messages_sender_id_fkey (
+            id,
+            username,
+            avatar_url
+          )
+        `)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast.error("Failed to fetch chats");
+        return;
+      }
+
+      // Process messages to get unique users
+      const uniqueUsers = new Map<string, ChatUser>();
+      messages?.forEach((msg) => {
+        const otherUserId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+        const profile = msg.profiles;
+        if (!uniqueUsers.has(otherUserId) && profile) {
+          uniqueUsers.set(otherUserId, {
+            id: profile.id,
+            username: profile.username,
+            avatar_url: profile.avatar_url,
+            last_message: msg.content
+          });
+        }
+      });
+
+      setChats(Array.from(uniqueUsers.values()));
+    };
+
+    fetchChats();
+  }, [user]);
+
+  // Subscribe to new messages
+  useEffect(() => {
+    if (!user) return;
+
     const channel = supabase
       .channel('messages_channel')
       .on(
@@ -49,28 +79,32 @@ const Messages = () => {
         (payload) => {
           const newMessage = payload.new as Message;
           setMessages((prev) => [...prev, newMessage]);
-          toast({
-            title: "New message",
-            description: "You have received a new message",
-          });
+          toast("New message received");
         }
       )
       .subscribe();
 
-    // Fetch existing messages
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // Fetch messages for selected chat
+  useEffect(() => {
+    if (!selectedChat || !user) return;
+
     const fetchMessages = async () => {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .or(
+          `and(sender_id.eq.${user.id},receiver_id.eq.${selectedChat}),` +
+          `and(sender_id.eq.${selectedChat},receiver_id.eq.${user.id})`
+        )
         .order('created_at', { ascending: true });
 
       if (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch messages",
-        });
+        toast.error("Failed to fetch messages");
         return;
       }
 
@@ -78,10 +112,6 @@ const Messages = () => {
     };
 
     fetchMessages();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [selectedChat, user]);
 
   const handleSendMessage = async () => {
@@ -90,7 +120,7 @@ const Messages = () => {
     const newMessage = {
       content: message,
       sender_id: user.id,
-      receiver_id: selectedChat.toString(),
+      receiver_id: selectedChat,
       read: false,
     };
 
@@ -99,11 +129,7 @@ const Messages = () => {
       .insert([newMessage]);
 
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to send message",
-      });
+      toast.error("Failed to send message");
       return;
     }
 
@@ -111,81 +137,27 @@ const Messages = () => {
   };
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="gaming-card grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="mx-auto max-w-4xl h-[calc(100vh-4rem)]">
+      <div className="h-full border rounded-lg grid grid-cols-1 md:grid-cols-3 divide-x">
         {/* Chat List */}
-        <div className="border-r border-gaming-700/50">
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search messages..." />
-          </div>
-          
-          <div className="space-y-2">
-            {chats.map((chat) => (
-              <button
-                key={chat.id}
-                className={`w-full p-3 rounded-lg hover:bg-gaming-700/20 transition-colors text-left flex items-center gap-3 ${
-                  selectedChat === chat.id ? "bg-gaming-700/30" : ""
-                }`}
-                onClick={() => setSelectedChat(chat.id)}
-              >
-                <div className="relative">
-                  <img 
-                    src={chat.avatar} 
-                    alt={chat.username}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  {chat.online && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium truncate">{chat.username}</span>
-                    <span className="text-xs text-muted-foreground">{chat.time}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {chat.lastMessage}
-                  </p>
-                </div>
-                {chat.unread > 0 && (
-                  <div className="min-w-[1.5rem] h-6 rounded-full bg-gaming-400 text-white text-xs flex items-center justify-center">
-                    {chat.unread}
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
+        <div className="p-4">
+          <ChatList
+            chats={chats}
+            selectedChat={selectedChat}
+            onSelectChat={setSelectedChat}
+          />
         </div>
 
         {/* Chat Area */}
-        <div className="col-span-2 flex flex-col h-[600px]">
+        <div className="col-span-2 flex flex-col h-full">
           {selectedChat ? (
             <>
               <div className="flex-1 p-4 overflow-y-auto">
                 {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`mb-4 ${
-                      msg.sender_id === user?.id ? "text-right" : "text-left"
-                    }`}
-                  >
-                    <div
-                      className={`inline-block p-3 rounded-lg ${
-                        msg.sender_id === user?.id
-                          ? "bg-gaming-400 text-white"
-                          : "bg-gaming-700/20"
-                      }`}
-                    >
-                      {msg.content}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {new Date(msg.created_at).toLocaleTimeString()}
-                    </div>
-                  </div>
+                  <MessageBubble key={msg.id} message={msg} />
                 ))}
               </div>
-              <div className="p-4 border-t border-gaming-700/50">
+              <div className="p-4 border-t">
                 <div className="flex gap-2">
                   <Input
                     placeholder="Type a message..."
@@ -193,10 +165,7 @@ const Messages = () => {
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                   />
-                  <Button 
-                    className="gaming-button"
-                    onClick={handleSendMessage}
-                  >
+                  <Button onClick={handleSendMessage}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
@@ -211,27 +180,4 @@ const Messages = () => {
       </div>
     </div>
   );
-};
-
-const MOCK_CHATS = [
-  {
-    id: 1,
-    username: "ProGamer123",
-    lastMessage: "GG! That was an amazing play!",
-    time: "2m ago",
-    unread: 2,
-    avatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
-    online: true,
-  },
-  {
-    id: 2,
-    username: "GameMaster",
-    lastMessage: "Want to team up for the next match?",
-    time: "1h ago",
-    unread: 0,
-    avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop",
-    online: false,
-  },
-];
-
-export default Messages;
+}
