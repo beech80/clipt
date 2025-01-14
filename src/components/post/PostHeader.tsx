@@ -1,13 +1,15 @@
-import { Button } from "@/components/ui/button";
-import { MoreVertical } from "lucide-react";
+import PostMenu from "./PostMenu";
 
 interface PostHeaderProps {
   avatarUrl: string;
   username: string;
   createdAt: string;
+  postId: string;
+  userId: string;
+  content: string;
 }
 
-const PostHeader = ({ avatarUrl, username, createdAt }: PostHeaderProps) => {
+const PostHeader = ({ avatarUrl, username, createdAt, postId, userId, content }: PostHeaderProps) => {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -28,9 +30,7 @@ const PostHeader = ({ avatarUrl, username, createdAt }: PostHeaderProps) => {
           </p>
         </div>
       </div>
-      <Button variant="ghost" size="icon">
-        <MoreVertical className="w-4 h-4" />
-      </Button>
+      <PostMenu postId={postId} userId={userId} content={content} />
     </div>
   );
 };
