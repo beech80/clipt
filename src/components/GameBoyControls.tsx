@@ -19,6 +19,7 @@ const GameBoyControls = () => {
   const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
   const joystickRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
+  const lastActionTimeRef = useRef(0);
   const navigate = useNavigate();
 
   const handleAction = (action: string) => {
@@ -40,32 +41,62 @@ const GameBoyControls = () => {
     }
   };
 
-  const handleDirectionClick = (direction: string) => {
-    setActiveDirection(direction);
+  const handleVideoControl = (direction: string) => {
+    const video = document.querySelector('video');
+    if (!video) return;
+
     switch (direction) {
       case 'up':
-        setJoystickPosition({ x: 0, y: -12 });
-        toast.info('Previous clip');
+        // Previous video logic
+        toast.info('Previous video');
         break;
       case 'down':
-        setJoystickPosition({ x: 0, y: 12 });
-        toast.info('Next clip');
+        // Next video logic
+        toast.info('Next video');
         break;
       case 'left':
-        setJoystickPosition({ x: -12, y: 0 });
-        toast.info('Rewind 10s');
+        // Rewind 10 seconds
+        video.currentTime = Math.max(0, video.currentTime - 10);
+        toast.info('Rewinding 10s');
         break;
       case 'right':
-        setJoystickPosition({ x: 12, y: 0 });
-        toast.info('Forward 10s');
+        // Fast forward 10 seconds
+        video.currentTime = Math.min(video.duration, video.currentTime + 10);
+        toast.info('Fast forwarding 10s');
         break;
       default:
         break;
     }
+  };
+
+  const handleDirectionClick = (direction: string) => {
+    setActiveDirection(direction);
+    handleVideoControl(direction);
+    
+    // Calculate joystick position based on direction
+    const maxDistance = 20;
+    switch (direction) {
+      case 'up':
+        setJoystickPosition({ x: 0, y: -maxDistance });
+        break;
+      case 'down':
+        setJoystickPosition({ x: 0, y: maxDistance });
+        break;
+      case 'left':
+        setJoystickPosition({ x: -maxDistance, y: 0 });
+        break;
+      case 'right':
+        setJoystickPosition({ x: maxDistance, y: 0 });
+        break;
+      default:
+        break;
+    }
+
+    // Reset after animation
     setTimeout(() => {
       setActiveDirection('neutral');
       setJoystickPosition({ x: 0, y: 0 });
-    }, 400);
+    }, 300);
   };
 
   const handleJoystickStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -95,7 +126,7 @@ const GameBoyControls = () => {
     const deltaX = clientX - centerX;
     const deltaY = clientY - centerY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const maxDistance = 12;
+    const maxDistance = 20; // Increased range for more fluid movement
     const angle = Math.atan2(deltaY, deltaX);
 
     let newX = deltaX;
@@ -108,32 +139,22 @@ const GameBoyControls = () => {
 
     setJoystickPosition({ x: newX, y: newY });
 
-    // Determine direction based on position
-    const threshold = maxDistance * 0.5;
-    let direction = 'neutral';
-    if (Math.abs(newX) > Math.abs(newY)) {
-      direction = newX > threshold ? 'right' : newX < -threshold ? 'left' : 'neutral';
-    } else {
-      direction = newY > threshold ? 'down' : newY < -threshold ? 'up' : 'neutral';
-    }
-    
-    if (direction !== activeDirection) {
-      setActiveDirection(direction);
-      if (direction !== 'neutral') {
-        switch (direction) {
-          case 'up':
-            toast.info('Previous clip');
-            break;
-          case 'down':
-            toast.info('Next clip');
-            break;
-          case 'left':
-            toast.info('Rewind 10s');
-            break;
-          case 'right':
-            toast.info('Forward 10s');
-            break;
-        }
+    // Determine direction based on position with debouncing
+    const now = Date.now();
+    if (now - lastActionTimeRef.current > 300) { // 300ms debounce
+      const threshold = maxDistance * 0.5;
+      let direction = 'neutral';
+      
+      if (Math.abs(newX) > Math.abs(newY)) {
+        direction = newX > threshold ? 'right' : newX < -threshold ? 'left' : 'neutral';
+      } else {
+        direction = newY > threshold ? 'down' : newY < -threshold ? 'up' : 'neutral';
+      }
+      
+      if (direction !== 'neutral' && direction !== activeDirection) {
+        setActiveDirection(direction);
+        handleVideoControl(direction);
+        lastActionTimeRef.current = now;
       }
     }
   };
@@ -145,7 +166,7 @@ const GameBoyControls = () => {
     document.removeEventListener('mouseup', handleJoystickEnd);
     document.removeEventListener('touchend', handleJoystickEnd);
     
-    // Reset position with animation
+    // Smooth return to center
     setJoystickPosition({ x: 0, y: 0 });
     setActiveDirection('neutral');
   };
@@ -238,15 +259,15 @@ const GameBoyControls = () => {
           onMouseDown={handleJoystickStart}
           onTouchStart={handleJoystickStart}
         >
-          {/* Solid black joystick with smooth dragging */}
+          {/* Joystick with smooth animation */}
           <div 
-            className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg transition-transform duration-150 ease-out"
+            className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg transition-all duration-300 ease-out"
             style={{ 
               transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
             }}
           />
           
-          {/* Larger touch areas for directional buttons */}
+          {/* Directional touch areas with improved feedback */}
           <button 
             onClick={() => handleDirectionClick('up')}
             className={`absolute top-0 left-1/2 -translate-x-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full 
