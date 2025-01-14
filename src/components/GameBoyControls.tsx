@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ThumbsUp, Share2, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,10 +47,10 @@ const GameBoyControls = () => {
 
     // Convert angle to direction
     const deg = angle * (180 / Math.PI);
-    if (deg > -45 && deg <= 45) handleJoystickMove('Right');
-    else if (deg > 45 && deg <= 135) handleJoystickMove('Down');
-    else if (deg > 135 || deg <= -135) handleJoystickMove('Left');
-    else handleJoystickMove('Up');
+    if (deg > -45 && deg <= 45) handleJoystickMove('right');
+    else if (deg > 45 && deg <= 135) handleJoystickMove('down');
+    else if (deg > 135 || deg <= -135) handleJoystickMove('left');
+    else handleJoystickMove('up');
   };
 
   return (
@@ -62,27 +62,26 @@ const GameBoyControls = () => {
         onPointerUp={handlePointerUp}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerUp}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          handlePointerDown(e as unknown as React.PointerEvent);
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          handlePointerUp();
+        }}
+        onTouchMove={(e) => {
+          e.preventDefault();
+          const touch = e.touches[0];
+          handlePointerMove({
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            currentTarget: e.currentTarget,
+          } as React.PointerEvent);
+        }}
       >
-        <div className={`joystick ${joystickPosition}`}>
+        <div className={`joystick ${joystickPosition.toLowerCase()}`}>
           <div className="joystick-ball" />
-        </div>
-        <div className="joystick-hitbox">
-          <button 
-            className="joystick-area top"
-            onClick={() => handleJoystickMove('Up')}
-          />
-          <button 
-            className="joystick-area bottom"
-            onClick={() => handleJoystickMove('Down')}
-          />
-          <button 
-            className="joystick-area left"
-            onClick={() => handleJoystickMove('Left')}
-          />
-          <button 
-            className="joystick-area right"
-            onClick={() => handleJoystickMove('Right')}
-          />
         </div>
       </div>
 
