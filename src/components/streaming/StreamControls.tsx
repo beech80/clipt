@@ -28,7 +28,7 @@ export const StreamControls = ({ userId, onStreamUpdate }: StreamControlsProps) 
         .from("streams")
         .select("id, stream_key")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (existingStream) {
         const { error } = await supabase
@@ -44,6 +44,7 @@ export const StreamControls = ({ userId, onStreamUpdate }: StreamControlsProps) 
         if (error) throw error;
         onStreamUpdate({ isLive: true, streamKey: existingStream.stream_key });
       } else {
+        // Let the database trigger handle stream_key generation
         const { data, error } = await supabase
           .from("streams")
           .insert({
@@ -52,6 +53,7 @@ export const StreamControls = ({ userId, onStreamUpdate }: StreamControlsProps) 
             description,
             is_live: true,
             started_at: new Date().toISOString(),
+            stream_key: await generateStreamKey(),
           })
           .select()
           .single();
@@ -67,6 +69,12 @@ export const StreamControls = ({ userId, onStreamUpdate }: StreamControlsProps) 
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const generateStreamKey = async () => {
+    const { data, error } = await supabase.rpc('generate_stream_key');
+    if (error) throw error;
+    return data;
   };
 
   const handleEndStream = async () => {
