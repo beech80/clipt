@@ -128,6 +128,12 @@ const GameBoyControls = () => {
 
   return (
     <div className="gameboy-container">
+      {/* Navigation Pathways */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute left-[140px] top-1/2 w-[calc(100%-280px)] h-0.5 bg-gradient-to-r from-gaming-400/20 via-gaming-400/40 to-gaming-400/20"></div>
+        <div className="absolute top-[60px] left-1/2 h-[calc(100%-120px)] w-0.5 bg-gradient-to-b from-gaming-400/20 via-gaming-400/40 to-gaming-400/20"></div>
+      </div>
+
       <div 
         className="joystick-base"
         onPointerDown={handlePointerDown}
@@ -144,6 +150,14 @@ const GameBoyControls = () => {
         }}
         onTouchMove={handleTouchMove}
       >
+        {/* Direction Labels */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold">Streaming</div>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold">Profile</div>
+          <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gaming-400 text-sm font-bold">Discover</div>
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gaming-400 text-sm font-bold">Messages</div>
+        </div>
+
         <div className={`joystick ${joystickPosition.toLowerCase()}`}>
           <div className="joystick-ball" />
         </div>
