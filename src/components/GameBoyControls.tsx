@@ -3,20 +3,37 @@ import {
   Heart,
   MessageSquare,
   UserPlus,
-  Trophy
+  Trophy,
+  Menu
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const GameBoyControls = () => {
   const [activeDirection, setActiveDirection] = useState<string>('neutral');
   const navigate = useNavigate();
 
   const handleAction = (action: string) => {
-    if (action.startsWith('navigate:')) {
-      const route = action.split(':')[1];
-      navigate(route);
-      toast.success(`Navigating to ${route}`);
+    switch(action) {
+      case 'like':
+        toast.success('Liked!');
+        break;
+      case 'comment':
+        toast.success('Comment added!');
+        break;
+      case 'follow':
+        toast.success('Following!');
+        break;
+      case 'rank':
+        toast.success('Ranked!');
+        break;
+      default:
+        break;
     }
   };
 
@@ -24,16 +41,16 @@ const GameBoyControls = () => {
     setActiveDirection(direction);
     switch (direction) {
       case 'up':
-        navigate('/streaming');
-        break;
-      case 'right':
-        navigate('/messages');
+        toast.info('Previous clip');
         break;
       case 'down':
-        navigate('/profile');
+        toast.info('Next clip');
         break;
       case 'left':
-        navigate('/discover');
+        toast.info('Rewind 10s');
+        break;
+      case 'right':
+        toast.info('Forward 10s');
         break;
       default:
         break;
@@ -74,18 +91,46 @@ const GameBoyControls = () => {
     );
   };
 
+  const navigationItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Discover', path: '/discover' },
+    { name: 'Messages', path: '/messages' },
+    { name: 'Profile', path: '/profile' },
+    { name: 'Streaming', path: '/streaming' },
+    { name: 'Top Clips', path: '/top-clips' },
+  ];
+
   return (
     <div className="gameboy-container">
-      <div className="absolute left-8 bottom-8 w-32 h-32">
-        {/* Direction Labels */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex flex-col items-center gap-2">
-          <div className="flex items-center gap-1">Streaming</div>
-          <div className="flex items-center gap-1">Profile</div>
-          <div className="flex items-center gap-1">Discover</div>
-          <div className="flex items-center gap-1">Messages</div>
-        </div>
+      {/* Center Navigation Menu */}
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="rounded-full bg-gaming-400/20 p-4 backdrop-blur-sm border border-gaming-400/30 hover:bg-gaming-400/30 transition-all duration-300">
+              <Menu className="w-6 h-6 text-gaming-400" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="top" className="w-full max-w-xl mx-auto rounded-b-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
+            <nav className="grid grid-cols-2 gap-4 p-4">
+              {navigationItems.map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => {
+                    navigate(item.path);
+                    toast.success(`Navigating to ${item.name}`);
+                  }}
+                  className="p-4 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 transition-all duration-300 text-gaming-400 font-medium"
+                >
+                  {item.name}
+                </button>
+              ))}
+            </nav>
+          </SheetContent>
+        </Sheet>
+      </div>
 
-        {/* New Circular D-Pad */}
+      {/* Centered D-Pad */}
+      <div className="fixed left-8 bottom-8 w-32 h-32">
         <div className="relative w-full h-full">
           {/* Center Button */}
           <div className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-gradient-to-br from-[#333] to-[#111] shadow-lg border border-gaming-400/30">
