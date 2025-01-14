@@ -293,12 +293,109 @@ export type Database = {
         }
         Relationships: []
       }
+      stream_settings: {
+        Row: {
+          chat_enabled: boolean | null
+          chat_followers_only: boolean | null
+          chat_slow_mode: number | null
+          created_at: string
+          id: string
+          notification_enabled: boolean | null
+          stream_description_template: string | null
+          stream_title_template: string | null
+          user_id: string
+        }
+        Insert: {
+          chat_enabled?: boolean | null
+          chat_followers_only?: boolean | null
+          chat_slow_mode?: number | null
+          created_at?: string
+          id?: string
+          notification_enabled?: boolean | null
+          stream_description_template?: string | null
+          stream_title_template?: string | null
+          user_id: string
+        }
+        Update: {
+          chat_enabled?: boolean | null
+          chat_followers_only?: boolean | null
+          chat_slow_mode?: number | null
+          created_at?: string
+          id?: string
+          notification_enabled?: boolean | null
+          stream_description_template?: string | null
+          stream_title_template?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      streams: {
+        Row: {
+          created_at: string
+          description: string | null
+          ended_at: string | null
+          id: string
+          is_live: boolean | null
+          started_at: string | null
+          stream_key: string
+          thumbnail_url: string | null
+          title: string
+          user_id: string
+          viewer_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_live?: boolean | null
+          started_at?: string | null
+          stream_key: string
+          thumbnail_url?: string | null
+          title: string
+          user_id: string
+          viewer_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          id?: string
+          is_live?: boolean | null
+          started_at?: string | null
+          stream_key?: string
+          thumbnail_url?: string | null
+          title?: string
+          user_id?: string
+          viewer_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streams_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_stream_key: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
