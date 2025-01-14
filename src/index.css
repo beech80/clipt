@@ -82,8 +82,9 @@
 }
 
 .action-button {
-  @apply w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#1A1F2C] hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border-2 border-[#9b87f5]/50 flex items-center justify-center text-white;
-  box-shadow: 0 0 10px rgba(155, 135, 245, 0.2);
+  @apply w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gaming-400/20 hover:bg-gaming-400/30 active:bg-gaming-400/40 
+    transition-all duration-300 border-2 border-gaming-400/50 flex items-center justify-center text-white backdrop-blur-sm;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
 .clip-button {

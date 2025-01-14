@@ -67,7 +67,7 @@ const GameBoyControls = () => {
         >
           <Heart className="w-5 h-5 sm:w-6 sm:h-6 group-hover:text-gaming-400" />
         </button>
-        <div className="flex gap-8 sm:gap-16 my-2 sm:my-4">
+        <div className="flex gap-6 sm:gap-12 my-2 sm:my-3">
           <button 
             className="action-button transition-transform hover:scale-110 active:scale-95 group"
             onClick={() => handleAction('comment')}
@@ -101,7 +101,7 @@ const GameBoyControls = () => {
   ];
 
   return (
-    <div className="gameboy-container h-[120px] sm:h-[160px] bg-background/95 backdrop-blur-sm">
+    <div className="gameboy-container h-[180px] sm:h-[200px] bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50">
       {/* Bottom Center Navigation Menu */}
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet>
@@ -129,43 +129,44 @@ const GameBoyControls = () => {
         </Sheet>
       </div>
 
-      {/* Centered D-Pad */}
-      <div className="fixed left-3 sm:left-6 bottom-2 sm:bottom-4 w-20 sm:w-28 h-20 sm:h-28">
-        <div className="relative w-full h-full">
+      {/* Centered D-Pad with increased visibility */}
+      <div className="fixed left-4 sm:left-8 bottom-6 sm:bottom-8 w-24 sm:w-32 h-24 sm:h-32">
+        <div className="relative w-full h-full bg-gaming-400/10 rounded-full border-2 border-gaming-400/30 backdrop-blur-sm">
           {/* Center Button */}
-          <div className="absolute inset-0 m-auto w-10 sm:w-14 h-10 sm:h-14 rounded-full bg-gradient-to-br from-[#333] to-[#111] shadow-lg border border-gaming-400/30">
+          <div className="absolute inset-0 m-auto w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-gradient-to-br from-gaming-400/20 to-gaming-400/40 shadow-lg border-2 border-gaming-400/50">
             <div className="absolute inset-0 rounded-full bg-black/20"></div>
           </div>
           
-          {/* Directional Buttons */}
+          {/* Directional Buttons with improved visibility */}
           <button 
             onClick={() => handleDirectionClick('up')}
-            className={`absolute top-0 left-1/2 -translate-x-1/2 w-6 sm:w-8 h-6 sm:h-8 rounded-full 
-              ${activeDirection === 'up' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-8 sm:w-10 h-8 sm:h-10 rounded-full border-2 border-gaming-400/50
+              ${activeDirection === 'up' ? 'bg-gaming-400/50' : 'bg-gaming-400/20'} 
               hover:bg-gaming-400/30 transition-colors`}
           />
           <button 
             onClick={() => handleDirectionClick('right')}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 w-6 sm:w-8 h-6 sm:h-8 rounded-full 
-              ${activeDirection === 'right' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+            className={`absolute right-0 top-1/2 -translate-y-1/2 w-8 sm:w-10 h-8 sm:h-10 rounded-full border-2 border-gaming-400/50
+              ${activeDirection === 'right' ? 'bg-gaming-400/50' : 'bg-gaming-400/20'} 
               hover:bg-gaming-400/30 transition-colors`}
           />
           <button 
             onClick={() => handleDirectionClick('down')}
-            className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-6 sm:w-8 h-6 sm:h-8 rounded-full 
-              ${activeDirection === 'down' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+            className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-8 sm:w-10 h-8 sm:h-10 rounded-full border-2 border-gaming-400/50
+              ${activeDirection === 'down' ? 'bg-gaming-400/50' : 'bg-gaming-400/20'} 
               hover:bg-gaming-400/30 transition-colors`}
           />
           <button 
             onClick={() => handleDirectionClick('left')}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 w-6 sm:w-8 h-6 sm:h-8 rounded-full 
-              ${activeDirection === 'left' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+            className={`absolute left-0 top-1/2 -translate-y-1/2 w-8 sm:w-10 h-8 sm:h-10 rounded-full border-2 border-gaming-400/50
+              ${activeDirection === 'left' ? 'bg-gaming-400/50' : 'bg-gaming-400/20'} 
               hover:bg-gaming-400/30 transition-colors`}
           />
         </div>
       </div>
 
-      <div className="action-buttons-container w-24 sm:w-32 h-24 sm:h-32 right-3 sm:right-6 bottom-2 sm:bottom-4">
+      {/* Action Buttons with improved visibility */}
+      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-24 sm:w-32 h-24 sm:h-32 flex flex-col items-center justify-center">
         {renderActionButtons()}
       </div>
     </div>
