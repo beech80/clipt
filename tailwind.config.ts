@@ -52,6 +52,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        gameboy: {
+          darkest: "#0f380f",
+          dark: "#306230",
+          light: "#8bac0f",
+          lightest: "#9bbc0f",
+        },
         gaming: {
           100: "#e0e7ff",
           200: "#c7d2fe",
@@ -80,17 +86,22 @@ export default {
         },
         glow: {
           "0%, 100%": {
-            boxShadow: "0 0 15px rgba(99, 102, 241, 0.5)",
+            boxShadow: "0 0 15px rgba(139, 172, 15, 0.5)",
           },
           "50%": {
-            boxShadow: "0 0 30px rgba(99, 102, 241, 0.8)",
+            boxShadow: "0 0 30px rgba(139, 172, 15, 0.8)",
           },
+        },
+        scanline: {
+          "0%": { transform: "translateY(0)" },
+          "100%": { transform: "translateY(100%)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         glow: "glow 2s ease-in-out infinite",
+        scanline: "scanline 8s linear infinite",
       },
     },
   },

@@ -4,26 +4,26 @@
  
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 252 87% 67%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 4% 16%;
-    --accent-foreground: 0 0% 98%;
+    --background: 75 27% 8%;
+    --foreground: 72 39% 63%;
+    --card: 75 27% 12%;
+    --card-foreground: 72 39% 63%;
+    --popover: 75 27% 12%;
+    --popover-foreground: 72 39% 63%;
+    --primary: 72 39% 37%;
+    --primary-foreground: 72 39% 63%;
+    --secondary: 75 27% 16%;
+    --secondary-foreground: 72 39% 63%;
+    --muted: 75 27% 16%;
+    --muted-foreground: 72 39% 45%;
+    --accent: 75 27% 16%;
+    --accent-foreground: 72 39% 63%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 252 87% 67%;
-    --radius: 1rem;
+    --destructive-foreground: 72 39% 63%;
+    --border: 75 27% 16%;
+    --input: 75 27% 16%;
+    --ring: 72 39% 37%;
+    --radius: 0.5rem;
   }
 }
 
@@ -32,31 +32,52 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gameboy-darkest text-gameboy-lightest;
     background-image: 
-      radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+      radial-gradient(at 100% 0%, rgba(139, 172, 15, 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(139, 172, 15, 0.15) 0px, transparent 50%);
     background-attachment: fixed;
+  }
+
+  /* Game Boy style pixelated font */
+  @font-face {
+    font-family: 'Press Start 2P';
+    src: url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
   }
 }
 
 .gaming-card {
-  @apply relative overflow-hidden rounded-xl border border-gaming-700/50 bg-black/20 p-4 transition-all hover:border-gaming-500 backdrop-blur-sm;
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.1);
+  @apply relative overflow-hidden rounded-none border-2 border-gameboy-light bg-gameboy-dark/90 p-4 transition-all hover:border-gameboy-lightest backdrop-blur-sm;
+  box-shadow: 4px 4px 0 rgba(139, 172, 15, 0.2);
 }
 
 .gaming-gradient {
-  @apply bg-gradient-to-r from-gaming-500 via-gaming-400 to-gaming-500 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-gameboy-light via-gameboy-lightest to-gameboy-light bg-clip-text text-transparent;
 }
 
 .gaming-button {
-  @apply inline-flex items-center justify-center rounded-lg bg-gaming-600/90 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-gaming-500 hover:shadow-lg hover:shadow-gaming-500/20 focus:outline-none focus:ring-2 focus:ring-gaming-500 focus:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50 backdrop-blur-sm;
+  @apply inline-flex items-center justify-center rounded-none border-2 border-gameboy-light bg-gameboy-dark px-4 py-2 text-sm font-medium text-gameboy-lightest transition-all hover:bg-gameboy-darkest hover:border-gameboy-lightest focus:outline-none focus:ring-2 focus:ring-gameboy-light focus:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50 backdrop-blur-sm;
 }
 
 .glass-card {
-  @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl;
+  @apply bg-gameboy-dark/20 backdrop-blur-lg border-2 border-gameboy-light/20 rounded-none;
 }
 
 .hover-glow {
-  @apply transition-all hover:shadow-lg hover:shadow-gaming-500/20;
+  @apply transition-all hover:shadow-lg hover:shadow-gameboy-light/20;
+}
+
+/* Retro screen effect */
+.retro-screen {
+  @apply relative overflow-hidden;
+}
+
+.retro-screen::before {
+  content: "";
+  @apply absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-gameboy-light/5 to-transparent opacity-30 animate-scanline;
+}
+
+.retro-screen::after {
+  content: "";
+  @apply absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgba(139,172,15,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(139,172,15,0.1)_1px,transparent_1px)] bg-[size:4px_4px];
 }
