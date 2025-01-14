@@ -1,10 +1,10 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import ImageUpload from "./post/ImageUpload";
 
 const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
   const [content, setContent] = useState("");
@@ -12,17 +12,6 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5000000) {
-        toast.error("Image size should be less than 5MB");
-        return;
-      }
-      setSelectedImage(file);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +29,6 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
     try {
       let image_url = null;
 
-      // Upload image if selected
       if (selectedImage) {
         const fileExt = selectedImage.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
@@ -54,7 +42,6 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
           throw uploadError;
         }
 
-        // Get public URL
         const { data: { publicUrl } } = supabase.storage
           .from('posts')
           .getPublicUrl(filePath);
@@ -62,7 +49,6 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
         image_url = publicUrl;
       }
 
-      // Create post
       const { error } = await supabase
         .from('posts')
         .insert({
@@ -94,46 +80,17 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
           className="min-h-[100px] resize-none"
         />
         
-        {selectedImage && (
-          <div className="relative">
-            <img 
-              src={URL.createObjectURL(selectedImage)} 
-              alt="Selected" 
-              className="w-full rounded-lg max-h-[300px] object-cover"
-            />
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="absolute top-2 right-2"
-              onClick={() => setSelectedImage(null)}
-            >
-              Remove
-            </Button>
-          </div>
-        )}
+        <ImageUpload
+          selectedImage={selectedImage}
+          onImageSelect={setSelectedImage}
+          fileInputRef={fileInputRef}
+        />
 
-        <div className="flex justify-between items-center">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => fileInputRef.current?.click()}
-            className="text-muted-foreground"
-          >
-            <ImagePlus className="w-4 h-4 mr-2" />
-            Add Image
-          </Button>
+        <div className="flex justify-end">
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Posting..." : "Post"}
           </Button>
         </div>
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept="image/*"
-          onChange={handleImageSelect}
-        />
       </form>
     </div>
   );
