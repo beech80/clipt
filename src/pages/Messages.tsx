@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Message, ChatUser } from "@/types/message";
@@ -64,7 +64,11 @@ export default function Messages() {
         setChats(Array.from(uniqueUsers.values()));
       } catch (error) {
         console.error('Error fetching chats:', error);
-        toast.error("Failed to fetch chats");
+        toast({
+          title: "Error",
+          description: "Failed to fetch chats. Please try again.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -105,7 +109,10 @@ export default function Messages() {
             });
           });
           
-          toast("New message received");
+          toast({
+            title: "New Message",
+            description: "You have received a new message",
+          });
         }
       )
       .subscribe();
@@ -158,7 +165,11 @@ export default function Messages() {
         }
       } catch (error) {
         console.error('Error fetching messages:', error);
-        toast.error("Failed to fetch messages");
+        toast({
+          title: "Error",
+          description: "Failed to fetch messages. Please try again.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -178,11 +189,18 @@ export default function Messages() {
         read: false,
       };
 
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('messages')
-        .insert([newMessage]);
+        .insert([newMessage])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Add the new message to the messages list
+      if (data) {
+        setMessages((prev) => [...prev, data]);
+      }
 
       // Update last message in chat list
       setChats((prevChats) => {
@@ -195,7 +213,11 @@ export default function Messages() {
       });
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error("Failed to send message");
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
