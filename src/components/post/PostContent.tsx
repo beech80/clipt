@@ -3,9 +3,9 @@ interface PostContentProps {
   imageUrl: string | null;
 }
 
-const PostContent = ({ content, imageUrl }: PostContentProps) => {
+const PostContent = ({ imageUrl }: PostContentProps) => {
   return (
-    <div className="relative h-full">
+    <div className="relative w-full h-[calc(100vh-200px)] bg-black">
       {imageUrl && (
         <img
           src={imageUrl}
@@ -13,9 +13,7 @@ const PostContent = ({ content, imageUrl }: PostContentProps) => {
           className="w-full h-full object-cover"
         />
       )}
-      <p className="absolute bottom-20 left-4 right-4 text-white text-lg z-10 line-clamp-2">
-        {content}
-      </p>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50" />
     </div>
   );
 };

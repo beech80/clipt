@@ -29,9 +29,9 @@ const PostList = () => {
   });
 
   return (
-    <div className="space-y-1">
+    <div className="h-full">
       {posts?.map((post) => (
-        <div key={post.id} className="snap-start snap-always h-[calc(100vh-120px)]">
+        <div key={post.id} className="snap-start snap-always h-[calc(100vh-200px)]">
           <PostItem 
             post={{
               ...post,
