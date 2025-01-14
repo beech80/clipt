@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { Settings } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { StreamControls } from "@/components/streaming/StreamControls";
