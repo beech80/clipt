@@ -86,16 +86,15 @@ export default {
             boxShadow: "0 0 30px rgba(155, 135, 245, 0.8)",
           },
         },
-        scanline: {
-          "0%": { transform: "translateY(0)" },
-          "100%": { transform: "translateY(100%)" },
+        gradient: {
+          "0%": { backgroundPosition: "200% 200%" },
+          "100%": { backgroundPosition: "0% 0%" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         glow: "glow 2s ease-in-out infinite",
-        scanline: "scanline 8s linear infinite",
       },
     },
   },
