@@ -53,6 +53,27 @@ const GameBoyControls = () => {
     else handleJoystickMove('up');
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const target = e.currentTarget;
+    const rect = target.getBoundingClientRect();
+    
+    // Create a synthetic pointer event
+    const pointerEvent = new PointerEvent('pointermove', {
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      bubbles: true
+    });
+    
+    // Set currentTarget manually since it's readonly
+    Object.defineProperty(pointerEvent, 'currentTarget', {
+      get: () => target
+    });
+    
+    handlePointerMove(pointerEvent as unknown as React.PointerEvent);
+  };
+
   return (
     <div className="gameboy-container">
       {/* Joystick */}
@@ -70,15 +91,7 @@ const GameBoyControls = () => {
           e.preventDefault();
           handlePointerUp();
         }}
-        onTouchMove={(e) => {
-          e.preventDefault();
-          const touch = e.touches[0];
-          handlePointerMove({
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-            currentTarget: e.currentTarget,
-          } as React.PointerEvent);
-        }}
+        onTouchMove={handleTouchMove}
       >
         <div className={`joystick ${joystickPosition.toLowerCase()}`}>
           <div className="joystick-ball" />
