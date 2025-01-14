@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { AuthGuard } from "./components/AuthGuard";
 import { MainNav } from "./components/MainNav";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
@@ -36,13 +37,56 @@ const App = () => {
                 <MainNav />
                 <main className="container mx-auto px-4 py-4">
                   <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/discover" element={<Discover />} />
-                    <Route path="/messages" element={<Messages />} />
-                    <Route path="/profile" element={<Profile />} />
                     <Route path="/login" element={<Login />} />
-                    <Route path="/streaming" element={<Streaming />} />
-                    <Route path="/top-clips" element={<TopClips />} />
+                    <Route
+                      path="/"
+                      element={
+                        <AuthGuard>
+                          <Home />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/discover"
+                      element={
+                        <AuthGuard>
+                          <Discover />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/messages"
+                      element={
+                        <AuthGuard>
+                          <Messages />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <AuthGuard>
+                          <Profile />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/streaming"
+                      element={
+                        <AuthGuard>
+                          <Streaming />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/top-clips"
+                      element={
+                        <AuthGuard>
+                          <TopClips />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
               </BrowserRouter>
