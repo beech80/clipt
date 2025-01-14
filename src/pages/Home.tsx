@@ -14,15 +14,19 @@ const Home = () => {
 
   return (
     <div className="max-w-3xl mx-auto h-[calc(100vh-200px)] relative">
-      <div className="absolute top-0 left-0 right-0 z-10 bg-black/50 backdrop-blur-sm p-4">
+      <h1 className="text-3xl font-bold gaming-gradient mb-4 text-center">
+        CLIPS
+      </h1>
+      
+      <div className="absolute top-0 left-0 right-0 z-10 bg-black/50 backdrop-blur-sm p-3">
         <div className="flex justify-between items-center">
           <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
             <DialogTrigger asChild>
               <Button 
                 className="gaming-button flex gap-2 items-center"
-                size="lg"
+                size="sm"
               >
-                <Video className="w-5 h-5" />
+                <Video className="w-4 h-4" />
                 Post
               </Button>
             </DialogTrigger>
@@ -31,13 +35,9 @@ const Home = () => {
             </DialogContent>
           </Dialog>
 
-          <span className="text-2xl font-bold gaming-gradient">
-            CLIPS
-          </span>
-
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span 
-              className={`text-sm font-bold uppercase tracking-wider transition-all ${
+              className={`text-xs font-bold uppercase tracking-wider transition-all ${
                 !showClips 
                   ? 'text-gaming-200 drop-shadow-[0_0_8px_rgba(155,135,245,0.8)]' 
                   : 'text-white/60'
@@ -49,7 +49,7 @@ const Home = () => {
               checked={showClips}
               onCheckedChange={setShowClips}
               className="
-                relative w-16 h-8
+                relative w-14 h-7
                 data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-gaming-600 data-[state=checked]:to-gaming-400
                 data-[state=unchecked]:bg-gradient-to-r data-[state=unchecked]:from-gaming-700 data-[state=unchecked]:to-gaming-900
                 rounded-lg
@@ -70,8 +70,8 @@ const Home = () => {
                 before:from-gaming-400/30
                 before:to-gaming-600/30
                 before:animate-pulse
-                [&>span]:w-7
-                [&>span]:h-7
+                [&>span]:w-6
+                [&>span]:h-6
                 [&>span]:rounded-md
                 [&>span]:bg-gradient-to-br
                 [&>span]:from-gaming-200
@@ -81,14 +81,14 @@ const Home = () => {
                 [&>span]:border-gaming-400/50
                 [&>span]:transition-all
                 [&>span]:duration-300
-                [&>span]:data-[state=checked]:translate-x-[32px]
+                [&>span]:data-[state=checked]:translate-x-[28px]
                 [&>span]:data-[state=unchecked]:translate-x-0.5
                 hover:scale-105
                 hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]
               "
             />
             <span 
-              className={`text-sm font-bold uppercase tracking-wider transition-all ${
+              className={`text-xs font-bold uppercase tracking-wider transition-all ${
                 showClips 
                   ? 'text-gaming-200 drop-shadow-[0_0_8px_rgba(155,135,245,0.8)]' 
                   : 'text-white/60'
@@ -99,7 +99,7 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className="snap-y snap-mandatory overflow-y-auto h-full">
+      <div className="snap-y snap-mandatory overflow-y-auto h-full mt-16">
         <PostList />
       </div>
     </div>
