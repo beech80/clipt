@@ -43,14 +43,19 @@ const PostActions = ({ postId, voteCount, onCommentClick, showComments }: PostAc
   const checkBookmarkStatus = async () => {
     if (!user) return;
 
-    const { data } = await supabase
-      .from('bookmarks')
-      .select()
-      .eq('post_id', postId)
-      .eq('user_id', user.id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select('*')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    setIsSaved(!!data);
+      if (error) throw error;
+      setIsSaved(!!data);
+    } catch (error) {
+      console.error('Error checking bookmark status:', error);
+    }
   };
 
   const handleVote = async () => {
@@ -128,26 +133,30 @@ const PostActions = ({ postId, voteCount, onCommentClick, showComments }: PostAc
 
     try {
       if (isSaved) {
-        await supabase
+        const { error } = await supabase
           .from('bookmarks')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', user.id);
-        
+
+        if (error) throw error;
         setIsSaved(false);
         toast.success("Post removed from bookmarks!");
       } else {
-        await supabase
+        const { error } = await supabase
           .from('bookmarks')
           .insert({
             post_id: postId,
             user_id: user.id
           });
-        
+
+        if (error) throw error;
         setIsSaved(true);
         toast.success("Post bookmarked!");
       }
+      queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
     } catch (error) {
+      console.error('Error updating bookmark:', error);
       toast.error("Error updating bookmark status");
     }
   };
