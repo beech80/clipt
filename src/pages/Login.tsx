@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { AuthError, AuthApiError, AuthResponse } from '@supabase/supabase-js';
+import { AuthError, AuthApiError } from '@supabase/supabase-js';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
@@ -37,7 +37,7 @@ const Login = () => {
 
     // Handle initial session error
     const checkSession = async () => {
-      const { error }: AuthResponse = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
       if (error) {
         handleAuthError(error);
       }
