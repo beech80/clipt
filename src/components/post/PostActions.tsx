@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Share2, Bookmark, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
@@ -17,6 +17,25 @@ const PostActions = ({ postId, voteCount }: PostActionsProps) => {
   const [isSaved, setIsSaved] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (user) {
+      checkLikeStatus();
+    }
+  }, [user, postId]);
+
+  const checkLikeStatus = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('likes')
+      .select()
+      .eq('post_id', postId)
+      .eq('user_id', user.id)
+      .single();
+
+    setIsLiked(!!data);
+  };
 
   const handleVote = async () => {
     if (!user) {
@@ -40,16 +59,44 @@ const PostActions = ({ postId, voteCount }: PostActionsProps) => {
         }
       } else {
         toast.success("Vote recorded!");
-        queryClient.invalidateQueries({ queryKey: ['top-posts'] });
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
       }
     } catch (error) {
       toast.error("Error recording vote");
     }
   };
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    toast.success(isLiked ? "Post unliked!" : "Post liked!");
+  const handleLike = async () => {
+    if (!user) {
+      toast.error("Please login to like posts!");
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+        
+        setIsLiked(false);
+        toast.success("Post unliked!");
+      } else {
+        await supabase
+          .from('likes')
+          .insert({
+            post_id: postId,
+            user_id: user.id
+          });
+        
+        setIsLiked(true);
+        toast.success("Post liked!");
+      }
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    } catch (error) {
+      toast.error("Error updating like status");
+    }
   };
 
   const handleComment = () => {

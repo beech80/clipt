@@ -14,6 +14,12 @@ const PostList = () => {
           profiles:user_id (
             username,
             avatar_url
+          ),
+          likes:likes (
+            count
+          ),
+          clip_votes:clip_votes (
+            count
           )
         `)
         .order('created_at', { ascending: false });
@@ -26,7 +32,14 @@ const PostList = () => {
   return (
     <ScrollArea className="h-[calc(100vh-200px)] w-full">
       {posts?.map((post) => (
-        <PostItem key={post.id} post={post} />
+        <PostItem 
+          key={post.id} 
+          post={{
+            ...post,
+            likes_count: post.likes?.[0]?.count || 0,
+            clip_votes: post.clip_votes || []
+          }} 
+        />
       ))}
     </ScrollArea>
   );

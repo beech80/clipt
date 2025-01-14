@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import ImageUpload from "./post/ImageUpload";
+import { useQueryClient } from "@tanstack/react-query";
 
 const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
   const [content, setContent] = useState("");
@@ -12,6 +13,7 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +64,7 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
       toast.success("Post created successfully!");
       setContent("");
       setSelectedImage(null);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       if (onPostCreated) onPostCreated();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Error creating post");

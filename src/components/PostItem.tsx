@@ -13,6 +13,7 @@ interface PostItemProps {
       username: string;
       avatar_url: string;
     };
+    likes_count: number;
     clip_votes?: { count: number }[];
   };
 }
