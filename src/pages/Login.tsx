@@ -69,8 +69,8 @@ const Login = () => {
             <Gamepad2 className="h-6 w-6 text-gaming-400" />
           </div>
         </div>
-        <h1 className="text-4xl font-bold">GameShare</h1>
-        <p className="text-muted-foreground">Connect with fellow gamers</p>
+        <h1 className="text-4xl font-bold">Clip</h1>
+        <p className="text-muted-foreground">Share your gaming moments</p>
       </div>
 
       {error && (

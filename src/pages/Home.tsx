@@ -14,10 +14,10 @@ const Home = () => {
       <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-8 px-4">
         <div className="max-w-2xl text-center space-y-4">
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-gaming-600 to-gaming-800">
-            Welcome to GameShare
+            Welcome to Clip
           </h1>
           <p className="text-xl text-muted-foreground">
-            Share your gaming moments, connect with fellow gamers, and build your gaming community.
+            Share your gaming moments, connect with fellow gamers.
           </p>
           <Button 
             size="lg" 
