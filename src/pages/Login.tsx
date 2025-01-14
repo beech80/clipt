@@ -5,9 +5,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Gamepad2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { AuthError, AuthApiError } from '@supabase/supabase-js';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthError, AuthApiError } from '@supabase/supabase-js';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -31,22 +30,12 @@ const Login = () => {
       }
       if (event === 'PASSWORD_RECOVERY') {
         setError('Please check your email to reset your password.');
-        toast.info('Please check your email to reset your password.');
       }
     });
 
-    // Handle initial session error
-    const checkSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        handleAuthError(error);
-      }
-    };
-    
-    checkSession();
     return () => {
       subscription.unsubscribe();
-      setError(null); // Clear error on cleanup
+      setError(null);
     };
   }, [user, navigate]);
 
@@ -56,11 +45,7 @@ const Login = () => {
     if (error instanceof AuthApiError) {
       switch (error.status) {
         case 400:
-          if (error.message.includes('Invalid login credentials')) {
-            errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-          } else if (error.message.includes('Email not confirmed')) {
-            errorMessage = 'Please verify your email address before signing in.';
-          }
+          errorMessage = 'Invalid email or password. Please check your credentials.';
           break;
         case 422:
           errorMessage = 'Invalid email format. Please enter a valid email address.';
@@ -74,28 +59,27 @@ const Login = () => {
     }
     
     setError(errorMessage);
-    toast.error(errorMessage);
   };
 
   return (
     <div className="mx-auto max-w-md space-y-6 pt-12">
       <div className="text-center space-y-2">
         <div className="flex justify-center mb-4">
-          <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center animate-glow">
+          <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
             <Gamepad2 className="h-6 w-6 text-gaming-400" />
           </div>
         </div>
-        <h1 className="gaming-gradient text-4xl font-bold">GameShare</h1>
-        <p className="text-white">Connect with fellow gamers</p>
+        <h1 className="text-4xl font-bold">GameShare</h1>
+        <p className="text-muted-foreground">Connect with fellow gamers</p>
       </div>
 
       {error && (
-        <Alert variant="destructive" className="mb-4">
+        <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <div className="gaming-card">
+      <div className="bg-card rounded-lg p-4 shadow-sm">
         <Auth
           supabaseClient={supabase}
           appearance={{
