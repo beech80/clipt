@@ -9,7 +9,7 @@ export const generateStreamKey = async () => {
 export const startStream = async (userId: string, title: string, description: string) => {
   const { data: existingStream } = await supabase
     .from("streams")
-    .select("id, stream_key")
+    .select("id, stream_key, stream_url")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -25,8 +25,15 @@ export const startStream = async (userId: string, title: string, description: st
       .eq("id", existingStream.id);
 
     if (error) throw error;
-    return { isLive: true, streamKey: existingStream.stream_key };
+    return { 
+      isLive: true, 
+      streamKey: existingStream.stream_key, 
+      streamUrl: existingStream.stream_url 
+    };
   }
+
+  const streamKey = await generateStreamKey();
+  const streamUrl = `https://stream.lovable.dev/live/${streamKey}/index.m3u8`;
 
   const { data, error } = await supabase
     .from("streams")
@@ -36,13 +43,18 @@ export const startStream = async (userId: string, title: string, description: st
       description,
       is_live: true,
       started_at: new Date().toISOString(),
-      stream_key: await generateStreamKey(),
+      stream_key: streamKey,
+      stream_url: streamUrl
     })
     .select()
     .single();
 
   if (error) throw error;
-  return { isLive: true, streamKey: data.stream_key };
+  return { 
+    isLive: true, 
+    streamKey: data.stream_key, 
+    streamUrl: data.stream_url 
+  };
 };
 
 export const endStream = async (userId: string) => {
@@ -55,5 +67,9 @@ export const endStream = async (userId: string) => {
     .eq("user_id", userId);
 
   if (error) throw error;
-  return { isLive: false, streamKey: null };
+  return { 
+    isLive: false, 
+    streamKey: null, 
+    streamUrl: null 
+  };
 };
