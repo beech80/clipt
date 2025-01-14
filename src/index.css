@@ -41,42 +41,39 @@
 }
 
 .gaming-card {
-  @apply relative overflow-hidden rounded-none border-2 border-gameboy-light bg-gameboy-dark/90 p-4 transition-all hover:border-gameboy-lightest backdrop-blur-sm;
-  box-shadow: 4px 4px 0 rgba(139, 172, 15, 0.2);
+  @apply relative overflow-hidden rounded-none border-2 border-[#9b87f5] bg-[#1A1F2C] p-4 transition-all hover:border-[#8B5CF6];
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
 .gaming-gradient {
-  @apply bg-gradient-to-r from-gameboy-light via-gameboy-lightest to-gameboy-light bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] bg-clip-text text-transparent;
 }
 
 .gaming-button {
-  @apply inline-flex items-center justify-center rounded-none border-2 border-gameboy-light bg-gameboy-dark px-4 py-2 text-sm font-medium text-gameboy-lightest transition-all hover:bg-gameboy-darkest hover:border-gameboy-lightest focus:outline-none focus:ring-2 focus:ring-gameboy-light focus:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50 backdrop-blur-sm;
+  @apply inline-flex items-center justify-center rounded-none border-2 border-[#9b87f5] bg-[#1A1F2C] px-4 py-2 text-sm font-medium text-white transition-all hover:border-[#8B5CF6] focus:outline-none focus:ring-2 focus:ring-[#9b87f5] focus:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
 .glass-card {
-  @apply bg-gameboy-dark/20 backdrop-blur-lg border-2 border-gameboy-light/20 rounded-none;
+  @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
 .hover-glow {
-  @apply transition-all hover:shadow-lg hover:shadow-gameboy-light/20;
+  @apply transition-all hover:shadow-lg hover:shadow-[#9b87f5]/20;
 }
 
 .retro-screen {
   @apply relative overflow-hidden;
 }
 
-.retro-screen::before {
-  content: "";
-  @apply absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-gameboy-light/5 to-transparent opacity-30 animate-scanline;
-}
-
 .retro-screen::after {
   content: "";
-  @apply absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgba(139,172,15,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(139,172,15,0.1)_1px,transparent_1px)] bg-[size:4px_4px];
+  @apply absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgba(155,135,245,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(155,135,245,0.1)_1px,transparent_1px)] bg-[size:4px_4px];
 }
 
 .gameboy-container {
-  @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/90 border-t-2 border-[#9b87f5] p-4;
+  @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C] border-t-2 border-[#9b87f5] p-4;
   height: 200px;
   box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.3);
 }
@@ -99,13 +96,8 @@
 .joystick.right { transform: rotateZ(30deg); }
 
 .joystick-ball {
-  @apply absolute top-0 left-1/2 w-12 h-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8B5CF6] border-2 border-[#9b87f5] transition-all duration-300;
+  @apply absolute top-0 left-1/2 w-12 h-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8B5CF6] border-2 border-[#9b87f5];
   box-shadow: 0 0 20px rgba(155, 135, 245, 0.6);
-}
-
-.joystick:hover .joystick-ball {
-  @apply shadow-[#9b87f5]/50;
-  filter: brightness(1.2);
 }
 
 .joystick-hitbox { @apply absolute inset-0; }
@@ -116,7 +108,7 @@
 .joystick-area.right { @apply right-0 top-1/2 -translate-y-1/2; }
 
 .clip-button {
-  @apply text-7xl font-bold tracking-wider;
+  @apply text-8xl font-bold tracking-wider;
   background: linear-gradient(180deg, #FFFFFF 0%, #E5E7EB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

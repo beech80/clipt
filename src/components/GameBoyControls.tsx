@@ -151,7 +151,7 @@ const GameBoyControls = () => {
 
       <button 
         onClick={() => handleAction('navigate:/')}
-        className="clip-button absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 px-8 py-4"
+        className="clip-button absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
       >
         CLIP
       </button>
