@@ -73,26 +73,25 @@
 }
 
 .gameboy-container {
-  @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C] border-t-2 border-[#9b87f5] p-2 sm:p-4;
-  box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.3);
+  @apply fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm border-t border-[#9b87f5]/30 p-4;
+  height: 140px;
 }
 
 .action-buttons-container {
-  @apply fixed flex flex-col items-center justify-center;
+  @apply fixed flex items-center justify-center gap-6 bottom-6 right-1/2 transform translate-x-1/2;
 }
 
 .action-button {
-  @apply w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#1A1F2C] hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border-2 border-[#9b87f5] flex items-center justify-center text-white;
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+  @apply w-12 h-12 rounded-full bg-black/50 hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border border-[#9b87f5]/50 flex items-center justify-center text-white backdrop-blur-sm;
+  box-shadow: 0 0 10px rgba(155, 135, 245, 0.2);
 }
 
 .clip-button {
-  @apply text-8xl font-bold tracking-wider;
+  @apply text-3xl font-bold tracking-wider;
   background: linear-gradient(180deg, #FFFFFF 0%, #E5E7EB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(155, 135, 245, 0.8);
-  position: relative;
+  text-shadow: 0 0 20px rgba(155, 135, 245, 0.6);
 }
 
 .clip-button::before {
