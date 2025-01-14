@@ -105,29 +105,29 @@ const GameBoyControls = () => {
           <>
             <button 
               className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('Play/Pause')}
+              onClick={() => handleAction('navigate:/discover')}
             >
-              <Play className="w-6 h-6" />
+              <Compass className="w-6 h-6" />
             </button>
             <div className="flex gap-16 my-4">
               <button 
                 className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('Rewind')}
+                onClick={() => handleAction('navigate:/messages')}
               >
-                <Rewind className="w-6 h-6" />
+                <MessageSquare className="w-6 h-6" />
               </button>
               <button 
                 className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('Forward')}
+                onClick={() => handleAction('navigate:/profile')}
               >
-                <Forward className="w-6 h-6" />
+                <User className="w-6 h-6" />
               </button>
             </div>
             <button 
               className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('Save')}
+              onClick={() => handleAction('navigate:/streaming')}
             >
-              <BookMarked className="w-6 h-6" />
+              <Video className="w-6 h-6" />
             </button>
           </>
         );
@@ -137,29 +137,29 @@ const GameBoyControls = () => {
           <>
             <button 
               className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('Search')}
+              onClick={() => handleAction('navigate:/streaming')}
             >
-              <Search className="w-6 h-6" />
+              <Video className="w-6 h-6" />
             </button>
             <div className="flex gap-16 my-4">
               <button 
                 className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('Explore')}
+                onClick={() => handleAction('navigate:/messages')}
               >
-                <Compass className="w-6 h-6" />
+                <MessageSquare className="w-6 h-6" />
               </button>
               <button 
                 className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('Community')}
+                onClick={() => handleAction('navigate:/profile')}
               >
-                <Users className="w-6 h-6" />
+                <User className="w-6 h-6" />
               </button>
             </div>
             <button 
               className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('Notifications')}
+              onClick={() => handleAction('navigate:/discover')}
             >
-              <Bell className="w-6 h-6" />
+              <Compass className="w-6 h-6" />
             </button>
           </>
         );
@@ -169,29 +169,29 @@ const GameBoyControls = () => {
           <>
             <button 
               className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('Like')}
+              onClick={() => handleAction('navigate:/streaming')}
             >
-              <ThumbsUp className="w-6 h-6" />
+              <Video className="w-6 h-6" />
             </button>
             <div className="flex gap-16 my-4">
               <button 
                 className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('Share')}
+                onClick={() => handleAction('navigate:/messages')}
               >
-                <Share2 className="w-6 h-6" />
+                <MessageSquare className="w-6 h-6" />
               </button>
               <button 
                 className="action-button transition-transform hover:scale-110 active:scale-95"
-                onClick={() => handleAction('Rank')}
+                onClick={() => handleAction('navigate:/profile')}
               >
-                <Trophy className="w-6 h-6" />
+                <User className="w-6 h-6" />
               </button>
             </div>
             <button 
               className="action-button transition-transform hover:scale-110 active:scale-95"
-              onClick={() => handleAction('Comment')}
+              onClick={() => handleAction('navigate:/discover')}
             >
-              <MessageSquare className="w-6 h-6" />
+              <Compass className="w-6 h-6" />
             </button>
           </>
         );
@@ -227,8 +227,7 @@ const GameBoyControls = () => {
                    bg-gaming-500 text-white px-6 py-2 rounded-full font-bold
                    hover:bg-gaming-600 transition-colors shadow-lg"
       >
-        <Home className="w-6 h-6" />
-        <span className="ml-2">CLIP</span>
+        CLIP
       </button>
 
       <div className="action-buttons-container">
