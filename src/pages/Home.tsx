@@ -13,8 +13,8 @@ const Home = () => {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
 
   return (
-    <div className="max-w-3xl mx-auto h-[calc(100vh-200px)] relative pt-12">
-      <div className="absolute top-0 left-0 right-0 z-20 text-center py-2">
+    <div className="max-w-3xl mx-auto h-[calc(100vh-200px)] relative pt-10">
+      <div className="absolute top-0 left-0 right-0 z-20 text-center py-1">
         <h1 className="text-3xl font-bold gaming-gradient">
           CLIPS
         </h1>

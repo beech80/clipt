@@ -72,12 +72,12 @@ const GameBoyControls = () => {
       </div>
 
       {/* D-Pad with Xbox-style joystick */}
-      <div className="fixed left-4 sm:left-8 bottom-8 sm:bottom-10 w-28 sm:w-32 h-28 sm:h-32">
+      <div className="fixed left-4 sm:left-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32">
         <Joystick onDirectionChange={handleVideoControl} />
       </div>
 
       {/* Action Buttons */}
-      <div className="fixed right-4 sm:right-8 bottom-8 sm:bottom-10 w-28 sm:w-32 h-28 sm:h-32 flex flex-col items-center justify-center">
+      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32 flex flex-col items-center justify-center">
         <ActionButtons onAction={handleAction} />
       </div>
     </div>
