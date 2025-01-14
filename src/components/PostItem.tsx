@@ -2,7 +2,7 @@ import { useState } from "react";
 import PostContent from "./post/PostContent";
 import CommentList from "./post/CommentList";
 import { useAuth } from "@/contexts/AuthContext";
-import { MessageSquare, UserPlus, ThumbsUp, Share2 } from "lucide-react";
+import { MessageSquare, UserPlus, Heart, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -81,12 +81,12 @@ const PostItem = ({ post }: PostItemProps) => {
           <span className="text-xs text-white mt-1">Follow</span>
         </button>
         <button className="p-2 hover:scale-110 transition-transform">
-          <ThumbsUp className="w-8 h-8 text-white" />
-          <span className="text-xs text-white mt-1">Vote ({voteCount})</span>
+          <Heart className="w-8 h-8 text-white" />
+          <span className="text-xs text-white mt-1">Like</span>
         </button>
         <button className="p-2 hover:scale-110 transition-transform">
-          <Share2 className="w-8 h-8 text-white" />
-          <span className="text-xs text-white mt-1">Share</span>
+          <Trophy className="w-8 h-8 text-white" />
+          <span className="text-xs text-white mt-1">Vote ({voteCount})</span>
         </button>
       </div>
 

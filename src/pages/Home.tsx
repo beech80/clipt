@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const Home = () => {
@@ -22,14 +22,18 @@ const Home = () => {
                 className="gaming-button flex gap-2 items-center"
                 size="lg"
               >
-                <Upload className="w-5 h-5" />
-                Post Clip
+                <Video className="w-5 h-5" />
+                Post
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
               <PostForm onPostCreated={() => setIsPostFormOpen(false)} />
             </DialogContent>
           </Dialog>
+
+          <span className="text-2xl font-bold gaming-gradient">
+            CLIPS
+          </span>
 
           <div className="flex items-center gap-4">
             <span 
