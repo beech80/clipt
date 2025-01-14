@@ -23,7 +23,33 @@ const Home = () => {
           <Switch 
             checked={showClips}
             onCheckedChange={setShowClips}
-            className="data-[state=checked]:bg-gaming-500 data-[state=unchecked]:bg-gaming-700 animate-glow relative after:content-[''] after:absolute after:inset-0 after:bg-[linear-gradient(to_right,transparent,rgba(155,135,245,0.2),transparent)] after:animate-scanline"
+            className="
+              relative w-14 h-8 
+              data-[state=checked]:bg-gaming-500 
+              data-[state=unchecked]:bg-gaming-700 
+              animate-glow 
+              border-2 border-gaming-400/50
+              after:content-[''] 
+              after:absolute 
+              after:inset-0 
+              after:bg-[linear-gradient(to_right,transparent,rgba(155,135,245,0.2),transparent)] 
+              after:animate-scanline
+              before:content-['']
+              before:absolute
+              before:inset-[-2px]
+              before:rounded-full
+              before:bg-gradient-to-r
+              before:from-gaming-400/20
+              before:to-gaming-600/20
+              before:animate-pulse
+              [&>span]:w-6
+              [&>span]:h-6
+              [&>span]:bg-gaming-200
+              [&>span]:shadow-[0_0_10px_rgba(155,135,245,0.5)]
+              [&>span]:data-[state=checked]:bg-gaming-100
+              [&>span]:transition-all
+              [&>span]:duration-300
+            "
           />
           <span 
             className={`text-sm font-bold uppercase tracking-wider transition-all ${
