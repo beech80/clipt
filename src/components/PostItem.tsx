@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import PostHeader from "./post/PostHeader";
 import PostContent from "./post/PostContent";
 import PostActions from "./post/PostActions";
+import CommentList from "./post/CommentList";
 
 interface PostItemProps {
   post: {
@@ -19,6 +21,7 @@ interface PostItemProps {
 }
 
 const PostItem = ({ post }: PostItemProps) => {
+  const [showComments, setShowComments] = useState(false);
   const voteCount = post.clip_votes?.[0]?.count || 0;
 
   return (
@@ -36,7 +39,10 @@ const PostItem = ({ post }: PostItemProps) => {
         <PostActions
           postId={post.id}
           voteCount={voteCount}
+          onCommentClick={() => setShowComments(!showComments)}
+          showComments={showComments}
         />
+        {showComments && <CommentList postId={post.id} />}
       </div>
     </Card>
   );

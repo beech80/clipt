@@ -10,9 +10,11 @@ import { useQueryClient } from "@tanstack/react-query";
 interface PostActionsProps {
   postId: string;
   voteCount: number;
+  onCommentClick: () => void;
+  showComments: boolean;
 }
 
-const PostActions = ({ postId, voteCount }: PostActionsProps) => {
+const PostActions = ({ postId, voteCount, onCommentClick, showComments }: PostActionsProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const { user } = useAuth();
@@ -21,6 +23,7 @@ const PostActions = ({ postId, voteCount }: PostActionsProps) => {
   useEffect(() => {
     if (user) {
       checkLikeStatus();
+      checkBookmarkStatus();
     }
   }, [user, postId]);
 
@@ -35,6 +38,19 @@ const PostActions = ({ postId, voteCount }: PostActionsProps) => {
       .single();
 
     setIsLiked(!!data);
+  };
+
+  const checkBookmarkStatus = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('bookmarks')
+      .select()
+      .eq('post_id', postId)
+      .eq('user_id', user.id)
+      .single();
+
+    setIsSaved(!!data);
   };
 
   const handleVote = async () => {
@@ -99,18 +115,41 @@ const PostActions = ({ postId, voteCount }: PostActionsProps) => {
     }
   };
 
-  const handleComment = () => {
-    toast.info("Comments feature coming soon!");
-  };
-
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied to clipboard!");
   };
 
-  const handleSave = () => {
-    setIsSaved(!isSaved);
-    toast.success(isSaved ? "Post unsaved!" : "Post saved!");
+  const handleSave = async () => {
+    if (!user) {
+      toast.error("Please login to bookmark posts!");
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        await supabase
+          .from('bookmarks')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+        
+        setIsSaved(false);
+        toast.success("Post removed from bookmarks!");
+      } else {
+        await supabase
+          .from('bookmarks')
+          .insert({
+            post_id: postId,
+            user_id: user.id
+          });
+        
+        setIsSaved(true);
+        toast.success("Post bookmarked!");
+      }
+    } catch (error) {
+      toast.error("Error updating bookmark status");
+    }
   };
 
   return (
@@ -126,8 +165,8 @@ const PostActions = ({ postId, voteCount }: PostActionsProps) => {
       <Button
         variant="ghost"
         size="sm"
-        onClick={handleComment}
-        className="flex items-center gap-2"
+        onClick={onCommentClick}
+        className={cn("flex items-center gap-2", showComments && "text-primary")}
       >
         <MessageCircle className="w-4 h-4" />
       </Button>
@@ -143,7 +182,7 @@ const PostActions = ({ postId, voteCount }: PostActionsProps) => {
         variant="ghost"
         size="sm"
         onClick={handleSave}
-        className={cn("flex items-center gap-2", isSaved && "text-gaming-600")}
+        className={cn("flex items-center gap-2", isSaved && "text-primary")}
       >
         <Bookmark className={cn("w-4 h-4", isSaved && "fill-current")} />
       </Button>
