@@ -129,49 +129,37 @@ const GameBoyControls = () => {
         </Sheet>
       </div>
 
-      {/* D-Pad with concave effect */}
+      {/* D-Pad with Xbox-style joystick */}
       <div className="fixed left-4 sm:left-8 bottom-4 sm:bottom-6 w-28 sm:w-32 h-28 sm:h-32">
         <div className="relative w-full h-full bg-gaming-400/5 rounded-full border-2 border-gaming-400/30 backdrop-blur-sm shadow-lg">
-          {/* Base joystick with concave effect */}
-          <div className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900"></div>
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black opacity-60"></div>
-            <div className="absolute inset-0 bg-radial-gradient"></div>
-          </div>
+          {/* Solid black joystick */}
+          <div className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg"></div>
           
-          {/* Directional Buttons with improved visibility and depth */}
+          {/* Directional Buttons */}
           <button 
             onClick={() => handleDirectionClick('up')}
-            className={`absolute top-0 left-1/2 -translate-x-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full border-2 border-gaming-400/50
-              ${activeDirection === 'up' ? 'bg-gaming-400/50' : 'bg-gradient-to-br from-gray-800 to-gray-900'} 
-              hover:bg-gaming-400/30 transition-all shadow-inner`}
-          >
-            <div className="absolute inset-0 rounded-full bg-gradient-to-b from-black/40 to-transparent"></div>
-          </button>
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full 
+              ${activeDirection === 'up' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+              hover:bg-gaming-400/30 transition-all`}
+          />
           <button 
             onClick={() => handleDirectionClick('right')}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full border-2 border-gaming-400/50
-              ${activeDirection === 'right' ? 'bg-gaming-400/50' : 'bg-gradient-to-br from-gray-800 to-gray-900'} 
-              hover:bg-gaming-400/30 transition-all shadow-inner`}
-          >
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-black/40 to-transparent"></div>
-          </button>
+            className={`absolute right-0 top-1/2 -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full 
+              ${activeDirection === 'right' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+              hover:bg-gaming-400/30 transition-all`}
+          />
           <button 
             onClick={() => handleDirectionClick('down')}
-            className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full border-2 border-gaming-400/50
-              ${activeDirection === 'down' ? 'bg-gaming-400/50' : 'bg-gradient-to-br from-gray-800 to-gray-900'} 
-              hover:bg-gaming-400/30 transition-all shadow-inner`}
-          >
-            <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/40 to-transparent"></div>
-          </button>
+            className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full 
+              ${activeDirection === 'down' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+              hover:bg-gaming-400/30 transition-all`}
+          />
           <button 
             onClick={() => handleDirectionClick('left')}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full border-2 border-gaming-400/50
-              ${activeDirection === 'left' ? 'bg-gaming-400/50' : 'bg-gradient-to-br from-gray-800 to-gray-900'} 
-              hover:bg-gaming-400/30 transition-all shadow-inner`}
-          >
-            <div className="absolute inset-0 rounded-full bg-gradient-to-l from-black/40 to-transparent"></div>
-          </button>
+            className={`absolute left-0 top-1/2 -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full 
+              ${activeDirection === 'left' ? 'bg-gaming-400/50' : 'bg-transparent'} 
+              hover:bg-gaming-400/30 transition-all`}
+          />
         </div>
       </div>
 
