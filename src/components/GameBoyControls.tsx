@@ -160,21 +160,23 @@ const GameBoyControls = () => {
       >
         {/* Direction Labels */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex items-center gap-1">
-            <ArrowUp className="w-4 h-4" />
-            Streaming
-          </div>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex items-center gap-1">
-            <ArrowDown className="w-4 h-4" />
-            Profile
-          </div>
-          <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gaming-400 text-sm font-bold flex items-center gap-1">
-            <ArrowLeft className="w-4 h-4" />
-            Discover
-          </div>
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gaming-400 text-sm font-bold flex items-center gap-1">
-            Messages
-            <ArrowRight className="w-4 h-4" />
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex flex-col items-center gap-2">
+            <div className="flex items-center gap-1">
+              <ArrowUp className="w-4 h-4" />
+              Streaming
+            </div>
+            <div className="flex items-center gap-1">
+              <ArrowDown className="w-4 h-4" />
+              Profile
+            </div>
+            <div className="flex items-center gap-1">
+              <ArrowLeft className="w-4 h-4" />
+              Discover
+            </div>
+            <div className="flex items-center gap-1">
+              Messages
+              <ArrowRight className="w-4 h-4" />
+            </div>
           </div>
         </div>
 
