@@ -11,6 +11,7 @@ interface PostItemProps {
     id: string;
     content: string;
     image_url: string | null;
+    video_url: string | null;
     created_at: string;
     user_id: string;
     profiles: {
@@ -62,6 +63,7 @@ const PostItem = ({ post }: PostItemProps) => {
       <PostContent
         content={post.content}
         imageUrl={post.image_url}
+        videoUrl={post.video_url}
       />
       
       {/* Vertical action buttons */}
