@@ -19,7 +19,7 @@ const TopClips = () => {
             count
           )
         `)
-        .order('created_at', { ascending: false })
+        .order('clip_votes(count)', { ascending: false, nullsFirst: false })
         .limit(5);
 
       if (error) throw error;
@@ -29,11 +29,15 @@ const TopClips = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Top Clips</h1>
+      <h1 className="text-2xl font-bold mb-6 gaming-gradient">Top Clips</h1>
       <ScrollArea className="h-[calc(100vh-200px)] w-full">
-        {topPosts?.map((post) => (
-          <PostItem key={post.id} post={post} />
-        ))}
+        {topPosts?.length === 0 ? (
+          <p className="text-center text-muted-foreground">No clips yet. Be the first to share!</p>
+        ) : (
+          topPosts?.map((post) => (
+            <PostItem key={post.id} post={post} />
+          ))
+        )}
       </ScrollArea>
     </div>
   );
