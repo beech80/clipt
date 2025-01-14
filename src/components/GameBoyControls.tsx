@@ -1,44 +1,46 @@
-import React from 'react';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ThumbsUp, Share2, MessageSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { ThumbsUp, Share2, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
 const GameBoyControls = () => {
+  const [joystickPosition, setJoystickPosition] = useState<string>('neutral');
+
   const handleAction = (action: string) => {
     toast.success(`${action} action triggered!`);
   };
 
+  const handleJoystickMove = (direction: string) => {
+    setJoystickPosition(direction);
+    handleAction(direction);
+    // Reset joystick position after animation
+    setTimeout(() => setJoystickPosition('neutral'), 200);
+  };
+
   return (
     <div className="gameboy-container">
-      {/* D-Pad */}
-      <div className="gameboy-dpad">
-        <button 
-          className="dpad-button"
-          style={{ top: 0, left: '50%', transform: 'translateX(-50%)' }}
-          onClick={() => handleAction('Up')}
-        >
-          <ArrowUp className="w-6 h-6" />
-        </button>
-        <button 
-          className="dpad-button"
-          style={{ bottom: 0, left: '50%', transform: 'translateX(-50%)' }}
-          onClick={() => handleAction('Down')}
-        >
-          <ArrowDown className="w-6 h-6" />
-        </button>
-        <button 
-          className="dpad-button"
-          style={{ left: 0, top: '50%', transform: 'translateY(-50%)' }}
-          onClick={() => handleAction('Left')}
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <button 
-          className="dpad-button"
-          style={{ right: 0, top: '50%', transform: 'translateY(-50%)' }}
-          onClick={() => handleAction('Right')}
-        >
-          <ArrowRight className="w-6 h-6" />
-        </button>
+      {/* Joystick */}
+      <div className="joystick-base">
+        <div className={`joystick ${joystickPosition}`}>
+          <div className="joystick-ball" />
+        </div>
+        <div className="joystick-hitbox">
+          <button 
+            className="joystick-area top"
+            onClick={() => handleJoystickMove('Up')}
+          />
+          <button 
+            className="joystick-area bottom"
+            onClick={() => handleJoystickMove('Down')}
+          />
+          <button 
+            className="joystick-area left"
+            onClick={() => handleJoystickMove('Left')}
+          />
+          <button 
+            className="joystick-area right"
+            onClick={() => handleJoystickMove('Right')}
+          />
+        </div>
       </div>
 
       {/* Action Buttons */}
