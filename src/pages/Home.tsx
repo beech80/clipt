@@ -12,64 +12,63 @@ const Home = () => {
       <div className="absolute top-0 left-0 right-0 z-10 bg-black/50 backdrop-blur-sm p-4">
         <div className="flex justify-center items-center gap-4">
           <span 
-            className={`text-sm font-bold uppercase tracking-wider transition-all ${
-              !showClips 
-                ? 'text-gaming-200 drop-shadow-[0_0_8px_rgba(155,135,245,0.8)]' 
-                : 'text-white/60'
+            className={`clip-button ${
+              !showClips ? 'opacity-100' : 'opacity-40'
             }`}
           >
-            Squad
+            SQUAD
           </span>
           <Switch 
             checked={showClips}
             onCheckedChange={setShowClips}
             className="
-              relative w-16 h-8
-              data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-gaming-600 data-[state=checked]:to-gaming-400
-              data-[state=unchecked]:bg-gradient-to-r data-[state=unchecked]:from-gaming-700 data-[state=unchecked]:to-gaming-900
-              rounded-lg
-              border-[3px] border-gaming-400
-              shadow-[inset_0_0_10px_rgba(155,135,245,0.3)]
+              relative w-24 h-24
+              data-[state=checked]:bg-gradient-to-br data-[state=checked]:from-gaming-400 data-[state=checked]:to-gaming-600
+              data-[state=unchecked]:bg-gradient-to-br data-[state=unchecked]:from-gaming-700 data-[state=unchecked]:to-gaming-900
+              rounded-full
+              border-[4px] border-gaming-400
+              shadow-[inset_0_0_20px_rgba(155,135,245,0.4)]
               transition-all duration-300
               after:content-['']
               after:absolute
               after:inset-0
-              after:bg-[linear-gradient(45deg,transparent_25%,rgba(155,135,245,0.2)_50%,transparent_75%)]
-              after:bg-[length:200%_200%]
-              after:animate-[gradient_3s_linear_infinite]
+              after:rounded-full
+              after:bg-[radial-gradient(circle_at_50%_50%,transparent_30%,rgba(155,135,245,0.2)_70%)]
+              after:animate-[pulse_2s_ease-in-out_infinite]
               before:content-['']
               before:absolute
-              before:inset-[-2px]
-              before:rounded-lg
+              before:inset-[-4px]
+              before:rounded-full
               before:bg-gradient-to-r
-              before:from-gaming-400/30
-              before:to-gaming-600/30
-              before:animate-pulse
-              [&>span]:w-7
-              [&>span]:h-7
-              [&>span]:rounded-md
+              before:from-gaming-400/40
+              before:to-gaming-600/40
+              before:animate-[spin_8s_linear_infinite]
+              [&>span]:w-16
+              [&>span]:h-16
+              [&>span]:rounded-full
               [&>span]:bg-gradient-to-br
               [&>span]:from-gaming-200
-              [&>span]:to-gaming-300
-              [&>span]:shadow-[0_0_15px_rgba(155,135,245,0.6)]
-              [&>span]:border-2
-              [&>span]:border-gaming-400/50
+              [&>span]:to-gaming-400
+              [&>span]:shadow-[0_0_30px_rgba(155,135,245,0.8)]
+              [&>span]:border-4
+              [&>span]:border-gaming-400/70
               [&>span]:transition-all
-              [&>span]:duration-300
-              [&>span]:data-[state=checked]:translate-x-[32px]
-              [&>span]:data-[state=unchecked]:translate-x-0.5
+              [&>span]:duration-500
+              [&>span]:data-[state=checked]:translate-x-6
+              [&>span]:data-[state=unchecked]:translate-x-0
+              [&>span]:data-[state=checked]:scale-90
+              [&>span]:data-[state=unchecked]:scale-100
               hover:scale-105
-              hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]
+              hover:shadow-[0_0_40px_rgba(155,135,245,0.6)]
+              hover:[&>span]:shadow-[0_0_40px_rgba(155,135,245,1)]
             "
           />
           <span 
-            className={`text-sm font-bold uppercase tracking-wider transition-all ${
-              showClips 
-                ? 'text-gaming-200 drop-shadow-[0_0_8px_rgba(155,135,245,0.8)]' 
-                : 'text-white/60'
+            className={`clip-button ${
+              showClips ? 'opacity-100' : 'opacity-40'
             }`}
           >
-            Clips
+            CLIPS
           </span>
         </div>
       </div>
