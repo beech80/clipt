@@ -55,19 +55,20 @@ const GameBoyControls = () => {
       default:
         break;
     }
-    setTimeout(() => setActiveDirection('neutral'), 300);
+    // Increased timeout for smoother animation
+    setTimeout(() => setActiveDirection('neutral'), 400);
   };
 
   const getJoystickTransform = () => {
     switch (activeDirection) {
       case 'up':
-        return 'translateY(-8px)';
+        return 'translateY(-12px)';
       case 'down':
-        return 'translateY(8px)';
+        return 'translateY(12px)';
       case 'left':
-        return 'translateX(-8px)';
+        return 'translateX(-12px)';
       case 'right':
-        return 'translateX(8px)';
+        return 'translateX(12px)';
       default:
         return 'translate(0, 0)';
     }
@@ -147,36 +148,36 @@ const GameBoyControls = () => {
       {/* D-Pad with Xbox-style joystick */}
       <div className="fixed left-4 sm:left-8 bottom-8 sm:bottom-10 w-28 sm:w-32 h-28 sm:h-32">
         <div className="relative w-full h-full bg-gaming-400/10 rounded-full border-2 border-gaming-400/30 backdrop-blur-sm shadow-xl">
-          {/* Solid black joystick with animation */}
+          {/* Solid black joystick with smoother animation */}
           <div 
-            className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg transition-transform duration-200"
+            className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg transition-transform duration-300 ease-out"
             style={{ transform: getJoystickTransform() }}
           ></div>
           
-          {/* Directional Buttons */}
+          {/* Larger touch areas for directional buttons */}
           <button 
             onClick={() => handleDirectionClick('up')}
-            className={`absolute top-0 left-1/2 -translate-x-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full 
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full 
               ${activeDirection === 'up' ? 'bg-gaming-400/50' : 'bg-transparent'} 
-              hover:bg-gaming-400/30 transition-all`}
+              hover:bg-gaming-400/30 transition-all duration-300 -translate-y-1`}
           />
           <button 
             onClick={() => handleDirectionClick('right')}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full 
+            className={`absolute right-0 top-1/2 -translate-y-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full 
               ${activeDirection === 'right' ? 'bg-gaming-400/50' : 'bg-transparent'} 
-              hover:bg-gaming-400/30 transition-all`}
+              hover:bg-gaming-400/30 transition-all duration-300 translate-x-1`}
           />
           <button 
             onClick={() => handleDirectionClick('down')}
-            className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full 
+            className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full 
               ${activeDirection === 'down' ? 'bg-gaming-400/50' : 'bg-transparent'} 
-              hover:bg-gaming-400/30 transition-all`}
+              hover:bg-gaming-400/30 transition-all duration-300 translate-y-1`}
           />
           <button 
             onClick={() => handleDirectionClick('left')}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 w-10 sm:w-12 h-10 sm:h-12 rounded-full 
+            className={`absolute left-0 top-1/2 -translate-y-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full 
               ${activeDirection === 'left' ? 'bg-gaming-400/50' : 'bg-transparent'} 
-              hover:bg-gaming-400/30 transition-all`}
+              hover:bg-gaming-400/30 transition-all duration-300 -translate-x-1`}
           />
         </div>
       </div>
