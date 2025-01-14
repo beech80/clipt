@@ -73,8 +73,8 @@
 }
 
 .gameboy-container {
-  @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C] border-t-2 border-[#9b87f5] p-2 sm:p-4;
-  box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.3);
+  @apply fixed bottom-0 left-0 right-0 border-t-2 border-[#9b87f5]/30;
+  box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.2);
 }
 
 .action-buttons-container {
@@ -82,8 +82,8 @@
 }
 
 .action-button {
-  @apply w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#1A1F2C] hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border-2 border-[#9b87f5] flex items-center justify-center text-white;
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+  @apply w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#1A1F2C] hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border-2 border-[#9b87f5]/50 flex items-center justify-center text-white;
+  box-shadow: 0 0 10px rgba(155, 135, 245, 0.2);
 }
 
 .clip-button {

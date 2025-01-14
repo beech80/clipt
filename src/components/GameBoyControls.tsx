@@ -101,17 +101,17 @@ const GameBoyControls = () => {
   ];
 
   return (
-    <div className="gameboy-container h-[150px] sm:h-[200px]">
+    <div className="gameboy-container h-[120px] sm:h-[160px] bg-background/95 backdrop-blur-sm">
       {/* Bottom Center Navigation Menu */}
-      <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet>
           <SheetTrigger asChild>
-            <button className="rounded-full bg-gaming-400/20 p-3 sm:p-4 backdrop-blur-sm border border-gaming-400/30 hover:bg-gaming-400/30 transition-all duration-300">
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gaming-400" />
+            <button className="rounded-full bg-gaming-400/20 p-2 sm:p-3 backdrop-blur-sm border border-gaming-400/30 hover:bg-gaming-400/30 transition-all duration-300">
+              <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-gaming-400" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
-            <nav className="grid grid-cols-2 gap-3 p-4">
+            <nav className="grid grid-cols-2 gap-2 p-3">
               {navigationItems.map((item) => (
                 <button
                   key={item.path}
@@ -119,7 +119,7 @@ const GameBoyControls = () => {
                     navigate(item.path);
                     toast.success(`Navigating to ${item.name}`);
                   }}
-                  className="p-3 sm:p-4 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 transition-all duration-300 text-gaming-400 font-medium text-sm sm:text-base"
+                  className="p-2 sm:p-3 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 transition-all duration-300 text-gaming-400 font-medium text-sm"
                 >
                   {item.name}
                 </button>
@@ -130,42 +130,42 @@ const GameBoyControls = () => {
       </div>
 
       {/* Centered D-Pad */}
-      <div className="fixed left-4 sm:left-8 bottom-4 sm:bottom-8 w-24 sm:w-32 h-24 sm:h-32">
+      <div className="fixed left-3 sm:left-6 bottom-2 sm:bottom-4 w-20 sm:w-28 h-20 sm:h-28">
         <div className="relative w-full h-full">
           {/* Center Button */}
-          <div className="absolute inset-0 m-auto w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-gradient-to-br from-[#333] to-[#111] shadow-lg border border-gaming-400/30">
+          <div className="absolute inset-0 m-auto w-10 sm:w-14 h-10 sm:h-14 rounded-full bg-gradient-to-br from-[#333] to-[#111] shadow-lg border border-gaming-400/30">
             <div className="absolute inset-0 rounded-full bg-black/20"></div>
           </div>
           
           {/* Directional Buttons */}
           <button 
             onClick={() => handleDirectionClick('up')}
-            className={`absolute top-0 left-1/2 -translate-x-1/2 w-8 sm:w-10 h-8 sm:h-10 rounded-full 
+            className={`absolute top-0 left-1/2 -translate-x-1/2 w-6 sm:w-8 h-6 sm:h-8 rounded-full 
               ${activeDirection === 'up' ? 'bg-gaming-400/50' : 'bg-transparent'} 
               hover:bg-gaming-400/30 transition-colors`}
           />
           <button 
             onClick={() => handleDirectionClick('right')}
-            className={`absolute right-0 top-1/2 -translate-y-1/2 w-8 sm:w-10 h-8 sm:h-10 rounded-full 
+            className={`absolute right-0 top-1/2 -translate-y-1/2 w-6 sm:w-8 h-6 sm:h-8 rounded-full 
               ${activeDirection === 'right' ? 'bg-gaming-400/50' : 'bg-transparent'} 
               hover:bg-gaming-400/30 transition-colors`}
           />
           <button 
             onClick={() => handleDirectionClick('down')}
-            className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-8 sm:w-10 h-8 sm:h-10 rounded-full 
+            className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-6 sm:w-8 h-6 sm:h-8 rounded-full 
               ${activeDirection === 'down' ? 'bg-gaming-400/50' : 'bg-transparent'} 
               hover:bg-gaming-400/30 transition-colors`}
           />
           <button 
             onClick={() => handleDirectionClick('left')}
-            className={`absolute left-0 top-1/2 -translate-y-1/2 w-8 sm:w-10 h-8 sm:h-10 rounded-full 
+            className={`absolute left-0 top-1/2 -translate-y-1/2 w-6 sm:w-8 h-6 sm:h-8 rounded-full 
               ${activeDirection === 'left' ? 'bg-gaming-400/50' : 'bg-transparent'} 
               hover:bg-gaming-400/30 transition-colors`}
           />
         </div>
       </div>
 
-      <div className="action-buttons-container w-28 sm:w-40 h-28 sm:h-40 right-4 sm:right-8 bottom-4 sm:bottom-8">
+      <div className="action-buttons-container w-24 sm:w-32 h-24 sm:h-32 right-3 sm:right-6 bottom-2 sm:bottom-4">
         {renderActionButtons()}
       </div>
     </div>
