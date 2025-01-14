@@ -73,17 +73,16 @@
 }
 
 .gameboy-container {
-  @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C] border-t-2 border-[#9b87f5] p-4;
-  height: 200px;
+  @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C] border-t-2 border-[#9b87f5] p-2 sm:p-4;
   box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.3);
 }
 
 .action-buttons-container {
-  @apply absolute right-8 bottom-8 flex flex-col items-center justify-center w-40 h-40;
+  @apply fixed flex flex-col items-center justify-center;
 }
 
 .action-button {
-  @apply w-12 h-12 rounded-full bg-[#1A1F2C] hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border-2 border-[#9b87f5] flex items-center justify-center text-white;
+  @apply w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-[#1A1F2C] hover:bg-[#9b87f5]/20 active:bg-[#9b87f5]/40 transition-all duration-300 border-2 border-[#9b87f5] flex items-center justify-center text-white;
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
