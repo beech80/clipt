@@ -106,7 +106,7 @@ const GameBoyControls = () => {
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
         <Sheet>
           <SheetTrigger asChild>
-            <button className="rounded-full bg-gaming-400/20 p-4 backdrop-blur-sm border border-gaming-400/30 hover:bg-gaming-400/30 transition-all duration-300">
+            <button className="gaming-button-glow rounded-full bg-gaming-400/20 p-4 backdrop-blur-sm border border-gaming-400/30 hover:bg-gaming-400/30 transition-all duration-300">
               <Menu className="w-6 h-6 text-gaming-400" />
             </button>
           </SheetTrigger>
@@ -130,7 +130,7 @@ const GameBoyControls = () => {
       </div>
 
       {/* Centered D-Pad */}
-      <div className="fixed left-8 bottom-8 w-32 h-32">
+      <div className="fixed left-1/2 -translate-x-[12rem] bottom-8 w-32 h-32">
         <div className="relative w-full h-full">
           {/* Center Button */}
           <div className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-gradient-to-br from-[#333] to-[#111] shadow-lg border border-gaming-400/30">
@@ -165,7 +165,8 @@ const GameBoyControls = () => {
         </div>
       </div>
 
-      <div className="action-buttons-container">
+      {/* Action Buttons Container */}
+      <div className="fixed right-1/2 translate-x-[12rem] bottom-8 w-40 h-40">
         {renderActionButtons()}
       </div>
     </div>

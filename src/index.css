@@ -54,6 +54,15 @@
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
+.gaming-button-glow {
+  @apply transition-all duration-300;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+}
+
+.gaming-button-glow:hover {
+  box-shadow: 0 0 25px rgba(155, 135, 245, 0.5);
+}
+
 .glass-card {
   @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none;
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
@@ -76,10 +85,6 @@
   @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C] border-t-2 border-[#9b87f5] p-4;
   height: 200px;
   box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.3);
-}
-
-.action-buttons-container {
-  @apply absolute right-8 bottom-8 flex flex-col items-center justify-center w-40 h-40;
 }
 
 .action-button {
