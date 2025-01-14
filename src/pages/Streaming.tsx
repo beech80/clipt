@@ -51,6 +51,13 @@ const Streaming = () => {
     }
   };
 
+  const handleStreamUpdate = (data: { isLive: boolean; streamKey: string | null; streamUrl: string | null }) => {
+    setStreamData(prev => ({
+      ...prev,
+      ...data
+    }));
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 space-y-8">
       <div className="gaming-card">
@@ -60,7 +67,7 @@ const Streaming = () => {
         
         <StreamControls 
           userId={user?.id || ''} 
-          onStreamUpdate={setStreamData} 
+          onStreamUpdate={handleStreamUpdate}
         />
         
         <StreamInfoCards 

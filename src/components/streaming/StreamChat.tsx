@@ -24,10 +24,10 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         .from('stream_chat')
         .select(`
           id,
-          message as content,
+          message,
           created_at,
-          user_id as sender_id,
-          profiles:profiles!stream_chat_user_id_fkey (
+          user_id,
+          profiles (
             username,
             avatar_url
           )
@@ -40,16 +40,18 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         return;
       }
 
-      setMessages(data.map(msg => ({
+      const formattedMessages: Message[] = data.map(msg => ({
         id: msg.id,
-        content: msg.content,
-        sender_id: msg.sender_id,
+        content: msg.message,
+        sender_id: msg.user_id,
         created_at: msg.created_at,
         sender: {
-          username: msg.profiles.username,
-          avatar_url: msg.profiles.avatar_url
+          username: msg.profiles?.username || 'Unknown',
+          avatar_url: msg.profiles?.avatar_url
         }
-      })));
+      }));
+
+      setMessages(formattedMessages);
     };
 
     loadMessages();
@@ -80,7 +82,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
             sender_id: payload.new.user_id,
             created_at: payload.new.created_at,
             sender: {
-              username: profile.username,
+              username: profile.username || 'Unknown',
               avatar_url: profile.avatar_url
             }
           };
