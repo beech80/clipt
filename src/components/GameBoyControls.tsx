@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { 
-  Video, MessageSquare, User, Compass
+  Video,
+  MessageSquare,
+  User,
+  Compass,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Joystick
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -97,30 +105,30 @@ const GameBoyControls = () => {
     return (
       <>
         <button 
-          className="action-button transition-transform hover:scale-110 active:scale-95"
+          className="action-button transition-transform hover:scale-110 active:scale-95 group"
           onClick={() => handleAction('navigate:/streaming')}
         >
-          <Video className="w-6 h-6" />
+          <Video className="w-6 h-6 group-hover:text-gaming-400" />
         </button>
         <div className="flex gap-16 my-4">
           <button 
-            className="action-button transition-transform hover:scale-110 active:scale-95"
+            className="action-button transition-transform hover:scale-110 active:scale-95 group"
             onClick={() => handleAction('navigate:/messages')}
           >
-            <MessageSquare className="w-6 h-6" />
+            <MessageSquare className="w-6 h-6 group-hover:text-gaming-400" />
           </button>
           <button 
-            className="action-button transition-transform hover:scale-110 active:scale-95"
+            className="action-button transition-transform hover:scale-110 active:scale-95 group"
             onClick={() => handleAction('navigate:/profile')}
           >
-            <User className="w-6 h-6" />
+            <User className="w-6 h-6 group-hover:text-gaming-400" />
           </button>
         </div>
         <button 
-          className="action-button transition-transform hover:scale-110 active:scale-95"
+          className="action-button transition-transform hover:scale-110 active:scale-95 group"
           onClick={() => handleAction('navigate:/discover')}
         >
-          <Compass className="w-6 h-6" />
+          <Compass className="w-6 h-6 group-hover:text-gaming-400" />
         </button>
       </>
     );
@@ -152,14 +160,28 @@ const GameBoyControls = () => {
       >
         {/* Direction Labels */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold">Streaming</div>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold">Profile</div>
-          <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gaming-400 text-sm font-bold">Discover</div>
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gaming-400 text-sm font-bold">Messages</div>
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex items-center gap-1">
+            <ArrowUp className="w-4 h-4" />
+            Streaming
+          </div>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex items-center gap-1">
+            <ArrowDown className="w-4 h-4" />
+            Profile
+          </div>
+          <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gaming-400 text-sm font-bold flex items-center gap-1">
+            <ArrowLeft className="w-4 h-4" />
+            Discover
+          </div>
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gaming-400 text-sm font-bold flex items-center gap-1">
+            Messages
+            <ArrowRight className="w-4 h-4" />
+          </div>
         </div>
 
         <div className={`joystick ${joystickPosition.toLowerCase()}`}>
-          <div className="joystick-ball" />
+          <div className="joystick-ball">
+            <Joystick className="w-6 h-6 text-gaming-400" />
+          </div>
         </div>
       </div>
 

@@ -84,7 +84,7 @@
 }
 
 .joystick {
-  @apply absolute w-8 h-24 bg-[#9b87f5] rounded-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2;
+  @apply absolute w-8 h-24 bg-[#9b87f5]/50 rounded-full left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 backdrop-blur-sm;
   transform-origin: bottom center;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.5);
@@ -96,7 +96,7 @@
 .joystick.right { transform: rotateZ(30deg); }
 
 .joystick-ball {
-  @apply absolute top-0 left-1/2 w-12 h-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8B5CF6] border-2 border-[#9b87f5];
+  @apply absolute top-0 left-1/2 w-12 h-12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#1A1F2C] border-2 border-[#9b87f5] flex items-center justify-center;
   box-shadow: 0 0 20px rgba(155, 135, 245, 0.6);
 }
 
