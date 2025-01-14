@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Video } from "lucide-react";
+import { Video, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { StreamForm } from "./StreamForm";
@@ -7,10 +7,11 @@ import { startStream, endStream } from "@/utils/streamUtils";
 
 interface StreamControlsProps {
   userId: string;
+  isLive?: boolean;
   onStreamUpdate: (data: { isLive: boolean; streamKey: string | null; streamUrl: string | null }) => void;
 }
 
-export const StreamControls = ({ userId, onStreamUpdate }: StreamControlsProps) => {
+export const StreamControls = ({ userId, isLive = false, onStreamUpdate }: StreamControlsProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -56,14 +57,25 @@ export const StreamControls = ({ userId, onStreamUpdate }: StreamControlsProps) 
         onTitleChange={setTitle}
         onDescriptionChange={setDescription}
       />
-      <Button 
-        onClick={handleEndStream}
-        className="w-full bg-red-500 hover:bg-red-600"
-        disabled={isLoading}
-      >
-        <Video className="h-4 w-4 mr-2" />
-        End Stream
-      </Button>
+      {!isLive ? (
+        <Button 
+          onClick={handleStartStream}
+          className="w-full bg-gaming-500 hover:bg-gaming-600"
+          disabled={isLoading}
+        >
+          <Video className="h-4 w-4 mr-2" />
+          Start Stream
+        </Button>
+      ) : (
+        <Button 
+          onClick={handleEndStream}
+          className="w-full bg-red-500 hover:bg-red-600"
+          disabled={isLoading}
+        >
+          <Video className="h-4 w-4 mr-2" />
+          End Stream
+        </Button>
+      )}
     </div>
   );
 };

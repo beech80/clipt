@@ -16,18 +16,26 @@ const Streaming = () => {
     isLive: boolean;
     streamKey: string | null;
     streamUrl: string | null;
+    viewerCount: number;
+    startedAt: string | null;
   }>({
     id: null,
     isLive: false,
     streamKey: null,
     streamUrl: null,
+    viewerCount: 0,
+    startedAt: null,
   });
 
   useEffect(() => {
     if (user) {
       loadStreamData();
+      if (streamData.isLive) {
+        const interval = setInterval(updateViewerCount, 30000);
+        return () => clearInterval(interval);
+      }
     }
-  }, [user]);
+  }, [user, streamData.isLive]);
 
   const loadStreamData = async () => {
     try {
@@ -35,7 +43,7 @@ const Streaming = () => {
         .from("streams")
         .select("*")
         .eq("user_id", user?.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -45,6 +53,8 @@ const Streaming = () => {
           isLive: stream.is_live || false,
           streamKey: stream.stream_key,
           streamUrl: stream.stream_url,
+          viewerCount: stream.viewer_count || 0,
+          startedAt: stream.started_at,
         });
       }
     } catch (error) {
@@ -52,10 +62,35 @@ const Streaming = () => {
     }
   };
 
+  const updateViewerCount = async () => {
+    if (!streamData.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("streams")
+        .select("viewer_count")
+        .eq("id", streamData.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setStreamData(prev => ({
+          ...prev,
+          viewerCount: data.viewer_count || 0
+        }));
+      }
+    } catch (error) {
+      console.error("Error updating viewer count:", error);
+    }
+  };
+
   const handleStreamUpdate = (data: { isLive: boolean; streamKey: string | null; streamUrl: string | null }) => {
     setStreamData(prev => ({
       ...prev,
-      ...data
+      ...data,
+      startedAt: data.isLive ? new Date().toISOString() : null,
+      viewerCount: data.isLive ? 0 : prev.viewerCount,
     }));
   };
 
@@ -69,13 +104,17 @@ const Streaming = () => {
         </h1>
         
         <StreamControls 
-          userId={user.id} 
+          userId={user.id}
+          isLive={streamData.isLive}
           onStreamUpdate={handleStreamUpdate}
         />
         
         <StreamInfoCards 
-          isLive={streamData.isLive} 
-          streamKey={streamData.streamKey} 
+          isLive={streamData.isLive}
+          streamKey={streamData.streamKey}
+          streamUrl={streamData.streamUrl}
+          viewerCount={streamData.viewerCount}
+          startedAt={streamData.startedAt}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -93,8 +132,8 @@ const Streaming = () => {
           <div className="lg:col-span-1">
             {streamData.id && (
               <StreamChat 
-                streamId={streamData.id} 
-                isLive={streamData.isLive} 
+                streamId={streamData.id}
+                isLive={streamData.isLive}
               />
             )}
           </div>
