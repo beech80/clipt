@@ -1,2 +1,2 @@
-export * from "./SidebarContext";
-export * from "./SidebarComponents";
+export * from "./SidebarProvider"
+export * from "./SidebarComponents"
