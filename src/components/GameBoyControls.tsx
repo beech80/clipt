@@ -80,12 +80,6 @@ const GameBoyControls = () => {
 
   return (
     <div className="gameboy-container">
-      {/* Navigation Pathways */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute left-[140px] top-1/2 w-[calc(100%-280px)] h-0.5 bg-gradient-to-r from-gaming-400/20 via-gaming-400/40 to-gaming-400/20"></div>
-        <div className="absolute top-[60px] left-1/2 h-[calc(100%-120px)] w-0.5 bg-gradient-to-b from-gaming-400/20 via-gaming-400/40 to-gaming-400/20"></div>
-      </div>
-
       <div className="absolute left-8 bottom-8 w-32 h-32">
         {/* Direction Labels */}
         <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex flex-col items-center gap-2">
