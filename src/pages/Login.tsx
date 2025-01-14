@@ -55,6 +55,8 @@ const Login = () => {
         case 400:
           if (error.message.includes('Invalid login credentials')) {
             errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+          } else if (error.message.includes('Email not confirmed')) {
+            errorMessage = 'Please verify your email address before signing in.';
           }
           break;
         case 422:
