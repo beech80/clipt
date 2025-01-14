@@ -1,4 +1,4 @@
-import { Home, Compass, MessageSquare, User, LogIn, Video } from "lucide-react";
+import { Home, Compass, MessageSquare, User, LogIn, Video, Trophy } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export function MainNav() {
@@ -43,6 +43,17 @@ export function MainNav() {
         >
           <Video className="h-6 w-6" />
           <span className="text-xs font-medium">Stream</span>
+        </Link>
+        <Link
+          to="/top-clips"
+          className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
+            isActive("/top-clips")
+              ? "text-gaming-400 scale-110"
+              : "text-muted-foreground"
+          }`}
+        >
+          <Trophy className="h-6 w-6" />
+          <span className="text-xs font-medium">Top Clips</span>
         </Link>
         <Link
           to="/messages"
