@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import { 
-  Video,
+  Heart,
   MessageSquare,
-  User,
-  Compass,
-  ArrowUp,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight
+  UserPlus,
+  Trophy
 } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const GameBoyControls = () => {
@@ -50,29 +46,29 @@ const GameBoyControls = () => {
       <>
         <button 
           className="action-button transition-transform hover:scale-110 active:scale-95 group"
-          onClick={() => handleAction('navigate:/streaming')}
+          onClick={() => handleAction('like')}
         >
-          <Video className="w-6 h-6 group-hover:text-gaming-400" />
+          <Heart className="w-6 h-6 group-hover:text-gaming-400" />
         </button>
         <div className="flex gap-16 my-4">
           <button 
             className="action-button transition-transform hover:scale-110 active:scale-95 group"
-            onClick={() => handleAction('navigate:/messages')}
+            onClick={() => handleAction('comment')}
           >
             <MessageSquare className="w-6 h-6 group-hover:text-gaming-400" />
           </button>
           <button 
             className="action-button transition-transform hover:scale-110 active:scale-95 group"
-            onClick={() => handleAction('navigate:/profile')}
+            onClick={() => handleAction('follow')}
           >
-            <User className="w-6 h-6 group-hover:text-gaming-400" />
+            <UserPlus className="w-6 h-6 group-hover:text-gaming-400" />
           </button>
         </div>
         <button 
           className="action-button transition-transform hover:scale-110 active:scale-95 group"
-          onClick={() => handleAction('navigate:/discover')}
+          onClick={() => handleAction('rank')}
         >
-          <Compass className="w-6 h-6 group-hover:text-gaming-400" />
+          <Trophy className="w-6 h-6 group-hover:text-gaming-400" />
         </button>
       </>
     );
@@ -83,22 +79,10 @@ const GameBoyControls = () => {
       <div className="absolute left-8 bottom-8 w-32 h-32">
         {/* Direction Labels */}
         <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-gaming-400 text-sm font-bold flex flex-col items-center gap-2">
-          <div className="flex items-center gap-1">
-            <ArrowUp className="w-4 h-4" />
-            Streaming
-          </div>
-          <div className="flex items-center gap-1">
-            <ArrowDown className="w-4 h-4" />
-            Profile
-          </div>
-          <div className="flex items-center gap-1">
-            <ArrowLeft className="w-4 h-4" />
-            Discover
-          </div>
-          <div className="flex items-center gap-1">
-            Messages
-            <ArrowRight className="w-4 h-4" />
-          </div>
+          <div className="flex items-center gap-1">Streaming</div>
+          <div className="flex items-center gap-1">Profile</div>
+          <div className="flex items-center gap-1">Discover</div>
+          <div className="flex items-center gap-1">Messages</div>
         </div>
 
         {/* New Circular D-Pad */}
