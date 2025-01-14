@@ -1,18 +1,15 @@
 import { useState, useEffect } from "react";
-import { Send } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Message, ChatUser } from "@/types/message";
-import { MessageBubble } from "@/components/messages/MessageBubble";
+import { MessageList } from "@/components/messages/MessageList";
 import { ChatList } from "@/components/messages/ChatList";
+import { MessageInput } from "@/components/messages/MessageInput";
 
 export default function Messages() {
   const { user } = useAuth();
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [chats, setChats] = useState<ChatUser[]>([]);
 
@@ -51,7 +48,8 @@ export default function Messages() {
             id: profile.id,
             username: profile.username,
             avatar_url: profile.avatar_url,
-            last_message: msg.content
+            last_message: msg.content,
+            unread_count: msg.sender_id !== user.id && !msg.read ? 1 : 0
           });
         }
       });
@@ -109,16 +107,30 @@ export default function Messages() {
       }
 
       setMessages(data || []);
+
+      // Mark messages as read
+      if (data && data.length > 0) {
+        const { error: updateError } = await supabase
+          .from('messages')
+          .update({ read: true })
+          .eq('sender_id', selectedChat)
+          .eq('receiver_id', user.id)
+          .eq('read', false);
+
+        if (updateError) {
+          console.error('Error marking messages as read:', updateError);
+        }
+      }
     };
 
     fetchMessages();
   }, [selectedChat, user]);
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !user || !selectedChat) return;
+  const handleSendMessage = async (content: string) => {
+    if (!user || !selectedChat) return;
 
     const newMessage = {
-      content: message,
+      content,
       sender_id: user.id,
       receiver_id: selectedChat,
       read: false,
@@ -132,14 +144,11 @@ export default function Messages() {
       toast.error("Failed to send message");
       return;
     }
-
-    setMessage("");
   };
 
   return (
     <div className="mx-auto max-w-4xl h-[calc(100vh-4rem)]">
       <div className="h-full border rounded-lg grid grid-cols-1 md:grid-cols-3 divide-x">
-        {/* Chat List */}
         <div className="p-4">
           <ChatList
             chats={chats}
@@ -148,28 +157,11 @@ export default function Messages() {
           />
         </div>
 
-        {/* Chat Area */}
         <div className="col-span-2 flex flex-col h-full">
           {selectedChat ? (
             <>
-              <div className="flex-1 p-4 overflow-y-auto">
-                {messages.map((msg) => (
-                  <MessageBubble key={msg.id} message={msg} />
-                ))}
-              </div>
-              <div className="p-4 border-t">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Type a message..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  />
-                  <Button onClick={handleSendMessage}>
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <MessageList messages={messages} />
+              <MessageInput onSendMessage={handleSendMessage} />
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
