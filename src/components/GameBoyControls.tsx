@@ -102,15 +102,15 @@ const GameBoyControls = () => {
 
   return (
     <div className="gameboy-container">
-      {/* Center Navigation Menu */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+      {/* Bottom Center Navigation Menu */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
         <Sheet>
           <SheetTrigger asChild>
             <button className="rounded-full bg-gaming-400/20 p-4 backdrop-blur-sm border border-gaming-400/30 hover:bg-gaming-400/30 transition-all duration-300">
               <Menu className="w-6 h-6 text-gaming-400" />
             </button>
           </SheetTrigger>
-          <SheetContent side="top" className="w-full max-w-xl mx-auto rounded-b-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
+          <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
             <nav className="grid grid-cols-2 gap-4 p-4">
               {navigationItems.map((item) => (
                 <button
