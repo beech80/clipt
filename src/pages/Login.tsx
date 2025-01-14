@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { AuthError, AuthChangeEvent, AuthApiError } from '@supabase/supabase-js';
+import { AuthError, AuthApiError, AuthResponse } from '@supabase/supabase-js';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
@@ -19,7 +19,7 @@ const Login = () => {
       navigate('/');
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN') {
         navigate('/');
       }
@@ -37,14 +37,17 @@ const Login = () => {
 
     // Handle initial session error
     const checkSession = async () => {
-      const { error } = await supabase.auth.getSession();
+      const { error }: AuthResponse = await supabase.auth.getSession();
       if (error) {
         handleAuthError(error);
       }
     };
     
     checkSession();
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      setError(null); // Clear error on cleanup
+    };
   }, [user, navigate]);
 
   const handleAuthError = (error: AuthError) => {
