@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
 import { MainNav } from "./components/MainNav";
+import GameBoyControls from "./components/GameBoyControls";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import Messages from "./pages/Messages";
@@ -30,12 +31,12 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
-            <div className="min-h-screen bg-background pb-16 md:pb-0 md:pt-16">
+            <div className="min-h-screen bg-background pb-48 md:pb-48 md:pt-16">
               <Toaster />
               <Sonner />
               <BrowserRouter>
                 <MainNav />
-                <main className="container mx-auto px-4 py-4">
+                <main className="container mx-auto px-4 py-4 retro-screen">
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route
@@ -89,6 +90,7 @@ const App = () => {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
+                <GameBoyControls />
               </BrowserRouter>
             </div>
           </TooltipProvider>

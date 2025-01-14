@@ -23,7 +23,7 @@
     --border: 75 27% 16%;
     --input: 75 27% 16%;
     --ring: 72 39% 37%;
-    --radius: 0.5rem;
+    --radius: 0rem;
   }
 }
 
@@ -39,7 +39,6 @@
     background-attachment: fixed;
   }
 
-  /* Game Boy style pixelated font */
   @font-face {
     font-family: 'Press Start 2P';
     src: url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
@@ -67,7 +66,6 @@
   @apply transition-all hover:shadow-lg hover:shadow-gameboy-light/20;
 }
 
-/* Retro screen effect */
 .retro-screen {
   @apply relative overflow-hidden;
 }
@@ -80,4 +78,25 @@
 .retro-screen::after {
   content: "";
   @apply absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgba(139,172,15,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(139,172,15,0.1)_1px,transparent_1px)] bg-[size:4px_4px];
+}
+
+.gameboy-container {
+  @apply fixed bottom-0 left-0 right-0 bg-gameboy-dark border-t-4 border-gameboy-light p-4;
+  height: 200px;
+}
+
+.gameboy-dpad {
+  @apply absolute left-8 bottom-8 w-32 h-32 bg-gameboy-darkest rounded-full border-2 border-gameboy-light;
+}
+
+.dpad-button {
+  @apply absolute w-10 h-10 bg-gameboy-dark hover:bg-gameboy-light/20 active:bg-gameboy-light/40 transition-colors border border-gameboy-light flex items-center justify-center text-gameboy-lightest;
+}
+
+.action-button {
+  @apply w-12 h-12 rounded-full bg-gameboy-dark hover:bg-gameboy-light/20 active:bg-gameboy-light/40 transition-colors border-2 border-gameboy-light flex items-center justify-center text-gameboy-lightest;
+}
+
+.action-buttons-container {
+  @apply absolute right-8 bottom-8 flex gap-4;
 }
