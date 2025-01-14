@@ -93,19 +93,18 @@ const GameBoyControls = () => {
         </div>
       </div>
 
-      {/* Action Buttons in Triangle Formation */}
+      {/* Action Buttons in Xbox Layout */}
       <div className="action-buttons-container">
-        {/* Top Button */}
+        {/* Top Button (Y) */}
         <button 
           className="action-button transition-transform hover:scale-110 active:scale-95"
           onClick={() => handleAction('Like')}
-          style={{ marginBottom: '-0.5rem' }}
         >
           <ThumbsUp className="w-6 h-6" />
         </button>
         
-        {/* Bottom Row */}
-        <div className="flex gap-8 mt-4">
+        {/* Middle Row (X and B) */}
+        <div className="flex gap-16 my-4">
           <button 
             className="action-button transition-transform hover:scale-110 active:scale-95"
             onClick={() => handleAction('Share')}
@@ -114,17 +113,19 @@ const GameBoyControls = () => {
           </button>
           <button 
             className="action-button transition-transform hover:scale-110 active:scale-95"
-            onClick={() => handleAction('Comment')}
-          >
-            <MessageSquare className="w-6 h-6" />
-          </button>
-          <button 
-            className="action-button transition-transform hover:scale-110 active:scale-95"
             onClick={() => handleAction('Rank')}
           >
             <Trophy className="w-6 h-6" />
           </button>
         </div>
+        
+        {/* Bottom Button (A) */}
+        <button 
+          className="action-button transition-transform hover:scale-110 active:scale-95"
+          onClick={() => handleAction('Comment')}
+        >
+          <MessageSquare className="w-6 h-6" />
+        </button>
       </div>
     </div>
   );
