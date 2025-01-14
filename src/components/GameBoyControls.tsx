@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Heart,
   MessageSquare,
@@ -16,6 +16,9 @@ import {
 
 const GameBoyControls = () => {
   const [activeDirection, setActiveDirection] = useState<string>('neutral');
+  const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
+  const joystickRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
   const navigate = useNavigate();
 
   const handleAction = (action: string) => {
@@ -41,38 +44,120 @@ const GameBoyControls = () => {
     setActiveDirection(direction);
     switch (direction) {
       case 'up':
+        setJoystickPosition({ x: 0, y: -12 });
         toast.info('Previous clip');
         break;
       case 'down':
+        setJoystickPosition({ x: 0, y: 12 });
         toast.info('Next clip');
         break;
       case 'left':
+        setJoystickPosition({ x: -12, y: 0 });
         toast.info('Rewind 10s');
         break;
       case 'right':
+        setJoystickPosition({ x: 12, y: 0 });
         toast.info('Forward 10s');
         break;
       default:
         break;
     }
-    // Increased timeout for smoother animation
-    setTimeout(() => setActiveDirection('neutral'), 400);
+    setTimeout(() => {
+      setActiveDirection('neutral');
+      setJoystickPosition({ x: 0, y: 0 });
+    }, 400);
   };
 
-  const getJoystickTransform = () => {
-    switch (activeDirection) {
-      case 'up':
-        return 'translateY(-12px)';
-      case 'down':
-        return 'translateY(12px)';
-      case 'left':
-        return 'translateX(-12px)';
-      case 'right':
-        return 'translateX(12px)';
-      default:
-        return 'translate(0, 0)';
+  const handleJoystickStart = (e: React.MouseEvent | React.TouchEvent) => {
+    isDraggingRef.current = true;
+    document.addEventListener('mousemove', handleJoystickMove as any);
+    document.addEventListener('touchmove', handleJoystickMove as any);
+    document.addEventListener('mouseup', handleJoystickEnd);
+    document.addEventListener('touchend', handleJoystickEnd);
+  };
+
+  const handleJoystickMove = (e: MouseEvent | TouchEvent) => {
+    if (!isDraggingRef.current || !joystickRef.current) return;
+
+    const joystickRect = joystickRef.current.getBoundingClientRect();
+    const centerX = joystickRect.left + joystickRect.width / 2;
+    const centerY = joystickRect.top + joystickRect.height / 2;
+
+    let clientX, clientY;
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const deltaX = clientX - centerX;
+    const deltaY = clientY - centerY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const maxDistance = 12;
+    const angle = Math.atan2(deltaY, deltaX);
+
+    let newX = deltaX;
+    let newY = deltaY;
+
+    if (distance > maxDistance) {
+      newX = Math.cos(angle) * maxDistance;
+      newY = Math.sin(angle) * maxDistance;
+    }
+
+    setJoystickPosition({ x: newX, y: newY });
+
+    // Determine direction based on position
+    const threshold = maxDistance * 0.5;
+    let direction = 'neutral';
+    if (Math.abs(newX) > Math.abs(newY)) {
+      direction = newX > threshold ? 'right' : newX < -threshold ? 'left' : 'neutral';
+    } else {
+      direction = newY > threshold ? 'down' : newY < -threshold ? 'up' : 'neutral';
+    }
+    
+    if (direction !== activeDirection) {
+      setActiveDirection(direction);
+      if (direction !== 'neutral') {
+        switch (direction) {
+          case 'up':
+            toast.info('Previous clip');
+            break;
+          case 'down':
+            toast.info('Next clip');
+            break;
+          case 'left':
+            toast.info('Rewind 10s');
+            break;
+          case 'right':
+            toast.info('Forward 10s');
+            break;
+        }
+      }
     }
   };
+
+  const handleJoystickEnd = () => {
+    isDraggingRef.current = false;
+    document.removeEventListener('mousemove', handleJoystickMove as any);
+    document.removeEventListener('touchmove', handleJoystickMove as any);
+    document.removeEventListener('mouseup', handleJoystickEnd);
+    document.removeEventListener('touchend', handleJoystickEnd);
+    
+    // Reset position with animation
+    setJoystickPosition({ x: 0, y: 0 });
+    setActiveDirection('neutral');
+  };
+
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleJoystickMove as any);
+      document.removeEventListener('touchmove', handleJoystickMove as any);
+      document.removeEventListener('mouseup', handleJoystickEnd);
+      document.removeEventListener('touchend', handleJoystickEnd);
+    };
+  }, []);
 
   const renderActionButtons = () => {
     return (
@@ -147,12 +232,19 @@ const GameBoyControls = () => {
 
       {/* D-Pad with Xbox-style joystick */}
       <div className="fixed left-4 sm:left-8 bottom-8 sm:bottom-10 w-28 sm:w-32 h-28 sm:h-32">
-        <div className="relative w-full h-full bg-gaming-400/10 rounded-full border-2 border-gaming-400/30 backdrop-blur-sm shadow-xl">
-          {/* Solid black joystick with smoother animation */}
+        <div 
+          ref={joystickRef}
+          className="relative w-full h-full bg-gaming-400/10 rounded-full border-2 border-gaming-400/30 backdrop-blur-sm shadow-xl cursor-grab active:cursor-grabbing"
+          onMouseDown={handleJoystickStart}
+          onTouchStart={handleJoystickStart}
+        >
+          {/* Solid black joystick with smooth dragging */}
           <div 
-            className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg transition-transform duration-300 ease-out"
-            style={{ transform: getJoystickTransform() }}
-          ></div>
+            className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg transition-transform duration-150 ease-out"
+            style={{ 
+              transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
+            }}
+          />
           
           {/* Larger touch areas for directional buttons */}
           <button 
