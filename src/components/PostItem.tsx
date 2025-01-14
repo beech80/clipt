@@ -1,8 +1,5 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import PostHeader from "./post/PostHeader";
 import PostContent from "./post/PostContent";
-import PostActions from "./post/PostActions";
 import CommentList from "./post/CommentList";
 import { useAuth } from "@/contexts/AuthContext";
 import { Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
