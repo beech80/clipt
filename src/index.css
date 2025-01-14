@@ -147,9 +147,9 @@
 }
 
 .action-buttons-container {
-  @apply absolute right-8 bottom-8 flex gap-4;
+  @apply absolute right-8 bottom-8 flex flex-col items-center;
 }
 
 .action-button {
-  @apply w-12 h-12 rounded-full bg-gameboy-dark hover:bg-gameboy-light/20 active:bg-gameboy-light/40 transition-all duration-300 border-2 border-gameboy-light flex items-center justify-center text-gameboy-lightest hover:scale-110 active:scale-95;
+  @apply w-12 h-12 rounded-full bg-gameboy-dark hover:bg-gameboy-light/20 active:bg-gameboy-light/40 transition-all duration-300 border-2 border-gameboy-light flex items-center justify-center text-gameboy-lightest;
 }

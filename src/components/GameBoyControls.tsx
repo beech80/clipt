@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ThumbsUp, Share2, MessageSquare } from 'lucide-react';
+import { ThumbsUp, Share2, MessageSquare, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 
 const GameBoyControls = () => {
@@ -13,7 +13,6 @@ const GameBoyControls = () => {
   const handleJoystickMove = (direction: string) => {
     setJoystickPosition(direction);
     handleAction(direction);
-    // Reset joystick position after animation
     setTimeout(() => setJoystickPosition('neutral'), 300);
   };
 
@@ -36,7 +35,6 @@ const GameBoyControls = () => {
     const x = e.clientX - rect.left - centerX;
     const y = e.clientY - rect.top - centerY;
 
-    // Calculate angle and distance from center
     const angle = Math.atan2(y, x);
     const distance = Math.min(Math.sqrt(x * x + y * y), 50);
 
@@ -45,7 +43,6 @@ const GameBoyControls = () => {
       return;
     }
 
-    // Convert angle to direction
     const deg = angle * (180 / Math.PI);
     if (deg > -45 && deg <= 45) handleJoystickMove('right');
     else if (deg > 45 && deg <= 135) handleJoystickMove('down');
@@ -59,14 +56,12 @@ const GameBoyControls = () => {
     const target = e.currentTarget;
     const rect = target.getBoundingClientRect();
     
-    // Create a synthetic pointer event
     const pointerEvent = new PointerEvent('pointermove', {
       clientX: touch.clientX,
       clientY: touch.clientY,
       bubbles: true
     });
     
-    // Set currentTarget manually since it's readonly
     Object.defineProperty(pointerEvent, 'currentTarget', {
       get: () => target
     });
@@ -98,26 +93,38 @@ const GameBoyControls = () => {
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {/* Action Buttons in Triangle Formation */}
       <div className="action-buttons-container">
+        {/* Top Button */}
         <button 
-          className="action-button animate-glow"
+          className="action-button transition-transform hover:scale-110 active:scale-95"
           onClick={() => handleAction('Like')}
+          style={{ marginBottom: '-0.5rem' }}
         >
           <ThumbsUp className="w-6 h-6" />
         </button>
-        <button 
-          className="action-button animate-glow"
-          onClick={() => handleAction('Share')}
-        >
-          <Share2 className="w-6 h-6" />
-        </button>
-        <button 
-          className="action-button animate-glow"
-          onClick={() => handleAction('Comment')}
-        >
-          <MessageSquare className="w-6 h-6" />
-        </button>
+        
+        {/* Bottom Row */}
+        <div className="flex gap-8 mt-4">
+          <button 
+            className="action-button transition-transform hover:scale-110 active:scale-95"
+            onClick={() => handleAction('Share')}
+          >
+            <Share2 className="w-6 h-6" />
+          </button>
+          <button 
+            className="action-button transition-transform hover:scale-110 active:scale-95"
+            onClick={() => handleAction('Comment')}
+          >
+            <MessageSquare className="w-6 h-6" />
+          </button>
+          <button 
+            className="action-button transition-transform hover:scale-110 active:scale-95"
+            onClick={() => handleAction('Rank')}
+          >
+            <Trophy className="w-6 h-6" />
+          </button>
+        </div>
       </div>
     </div>
   );
