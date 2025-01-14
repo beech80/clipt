@@ -7,7 +7,7 @@ import { startStream, endStream } from "@/utils/streamUtils";
 
 interface StreamControlsProps {
   userId: string;
-  onStreamUpdate: (data: { isLive: boolean; streamKey: string | null }) => void;
+  onStreamUpdate: (data: { isLive: boolean; streamKey: string | null; streamUrl: string | null }) => void;
 }
 
 export const StreamControls = ({ userId, onStreamUpdate }: StreamControlsProps) => {
