@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AuthError, AuthChangeEvent, AuthApiError } from '@supabase/supabase-js';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -59,6 +60,9 @@ const Login = () => {
         case 422:
           errorMessage = 'Invalid email format. Please enter a valid email address.';
           break;
+        case 429:
+          errorMessage = 'Too many login attempts. Please try again later.';
+          break;
         default:
           errorMessage = error.message;
       }
@@ -79,6 +83,12 @@ const Login = () => {
         <h1 className="gaming-gradient text-4xl font-bold">GameShare</h1>
         <p className="text-white">Connect with fellow gamers</p>
       </div>
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="gaming-card">
         <Auth
