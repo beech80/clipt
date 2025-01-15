@@ -88,23 +88,23 @@
 }
 
 .clip-button {
-  @apply text-8xl font-bold tracking-wider;
+  @apply text-5xl font-bold tracking-wider;
   background: linear-gradient(180deg, #FFFFFF 0%, #E5E7EB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(155, 135, 245, 0.8);
+  text-shadow: 0 0 20px rgba(155, 135, 245, 0.6);
   position: relative;
 }
 
 .clip-button::before {
   content: '';
   position: absolute;
-  inset: -4px;
+  inset: -2px;
   background: linear-gradient(90deg, #9b87f5 0%, #8B5CF6 100%);
-  border-radius: 16px;
+  border-radius: 8px;
   z-index: -1;
-  filter: blur(12px);
-  opacity: 0.8;
+  filter: blur(8px);
+  opacity: 0.6;
 }
 
 .clip-button::after {
@@ -112,7 +112,7 @@
   position: absolute;
   inset: 0;
   background: #1A1F2C;
-  border-radius: 12px;
+  border-radius: 6px;
   z-index: -1;
 }
 
