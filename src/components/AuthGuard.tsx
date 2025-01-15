@@ -7,17 +7,6 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const path = window.location.pathname;
 
-  useEffect(() => {
-    // Allow access to streaming routes without authentication
-    if (path.startsWith('/streaming')) {
-      return;
-    }
-
-    // Require authentication for other routes
-    if (!user) {
-      navigate('/login');
-    }
-  }, [user, navigate, path]);
-
+  // Allow access to all pages without authentication
   return <>{children}</>;
 };
