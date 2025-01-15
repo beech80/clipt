@@ -6,14 +6,13 @@ interface UploadProgressProps {
 }
 
 const UploadProgress = ({ progress, type }: UploadProgressProps) => {
-  if (progress === 0) return null;
-
   return (
     <div className="space-y-2">
+      <div className="flex justify-between text-sm text-muted-foreground">
+        <span>Uploading {type}...</span>
+        <span>{progress}%</span>
+      </div>
       <Progress value={progress} className="h-2" />
-      <p className="text-sm text-muted-foreground text-center">
-        Uploading {type}: {progress}%
-      </p>
     </div>
   );
 };
