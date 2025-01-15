@@ -22,9 +22,9 @@ const Home = () => {
                 <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="relative h-full w-1/2 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
-                      border-y-2 border-l-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
-                      active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
+                      className="relative h-full w-1/2 bg-gradient-to-b from-gaming-700/40 to-gaming-800/50 
+                      border-y-2 border-l-2 border-gaming-400/50 text-white hover:from-gaming-700/50 hover:to-gaming-800/60
+                      active:from-gaming-700/60 active:to-gaming-800/70 transform active:translate-y-0.5
                       transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
                       hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none"
                     >
@@ -42,9 +42,9 @@ const Home = () => {
                 <div className="w-[2px] h-full bg-gaming-400/50" />
 
                 <Button 
-                  className="relative h-full w-1/2 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
-                  border-y-2 border-r-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
-                  active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
+                  className="relative h-full w-1/2 bg-gradient-to-b from-gaming-700/40 to-gaming-800/50 
+                  border-y-2 border-r-2 border-gaming-400/50 text-white hover:from-gaming-700/50 hover:to-gaming-800/60
+                  active:from-gaming-700/60 active:to-gaming-800/70 transform active:translate-y-0.5
                   transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
                   hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none"
                   onClick={() => setActiveTab("squad")}
@@ -60,7 +60,7 @@ const Home = () => {
       </div>
 
       {/* Modern CLIPT Title */}
-      <div className="fixed bottom-[160px] left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-[180px] left-1/2 -translate-x-1/2 z-50">
         <h1 className="clip-button">
           CLIPT
         </h1>
