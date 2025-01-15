@@ -1,19 +1,26 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+import PostFormContent from "./post/form/PostFormContent";
 import ImageUpload from "./post/ImageUpload";
 import VideoUpload from "./post/VideoUpload";
-import { useQueryClient } from "@tanstack/react-query";
+import UploadProgress from "./post/form/UploadProgress";
+import MediaPreview from "./post/form/MediaPreview";
 
-const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
+interface PostFormProps {
+  onPostCreated?: () => void;
+}
+
+const PostForm = ({ onPostCreated }: PostFormProps) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [imageProgress, setImageProgress] = useState(0);
+  const [videoProgress, setVideoProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
@@ -48,9 +55,17 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
+        // Simulate upload progress for image
+        const imageInterval = setInterval(() => {
+          setImageProgress(prev => Math.min(prev + 20, 90));
+        }, 500);
+
         const { error: uploadError, data } = await supabase.storage
           .from('posts')
           .upload(filePath, selectedImage);
+
+        clearInterval(imageInterval);
+        setImageProgress(100);
 
         if (uploadError) {
           toast.error("Failed to upload image", { id: toastId });
@@ -69,30 +84,22 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        // Simulate upload progress
-        const uploadInterval = setInterval(() => {
-          setUploadProgress((prev) => {
-            if (prev >= 90) {
-              clearInterval(uploadInterval);
-              return prev;
-            }
-            return prev + 10;
-          });
+        // Simulate upload progress for video
+        const videoInterval = setInterval(() => {
+          setVideoProgress(prev => Math.min(prev + 10, 90));
         }, 500);
 
         const { error: uploadError } = await supabase.storage
           .from('videos')
           .upload(filePath, selectedVideo);
 
-        clearInterval(uploadInterval);
+        clearInterval(videoInterval);
+        setVideoProgress(100);
 
         if (uploadError) {
-          setUploadProgress(0);
           toast.error("Failed to upload video", { id: toastId });
           throw uploadError;
         }
-
-        setUploadProgress(100);
 
         const { data: { publicUrl } } = supabase.storage
           .from('videos')
@@ -110,23 +117,21 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
           video_url
         });
 
-      if (error) {
-        toast.error("Failed to create post", { id: toastId });
-        throw error;
-      }
+      if (error) throw error;
 
       toast.success("Post created successfully!", { id: toastId });
       setContent("");
       setSelectedImage(null);
       setSelectedVideo(null);
-      setUploadProgress(0);
+      setImageProgress(0);
+      setVideoProgress(0);
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (videoInputRef.current) videoInputRef.current.value = '';
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       if (onPostCreated) onPostCreated();
     } catch (error) {
       console.error("Error creating post:", error);
-      toast.error(error instanceof Error ? error.message : "Error creating post", { id: toastId });
+      toast.error("Failed to create post", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -135,13 +140,30 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
   return (
     <div className="bg-card rounded-lg p-4 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Textarea
-          placeholder="Share your gaming moments..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="min-h-[100px] resize-none"
-        />
+        <PostFormContent content={content} onChange={setContent} />
         
+        {selectedImage && (
+          <>
+            <MediaPreview 
+              file={selectedImage} 
+              type="image" 
+              onRemove={() => setSelectedImage(null)} 
+            />
+            <UploadProgress progress={imageProgress} type="image" />
+          </>
+        )}
+
+        {selectedVideo && (
+          <>
+            <MediaPreview 
+              file={selectedVideo} 
+              type="video" 
+              onRemove={() => setSelectedVideo(null)} 
+            />
+            <UploadProgress progress={videoProgress} type="video" />
+          </>
+        )}
+
         {!selectedVideo && (
           <ImageUpload
             selectedImage={selectedImage}
@@ -155,8 +177,8 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
             selectedVideo={selectedVideo}
             onVideoSelect={setSelectedVideo}
             videoInputRef={videoInputRef}
-            uploadProgress={uploadProgress}
-            setUploadProgress={setUploadProgress}
+            uploadProgress={videoProgress}
+            setUploadProgress={setVideoProgress}
           />
         )}
 
