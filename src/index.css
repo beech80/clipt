@@ -95,6 +95,7 @@
   text-shadow: none;
   font-weight: 900;
   animation: textGlow 2s ease-in-out infinite;
+  filter: brightness(1.2);
 }
 
 .clip-button::before {
@@ -125,11 +126,13 @@
 @keyframes textGlow {
   0%, 100% {
     color: #FFFFFF;
-    filter: brightness(1);
+    filter: brightness(1.2);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
   }
   50% {
     color: #FFFFFF;
-    filter: brightness(1.2);
+    filter: brightness(1.4);
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.9);
   }
 }
 
