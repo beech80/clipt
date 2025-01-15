@@ -42,6 +42,7 @@ const GameBoyControls = () => {
     { name: 'Profile', path: '/profile' },
     { name: 'Streaming', path: '/streaming' },
     { name: 'Top Clips', path: '/top-clips' },
+    { name: 'Clipts', path: '/clipts' },
   ];
 
   return (
