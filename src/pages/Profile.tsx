@@ -75,7 +75,7 @@ const Profile = () => {
             className="w-24 h-24 rounded-full border-4 border-gaming-500 animate-glow mb-4"
           />
           <div className="text-center">
-            <h1 className="text-2xl font-bold gaming-gradient">ProGamer123</h1>
+            <h1 className="text-2xl font-bold gaming-gradient">Cliped</h1>
             <p className="text-sm text-muted-foreground mt-2 max-w-md">
               Pro gamer and content creator. Love streaming and making awesome gaming content!
             </p>
