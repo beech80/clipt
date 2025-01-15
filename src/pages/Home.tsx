@@ -33,23 +33,25 @@ const Home = () => {
             </Dialog>
 
             {/* Custom Toggle Switch */}
-            <div className="relative inline-flex bg-gaming-700/20 rounded-lg p-1 min-w-[160px]">
+            <div className="relative inline-flex items-center min-w-[200px] h-8">
+              <div className="absolute inset-0 bg-[#1A1F2C] border border-gaming-400/20"></div>
+              <div 
+                className={`absolute h-full w-1/2 bg-gaming-400 transition-all duration-300 ease-in-out ${
+                  activeTab === "clips" ? "translate-x-full" : "translate-x-0"
+                }`}
+              ></div>
               <button
                 onClick={() => setActiveTab("squad")}
-                className={`flex-1 px-4 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === "squad"
-                    ? "bg-gaming-400/20 text-gaming-400"
-                    : "text-gray-400 hover:text-gaming-400/60"
+                className={`relative flex-1 h-full px-4 text-sm font-medium transition-colors duration-200 ${
+                  activeTab === "squad" ? "text-white" : "text-gray-400"
                 }`}
               >
                 SQUAD
               </button>
               <button
                 onClick={() => setActiveTab("clips")}
-                className={`flex-1 px-4 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === "clips"
-                    ? "bg-gaming-400 text-white"
-                    : "text-gray-400 hover:text-gaming-400/60"
+                className={`relative flex-1 h-full px-4 text-sm font-medium transition-colors duration-200 ${
+                  activeTab === "clips" ? "text-white" : "text-gray-400"
                 }`}
               >
                 CLIPS
