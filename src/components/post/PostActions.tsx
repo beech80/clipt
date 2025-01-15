@@ -4,6 +4,7 @@ import { MessageSquare, UserPlus, Heart, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import ShareButton from "./actions/ShareButton";
 
 interface PostActionsProps {
   postId: string;
@@ -138,6 +139,7 @@ const PostActions = ({ postId, userId, likesCount, voteCount, onCommentToggle }:
         <MessageSquare className="w-8 h-8 text-white" />
         <span className="text-xs text-white mt-1">Comment</span>
       </button>
+      <ShareButton />
       <button 
         className="p-2 hover:scale-110 transition-transform"
         onClick={handleFollow}
