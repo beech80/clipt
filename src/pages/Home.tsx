@@ -13,7 +13,7 @@ const Home = () => {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
 
   return (
-    <div className="max-w-3xl mx-auto relative">
+    <div className="max-w-3xl mx-auto h-[calc(100vh-200px)] relative pt-10">
       <div className="absolute -top-2 left-0 right-0 z-20 text-center">
         <h1 className="text-3xl font-bold gaming-gradient relative inline-block transform -translate-y-2">
           CLIPS
@@ -23,7 +23,7 @@ const Home = () => {
         </h1>
       </div>
       
-      <div className="sticky top-0 z-10 bg-black/50 backdrop-blur-sm">
+      <div className="absolute top-8 left-0 right-0 z-10 bg-black/50 backdrop-blur-sm">
         <div className="flex justify-between items-center px-4 py-3">
           <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
             <DialogTrigger asChild>
@@ -104,7 +104,7 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className="mt-16">
+      <div className="snap-y snap-mandatory overflow-y-auto h-full mt-4">
         <PostList />
       </div>
     </div>

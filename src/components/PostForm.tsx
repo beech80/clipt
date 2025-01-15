@@ -1,23 +1,21 @@
 import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import PostFormContent from "./post/form/PostFormContent";
-import MediaUploadSection from "./post/form/MediaUploadSection";
-import FormActions from "./post/form/FormActions";
-import { useContentParser } from "./post/form/ContentParser";
+import ImageUpload from "./post/ImageUpload";
+import VideoUpload from "./post/VideoUpload";
+import UploadProgress from "./post/form/UploadProgress";
+import MediaPreview from "./post/form/MediaPreview";
 
 interface PostFormProps {
   onPostCreated?: () => void;
-  editingPost?: {
-    id: string;
-    content: string;
-  };
 }
 
-const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
-  const [content, setContent] = useState(editingPost?.content || "");
+const PostForm = ({ onPostCreated }: PostFormProps) => {
+  const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
@@ -27,10 +25,13 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { hashtags, mentions } = useContentParser(content);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast.error("Please login to create a post");
+      return;
+    }
 
     if (!content.trim() && !selectedImage && !selectedVideo) {
       toast.error("Please add some content, image, or video to your post");
@@ -43,7 +44,7 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
     }
 
     setIsSubmitting(true);
-    const toastId = toast.loading(editingPost ? "Updating your post..." : "Creating your post...");
+    const toastId = toast.loading("Creating your post...");
 
     try {
       let image_url = null;
@@ -54,6 +55,7 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
+        // Simulate upload progress for image
         const imageInterval = setInterval(() => {
           setImageProgress(prev => Math.min(prev + 20, 90));
         }, 500);
@@ -65,7 +67,10 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
         clearInterval(imageInterval);
         setImageProgress(100);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          toast.error("Failed to upload image", { id: toastId });
+          throw uploadError;
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('posts')
@@ -79,6 +84,7 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
+        // Simulate upload progress for video
         const videoInterval = setInterval(() => {
           setVideoProgress(prev => Math.min(prev + 10, 90));
         }, 500);
@@ -90,7 +96,10 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
         clearInterval(videoInterval);
         setVideoProgress(100);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          toast.error("Failed to upload video", { id: toastId });
+          throw uploadError;
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('videos')
@@ -99,79 +108,18 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
         video_url = publicUrl;
       }
 
-      if (editingPost) {
-        // Store previous content in post_edits if user is authenticated
-        if (user) {
-          await supabase
-            .from('post_edits')
-            .insert({
-              post_id: editingPost.id,
-              user_id: user.id,
-              previous_content: editingPost.content
-            })
-            .select();
-        }
+      const { error } = await supabase
+        .from('posts')
+        .insert({
+          content: content.trim(),
+          user_id: user.id,
+          image_url,
+          video_url
+        });
 
-        // Update the post
-        const { error } = await supabase
-          .from('posts')
-          .update({
-            content: content.trim(),
-            image_url: image_url || null,
-            video_url: video_url || null
-          })
-          .eq('id', editingPost.id)
-          .select();
+      if (error) throw error;
 
-        if (error) throw error;
-      } else {
-        // Create new post
-        const { data: post, error } = await supabase
-          .from('posts')
-          .insert({
-            content: content.trim(),
-            user_id: user?.id || null,
-            image_url,
-            video_url
-          })
-          .select('id')
-          .single();
-
-        if (error) throw error;
-
-        // Insert hashtags if user is authenticated
-        if (user && hashtags.length > 0) {
-          // First, ensure all hashtags exist
-          for (const tag of hashtags) {
-            await supabase
-              .from('hashtags')
-              .insert({ name: tag })
-              .select()
-              .maybeSingle();
-          }
-
-          // Get hashtag IDs
-          const { data: hashtagData } = await supabase
-            .from('hashtags')
-            .select('id, name')
-            .in('name', hashtags);
-
-          if (hashtagData) {
-            // Link hashtags to post
-            await supabase
-              .from('post_hashtags')
-              .insert(
-                hashtagData.map(tag => ({
-                  post_id: post.id,
-                  hashtag_id: tag.id
-                }))
-              )
-              .select();
-          }
-        }
-      }
-
-      toast.success(editingPost ? "Post updated successfully!" : "Post created successfully!", { id: toastId });
+      toast.success("Post created successfully!", { id: toastId });
       setContent("");
       setSelectedImage(null);
       setSelectedVideo(null);
@@ -179,14 +127,11 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
       setVideoProgress(0);
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (videoInputRef.current) videoInputRef.current.value = '';
-      
-      // Invalidate and refetch posts query to update the home page
       queryClient.invalidateQueries({ queryKey: ['posts'] });
-      
       if (onPostCreated) onPostCreated();
     } catch (error) {
       console.error("Error creating post:", error);
-      toast.error(editingPost ? "Failed to update post" : "Failed to create post", { id: toastId });
+      toast.error("Failed to create post", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -195,25 +140,53 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
   return (
     <div className="bg-card rounded-lg p-4 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <PostFormContent 
-          content={content} 
-          onChange={setContent}
-          hashtags={hashtags}
-          mentions={mentions}
-        />
+        <PostFormContent content={content} onChange={setContent} />
         
-        <MediaUploadSection
-          selectedImage={selectedImage}
-          selectedVideo={selectedVideo}
-          imageProgress={imageProgress}
-          videoProgress={videoProgress}
-          onImageSelect={setSelectedImage}
-          onVideoSelect={setSelectedVideo}
-          fileInputRef={fileInputRef}
-          videoInputRef={videoInputRef}
-        />
+        {selectedImage && (
+          <>
+            <MediaPreview 
+              file={selectedImage} 
+              type="image" 
+              onRemove={() => setSelectedImage(null)} 
+            />
+            <UploadProgress progress={imageProgress} type="image" />
+          </>
+        )}
 
-        <FormActions isSubmitting={isSubmitting} isEditing={!!editingPost} />
+        {selectedVideo && (
+          <>
+            <MediaPreview 
+              file={selectedVideo} 
+              type="video" 
+              onRemove={() => setSelectedVideo(null)} 
+            />
+            <UploadProgress progress={videoProgress} type="video" />
+          </>
+        )}
+
+        {!selectedVideo && (
+          <ImageUpload
+            selectedImage={selectedImage}
+            onImageSelect={setSelectedImage}
+            fileInputRef={fileInputRef}
+          />
+        )}
+
+        {!selectedImage && (
+          <VideoUpload
+            selectedVideo={selectedVideo}
+            onVideoSelect={setSelectedVideo}
+            videoInputRef={videoInputRef}
+            uploadProgress={videoProgress}
+            setUploadProgress={setVideoProgress}
+          />
+        )}
+
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Posting..." : "Post"}
+          </Button>
+        </div>
       </form>
     </div>
   );

@@ -9,13 +9,14 @@ const ShareButton = () => {
   };
 
   return (
-    <button 
-      className="p-2 hover:scale-110 transition-transform"
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={handleShare}
+      className="flex items-center gap-2"
     >
-      <Share2 className="w-8 h-8 text-white" />
-      <span className="text-xs text-white mt-1">Share</span>
-    </button>
+      <Share2 className="w-4 h-4" />
+    </Button>
   );
 };
 

@@ -1,24 +1,11 @@
 import { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import CommentList from "./post/CommentList";
-import PostActions from "./post/PostActions";
-import PostUserInfo from "./post/PostUserInfo";
-import PostStats from "./post/PostStats";
 import { useAuth } from "@/contexts/AuthContext";
+import { MessageSquare, UserPlus, Heart, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { MoreVertical, Pencil, Trash2, FolderPlus } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import CollectionSelector from "./post/CollectionSelector";
 
 interface PostItemProps {
   post: {
@@ -39,70 +26,160 @@ interface PostItemProps {
 
 const PostItem = ({ post }: PostItemProps) => {
   const [showComments, setShowComments] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
-  const [editedContent, setEditedContent] = useState(post.content);
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(post.likes_count);
   const voteCount = post.clip_votes?.[0]?.count || 0;
+  const [isVoted, setIsVoted] = useState(false);
+  const { user } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Track view
   useEffect(() => {
     if (user) {
-      const trackView = async () => {
-        await supabase
-          .from('post_views')
+      checkIfLiked();
+      checkIfVoted();
+      checkIfFollowing();
+    }
+  }, [user, post.id]);
+
+  const checkIfLiked = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('likes')
+      .select('id')
+      .eq('post_id', post.id)
+      .eq('user_id', user.id)
+      .single();
+    setIsLiked(!!data);
+  };
+
+  const checkIfVoted = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('clip_votes')
+      .select('id')
+      .eq('post_id', post.id)
+      .eq('user_id', user.id)
+      .single();
+    setIsVoted(!!data);
+  };
+
+  const checkIfFollowing = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('follows')
+      .select('follower_id')
+      .eq('follower_id', user.id)
+      .eq('following_id', post.user_id)
+      .single();
+    setIsFollowing(!!data);
+  };
+
+  const handleLike = async () => {
+    if (!user) {
+      toast.error("Please login to like posts");
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        const { error } = await supabase
+          .from('likes')
+          .delete()
+          .eq('post_id', post.id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        setLikesCount(prev => prev - 1);
+      } else {
+        const { error } = await supabase
+          .from('likes')
           .insert({
             post_id: post.id,
-            viewer_id: user.id
-          })
-          .select()
-          .maybeSingle();
-      };
-      trackView();
-    }
-  }, [post.id, user]);
+            user_id: user.id
+          });
 
-  const handleEdit = async () => {
-    try {
-      // Store edit history
-      await supabase
-        .from('post_edits')
-        .insert({
-          post_id: post.id,
-          user_id: user?.id,
-          previous_content: post.content
-        });
-
-      // Update post
-      const { error } = await supabase
-        .from('posts')
-        .update({ content: editedContent })
-        .eq('id', post.id);
-
-      if (error) throw error;
-
-      toast.success("Post updated successfully!");
-      setIsEditDialogOpen(false);
+        if (error) throw error;
+        setLikesCount(prev => prev + 1);
+      }
+      setIsLiked(!isLiked);
       queryClient.invalidateQueries({ queryKey: ['posts'] });
     } catch (error) {
-      toast.error("Error updating post");
+      toast.error("Error updating like");
     }
   };
 
-  const handleDelete = async () => {
+  const handleVote = async () => {
+    if (!user) {
+      toast.error("Please login to vote for clips");
+      return;
+    }
+
     try {
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', post.id);
+      if (isVoted) {
+        const { error } = await supabase
+          .from('clip_votes')
+          .delete()
+          .eq('post_id', post.id)
+          .eq('user_id', user.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('clip_votes')
+          .insert({
+            post_id: post.id,
+            user_id: user.id
+          });
 
-      toast.success("Post deleted successfully!");
+        if (error) throw error;
+      }
+      setIsVoted(!isVoted);
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      toast.success(isVoted ? "Vote removed!" : "Vote added!");
     } catch (error) {
-      toast.error("Error deleting post");
+      toast.error("Error updating vote");
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!user) {
+      toast.error("Please login to follow users");
+      return;
+    }
+
+    try {
+      if (isFollowing) {
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', post.user_id);
+
+        if (error) throw error;
+        setIsFollowing(false);
+        toast.success("Unfollowed user!");
+      } else {
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            following_id: post.user_id
+          });
+
+        if (error) {
+          if (error.code === '23505') {
+            toast.error("You're already following this user!");
+          } else {
+            throw error;
+          }
+        } else {
+          setIsFollowing(true);
+          toast.success("Following user!");
+        }
+      }
+    } catch (error) {
+      toast.error("Error updating follow status");
     }
   };
 
@@ -114,88 +191,55 @@ const PostItem = ({ post }: PostItemProps) => {
         videoUrl={post.video_url}
       />
       
-      {user?.id === post.user_id && (
-        <div className="absolute top-4 right-4 z-10">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white">
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsCollectionDialogOpen(true)}>
-                <FolderPlus className="w-4 h-4 mr-2" />
-                Add to Collection
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-red-500">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
-
-      <div className="absolute bottom-32 right-4">
-        <PostStats postId={post.id} />
+      {/* Vertical action buttons */}
+      <div className="absolute right-4 bottom-24 flex flex-col gap-6 items-center">
+        <button 
+          className="p-2 hover:scale-110 transition-transform"
+          onClick={() => setShowComments(!showComments)}
+        >
+          <MessageSquare className="w-8 h-8 text-white" />
+          <span className="text-xs text-white mt-1">Comment</span>
+        </button>
+        <button 
+          className="p-2 hover:scale-110 transition-transform"
+          onClick={handleFollow}
+        >
+          <UserPlus className={`w-8 h-8 ${isFollowing ? 'text-gaming-400' : 'text-white'}`} />
+          <span className="text-xs text-white mt-1">
+            {isFollowing ? 'Following' : 'Follow'}
+          </span>
+        </button>
+        <button 
+          className="p-2 hover:scale-110 transition-transform"
+          onClick={handleLike}
+        >
+          <Heart className={`w-8 h-8 ${isLiked ? 'text-red-500' : 'text-white'}`} />
+          <span className="text-xs text-white mt-1">
+            Like ({likesCount})
+          </span>
+        </button>
+        <button 
+          className="p-2 hover:scale-110 transition-transform"
+          onClick={handleVote}
+        >
+          <Trophy className={`w-8 h-8 ${isVoted ? 'text-gaming-400' : 'text-white'}`} />
+          <span className="text-xs text-white mt-1">
+            Vote ({voteCount})
+          </span>
+        </button>
       </div>
 
-      <PostActions
-        postId={post.id}
-        userId={post.user_id}
-        likesCount={post.likes_count}
-        voteCount={voteCount}
-        onCommentToggle={() => setShowComments(!showComments)}
-      />
-
-      <PostUserInfo
-        username={post.profiles.username}
-        content={post.content}
-      />
+      {/* User info and description overlay */}
+      <div className="absolute bottom-24 left-4 right-20 text-white">
+        <h3 className="font-bold">@{post.profiles?.username}</h3>
+        <p className="text-sm mt-2 line-clamp-2">{post.content}</p>
+      </div>
 
       {showComments && (
         <div className="absolute bottom-0 left-0 right-0 bg-black/90 h-2/3 rounded-t-xl overflow-hidden">
           <CommentList postId={post.id} />
         </div>
       )}
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Post</DialogTitle>
-          </DialogHeader>
-          <Textarea
-            value={editedContent}
-            onChange={(e) => setEditedContent(e.target.value)}
-            className="min-h-[100px]"
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEdit}>Save</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isCollectionDialogOpen} onOpenChange={setIsCollectionDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add to Collection</DialogTitle>
-          </DialogHeader>
-          <CollectionSelector 
-            postId={post.id} 
-            onSuccess={() => {
-              setIsCollectionDialogOpen(false);
-              toast.success("Added to collection!");
-            }}
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
