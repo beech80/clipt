@@ -36,14 +36,14 @@ const Home = () => {
             <div className="relative inline-flex items-center min-w-[200px] h-8">
               <div className="absolute inset-0 bg-[#1A1F2C] border border-gaming-400/20"></div>
               <div 
-                className={`absolute h-full w-1/2 bg-gaming-400 transition-all duration-300 ease-in-out ${
+                className={`absolute h-full w-1/2 bg-gaming-400/20 transition-all duration-300 ease-in-out ${
                   activeTab === "clips" ? "translate-x-full" : "translate-x-0"
                 }`}
               ></div>
               <button
                 onClick={() => setActiveTab("squad")}
                 className={`relative flex-1 h-full px-4 text-sm font-medium transition-colors duration-200 ${
-                  activeTab === "squad" ? "text-white" : "text-gray-400"
+                  activeTab === "squad" ? "text-gaming-400" : "text-gray-400"
                 }`}
               >
                 SQUAD
@@ -51,7 +51,7 @@ const Home = () => {
               <button
                 onClick={() => setActiveTab("clips")}
                 className={`relative flex-1 h-full px-4 text-sm font-medium transition-colors duration-200 ${
-                  activeTab === "clips" ? "text-white" : "text-gray-400"
+                  activeTab === "clips" ? "text-gaming-400" : "text-gray-400"
                 }`}
               >
                 CLIPS
