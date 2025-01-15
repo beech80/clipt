@@ -45,43 +45,40 @@ const Home = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* Smooth Game-like Toggle Switch */}
-              <div className="relative inline-flex items-center min-w-[140px] h-9">
+              {/* Gaming Trigger Toggle Switch */}
+              <div className="relative inline-flex items-center min-w-[200px] h-12">
                 <div 
-                  className="absolute inset-0 rounded-sm"
-                  style={{
-                    background: 'linear-gradient(to right, rgba(155, 135, 245, 0.1), rgba(139, 92, 246, 0.1))',
-                    border: '2px solid rgba(155, 135, 245, 0.3)',
-                    boxShadow: '0 0 10px rgba(155, 135, 245, 0.15)',
-                  }}
+                  className="absolute inset-0 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                    border-2 border-gaming-400/50 rounded-r-lg rounded-l-sm skew-x-12
+                    shadow-[0_0_15px_rgba(155,135,245,0.3)]"
                 ></div>
                 <div 
-                  className={`absolute h-full w-1/2 transition-all duration-300 ease-out rounded-sm ${
-                    activeTab === "clips" ? "translate-x-full" : "translate-x-0"
-                  }`}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(155, 135, 245, 0.15), rgba(139, 92, 246, 0.25))',
-                    boxShadow: '0 0 10px rgba(155, 135, 245, 0.2)',
-                    border: '2px solid rgba(155, 135, 245, 0.4)',
-                  }}
-                ></div>
+                  className={`absolute h-full w-1/2 transition-all duration-300 ease-out 
+                    bg-gradient-to-b from-gaming-400/30 to-gaming-400/40 
+                    border-2 border-gaming-400/50 rounded-r-lg rounded-l-sm skew-x-12
+                    shadow-[0_0_20px_rgba(155,135,245,0.4)]
+                    ${activeTab === "clips" ? "translate-x-full" : "translate-x-0"}`}
+                >
+                  <div className="absolute -right-0.5 top-0 bottom-0 w-2 bg-gaming-400/30 
+                    border-r-2 border-gaming-400/50 rounded-r-lg"></div>
+                </div>
                 <button
                   onClick={() => setActiveTab("squad")}
-                  className={`relative flex-1 h-full px-2 text-xs font-bold tracking-wider transition-colors duration-200 ${
-                    activeTab === "squad" 
+                  className={`relative flex-1 h-full px-4 text-xs font-bold tracking-wider transition-colors duration-200 -skew-x-12
+                    ${activeTab === "squad" 
                       ? "text-gaming-400" 
                       : "text-gray-400 hover:text-gaming-400/70"
-                  }`}
+                    }`}
                 >
                   SQUAD
                 </button>
                 <button
                   onClick={() => setActiveTab("clips")}
-                  className={`relative flex-1 h-full px-2 text-xs font-bold tracking-wider transition-colors duration-200 ${
-                    activeTab === "clips" 
+                  className={`relative flex-1 h-full px-4 text-xs font-bold tracking-wider transition-colors duration-200 -skew-x-12
+                    ${activeTab === "clips" 
                       ? "text-gaming-400" 
                       : "text-gray-400 hover:text-gaming-400/70"
-                  }`}
+                    }`}
                 >
                   CLIPS
                 </button>
