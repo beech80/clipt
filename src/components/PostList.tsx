@@ -74,7 +74,7 @@ const PostList = () => {
 
   if (status === "pending") {
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+      <div className="flex justify-center items-center p-8">
         <Loader2 className="w-8 h-8 animate-spin text-gaming-400" />
       </div>
     );
@@ -82,26 +82,36 @@ const PostList = () => {
 
   if (status === "error") {
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+      <div className="flex justify-center items-center p-8">
         <p className="text-red-500">Error: {error.message}</p>
       </div>
     );
   }
 
+  if (!data?.pages[0]?.length) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <p className="text-gaming-400">No posts yet. Be the first to post!</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full">
+    <div className="space-y-6">
       {data.pages.map((page, i) => (
-        page.map((post) => (
-          <div key={post.id} className="snap-start snap-always h-[calc(100vh-200px)]">
-            <PostItem 
-              post={{
-                ...post,
-                likes_count: post.likes?.[0]?.count || 0,
-                clip_votes: post.clip_votes || []
-              }} 
-            />
-          </div>
-        ))
+        <div key={i} className="space-y-6">
+          {page.map((post) => (
+            <div key={post.id} className="w-full">
+              <PostItem 
+                post={{
+                  ...post,
+                  likes_count: post.likes?.[0]?.count || 0,
+                  clip_votes: post.clip_votes || []
+                }} 
+              />
+            </div>
+          ))}
+        </div>
       ))}
       {hasNextPage && (
         <div
