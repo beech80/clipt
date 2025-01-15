@@ -9,7 +9,7 @@ const ActionButtons = ({ onAction }: ActionButtonsProps) => {
   return (
     <>
       <button 
-        className="action-button bg-[#F97316]/90 hover:bg-[#F97316]/80 transition-transform hover:scale-110 active:scale-95 group"
+        className="action-button bg-[#ea384c]/90 hover:bg-[#ea384c]/80 transition-transform hover:scale-110 active:scale-95 group"
         onClick={() => onAction('like')}
       >
         <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-[#FEC6A1] group-hover:text-[#FFDEE2]" />
@@ -22,14 +22,14 @@ const ActionButtons = ({ onAction }: ActionButtonsProps) => {
           <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#D3E4FD] group-hover:text-[#E5DEFF]" />
         </button>
         <button 
-          className="action-button bg-[#8B5CF6]/90 hover:bg-[#8B5CF6]/80 transition-transform hover:scale-110 active:scale-95 group"
+          className="action-button bg-[#22c55e]/90 hover:bg-[#22c55e]/80 transition-transform hover:scale-110 active:scale-95 group"
           onClick={() => onAction('follow')}
         >
           <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-[#E5DEFF] group-hover:text-[#D6BCFA]" />
         </button>
       </div>
       <button 
-        className="action-button bg-[#D946EF]/90 hover:bg-[#D946EF]/80 transition-transform hover:scale-110 active:scale-95 group"
+        className="action-button bg-[#F97316]/90 hover:bg-[#F97316]/80 transition-transform hover:scale-110 active:scale-95 group"
         onClick={() => onAction('rank')}
       >
         <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFDEE2] group-hover:text-[#FEC6A1]" />
