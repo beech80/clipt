@@ -152,11 +152,17 @@ const App = () => {
                   </Routes>
                 </main>
                 {!isMenuOpen && (
-                  <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 z-[60]">
-                    <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
-                      <Play className="clip-button-icon" />
-                      <span className="clip-button-text">clipt</span>
-                    </div>
+                  <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
+                    <Sheet onOpenChange={setIsOpen}>
+                      <SheetTrigger asChild>
+                        <button className="menu-button">
+                          <Menu className="menu-button-icon" />
+                        </button>
+                      </SheetTrigger>
+                      <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
+                        {/* Sheet content goes here */}
+                      </SheetContent>
+                    </Sheet>
                   </div>
                 )}
                 <GameBoyControls />

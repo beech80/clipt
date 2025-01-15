@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
     --background: 240 27% 8%;
@@ -217,4 +217,44 @@
 
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
+}
+
+.menu-button {
+  @apply rounded-full p-2 sm:p-3 backdrop-blur-sm transition-all duration-300;
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  box-shadow: 
+    inset 0 2px 15px rgba(255,255,255,0.1),
+    0 5px 15px rgba(0,0,0,0.4),
+    0 15px 30px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-button::before {
+  content: '';
+  @apply absolute inset-0 rounded-full;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.menu-button:hover {
+  @apply bg-gaming-400/30;
+  transform: translateY(-2px);
+  box-shadow: 
+    inset 0 2px 15px rgba(255,255,255,0.15),
+    0 8px 20px rgba(0,0,0,0.5),
+    0 20px 40px rgba(0,0,0,0.3);
+}
+
+.menu-button:active {
+  transform: translateY(1px);
+  box-shadow: 
+    inset 0 2px 10px rgba(255,255,255,0.1),
+    0 3px 10px rgba(0,0,0,0.3);
+}
+
+.menu-button-icon {
+  @apply w-4 h-4 sm:w-5 sm:h-5 text-gaming-400;
+  filter: drop-shadow(0 0 5px rgba(30, 174, 219, 0.5));
 }
