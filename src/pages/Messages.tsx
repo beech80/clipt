@@ -3,7 +3,7 @@ import { MessageList } from "@/components/messages/MessageList";
 import { ChatList } from "@/components/messages/ChatList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { GameController, Users } from "lucide-react";
+import { Gamepad, Users } from "lucide-react";
 
 function MessagesContent() {
   const { selectedChat, setSelectedChat, messages, chats, isLoading, handleSendMessage } = useMessages();
@@ -21,7 +21,7 @@ function MessagesContent() {
           {/* Welcome Message */}
           <div className="bg-gaming-900/50 rounded-lg p-4 border border-gaming-500/20">
             <div className="flex items-center space-x-2 mb-2">
-              <GameController className="w-5 h-5 text-gaming-500" />
+              <Gamepad className="w-5 h-5 text-gaming-500" />
               <h3 className="font-bold text-gaming-100">Game Chat Hub</h3>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -71,7 +71,7 @@ function MessagesContent() {
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-2">
-                <GameController className="w-12 h-12 mx-auto text-gaming-500 opacity-50" />
+                <Gamepad className="w-12 h-12 mx-auto text-gaming-500 opacity-50" />
                 <p className="text-muted-foreground">Select a chat to start messaging</p>
               </div>
             </div>
