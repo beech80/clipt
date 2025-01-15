@@ -45,6 +45,7 @@ const Clipts = () => {
 
   return (
     <div className="h-[calc(100vh-80px)]">
+      <h1 className="text-2xl font-bold mb-4 text-center gaming-gradient">Clipts</h1>
       <ScrollArea className="h-full">
         <div className="snap-y snap-mandatory h-full overflow-y-scroll">
           {posts?.map((post) => (
