@@ -88,13 +88,11 @@
 }
 
 .clip-button {
-  @apply text-xl font-bold tracking-wider backdrop-blur-[2px];
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(229, 231, 235, 0.9) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 20px rgba(155, 135, 245, 1);
+  @apply text-xl font-black tracking-wider;
+  color: white;
+  letter-spacing: 0.2em;
   position: relative;
-  mix-blend-mode: overlay;
+  mix-blend-mode: difference;
 }
 
 .clip-button::before {
@@ -104,7 +102,6 @@
   background: linear-gradient(90deg, #9b87f5 0%, #8B5CF6 100%);
   border-radius: 8px;
   z-index: -1;
-  filter: blur(12px);
   opacity: 1;
   transform: translateY(4px);
 }
