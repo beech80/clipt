@@ -6,6 +6,7 @@ import { StreamInfoCards } from "@/components/streaming/StreamInfoCards";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
 import { StreamChat } from "@/components/streaming/StreamChat";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
+import { toast } from "sonner";
 
 const Streaming = () => {
   const { user } = useAuth();
@@ -26,25 +27,38 @@ const Streaming = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      loadStreamData();
-      if (streamData.isLive) {
-        const interval = setInterval(updateViewerCount, 30000);
-        return () => clearInterval(interval);
-      }
+    if (!user) {
+      console.log("No user found");
+      return;
+    }
+
+    console.log("Loading stream data for user:", user.id);
+    loadStreamData();
+    
+    if (streamData.isLive) {
+      const interval = setInterval(updateViewerCount, 30000);
+      return () => clearInterval(interval);
     }
   }, [user, streamData.isLive]);
 
   const loadStreamData = async () => {
+    if (!user) return;
+
     try {
+      console.log("Fetching stream data...");
       const { data: stream, error } = await supabase
         .from("streams")
         .select("*")
-        .eq("user_id", user?.id)
+        .eq("user_id", user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading stream data:", error);
+        toast.error("Failed to load stream data");
+        return;
+      }
 
+      console.log("Stream data received:", stream);
       if (stream) {
         setStreamData({
           id: stream.id,
@@ -56,7 +70,8 @@ const Streaming = () => {
         });
       }
     } catch (error) {
-      console.error("Error loading stream data:", error);
+      console.error("Error in loadStreamData:", error);
+      toast.error("Failed to load stream data");
     }
   };
 
@@ -92,11 +107,22 @@ const Streaming = () => {
     }));
   };
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-2">Please Log In</h2>
+          <p className="text-muted-foreground">You need to be logged in to access the streaming features.</p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log("Rendering Streaming component with data:", streamData);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 space-y-8">
-      <div className="gaming-card">
+    <div className="mx-auto max-w-7xl space-y-8">
+      <div className="gaming-card p-6">
         <h1 className="gaming-gradient text-3xl font-bold tracking-tight mb-4">
           Stream Manager
         </h1>

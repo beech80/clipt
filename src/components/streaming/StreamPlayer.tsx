@@ -21,8 +21,11 @@ export const StreamPlayer = ({
   useEffect(() => {
     if (!streamUrl || !videoRef.current) return;
 
+    console.log("Initializing stream player with URL:", streamUrl);
+
     const initPlayer = () => {
       if (Hls.isSupported()) {
+        console.log("HLS is supported, initializing player...");
         const hls = new Hls({
           enableWorker: true,
           lowLatencyMode: true,
@@ -34,23 +37,29 @@ export const StreamPlayer = ({
         hls.attachMedia(videoRef.current!);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log("HLS manifest parsed, attempting autoplay...");
           if (autoplay) {
             videoRef.current?.play().catch(() => {
+              console.log("Autoplay blocked by browser");
               toast.error("Autoplay blocked. Please click play.");
             });
           }
         });
 
         hls.on(Hls.Events.ERROR, (_, data) => {
+          console.log("HLS error:", data);
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log("Network error, attempting to recover...");
                 hls.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log("Media error, attempting to recover...");
                 hls.recoverMediaError();
                 break;
               default:
+                console.log("Fatal error, reinitializing player...");
                 initPlayer();
                 break;
             }
@@ -58,9 +67,11 @@ export const StreamPlayer = ({
         });
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
         // For Safari
+        console.log("Using native HLS support for Safari");
         videoRef.current.src = streamUrl;
         if (autoplay) {
           videoRef.current.play().catch(() => {
+            console.log("Autoplay blocked in Safari");
             toast.error("Autoplay blocked. Please click play.");
           });
         }
@@ -70,6 +81,7 @@ export const StreamPlayer = ({
     initPlayer();
 
     return () => {
+      console.log("Cleaning up stream player...");
       if (hlsRef.current) {
         hlsRef.current.destroy();
       }
