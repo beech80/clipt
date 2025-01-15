@@ -154,10 +154,6 @@ const App = () => {
                 {!isMenuOpen && (
                   <div className="fixed bottom-[100px] left-1/2 -translate-x-1/2 z-[60]">
                     <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
-                      <div className="clip-button-corners">
-                        <div className="clip-button-corner"></div>
-                        <div className="clip-button-corner"></div>
-                      </div>
                       <Play className="clip-button-icon" />
                     </div>
                   </div>
