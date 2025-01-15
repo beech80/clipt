@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Gamepad2, Bookmark, Settings, Edit, MessageSquare, UserPlus } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
+import { Gamepad2, Trophy, MessageSquare, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 
 const Profile = () => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'clips' | 'games' | 'achievements'>('clips');
 
   const { data: userClips } = useQuery({
     queryKey: ['user-clips'],
@@ -55,11 +55,6 @@ const Profile = () => {
     { id: 3, name: "Stream Star", description: "Reached 1000 viewers", date: "2024-02-15" }
   ];
 
-  const handleEditProfile = () => {
-    setIsEditing(true);
-    toast.info("Profile editing coming soon!");
-  };
-
   const handleAddFriend = () => {
     toast.success("Friend request sent!");
   };
@@ -76,10 +71,10 @@ const Profile = () => {
             <img
               src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop"
               alt="Profile"
-              className="w-24 h-24 rounded-full border-4 border-gaming-500"
+              className="w-24 h-24 rounded-full border-4 border-gaming-500 animate-glow"
             />
             <div>
-              <h1 className="text-2xl font-bold">ProGamer123</h1>
+              <h1 className="text-2xl font-bold gaming-gradient">ProGamer123</h1>
               <p className="text-muted-foreground">Joined January 2024</p>
               <p className="text-sm text-muted-foreground mt-2 max-w-md">
                 Pro gamer and content creator. Love streaming and making awesome gaming content!
@@ -91,18 +86,14 @@ const Profile = () => {
               <div className="flex gap-2 mt-4">
                 <Button 
                   onClick={handleAddFriend}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
+                  className="gaming-button"
                 >
                   <UserPlus className="w-4 h-4" />
                   Add Friend
                 </Button>
                 <Button 
                   onClick={handleMessage}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
+                  className="gaming-button"
                 >
                   <MessageSquare className="w-4 h-4" />
                   Message
@@ -110,88 +101,93 @@ const Profile = () => {
               </div>
             </div>
           </div>
-          <Button 
-            onClick={handleEditProfile} 
-            variant="ghost" 
-            size="icon" 
-            className="hover:bg-gaming-500/20"
-          >
-            <Edit className="w-5 h-5" />
-          </Button>
         </div>
 
-        <Tabs defaultValue="clips" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 gap-4">
-            <TabsTrigger value="clips">
-              <Gamepad2 className="w-4 h-4 mr-2" /> Clips
-            </TabsTrigger>
-            <TabsTrigger value="games">
-              <Gamepad2 className="w-4 h-4 mr-2" /> Games
-            </TabsTrigger>
-            <TabsTrigger value="achievements">
-              <Trophy className="w-4 h-4 mr-2" /> Achievements
-            </TabsTrigger>
-            <TabsTrigger value="saved">
-              <Bookmark className="w-4 h-4 mr-2" /> Saved
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex justify-center gap-4 mb-6">
+          <Toggle
+            pressed={activeTab === 'clips'}
+            onPressedChange={() => setActiveTab('clips')}
+            className="gaming-button flex gap-2 data-[state=on]:border-gaming-500 data-[state=on]:bg-gaming-500/20"
+          >
+            <Gamepad2 className="w-4 h-4" /> Clips
+          </Toggle>
+          <Toggle
+            pressed={activeTab === 'games'}
+            onPressedChange={() => setActiveTab('games')}
+            className="gaming-button flex gap-2 data-[state=on]:border-gaming-500 data-[state=on]:bg-gaming-500/20"
+          >
+            <Gamepad2 className="w-4 h-4" /> Games
+          </Toggle>
+          <Toggle
+            pressed={activeTab === 'achievements'}
+            onPressedChange={() => setActiveTab('achievements')}
+            className="gaming-button flex gap-2 data-[state=on]:border-gaming-500 data-[state=on]:bg-gaming-500/20"
+          >
+            <Trophy className="w-4 h-4" /> Achievements
+          </Toggle>
+        </div>
 
-          <TabsContent value="clips" className="space-y-4">
-            {userClips?.length === 0 ? (
-              <div className="text-center py-8">
-                <Gamepad2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold">No clips yet</h3>
-                <p className="text-muted-foreground">Share your gaming moments!</p>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {userClips?.map((clip) => (
-                  <PostItem 
-                    key={clip.id} 
-                    post={{
-                      ...clip,
-                      likes_count: clip.likes?.[0]?.count || 0,
-                      clip_votes: clip.clip_votes || []
-                    }} 
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="games" className="space-y-4">
-            {userGames.map(game => (
-              <div key={game.id} className="flex items-center justify-between p-4 gaming-card hover:border-gaming-500">
-                <div>
-                  <h3 className="font-semibold">{game.name}</h3>
-                  <p className="text-sm text-muted-foreground">Last played {game.lastPlayed}</p>
+        <div className="mt-6">
+          {activeTab === 'clips' && (
+            <div className="space-y-4">
+              {userClips?.length === 0 ? (
+                <div className="text-center py-8">
+                  <Gamepad2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold">No clips yet</h3>
+                  <p className="text-muted-foreground">Share your gaming moments!</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium">{game.hours} hours</p>
+              ) : (
+                <div className="grid gap-4">
+                  {userClips?.map((clip) => (
+                    <PostItem 
+                      key={clip.id} 
+                      post={{
+                        ...clip,
+                        likes_count: clip.likes?.[0]?.count || 0,
+                        clip_votes: clip.clip_votes || []
+                      }} 
+                    />
+                  ))}
                 </div>
-              </div>
-            ))}
-          </TabsContent>
+              )}
+            </div>
+          )}
 
-          <TabsContent value="achievements" className="space-y-4">
-            {achievements.map(achievement => (
-              <div key={achievement.id} className="flex items-center gap-4 p-4 gaming-card hover:border-gaming-500">
-                <Trophy className="w-8 h-8 text-gaming-400" />
-                <div>
-                  <h3 className="font-semibold">{achievement.name}</h3>
-                  <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                  <p className="text-xs text-muted-foreground">Achieved on {achievement.date}</p>
+          {activeTab === 'games' && (
+            <div className="space-y-4">
+              {userGames.map(game => (
+                <div key={game.id} className="gaming-card hover:border-gaming-500 transition-all">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold gaming-gradient">{game.name}</h3>
+                      <p className="text-sm text-muted-foreground">Last played {game.lastPlayed}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">{game.hours} hours</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </TabsContent>
+              ))}
+            </div>
+          )}
 
-          <TabsContent value="saved" className="text-center py-8">
-            <Bookmark className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No saved items yet</h3>
-            <p className="text-muted-foreground">Items you save will appear here</p>
-          </TabsContent>
-        </Tabs>
+          {activeTab === 'achievements' && (
+            <div className="space-y-4">
+              {achievements.map(achievement => (
+                <div key={achievement.id} className="gaming-card hover:border-gaming-500 transition-all">
+                  <div className="flex items-center gap-4">
+                    <Trophy className="w-8 h-8 text-gaming-400" />
+                    <div>
+                      <h3 className="font-semibold gaming-gradient">{achievement.name}</h3>
+                      <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                      <p className="text-xs text-muted-foreground">Achieved on {achievement.date}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
