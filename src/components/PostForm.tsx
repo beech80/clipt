@@ -179,7 +179,10 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
       setVideoProgress(0);
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (videoInputRef.current) videoInputRef.current.value = '';
+      
+      // Invalidate and refetch posts query to update the home page
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
       if (onPostCreated) onPostCreated();
     } catch (error) {
       console.error("Error creating post:", error);
