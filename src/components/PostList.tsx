@@ -7,6 +7,21 @@ import { Loader2 } from "lucide-react";
 
 const POSTS_PER_PAGE = 5;
 
+interface Post {
+  id: string;
+  content: string | null;
+  image_url: string | null;
+  video_url: string | null;
+  created_at: string;
+  user_id: string;
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+  } | null;
+  likes: { count: number }[];
+  clip_votes: { count: number }[];
+}
+
 const PostList = () => {
   const { ref, inView } = useInView();
 
@@ -20,7 +35,7 @@ const PostList = () => {
   } = useInfiniteQuery({
     queryKey: ['posts'],
     queryFn: async ({ pageParam = 0 }) => {
-      const from = pageParam * POSTS_PER_PAGE;
+      const from = Number(pageParam) * POSTS_PER_PAGE;
       const to = from + POSTS_PER_PAGE - 1;
 
       const { data, error } = await supabase
@@ -42,8 +57,9 @@ const PostList = () => {
         .range(from, to);
 
       if (error) throw error;
-      return data;
+      return data as Post[];
     },
+    initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => {
       if (!lastPage || lastPage.length < POSTS_PER_PAGE) return undefined;
       return pages.length;
