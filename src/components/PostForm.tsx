@@ -65,7 +65,15 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
 
         const { error: uploadError } = await supabase.storage
           .from('videos')
-          .upload(filePath, selectedVideo);
+          .upload(filePath, selectedVideo, {
+            onUploadProgress: (progress) => {
+              const percent = Math.round((progress.loaded / progress.total) * 100);
+              // Update progress in VideoUpload component
+              if (videoUploadRef.current) {
+                videoUploadRef.current.setUploadProgress(percent);
+              }
+            },
+          });
 
         if (uploadError) throw uploadError;
 
