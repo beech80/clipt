@@ -60,8 +60,8 @@ const Home = () => {
       </div>
 
       {/* Modern CLIPT Title */}
-      <div className="fixed bottom-[120px] left-1/2 -translate-x-1/2 z-50">
-        <h1 className="clip-button">
+      <div className="fixed bottom-[120px] left-1/2 -translate-x-1/2 z-[60]">
+        <h1 className="clip-button text-3xl">
           CLIPT
         </h1>
       </div>
