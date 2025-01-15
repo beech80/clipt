@@ -92,28 +92,31 @@
   color: #FFFFFF;
   letter-spacing: 0.2em;
   position: relative;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+  font-weight: 900;
 }
 
 .clip-button::before {
   content: '';
   position: absolute;
   inset: -2px;
-  background: linear-gradient(90deg, #C4B5FD 0%, #A78BFA 100%);
+  background: linear-gradient(90deg, #8B5CF6 0%, #7C3AED 100%);
   border-radius: 8px;
   z-index: -1;
   opacity: 1;
   transform: translateY(4px);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
 }
 
 .clip-button::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #EDE9FE 0%, #DDD6FE 100%);
+  background: linear-gradient(90deg, #A78BFA 0%, #8B5CF6 100%);
   border-radius: 6px;
   z-index: -1;
-  opacity: 0.9;
+  opacity: 1;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
 }
 
 .xbox-joystick {
