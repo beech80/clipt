@@ -13,6 +13,7 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
@@ -65,15 +66,7 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
 
         const { error: uploadError } = await supabase.storage
           .from('videos')
-          .upload(filePath, selectedVideo, {
-            onUploadProgress: (progress) => {
-              const percent = Math.round((progress.loaded / progress.total) * 100);
-              // Update progress in VideoUpload component
-              if (videoUploadRef.current) {
-                videoUploadRef.current.setUploadProgress(percent);
-              }
-            },
-          });
+          .upload(filePath, selectedVideo);
 
         if (uploadError) throw uploadError;
 
@@ -99,6 +92,7 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
       setContent("");
       setSelectedImage(null);
       setSelectedVideo(null);
+      setUploadProgress(0);
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       if (onPostCreated) onPostCreated();
     } catch (error) {
@@ -131,6 +125,8 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
             selectedVideo={selectedVideo}
             onVideoSelect={setSelectedVideo}
             videoInputRef={videoInputRef}
+            uploadProgress={uploadProgress}
+            setUploadProgress={setUploadProgress}
           />
         )}
 

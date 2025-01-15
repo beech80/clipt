@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
 import { toast } from "sonner";
@@ -7,11 +8,17 @@ interface VideoUploadProps {
   selectedVideo: File | null;
   onVideoSelect: (file: File | null) => void;
   videoInputRef: React.RefObject<HTMLInputElement>;
+  uploadProgress?: number;
+  setUploadProgress?: (progress: number) => void;
 }
 
-const VideoUpload = ({ selectedVideo, onVideoSelect, videoInputRef }: VideoUploadProps) => {
-  const [uploadProgress, setUploadProgress] = useState(0);
-
+const VideoUpload = ({ 
+  selectedVideo, 
+  onVideoSelect, 
+  videoInputRef,
+  uploadProgress = 0,
+  setUploadProgress = () => {} 
+}: VideoUploadProps) => {
   const handleVideoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
