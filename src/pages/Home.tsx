@@ -20,45 +20,49 @@ const Home = () => {
               CLIPT
             </h1>
             
-            <div className="flex justify-between items-center w-full space-x-6">
-              <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
-                <DialogTrigger asChild>
-                  <Button 
-                    className="relative h-12 w-[120px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
-                    border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
-                    active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
-                    transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                    hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
-                    style={{
-                      clipPath: "polygon(30% 0, 100% 0, 70% 100%, 0% 100%)"
-                    }}
-                  >
-                    <span className="flex items-center -skew-x-12">
-                      <Video className="w-4 h-4 mr-2" />
-                      POST
-                    </span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
-                  <PostForm onPostCreated={() => setIsPostFormOpen(false)} />
-                </DialogContent>
-              </Dialog>
+            <div className="relative w-full h-12">
+              <div className="absolute left-0 right-0 flex justify-between">
+                <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="relative h-12 w-[140px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                      border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
+                      active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
+                      transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
+                      hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
+                      style={{
+                        clipPath: "polygon(0 0, 100% 0, 80% 100%, 0% 100%)",
+                        transform: "perspective(500px) rotateY(15deg)"
+                      }}
+                    >
+                      <span className="flex items-center -skew-x-12">
+                        <Video className="w-4 h-4 mr-2" />
+                        POST
+                      </span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]">
+                    <PostForm onPostCreated={() => setIsPostFormOpen(false)} />
+                  </DialogContent>
+                </Dialog>
 
-              <Button 
-                className="relative h-12 w-[120px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
-                border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
-                active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
-                transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
-                style={{
-                  clipPath: "polygon(30% 0, 100% 0, 70% 100%, 0% 100%)"
-                }}
-                onClick={() => setActiveTab("squad")}
-              >
-                <span className="flex items-center -skew-x-12 font-bold tracking-wider">
-                  SQUADS
-                </span>
-              </Button>
+                <Button 
+                  className="relative h-12 w-[140px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                  border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
+                  active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
+                  transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
+                  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
+                  style={{
+                    clipPath: "polygon(20% 0, 100% 0, 100% 100%, 0% 100%)",
+                    transform: "perspective(500px) rotateY(-15deg)"
+                  }}
+                  onClick={() => setActiveTab("squad")}
+                >
+                  <span className="flex items-center -skew-x-12 font-bold tracking-wider">
+                    SQUADS
+                  </span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
