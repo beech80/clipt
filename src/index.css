@@ -73,7 +73,7 @@
 }
 
 .gameboy-container {
-  @apply fixed bottom-0 left-0 right-0 border-t-2 border-[#9b87f5]/30 bg-[#1A1F2C]/95;
+  @apply fixed bottom-0 left-0 right-0 border-t-2 border-[#9b87f5]/30 bg-[#1A1F2C]/95 backdrop-blur-sm;
   box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.2);
 }
 
