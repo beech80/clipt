@@ -155,6 +155,7 @@ const App = () => {
                   <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 z-[60]">
                     <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
                       <Play className="clip-button-icon" />
+                      <span className="clip-button-text">clipt</span>
                     </div>
                   </div>
                 )}
