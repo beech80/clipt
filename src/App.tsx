@@ -9,6 +9,7 @@ import { MainNav } from "./components/MainNav";
 import GameBoyControls from "./components/GameBoyControls";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
+import Clips from "./pages/Clips";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
@@ -53,6 +54,14 @@ const App = () => {
                       element={
                         <AuthGuard>
                           <Discover />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/clips"
+                      element={
+                        <AuthGuard>
+                          <Clips />
                         </AuthGuard>
                       }
                     />
