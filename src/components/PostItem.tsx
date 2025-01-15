@@ -56,8 +56,8 @@ const PostItem = ({ post }: PostItemProps) => {
             post_id: post.id,
             viewer_id: user.id
           })
-          .onConflict(['post_id', 'viewer_id'])
-          .ignore();
+          .select()
+          .maybeSingle();
       };
       trackView();
     }

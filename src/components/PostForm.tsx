@@ -111,7 +111,8 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
             post_id: editingPost.id,
             user_id: user.id,
             previous_content: editingPost.content
-          });
+          })
+          .select();
 
         // Update the post
         const { error } = await supabase
@@ -121,7 +122,8 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
             image_url: image_url || null,
             video_url: video_url || null
           })
-          .eq('id', editingPost.id);
+          .eq('id', editingPost.id)
+          .select();
 
         if (error) throw error;
       } else {
@@ -146,8 +148,8 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
             await supabase
               .from('hashtags')
               .insert({ name: tag })
-              .onConflict('name')
-              .ignore();
+              .select()
+              .maybeSingle();
           }
 
           // Get hashtag IDs
@@ -165,7 +167,8 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
                   post_id: post.id,
                   hashtag_id: tag.id
                 }))
-              );
+              )
+              .select();
           }
         }
       }
