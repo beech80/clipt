@@ -4,19 +4,26 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { StreamForm } from "./StreamForm";
 import { startStream, endStream } from "@/utils/streamUtils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StreamControlsProps {
-  userId: string;
+  userId?: string;
   isLive?: boolean;
   onStreamUpdate: (data: { isLive: boolean; streamKey: string | null; streamUrl: string | null }) => void;
 }
 
 export const StreamControls = ({ userId, isLive = false, onStreamUpdate }: StreamControlsProps) => {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
   const handleStartStream = async () => {
+    if (!userId) {
+      toast.error("Please log in to start streaming");
+      return;
+    }
+
     if (!title) {
       toast.error("Please set a stream title first");
       return;
@@ -36,6 +43,8 @@ export const StreamControls = ({ userId, isLive = false, onStreamUpdate }: Strea
   };
 
   const handleEndStream = async () => {
+    if (!userId) return;
+
     setIsLoading(true);
     try {
       const result = await endStream(userId);
@@ -48,6 +57,11 @@ export const StreamControls = ({ userId, isLive = false, onStreamUpdate }: Strea
       setIsLoading(false);
     }
   };
+
+  // Only show stream controls if user is logged in and it's their stream
+  if (!user || user.id !== userId) {
+    return null;
+  }
 
   return (
     <div className="space-y-4 mb-6">

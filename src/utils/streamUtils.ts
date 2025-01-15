@@ -73,3 +73,20 @@ export const endStream = async (userId: string) => {
     streamUrl: null 
   };
 };
+
+export const getActiveStreams = async () => {
+  const { data, error } = await supabase
+    .from("streams")
+    .select(`
+      *,
+      profiles:user_id (
+        username,
+        avatar_url
+      )
+    `)
+    .eq("is_live", true)
+    .order("viewer_count", { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
