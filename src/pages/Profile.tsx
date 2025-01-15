@@ -66,39 +66,36 @@ const Profile = () => {
   return (
     <div className="space-y-6">
       <div className="gaming-card">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <img
-              src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop"
-              alt="Profile"
-              className="w-24 h-24 rounded-full border-4 border-gaming-500 animate-glow"
-            />
-            <div>
-              <h1 className="text-2xl font-bold gaming-gradient">ProGamer123</h1>
-              <p className="text-muted-foreground">Joined January 2024</p>
-              <p className="text-sm text-muted-foreground mt-2 max-w-md">
-                Pro gamer and content creator. Love streaming and making awesome gaming content!
-              </p>
-              <div className="flex gap-4 mt-2">
-                <span className="text-sm">{userStats.followers} Followers</span>
-                <span className="text-sm">{userStats.following} Following</span>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button 
-                  onClick={handleAddFriend}
-                  className="gaming-button"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Add Friend
-                </Button>
-                <Button 
-                  onClick={handleMessage}
-                  className="gaming-button"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  Message
-                </Button>
-              </div>
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop"
+            alt="Profile"
+            className="w-24 h-24 rounded-full border-4 border-gaming-500 animate-glow mb-4"
+          />
+          <div className="text-center">
+            <h1 className="text-2xl font-bold gaming-gradient">ProGamer123</h1>
+            <p className="text-sm text-muted-foreground mt-2 max-w-md">
+              Pro gamer and content creator. Love streaming and making awesome gaming content!
+            </p>
+            <div className="flex justify-center gap-4 mt-2">
+              <span className="text-sm">{userStats.followers} Followers</span>
+              <span className="text-sm">{userStats.following} Following</span>
+            </div>
+            <div className="flex justify-center gap-2 mt-4">
+              <Button 
+                onClick={handleAddFriend}
+                className="gaming-button"
+              >
+                <UserPlus className="w-4 h-4" />
+                Add Friend
+              </Button>
+              <Button 
+                onClick={handleMessage}
+                className="gaming-button"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Message
+              </Button>
             </div>
           </div>
         </div>
