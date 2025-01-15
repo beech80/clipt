@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Home = () => {
   const { user } = useAuth();
@@ -33,27 +32,29 @@ const Home = () => {
               </DialogContent>
             </Dialog>
 
-            <Tabs 
-              defaultValue="clips" 
-              className="w-48"
-              value={activeTab}
-              onValueChange={setActiveTab}
-            >
-              <TabsList className="grid w-full grid-cols-2 bg-gaming-700/20">
-                <TabsTrigger 
-                  value="squad" 
-                  className="data-[state=active]:bg-gaming-400/20"
-                >
-                  SQUAD
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="clips" 
-                  className="data-[state=active]:bg-gaming-400"
-                >
-                  CLIPS
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            {/* Custom Toggle Switch */}
+            <div className="relative inline-flex bg-gaming-700/20 rounded-lg p-1 min-w-[160px]">
+              <button
+                onClick={() => setActiveTab("squad")}
+                className={`flex-1 px-4 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
+                  activeTab === "squad"
+                    ? "bg-gaming-400/20 text-gaming-400"
+                    : "text-gray-400 hover:text-gaming-400/60"
+                }`}
+              >
+                SQUAD
+              </button>
+              <button
+                onClick={() => setActiveTab("clips")}
+                className={`flex-1 px-4 py-1 text-sm font-medium rounded-md transition-all duration-200 ${
+                  activeTab === "clips"
+                    ? "bg-gaming-400 text-white"
+                    : "text-gray-400 hover:text-gaming-400/60"
+                }`}
+              >
+                CLIPS
+              </button>
+            </div>
           </div>
         </div>
       </div>

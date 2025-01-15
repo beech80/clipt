@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import CommentList from "./post/CommentList";
 import { useAuth } from "@/contexts/AuthContext";
-import { MessageSquare, UserPlus, Heart, Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -193,7 +192,7 @@ const PostItem = ({ post }: PostItemProps) => {
       
       {/* User info overlay */}
       <div className="absolute bottom-4 left-4 right-4 text-white">
-        <h3 className="font-bold">@{post.profiles?.username}</h3>
+        <h3 className="font-bold">{post.profiles?.username}</h3>
       </div>
 
       {showComments && (
