@@ -35,7 +35,7 @@ const Home = () => {
                   >
                     <span className="flex items-center -skew-x-12">
                       <Video className="w-4 h-4 mr-2" />
-                      RT
+                      POST
                     </span>
                   </Button>
                 </DialogTrigger>
@@ -56,7 +56,7 @@ const Home = () => {
                 onClick={() => setActiveTab("squad")}
               >
                 <span className="flex items-center -skew-x-12 font-bold tracking-wider">
-                  LT
+                  SQUADS
                 </span>
               </Button>
             </div>
