@@ -24,17 +24,18 @@ const Home = () => {
               <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    className="relative h-10 w-[100px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                    className="relative h-12 w-[120px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
                     border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
                     active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
                     transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                    hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]
-                    [clip-path:polygon(0_0,100%_0,85%_100%,0%_100%)]"
-                    size="sm"
+                    hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
+                    style={{
+                      clipPath: "polygon(30% 0, 100% 0, 70% 100%, 0% 100%)"
+                    }}
                   >
-                    <span className="flex items-center">
+                    <span className="flex items-center -skew-x-12">
                       <Video className="w-4 h-4 mr-2" />
-                      Post
+                      RT
                     </span>
                   </Button>
                 </DialogTrigger>
@@ -43,20 +44,21 @@ const Home = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* Gaming Button */}
-              <div className="relative inline-flex items-center min-w-[120px] h-10">
-                <div className="absolute inset-0 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
-                  border-2 border-gaming-400/50 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                  [clip-path:polygon(15%_0,85%_0,100%_100%,0%_100%)]">
-                </div>
-                
-                <button
-                  onClick={() => setActiveTab("squad")}
-                  className="relative flex-1 h-full px-4 text-xs font-bold tracking-wider text-gaming-400"
-                >
-                  SQUAD
-                </button>
-              </div>
+              <Button 
+                className="relative h-12 w-[120px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
+                active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
+                transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
+                hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
+                style={{
+                  clipPath: "polygon(30% 0, 100% 0, 70% 100%, 0% 100%)"
+                }}
+                onClick={() => setActiveTab("squad")}
+              >
+                <span className="flex items-center -skew-x-12 font-bold tracking-wider">
+                  LT
+                </span>
+              </Button>
             </div>
           </div>
         </div>
