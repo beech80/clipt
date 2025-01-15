@@ -152,20 +152,18 @@ const App = () => {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
-                {!isMenuOpen && (
-                  <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
-                    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                      <SheetTrigger asChild>
-                        <button className="menu-button">
-                          <Menu className="menu-button-icon" />
-                        </button>
-                      </SheetTrigger>
-                      <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
-                        {/* Sheet content goes here */}
-                      </SheetContent>
-                    </Sheet>
-                  </div>
-                )}
+                <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
+                  <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                    <SheetTrigger asChild>
+                      <button className="menu-button">
+                        <Menu className="menu-button-icon" />
+                      </button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
+                      {/* Sheet content goes here */}
+                    </SheetContent>
+                  </Sheet>
+                </div>
                 <GameBoyControls />
               </BrowserRouter>
             </div>
