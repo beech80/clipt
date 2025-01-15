@@ -92,14 +92,13 @@
   color: #FFFFFF;
   letter-spacing: 0.2em;
   position: relative;
-  mix-blend-mode: normal;
 }
 
 .clip-button::before {
   content: '';
   position: absolute;
   inset: -2px;
-  background: linear-gradient(90deg, #9b87f5 0%, #8B5CF6 100%);
+  background: linear-gradient(90deg, #B794F4 0%, #9F7AEA 100%);
   border-radius: 8px;
   z-index: -1;
   opacity: 1;
@@ -110,7 +109,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #A78BFA 0%, #8B5CF6 100%);
+  background: linear-gradient(90deg, #D6BCFA 0%, #B794F4 100%);
   border-radius: 6px;
   z-index: -1;
   opacity: 1;
