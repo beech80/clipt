@@ -122,12 +122,12 @@ const Joystick = ({ onDirectionChange }: JoystickProps) => {
   return (
     <div 
       ref={joystickRef}
-      className="relative w-full h-full bg-gaming-400/10 rounded-full border-2 border-gaming-400/30 backdrop-blur-sm shadow-xl cursor-grab active:cursor-grabbing"
+      className="xbox-joystick cursor-grab active:cursor-grabbing"
       onMouseDown={handleJoystickStart}
       onTouchStart={handleJoystickStart}
     >
       <div 
-        className="absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full bg-black shadow-lg transition-all duration-300 ease-out"
+        className="xbox-joystick-thumb"
         style={{ 
           transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
         }}
@@ -135,19 +135,19 @@ const Joystick = ({ onDirectionChange }: JoystickProps) => {
       
       <button 
         onClick={() => handleDirectionClick('up')}
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent -translate-y-1"
+        className="xbox-joystick-direction top-0 left-1/2 -translate-x-1/2 -translate-y-1"
       />
       <button 
         onClick={() => handleDirectionClick('right')}
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent translate-x-1"
+        className="xbox-joystick-direction right-0 top-1/2 -translate-y-1/2 translate-x-1"
       />
       <button 
         onClick={() => handleDirectionClick('down')}
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent translate-y-1"
+        className="xbox-joystick-direction bottom-0 left-1/2 -translate-x-1/2 translate-y-1"
       />
       <button 
         onClick={() => handleDirectionClick('left')}
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent -translate-x-1"
+        className="xbox-joystick-direction left-0 top-1/2 -translate-y-1/2 -translate-x-1"
       />
     </div>
   );
