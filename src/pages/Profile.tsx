@@ -81,7 +81,7 @@ const Profile = () => {
             </div>
             <div className="text-center">
               <h1 className="clip-button text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gaming-400 to-gaming-600 truncate max-w-[200px]">
-                ProGamer123
+                Cliped
               </h1>
               <p className="text-sm text-gaming-400/80 mt-2 max-w-md px-4">
                 Pro gamer and content creator. Love streaming and making awesome gaming content!
