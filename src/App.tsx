@@ -17,7 +17,7 @@ import EditProfile from "./pages/EditProfile";
 import Login from "./pages/Login";
 import Streaming from "./pages/Streaming";
 import TopClips from "./pages/TopClips";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSheetState } from "./hooks/use-sheet-state";
 
 const queryClient = new QueryClient({
@@ -31,6 +31,37 @@ const queryClient = new QueryClient({
 
 const App = () => {
   const { isOpen: isMenuOpen } = useSheetState();
+  const [shouldFade, setShouldFade] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const clipt = document.querySelector('.clip-button');
+      if (clipt) {
+        const rect = clipt.getBoundingClientRect();
+        const elements = document.elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        const hasOverlap = elements.some(el => 
+          el !== clipt && 
+          !el.classList.contains('gameboy-container') && 
+          getComputedStyle(el).opacity !== '0' &&
+          !['HTML', 'BODY'].includes(el.tagName)
+        );
+        setShouldFade(hasOverlap);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    // Also check on content changes
+    const observer = new MutationObserver(handleScroll);
+    observer.observe(document.body, { 
+      childList: true, 
+      subtree: true 
+    });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
+    };
+  }, []);
 
   return (
     <React.StrictMode>
@@ -122,7 +153,7 @@ const App = () => {
                 </main>
                 {!isMenuOpen && (
                   <div className="fixed bottom-[100px] left-1/2 -translate-x-1/2 z-[60]">
-                    <h1 className="clip-button text-xl">
+                    <h1 className={`clip-button text-xl ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
                       CLIPT
                     </h1>
                   </div>
