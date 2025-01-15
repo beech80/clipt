@@ -89,8 +89,8 @@
 
 .clip-button {
   @apply relative flex items-center justify-center;
-  width: 90px;
-  height: 90px;
+  width: 60px;  /* Reduced from 90px */
+  height: 60px; /* Reduced from 90px */
   border-radius: 50%;
   background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
   position: relative;
@@ -127,8 +127,8 @@
 .clip-button-icon {
   position: relative;
   z-index: 2;
-  width: 35px;
-  height: 35px;
+  width: 24px;  /* Reduced from 35px */
+  height: 24px; /* Reduced from 35px */
   color: #fff;
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
   opacity: 0.9;

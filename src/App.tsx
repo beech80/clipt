@@ -152,7 +152,7 @@ const App = () => {
                   </Routes>
                 </main>
                 {!isMenuOpen && (
-                  <div className="fixed bottom-[100px] left-1/2 -translate-x-1/2 z-[60]">
+                  <div className="fixed bottom-[60px] left-1/2 -translate-x-1/2 z-[60]">
                     <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
                       <Play className="clip-button-icon" />
                     </div>
