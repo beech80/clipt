@@ -61,15 +61,6 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Modern CLIPT Title */}
-      {!isMenuOpen && (
-        <div className="fixed bottom-[120px] left-1/2 -translate-x-1/2 z-[60]">
-          <h1 className="clip-button text-3xl">
-            CLIPT
-          </h1>
-        </div>
-      )}
-
       <div className="retro-screen h-full pt-16">
         {activeTab === "squad" ? (
           <div className="flex items-center justify-center h-full text-gaming-400">

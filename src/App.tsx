@@ -18,6 +18,7 @@ import Login from "./pages/Login";
 import Streaming from "./pages/Streaming";
 import TopClips from "./pages/TopClips";
 import React from 'react';
+import { useSheetState } from "./hooks/use-sheet-state";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +30,8 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const { isOpen: isMenuOpen } = useSheetState();
+
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -117,6 +120,13 @@ const App = () => {
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
+                {!isMenuOpen && (
+                  <div className="fixed bottom-[120px] left-1/2 -translate-x-1/2 z-[60]">
+                    <h1 className="clip-button text-3xl">
+                      CLIPT
+                    </h1>
+                  </div>
+                )}
                 <GameBoyControls />
               </BrowserRouter>
             </div>
