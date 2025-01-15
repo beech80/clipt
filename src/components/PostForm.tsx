@@ -31,10 +31,6 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      toast.error("Please login to create a post");
-      return;
-    }
 
     if (!content.trim() && !selectedImage && !selectedVideo) {
       toast.error("Please add some content, image, or video to your post");
@@ -104,15 +100,17 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
       }
 
       if (editingPost) {
-        // Store previous content in post_edits
-        await supabase
-          .from('post_edits')
-          .insert({
-            post_id: editingPost.id,
-            user_id: user.id,
-            previous_content: editingPost.content
-          })
-          .select();
+        // Store previous content in post_edits if user is authenticated
+        if (user) {
+          await supabase
+            .from('post_edits')
+            .insert({
+              post_id: editingPost.id,
+              user_id: user.id,
+              previous_content: editingPost.content
+            })
+            .select();
+        }
 
         // Update the post
         const { error } = await supabase
@@ -132,7 +130,7 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
           .from('posts')
           .insert({
             content: content.trim(),
-            user_id: user.id,
+            user_id: user?.id || null,
             image_url,
             video_url
           })
@@ -141,8 +139,8 @@ const PostForm = ({ onPostCreated, editingPost }: PostFormProps) => {
 
         if (error) throw error;
 
-        // Insert hashtags
-        if (hashtags.length > 0) {
+        // Insert hashtags if user is authenticated
+        if (user && hashtags.length > 0) {
           // First, ensure all hashtags exist
           for (const tag of hashtags) {
             await supabase
