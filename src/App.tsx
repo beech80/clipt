@@ -1,13 +1,9 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
-import { AuthGuard } from "./components/AuthGuard";
-import { MainNav } from "./components/MainNav";
-import GameBoyControls from "./components/GameBoyControls";
-import { Play } from "lucide-react";
+import { MessagesProvider } from "./contexts/MessagesContext";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Camera } from "lucide-react";
 import React, { useEffect, useState } from 'react';
 import { useSheetState } from "./hooks/use-sheet-state";
 import Home from "./pages/Home";
@@ -24,147 +20,71 @@ import TopClips from "./pages/TopClips";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
-      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
     },
   },
 });
 
 const App = () => {
-  const { isOpen: isMenuOpen } = useSheetState();
-  const [shouldFade, setShouldFade] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const { setSheetOpen } = useSheetState();
 
   useEffect(() => {
-    const handleScroll = () => {
-      const clipt = document.querySelector('.clip-button');
-      if (clipt) {
-        const rect = clipt.getBoundingClientRect();
-        const elements = document.elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
-        const hasOverlap = elements.some(el => 
-          el !== clipt && 
-          !el.classList.contains('gameboy-container') && 
-          getComputedStyle(el).opacity !== '0' &&
-          !['HTML', 'BODY'].includes(el.tagName)
-        );
-        setShouldFade(hasOverlap);
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSheetOpen(false);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    const observer = new MutationObserver(handleScroll);
-    observer.observe(document.body, { 
-      childList: true, 
-      subtree: true 
-    });
-
+    window.addEventListener('keydown', handleKeyPress);
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      observer.disconnect();
+      window.removeEventListener('keydown', handleKeyPress);
     };
-  }, []);
+  }, [setSheetOpen]);
 
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <div className="min-h-screen bg-[#1A1F2C] pb-48 md:pb-48 md:pt-16">
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <MainNav />
-                <main className="container mx-auto px-4 py-4 retro-screen">
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route
-                      path="/"
-                      element={
-                        <AuthGuard>
-                          <Home />
-                        </AuthGuard>
-                      }
-                    />
-                    <Route
-                      path="/discover"
-                      element={
-                        <AuthGuard>
-                          <Discover />
-                        </AuthGuard>
-                      }
-                    />
-                    <Route
-                      path="/for-you"
-                      element={
-                        <AuthGuard>
-                          <ForYou />
-                        </AuthGuard>
-                      }
-                    />
-                    <Route
-                      path="/clipts"
-                      element={
-                        <AuthGuard>
-                          <Clipts />
-                        </AuthGuard>
-                      }
-                    />
-                    <Route
-                      path="/messages"
-                      element={
-                        <AuthGuard>
-                          <Messages />
-                        </AuthGuard>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <AuthGuard>
-                          <Profile />
-                        </AuthGuard>
-                      }
-                    />
-                    <Route
-                      path="/profile/edit"
-                      element={
-                        <AuthGuard>
-                          <EditProfile />
-                        </AuthGuard>
-                      }
-                    />
-                    <Route
-                      path="/streaming"
-                      element={
-                        <AuthGuard>
-                          <Streaming />
-                        </AuthGuard>
-                      }
-                    />
-                    <Route
-                      path="/top-clips"
-                      element={
-                        <AuthGuard>
-                          <TopClips />
-                        </AuthGuard>
-                      }
-                    />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </main>
-                {!isMenuOpen && (
-                  <div className="fixed bottom-[100px] left-1/2 -translate-x-1/2 z-[60]">
-                    <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
-                      <Play className="clip-button-icon" />
-                    </div>
-                  </div>
-                )}
-                <GameBoyControls />
-              </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <MessagesProvider>
+          <Router>
+            <div className="min-h-screen">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/discover" element={<Discover />} />
+                <Route path="/for-you" element={<ForYou />} />
+                <Route path="/clipts" element={<Clipts />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/edit-profile" element={<EditProfile />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/streaming" element={<Streaming />} />
+                <Route path="/top-clips" element={<TopClips />} />
+              </Routes>
+
+              <button
+                onClick={() => setIsRecording(!isRecording)}
+                className="clip-button fixed bottom-24 right-6 z-50 group"
+              >
+                <div className="clip-button-icon">
+                  <Camera 
+                    className={`w-8 h-8 transition-transform duration-300 ${
+                      isRecording ? 'text-red-500 scale-110' : 'text-white'
+                    }`}
+                    strokeWidth={2.5}
+                  />
+                </div>
+                <div className={`absolute inset-0 rounded-full ${
+                  isRecording ? 'animate-pulse bg-red-500/20' : ''
+                }`} />
+              </button>
+
+              <Toaster position="top-center" />
             </div>
-          </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+          </Router>
+        </MessagesProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 
