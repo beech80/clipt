@@ -14,7 +14,7 @@ const Home = () => {
   return (
     <div className="max-w-3xl mx-auto h-[calc(100vh-80px)] relative">
       <div className="absolute top-0 left-0 right-0 z-20">
-        <div className="w-full px-4 py-3 bg-[#1A1F2C]/80 backdrop-blur-sm border-y border-gaming-400/20">
+        <div className="w-full px-4 py-3 bg-[#1A1F2C]/80 backdrop-blur-sm">
           <div className="flex flex-col items-center max-w-md mx-auto space-y-4">
             <h1 className="text-2xl font-bold gaming-gradient tracking-wider">
               CLIPS
