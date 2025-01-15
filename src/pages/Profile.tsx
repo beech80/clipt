@@ -62,7 +62,7 @@ const Profile = () => {
   };
 
   const handleMessage = () => {
-    toast.success("Message feature coming soon!");
+    navigate('/messages');
   };
 
   return (
