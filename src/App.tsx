@@ -121,8 +121,8 @@ const App = () => {
                   </Routes>
                 </main>
                 {!isMenuOpen && (
-                  <div className="fixed bottom-[120px] left-1/2 -translate-x-1/2 z-[60]">
-                    <h1 className="clip-button text-3xl">
+                  <div className="fixed bottom-[80px] left-1/2 -translate-x-1/2 z-[60]">
+                    <h1 className="clip-button text-2xl">
                       CLIPT
                     </h1>
                   </div>
