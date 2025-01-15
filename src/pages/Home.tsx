@@ -17,7 +17,7 @@ const Home = () => {
         <div className="w-full px-4 py-3 bg-[#1A1F2C]/80 backdrop-blur-sm">
           <div className="flex flex-col items-center max-w-md mx-auto space-y-4">
             <h1 className="text-2xl font-bold gaming-gradient tracking-wider">
-              CLIPED
+              CLIPT
             </h1>
             
             <div className="flex justify-between items-center w-full space-x-6">
