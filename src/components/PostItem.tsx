@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import CommentList from "./post/CommentList";
 import PostActions from "./post/PostActions";
 import PostUserInfo from "./post/PostUserInfo";
+import PostStats from "./post/PostStats";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -10,13 +11,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, FolderPlus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import CollectionSelector from "./post/CollectionSelector";
 
 interface PostItemProps {
   post: {
@@ -38,13 +40,41 @@ interface PostItemProps {
 const PostItem = ({ post }: PostItemProps) => {
   const [showComments, setShowComments] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const voteCount = post.clip_votes?.[0]?.count || 0;
 
+  // Track view
+  useEffect(() => {
+    if (user) {
+      const trackView = async () => {
+        await supabase
+          .from('post_views')
+          .insert({
+            post_id: post.id,
+            viewer_id: user.id
+          })
+          .onConflict(['post_id', 'viewer_id'])
+          .ignore();
+      };
+      trackView();
+    }
+  }, [post.id, user]);
+
   const handleEdit = async () => {
     try {
+      // Store edit history
+      await supabase
+        .from('post_edits')
+        .insert({
+          post_id: post.id,
+          user_id: user?.id,
+          previous_content: post.content
+        });
+
+      // Update post
       const { error } = await supabase
         .from('posts')
         .update({ content: editedContent })
@@ -97,6 +127,10 @@ const PostItem = ({ post }: PostItemProps) => {
                 <Pencil className="w-4 h-4 mr-2" />
                 Edit
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsCollectionDialogOpen(true)}>
+                <FolderPlus className="w-4 h-4 mr-2" />
+                Add to Collection
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleDelete} className="text-red-500">
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
@@ -105,6 +139,10 @@ const PostItem = ({ post }: PostItemProps) => {
           </DropdownMenu>
         </div>
       )}
+
+      <div className="absolute bottom-32 right-4">
+        <PostStats postId={post.id} />
+      </div>
 
       <PostActions
         postId={post.id}
@@ -141,6 +179,21 @@ const PostItem = ({ post }: PostItemProps) => {
             </Button>
             <Button onClick={handleEdit}>Save</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCollectionDialogOpen} onOpenChange={setIsCollectionDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add to Collection</DialogTitle>
+          </DialogHeader>
+          <CollectionSelector 
+            postId={post.id} 
+            onSuccess={() => {
+              setIsCollectionDialogOpen(false);
+              toast.success("Added to collection!");
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>
