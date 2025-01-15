@@ -1,11 +1,40 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Gamepad2, Bookmark, Users2, Settings, Edit } from "lucide-react";
+import { Trophy, Gamepad2, Bookmark, Settings, Edit, MessageSquare, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import PostItem from "@/components/PostItem";
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
+
+  const { data: userClips } = useQuery({
+    queryKey: ['user-clips'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            avatar_url
+          ),
+          likes:likes (
+            count
+          ),
+          clip_votes:clip_votes (
+            count
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const userStats = {
     followers: 1234,
@@ -31,6 +60,14 @@ const Profile = () => {
     toast.info("Profile editing coming soon!");
   };
 
+  const handleAddFriend = () => {
+    toast.success("Friend request sent!");
+  };
+
+  const handleMessage = () => {
+    toast.success("Message feature coming soon!");
+  };
+
   return (
     <div className="space-y-6">
       <div className="gaming-card">
@@ -44,9 +81,32 @@ const Profile = () => {
             <div>
               <h1 className="text-2xl font-bold">ProGamer123</h1>
               <p className="text-muted-foreground">Joined January 2024</p>
+              <p className="text-sm text-muted-foreground mt-2 max-w-md">
+                Pro gamer and content creator. Love streaming and making awesome gaming content!
+              </p>
               <div className="flex gap-4 mt-2">
                 <span className="text-sm">{userStats.followers} Followers</span>
                 <span className="text-sm">{userStats.following} Following</span>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button 
+                  onClick={handleAddFriend}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Add Friend
+                </Button>
+                <Button 
+                  onClick={handleMessage}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Message
+                </Button>
               </div>
             </div>
           </div>
@@ -60,8 +120,11 @@ const Profile = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="games" className="w-full">
+        <Tabs defaultValue="clips" className="w-full">
           <TabsList className="grid w-full grid-cols-4 gap-4">
+            <TabsTrigger value="clips">
+              <Gamepad2 className="w-4 h-4 mr-2" /> Clips
+            </TabsTrigger>
             <TabsTrigger value="games">
               <Gamepad2 className="w-4 h-4 mr-2" /> Games
             </TabsTrigger>
@@ -71,10 +134,30 @@ const Profile = () => {
             <TabsTrigger value="saved">
               <Bookmark className="w-4 h-4 mr-2" /> Saved
             </TabsTrigger>
-            <TabsTrigger value="friends">
-              <Users2 className="w-4 h-4 mr-2" /> Friends
-            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="clips" className="space-y-4">
+            {userClips?.length === 0 ? (
+              <div className="text-center py-8">
+                <Gamepad2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold">No clips yet</h3>
+                <p className="text-muted-foreground">Share your gaming moments!</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {userClips?.map((clip) => (
+                  <PostItem 
+                    key={clip.id} 
+                    post={{
+                      ...clip,
+                      likes_count: clip.likes?.[0]?.count || 0,
+                      clip_votes: clip.clip_votes || []
+                    }} 
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="games" className="space-y-4">
             {userGames.map(game => (
@@ -85,7 +168,6 @@ const Profile = () => {
                 </div>
                 <div className="text-right">
                   <p className="font-medium">{game.hours} hours</p>
-                  <Button variant="outline" size="sm">Play Now</Button>
                 </div>
               </div>
             ))}
@@ -108,13 +190,6 @@ const Profile = () => {
             <Bookmark className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold">No saved items yet</h3>
             <p className="text-muted-foreground">Items you save will appear here</p>
-          </TabsContent>
-
-          <TabsContent value="friends" className="text-center py-8">
-            <Users2 className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">Connect with Gamers</h3>
-            <p className="text-muted-foreground">Find and add friends to play together</p>
-            <Button className="gaming-button mt-4">Find Friends</Button>
           </TabsContent>
         </Tabs>
       </div>
