@@ -72,7 +72,7 @@ const PostList = () => {
     }
   }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  if (status === "loading") {
+  if (status === "pending") {
     return (
       <div className="flex justify-center items-center h-[calc(100vh-200px)]">
         <Loader2 className="w-8 h-8 animate-spin text-gaming-400" />
