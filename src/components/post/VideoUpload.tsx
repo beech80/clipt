@@ -24,8 +24,22 @@ const VideoUpload = ({
     if (file) {
       if (file.size > 100000000) { // 100MB limit
         toast.error("Video size should be less than 100MB");
+        if (event.target) {
+          event.target.value = ''; // Reset input
+        }
         return;
       }
+
+      // Check file type
+      const validTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+      if (!validTypes.includes(file.type)) {
+        toast.error("Please upload a valid video file (MP4, WebM, or OGG)");
+        if (event.target) {
+          event.target.value = ''; // Reset input
+        }
+        return;
+      }
+
       setUploadProgress(0);
       onVideoSelect(file);
     }
@@ -39,6 +53,11 @@ const VideoUpload = ({
             src={URL.createObjectURL(selectedVideo)} 
             controls
             className="w-full rounded-lg max-h-[300px] object-cover"
+            onError={() => {
+              toast.error("Error loading video preview");
+              onVideoSelect(null);
+              setUploadProgress(0);
+            }}
           />
           {uploadProgress > 0 && uploadProgress < 100 && (
             <div className="space-y-2">
@@ -56,6 +75,9 @@ const VideoUpload = ({
             onClick={() => {
               onVideoSelect(null);
               setUploadProgress(0);
+              if (videoInputRef.current) {
+                videoInputRef.current.value = '';
+              }
             }}
           >
             Remove
@@ -75,7 +97,7 @@ const VideoUpload = ({
         type="file"
         ref={videoInputRef}
         className="hidden"
-        accept="video/*"
+        accept="video/mp4,video/webm,video/ogg"
         onChange={handleVideoSelect}
       />
     </>

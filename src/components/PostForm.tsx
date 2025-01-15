@@ -37,6 +37,8 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
     }
 
     setIsSubmitting(true);
+    const toastId = toast.loading("Creating your post...");
+
     try {
       let image_url = null;
       let video_url = null;
@@ -50,7 +52,10 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
           .from('posts')
           .upload(filePath, selectedImage);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          toast.error("Failed to upload image", { id: toastId });
+          throw uploadError;
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('posts')
@@ -64,11 +69,30 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
+        // Simulate upload progress
+        const uploadInterval = setInterval(() => {
+          setUploadProgress((prev) => {
+            if (prev >= 90) {
+              clearInterval(uploadInterval);
+              return prev;
+            }
+            return prev + 10;
+          });
+        }, 500);
+
         const { error: uploadError } = await supabase.storage
           .from('videos')
           .upload(filePath, selectedVideo);
 
-        if (uploadError) throw uploadError;
+        clearInterval(uploadInterval);
+
+        if (uploadError) {
+          setUploadProgress(0);
+          toast.error("Failed to upload video", { id: toastId });
+          throw uploadError;
+        }
+
+        setUploadProgress(100);
 
         const { data: { publicUrl } } = supabase.storage
           .from('videos')
@@ -86,17 +110,23 @@ const PostForm = ({ onPostCreated }: { onPostCreated?: () => void }) => {
           video_url
         });
 
-      if (error) throw error;
+      if (error) {
+        toast.error("Failed to create post", { id: toastId });
+        throw error;
+      }
 
-      toast.success("Post created successfully!");
+      toast.success("Post created successfully!", { id: toastId });
       setContent("");
       setSelectedImage(null);
       setSelectedVideo(null);
       setUploadProgress(0);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (videoInputRef.current) videoInputRef.current.value = '';
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       if (onPostCreated) onPostCreated();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Error creating post");
+      console.error("Error creating post:", error);
+      toast.error(error instanceof Error ? error.message : "Error creating post", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
