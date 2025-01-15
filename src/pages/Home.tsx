@@ -24,20 +24,18 @@ const Home = () => {
               <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    className="relative h-10 px-5 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                    className="relative h-10 w-[100px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
                     border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
                     active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
-                    rounded-r-lg rounded-l-sm skew-x-12 transition-all duration-200 min-w-[90px]
-                    shadow-[0_0_15px_rgba(155,135,245,0.3)] hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
+                    transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
+                    hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]
+                    [clip-path:polygon(0_0,100%_0,85%_100%,0%_100%)]"
                     size="sm"
                   >
-                    <span className="flex items-center -skew-x-12">
+                    <span className="flex items-center">
                       <Video className="w-4 h-4 mr-2" />
                       Post
                     </span>
-                    {/* Trigger accent */}
-                    <div className="absolute -right-0.5 top-0 bottom-0 w-2 bg-gaming-400/30 
-                      border-r-2 border-gaming-400/50 rounded-r-lg"></div>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px]">
@@ -45,30 +43,30 @@ const Home = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* Gaming Toggle Switch Container */}
-              <div className="relative inline-flex items-center min-w-[180px] h-10">
+              {/* Gaming Toggle Container */}
+              <div className="relative inline-flex items-center min-w-[200px] h-10">
                 {/* Background Frame */}
-                <div 
-                  className="absolute inset-0 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
-                    border-2 border-gaming-400/50 rounded-r-lg rounded-l-sm skew-x-12
-                    shadow-[0_0_15px_rgba(155,135,245,0.3)]"
-                ></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                  border-2 border-gaming-400/50 shadow-[0_0_15px_rgba(155,135,245,0.3)]
+                  [clip-path:polygon(15%_0,85%_0,100%_100%,0%_100%)]">
+                </div>
+                
                 {/* Sliding Highlight */}
                 <div 
                   className={`absolute h-full w-1/2 transition-all duration-300 ease-out 
                     bg-gradient-to-b from-gaming-400/30 to-gaming-400/40 
-                    border-2 border-gaming-400/50 rounded-r-lg rounded-l-sm skew-x-12
-                    shadow-[0_0_20px_rgba(155,135,245,0.4)]
-                    ${activeTab === "clips" ? "translate-x-full" : "translate-x-0"}`}
+                    border-2 border-gaming-400/50 shadow-[0_0_20px_rgba(155,135,245,0.4)]
+                    [clip-path:polygon(15%_0,85%_0,100%_100%,0%_100%)]
+                    ${activeTab === "clips" ? "translate-x-[95px]" : "translate-x-0"}`}
                 >
-                  {/* Right Edge Accent */}
-                  <div className="absolute -right-0.5 top-0 bottom-0 w-2 bg-gaming-400/30 
-                    border-r-2 border-gaming-400/50 rounded-r-lg"></div>
+                  {/* Highlight Glow */}
+                  <div className="absolute inset-0 bg-gaming-400/10"></div>
                 </div>
+
                 {/* Button Labels */}
                 <button
                   onClick={() => setActiveTab("squad")}
-                  className={`relative flex-1 h-full px-4 text-xs font-bold tracking-wider transition-colors duration-200 -skew-x-12
+                  className={`relative flex-1 h-full px-4 text-xs font-bold tracking-wider transition-colors duration-200
                     ${activeTab === "squad" 
                       ? "text-gaming-400" 
                       : "text-gray-400 hover:text-gaming-400/70"
@@ -78,7 +76,7 @@ const Home = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab("clips")}
-                  className={`relative flex-1 h-full px-4 text-xs font-bold tracking-wider transition-colors duration-200 -skew-x-12
+                  className={`relative flex-1 h-full px-4 text-xs font-bold tracking-wider transition-colors duration-200
                     ${activeTab === "clips" 
                       ? "text-gaming-400" 
                       : "text-gray-400 hover:text-gaming-400/70"
