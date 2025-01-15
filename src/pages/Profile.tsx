@@ -67,79 +67,73 @@ const Profile = () => {
 
   return (
     <div className="space-y-6">
-      <div className="gaming-card relative overflow-hidden backdrop-blur-md bg-[#1A1F2C]/80">
-        <div className="absolute inset-0 bg-gradient-to-br from-gaming-700/20 to-transparent pointer-events-none" />
-        <div className="relative z-10">
-          <div className="flex flex-col items-center mb-6">
-            <div className="relative">
-              <img
-                src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop"
-                alt="Profile"
-                className="w-24 h-24 rounded-none border-4 border-gaming-500 mb-4 transition-all duration-300 hover:scale-105 animate-glow"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-gaming-500/20 to-transparent pointer-events-none" />
+      <div className="gaming-card">
+        <div className="flex flex-col items-center mb-6">
+          <img
+            src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop"
+            alt="Profile"
+            className="w-24 h-24 rounded-full border-4 border-gaming-500 animate-glow mb-4"
+          />
+          <div className="text-center">
+            <h1 className="text-2xl font-bold gaming-gradient">ProGamer123</h1>
+            <p className="text-sm text-muted-foreground mt-2 max-w-md">
+              Pro gamer and content creator. Love streaming and making awesome gaming content!
+            </p>
+            <div className="flex justify-center gap-4 mt-2">
+              <span className="text-sm">{userStats.followers} Followers</span>
+              <span className="text-sm">{userStats.following} Following</span>
             </div>
-            <div className="text-center">
-              <h1 className="clip-button text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gaming-400 to-gaming-600 truncate max-w-[200px]">
-                Cliped
-              </h1>
-              <p className="text-sm text-gaming-400/80 mt-2 max-w-md px-4">
-                Pro gamer and content creator. Love streaming and making awesome gaming content!
-              </p>
-              <div className="flex justify-center gap-4 mt-2">
-                <span className="text-sm text-gaming-400">{userStats.followers} Followers</span>
-                <span className="text-sm text-gaming-400">{userStats.following} Following</span>
-              </div>
-              <div className="flex justify-center gap-2 mt-4">
-                <Button 
-                  onClick={handleAddFriend}
-                  className="gaming-button hover:animate-glow"
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Add Friend
-                </Button>
-                <Button 
-                  onClick={handleMessage}
-                  className="gaming-button hover:animate-glow"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Message
-                </Button>
-                <Button
-                  onClick={() => navigate('/profile/edit')}
-                  className="gaming-button hover:animate-glow"
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
-              </div>
+            <div className="flex justify-center gap-2 mt-4">
+              <Button 
+                onClick={handleAddFriend}
+                className="gaming-button"
+              >
+                <UserPlus className="w-4 h-4" />
+                Add Friend
+              </Button>
+              <Button 
+                onClick={handleMessage}
+                className="gaming-button"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Message
+              </Button>
+              <Button
+                onClick={() => navigate('/profile/edit')}
+                className="gaming-button"
+              >
+                <Pencil className="w-4 h-4" />
+                Edit Profile
+              </Button>
             </div>
           </div>
+        </div>
 
-          <div className="flex justify-center gap-4 mb-6">
-            <Toggle
-              pressed={activeTab === 'clips'}
-              onPressedChange={() => setActiveTab('clips')}
-              className="gaming-button flex gap-2 data-[state=on]:border-gaming-500 data-[state=on]:bg-gaming-500/20 hover:animate-glow"
-            >
-              <Gamepad2 className="w-4 h-4" /> Clips
-            </Toggle>
-            <Toggle
-              pressed={activeTab === 'games'}
-              onPressedChange={() => setActiveTab('games')}
-              className="gaming-button flex gap-2 data-[state=on]:border-gaming-500 data-[state=on]:bg-gaming-500/20 hover:animate-glow"
-            >
-              <Gamepad2 className="w-4 h-4" /> Games
-            </Toggle>
-            <Toggle
-              pressed={activeTab === 'achievements'}
-              onPressedChange={() => setActiveTab('achievements')}
-              className="gaming-button flex gap-2 data-[state=on]:border-gaming-500 data-[state=on]:bg-gaming-500/20 hover:animate-glow"
-            >
-              <Trophy className="w-4 h-4" /> Achievements
-            </Toggle>
-          </div>
+        <div className="flex justify-center gap-4 mb-6">
+          <Toggle
+            pressed={activeTab === 'clips'}
+            onPressedChange={() => setActiveTab('clips')}
+            className="gaming-button flex gap-2 data-[state=on]:border-gaming-500 data-[state=on]:bg-gaming-500/20"
+          >
+            <Gamepad2 className="w-4 h-4" /> Clips
+          </Toggle>
+          <Toggle
+            pressed={activeTab === 'games'}
+            onPressedChange={() => setActiveTab('games')}
+            className="gaming-button flex gap-2 data-[state=on]:border-gaming-500 data-[state=on]:bg-gaming-500/20"
+          >
+            <Gamepad2 className="w-4 h-4" /> Games
+          </Toggle>
+          <Toggle
+            pressed={activeTab === 'achievements'}
+            onPressedChange={() => setActiveTab('achievements')}
+            className="gaming-button flex gap-2 data-[state=on]:border-gaming-500 data-[state=on]:bg-gaming-500/20"
+          >
+            <Trophy className="w-4 h-4" /> Achievements
+          </Toggle>
+        </div>
 
+        <div className="mt-6">
           {activeTab === 'clips' && (
             <div className="space-y-4">
               {userClips?.length === 0 ? (

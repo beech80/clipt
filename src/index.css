@@ -77,40 +77,6 @@
   box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.2);
 }
 
-.clip-button {
-  @apply relative inline-block;
-  background: linear-gradient(90deg, #9b87f5 0%, #8B5CF6 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(155, 135, 245, 0.4);
-  position: relative;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  max-width: 200px;
-}
-
-.clip-button::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  background: linear-gradient(90deg, #9b87f5 0%, #8B5CF6 100%);
-  border-radius: 16px;
-  z-index: -1;
-  filter: blur(12px);
-  opacity: 0.5;
-}
-
-.clip-button::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: #1A1F2C;
-  border-radius: 12px;
-  z-index: -1;
-}
-
 .action-buttons-container {
   @apply fixed flex flex-col items-center justify-center;
 }
@@ -123,4 +89,33 @@
 
 .bg-radial-gradient {
   background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+.clip-button {
+  @apply text-8xl font-bold tracking-wider;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E5E7EB 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(155, 135, 245, 0.8);
+  position: relative;
+}
+
+.clip-button::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(90deg, #9b87f5 0%, #8B5CF6 100%);
+  border-radius: 16px;
+  z-index: -1;
+  filter: blur(12px);
+  opacity: 0.8;
+}
+
+.clip-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #1A1F2C;
+  border-radius: 12px;
+  z-index: -1;
 }
