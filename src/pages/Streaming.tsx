@@ -6,6 +6,7 @@ import { StreamInfoCards } from "@/components/streaming/StreamInfoCards";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
 import { StreamChat } from "@/components/streaming/StreamChat";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
+import { toast } from "sonner";
 
 const Streaming = () => {
   const { user } = useAuth();
@@ -28,10 +29,12 @@ const Streaming = () => {
   useEffect(() => {
     if (user) {
       loadStreamData();
-      if (streamData.isLive) {
-        const interval = setInterval(updateViewerCount, 30000);
-        return () => clearInterval(interval);
-      }
+      const interval = setInterval(() => {
+        if (streamData.isLive) {
+          updateViewerCount();
+        }
+      }, 30000);
+      return () => clearInterval(interval);
     }
   }, [user, streamData.isLive]);
 
@@ -43,7 +46,10 @@ const Streaming = () => {
         .eq("user_id", user?.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        toast.error("Failed to load stream data");
+        return;
+      }
 
       if (stream) {
         setStreamData({
@@ -57,6 +63,7 @@ const Streaming = () => {
       }
     } catch (error) {
       console.error("Error loading stream data:", error);
+      toast.error("Failed to load stream data");
     }
   };
 
@@ -92,10 +99,16 @@ const Streaming = () => {
     }));
   };
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <p className="text-muted-foreground">Please log in to access streaming features.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="gaming-card">
         <h1 className="gaming-gradient text-3xl font-bold tracking-tight mb-4">
           Stream Manager
