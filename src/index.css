@@ -92,7 +92,9 @@
   color: #FFFFFF;
   letter-spacing: 0.2em;
   position: relative;
-  text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+  text-shadow: 0 0 15px rgba(255, 255, 255, 1),
+               0 0 25px rgba(255, 255, 255, 0.8),
+               0 0 35px rgba(255, 255, 255, 0.6);
   font-weight: 900;
 }
 
