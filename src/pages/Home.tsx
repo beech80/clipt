@@ -13,8 +13,7 @@ const Home = () => {
 
   return (
     <div className="max-w-3xl mx-auto h-[calc(100vh-80px)] relative">
-      <div className="absolute top-0 left-0 right-0 z-20 flex flex-col items-center">
-        <h1 className="text-4xl font-bold text-gaming-400 mb-4">CLIPS</h1>
+      <div className="absolute top-0 left-0 right-0 z-20">
         <div className="w-full px-4 py-3 bg-[#1A1F2C]/80 backdrop-blur-sm border-y border-gaming-400/20">
           <div className="flex justify-between items-center max-w-md mx-auto">
             <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
@@ -36,11 +35,13 @@ const Home = () => {
             <div className="relative inline-flex items-center min-w-[200px] h-10 p-1">
               <div className="absolute inset-0 bg-[#1A1F2C] border-2 border-gaming-400/30 shadow-[0_0_15px_rgba(155,135,245,0.2)]"></div>
               <div 
-                className={`absolute h-full w-1/2 bg-gradient-to-r from-[#9b87f5]/20 to-[#8B5CF6]/20 border-2 border-gaming-400/50 transition-all duration-300 ease-out ${
+                className={`absolute h-full w-1/2 transition-all duration-300 ease-out ${
                   activeTab === "clips" ? "translate-x-full" : "translate-x-0"
                 }`}
                 style={{
+                  background: 'linear-gradient(to right, rgba(155, 135, 245, 0.1), rgba(139, 92, 246, 0.2))',
                   boxShadow: '0 0 20px rgba(155, 135, 245, 0.3)',
+                  border: '2px solid rgba(155, 135, 245, 0.5)',
                 }}
               ></div>
               <button
@@ -68,7 +69,7 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="retro-screen h-full pt-32">
+      <div className="retro-screen h-full pt-16">
         {activeTab === "clips" ? (
           <PostList />
         ) : (
