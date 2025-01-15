@@ -7,9 +7,10 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
 import { MainNav } from "./components/MainNav";
 import GameBoyControls from "./components/GameBoyControls";
-import { Play } from "lucide-react";
+import { Menu } from "lucide-react";
 import React, { useEffect, useState } from 'react';
 import { useSheetState } from "./hooks/use-sheet-state";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import ForYou from "./pages/ForYou";
@@ -31,7 +32,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const { isOpen: isMenuOpen } = useSheetState();
+  const { isOpen, setIsOpen } = useSheetState();
   const [shouldFade, setShouldFade] = useState(false);
 
   useEffect(() => {
@@ -153,7 +154,7 @@ const App = () => {
                 </main>
                 {!isMenuOpen && (
                   <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
-                    <Sheet onOpenChange={setIsOpen}>
+                    <Sheet open={isOpen} onOpenChange={setIsOpen}>
                       <SheetTrigger asChild>
                         <button className="menu-button">
                           <Menu className="menu-button-icon" />
