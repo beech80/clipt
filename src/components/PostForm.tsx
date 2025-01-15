@@ -1,14 +1,11 @@
 import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import PostFormContent from "./post/form/PostFormContent";
-import ImageUpload from "./post/ImageUpload";
-import VideoUpload from "./post/VideoUpload";
-import UploadProgress from "./post/form/UploadProgress";
-import MediaPreview from "./post/form/MediaPreview";
+import MediaUploadSection from "./post/form/MediaUploadSection";
+import FormActions from "./post/form/FormActions";
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -55,7 +52,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        // Simulate upload progress for image
         const imageInterval = setInterval(() => {
           setImageProgress(prev => Math.min(prev + 20, 90));
         }, 500);
@@ -67,10 +63,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         clearInterval(imageInterval);
         setImageProgress(100);
 
-        if (uploadError) {
-          toast.error("Failed to upload image", { id: toastId });
-          throw uploadError;
-        }
+        if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
           .from('posts')
@@ -84,7 +77,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        // Simulate upload progress for video
         const videoInterval = setInterval(() => {
           setVideoProgress(prev => Math.min(prev + 10, 90));
         }, 500);
@@ -96,10 +88,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         clearInterval(videoInterval);
         setVideoProgress(100);
 
-        if (uploadError) {
-          toast.error("Failed to upload video", { id: toastId });
-          throw uploadError;
-        }
+        if (uploadError) throw uploadError;
 
         const { data: { publicUrl } } = supabase.storage
           .from('videos')
@@ -142,51 +131,18 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <PostFormContent content={content} onChange={setContent} />
         
-        {selectedImage && (
-          <>
-            <MediaPreview 
-              file={selectedImage} 
-              type="image" 
-              onRemove={() => setSelectedImage(null)} 
-            />
-            <UploadProgress progress={imageProgress} type="image" />
-          </>
-        )}
+        <MediaUploadSection
+          selectedImage={selectedImage}
+          selectedVideo={selectedVideo}
+          imageProgress={imageProgress}
+          videoProgress={videoProgress}
+          onImageSelect={setSelectedImage}
+          onVideoSelect={setSelectedVideo}
+          fileInputRef={fileInputRef}
+          videoInputRef={videoInputRef}
+        />
 
-        {selectedVideo && (
-          <>
-            <MediaPreview 
-              file={selectedVideo} 
-              type="video" 
-              onRemove={() => setSelectedVideo(null)} 
-            />
-            <UploadProgress progress={videoProgress} type="video" />
-          </>
-        )}
-
-        {!selectedVideo && (
-          <ImageUpload
-            selectedImage={selectedImage}
-            onImageSelect={setSelectedImage}
-            fileInputRef={fileInputRef}
-          />
-        )}
-
-        {!selectedImage && (
-          <VideoUpload
-            selectedVideo={selectedVideo}
-            onVideoSelect={setSelectedVideo}
-            videoInputRef={videoInputRef}
-            uploadProgress={videoProgress}
-            setUploadProgress={setVideoProgress}
-          />
-        )}
-
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Posting..." : "Post"}
-          </Button>
-        </div>
+        <FormActions isSubmitting={isSubmitting} />
       </form>
     </div>
   );

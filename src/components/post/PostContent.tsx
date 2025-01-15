@@ -7,16 +7,18 @@ interface PostContentProps {
 }
 
 const PostContent = ({ content, imageUrl, videoUrl }: PostContentProps) => {
-  // Function to format content (convert URLs to links, handle line breaks)
   const formatContent = (text: string) => {
     // Convert URLs to clickable links
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const withLinks = text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-gaming-400 hover:underline">${url}</a>`);
+    const withLinks = text.replace(urlRegex, (url) => 
+      `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-gaming-400 hover:underline">${url}</a>`
+    );
     
-    // Convert line breaks to <br> tags
-    const withLineBreaks = withLinks.replace(/\n/g, '<br>');
+    // Convert line breaks to <br> tags and handle multiple consecutive breaks
+    const withLineBreaks = withLinks.replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>');
     
-    return withLineBreaks;
+    // Wrap in paragraph tags if not already wrapped
+    return `<p>${withLineBreaks}</p>`;
   };
 
   return (
@@ -28,6 +30,7 @@ const PostContent = ({ content, imageUrl, videoUrl }: PostContentProps) => {
               src={imageUrl}
               alt="Post content"
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           )}
           {videoUrl && (
@@ -38,12 +41,13 @@ const PostContent = ({ content, imageUrl, videoUrl }: PostContentProps) => {
               loop
               playsInline
               muted
+              preload="metadata"
             />
           )}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-4">
             {content && (
-              <p 
-                className="text-white text-lg break-words"
+              <div 
+                className="text-white text-lg break-words prose prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: formatContent(content) }}
               />
             )}
@@ -51,8 +55,8 @@ const PostContent = ({ content, imageUrl, videoUrl }: PostContentProps) => {
         </div>
       ) : (
         <div className="h-full flex items-center justify-center bg-black p-8">
-          <p 
-            className="text-white text-xl break-words max-w-2xl"
+          <div 
+            className="text-white text-xl break-words prose prose-invert max-w-2xl"
             dangerouslySetInnerHTML={{ __html: formatContent(content) }}
           />
         </div>
