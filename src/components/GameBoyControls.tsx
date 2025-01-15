@@ -10,9 +10,11 @@ import {
 import Joystick from './gameboy/Joystick';
 import ActionButtons from './gameboy/ActionButtons';
 import { handleVideoControl } from './gameboy/VideoControls';
+import { useSheetState } from '@/hooks/use-sheet-state';
 
 const GameBoyControls = () => {
   const navigate = useNavigate();
+  const { setIsOpen } = useSheetState();
 
   const handleAction = (action: string) => {
     switch(action) {
@@ -46,7 +48,7 @@ const GameBoyControls = () => {
     <div className="gameboy-container h-[140px] sm:h-[160px] bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50">
       {/* Bottom Center Navigation Menu */}
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
-        <Sheet>
+        <Sheet onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <button className="rounded-full bg-gaming-400/20 p-2 sm:p-3 backdrop-blur-sm border border-gaming-400/30 hover:bg-gaming-400/30 transition-all duration-300">
               <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-gaming-400" />

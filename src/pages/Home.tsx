@@ -6,11 +6,13 @@ import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
+import { useSheetState } from "@/hooks/use-sheet-state";
 
 const Home = () => {
   const { user } = useAuth();
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("squad");
+  const { isOpen: isMenuOpen } = useSheetState();
 
   return (
     <div className="h-[calc(100vh-80px)] relative">
@@ -60,11 +62,13 @@ const Home = () => {
       </div>
 
       {/* Modern CLIPT Title */}
-      <div className="fixed bottom-[120px] left-1/2 -translate-x-1/2 z-[60]">
-        <h1 className="clip-button text-3xl">
-          CLIPT
-        </h1>
-      </div>
+      {!isMenuOpen && (
+        <div className="fixed bottom-[120px] left-1/2 -translate-x-1/2 z-[60]">
+          <h1 className="clip-button text-3xl">
+            CLIPT
+          </h1>
+        </div>
+      )}
 
       <div className="retro-screen h-full pt-16">
         {activeTab === "squad" ? (
