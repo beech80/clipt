@@ -20,10 +20,10 @@ const Home = () => {
             <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
               <DialogTrigger asChild>
                 <Button 
-                  className="border border-gaming-400 bg-transparent hover:bg-gaming-400/10 text-white flex gap-2 items-center"
+                  className="gaming-button"
                   size="sm"
                 >
-                  <Video className="w-4 h-4" />
+                  <Video className="w-4 h-4 mr-2" />
                   Post
                 </Button>
               </DialogTrigger>
@@ -32,26 +32,33 @@ const Home = () => {
               </DialogContent>
             </Dialog>
 
-            {/* Custom Toggle Switch */}
-            <div className="relative inline-flex items-center min-w-[200px] h-8">
-              <div className="absolute inset-0 bg-[#1A1F2C] border border-gaming-400/20"></div>
+            {/* Enhanced Game-like Toggle Switch */}
+            <div className="relative inline-flex items-center min-w-[200px] h-10 p-1">
+              <div className="absolute inset-0 bg-[#1A1F2C] border-2 border-gaming-400/30 shadow-[0_0_15px_rgba(155,135,245,0.2)]"></div>
               <div 
-                className={`absolute h-full w-1/2 bg-gaming-400/20 transition-all duration-300 ease-in-out ${
+                className={`absolute h-full w-1/2 bg-gradient-to-r from-[#9b87f5]/20 to-[#8B5CF6]/20 border-2 border-gaming-400/50 transition-all duration-300 ease-out ${
                   activeTab === "clips" ? "translate-x-full" : "translate-x-0"
                 }`}
+                style={{
+                  boxShadow: '0 0 20px rgba(155, 135, 245, 0.3)',
+                }}
               ></div>
               <button
                 onClick={() => setActiveTab("squad")}
-                className={`relative flex-1 h-full px-4 text-sm font-medium transition-colors duration-200 ${
-                  activeTab === "squad" ? "text-gaming-400" : "text-gray-400"
+                className={`relative flex-1 h-full px-4 text-sm font-bold tracking-wider transition-colors duration-200 ${
+                  activeTab === "squad" 
+                    ? "text-gaming-400 animate-glow" 
+                    : "text-gray-400 hover:text-gaming-400/70"
                 }`}
               >
                 SQUAD
               </button>
               <button
                 onClick={() => setActiveTab("clips")}
-                className={`relative flex-1 h-full px-4 text-sm font-medium transition-colors duration-200 ${
-                  activeTab === "clips" ? "text-gaming-400" : "text-gray-400"
+                className={`relative flex-1 h-full px-4 text-sm font-bold tracking-wider transition-colors duration-200 ${
+                  activeTab === "clips" 
+                    ? "text-gaming-400 animate-glow" 
+                    : "text-gray-400 hover:text-gaming-400/70"
                 }`}
               >
                 CLIPS

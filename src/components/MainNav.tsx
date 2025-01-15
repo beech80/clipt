@@ -32,19 +32,14 @@ export function MainNav() {
     { path: "/top-clips", icon: Trophy, label: "Top Clips" },
     { path: "/messages", icon: MessageSquare, label: "Messages" },
     { path: "/profile", icon: User, label: "Profile" },
-    { path: "/login", icon: LogIn, label: "Login", showWhenLoggedOut: true },
   ];
-
-  const filteredNavItems = user 
-    ? navItems.filter(item => !item.showWhenLoggedOut)
-    : navItems.filter(item => item.showWhenLoggedOut);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gaming-700/50 bg-background/80 backdrop-blur-xl md:top-0 md:bottom-auto md:border-b md:border-t-0">
       <div className="mx-auto flex max-w-screen-xl items-center justify-around px-2 py-1">
         {isMobile ? (
           <>
-            {filteredNavItems.map(({ path, icon: Icon, label }) => (
+            {navItems.map(({ path, icon: Icon, label }) => (
               <Link
                 key={path}
                 to={path}
@@ -55,7 +50,7 @@ export function MainNav() {
                 <Icon className="h-5 w-5" />
               </Link>
             ))}
-            {user && (
+            {user ? (
               <Button
                 variant="ghost"
                 size="icon"
@@ -64,11 +59,18 @@ export function MainNav() {
               >
                 <LogOut className="h-5 w-5" />
               </Button>
+            ) : (
+              <Link
+                to="/login"
+                className="p-2 transition-all hover:text-gaming-400 text-muted-foreground"
+              >
+                <LogIn className="h-5 w-5" />
+              </Link>
             )}
           </>
         ) : (
           <>
-            {filteredNavItems.map(({ path, icon: Icon, label }) => (
+            {navItems.map(({ path, icon: Icon, label }) => (
               <Link
                 key={path}
                 to={path}
@@ -80,7 +82,7 @@ export function MainNav() {
                 <span className="text-xs font-medium">{label}</span>
               </Link>
             ))}
-            {user && (
+            {user ? (
               <Button
                 variant="ghost"
                 size="icon"
@@ -90,6 +92,14 @@ export function MainNav() {
                 <LogOut className="h-6 w-6" />
                 <span className="text-xs font-medium">Logout</span>
               </Button>
+            ) : (
+              <Link
+                to="/login"
+                className="flex flex-col items-center p-2 transition-all hover:text-gaming-400 text-muted-foreground"
+              >
+                <LogIn className="h-6 w-6" />
+                <span className="text-xs font-medium">Login</span>
+              </Link>
             )}
           </>
         )}
