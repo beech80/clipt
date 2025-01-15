@@ -12,26 +12,26 @@ const Home = () => {
   const [activeTab, setActiveTab] = useState("squad");
 
   return (
-    <div className="max-w-3xl mx-auto h-[calc(100vh-80px)] relative">
+    <div className="h-[calc(100vh-80px)] relative">
       <div className="absolute top-0 left-0 right-0 z-20">
-        <div className="w-full px-4 py-3 bg-[#1A1F2C]/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center max-w-md mx-auto space-y-4">
+        <div className="w-full px-0 py-3 bg-[#1A1F2C]/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4">
             <h1 className="text-2xl font-bold gaming-gradient tracking-wider">
               CLIPT
             </h1>
             
             <div className="relative w-full h-12">
-              <div className="absolute left-0 right-0 flex justify-between">
+              <div className="absolute left-0 right-0 flex justify-between px-0">
                 <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="relative h-12 w-[140px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                      className="relative h-12 w-[180px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
                       border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
                       active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
                       transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                      hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
+                      hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none"
                       style={{
-                        clipPath: "polygon(0 0, 100% 0, 80% 100%, 0% 100%)",
+                        clipPath: "polygon(0 0, 100% 0, 85% 100%, 0% 100%)",
                         transform: "perspective(500px) rotateY(15deg)"
                       }}
                     >
@@ -47,13 +47,13 @@ const Home = () => {
                 </Dialog>
 
                 <Button 
-                  className="relative h-12 w-[140px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                  className="relative h-12 w-[180px] bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
                   border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
                   active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
                   transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
+                  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none"
                   style={{
-                    clipPath: "polygon(20% 0, 100% 0, 100% 100%, 0% 100%)",
+                    clipPath: "polygon(15% 0, 100% 0, 100% 100%, 0% 100%)",
                     transform: "perspective(500px) rotateY(-15deg)"
                   }}
                   onClick={() => setActiveTab("squad")}
