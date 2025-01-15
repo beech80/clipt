@@ -88,72 +88,53 @@
 }
 
 .clip-button {
-  @apply text-xl font-black tracking-wider;
-  color: #FFFFFF;
-  letter-spacing: 0.2em;
+  @apply relative flex items-center justify-center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #1A1F2C;
   position: relative;
-  text-shadow: none;
-  font-weight: 900;
-  animation: textGlow 2s ease-in-out infinite;
-  filter: brightness(1.2);
 }
 
 .clip-button::before {
   content: '';
   position: absolute;
   inset: -2px;
-  background: linear-gradient(90deg, #8B5CF6 0%, #7C3AED 100%);
-  border-radius: 8px;
-  z-index: -1;
-  opacity: 1;
-  transform: translateY(4px);
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.8);
-  animation: backgroundGlow 2s ease-in-out infinite;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #00C2FF, #8B5CF6, #00C2FF);
+  animation: rotate 4s linear infinite;
+  filter: blur(8px);
 }
 
 .clip-button::after {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, #A78BFA 0%, #8B5CF6 100%);
-  border-radius: 6px;
-  z-index: -1;
-  opacity: 1;
-  box-shadow: 0 0 25px rgba(139, 92, 246, 0.7);
-  animation: backgroundGlow 2s ease-in-out infinite alternate;
+  inset: 2px;
+  background: #1A1F2C;
+  border-radius: 50%;
+  z-index: 1;
 }
 
-@keyframes textGlow {
-  0%, 100% {
-    color: #FFFFFF;
-    filter: brightness(1.2);
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
-  }
-  50% {
-    color: #FFFFFF;
-    filter: brightness(1.4);
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.9);
-  }
-}
-
-@keyframes backgroundGlow {
-  0%, 100% {
-    filter: brightness(1);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
-  }
-  50% {
-    filter: brightness(1.3);
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.9);
-  }
-}
-
-.clip-button {
-  @apply text-xl font-black tracking-wider;
-  color: #FFFFFF;
-  letter-spacing: 0.2em;
+.clip-button-icon {
   position: relative;
-  text-shadow: none;
-  font-weight: 900;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  color: white;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+}
+
+.clip-button-icon path {
+  stroke-width: 2px;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .xbox-joystick {

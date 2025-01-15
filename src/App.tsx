@@ -7,16 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AuthGuard } from "./components/AuthGuard";
 import { MainNav } from "./components/MainNav";
 import GameBoyControls from "./components/GameBoyControls";
-import Home from "./pages/Home";
-import Discover from "./pages/Discover";
-import ForYou from "./pages/ForYou";
-import Clipts from "./pages/Clipts";
-import Messages from "./pages/Messages";
-import Profile from "./pages/Profile";
-import EditProfile from "./pages/EditProfile";
-import Login from "./pages/Login";
-import Streaming from "./pages/Streaming";
-import TopClips from "./pages/TopClips";
+import { Play } from "lucide-react";
 import React, { useEffect, useState } from 'react';
 import { useSheetState } from "./hooks/use-sheet-state";
 
@@ -50,7 +41,6 @@ const App = () => {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // Also check on content changes
     const observer = new MutationObserver(handleScroll);
     observer.observe(document.body, { 
       childList: true, 
@@ -153,9 +143,9 @@ const App = () => {
                 </main>
                 {!isMenuOpen && (
                   <div className="fixed bottom-[100px] left-1/2 -translate-x-1/2 z-[60]">
-                    <h1 className={`clip-button text-xl ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
-                      CLIPT
-                    </h1>
+                    <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
+                      <Play className="clip-button-icon" />
+                    </div>
                   </div>
                 )}
                 <GameBoyControls />
