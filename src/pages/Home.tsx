@@ -45,13 +45,15 @@ const Home = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* Gaming Trigger Toggle Switch */}
+              {/* Gaming Toggle Switch Container */}
               <div className="relative inline-flex items-center min-w-[180px] h-10">
+                {/* Background Frame */}
                 <div 
                   className="absolute inset-0 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
                     border-2 border-gaming-400/50 rounded-r-lg rounded-l-sm skew-x-12
                     shadow-[0_0_15px_rgba(155,135,245,0.3)]"
                 ></div>
+                {/* Sliding Highlight */}
                 <div 
                   className={`absolute h-full w-1/2 transition-all duration-300 ease-out 
                     bg-gradient-to-b from-gaming-400/30 to-gaming-400/40 
@@ -59,9 +61,11 @@ const Home = () => {
                     shadow-[0_0_20px_rgba(155,135,245,0.4)]
                     ${activeTab === "clips" ? "translate-x-full" : "translate-x-0"}`}
                 >
+                  {/* Right Edge Accent */}
                   <div className="absolute -right-0.5 top-0 bottom-0 w-2 bg-gaming-400/30 
                     border-r-2 border-gaming-400/50 rounded-r-lg"></div>
                 </div>
+                {/* Button Labels */}
                 <button
                   onClick={() => setActiveTab("squad")}
                   className={`relative flex-1 h-full px-4 text-xs font-bold tracking-wider transition-colors duration-200 -skew-x-12
