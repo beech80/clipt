@@ -17,10 +17,6 @@ const Home = () => {
       <div className="absolute top-0 left-0 right-0 z-20">
         <div className="w-full bg-[#1A1F2C]/80 backdrop-blur-sm">
           <div className="flex flex-col items-center">
-            <h1 className="text-2xl font-bold gaming-gradient tracking-wider py-3">
-              CLIPT
-            </h1>
-            
             <div className="w-full h-12">
               <div className="flex w-full h-full">
                 <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
@@ -61,6 +57,13 @@ const Home = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Modern CLIPT Title */}
+      <div className="fixed bottom-[80px] left-1/2 -translate-x-1/2 z-50">
+        <h1 className="clip-button">
+          CLIPT
+        </h1>
       </div>
 
       <div className="retro-screen h-full pt-16">
