@@ -13,50 +13,52 @@ const Home = () => {
   const [activeTab, setActiveTab] = useState("clips");
 
   return (
-    <div className="max-w-3xl mx-auto h-[calc(100vh-200px)] relative pt-10">
-      <div className="absolute -top-2 left-0 right-0 z-20 flex flex-col items-center gap-4">
-        <Tabs 
-          defaultValue="clips" 
-          className="w-[200px]"
-          value={activeTab}
-          onValueChange={setActiveTab}
-        >
-          <TabsList className="grid w-full grid-cols-2 bg-gaming-700/20">
-            <TabsTrigger 
-              value="clips" 
-              className="data-[state=active]:bg-gaming-400/20"
+    <div className="max-w-3xl mx-auto h-[calc(100vh-80px)] relative">
+      <div className="absolute top-0 left-0 right-0 z-20 flex flex-col items-center">
+        <h1 className="text-4xl font-bold text-gaming-400 mb-4">CLIPS</h1>
+        <div className="w-full px-4 py-3 bg-[#1A1F2C]/80 backdrop-blur-sm border-y border-gaming-400/20">
+          <div className="flex justify-between items-center max-w-md mx-auto">
+            <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="border border-gaming-400 bg-transparent hover:bg-gaming-400/10 text-white flex gap-2 items-center"
+                  size="sm"
+                >
+                  <Video className="w-4 h-4" />
+                  Post
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
+                <PostForm onPostCreated={() => setIsPostFormOpen(false)} />
+              </DialogContent>
+            </Dialog>
+
+            <Tabs 
+              defaultValue="clips" 
+              className="w-48"
+              value={activeTab}
+              onValueChange={setActiveTab}
             >
-              CLIPS
-            </TabsTrigger>
-            <TabsTrigger 
-              value="squad" 
-              className="data-[state=active]:bg-gaming-400/20"
-            >
-              SQUAD
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-      
-      <div className="absolute top-14 left-0 right-0 z-10 bg-black/50 backdrop-blur-sm">
-        <div className="flex justify-center items-center px-4 py-3">
-          <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="gaming-button flex gap-2 items-center"
-                size="sm"
-              >
-                <Video className="w-4 h-4" />
-                Post
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <PostForm onPostCreated={() => setIsPostFormOpen(false)} />
-            </DialogContent>
-          </Dialog>
+              <TabsList className="grid w-full grid-cols-2 bg-gaming-700/20">
+                <TabsTrigger 
+                  value="squad" 
+                  className="data-[state=active]:bg-gaming-400/20"
+                >
+                  SQUAD
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="clips" 
+                  className="data-[state=active]:bg-gaming-400"
+                >
+                  CLIPS
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
       </div>
-      <div className="snap-y snap-mandatory overflow-y-auto h-full mt-12">
+
+      <div className="retro-screen h-full pt-32">
         {activeTab === "clips" ? (
           <PostList />
         ) : (

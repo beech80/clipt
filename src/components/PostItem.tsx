@@ -191,48 +191,9 @@ const PostItem = ({ post }: PostItemProps) => {
         videoUrl={post.video_url}
       />
       
-      {/* Vertical action buttons */}
-      <div className="absolute right-4 bottom-24 flex flex-col gap-6 items-center">
-        <button 
-          className="p-2 hover:scale-110 transition-transform"
-          onClick={() => setShowComments(!showComments)}
-        >
-          <MessageSquare className="w-8 h-8 text-white" />
-          <span className="text-xs text-white mt-1">Comment</span>
-        </button>
-        <button 
-          className="p-2 hover:scale-110 transition-transform"
-          onClick={handleFollow}
-        >
-          <UserPlus className={`w-8 h-8 ${isFollowing ? 'text-gaming-400' : 'text-white'}`} />
-          <span className="text-xs text-white mt-1">
-            {isFollowing ? 'Following' : 'Follow'}
-          </span>
-        </button>
-        <button 
-          className="p-2 hover:scale-110 transition-transform"
-          onClick={handleLike}
-        >
-          <Heart className={`w-8 h-8 ${isLiked ? 'text-red-500' : 'text-white'}`} />
-          <span className="text-xs text-white mt-1">
-            Like ({likesCount})
-          </span>
-        </button>
-        <button 
-          className="p-2 hover:scale-110 transition-transform"
-          onClick={handleVote}
-        >
-          <Trophy className={`w-8 h-8 ${isVoted ? 'text-gaming-400' : 'text-white'}`} />
-          <span className="text-xs text-white mt-1">
-            Vote ({voteCount})
-          </span>
-        </button>
-      </div>
-
-      {/* User info and description overlay */}
-      <div className="absolute bottom-24 left-4 right-20 text-white">
+      {/* User info overlay */}
+      <div className="absolute bottom-4 left-4 right-4 text-white">
         <h3 className="font-bold">@{post.profiles?.username}</h3>
-        <p className="text-sm mt-2 line-clamp-2">{post.content}</p>
       </div>
 
       {showComments && (

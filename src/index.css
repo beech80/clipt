@@ -65,15 +65,15 @@
 
 .retro-screen {
   @apply relative overflow-hidden;
-}
-
-.retro-screen::after {
-  content: "";
-  @apply absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgba(155,135,245,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(155,135,245,0.1)_1px,transparent_1px)] bg-[size:4px_4px];
+  background-color: #1A1F2C;
+  background-image: 
+    linear-gradient(rgba(155, 135, 245, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(155, 135, 245, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .gameboy-container {
-  @apply fixed bottom-0 left-0 right-0 border-t-2 border-[#9b87f5]/30;
+  @apply fixed bottom-0 left-0 right-0 border-t-2 border-[#9b87f5]/30 bg-[#1A1F2C]/95;
   box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.2);
 }
 
