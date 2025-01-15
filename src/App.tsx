@@ -10,6 +10,16 @@ import GameBoyControls from "./components/GameBoyControls";
 import { Play } from "lucide-react";
 import React, { useEffect, useState } from 'react';
 import { useSheetState } from "./hooks/use-sheet-state";
+import Home from "./pages/Home";
+import Discover from "./pages/Discover";
+import ForYou from "./pages/ForYou";
+import Clipts from "./pages/Clipts";
+import Messages from "./pages/Messages";
+import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
+import Login from "./pages/Login";
+import Streaming from "./pages/Streaming";
+import TopClips from "./pages/TopClips";
 
 const queryClient = new QueryClient({
   defaultOptions: {
