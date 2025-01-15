@@ -47,6 +47,7 @@ const Streaming = () => {
         .maybeSingle();
 
       if (error) {
+        console.error("Error loading stream data:", error);
         toast.error("Failed to load stream data");
         return;
       }
@@ -108,9 +109,9 @@ const Streaming = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="gaming-card">
-        <h1 className="gaming-gradient text-3xl font-bold tracking-tight mb-4">
+    <div className="container mx-auto px-4 py-8">
+      <div className="gaming-card mb-8">
+        <h1 className="gaming-gradient text-3xl font-bold tracking-tight mb-6">
           Stream Manager
         </h1>
         
@@ -128,12 +129,10 @@ const Streaming = () => {
           startedAt={streamData.startedAt}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+          <div className="lg:col-span-2 space-y-6">
             <div className="glass-card p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">Stream Preview</h3>
-              </div>
+              <h2 className="font-semibold mb-4">Stream Preview</h2>
               <StreamPlayer 
                 streamUrl={streamData.streamUrl}
                 isLive={streamData.isLive}
