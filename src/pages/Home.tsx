@@ -24,11 +24,20 @@ const Home = () => {
               <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    className="gaming-button min-w-[80px]"
+                    className="relative h-12 px-6 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                    border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
+                    active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
+                    rounded-r-lg rounded-l-sm skew-x-12 transition-all duration-200 min-w-[100px]
+                    shadow-[0_0_15px_rgba(155,135,245,0.3)] hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
                     size="sm"
                   >
-                    <Video className="w-4 h-4 mr-2" />
-                    Post
+                    <span className="flex items-center -skew-x-12">
+                      <Video className="w-4 h-4 mr-2" />
+                      Post
+                    </span>
+                    {/* Trigger accent */}
+                    <div className="absolute -right-0.5 top-0 bottom-0 w-2 bg-gaming-400/30 
+                      border-r-2 border-gaming-400/50 rounded-r-lg"></div>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px]">
