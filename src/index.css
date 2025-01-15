@@ -4,91 +4,118 @@
  
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
- 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
- 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
- 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
- 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
- 
-    --radius: 0.5rem;
-
-    --gaming-400: 262 83.3% 57.8%;
-    --gaming-500: 262 83.3% 47.8%;
-    --gaming-600: 262 83.3% 37.8%;
-  }
- 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
- 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
- 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
- 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
- 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
- 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
- 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
- 
+    --background: 240 27% 8%;
+    --foreground: 255 39% 63%;
+    --card: 240 27% 12%;
+    --card-foreground: 255 39% 63%;
+    --popover: 240 27% 12%;
+    --popover-foreground: 255 39% 63%;
+    --primary: 255 39% 37%;
+    --primary-foreground: 255 39% 63%;
+    --secondary: 240 27% 16%;
+    --secondary-foreground: 255 39% 63%;
+    --muted: 240 27% 16%;
+    --muted-foreground: 255 39% 45%;
+    --accent: 240 27% 16%;
+    --accent-foreground: 255 39% 63%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
- 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 255 39% 63%;
+    --border: 240 27% 16%;
+    --input: 240 27% 16%;
+    --ring: 255 39% 37%;
+    --radius: 0rem;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#1A1F2C] text-white;
+    background-image: 
+      radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
+    background-attachment: fixed;
   }
 }
 
-@layer components {
-  .glass-card {
-    @apply bg-white/10 backdrop-blur-lg border rounded-lg shadow-lg;
-  }
-  
-  .gaming-card {
-    @apply bg-white/5 backdrop-blur-sm border border-gaming-500/20 rounded-lg p-6 shadow-xl;
-  }
-  
-  .gaming-gradient {
-    @apply bg-gradient-to-r from-gaming-400 to-gaming-600 bg-clip-text text-transparent;
-  }
+.gaming-card {
+  @apply relative overflow-hidden rounded-none border-2 border-[#9b87f5] bg-[#1A1F2C] p-4 transition-all hover:border-[#8B5CF6];
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+}
+
+.gaming-gradient {
+  @apply bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] bg-clip-text text-transparent;
+}
+
+.gaming-button {
+  @apply inline-flex items-center justify-center rounded-none border-2 border-[#9b87f5] bg-[#1A1F2C] px-4 py-2 text-sm font-medium text-white transition-all hover:border-[#8B5CF6] focus:outline-none focus:ring-2 focus:ring-[#9b87f5] focus:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+}
+
+.glass-card {
+  @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+}
+
+.hover-glow {
+  @apply transition-all hover:shadow-lg hover:shadow-[#9b87f5]/20;
+}
+
+.retro-screen {
+  @apply relative overflow-hidden;
+}
+
+.retro-screen::after {
+  content: "";
+  @apply absolute inset-0 pointer-events-none bg-[linear-gradient(to_right,rgba(155,135,245,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(155,135,245,0.1)_1px,transparent_1px)] bg-[size:4px_4px];
+}
+
+.gameboy-container {
+  @apply fixed bottom-0 left-0 right-0 border-t-2 border-[#9b87f5]/30;
+  box-shadow: 0 -4px 20px rgba(155, 135, 245, 0.2);
+}
+
+.action-buttons-container {
+  @apply fixed flex flex-col items-center justify-center;
+}
+
+.action-button {
+  @apply w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gaming-400/20 hover:bg-gaming-400/30 active:bg-gaming-400/40 
+    transition-all duration-300 border-2 border-gaming-400/50 flex items-center justify-center text-white backdrop-blur-sm;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+}
+
+.bg-radial-gradient {
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+.clip-button {
+  @apply text-8xl font-bold tracking-wider;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E5E7EB 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(155, 135, 245, 0.8);
+  position: relative;
+}
+
+.clip-button::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(90deg, #9b87f5 0%, #8B5CF6 100%);
+  border-radius: 16px;
+  z-index: -1;
+  filter: blur(12px);
+  opacity: 0.8;
+}
+
+.clip-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #1A1F2C;
+  border-radius: 12px;
+  z-index: -1;
 }
