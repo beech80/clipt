@@ -9,6 +9,7 @@ import { MainNav } from "./components/MainNav";
 import GameBoyControls from "./components/GameBoyControls";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
+import ForYou from "./pages/ForYou";
 import Clipts from "./pages/Clipts";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
@@ -54,6 +55,14 @@ const App = () => {
                       element={
                         <AuthGuard>
                           <Discover />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/for-you"
+                      element={
+                        <AuthGuard>
+                          <ForYou />
                         </AuthGuard>
                       }
                     />
