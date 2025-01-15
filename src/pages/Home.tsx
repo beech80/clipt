@@ -20,14 +20,14 @@ const Home = () => {
               CLIPS
             </h1>
             
-            <div className="flex justify-between items-center w-full">
+            <div className="flex justify-between items-center w-full space-x-6">
               <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
                 <DialogTrigger asChild>
                   <Button 
-                    className="relative h-12 px-6 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
+                    className="relative h-10 px-5 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
                     border-2 border-gaming-400/50 text-white hover:from-gaming-400/30 hover:to-gaming-400/40
                     active:from-gaming-400/40 active:to-gaming-400/50 transform active:translate-y-0.5
-                    rounded-r-lg rounded-l-sm skew-x-12 transition-all duration-200 min-w-[100px]
+                    rounded-r-lg rounded-l-sm skew-x-12 transition-all duration-200 min-w-[90px]
                     shadow-[0_0_15px_rgba(155,135,245,0.3)] hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]"
                     size="sm"
                   >
@@ -46,7 +46,7 @@ const Home = () => {
               </Dialog>
 
               {/* Gaming Trigger Toggle Switch */}
-              <div className="relative inline-flex items-center min-w-[200px] h-12">
+              <div className="relative inline-flex items-center min-w-[180px] h-10">
                 <div 
                   className="absolute inset-0 bg-gradient-to-b from-gaming-400/20 to-gaming-400/30 
                     border-2 border-gaming-400/50 rounded-r-lg rounded-l-sm skew-x-12
