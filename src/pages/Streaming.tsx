@@ -9,7 +9,10 @@ import { StreamSettings } from "@/components/streaming/StreamSettings";
 import { toast } from "sonner";
 
 const Streaming = () => {
+  console.log("Rendering Streaming component"); // Debug log
   const { user } = useAuth();
+  console.log("User auth state:", user); // Debug log
+
   const [streamData, setStreamData] = useState<{
     id: string | null;
     isLive: boolean;
@@ -28,6 +31,7 @@ const Streaming = () => {
 
   useEffect(() => {
     if (user) {
+      console.log("Loading stream data for user:", user.id); // Debug log
       loadStreamData();
       const interval = setInterval(() => {
         if (streamData.isLive) {
@@ -51,6 +55,8 @@ const Streaming = () => {
         toast.error("Failed to load stream data");
         return;
       }
+
+      console.log("Stream data loaded:", stream); // Debug log
 
       if (stream) {
         setStreamData({
@@ -100,16 +106,20 @@ const Streaming = () => {
     }));
   };
 
+  // Add a loading state message
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <p className="text-muted-foreground">Please log in to access streaming features.</p>
+      <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-4">Please Log In</h2>
+          <p className="text-muted-foreground">You need to be logged in to access streaming features.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 min-h-screen bg-background">
       <div className="gaming-card mb-8">
         <h1 className="gaming-gradient text-3xl font-bold tracking-tight mb-6">
           Stream Manager
