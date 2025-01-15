@@ -35,14 +35,14 @@ const Home = () => {
               CLIPS
             </h1>
 
-            {/* Enhanced Game-like Toggle Switch */}
+            {/* Smooth Game-like Toggle Switch */}
             <div className="relative inline-flex items-center min-w-[140px] h-9">
               <div 
                 className="absolute inset-0 rounded-sm"
                 style={{
                   background: 'linear-gradient(to right, rgba(155, 135, 245, 0.1), rgba(139, 92, 246, 0.1))',
                   border: '2px solid rgba(155, 135, 245, 0.3)',
-                  boxShadow: '0 0 20px rgba(155, 135, 245, 0.2)',
+                  boxShadow: '0 0 10px rgba(155, 135, 245, 0.15)',
                 }}
               ></div>
               <div 
@@ -50,16 +50,16 @@ const Home = () => {
                   activeTab === "clips" ? "translate-x-full" : "translate-x-0"
                 }`}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(155, 135, 245, 0.2), rgba(139, 92, 246, 0.3))',
-                  boxShadow: '0 0 15px rgba(155, 135, 245, 0.4)',
-                  border: '2px solid rgba(155, 135, 245, 0.5)',
+                  background: 'linear-gradient(135deg, rgba(155, 135, 245, 0.15), rgba(139, 92, 246, 0.25))',
+                  boxShadow: '0 0 10px rgba(155, 135, 245, 0.2)',
+                  border: '2px solid rgba(155, 135, 245, 0.4)',
                 }}
               ></div>
               <button
                 onClick={() => setActiveTab("squad")}
                 className={`relative flex-1 h-full px-2 text-xs font-bold tracking-wider transition-colors duration-200 ${
                   activeTab === "squad" 
-                    ? "text-gaming-400 animate-glow" 
+                    ? "text-gaming-400" 
                     : "text-gray-400 hover:text-gaming-400/70"
                 }`}
               >
@@ -69,7 +69,7 @@ const Home = () => {
                 onClick={() => setActiveTab("clips")}
                 className={`relative flex-1 h-full px-2 text-xs font-bold tracking-wider transition-colors duration-200 ${
                   activeTab === "clips" 
-                    ? "text-gaming-400 animate-glow" 
+                    ? "text-gaming-400" 
                     : "text-gray-400 hover:text-gaming-400/70"
                 }`}
               >
