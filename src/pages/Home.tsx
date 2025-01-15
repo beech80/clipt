@@ -13,7 +13,14 @@ const Home = () => {
 
   return (
     <div className="max-w-3xl mx-auto h-[calc(100vh-80px)] relative">
-      <div className="absolute top-0 left-0 right-0 z-20">
+      {/* Title Section */}
+      <div className="absolute top-0 left-0 right-0 z-20 py-4">
+        <h1 className="text-4xl font-bold gaming-gradient tracking-wider">
+          CLIPS
+        </h1>
+      </div>
+
+      <div className="absolute top-16 left-0 right-0 z-20">
         <div className="w-full px-4 py-3 bg-[#1A1F2C]/80 backdrop-blur-sm border-y border-gaming-400/20">
           <div className="flex justify-between items-center max-w-md mx-auto">
             <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
@@ -69,7 +76,7 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="retro-screen h-full pt-16">
+      <div className="retro-screen h-full pt-32">
         {activeTab === "clips" ? (
           <PostList />
         ) : (
