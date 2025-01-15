@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, UserPlus } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'clips' | 'games' | 'achievements'>('clips');
 
   const { data: userClips } = useQuery({
@@ -95,6 +97,13 @@ const Profile = () => {
               >
                 <MessageSquare className="w-4 h-4" />
                 Message
+              </Button>
+              <Button
+                onClick={() => navigate('/profile/edit')}
+                className="gaming-button"
+              >
+                <Pencil className="w-4 h-4" />
+                Edit Profile
               </Button>
             </div>
           </div>

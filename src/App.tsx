@@ -11,6 +11,7 @@ import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 import Login from "./pages/Login";
 import Streaming from "./pages/Streaming";
 import TopClips from "./pages/TopClips";
@@ -68,6 +69,14 @@ const App = () => {
                       element={
                         <AuthGuard>
                           <Profile />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/profile/edit"
+                      element={
+                        <AuthGuard>
+                          <EditProfile />
                         </AuthGuard>
                       }
                     />
