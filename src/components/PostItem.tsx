@@ -45,7 +45,7 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   return (
-    <div className="relative aspect-square w-full max-w-[1080px] mx-auto bg-[#1A1F2C] overflow-hidden">
+    <div className="relative w-full aspect-square max-w-[1080px] mx-auto bg-[#1A1F2C] overflow-hidden">
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent z-20">
         <div className="flex items-center space-x-2">
@@ -73,24 +73,26 @@ const PostItem = ({ post }: PostItemProps) => {
       </div>
 
       {/* Footer Actions */}
-      <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-6">
-        <button className="clip-button">
-          <Heart className="clip-button-icon" />
-          <span className="text-xs text-white">{post.likes_count || 0}</span>
-        </button>
-        
-        <button 
-          className="clip-button"
-          onClick={handleCommentClick}
-        >
-          <MessageCircle className="clip-button-icon" />
-          <span className="text-xs text-white">{commentsCount}</span>
-        </button>
-        
-        <button className="clip-button">
-          <Trophy className="clip-button-icon" />
-          <span className="text-xs text-white">{post.clip_votes?.[0]?.count || 0}</span>
-        </button>
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center items-center p-4 bg-gradient-to-t from-black/60 to-transparent z-20">
+        <div className="flex items-center gap-8">
+          <button className="clip-button flex items-center gap-2">
+            <Heart className="clip-button-icon" />
+            <span className="text-xs text-white">{post.likes_count || 0}</span>
+          </button>
+          
+          <button 
+            className="clip-button flex items-center gap-2"
+            onClick={handleCommentClick}
+          >
+            <MessageCircle className="clip-button-icon" />
+            <span className="text-xs text-white">{commentsCount}</span>
+          </button>
+          
+          <button className="clip-button flex items-center gap-2">
+            <Trophy className="clip-button-icon" />
+            <span className="text-xs text-white">{post.clip_votes?.[0]?.count || 0}</span>
+          </button>
+        </div>
       </div>
     </div>
   );
