@@ -24,7 +24,9 @@ export const StreamSettings = ({ userId }: StreamSettingsProps) => {
   });
 
   useEffect(() => {
-    loadSettings();
+    if (userId) {
+      loadSettings();
+    }
   }, [userId]);
 
   const loadSettings = async () => {
@@ -33,9 +35,13 @@ export const StreamSettings = ({ userId }: StreamSettingsProps) => {
         .from("stream_settings")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading settings:", error);
+        toast.error("Failed to load stream settings");
+        return;
+      }
 
       if (data) {
         setSettings({
@@ -66,7 +72,8 @@ export const StreamSettings = ({ userId }: StreamSettingsProps) => {
           chat_followers_only: settings.chatFollowersOnly,
           chat_slow_mode: settings.chatSlowMode,
           notification_enabled: settings.notificationEnabled,
-        });
+        })
+        .select();
 
       if (error) throw error;
       toast.success("Settings saved successfully!");
