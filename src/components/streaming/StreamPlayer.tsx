@@ -3,6 +3,7 @@ import Hls from 'hls.js';
 import { toast } from "sonner";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,7 @@ interface StreamPlayerProps {
   autoplay?: boolean;
   controls?: boolean;
   qualities?: string[];
+  streamId?: string; // Add streamId prop
 }
 
 export const StreamPlayer = ({ 
@@ -23,11 +25,55 @@ export const StreamPlayer = ({
   isLive = false, 
   autoplay = true,
   controls = true,
-  qualities = []
+  qualities = [],
+  streamId
 }: StreamPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [currentQuality, setCurrentQuality] = useState<string>('auto');
+  const [healthStatus, setHealthStatus] = useState<string>('unknown');
+  const [streamMetrics, setStreamMetrics] = useState({
+    bitrate: 0,
+    fps: 0,
+    resolution: ''
+  });
+
+  useEffect(() => {
+    if (!streamId) return;
+
+    // Subscribe to real-time stream health updates
+    const channel = supabase
+      .channel('stream-health')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'streams',
+          filter: `id=eq.${streamId}`
+        },
+        (payload) => {
+          const { health_status, current_bitrate, current_fps, stream_resolution } = payload.new;
+          
+          setHealthStatus(health_status || 'unknown');
+          setStreamMetrics({
+            bitrate: current_bitrate || 0,
+            fps: current_fps || 0,
+            resolution: stream_resolution || ''
+          });
+
+          // Show toast for critical health status
+          if (health_status === 'critical') {
+            toast.error('Stream health is critical. Please check your connection.');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [streamId]);
 
   useEffect(() => {
     if (!streamUrl || !videoRef.current) return;
@@ -123,6 +169,21 @@ export const StreamPlayer = ({
     }
   };
 
+  const getHealthStatusColor = () => {
+    switch (healthStatus) {
+      case 'excellent':
+        return 'bg-green-500';
+      case 'good':
+        return 'bg-green-400';
+      case 'poor':
+        return 'bg-yellow-500';
+      case 'critical':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-400';
+    }
+  };
+
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden group">
       {!isLive && !streamUrl && (
@@ -137,6 +198,19 @@ export const StreamPlayer = ({
         playsInline
         poster={!isLive ? "/placeholder.svg" : undefined}
       />
+      
+      {isLive && (
+        <div className="absolute top-4 left-4 flex items-center space-x-2 bg-black/60 rounded-full px-3 py-1">
+          <span className={`h-2 w-2 rounded-full ${getHealthStatusColor()}`} />
+          <span className="text-white text-sm capitalize">{healthStatus}</span>
+        </div>
+      )}
+
+      {streamMetrics.bitrate > 0 && (
+        <div className="absolute top-4 right-20 bg-black/60 rounded-full px-3 py-1 text-white text-sm">
+          {(streamMetrics.bitrate / 1000).toFixed(1)} Mbps | {streamMetrics.fps} FPS
+        </div>
+      )}
       
       {qualities.length > 0 && (
         <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
