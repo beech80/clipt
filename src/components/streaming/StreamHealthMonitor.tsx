@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { AlertCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface StreamHealthMonitorProps {
   streamId: string;
@@ -27,10 +28,28 @@ export const StreamHealthMonitor = ({ streamId }: StreamHealthMonitorProps) => {
   });
 
   useEffect(() => {
-    if (stream?.health_status === 'critical') {
-      toast.error('Stream health is critical. Please check your connection.');
-    }
-  }, [stream?.health_status]);
+    const channel = supabase
+      .channel('stream-health')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'streams',
+          filter: `id=eq.${streamId}`
+        },
+        (payload) => {
+          if (payload.new.health_status === 'critical') {
+            toast.error('Stream health is critical. Please check your connection.');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [streamId]);
 
   if (error) {
     return (
@@ -89,40 +108,45 @@ export const StreamHealthMonitor = ({ streamId }: StreamHealthMonitorProps) => {
   };
 
   return (
-    <div className="space-y-4 p-4 rounded-lg border bg-card">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {getHealthIcon(stream.health_status)}
-          <span className="font-semibold capitalize">{stream.health_status}</span>
-        </div>
-        <span className="text-sm text-muted-foreground">
-          {stream.stream_resolution}
-        </span>
-      </div>
-
-      <div className="space-y-2">
-        <div className="space-y-1">
-          <div className="flex justify-between text-sm">
-            <span>Bitrate</span>
-            <span>{(stream.current_bitrate / 1000).toFixed(1)} Mbps</span>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-medium">Stream Health</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {getHealthIcon(stream.health_status)}
+            <span className="font-semibold capitalize">{stream.health_status}</span>
           </div>
-          <Progress 
-            value={getBitrateQuality(stream.current_bitrate)} 
-            className={getHealthColor(stream.health_status)}
-          />
+          <span className="text-sm text-muted-foreground">
+            {stream.stream_resolution}
+          </span>
         </div>
 
-        <div className="space-y-1">
-          <div className="flex justify-between text-sm">
-            <span>FPS</span>
-            <span>{stream.current_fps}</span>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Bitrate</span>
+              <span>{(stream.current_bitrate / 1000).toFixed(1)} Mbps</span>
+            </div>
+            <Progress 
+              value={getBitrateQuality(stream.current_bitrate)} 
+              className={getHealthColor(stream.health_status)}
+            />
           </div>
-          <Progress 
-            value={getFPSQuality(stream.current_fps)} 
-            className={getHealthColor(stream.health_status)}
-          />
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>FPS</span>
+              <span>{stream.current_fps}</span>
+            </div>
+            <Progress 
+              value={getFPSQuality(stream.current_fps)} 
+              className={getHealthColor(stream.health_status)}
+            />
+          </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
