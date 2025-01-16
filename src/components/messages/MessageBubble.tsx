@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Message } from "@/types/message";
 import { useAuth } from "@/contexts/AuthContext";
 import { Check, CheckCheck } from "lucide-react";
+import { useEmotes } from "@/contexts/EmoteContext";
 
 interface MessageBubbleProps {
   message: Message;
@@ -9,7 +10,29 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   const { user } = useAuth();
+  const { emotes } = useEmotes();
   const isOwn = message.sender_id === user?.id;
+
+  const renderMessageContent = (content: string) => {
+    const parts = content.split(/(:[a-zA-Z0-9_]+:)/g);
+    return parts.map((part, index) => {
+      if (part.match(/^:[a-zA-Z0-9_]+:$/)) {
+        const emoteName = part.slice(1, -1);
+        const emote = emotes.find(e => e.name === emoteName);
+        if (emote) {
+          return (
+            <img
+              key={index}
+              src={emote.url}
+              alt={emoteName}
+              className="inline-block h-6 w-6 align-middle"
+            />
+          );
+        }
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
 
   return (
     <div className={cn("mb-4", isOwn ? "text-right" : "text-left")}>
@@ -19,7 +42,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           isOwn ? "bg-primary text-primary-foreground" : "bg-muted"
         )}
       >
-        {message.content}
+        {renderMessageContent(message.content)}
         {isOwn && (
           <span className="absolute -bottom-4 right-0 text-muted-foreground">
             {message.read ? (

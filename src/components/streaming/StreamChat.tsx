@@ -5,6 +5,8 @@ import { MessageInput } from "@/components/messages/MessageInput";
 import { MessageList } from "@/components/messages/MessageList";
 import { Message } from "@/types/message";
 import { toast } from "sonner";
+import { processCommand } from "@/utils/chatCommands";
+import type { StreamChatMessage } from "@/types/chat";
 
 interface StreamChatProps {
   streamId: string;
@@ -14,6 +16,7 @@ interface StreamChatProps {
 export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [timeouts, setTimeouts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!streamId) return;
@@ -27,12 +30,18 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
           message,
           created_at,
           user_id,
+          is_deleted,
+          deleted_by,
+          deleted_at,
+          is_command,
+          command_type,
           profiles (
             username,
             avatar_url
           )
         `)
         .eq('stream_id', streamId)
+        .eq('is_deleted', false)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -54,59 +63,116 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       setMessages(formattedMessages);
     };
 
-    loadMessages();
+    // Load active timeouts
+    const loadTimeouts = async () => {
+      const { data, error } = await supabase
+        .from('chat_timeouts')
+        .select('user_id, expires_at')
+        .eq('stream_id', streamId)
+        .gt('expires_at', new Date().toISOString());
 
-    // Subscribe to new messages
+      if (!error && data) {
+        const timeoutMap: Record<string, string> = {};
+        data.forEach(timeout => {
+          timeoutMap[timeout.user_id] = timeout.expires_at;
+        });
+        setTimeouts(timeoutMap);
+      }
+    };
+
+    loadMessages();
+    loadTimeouts();
+
+    // Subscribe to new messages and deletions
     const channel = supabase
       .channel('stream_chat')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'stream_chat',
           filter: `stream_id=eq.${streamId}`
         },
         async (payload) => {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('username, avatar_url')
-            .eq('id', payload.new.user_id)
-            .single();
+          if (payload.eventType === 'INSERT') {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('username, avatar_url')
+              .eq('id', payload.new.user_id)
+              .single();
 
-          if (error) return;
+            const newMessage: Message = {
+              id: payload.new.id,
+              content: payload.new.message,
+              sender_id: payload.new.user_id,
+              created_at: payload.new.created_at,
+              sender: {
+                username: profile?.username || 'Unknown',
+                avatar_url: profile?.avatar_url
+              }
+            };
 
-          const newMessage: Message = {
-            id: payload.new.id,
-            content: payload.new.message,
-            sender_id: payload.new.user_id,
-            created_at: payload.new.created_at,
-            sender: {
-              username: profile.username || 'Unknown',
-              avatar_url: profile.avatar_url
-            }
-          };
+            setMessages(prev => [...prev, newMessage]);
+          } else if (payload.eventType === 'UPDATE' && payload.new.is_deleted) {
+            setMessages(prev => prev.filter(msg => msg.id !== payload.new.id));
+          }
+        }
+      )
+      .subscribe();
 
-          setMessages(prev => [...prev, newMessage]);
+    // Subscribe to timeout changes
+    const timeoutChannel = supabase
+      .channel('chat_timeouts')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_timeouts',
+          filter: `stream_id=eq.${streamId}`
+        },
+        (payload) => {
+          setTimeouts(prev => ({
+            ...prev,
+            [payload.new.user_id]: payload.new.expires_at
+          }));
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(timeoutChannel);
     };
   }, [streamId]);
 
   const handleSendMessage = async (content: string) => {
     if (!user || !streamId || !isLive) return;
 
+    // Check if user is timed out
+    const userTimeout = timeouts[user.id];
+    if (userTimeout && new Date(userTimeout) > new Date()) {
+      const timeLeft = Math.ceil((new Date(userTimeout).getTime() - Date.now()) / 1000);
+      toast.error(`You are timed out for ${timeLeft} more seconds`);
+      return;
+    }
+
     try {
+      // Check if message is a command
+      if (content.startsWith('/')) {
+        const success = await processCommand(content, user.id, streamId);
+        if (success) return;
+      }
+
       const { error } = await supabase
         .from('stream_chat')
         .insert({
           stream_id: streamId,
           user_id: user.id,
-          message: content
+          message: content,
+          is_command: content.startsWith('/'),
+          command_type: content.startsWith('/') ? content.split(' ')[0].slice(1) : null
         });
 
       if (error) throw error;

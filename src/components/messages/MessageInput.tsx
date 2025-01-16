@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { EmoteSelector } from "@/components/streaming/EmoteSelector";
 
 interface MessageInputProps {
   onSendMessage: (content: string) => void;
@@ -17,9 +18,14 @@ export function MessageInput({ onSendMessage }: MessageInputProps) {
     }
   };
 
+  const handleEmoteSelect = (emoteName: string) => {
+    setMessage(prev => `${prev} :${emoteName}: `);
+  };
+
   return (
     <div className="p-4 border-t">
       <div className="flex gap-2">
+        <EmoteSelector onSelect={handleEmoteSelect} />
         <Input
           placeholder="Type a message..."
           value={message}

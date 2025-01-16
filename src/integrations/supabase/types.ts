@@ -45,6 +45,87 @@ export type Database = {
           },
         ]
       }
+      chat_emotes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_emotes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_timeouts: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          moderator_id: string
+          stream_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          moderator_id: string
+          stream_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          moderator_id?: string
+          stream_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_timeouts_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_timeouts_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_timeouts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clip_votes: {
         Row: {
           created_at: string
@@ -502,27 +583,52 @@ export type Database = {
       }
       stream_chat: {
         Row: {
+          command_type: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
+          is_command: boolean | null
+          is_deleted: boolean | null
           message: string
           stream_id: string | null
+          timeout_duration: number | null
           user_id: string | null
         }
         Insert: {
+          command_type?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
+          is_command?: boolean | null
+          is_deleted?: boolean | null
           message: string
           stream_id?: string | null
+          timeout_duration?: number | null
           user_id?: string | null
         }
         Update: {
+          command_type?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
+          is_command?: boolean | null
+          is_deleted?: boolean | null
           message?: string
           stream_id?: string | null
+          timeout_duration?: number | null
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "stream_chat_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stream_chat_stream_id_fkey"
             columns: ["stream_id"]
