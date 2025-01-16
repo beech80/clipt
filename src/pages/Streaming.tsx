@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { StreamForm } from "@/components/streaming/StreamForm";
 import StreamPreview from "@/components/streaming/StreamPreview";
@@ -10,9 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const Streaming = () => {
   const { user } = useAuth();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
   const { data: stream, isLoading } = useQuery({
     queryKey: ['stream', user?.id],
@@ -57,7 +60,12 @@ const Streaming = () => {
               />
             </div>
             <div>
-              <StreamForm />
+              <StreamForm
+                title={title}
+                description={description}
+                onTitleChange={setTitle}
+                onDescriptionChange={setDescription}
+              />
             </div>
           </div>
         </TabsContent>
