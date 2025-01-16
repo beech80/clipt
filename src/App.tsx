@@ -33,6 +33,7 @@ const queryClient = new QueryClient({
 const App = () => {
   const { isOpen: isMenuOpen } = useSheetState();
   const [shouldFade, setShouldFade] = useState(false);
+  const [currentPostId, setCurrentPostId] = useState<string>('');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,7 +81,7 @@ const App = () => {
                       path="/"
                       element={
                         <AuthGuard>
-                          <Home />
+                          <Home onPostChange={setCurrentPostId} />
                         </AuthGuard>
                       }
                     />
@@ -159,7 +160,7 @@ const App = () => {
                     </div>
                   </div>
                 )}
-                <GameBoyControls />
+                <GameBoyControls currentPostId={currentPostId} />
               </BrowserRouter>
             </div>
           </TooltipProvider>

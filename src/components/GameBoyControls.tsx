@@ -12,23 +12,27 @@ import ActionButtons from './gameboy/ActionButtons';
 import { handleVideoControl } from './gameboy/VideoControls';
 import { useSheetState } from '@/hooks/use-sheet-state';
 
-const GameBoyControls = () => {
+interface GameBoyControlsProps {
+  currentPostId?: string;
+}
+
+const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
   const navigate = useNavigate();
   const { setIsOpen } = useSheetState();
 
   const handleAction = (action: string) => {
     switch(action) {
       case 'like':
-        toast.success('Liked!');
+        // Handled in ActionButtons
         break;
       case 'comment':
-        toast.success('Comment added!');
+        // Handled in ActionButtons
         break;
       case 'follow':
-        toast.success('Following!');
+        // Handled in ActionButtons
         break;
       case 'rank':
-        toast.success('Ranked!');
+        // Handled in ActionButtons
         break;
       default:
         break;
@@ -81,7 +85,7 @@ const GameBoyControls = () => {
 
       {/* Action Buttons */}
       <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32 flex flex-col items-center justify-center">
-        <ActionButtons onAction={handleAction} />
+        <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
       </div>
     </div>
   );
