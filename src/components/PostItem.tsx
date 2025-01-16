@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
-import CommentList from "./post/CommentList";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import PostActions from "./post/PostActions";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { formatDistanceToNow } from 'date-fns';
 
@@ -27,55 +22,7 @@ interface PostItemProps {
 }
 
 const PostItem = ({ post }: PostItemProps) => {
-  const [showComments, setShowComments] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(post.likes_count);
-  const voteCount = post.clip_votes?.[0]?.count || 0;
-  const [isVoted, setIsVoted] = useState(false);
   const { user } = useAuth();
-  const [isFollowing, setIsFollowing] = useState(false);
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (user) {
-      checkIfLiked();
-      checkIfVoted();
-      checkIfFollowing();
-    }
-  }, [user, post.id]);
-
-  const checkIfLiked = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('likes')
-      .select('id')
-      .eq('post_id', post.id)
-      .eq('user_id', user.id)
-      .single();
-    setIsLiked(!!data);
-  };
-
-  const checkIfVoted = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('clip_votes')
-      .select('id')
-      .eq('post_id', post.id)
-      .eq('user_id', user.id)
-      .single();
-    setIsVoted(!!data);
-  };
-
-  const checkIfFollowing = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('follows')
-      .select('follower_id')
-      .eq('follower_id', user.id)
-      .eq('following_id', post.user_id)
-      .single();
-    setIsFollowing(!!data);
-  };
 
   return (
     <div className="relative h-full w-full bg-black">
@@ -104,12 +51,6 @@ const PostItem = ({ post }: PostItemProps) => {
       {post.content && (
         <div className="absolute bottom-4 left-4 right-4 text-white">
           <p className="text-sm">{post.content}</p>
-        </div>
-      )}
-
-      {showComments && (
-        <div className="absolute bottom-0 left-0 right-0 bg-black/90 h-2/3 rounded-t-xl overflow-hidden">
-          <CommentList postId={post.id} />
         </div>
       )}
     </div>

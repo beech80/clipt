@@ -125,33 +125,6 @@ const PostList = () => {
     queryFn: async ({ pageParam = 0 }) => {
       // For testing purposes, return sample data
       return samplePosts;
-      
-      // Original query code:
-      /*
-      const from = Number(pageParam) * POSTS_PER_PAGE;
-      const to = from + POSTS_PER_PAGE - 1;
-
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            avatar_url
-          ),
-          likes:likes (
-            count
-          ),
-          clip_votes:clip_votes (
-            count
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .range(from, to);
-
-      if (error) throw error;
-      return data as Post[];
-      */
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => {
@@ -183,10 +156,10 @@ const PostList = () => {
   }
 
   return (
-    <div className="h-full">
+    <div className="h-full overflow-y-auto snap-y snap-mandatory">
       {data.pages.map((page, i) => (
         page.map((post) => (
-          <div key={post.id} className="snap-start snap-always h-[calc(100vh-200px)]">
+          <div key={post.id} className="snap-start snap-always min-h-[calc(100vh-200px)]">
             <PostItem 
               post={{
                 ...post,
