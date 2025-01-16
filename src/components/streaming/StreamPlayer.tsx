@@ -27,6 +27,7 @@ export const StreamPlayer = ({
   const hlsRef = useRef<Hls | null>(null);
   const [currentQuality, setCurrentQuality] = useState<string>('auto');
   const [healthStatus, setHealthStatus] = useState<string>('unknown');
+  const [viewerCount, setViewerCount] = useState<number>(0);
   const [streamMetrics, setStreamMetrics] = useState({
     bitrate: 0,
     fps: 0,
@@ -36,7 +37,8 @@ export const StreamPlayer = ({
   useEffect(() => {
     if (!streamId) return;
 
-    const channel = supabase
+    // Subscribe to stream health updates
+    const healthChannel = supabase
       .channel('stream-health')
       .on(
         'postgres_changes',
@@ -47,9 +49,16 @@ export const StreamPlayer = ({
           filter: `id=eq.${streamId}`
         },
         (payload) => {
-          const { health_status, current_bitrate, current_fps, stream_resolution } = payload.new;
+          const { 
+            health_status, 
+            current_bitrate, 
+            current_fps, 
+            stream_resolution,
+            viewer_count 
+          } = payload.new;
           
           setHealthStatus(health_status || 'unknown');
+          setViewerCount(viewer_count || 0);
           setStreamMetrics({
             bitrate: current_bitrate || 0,
             fps: current_fps || 0,
@@ -63,10 +72,46 @@ export const StreamPlayer = ({
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
+    // Increment viewer count when joining
+    const incrementViewers = async () => {
+      if (!streamId) return;
+      
+      const { error } = await supabase
+        .from('streams')
+        .update({ 
+          viewer_count: viewerCount + 1 
+        })
+        .eq('id', streamId);
+
+      if (error) {
+        console.error('Error incrementing viewer count:', error);
+      }
     };
-  }, [streamId]);
+
+    // Decrement viewer count when leaving
+    const decrementViewers = async () => {
+      if (!streamId) return;
+      
+      const { error } = await supabase
+        .from('streams')
+        .update({ 
+          viewer_count: Math.max(0, viewerCount - 1)
+        })
+        .eq('id', streamId);
+
+      if (error) {
+        console.error('Error decrementing viewer count:', error);
+      }
+    };
+
+    // Initialize viewer count
+    incrementViewers();
+
+    return () => {
+      decrementViewers();
+      supabase.removeChannel(healthChannel);
+    };
+  }, [streamId, viewerCount]);
 
   useEffect(() => {
     if (!streamUrl || !videoRef.current) return;
@@ -158,16 +203,22 @@ export const StreamPlayer = ({
       />
       
       {isLive && (
-        <StreamHealthIndicator 
-          status={healthStatus}
-          className="absolute top-4 left-4 bg-black/60 rounded-full px-3 py-1"
-        />
+        <>
+          <StreamHealthIndicator 
+            status={healthStatus}
+            className="absolute top-4 left-4 bg-black/60 rounded-full px-3 py-1"
+          />
+          <div className="absolute top-4 right-4 bg-black/60 rounded-full px-3 py-1 text-white text-sm flex items-center space-x-2">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span>{viewerCount} watching</span>
+          </div>
+        </>
       )}
 
       <StreamMetrics
         bitrate={streamMetrics.bitrate}
         fps={streamMetrics.fps}
-        className="absolute top-4 right-20 bg-black/60 rounded-full px-3 py-1"
+        className="absolute top-14 right-4 bg-black/60 rounded-full px-3 py-1"
       />
       
       <QualitySelector
