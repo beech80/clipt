@@ -47,6 +47,7 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
     { name: 'Streaming', path: '/streaming' },
     { name: 'Top Clips', path: '/top-clips' },
     { name: 'Clipts', path: '/clipts' },
+    { name: 'Settings', path: '/settings' },
   ];
 
   return (
