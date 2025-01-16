@@ -74,21 +74,21 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-[#1A1F2C] border-t border-[#2A2E3B]">
-          <div className="flex justify-start gap-4">
-            <div className="flex items-center px-3 py-1 border border-[#1EAEDB] rounded">
-              <Heart className="w-4 h-4 text-[#1EAEDB] mr-2" />
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#1A1F2C] to-transparent">
+          <div className="flex justify-center gap-6">
+            <div className="flex items-center px-4 py-2 bg-[#1A1F2C]/90 border-2 border-[#1EAEDB] rounded-lg backdrop-blur-sm">
+              <Heart className="w-5 h-5 text-[#1EAEDB] mr-2" />
               <span className="text-sm font-medium text-[#1EAEDB]">{post.likes_count || 0}</span>
             </div>
             <div 
               onClick={handleCommentClick}
-              className="flex items-center px-3 py-1 border border-[#1EAEDB] rounded cursor-pointer"
+              className="flex items-center px-4 py-2 bg-[#1A1F2C]/90 border-2 border-[#1EAEDB] rounded-lg backdrop-blur-sm cursor-pointer"
             >
-              <MessageCircle className="w-4 h-4 text-[#1EAEDB] mr-2" />
+              <MessageCircle className="w-5 h-5 text-[#1EAEDB] mr-2" />
               <span className="text-sm font-medium text-[#1EAEDB]">{commentsCount}</span>
             </div>
-            <div className="flex items-center px-3 py-1 border border-[#1EAEDB] rounded">
-              <Trophy className="w-4 h-4 text-[#1EAEDB] mr-2" />
+            <div className="flex items-center px-4 py-2 bg-[#1A1F2C]/90 border-2 border-[#1EAEDB] rounded-lg backdrop-blur-sm">
+              <Trophy className="w-5 h-5 text-[#1EAEDB] mr-2" />
               <span className="text-sm font-medium text-[#1EAEDB]">{post.clip_votes?.[0]?.count || 0}</span>
             </div>
           </div>
