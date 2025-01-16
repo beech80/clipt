@@ -1,65 +1,40 @@
 import React from 'react';
-import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Heart, MessageSquare, UserPlus, Trophy } from 'lucide-react';
 
 interface ActionButtonsProps {
   onAction: (action: string) => void;
 }
 
 const ActionButtons = ({ onAction }: ActionButtonsProps) => {
-  const handleClick = (action: string) => {
-    const button = document.querySelector(`.action-button-${action}`);
-    if (button) {
-      button.classList.add('animate-scale-up');
-      setTimeout(() => {
-        button.classList.remove('animate-scale-up');
-      }, 600);
-    }
-    onAction(action);
-  };
-
   return (
-    <div className="action-buttons-container right-4 sm:right-8 space-y-4">
-      <button
-        onClick={() => handleClick('like')}
-        className={cn(
-          "action-button action-button-like",
-          "hover:text-red-500 hover:border-red-500"
-        )}
+    <>
+      <button 
+        className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+        onClick={() => onAction('like')}
       >
-        <Heart className="w-5 h-5" />
+        <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-[#FF0000] group-hover:text-[#FF3333]" />
       </button>
-      
-      <button
-        onClick={() => handleClick('comment')}
-        className={cn(
-          "action-button action-button-comment",
-          "hover:text-blue-500 hover:border-blue-500"
-        )}
+      <div className="flex gap-6 sm:gap-12 my-2 sm:my-3">
+        <button 
+          className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+          onClick={() => onAction('comment')}
+        >
+          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#0066FF] group-hover:text-[#3399FF]" />
+        </button>
+        <button 
+          className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+          onClick={() => onAction('follow')}
+        >
+          <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-[#00FF00] group-hover:text-[#33FF33]" />
+        </button>
+      </div>
+      <button 
+        className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+        onClick={() => onAction('rank')}
       >
-        <MessageCircle className="w-5 h-5" />
+        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFD700] group-hover:text-[#FFDF33]" />
       </button>
-      
-      <button
-        onClick={() => handleClick('share')}
-        className={cn(
-          "action-button action-button-share",
-          "hover:text-green-500 hover:border-green-500"
-        )}
-      >
-        <Share2 className="w-5 h-5" />
-      </button>
-      
-      <button
-        onClick={() => handleClick('bookmark')}
-        className={cn(
-          "action-button action-button-bookmark",
-          "hover:text-purple-500 hover:border-purple-500"
-        )}
-      >
-        <Bookmark className="w-5 h-5" />
-      </button>
-    </div>
+    </>
   );
 };
 

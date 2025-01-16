@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import PostItem from "./PostItem";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
@@ -21,6 +22,7 @@ interface Post {
   clip_votes: { count: number }[];
 }
 
+// Sample data for testing
 const samplePosts: Post[] = [
   {
     id: '1',
@@ -121,6 +123,7 @@ const PostList = () => {
   } = useInfiniteQuery({
     queryKey: ['posts'],
     queryFn: async ({ pageParam = 0 }) => {
+      // For testing purposes, return sample data
       return samplePosts;
     },
     initialPageParam: 0,
@@ -153,7 +156,7 @@ const PostList = () => {
   }
 
   return (
-    <div className="post-container h-full overflow-y-auto snap-y snap-mandatory">
+    <div className="h-full overflow-y-auto snap-y snap-mandatory">
       {data.pages.map((page, i) => (
         page.map((post) => (
           <div key={post.id} className="snap-start snap-always min-h-[calc(100vh-200px)]">
