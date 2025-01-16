@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
 import { Volume2, VolumeX, Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { handleVideoControl } from '../gameboy/VideoControls';
 
 interface PostContentProps {
   content: string;
@@ -21,6 +22,7 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
   const containerRef = useRef<HTMLDivElement>(null);
   const [lastTap, setLastTap] = useState(0);
   const { user } = useAuth();
+  const [showLikeAnimation, setShowLikeAnimation] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -35,7 +37,8 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
     return () => video.removeEventListener('timeupdate', handleTimeUpdate);
   }, []);
 
-  const handleVideoClick = () => {
+  const handleVideoClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const video = videoRef.current;
     if (!video) return;
 
@@ -53,13 +56,13 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
     const DOUBLE_TAP_DELAY = 300;
     
     if (now - lastTap < DOUBLE_TAP_DELAY) {
-      // Double tap detected
       if (!user) {
         toast.error("Please login to like posts");
         return;
       }
 
       try {
+        setShowLikeAnimation(true);
         const { error } = await supabase
           .from('likes')
           .insert({
@@ -69,6 +72,11 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
 
         if (error) throw error;
         toast.success("Post liked!");
+
+        // Reset like animation after delay
+        setTimeout(() => {
+          setShowLikeAnimation(false);
+        }, 1000);
       } catch (error) {
         console.error("Error liking post:", error);
         toast.error("Failed to like post");
@@ -90,7 +98,7 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-[calc(100vh-200px)] bg-black"
+      className="relative w-full h-[calc(100vh-200px)] bg-black group"
       onClick={handleDoubleTap}
     >
       {videoUrl ? (
@@ -102,19 +110,13 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
             playsInline
             loop
             muted={isMuted}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleVideoClick();
-            }}
+            onClick={handleVideoClick}
           />
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
             <Progress value={progress} className="h-1 mb-4" />
             <div className="flex items-center gap-4">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleVideoClick();
-                }}
+                onClick={handleVideoClick}
                 className="text-white hover:text-gaming-400 transition-colors"
               >
                 {isPlaying ? (
@@ -143,6 +145,14 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
           className="w-full h-full object-cover"
         />
       ) : null}
+      
+      {/* Double tap like animation */}
+      {showLikeAnimation && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Heart className="w-24 h-24 text-red-500 animate-scale-up" />
+        </div>
+      )}
+
       <div className={cn(
         "absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50",
         content && "pb-16"

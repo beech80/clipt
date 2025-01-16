@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import PostActions from "./post/PostActions";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { formatDistanceToNow } from 'date-fns';
 
 interface PostItemProps {
   post: {
@@ -77,6 +79,21 @@ const PostItem = ({ post }: PostItemProps) => {
 
   return (
     <div className="relative h-full w-full bg-black">
+      <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/60 to-transparent">
+        <div className="flex items-center space-x-2">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={post.profiles?.avatar_url} />
+            <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <p className="font-semibold text-white">{post.profiles?.username}</p>
+            <p className="text-xs text-gray-300">
+              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            </p>
+          </div>
+        </div>
+      </div>
+      
       <PostContent
         content={post.content}
         imageUrl={post.image_url}
@@ -85,18 +102,12 @@ const PostItem = ({ post }: PostItemProps) => {
       />
       
       <div className="absolute bottom-4 left-4 right-4 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-bold">{post.profiles?.username}</h3>
-            <p className="text-sm text-gray-300">{post.content}</p>
-          </div>
-          <PostActions
-            postId={post.id}
-            voteCount={voteCount}
-            onCommentClick={() => setShowComments(!showComments)}
-            showComments={showComments}
-          />
-        </div>
+        <PostActions
+          postId={post.id}
+          voteCount={voteCount}
+          onCommentClick={() => setShowComments(!showComments)}
+          showComments={showComments}
+        />
       </div>
 
       {showComments && (
