@@ -35,7 +35,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
           deleted_at,
           is_command,
           command_type,
-          profiles:user_id (
+          sender:user_id (
             username,
             avatar_url
           )
@@ -55,15 +55,14 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         sender_id: msg.user_id,
         created_at: msg.created_at,
         sender: {
-          username: msg.profiles?.username || 'Unknown',
-          avatar_url: msg.profiles?.avatar_url
+          username: msg.sender?.username || 'Unknown',
+          avatar_url: msg.sender?.avatar_url
         }
       }));
 
       setMessages(formattedMessages);
     };
 
-    // Load active timeouts
     const loadTimeouts = async () => {
       const { data, error } = await supabase
         .from('chat_timeouts')
@@ -121,7 +120,6 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       )
       .subscribe();
 
-    // Subscribe to timeout changes
     const timeoutChannel = supabase
       .channel('chat_timeouts')
       .on(
