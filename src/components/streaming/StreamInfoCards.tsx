@@ -1,7 +1,8 @@
-import { Gamepad2, Users, Share2, Clock, Copy } from "lucide-react";
+import { Gamepad2, Users, Share2, Clock, Copy, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatDuration } from "@/utils/dateUtils";
+import { StreamHealthIndicator } from "./StreamHealthIndicator";
 
 interface StreamInfoCardsProps {
   isLive: boolean;
@@ -9,6 +10,10 @@ interface StreamInfoCardsProps {
   streamUrl: string | null;
   viewerCount?: number;
   startedAt?: string | null;
+  healthStatus?: string;
+  bitrate?: number;
+  fps?: number;
+  resolution?: string;
 }
 
 export const StreamInfoCards = ({ 
@@ -16,7 +21,11 @@ export const StreamInfoCards = ({
   streamKey, 
   streamUrl,
   viewerCount = 0,
-  startedAt
+  startedAt,
+  healthStatus = 'unknown',
+  bitrate,
+  fps,
+  resolution
 }: StreamInfoCardsProps) => {
   const handleCopy = (text: string | null, label: string) => {
     if (!text) return;
@@ -30,15 +39,13 @@ export const StreamInfoCards = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div className="glass-card p-4">
-        <Gamepad2 className="h-6 w-6 mb-2 text-gaming-400" />
-        <h3 className="font-semibold mb-1">Stream Status</h3>
-        <p className="text-sm text-muted-foreground">
-          {isLive ? (
-            <span className="text-green-500 font-semibold">Live</span>
-          ) : (
-            'Offline'
-          )}
-        </p>
+        <Activity className="h-6 w-6 mb-2 text-gaming-400" />
+        <StreamHealthIndicator
+          status={healthStatus}
+          bitrate={bitrate}
+          fps={fps}
+          resolution={resolution}
+        />
       </div>
       
       <div className="glass-card p-4">

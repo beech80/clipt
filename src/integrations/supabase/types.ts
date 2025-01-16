@@ -585,14 +585,19 @@ export type Database = {
       }
       streams: {
         Row: {
+          available_qualities: Json | null
           chat_enabled: boolean | null
           created_at: string
+          current_bitrate: number | null
+          current_fps: number | null
           description: string | null
           ended_at: string | null
+          health_status: string | null
           id: string
           is_live: boolean | null
           started_at: string | null
           stream_key: string
+          stream_resolution: string | null
           stream_url: string | null
           thumbnail_url: string | null
           title: string
@@ -600,14 +605,19 @@ export type Database = {
           viewer_count: number | null
         }
         Insert: {
+          available_qualities?: Json | null
           chat_enabled?: boolean | null
           created_at?: string
+          current_bitrate?: number | null
+          current_fps?: number | null
           description?: string | null
           ended_at?: string | null
+          health_status?: string | null
           id?: string
           is_live?: boolean | null
           started_at?: string | null
           stream_key: string
+          stream_resolution?: string | null
           stream_url?: string | null
           thumbnail_url?: string | null
           title: string
@@ -615,14 +625,19 @@ export type Database = {
           viewer_count?: number | null
         }
         Update: {
+          available_qualities?: Json | null
           chat_enabled?: boolean | null
           created_at?: string
+          current_bitrate?: number | null
+          current_fps?: number | null
           description?: string | null
           ended_at?: string | null
+          health_status?: string | null
           id?: string
           is_live?: boolean | null
           started_at?: string | null
           stream_key?: string
+          stream_resolution?: string | null
           stream_url?: string | null
           thumbnail_url?: string | null
           title?: string
