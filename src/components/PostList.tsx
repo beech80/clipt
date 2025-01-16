@@ -22,6 +22,52 @@ interface Post {
   clip_votes: { count: number }[];
 }
 
+// Sample data for testing
+const samplePosts: Post[] = [
+  {
+    id: '1',
+    content: 'Just finished an epic gaming session! 🎮 #gaming #streamer',
+    image_url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80',
+    video_url: null,
+    created_at: new Date().toISOString(),
+    user_id: '1',
+    profiles: {
+      username: 'gamergirl',
+      avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80'
+    },
+    likes: [{ count: 42 }],
+    clip_votes: [{ count: 15 }]
+  },
+  {
+    id: '2',
+    content: 'Check out this amazing gameplay! 🏆',
+    image_url: null,
+    video_url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    created_at: new Date().toISOString(),
+    user_id: '2',
+    profiles: {
+      username: 'proplayer',
+      avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80'
+    },
+    likes: [{ count: 128 }],
+    clip_votes: [{ count: 45 }]
+  },
+  {
+    id: '3',
+    content: 'New gaming setup complete! What do you think? 🖥️',
+    image_url: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?auto=format&fit=crop&q=80',
+    video_url: null,
+    created_at: new Date().toISOString(),
+    user_id: '3',
+    profiles: {
+      username: 'techie_gamer',
+      avatar_url: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&q=80'
+    },
+    likes: [{ count: 89 }],
+    clip_votes: [{ count: 23 }]
+  }
+];
+
 const PostList = () => {
   const { ref, inView } = useInView();
 
@@ -35,6 +81,11 @@ const PostList = () => {
   } = useInfiniteQuery({
     queryKey: ['posts'],
     queryFn: async ({ pageParam = 0 }) => {
+      // For testing purposes, return sample data
+      return samplePosts;
+      
+      // Original query code:
+      /*
       const from = Number(pageParam) * POSTS_PER_PAGE;
       const to = from + POSTS_PER_PAGE - 1;
 
@@ -58,6 +109,7 @@ const PostList = () => {
 
       if (error) throw error;
       return data as Post[];
+      */
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => {
