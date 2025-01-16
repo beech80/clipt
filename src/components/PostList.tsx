@@ -155,7 +155,7 @@ const PostList = () => {
   }
 
   return (
-    <div className="post-container h-full overflow-y-hidden snap-y snap-mandatory">
+    <div className="post-container h-full overflow-y-hidden snap-y snap-mandatory scroll-smooth">
       {data.pages.map((page, i) => (
         page.map((post) => (
           <div key={post.id} className="snap-start snap-always min-h-[calc(100vh-200px)]">
