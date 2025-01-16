@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { toast } from 'sonner';
 
 interface JoystickProps {
   onDirectionChange: (direction: string) => void;
@@ -11,10 +10,27 @@ const Joystick = ({ onDirectionChange }: JoystickProps) => {
   const joystickRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
   const lastActionTimeRef = useRef(0);
+  const scrollIntervalRef = useRef<number>();
+
+  const handleScroll = (direction: string) => {
+    const scrollAmount = 400; // Adjust this value to control scroll speed
+    const container = document.querySelector('.post-container');
+    if (container) {
+      const targetScroll = direction === 'up' 
+        ? container.scrollTop - scrollAmount 
+        : container.scrollTop + scrollAmount;
+      
+      container.scrollTo({
+        top: targetScroll,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const handleDirectionClick = (direction: string) => {
     setActiveDirection(direction);
     onDirectionChange(direction);
+    handleScroll(direction);
     
     const maxDistance = 20;
     switch (direction) {
@@ -38,6 +54,23 @@ const Joystick = ({ onDirectionChange }: JoystickProps) => {
       setActiveDirection('neutral');
       setJoystickPosition({ x: 0, y: 0 });
     }, 300);
+  };
+
+  const startScrolling = (direction: string) => {
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+    }
+    
+    scrollIntervalRef.current = window.setInterval(() => {
+      handleScroll(direction);
+    }, 100);
+  };
+
+  const stopScrolling = () => {
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = undefined;
+    }
   };
 
   const handleJoystickStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -81,14 +114,17 @@ const Joystick = ({ onDirectionChange }: JoystickProps) => {
     setJoystickPosition({ x: newX, y: newY });
 
     const now = Date.now();
-    if (now - lastActionTimeRef.current > 300) {
+    if (now - lastActionTimeRef.current > 100) {
       const threshold = maxDistance * 0.5;
       let direction = 'neutral';
       
-      if (Math.abs(newX) > Math.abs(newY)) {
-        direction = newX > threshold ? 'right' : newX < -threshold ? 'left' : 'neutral';
-      } else {
+      if (Math.abs(newY) > Math.abs(newX)) {
         direction = newY > threshold ? 'down' : newY < -threshold ? 'up' : 'neutral';
+        if (direction !== 'neutral') {
+          startScrolling(direction);
+        } else {
+          stopScrolling();
+        }
       }
       
       if (direction !== 'neutral' && direction !== activeDirection) {
@@ -108,10 +144,12 @@ const Joystick = ({ onDirectionChange }: JoystickProps) => {
     
     setJoystickPosition({ x: 0, y: 0 });
     setActiveDirection('neutral');
+    stopScrolling();
   };
 
   useEffect(() => {
     return () => {
+      stopScrolling();
       document.removeEventListener('mousemove', handleJoystickMove as any);
       document.removeEventListener('touchmove', handleJoystickMove as any);
       document.removeEventListener('mouseup', handleJoystickEnd);
