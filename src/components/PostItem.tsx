@@ -73,29 +73,23 @@ const PostItem = ({ post }: PostItemProps) => {
           />
         </div>
 
-        {/* Side Action Buttons */}
-        <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-6">
-          <div className="action-button">
-            <div className="relative">
-              <Heart className="w-5 h-5 text-[#FF6B6B]" />
-              <span className="absolute -top-2 -right-2 text-xs font-medium text-[#FF6B6B]">{post.likes_count || 0}</span>
-            </div>
-          </div>
-          <div 
+        {/* Bottom Action Buttons */}
+        <div className="flex justify-around items-center p-4 border-t border-[#2A2E3B]">
+          <button className="flex items-center gap-2 text-[#FF6B6B]">
+            <Heart className="w-5 h-5" />
+            <span>{post.likes_count || 0}</span>
+          </button>
+          <button 
             onClick={handleCommentClick}
-            className="action-button cursor-pointer"
+            className="flex items-center gap-2 text-[#4CAF50] cursor-pointer"
           >
-            <div className="relative">
-              <MessageCircle className="w-5 h-5 text-[#4CAF50]" />
-              <span className="absolute -top-2 -right-2 text-xs font-medium text-[#4CAF50]">{commentsCount}</span>
-            </div>
-          </div>
-          <div className="action-button">
-            <div className="relative">
-              <Trophy className="w-5 h-5 text-[#FFD700]" />
-              <span className="absolute -top-2 -right-2 text-xs font-medium text-[#FFD700]">{post.clip_votes?.[0]?.count || 0}</span>
-            </div>
-          </div>
+            <MessageCircle className="w-5 h-5" />
+            <span>{commentsCount}</span>
+          </button>
+          <button className="flex items-center gap-2 text-[#FFD700]">
+            <Trophy className="w-5 h-5" />
+            <span>{post.clip_votes?.[0]?.count || 0}</span>
+          </button>
         </div>
       </div>
     </div>
