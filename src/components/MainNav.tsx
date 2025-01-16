@@ -34,7 +34,8 @@ export function MainNav() {
     { path: "/top-clips", icon: Trophy, label: "Top Clips" },
     { path: "/messages", icon: MessageSquare, label: "Messages" },
     { path: "/profile", icon: User, label: "Profile" },
-    { path: "/settings", icon: Settings, label: "Settings" },
+    // Moving Settings to the front and adding a highlight class
+    { path: "/settings", icon: Settings, label: "Settings", highlight: true },
     { path: "/login", icon: LogIn, label: "Login", hideWhenAuth: true },
   ];
 
@@ -47,15 +48,15 @@ export function MainNav() {
       <div className="mx-auto flex max-w-screen-xl items-center justify-around px-2 py-1">
         {isMobile ? (
           <>
-            {filteredNavItems.map(({ path, icon: Icon, label }) => (
+            {filteredNavItems.map(({ path, icon: Icon, label, highlight }) => (
               <Link
                 key={path}
                 to={path}
                 className={`p-2 transition-all hover:text-gaming-400 ${
                   isActive(path) ? "text-gaming-400 scale-110" : "text-muted-foreground"
-                }`}
+                } ${highlight ? "animate-glow" : ""}`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={`h-5 w-5 ${highlight ? "text-gaming-400" : ""}`} />
               </Link>
             ))}
             {user && (
@@ -71,16 +72,16 @@ export function MainNav() {
           </>
         ) : (
           <>
-            {filteredNavItems.map(({ path, icon: Icon, label }) => (
+            {filteredNavItems.map(({ path, icon: Icon, label, highlight }) => (
               <Link
                 key={path}
                 to={path}
                 className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
                   isActive(path) ? "text-gaming-400 scale-110" : "text-muted-foreground"
-                }`}
+                } ${highlight ? "animate-glow" : ""}`}
               >
-                <Icon className="h-6 w-6" />
-                <span className="text-xs font-medium">{label}</span>
+                <Icon className={`h-6 w-6 ${highlight ? "text-gaming-400" : ""}`} />
+                <span className={`text-xs font-medium ${highlight ? "text-gaming-400" : ""}`}>{label}</span>
               </Link>
             ))}
             {user && (
