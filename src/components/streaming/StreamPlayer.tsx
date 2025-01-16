@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { StreamHealthIndicator } from './StreamHealthIndicator';
-import { StreamMetrics } from './StreamMetrics';
 import { QualitySelector } from './QualitySelector';
+import { StreamMetricsDisplay } from './StreamMetricsDisplay';
+import { ViewerCountManager } from './ViewerCountManager';
 
 interface StreamPlayerProps {
   streamUrl?: string | null;
@@ -53,12 +53,10 @@ export const StreamPlayer = ({
             health_status, 
             current_bitrate, 
             current_fps, 
-            stream_resolution,
-            viewer_count 
+            stream_resolution
           } = payload.new;
           
           setHealthStatus(health_status || 'unknown');
-          setViewerCount(viewer_count || 0);
           setStreamMetrics({
             bitrate: current_bitrate || 0,
             fps: current_fps || 0,
@@ -72,46 +70,10 @@ export const StreamPlayer = ({
       )
       .subscribe();
 
-    // Increment viewer count when joining
-    const incrementViewers = async () => {
-      if (!streamId) return;
-      
-      const { error } = await supabase
-        .from('streams')
-        .update({ 
-          viewer_count: viewerCount + 1 
-        })
-        .eq('id', streamId);
-
-      if (error) {
-        console.error('Error incrementing viewer count:', error);
-      }
-    };
-
-    // Decrement viewer count when leaving
-    const decrementViewers = async () => {
-      if (!streamId) return;
-      
-      const { error } = await supabase
-        .from('streams')
-        .update({ 
-          viewer_count: Math.max(0, viewerCount - 1)
-        })
-        .eq('id', streamId);
-
-      if (error) {
-        console.error('Error decrementing viewer count:', error);
-      }
-    };
-
-    // Initialize viewer count
-    incrementViewers();
-
     return () => {
-      decrementViewers();
       supabase.removeChannel(healthChannel);
     };
-  }, [streamId, viewerCount]);
+  }, [streamId]);
 
   useEffect(() => {
     if (!streamUrl || !videoRef.current) return;
@@ -202,23 +164,19 @@ export const StreamPlayer = ({
         poster={!isLive ? "/placeholder.svg" : undefined}
       />
       
-      {isLive && (
-        <>
-          <StreamHealthIndicator 
-            status={healthStatus}
-            className="absolute top-4 left-4 bg-black/60 rounded-full px-3 py-1"
-          />
-          <div className="absolute top-4 right-4 bg-black/60 rounded-full px-3 py-1 text-white text-sm flex items-center space-x-2">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span>{viewerCount} watching</span>
-          </div>
-        </>
+      {streamId && (
+        <ViewerCountManager
+          streamId={streamId}
+          viewerCount={viewerCount}
+          onViewerCountChange={setViewerCount}
+        />
       )}
 
-      <StreamMetrics
-        bitrate={streamMetrics.bitrate}
-        fps={streamMetrics.fps}
-        className="absolute top-14 right-4 bg-black/60 rounded-full px-3 py-1"
+      <StreamMetricsDisplay
+        isLive={isLive}
+        healthStatus={healthStatus}
+        viewerCount={viewerCount}
+        metrics={streamMetrics}
       />
       
       <QualitySelector
