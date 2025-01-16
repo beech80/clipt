@@ -1,4 +1,4 @@
-import { Home, Compass, MessageSquare, User, LogIn, Video, Trophy, LogOut, Film, Settings } from "lucide-react";
+import { Home, Compass, MessageSquare, User, LogIn, Video, Trophy, Settings, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "./ui/button";
