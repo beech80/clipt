@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
-import StreamForm from "@/components/streaming/StreamForm";
+import { StreamForm } from "@/components/streaming/StreamForm";
 import StreamPreview from "@/components/streaming/StreamPreview";
-import StreamSettings from "@/components/streaming/StreamSettings";
-import StreamChat from "@/components/streaming/StreamChat";
+import { StreamSettings } from "@/components/streaming/StreamSettings";
+import { StreamChat } from "@/components/streaming/StreamChat";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -57,13 +57,18 @@ const Streaming = () => {
               />
             </div>
             <div>
-              <StreamForm />
+              <StreamForm
+                title={stream?.title || ''}
+                description={stream?.description || ''}
+                onTitleChange={() => {}}
+                onDescriptionChange={() => {}}
+              />
             </div>
           </div>
         </TabsContent>
 
         <TabsContent value="settings">
-          <StreamSettings />
+          {user && <StreamSettings userId={user.id} />}
         </TabsContent>
 
         <TabsContent value="chat">
