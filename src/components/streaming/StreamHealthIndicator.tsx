@@ -3,9 +3,18 @@ import React from 'react';
 interface StreamHealthIndicatorProps {
   status: string;
   className?: string;
+  bitrate?: number;
+  fps?: number;
+  resolution?: string;
 }
 
-export const StreamHealthIndicator = ({ status, className }: StreamHealthIndicatorProps) => {
+export const StreamHealthIndicator = ({ 
+  status, 
+  className,
+  bitrate,
+  fps,
+  resolution 
+}: StreamHealthIndicatorProps) => {
   const getHealthStatusColor = () => {
     switch (status) {
       case 'excellent':
@@ -25,6 +34,11 @@ export const StreamHealthIndicator = ({ status, className }: StreamHealthIndicat
     <div className={`flex items-center space-x-2 ${className}`}>
       <span className={`h-2 w-2 rounded-full ${getHealthStatusColor()}`} />
       <span className="text-white text-sm capitalize">{status}</span>
+      {bitrate && fps && resolution && (
+        <span className="text-white text-sm ml-2">
+          {(bitrate / 1000).toFixed(1)} Mbps | {fps} FPS | {resolution}
+        </span>
+      )}
     </div>
   );
 };
