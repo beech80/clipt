@@ -1,76 +1,30 @@
-import { AlertCircle, CheckCircle2, SignalHigh } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React from 'react';
 
 interface StreamHealthIndicatorProps {
   status: string;
-  bitrate?: number;
-  fps?: number;
-  resolution?: string;
   className?: string;
 }
 
-export const StreamHealthIndicator = ({ 
-  status, 
-  bitrate, 
-  fps, 
-  resolution,
-  className 
-}: StreamHealthIndicatorProps) => {
-  const getHealthColor = () => {
+export const StreamHealthIndicator = ({ status, className }: StreamHealthIndicatorProps) => {
+  const getHealthStatusColor = () => {
     switch (status) {
       case 'excellent':
-        return 'text-green-500';
+        return 'bg-green-500';
       case 'good':
-        return 'text-green-400';
+        return 'bg-green-400';
       case 'poor':
-        return 'text-yellow-500';
+        return 'bg-yellow-500';
       case 'critical':
-        return 'text-red-500';
+        return 'bg-red-500';
       default:
-        return 'text-gray-400';
-    }
-  };
-
-  const getHealthIcon = () => {
-    switch (status) {
-      case 'excellent':
-      case 'good':
-        return <CheckCircle2 className="w-4 h-4" />;
-      case 'poor':
-        return <SignalHigh className="w-4 h-4" />;
-      case 'critical':
-      default:
-        return <AlertCircle className="w-4 h-4" />;
+        return 'bg-gray-400';
     }
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <div className={cn("flex items-center gap-2", getHealthColor())}>
-        {getHealthIcon()}
-        <span className="font-medium">Stream Health: {status}</span>
-      </div>
-      
-      <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground">
-        {bitrate && (
-          <div>
-            <p className="font-medium">Bitrate</p>
-            <p>{(bitrate / 1000).toFixed(1)} Mbps</p>
-          </div>
-        )}
-        {fps && (
-          <div>
-            <p className="font-medium">FPS</p>
-            <p>{fps}</p>
-          </div>
-        )}
-        {resolution && (
-          <div>
-            <p className="font-medium">Resolution</p>
-            <p>{resolution}</p>
-          </div>
-        )}
-      </div>
+    <div className={`flex items-center space-x-2 ${className}`}>
+      <span className={`h-2 w-2 rounded-full ${getHealthStatusColor()}`} />
+      <span className="text-white text-sm capitalize">{status}</span>
     </div>
   );
 };
