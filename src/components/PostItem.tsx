@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import PostActions from "./post/PostActions";
 
 interface PostItemProps {
   post: {
@@ -74,125 +75,28 @@ const PostItem = ({ post }: PostItemProps) => {
     setIsFollowing(!!data);
   };
 
-  const handleLike = async () => {
-    if (!user) {
-      toast.error("Please login to like posts");
-      return;
-    }
-
-    try {
-      if (isLiked) {
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('post_id', post.id)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        setLikesCount(prev => prev - 1);
-      } else {
-        const { error } = await supabase
-          .from('likes')
-          .insert({
-            post_id: post.id,
-            user_id: user.id
-          });
-
-        if (error) throw error;
-        setLikesCount(prev => prev + 1);
-      }
-      setIsLiked(!isLiked);
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-    } catch (error) {
-      toast.error("Error updating like");
-    }
-  };
-
-  const handleVote = async () => {
-    if (!user) {
-      toast.error("Please login to vote for clips");
-      return;
-    }
-
-    try {
-      if (isVoted) {
-        const { error } = await supabase
-          .from('clip_votes')
-          .delete()
-          .eq('post_id', post.id)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('clip_votes')
-          .insert({
-            post_id: post.id,
-            user_id: user.id
-          });
-
-        if (error) throw error;
-      }
-      setIsVoted(!isVoted);
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      toast.success(isVoted ? "Vote removed!" : "Vote added!");
-    } catch (error) {
-      toast.error("Error updating vote");
-    }
-  };
-
-  const handleFollow = async () => {
-    if (!user) {
-      toast.error("Please login to follow users");
-      return;
-    }
-
-    try {
-      if (isFollowing) {
-        const { error } = await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', user.id)
-          .eq('following_id', post.user_id);
-
-        if (error) throw error;
-        setIsFollowing(false);
-        toast.success("Unfollowed user!");
-      } else {
-        const { error } = await supabase
-          .from('follows')
-          .insert({
-            follower_id: user.id,
-            following_id: post.user_id
-          });
-
-        if (error) {
-          if (error.code === '23505') {
-            toast.error("You're already following this user!");
-          } else {
-            throw error;
-          }
-        } else {
-          setIsFollowing(true);
-          toast.success("Following user!");
-        }
-      }
-    } catch (error) {
-      toast.error("Error updating follow status");
-    }
-  };
-
   return (
     <div className="relative h-full w-full bg-black">
       <PostContent
         content={post.content}
         imageUrl={post.image_url}
         videoUrl={post.video_url}
+        postId={post.id}
       />
       
-      {/* User info overlay */}
       <div className="absolute bottom-4 left-4 right-4 text-white">
-        <h3 className="font-bold">{post.profiles?.username}</h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold">{post.profiles?.username}</h3>
+            <p className="text-sm text-gray-300">{post.content}</p>
+          </div>
+          <PostActions
+            postId={post.id}
+            voteCount={voteCount}
+            onCommentClick={() => setShowComments(!showComments)}
+            showComments={showComments}
+          />
+        </div>
       </div>
 
       {showComments && (
