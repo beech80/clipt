@@ -74,23 +74,23 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-2 bg-[#1A1F2C] border-t border-[#2A2E3B]">
-          <div className="flex justify-start gap-4 px-2">
-            <button className="flex items-center gap-2 text-[#1EAEDB] hover:text-[#0FA0CE] transition-colors">
-              <Heart className="w-5 h-5" />
-              <span className="text-sm font-medium">{post.likes_count || 0}</span>
-            </button>
-            <button 
+        <div className="p-4 bg-[#1A1F2C] border-t border-[#2A2E3B]">
+          <div className="flex justify-start gap-4">
+            <div className="flex items-center px-3 py-1 border border-[#1EAEDB] rounded">
+              <Heart className="w-4 h-4 text-[#1EAEDB] mr-2" />
+              <span className="text-sm font-medium text-[#1EAEDB]">{post.likes_count || 0}</span>
+            </div>
+            <div 
               onClick={handleCommentClick}
-              className="flex items-center gap-2 text-[#1EAEDB] hover:text-[#0FA0CE] transition-colors"
+              className="flex items-center px-3 py-1 border border-[#1EAEDB] rounded cursor-pointer"
             >
-              <MessageCircle className="w-5 h-5" />
-              <span className="text-sm font-medium">{commentsCount}</span>
-            </button>
-            <button className="flex items-center gap-2 text-[#1EAEDB] hover:text-[#0FA0CE] transition-colors">
-              <Trophy className="w-5 h-5" />
-              <span className="text-sm font-medium">{post.clip_votes?.[0]?.count || 0}</span>
-            </button>
+              <MessageCircle className="w-4 h-4 text-[#1EAEDB] mr-2" />
+              <span className="text-sm font-medium text-[#1EAEDB]">{commentsCount}</span>
+            </div>
+            <div className="flex items-center px-3 py-1 border border-[#1EAEDB] rounded">
+              <Trophy className="w-4 h-4 text-[#1EAEDB] mr-2" />
+              <span className="text-sm font-medium text-[#1EAEDB]">{post.clip_votes?.[0]?.count || 0}</span>
+            </div>
           </div>
         </div>
       </div>
