@@ -7,7 +7,6 @@ interface JoystickProps {
 const Joystick: React.FC<JoystickProps> = ({ onDirectionChange }) => {
   const [activeDirection, setActiveDirection] = useState('neutral');
   const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
-  const maxDistance = 30;
   const joystickRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
   const lastActionTimeRef = useRef(0);
@@ -35,52 +34,6 @@ const Joystick: React.FC<JoystickProps> = ({ onDirectionChange }) => {
       setTimeout(() => {
         isScrollingRef.current = false;
       }, 800); // Adjust this value to control the delay between scrolls
-    }
-  };
-
-  const handleDirectionClick = (direction: string) => {
-    setActiveDirection(direction);
-    onDirectionChange(direction);
-    handleScroll(direction);
-    
-    const maxDistance = 20;
-    switch (direction) {
-      case 'up':
-        setJoystickPosition({ x: 0, y: -maxDistance });
-        break;
-      case 'down':
-        setJoystickPosition({ x: 0, y: maxDistance });
-        break;
-      case 'left':
-        setJoystickPosition({ x: -maxDistance, y: 0 });
-        break;
-      case 'right':
-        setJoystickPosition({ x: maxDistance, y: 0 });
-        break;
-      default:
-        setJoystickPosition({ x: 0, y: 0 });
-    }
-
-    setTimeout(() => {
-      setActiveDirection('neutral');
-      setJoystickPosition({ x: 0, y: 0 });
-    }, 300);
-  };
-
-  const startScrolling = (direction: string) => {
-    if (scrollIntervalRef.current) {
-      clearInterval(scrollIntervalRef.current);
-    }
-    
-    scrollIntervalRef.current = window.setInterval(() => {
-      handleScroll(direction);
-    }, 800); // Match this with the scroll delay
-  };
-
-  const stopScrolling = () => {
-    if (scrollIntervalRef.current) {
-      clearInterval(scrollIntervalRef.current);
-      scrollIntervalRef.current = undefined;
     }
   };
 
@@ -124,21 +77,23 @@ const Joystick: React.FC<JoystickProps> = ({ onDirectionChange }) => {
 
     setJoystickPosition({ x: newX, y: newY });
 
+    // Handle scrolling based on joystick position
     const now = Date.now();
-    if (now - lastActionTimeRef.current > 100) {
+    if (now - lastActionTimeRef.current > 100) { // Throttle updates
       const threshold = maxDistance * 0.5;
       let direction = 'neutral';
       
       if (Math.abs(newY) > Math.abs(newX)) {
-        direction = newY > threshold ? 'down' : newY < -threshold ? 'up' : 'neutral';
-        if (direction !== 'neutral') {
-          startScrolling(direction);
-        } else {
-          stopScrolling();
+        if (newY < -threshold) {
+          direction = 'up';
+          handleScroll('up');
+        } else if (newY > threshold) {
+          direction = 'down';
+          handleScroll('down');
         }
       }
       
-      if (direction !== 'neutral' && direction !== activeDirection) {
+      if (direction !== activeDirection) {
         setActiveDirection(direction);
         onDirectionChange(direction);
         lastActionTimeRef.current = now;
@@ -155,12 +110,17 @@ const Joystick: React.FC<JoystickProps> = ({ onDirectionChange }) => {
     
     setJoystickPosition({ x: 0, y: 0 });
     setActiveDirection('neutral');
-    stopScrolling();
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = undefined;
+    }
   };
 
   useEffect(() => {
     return () => {
-      stopScrolling();
+      if (scrollIntervalRef.current) {
+        clearInterval(scrollIntervalRef.current);
+      }
       document.removeEventListener('mousemove', handleJoystickMove as any);
       document.removeEventListener('touchmove', handleJoystickMove as any);
       document.removeEventListener('mouseup', handleJoystickEnd);
@@ -179,10 +139,6 @@ const Joystick: React.FC<JoystickProps> = ({ onDirectionChange }) => {
         onMouseDown={handleJoystickStart}
         onTouchStart={handleJoystickStart}
       />
-      <div className="xbox-joystick-direction absolute top-0 -translate-y-1/2" onClick={() => handleDirectionClick('up')} />
-      <div className="xbox-joystick-direction absolute right-0 translate-x-1/2" onClick={() => handleDirectionClick('right')} />
-      <div className="xbox-joystick-direction absolute bottom-0 translate-y-1/2" onClick={() => handleDirectionClick('down')} />
-      <div className="xbox-joystick-direction absolute left-0 -translate-x-1/2" onClick={() => handleDirectionClick('left')} />
     </div>
   );
 };
