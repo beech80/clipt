@@ -82,18 +82,18 @@ const CommentList = ({ postId }: CommentListProps) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <div className="flex items-center justify-between p-4 border-b">
+    <div className="flex flex-col h-[100dvh] bg-background">
+      <div className="flex items-center justify-between p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <SheetClose asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="hover:bg-accent">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </SheetClose>
           <h2 className="text-lg font-semibold">Comments</h2>
         </div>
         <SheetClose asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="hover:bg-accent">
             <X className="w-4 h-4" />
           </Button>
         </SheetClose>
@@ -101,7 +101,7 @@ const CommentList = ({ postId }: CommentListProps) => {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {comments?.map((comment) => (
-          <div key={comment.id} className="flex gap-3 p-4 bg-muted/50 rounded-lg">
+          <div key={comment.id} className="flex gap-3 p-4 bg-muted/50 rounded-lg hover:bg-muted/80 transition-colors">
             <Avatar className="w-8 h-8">
               <AvatarImage src={comment.profiles.avatar_url} />
               <AvatarFallback>{comment.profiles.username[0]?.toUpperCase()}</AvatarFallback>
@@ -119,13 +119,13 @@ const CommentList = ({ postId }: CommentListProps) => {
         ))}
       </div>
 
-      <form onSubmit={handleSubmitComment} className="p-4 border-t bg-background">
+      <form onSubmit={handleSubmitComment} className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky bottom-0">
         <div className="flex gap-2">
           <Textarea
             placeholder="Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="flex-1 min-h-[80px]"
+            className="flex-1 min-h-[80px] resize-none bg-muted/50"
           />
           <Button type="submit" className="self-end" disabled={!newComment.trim()}>
             Post
