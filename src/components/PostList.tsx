@@ -40,7 +40,7 @@ const samplePosts: Post[] = [
   },
   {
     id: '2',
-    content: 'Check out this amazing gameplay! 🏆',
+    content: 'Check out this amazing gameplay! 🏆 #esports #competitive',
     image_url: null,
     video_url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     created_at: new Date().toISOString(),
@@ -54,7 +54,7 @@ const samplePosts: Post[] = [
   },
   {
     id: '3',
-    content: 'New gaming setup complete! What do you think? 🖥️',
+    content: 'New gaming setup complete! What do you think? 🖥️ #setup #battlestation',
     image_url: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?auto=format&fit=crop&q=80',
     video_url: null,
     created_at: new Date().toISOString(),
@@ -65,6 +65,48 @@ const samplePosts: Post[] = [
     },
     likes: [{ count: 89 }],
     clip_votes: [{ count: 23 }]
+  },
+  {
+    id: '4',
+    content: 'Late night streaming vibes 🌙 #latenight #twitchstreamer',
+    image_url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80',
+    video_url: null,
+    created_at: new Date().toISOString(),
+    user_id: '4',
+    profiles: {
+      username: 'nightowl',
+      avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80'
+    },
+    likes: [{ count: 156 }],
+    clip_votes: [{ count: 67 }]
+  },
+  {
+    id: '5',
+    content: 'Epic win in ranked! 🏆 #victory #gaming',
+    image_url: null,
+    video_url: 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    created_at: new Date().toISOString(),
+    user_id: '5',
+    profiles: {
+      username: 'rankstar',
+      avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80'
+    },
+    likes: [{ count: 234 }],
+    clip_votes: [{ count: 89 }]
+  },
+  {
+    id: '6',
+    content: 'New RGB setup looking fire 🔥 #rgb #gaming #setup',
+    image_url: 'https://images.unsplash.com/photo-1603481588273-2f908a9a7a1b?auto=format&fit=crop&q=80',
+    video_url: null,
+    created_at: new Date().toISOString(),
+    user_id: '6',
+    profiles: {
+      username: 'rgbmaster',
+      avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80'
+    },
+    likes: [{ count: 178 }],
+    clip_votes: [{ count: 56 }]
   }
 ];
 
