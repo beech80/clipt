@@ -66,26 +66,25 @@ const App = () => {
   }, []);
 
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <div className="min-h-screen bg-[#1A1F2C] pb-48 md:pb-48 md:pt-16">
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <MainNav />
-                <main className="container mx-auto px-4 py-4 retro-screen">
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route
-                      path="/"
-                      element={
-                        <AuthGuard>
-                          <Home onPostChange={setCurrentPostId} />
-                        </AuthGuard>
-                      }
-                    />
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <div className="min-h-screen bg-[#1A1F2C] pb-48 md:pb-48 md:pt-16">
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <MainNav />
+              <main className="container mx-auto px-4 py-4 retro-screen">
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route
+                    path="/"
+                    element={
+                      <AuthGuard>
+                        <Home onPostChange={setCurrentPostId} />
+                      </AuthGuard>
+                    }
+                  />
                     <Route
                       path="/discover"
                       element={
@@ -159,23 +158,22 @@ const App = () => {
                       }
                     />
                     <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </main>
-                {!isMenuOpen && (
-                  <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 z-[60]">
-                    <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
-                      <Play className="clip-button-icon" />
-                      <span className="clip-button-text">clipt</span>
-                    </div>
+                </Routes>
+              </main>
+              {!isMenuOpen && (
+                <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 z-[60]">
+                  <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
+                    <Play className="clip-button-icon" />
+                    <span className="clip-button-text">clipt</span>
                   </div>
-                )}
-                <GameBoyControls currentPostId={currentPostId} />
-              </BrowserRouter>
-            </div>
-          </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+                </div>
+              )}
+              <GameBoyControls currentPostId={currentPostId} />
+            </BrowserRouter>
+          </div>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 };
 

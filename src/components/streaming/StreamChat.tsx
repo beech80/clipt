@@ -35,7 +35,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
           deleted_at,
           is_command,
           command_type,
-          profiles (
+          profiles:user_id (
             username,
             avatar_url
           )
