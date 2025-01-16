@@ -21,7 +21,6 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   useEffect(() => {
     if (!streamId) return;
 
-    // Load existing messages
     const loadMessages = async () => {
       const { data, error } = await supabase
         .from('stream_chat')
@@ -35,7 +34,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
           deleted_at,
           is_command,
           command_type,
-          sender:user_id (
+          profiles!stream_chat_user_id_fkey (
             username,
             avatar_url
           )
@@ -55,8 +54,8 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         sender_id: msg.user_id,
         created_at: msg.created_at,
         sender: {
-          username: msg.sender?.username || 'Unknown',
-          avatar_url: msg.sender?.avatar_url
+          username: msg.profiles?.username || 'Unknown',
+          avatar_url: msg.profiles?.avatar_url
         }
       }));
 
@@ -82,7 +81,6 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
     loadMessages();
     loadTimeouts();
 
-    // Subscribe to new messages and deletions
     const channel = supabase
       .channel('stream_chat')
       .on(
@@ -148,7 +146,6 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const handleSendMessage = async (content: string) => {
     if (!user || !streamId || !isLive) return;
 
-    // Check if user is timed out
     const userTimeout = timeouts[user.id];
     if (userTimeout && new Date(userTimeout) > new Date()) {
       const timeLeft = Math.ceil((new Date(userTimeout).getTime() - Date.now()) / 1000);
@@ -157,7 +154,6 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
     }
 
     try {
-      // Check if message is a command
       if (content.startsWith('/')) {
         const success = await processCommand(content, user.id, streamId);
         if (success) return;
