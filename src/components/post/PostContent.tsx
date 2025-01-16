@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
-import { Volume2, VolumeX, Play, Pause } from 'lucide-react';
+import { Volume2, VolumeX, Play, Pause, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { handleVideoControl } from '../gameboy/VideoControls';
 
