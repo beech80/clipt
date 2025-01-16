@@ -73,23 +73,27 @@ const PostItem = ({ post }: PostItemProps) => {
           />
         </div>
 
-        {/* Footer Actions */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#1A1F2C] to-transparent">
-          <div className="flex justify-center gap-6">
-            <div className="flex items-center">
-              <Heart className="w-5 h-5 text-[#FF6B6B] mr-2" />
-              <span className="text-sm font-medium text-[#FF6B6B]">{post.likes_count || 0}</span>
+        {/* Side Action Buttons */}
+        <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-6">
+          <div className="action-button">
+            <div className="relative">
+              <Heart className="w-5 h-5 text-[#FF6B6B]" />
+              <span className="absolute -top-2 -right-2 text-xs font-medium text-[#FF6B6B]">{post.likes_count || 0}</span>
             </div>
-            <div 
-              onClick={handleCommentClick}
-              className="flex items-center cursor-pointer"
-            >
-              <MessageCircle className="w-5 h-5 text-[#4CAF50] mr-2" />
-              <span className="text-sm font-medium text-[#4CAF50]">{commentsCount}</span>
+          </div>
+          <div 
+            onClick={handleCommentClick}
+            className="action-button cursor-pointer"
+          >
+            <div className="relative">
+              <MessageCircle className="w-5 h-5 text-[#4CAF50]" />
+              <span className="absolute -top-2 -right-2 text-xs font-medium text-[#4CAF50]">{commentsCount}</span>
             </div>
-            <div className="flex items-center">
-              <Trophy className="w-5 h-5 text-[#FFD700] mr-2" />
-              <span className="text-sm font-medium text-[#FFD700]">{post.clip_votes?.[0]?.count || 0}</span>
+          </div>
+          <div className="action-button">
+            <div className="relative">
+              <Trophy className="w-5 h-5 text-[#FFD700]" />
+              <span className="absolute -top-2 -right-2 text-xs font-medium text-[#FFD700]">{post.clip_votes?.[0]?.count || 0}</span>
             </div>
           </div>
         </div>
