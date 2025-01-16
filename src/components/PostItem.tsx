@@ -45,10 +45,10 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   return (
-    <div className="relative h-full w-full bg-[#1A1F2C]">
+    <div className="relative aspect-square w-full max-w-[1080px] mx-auto bg-[#1A1F2C]">
       <div className="absolute inset-0 flex flex-col">
         {/* Header */}
-        <div className="p-4 bg-[#1A1F2C] border-b border-[#2A2E3B]">
+        <div className="p-4 bg-[#1A1F2C] border-b border-[#2A2E3B] z-10">
           <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src={post.profiles?.avatar_url} />
@@ -74,8 +74,8 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-          <div className="flex items-center gap-6 px-8 py-2 bg-[#1A1F2C]/90 border-2 border-[#1EAEDB] rounded-full backdrop-blur-sm">
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10">
+          <div className="flex items-center gap-8 px-10 py-2.5 bg-[#1A1F2C]/80 border border-[#1EAEDB]/30 rounded-full backdrop-blur-md shadow-lg hover:bg-[#1A1F2C]/90 transition-all duration-300">
             <div className="flex items-center">
               <Heart className="w-5 h-5 text-[#1EAEDB] mr-2" />
               <span className="text-sm font-medium text-[#1EAEDB]">{post.likes_count || 0}</span>
