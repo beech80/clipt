@@ -1,75 +1,92 @@
 import { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
-import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { QualitySelector } from './QualitySelector';
 
 interface StreamPreviewProps {
-  streamUrl?: string;
-  isLive?: boolean;
+  streamUrl: string | null;
+  isLive: boolean;
+  className?: string;
 }
 
-export function StreamPreview({ streamUrl, isLive }: StreamPreviewProps) {
+export const StreamPreview = ({ streamUrl, isLive, className }: StreamPreviewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [qualities, setQualities] = useState<string[]>([]);
+  const [currentQuality, setCurrentQuality] = useState('auto');
 
   useEffect(() => {
     if (!streamUrl || !videoRef.current) return;
 
-    const video = videoRef.current;
-    let hls: Hls;
+    let hls: Hls | null = null;
 
     const initializePlayer = async () => {
       setIsLoading(true);
-      setError("");
+      setError(null);
 
       try {
-        if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          // Native HLS support (Safari)
-          video.src = streamUrl;
-        } else if (Hls.isSupported()) {
-          // HLS.js support
+        if (Hls.isSupported()) {
           hls = new Hls({
             debug: false,
             enableWorker: true,
             lowLatencyMode: true,
           });
 
-          hls.loadSource(streamUrl);
-          hls.attachMedia(video);
-
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+            const availableQualities = data.levels.map(level => 
+              `${level.height}p`
+            );
+            setQualities(availableQualities);
             setIsLoading(false);
-            if (isLive) {
-              video.play().catch(console.error);
-            }
           });
 
-          hls.on(Hls.Events.ERROR, (_, data) => {
+          hls.on(Hls.Events.ERROR, (event, data) => {
             if (data.fatal) {
               switch (data.type) {
                 case Hls.ErrorTypes.NETWORK_ERROR:
-                  setError("Network error while loading stream");
+                  console.error('Network error:', data);
+                  setError('Stream connection failed. Please try again.');
+                  hls?.startLoad();
                   break;
                 case Hls.ErrorTypes.MEDIA_ERROR:
-                  setError("Media error: stream cannot be played");
+                  console.error('Media error:', data);
+                  setError('Stream playback error. Please try again.');
+                  hls?.recoverMediaError();
                   break;
                 default:
-                  setError("An error occurred while loading the stream");
+                  console.error('Fatal error:', data);
+                  setError('Failed to load stream. Please try again.');
                   break;
               }
-              setIsLoading(false);
             }
           });
+
+          hls.loadSource(streamUrl);
+          hls.attachMedia(videoRef.current);
+          await videoRef.current.play().catch(error => {
+            console.log('Autoplay prevented:', error);
+          });
+        } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+          // For Safari which has native HLS support
+          videoRef.current.src = streamUrl;
+          await videoRef.current.play().catch(error => {
+            console.log('Autoplay prevented:', error);
+          });
+          setIsLoading(false);
+        } else {
+          setError('Your browser does not support HLS playback.');
         }
       } catch (err) {
-        setError("Failed to initialize stream preview");
-        setIsLoading(false);
+        console.error('Stream initialization error:', err);
+        setError('Failed to initialize stream player.');
       }
     };
 
-    initializePlayer();
+    if (isLive) {
+      initializePlayer();
+    }
 
     return () => {
       if (hls) {
@@ -78,36 +95,55 @@ export function StreamPreview({ streamUrl, isLive }: StreamPreviewProps) {
     };
   }, [streamUrl, isLive]);
 
-  if (!streamUrl) {
+  const handleQualityChange = (quality: string) => {
+    if (!videoRef.current || !quality) return;
+    
+    setCurrentQuality(quality);
+    // Implementation for quality switching would go here
+    // This requires integration with your streaming server
+  };
+
+  if (!isLive) {
     return (
-      <Card className="aspect-video bg-muted flex items-center justify-center">
-        <p className="text-muted-foreground">No preview available</p>
-      </Card>
+      <div className="relative aspect-video bg-background/95 flex items-center justify-center">
+        <p className="text-muted-foreground">Stream is offline</p>
+      </div>
     );
   }
 
   return (
-    <div className="relative">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      )}
-      
+    <div className={`relative ${className}`}>
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+      
+      <div className="relative aspect-video bg-background/95">
+        <video
+          ref={videoRef}
+          className="w-full h-full"
+          playsInline
+          muted
+          controls
+        />
+        
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        )}
+      </div>
 
-      <video
-        ref={videoRef}
-        className="w-full aspect-video bg-muted rounded-lg"
-        playsInline
-        controls={isLive}
-        muted
-      />
+      {qualities.length > 0 && (
+        <QualitySelector
+          qualities={qualities}
+          currentQuality={currentQuality}
+          onQualityChange={handleQualityChange}
+          className="absolute bottom-4 right-4"
+        />
+      )}
     </div>
   );
-}
+};
