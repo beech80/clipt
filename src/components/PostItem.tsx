@@ -3,7 +3,7 @@ import PostContent from "./post/PostContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, Heart } from "lucide-react";
+import { MessageCircle, Heart, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 
@@ -20,7 +20,7 @@ interface PostItemProps {
       avatar_url: string;
     };
     likes_count: number;
-    clip_votes?: { count: number }[];
+    clip_votes: { count: number }[];
   };
 }
 
@@ -86,6 +86,10 @@ const PostItem = ({ post }: PostItemProps) => {
             >
               <MessageCircle className="w-5 h-5" />
               <span className="text-sm font-medium">{commentsCount}</span>
+            </button>
+            <button className="flex items-center gap-2 text-[#1EAEDB] hover:text-[#0FA0CE] transition-colors">
+              <Trophy className="w-5 h-5" />
+              <span className="text-sm font-medium">{post.clip_votes?.[0]?.count || 0}</span>
             </button>
           </div>
         </div>
