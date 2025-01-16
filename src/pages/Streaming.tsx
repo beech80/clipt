@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { StreamForm } from "@/components/streaming/StreamForm";
 import StreamPreview from "@/components/streaming/StreamPreview";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
 import { StreamChat } from "@/components/streaming/StreamChat";
 import { StreamQualitySettings } from "@/components/streaming/StreamQualitySettings";
+import { StreamHealthMonitor } from "@/components/streaming/StreamHealthMonitor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -12,7 +13,6 @@ import { Loader2 } from "lucide-react";
 
 const Streaming = () => {
   const { user } = useAuth();
-  const [activeStream, setActiveStream] = useState<any>(null);
 
   const { data: stream, isLoading } = useQuery({
     queryKey: ['stream', user?.id],
@@ -40,10 +40,11 @@ const Streaming = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+        <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
           <TabsTrigger value="quality">Quality</TabsTrigger>
+          <TabsTrigger value="health">Health</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
         </TabsList>
 
@@ -53,18 +54,10 @@ const Streaming = () => {
               <StreamPreview
                 streamUrl={stream?.stream_url}
                 className="aspect-video"
-                onGoLive={() => {
-                  // Handle go live logic
-                }}
               />
             </div>
             <div>
-              <StreamForm
-                title={stream?.title || ''}
-                description={stream?.description || ''}
-                onTitleChange={() => {}}
-                onDescriptionChange={() => {}}
-              />
+              <StreamForm />
             </div>
           </div>
         </TabsContent>
@@ -75,6 +68,10 @@ const Streaming = () => {
 
         <TabsContent value="quality">
           {stream && <StreamQualitySettings streamId={stream.id} />}
+        </TabsContent>
+
+        <TabsContent value="health">
+          {stream && <StreamHealthMonitor streamId={stream.id} />}
         </TabsContent>
 
         <TabsContent value="chat">
