@@ -101,14 +101,11 @@ const PostItem = ({ post }: PostItemProps) => {
         postId={post.id}
       />
       
-      <div className="absolute bottom-4 left-4 right-4 text-white">
-        <PostActions
-          postId={post.id}
-          voteCount={voteCount}
-          onCommentClick={() => setShowComments(!showComments)}
-          showComments={showComments}
-        />
-      </div>
+      {post.content && (
+        <div className="absolute bottom-4 left-4 right-4 text-white">
+          <p className="text-sm">{post.content}</p>
+        </div>
+      )}
 
       {showComments && (
         <div className="absolute bottom-0 left-0 right-0 bg-black/90 h-2/3 rounded-t-xl overflow-hidden">
