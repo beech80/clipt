@@ -20,6 +20,7 @@ import EditProfile from "./pages/EditProfile";
 import Login from "./pages/Login";
 import Streaming from "./pages/Streaming";
 import TopClips from "./pages/TopClips";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -146,6 +147,14 @@ const App = () => {
                       element={
                         <AuthGuard>
                           <TopClips />
+                        </AuthGuard>
+                      }
+                    />
+                    <Route
+                      path="/settings"
+                      element={
+                        <AuthGuard>
+                          <Settings />
                         </AuthGuard>
                       }
                     />
