@@ -1,61 +1,113 @@
-import React from 'react';
-import { StreamPlayer } from './StreamPlayer';
-import { Button } from '../ui/button';
-import { Eye, EyeOff } from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useRef, useState } from 'react';
+import Hls from 'hls.js';
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 interface StreamPreviewProps {
-  streamUrl?: string | null;
-  onTogglePreview: () => void;
-  isPreviewActive: boolean;
+  streamUrl?: string;
+  isLive?: boolean;
 }
 
-export const StreamPreview = ({
-  streamUrl,
-  onTogglePreview,
-  isPreviewActive
-}: StreamPreviewProps) => {
-  const handleTogglePreview = () => {
-    onTogglePreview();
-    toast.success(isPreviewActive ? 'Preview disabled' : 'Preview enabled');
-  };
+export function StreamPreview({ streamUrl, isLive }: StreamPreviewProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!streamUrl || !videoRef.current) return;
+
+    const video = videoRef.current;
+    let hls: Hls;
+
+    const initializePlayer = async () => {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          // Native HLS support (Safari)
+          video.src = streamUrl;
+        } else if (Hls.isSupported()) {
+          // HLS.js support
+          hls = new Hls({
+            debug: false,
+            enableWorker: true,
+            lowLatencyMode: true,
+          });
+
+          hls.loadSource(streamUrl);
+          hls.attachMedia(video);
+
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            setIsLoading(false);
+            if (isLive) {
+              video.play().catch(console.error);
+            }
+          });
+
+          hls.on(Hls.Events.ERROR, (_, data) => {
+            if (data.fatal) {
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  setError("Network error while loading stream");
+                  break;
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  setError("Media error: stream cannot be played");
+                  break;
+                default:
+                  setError("An error occurred while loading the stream");
+                  break;
+              }
+              setIsLoading(false);
+            }
+          });
+        }
+      } catch (err) {
+        setError("Failed to initialize stream preview");
+        setIsLoading(false);
+      }
+    };
+
+    initializePlayer();
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
+  }, [streamUrl, isLive]);
+
+  if (!streamUrl) {
+    return (
+      <Card className="aspect-video bg-muted flex items-center justify-center">
+        <p className="text-muted-foreground">No preview available</p>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Stream Preview</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleTogglePreview}
-          className="flex items-center gap-2"
-        >
-          {isPreviewActive ? (
-            <>
-              <EyeOff className="h-4 w-4" />
-              Hide Preview
-            </>
-          ) : (
-            <>
-              <Eye className="h-4 w-4" />
-              Show Preview
-            </>
-          )}
-        </Button>
-      </div>
-      
-      {isPreviewActive && (
-        <div className="relative aspect-video rounded-lg overflow-hidden border border-border">
-          <StreamPlayer
-            streamUrl={streamUrl}
-            autoplay={false}
-            controls={true}
-          />
-          <div className="absolute top-2 right-2 bg-background/80 px-2 py-1 rounded text-xs font-medium">
-            Preview Mode
-          </div>
+    <div className="relative">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <video
+        ref={videoRef}
+        className="w-full aspect-video bg-muted rounded-lg"
+        playsInline
+        controls={isLive}
+        muted
+      />
     </div>
   );
-};
+}
