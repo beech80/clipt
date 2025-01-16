@@ -1,4 +1,4 @@
-import { Home, Compass, MessageSquare, User, LogIn, Video, Trophy, LogOut, Film } from "lucide-react";
+import { Home, Compass, MessageSquare, User, LogIn, Video, Trophy, LogOut, Film, Settings } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "./ui/button";
@@ -34,6 +34,7 @@ export function MainNav() {
     { path: "/top-clips", icon: Trophy, label: "Top Clips" },
     { path: "/messages", icon: MessageSquare, label: "Messages" },
     { path: "/profile", icon: User, label: "Profile" },
+    { path: "/settings", icon: Settings, label: "Settings" },
     { path: "/login", icon: LogIn, label: "Login", hideWhenAuth: true },
   ];
 

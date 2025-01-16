@@ -32,7 +32,8 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#1A1F2C] text-white;
+    @apply text-white;
+    background-color: var(--background-override, #1A1F2C);
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
@@ -67,8 +68,15 @@
 }
 
 .gaming-button {
-  @apply inline-flex items-center justify-center rounded-none border-2 border-[#9b87f5] bg-[#1A1F2C] px-4 py-2 text-sm font-medium text-white transition-all hover:border-[#8B5CF6] focus:outline-none focus:ring-2 focus:ring-[#9b87f5] focus:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50;
+  @apply inline-flex items-center justify-center rounded-none border-2 px-4 py-2 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 disabled:pointer-events-none disabled:opacity-50;
+  border-color: var(--button-override, #9b87f5);
+  background-color: var(--background-override, #1A1F2C);
+  color: var(--text-override, #FFFFFF);
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+}
+
+.gaming-button:hover {
+  border-color: var(--button-override, #8B5CF6);
 }
 
 .glass-card {
@@ -235,3 +243,4 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
+
