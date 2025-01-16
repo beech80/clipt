@@ -45,7 +45,7 @@ const ForYou = () => {
       <ScrollArea className="h-full">
         <div className="snap-y snap-mandatory h-full">
           {posts?.map((post) => (
-            <div key={post.id} className="snap-start snap-always h-screen flex items-center justify-center">
+            <div key={post.id} className="snap-start snap-always h-[1080px] flex items-center justify-center">
               <PostItem 
                 post={{
                   ...post,

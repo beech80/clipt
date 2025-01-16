@@ -45,7 +45,7 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   return (
-    <div className="relative w-full aspect-square max-w-[1080px] mx-auto bg-[#1A1F2C] overflow-hidden">
+    <div className="relative w-[1080px] h-[1080px] mx-auto bg-[#1A1F2C] overflow-hidden">
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent z-20">
         <div className="flex items-center space-x-2">
