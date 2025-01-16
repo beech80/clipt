@@ -1,80 +1,75 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
-import { Gamepad2, Users2, Share2 } from "lucide-react";
-import { StreamControls } from "@/components/streaming/StreamControls";
-import { StreamSettings } from "@/components/streaming/StreamSettings";
-import { StreamPlayer } from "@/components/streaming/StreamPlayer";
+import StreamForm from "@/components/streaming/StreamForm";
+import StreamPreview from "@/components/streaming/StreamPreview";
+import StreamSettings from "@/components/streaming/StreamSettings";
+import StreamChat from "@/components/streaming/StreamChat";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
 
 const Streaming = () => {
   const { user } = useAuth();
-  const [streamData, setStreamData] = useState({
-    isLive: false,
-    streamKey: null,
-    streamUrl: null,
+  const [activeStream, setActiveStream] = useState<any>(null);
+
+  const { data: stream, isLoading } = useQuery({
+    queryKey: ['stream', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('streams')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
   });
 
-  const handleStreamUpdate = (data: { 
-    isLive: boolean; 
-    streamKey: string | null; 
-    streamUrl: string | null 
-  }) => {
-    setStreamData(data);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-gaming-400" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#1A1F2C] p-6">
-      <h1 className="text-4xl font-bold text-gaming-400 mb-8">Start Streaming</h1>
-      
-      <div className="gaming-card min-h-[400px] mb-8 flex items-center justify-center">
-        {!streamData.isLive ? (
-          <StreamControls
-            userId={user?.id}
-            isLive={streamData.isLive}
-            onStreamUpdate={handleStreamUpdate}
-          />
-        ) : (
-          <StreamPlayer
-            streamUrl={streamData.streamUrl}
-            isLive={streamData.isLive}
-          />
-        )}
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <Tabs defaultValue="preview" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+          <TabsTrigger value="preview">Preview</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="chat">Chat</TabsTrigger>
+        </TabsList>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="gaming-card hover:scale-105 transition-transform">
-          <div className="flex items-center gap-3 mb-2">
-            <Gamepad2 className="h-6 w-6 text-gaming-400" />
-            <h2 className="text-xl font-semibold">Game Details</h2>
+        <TabsContent value="preview" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <StreamPreview
+                streamUrl={stream?.stream_url}
+                className="aspect-video"
+                onGoLive={() => {
+                  // Handle go live logic
+                }}
+              />
+            </div>
+            <div>
+              <StreamForm />
+            </div>
           </div>
-          <p className="text-muted-foreground">Set your game and title</p>
-        </div>
+        </TabsContent>
 
-        <div className="gaming-card hover:scale-105 transition-transform">
-          <div className="flex items-center gap-3 mb-2">
-            <Users2 className="h-6 w-6 text-gaming-400" />
-            <h2 className="text-xl font-semibold">Stream Settings</h2>
-          </div>
-          <p className="text-muted-foreground">Configure your stream</p>
-        </div>
+        <TabsContent value="settings">
+          <StreamSettings />
+        </TabsContent>
 
-        <div className="gaming-card hover:scale-105 transition-transform">
-          <div className="flex items-center gap-3 mb-2">
-            <Share2 className="h-6 w-6 text-gaming-400" />
-            <h2 className="text-xl font-semibold">Share Stream</h2>
-          </div>
-          <p className="text-muted-foreground">Get your stream link</p>
-        </div>
-      </div>
-
-      {streamData.isLive && (
-        <div className="gaming-card">
-          <h2 className="text-xl font-semibold mb-4">Stream Preview</h2>
-          <StreamPlayer
-            streamUrl={streamData.streamUrl}
-            isLive={streamData.isLive}
-          />
-        </div>
-      )}
+        <TabsContent value="chat">
+          <StreamChat streamId={stream?.id} isLive={stream?.is_live} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
