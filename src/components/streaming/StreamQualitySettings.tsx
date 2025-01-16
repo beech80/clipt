@@ -49,7 +49,8 @@ export const StreamQualitySettings = ({ streamId }: StreamQualitySettingsProps) 
     },
   });
 
-  const availableQualities = stream?.available_qualities || [];
+  // Parse the available qualities from the JSONB array
+  const availableQualities = (stream?.available_qualities as string[]) || [];
   const currentQuality = stream?.stream_resolution || 'auto';
 
   if (isLoading) {
