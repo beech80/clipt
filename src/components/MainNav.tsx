@@ -28,13 +28,12 @@ export function MainNav() {
   const navItems = [
     { path: "/", icon: Home, label: "Home" },
     { path: "/discover", icon: Compass, label: "Discover" },
-    { path: "/for-you", icon: Film, label: "For You" },
-    { path: "/clipts", icon: Video, label: "Clipts" },
-    { path: "/streaming", icon: Video, label: "Stream" },
-    { path: "/top-clips", icon: Trophy, label: "Top Clips" },
-    { path: "/settings", icon: Settings, label: "Settings", highlight: true },
     { path: "/messages", icon: MessageSquare, label: "Messages" },
     { path: "/profile", icon: User, label: "Profile" },
+    { path: "/streaming", icon: Video, label: "Streaming" },
+    { path: "/top-clips", icon: Trophy, label: "Top Clips" },
+    { path: "/clipts", icon: Video, label: "Clipts" },
+    { path: "/settings", icon: Settings, label: "Settings" },
     { path: "/login", icon: LogIn, label: "Login", hideWhenAuth: true },
   ];
 
@@ -47,15 +46,15 @@ export function MainNav() {
       <div className="mx-auto flex max-w-screen-xl items-center justify-around px-2 py-1">
         {isMobile ? (
           <>
-            {filteredNavItems.map(({ path, icon: Icon, label, highlight }) => (
+            {filteredNavItems.map(({ path, icon: Icon, label }) => (
               <Link
                 key={path}
                 to={path}
                 className={`p-2 transition-all hover:text-gaming-400 ${
-                  isActive(path) ? "text-gaming-400 scale-110" : "text-muted-foreground"
-                } ${highlight ? "animate-glow" : ""}`}
+                  isActive(path) ? "text-gaming-400 scale-110" : "text-blue-500"
+                }`}
               >
-                <Icon className={`h-5 w-5 ${highlight ? "text-gaming-400" : ""}`} />
+                <Icon className="h-5 w-5" />
               </Link>
             ))}
             {user && (
@@ -63,7 +62,7 @@ export function MainNav() {
                 variant="ghost"
                 size="icon"
                 onClick={handleSignOut}
-                className="p-2 transition-all hover:text-gaming-400 text-muted-foreground"
+                className="p-2 transition-all hover:text-gaming-400 text-blue-500"
               >
                 <LogOut className="h-5 w-5" />
               </Button>
@@ -71,16 +70,16 @@ export function MainNav() {
           </>
         ) : (
           <>
-            {filteredNavItems.map(({ path, icon: Icon, label, highlight }) => (
+            {filteredNavItems.map(({ path, icon: Icon, label }) => (
               <Link
                 key={path}
                 to={path}
                 className={`flex flex-col items-center p-2 transition-all hover:text-gaming-400 ${
-                  isActive(path) ? "text-gaming-400 scale-110" : "text-muted-foreground"
-                } ${highlight ? "animate-glow" : ""}`}
+                  isActive(path) ? "text-gaming-400 scale-110" : "text-blue-500"
+                }`}
               >
-                <Icon className={`h-6 w-6 ${highlight ? "text-gaming-400" : ""}`} />
-                <span className={`text-xs font-medium ${highlight ? "text-gaming-400" : ""}`}>{label}</span>
+                <Icon className="h-6 w-6" />
+                <span className="text-xs font-medium">{label}</span>
               </Link>
             ))}
             {user && (
@@ -88,7 +87,7 @@ export function MainNav() {
                 variant="ghost"
                 size="icon"
                 onClick={handleSignOut}
-                className="flex flex-col items-center p-2 transition-all hover:text-gaming-400 text-muted-foreground"
+                className="flex flex-col items-center p-2 transition-all hover:text-gaming-400 text-blue-500"
               >
                 <LogOut className="h-6 w-6" />
                 <span className="text-xs font-medium">Logout</span>
