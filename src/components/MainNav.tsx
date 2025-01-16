@@ -32,10 +32,9 @@ export function MainNav() {
     { path: "/clipts", icon: Video, label: "Clipts" },
     { path: "/streaming", icon: Video, label: "Stream" },
     { path: "/top-clips", icon: Trophy, label: "Top Clips" },
+    { path: "/settings", icon: Settings, label: "Settings", highlight: true },
     { path: "/messages", icon: MessageSquare, label: "Messages" },
     { path: "/profile", icon: User, label: "Profile" },
-    // Moving Settings to the front and adding a highlight class
-    { path: "/settings", icon: Settings, label: "Settings", highlight: true },
     { path: "/login", icon: LogIn, label: "Login", hideWhenAuth: true },
   ];
 
