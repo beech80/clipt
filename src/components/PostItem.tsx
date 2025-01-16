@@ -45,36 +45,40 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   return (
-    <div className="relative w-full aspect-square max-w-[1080px] mx-auto bg-[#1A1F2C] overflow-hidden">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent z-20">
-        <div className="flex items-center space-x-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={post.profiles?.avatar_url} />
-            <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <p className="font-semibold text-[#1EAEDB]">{post.profiles?.username}</p>
-            <p className="text-xs text-gray-400">
-              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-            </p>
+    <div className="flex flex-col w-full">
+      {/* Main Post Container */}
+      <div className="relative w-full aspect-square bg-[#1A1F2C] overflow-hidden">
+        {/* Header */}
+        <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent z-20">
+          <div className="flex items-center space-x-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={post.profiles?.avatar_url} />
+              <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="font-semibold text-[#1EAEDB]">{post.profiles?.username}</p>
+              <p className="text-xs text-gray-400">
+                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+              </p>
+            </div>
           </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="absolute inset-0">
+          <PostContent
+            content={post.content}
+            imageUrl={post.image_url}
+            videoUrl={post.video_url}
+            postId={post.id}
+          />
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="absolute inset-0">
-        <PostContent
-          content={post.content}
-          imageUrl={post.image_url}
-          videoUrl={post.video_url}
-          postId={post.id}
-        />
-      </div>
-
-      {/* Footer Actions */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center items-center p-4 bg-gradient-to-t from-black/60 to-transparent z-20">
-        <div className="flex items-center gap-8">
+      {/* Comment Section */}
+      <div className="bg-[#1A1F2C] border-t border-gaming-700">
+        {/* Action Buttons */}
+        <div className="flex justify-center items-center gap-8 p-4 border-b border-gaming-700">
           <button className="clip-button flex items-center gap-2">
             <Heart className="clip-button-icon" />
             <span className="text-xs text-white">{post.likes_count || 0}</span>
@@ -91,6 +95,33 @@ const PostItem = ({ post }: PostItemProps) => {
           <button className="clip-button flex items-center gap-2">
             <Trophy className="clip-button-icon" />
             <span className="text-xs text-white">{post.clip_votes?.[0]?.count || 0}</span>
+          </button>
+        </div>
+
+        {/* Comments Area */}
+        <div className="max-h-[300px] overflow-y-auto p-4 space-y-4">
+          {/* Comment Input */}
+          <div className="flex items-center gap-2 mb-4">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user?.user_metadata?.avatar_url} />
+              <AvatarFallback>
+                {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <input
+              type="text"
+              placeholder="Add a comment..."
+              className="flex-1 bg-gaming-800/50 border border-gaming-700 rounded-full px-4 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-gaming-500"
+              onClick={handleCommentClick}
+            />
+          </div>
+
+          {/* View All Comments Button */}
+          <button
+            onClick={handleCommentClick}
+            className="w-full text-center text-sm text-gaming-400 hover:text-gaming-300 transition-colors"
+          >
+            View all {commentsCount} comments
           </button>
         </div>
       </div>
