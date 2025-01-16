@@ -4,14 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { useSheetState } from "@/hooks/use-sheet-state";
 
 const Home = () => {
   const { user } = useAuth();
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("squad");
+  const [activeTab, setActiveTab] = useState("feed");
   const { isOpen: isMenuOpen } = useSheetState();
 
   return (
@@ -66,7 +65,9 @@ const Home = () => {
           <div className="flex items-center justify-center h-full text-gaming-400">
             Squad feature coming soon!
           </div>
-        ) : null}
+        ) : (
+          <PostList />
+        )}
       </div>
     </div>
   );
