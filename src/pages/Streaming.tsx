@@ -4,6 +4,7 @@ import { StreamForm } from "@/components/streaming/StreamForm";
 import StreamPreview from "@/components/streaming/StreamPreview";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
 import { StreamChat } from "@/components/streaming/StreamChat";
+import { StreamQualitySettings } from "@/components/streaming/StreamQualitySettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -39,9 +40,10 @@ const Streaming = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
           <TabsTrigger value="preview">Preview</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="quality">Quality</TabsTrigger>
           <TabsTrigger value="chat">Chat</TabsTrigger>
         </TabsList>
 
@@ -69,6 +71,10 @@ const Streaming = () => {
 
         <TabsContent value="settings">
           {user && <StreamSettings userId={user.id} />}
+        </TabsContent>
+
+        <TabsContent value="quality">
+          {stream && <StreamQualitySettings streamId={stream.id} />}
         </TabsContent>
 
         <TabsContent value="chat">
