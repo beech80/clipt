@@ -45,54 +45,52 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   return (
-    <div className="relative aspect-square w-full max-w-[1080px] mx-auto bg-[#1A1F2C]">
-      <div className="absolute inset-0 flex flex-col">
-        {/* Header */}
-        <div className="p-4 bg-[#1A1F2C] border-b border-[#2A2E3B] z-10">
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={post.profiles?.avatar_url} />
-              <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <p className="font-semibold text-[#1EAEDB]">{post.profiles?.username}</p>
-              <p className="text-xs text-gray-400">
-                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-              </p>
-            </div>
+    <div className="relative aspect-square w-full max-w-[1080px] mx-auto bg-[#1A1F2C] overflow-hidden">
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent z-20">
+        <div className="flex items-center space-x-2">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={post.profiles?.avatar_url} />
+            <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <p className="font-semibold text-[#1EAEDB]">{post.profiles?.username}</p>
+            <p className="text-xs text-gray-400">
+              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="flex-1 relative">
-          <PostContent
-            content={post.content}
-            imageUrl={post.image_url}
-            videoUrl={post.video_url}
-            postId={post.id}
-          />
-        </div>
+      {/* Main Content */}
+      <div className="absolute inset-0">
+        <PostContent
+          content={post.content}
+          imageUrl={post.image_url}
+          videoUrl={post.video_url}
+          postId={post.id}
+        />
+      </div>
 
-        {/* Footer Actions */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10">
-          <div className="flex items-center gap-8 px-10 py-2.5 bg-[#1A1F2C]/80 border border-[#1EAEDB]/30 rounded-full backdrop-blur-md shadow-lg hover:bg-[#1A1F2C]/90 transition-all duration-300">
-            <div className="flex items-center">
-              <Heart className="w-5 h-5 text-[#1EAEDB] mr-2" />
-              <span className="text-sm font-medium text-[#1EAEDB]">{post.likes_count || 0}</span>
-            </div>
-            <div 
-              onClick={handleCommentClick}
-              className="flex items-center cursor-pointer"
-            >
-              <MessageCircle className="w-5 h-5 text-[#1EAEDB] mr-2" />
-              <span className="text-sm font-medium text-[#1EAEDB]">{commentsCount}</span>
-            </div>
-            <div className="flex items-center">
-              <Trophy className="w-5 h-5 text-[#1EAEDB] mr-2" />
-              <span className="text-sm font-medium text-[#1EAEDB]">{post.clip_votes?.[0]?.count || 0}</span>
-            </div>
-          </div>
-        </div>
+      {/* Footer Actions */}
+      <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-6">
+        <button className="clip-button">
+          <Heart className="clip-button-icon" />
+          <span className="text-xs text-white">{post.likes_count || 0}</span>
+        </button>
+        
+        <button 
+          className="clip-button"
+          onClick={handleCommentClick}
+        >
+          <MessageCircle className="clip-button-icon" />
+          <span className="text-xs text-white">{commentsCount}</span>
+        </button>
+        
+        <button className="clip-button">
+          <Trophy className="clip-button-icon" />
+          <span className="text-xs text-white">{post.clip_votes?.[0]?.count || 0}</span>
+        </button>
       </div>
     </div>
   );

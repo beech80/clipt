@@ -41,7 +41,7 @@ const ForYou = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-80px)]">
+    <div className="h-screen">
       <ScrollArea className="h-full">
         <div className="snap-y snap-mandatory h-full">
           {posts?.map((post) => (
