@@ -15,7 +15,7 @@ export const uploadImage = async (
   const filePath = `${fileName}`;
 
   const imageInterval = setInterval(() => {
-    setProgress(prev => Math.min(prev + 20, 90));
+    setProgress(Math.min(90, Math.random() * 90));
   }, 500);
 
   try {
@@ -47,7 +47,7 @@ export const uploadVideo = async (
   const filePath = `${fileName}`;
 
   const videoInterval = setInterval(() => {
-    setProgress(prev => Math.min(prev + 10, 90));
+    setProgress(Math.min(90, Math.random() * 90));
   }, 500);
 
   try {
