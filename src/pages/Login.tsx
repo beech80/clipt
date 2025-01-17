@@ -62,7 +62,11 @@ const Login = () => {
           }
           break;
         case 422:
-          errorMessage = 'Invalid email format. Please enter a valid email address.';
+          if (error.message.includes('Password should be')) {
+            errorMessage = 'Password must be at least 6 characters long.';
+          } else {
+            errorMessage = 'Invalid email format. Please enter a valid email address.';
+          }
           break;
         case 429:
           errorMessage = 'Too many login attempts. Please try again later.';
