@@ -1,9 +1,15 @@
-import React from 'react';
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export const StreamChatOffline = () => {
+export function StreamChatOffline() {
   return (
-    <div className="p-4 border-t text-center text-muted-foreground">
-      Chat is disabled while stream is offline
+    <div className="flex items-center justify-center h-full p-4">
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Chat is currently offline. The stream may have ended or chat might be disabled.
+        </AlertDescription>
+      </Alert>
     </div>
   );
-};
+}
