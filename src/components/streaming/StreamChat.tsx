@@ -17,7 +17,7 @@ interface StreamChatProps {
 export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const handleError = useErrorHandler();
+  const { handleError } = useErrorHandler();
 
   const { data: messages = [], isError } = useQuery({
     queryKey: ['stream-chat', streamId],
