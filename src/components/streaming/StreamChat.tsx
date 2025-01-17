@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ChatMessage } from './chat/ChatMessage';
-import { ChatInput } from './chat/ChatInput';
+import ChatInput from './chat/ChatInput';
 import { StreamChatHeader } from './chat/StreamChatHeader';
 import { StreamChatError } from './chat/StreamChatError';
 import { StreamChatOffline } from './chat/StreamChatOffline';
@@ -17,7 +17,7 @@ interface StreamChatProps {
 export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const { data: messages, error } = useQuery({
+  const { data: messages, error } = useQuery<StreamChatMessage[]>({
     queryKey: ['stream-chat', streamId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -30,7 +30,13 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as StreamChatMessage[];
+      return data.map(msg => ({
+        ...msg,
+        profiles: {
+          username: msg.profiles?.username || 'Anonymous',
+          avatar_url: msg.profiles?.avatar_url || ''
+        }
+      })) as StreamChatMessage[];
     },
     refetchInterval: isLive ? 1000 : false,
   });
@@ -64,7 +70,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
 
       <ChatInput 
         onSendMessage={() => {}} 
-        isDisabled={!isLive || !chatEnabled} 
+        disabled={!isLive || !chatEnabled} 
       />
     </div>
   );

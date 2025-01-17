@@ -5,8 +5,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ViewerEngagement {
+  id: string;
   viewer_id: string;
   watch_duration: string;
+  messages_sent: number;
+  created_at: string;
 }
 
 export const ViewerEngagementChart = ({ streamId }: { streamId: string }) => {
@@ -19,7 +22,7 @@ export const ViewerEngagementChart = ({ streamId }: { streamId: string }) => {
         .eq('stream_id', streamId);
       
       if (error) throw error;
-      return data;
+      return data as ViewerEngagement[];
     },
   });
 

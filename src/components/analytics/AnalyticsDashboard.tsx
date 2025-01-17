@@ -9,10 +9,13 @@ import { ViewerEngagementChart } from './ViewerEngagementChart';
 import { RevenueMetrics } from './RevenueMetrics';
 
 interface StreamAnalytics {
+  id: string;
+  stream_id: string;
   peak_viewers: number;
   average_viewers: number;
   stream_duration: string;
   chat_messages_count: number;
+  created_at: string;
 }
 
 export const AnalyticsDashboard = ({ streamId }: { streamId: string }) => {
@@ -26,7 +29,7 @@ export const AnalyticsDashboard = ({ streamId }: { streamId: string }) => {
         .single();
       
       if (error) throw error;
-      return data;
+      return data as StreamAnalytics;
     },
   });
 
@@ -78,7 +81,7 @@ export const AnalyticsDashboard = ({ streamId }: { streamId: string }) => {
           </div>
           <p className="text-2xl font-bold mt-2">
             {analytics?.stream_duration ? 
-              new Date(analytics.stream_duration).toISOString().substr(11, 8) : 
+              analytics.stream_duration.substring(0, 8) : 
               '00:00:00'}
           </p>
         </Card>
