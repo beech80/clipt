@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { MessageInput } from "@/components/messages/MessageInput";
-import { MessageList } from "@/components/messages/MessageList";
-import { Message } from "@/types/message";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { processCommand } from "@/utils/chatCommands";
+import { ChatMessageList } from "./chat/ChatMessageList";
+import { ChatInput } from "./chat/ChatInput";
 import type { StreamChatMessage } from "@/types/chat";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 interface StreamChatProps {
   streamId: string;
@@ -15,13 +16,12 @@ interface StreamChatProps {
 
 export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [timeouts, setTimeouts] = useState<Record<string, string>>({});
+  const queryClient = useQueryClient();
+  const handleError = useErrorHandler();
 
-  useEffect(() => {
-    if (!streamId) return;
-
-    const loadMessages = async () => {
+  const { data: messages = [], isError } = useQuery({
+    queryKey: ['stream-chat', streamId],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('stream_chat')
         .select(`
@@ -43,43 +43,13 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         .eq('is_deleted', false)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        toast.error("Failed to load chat messages");
-        return;
-      }
+      if (error) throw error;
+      return data as StreamChatMessage[];
+    },
+  });
 
-      const formattedMessages: Message[] = data.map(msg => ({
-        id: msg.id,
-        content: msg.message,
-        sender_id: msg.user_id,
-        created_at: msg.created_at,
-        sender: {
-          username: msg.profiles?.username || 'Unknown',
-          avatar_url: msg.profiles?.avatar_url
-        }
-      }));
-
-      setMessages(formattedMessages);
-    };
-
-    const loadTimeouts = async () => {
-      const { data, error } = await supabase
-        .from('chat_timeouts')
-        .select('user_id, expires_at')
-        .eq('stream_id', streamId)
-        .gt('expires_at', new Date().toISOString());
-
-      if (!error && data) {
-        const timeoutMap: Record<string, string> = {};
-        data.forEach(timeout => {
-          timeoutMap[timeout.user_id] = timeout.expires_at;
-        });
-        setTimeouts(timeoutMap);
-      }
-    };
-
-    loadMessages();
-    loadTimeouts();
+  useEffect(() => {
+    if (!streamId) return;
 
     const channel = supabase
       .channel('stream_chat')
@@ -91,67 +61,27 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
           table: 'stream_chat',
           filter: `stream_id=eq.${streamId}`
         },
-        async (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('username, avatar_url')
-              .eq('id', payload.new.user_id)
-              .single();
-
-            const newMessage: Message = {
-              id: payload.new.id,
-              content: payload.new.message,
-              sender_id: payload.new.user_id,
-              created_at: payload.new.created_at,
-              sender: {
-                username: profile?.username || 'Unknown',
-                avatar_url: profile?.avatar_url
-              }
-            };
-
-            setMessages(prev => [...prev, newMessage]);
-          } else if (payload.eventType === 'UPDATE' && payload.new.is_deleted) {
-            setMessages(prev => prev.filter(msg => msg.id !== payload.new.id));
-          }
-        }
-      )
-      .subscribe();
-
-    const timeoutChannel = supabase
-      .channel('chat_timeouts')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_timeouts',
-          filter: `stream_id=eq.${streamId}`
-        },
         (payload) => {
-          setTimeouts(prev => ({
-            ...prev,
-            [payload.new.user_id]: payload.new.expires_at
-          }));
+          queryClient.setQueryData(['stream-chat', streamId], (old: StreamChatMessage[] = []) => {
+            if (payload.eventType === 'INSERT') {
+              return [...old, payload.new as StreamChatMessage];
+            }
+            if (payload.eventType === 'UPDATE' && payload.new.is_deleted) {
+              return old.filter(msg => msg.id !== payload.new.id);
+            }
+            return old;
+          });
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
-      supabase.removeChannel(timeoutChannel);
     };
-  }, [streamId]);
+  }, [streamId, queryClient]);
 
   const handleSendMessage = async (content: string) => {
     if (!user || !streamId || !isLive) return;
-
-    const userTimeout = timeouts[user.id];
-    if (userTimeout && new Date(userTimeout) > new Date()) {
-      const timeLeft = Math.ceil((new Date(userTimeout).getTime() - Date.now()) / 1000);
-      toast.error(`You are timed out for ${timeLeft} more seconds`);
-      return;
-    }
 
     try {
       if (content.startsWith('/')) {
@@ -171,18 +101,28 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
 
       if (error) throw error;
     } catch (error) {
-      toast.error("Failed to send message");
+      handleError(error, 'Failed to send message');
     }
   };
+
+  if (isError) {
+    return (
+      <div className="flex flex-col h-[600px] border rounded-lg">
+        <div className="p-4 text-center text-destructive">
+          Failed to load chat messages
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[600px] border rounded-lg">
       <div className="p-4 border-b bg-muted">
         <h3 className="font-semibold">Stream Chat</h3>
       </div>
-      <MessageList messages={messages} />
+      <ChatMessageList messages={messages} />
       {isLive ? (
-        <MessageInput onSendMessage={handleSendMessage} />
+        <ChatInput onSendMessage={handleSendMessage} />
       ) : (
         <div className="p-4 border-t text-center text-muted-foreground">
           Chat is disabled while stream is offline
