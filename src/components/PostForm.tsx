@@ -73,6 +73,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
       });
 
       if (postError) throw postError;
+      if (!post) throw new Error("Failed to create post");
 
       // Handle mentions
       const mentions = extractMentions(content);
