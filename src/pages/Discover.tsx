@@ -15,7 +15,7 @@ const TRENDING_CREATORS = [
   { id: 2, name: "GameMaster", followers: "8.7K", image: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200&h=200&fit=crop" },
 ];
 
-const Discover = () => {
+export default function Discover() {
   const handleFollow = () => {
     toast.success("Creator followed successfully!");
   };
@@ -100,6 +100,4 @@ const Discover = () => {
       </div>
     </div>
   );
-};
-
-export default Discover;
+}
