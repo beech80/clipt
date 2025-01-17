@@ -1,11 +1,11 @@
-import { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from "@/components/ui/toaster";
-import { AuthGuard } from "@/components/AuthGuard";
+import { lazy, Suspense } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import GameBoyControls from "@/components/GameBoyControls";
 
 // Lazy load route components
 const Home = lazy(() => import('@/pages/Home'));
@@ -23,14 +23,12 @@ const queryClient = new QueryClient();
 
 // Loading fallback component
 const PageLoader = () => (
-  <div className="w-full h-[calc(100vh-4rem)] flex items-center justify-center p-4">
-    <div className="space-y-4 w-full max-w-3xl">
-      <Skeleton className="h-12 w-[250px]" />
-      <Skeleton className="h-[200px] w-full" />
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="space-y-3">
+      <Skeleton className="h-[125px] w-[250px] rounded-xl" />
       <div className="space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-[80%]" />
-        <Skeleton className="h-4 w-[60%]" />
+        <Skeleton className="h-4 w-[250px]" />
+        <Skeleton className="h-4 w-[200px]" />
       </div>
     </div>
   </div>
@@ -57,6 +55,7 @@ function App() {
                 </Route>
               </Routes>
             </Suspense>
+            <GameBoyControls />
             <Toaster />
           </Router>
         </AuthProvider>
