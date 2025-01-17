@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 
-interface ErrorDetails {
+export interface ErrorDetails {
   message: string;
   stack?: string;
   componentStack?: string;
@@ -19,7 +19,7 @@ class ErrorLoggingService {
     return ErrorLoggingService.instance;
   }
 
-  public logError(error: Error, details?: ErrorDetails) {
+  public logError(error: Error, details?: Partial<ErrorDetails>) {
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Error:', error);

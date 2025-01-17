@@ -5,12 +5,18 @@ import { toast } from "sonner";
 export const useErrorHandler = () => {
   const handleError = useCallback((error: unknown, context?: string) => {
     if (error instanceof Error) {
-      errorLogging.logError(error, { additionalInfo: { context } });
+      errorLogging.logError(error, { 
+        message: error.message,
+        additionalInfo: { context } 
+      });
     } else {
       const genericError = new Error(
         typeof error === 'string' ? error : 'An unexpected error occurred'
       );
-      errorLogging.logError(genericError, { additionalInfo: { context } });
+      errorLogging.logError(genericError, { 
+        message: genericError.message,
+        additionalInfo: { context } 
+      });
     }
   }, []);
 

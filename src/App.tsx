@@ -29,10 +29,10 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000,
       retry: 1,
-      onError: (error) => {
-        if (error instanceof Error) {
+      meta: {
+        onError: (error: Error) => {
           errorLogging.logError(error);
-        }
+        },
       },
     },
   },
