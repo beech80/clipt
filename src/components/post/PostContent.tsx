@@ -7,6 +7,7 @@ import { Volume2, VolumeX, Play, Pause, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { handleVideoControl } from '../gameboy/VideoControls';
 import { linkifyHashtags } from '@/utils/hashtagUtils';
+import { linkifyMentions } from '@/utils/mentionUtils';
 
 interface PostContentProps {
   content: string;
@@ -161,7 +162,9 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
         <div className="absolute bottom-4 left-4 right-4 text-white">
           <p 
             className="text-sm"
-            dangerouslySetInnerHTML={{ __html: linkifyHashtags(content) }}
+            dangerouslySetInnerHTML={{ 
+              __html: linkifyMentions(linkifyHashtags(content))
+            }}
           />
         </div>
       )}

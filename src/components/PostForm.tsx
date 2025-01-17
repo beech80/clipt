@@ -10,6 +10,7 @@ import UploadProgress from "./post/form/UploadProgress";
 import MediaPreview from "./post/form/MediaPreview";
 import { uploadImage, uploadVideo } from "@/utils/postUploadUtils";
 import { createPost } from "@/services/postService";
+import { extractMentions, createMention } from "@/utils/mentionUtils";
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -63,12 +64,21 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         videoUrl = result.url;
       }
 
-      await createPost({
+      // Create the post
+      const { data: post, error: postError } = await createPost({
         content,
         userId: user.id,
         imageUrl,
         videoUrl
       });
+
+      if (postError) throw postError;
+
+      // Handle mentions
+      const mentions = extractMentions(content);
+      for (const username of mentions) {
+        await createMention(username, post.id);
+      }
 
       toast.success("Post created successfully!", { id: toastId });
       setContent("");
