@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +24,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const queryClient = useQueryClient();
   const { handleError } = useErrorHandler();
 
-  const { data: messages = [], isError } = useQuery({
+  const { data: messages = [], isError, isLoading } = useQuery({
     queryKey: ['stream-chat', streamId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -112,6 +112,17 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
 
   if (isError) {
     return <StreamChatError />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-[600px] border rounded-lg">
+        <StreamChatHeader messageCount={0} />
+        <div className="flex-1">
+          <Skeleton className="w-full h-full" />
+        </div>
+      </div>
+    );
   }
 
   return (
