@@ -24,7 +24,7 @@ export const StreamQualitySettings = ({ streamId }: StreamQualitySettingsProps) 
         .from('streams')
         .select('available_qualities, current_bitrate, current_fps, stream_resolution')
         .eq('id', streamId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
