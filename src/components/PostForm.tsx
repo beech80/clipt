@@ -9,6 +9,7 @@ import ImageUpload from "./post/ImageUpload";
 import VideoUpload from "./post/VideoUpload";
 import UploadProgress from "./post/form/UploadProgress";
 import MediaPreview from "./post/form/MediaPreview";
+import { extractHashtags } from "@/utils/hashtagUtils";
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -55,7 +56,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        // Simulate upload progress for image
         const imageInterval = setInterval(() => {
           setImageProgress(prev => Math.min(prev + 20, 90));
         }, 500);
@@ -84,7 +84,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        // Simulate upload progress for video
         const videoInterval = setInterval(() => {
           setVideoProgress(prev => Math.min(prev + 10, 90));
         }, 500);
@@ -108,16 +107,46 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         video_url = publicUrl;
       }
 
-      const { error } = await supabase
+      // Create the post
+      const { data: post, error: postError } = await supabase
         .from('posts')
         .insert({
           content: content.trim(),
           user_id: user.id,
           image_url,
           video_url
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (postError) throw postError;
+
+      // Extract and save hashtags
+      const hashtags = extractHashtags(content);
+      if (hashtags.length > 0) {
+        // Insert hashtags
+        const { data: hashtagData, error: hashtagError } = await supabase
+          .from('hashtags')
+          .upsert(
+            hashtags.map(tag => ({ name: tag.toLowerCase() })),
+            { onConflict: 'name' }
+          )
+          .select('id, name');
+
+        if (hashtagError) throw hashtagError;
+
+        // Link hashtags to post
+        const { error: linkError } = await supabase
+          .from('post_hashtags')
+          .insert(
+            hashtagData.map(tag => ({
+              post_id: post.id,
+              hashtag_id: tag.id
+            }))
+          );
+
+        if (linkError) throw linkError;
+      }
 
       toast.success("Post created successfully!", { id: toastId });
       setContent("");

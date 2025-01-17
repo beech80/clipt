@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Volume2, VolumeX, Play, Pause, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { handleVideoControl } from '../gameboy/VideoControls';
+import { linkifyHashtags } from '@/utils/hashtagUtils';
 
 interface PostContentProps {
   content: string;
@@ -146,7 +147,6 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
         />
       ) : null}
       
-      {/* Double tap like animation */}
       {showLikeAnimation && (
         <div className="absolute inset-0 flex items-center justify-center">
           <Heart className="w-24 h-24 text-red-500 animate-scale-up" />
@@ -159,7 +159,10 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
       )} />
       {content && (
         <div className="absolute bottom-4 left-4 right-4 text-white">
-          <p className="text-sm">{content}</p>
+          <p 
+            className="text-sm"
+            dangerouslySetInnerHTML={{ __html: linkifyHashtags(content) }}
+          />
         </div>
       )}
     </div>
