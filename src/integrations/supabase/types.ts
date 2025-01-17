@@ -114,6 +114,13 @@ export type Database = {
             foreignKeyName: "chat_timeouts_stream_id_fkey"
             columns: ["stream_id"]
             isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "chat_timeouts_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
             referencedRelation: "streams"
             referencedColumns: ["id"]
           },
@@ -581,6 +588,52 @@ export type Database = {
         }
         Relationships: []
       }
+      recommended_streams: {
+        Row: {
+          created_at: string
+          id: string
+          score: number
+          stream_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          score?: number
+          stream_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          score?: number
+          stream_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommended_streams_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "recommended_streams_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recommended_streams_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_categories: {
         Row: {
           created_at: string
@@ -631,6 +684,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "stream_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_category_mappings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
           },
           {
             foreignKeyName: "stream_category_mappings_stream_id_fkey"
@@ -688,6 +748,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_chat_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
           },
           {
             foreignKeyName: "stream_chat_stream_id_fkey"
@@ -766,6 +833,13 @@ export type Database = {
           tag_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stream_tag_mappings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
           {
             foreignKeyName: "stream_tag_mappings_stream_id_fkey"
             columns: ["stream_id"]
@@ -873,7 +947,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      stream_recommendations: {
+        Row: {
+          description: string | null
+          is_live: boolean | null
+          recommendation_score: number | null
+          started_at: string | null
+          stream_id: string | null
+          stream_url: string | null
+          streamer_avatar: string | null
+          streamer_id: string | null
+          streamer_username: string | null
+          thumbnail_url: string | null
+          title: string | null
+          viewer_count: number | null
+          viewer_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recommended_streams_user_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "streams_user_id_fkey"
+            columns: ["streamer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       generate_stream_key: {
@@ -925,6 +1031,10 @@ export type Database = {
           "": string
         }
         Returns: string[]
+      }
+      update_stream_recommendations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
