@@ -2161,10 +2161,6 @@ export type Database = {
         }
         Returns: unknown
       }
-      refresh_trending_views: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       set_limit: {
         Args: {
           "": number
