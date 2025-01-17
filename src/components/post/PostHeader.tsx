@@ -3,28 +3,34 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PostMenu from "./PostMenu";
 import { PostHeaderProps } from "@/types/post";
 import { Heart, MessageCircle, Trophy } from "lucide-react";
-import LikeButton from "./actions/LikeButton";
 
 export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
   return (
-    <div className="flex items-center gap-3">
-      <Avatar className="w-8 h-8">
+    <div className="flex items-center gap-3 bg-[#1A1F2C]/80 backdrop-blur-sm p-3 border-b border-[#403E43]">
+      <Avatar className="w-10 h-10 ring-2 ring-[#403E43] ring-offset-2 ring-offset-[#1A1F2C]">
         <AvatarImage src={post.profiles.avatar_url || ""} />
         <AvatarFallback>{post.profiles.username?.[0]?.toUpperCase()}</AvatarFallback>
       </Avatar>
       
-      <div className="flex items-center gap-2 text-sm">
-        <span className="font-semibold text-[#9b87f5]">{post.profiles.username}</span>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Heart className="w-4 h-4 text-red-500" />
-          <span>{post.likes_count || 0}</span>
-          <MessageCircle className="w-4 h-4" />
-          <span>{commentsCount || 0}</span>
-          <Trophy className="w-4 h-4 text-[#FFD700]" />
-          <span>{post.clip_votes?.[0]?.count || 0}</span>
+      <div className="flex flex-col">
+        <div className="flex items-center gap-4">
+          <span className="font-semibold text-[#9b87f5]">{post.profiles.username}</span>
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-1">
+              <Heart className="w-4 h-4 text-[#9b87f5]" />
+              <span className="text-white">{post.likes_count || 0}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <MessageCircle className="w-4 h-4 text-[#9b87f5]" />
+              <span className="text-white">{commentsCount || 0}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Trophy className="w-4 h-4 text-[#9b87f5]" />
+              <span className="text-white">{post.clip_votes?.[0]?.count || 0}</span>
+            </div>
+          </div>
         </div>
-        <span className="text-muted-foreground">·</span>
-        <span className="text-muted-foreground">
+        <span className="text-sm text-[#8E9196]">
           {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
         </span>
       </div>
