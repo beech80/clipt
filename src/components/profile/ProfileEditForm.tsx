@@ -19,6 +19,13 @@ import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect } from "react"
 
+// Define the shape of social links
+interface SocialLinks {
+  twitter?: string;
+  instagram?: string;
+  youtube?: string;
+}
+
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
   displayName: z.string().min(2).max(50),
@@ -70,10 +77,22 @@ export function ProfileEditForm() {
 
   useEffect(() => {
     if (profile) {
-      const socialLinks = typeof profile.social_links === 'object' ? profile.social_links : {
+      // Safely parse social_links with proper type checking
+      let socialLinks: SocialLinks = {
         twitter: "",
         instagram: "",
         youtube: "",
+      }
+
+      if (profile.social_links && 
+          typeof profile.social_links === 'object' && 
+          !Array.isArray(profile.social_links)) {
+        const links = profile.social_links as Record<string, unknown>
+        socialLinks = {
+          twitter: typeof links.twitter === 'string' ? links.twitter : "",
+          instagram: typeof links.instagram === 'string' ? links.instagram : "",
+          youtube: typeof links.youtube === 'string' ? links.youtube : "",
+        }
       }
       
       form.reset({
@@ -82,11 +101,7 @@ export function ProfileEditForm() {
         bioDescription: profile.bio_description || "",
         location: profile.location || "",
         website: profile.website || "",
-        socialLinks: {
-          twitter: socialLinks.twitter || "",
-          instagram: socialLinks.instagram || "",
-          youtube: socialLinks.youtube || "",
-        },
+        socialLinks,
       })
     }
   }, [profile, form])
