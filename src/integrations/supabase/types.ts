@@ -603,6 +603,44 @@ export type Database = {
           },
         ]
       }
+      post_analytics: {
+        Row: {
+          created_at: string | null
+          engagement_rate: number | null
+          id: string
+          post_id: string | null
+          shares_count: number | null
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          engagement_rate?: number | null
+          id?: string
+          post_id?: string | null
+          shares_count?: number | null
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          engagement_rate?: number | null
+          id?: string
+          post_id?: string | null
+          shares_count?: number | null
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_analytics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_edits: {
         Row: {
           created_at: string | null
