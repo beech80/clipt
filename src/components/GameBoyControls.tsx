@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -53,11 +53,11 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
   return (
     <div className="gameboy-container h-[140px] sm:h-[160px]">
       {/* Bottom Center Navigation Menu */}
-      <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <button className="clip-button">
-              <Menu className="clip-button-icon" />
+              <Menu className="w-6 h-6 text-white/80" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
@@ -80,12 +80,12 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
       </div>
 
       {/* D-Pad with Xbox-style joystick */}
-      <div className="fixed left-4 sm:left-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32">
+      <div className="fixed left-8 bottom-8 w-32 h-32">
         <Joystick onDirectionChange={handleVideoControl} />
       </div>
 
       {/* Action Buttons */}
-      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32">
+      <div className="fixed right-8 bottom-8 w-32 h-32">
         <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
       </div>
     </div>

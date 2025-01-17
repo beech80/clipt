@@ -123,28 +123,36 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
   return (
     <div className="grid grid-cols-2 gap-4">
       <button 
-        className="action-button bg-[#1A1F2C] hover:bg-[#252A3C] group"
+        className="action-button"
         onClick={handleLike}
+        style={{ '--icon-glow-color': '255, 0, 0' } as React.CSSProperties}
       >
-        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-[#FF0000] text-[#FF0000]' : 'text-[#FF0000]'} group-hover:text-[#FF3333]`} />
+        <Heart 
+          className={`${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'}`}
+        />
       </button>
       <button 
-        className="action-button bg-[#1A1F2C] hover:bg-[#252A3C] group"
+        className="action-button"
         onClick={() => setIsCommentOpen(true)}
+        style={{ '--icon-glow-color': '0, 122, 255' } as React.CSSProperties}
       >
-        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#0066FF] group-hover:text-[#3399FF]" />
+        <MessageSquare className="text-blue-500" />
       </button>
       <button 
-        className="action-button bg-[#1A1F2C] hover:bg-[#252A3C] group"
+        className="action-button"
         onClick={handleFollow}
+        style={{ '--icon-glow-color': '0, 255, 0' } as React.CSSProperties}
       >
-        <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-[#33FF33]' : 'text-[#00FF00]'} group-hover:text-[#33FF33]`} />
+        <UserPlus 
+          className={`${isFollowing ? 'text-green-400' : 'text-green-500'}`}
+        />
       </button>
       <button 
-        className="action-button bg-[#1A1F2C] hover:bg-[#252A3C] group"
+        className="action-button"
         onClick={handleRank}
+        style={{ '--icon-glow-color': '255, 215, 0' } as React.CSSProperties}
       >
-        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFD700] group-hover:text-[#FFDF33]" />
+        <Trophy className="text-yellow-500" />
       </button>
 
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
