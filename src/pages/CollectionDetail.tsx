@@ -5,6 +5,7 @@ import PostItem from "@/components/PostItem";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Post } from "@/types/post";
 
 const CollectionDetail = () => {
   const { id } = useParams();
@@ -42,13 +43,28 @@ const CollectionDetail = () => {
               username,
               avatar_url,
               display_name
-            )
+            ),
+            (
+              select count(*) as likes_count 
+              from likes 
+              where likes.post_id = posts.id
+            ),
+            (
+              select count(*) as count
+              from clip_votes 
+              where clip_votes.post_id = posts.id
+            ) as clip_votes
           )
         `)
         .eq('collection_id', id);
 
       if (error) throw error;
-      return data.map(item => item.posts);
+      
+      return data.map(item => ({
+        ...item.posts,
+        likes_count: item.posts.likes_count || 0,
+        clip_votes: [{ count: item.posts.clip_votes?.count || 0 }]
+      })) as Post[];
     },
     enabled: !!id,
   });
