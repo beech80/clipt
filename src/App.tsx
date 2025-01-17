@@ -6,6 +6,7 @@ import Home from "@/pages/Home";
 import ExplorePage from "@/pages/Explore";
 import PostListPage from "@/pages/PostListPage";
 import Discover from "@/pages/Discover";
+import Collections from "@/pages/Collections";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ function App() {
             <Route path="/explore" element={<ExplorePage />} />
             <Route path="/posts" element={<PostListPage />} />
             <Route path="/discover" element={<Discover />} />
+            <Route path="/collections" element={<Collections />} />
           </Routes>
           <Toaster />
         </Router>
