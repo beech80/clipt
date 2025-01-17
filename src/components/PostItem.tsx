@@ -15,9 +15,12 @@ import {
 import { PostHeader } from "./post/PostHeader";
 import { PostActions } from "./post/PostActions";
 import { Post } from "@/types/post";
+import { Badge } from "./ui/badge";
 
 interface PostItemProps {
-  post: Post;
+  post: Post & {
+    categories?: { name: string; slug: string; }[];
+  };
 }
 
 const PostItem = ({ post }: PostItemProps) => {
@@ -50,6 +53,19 @@ const PostItem = ({ post }: PostItemProps) => {
       <div className="absolute inset-0 flex flex-col">
         <div className="p-4 bg-[#1A1F2C] border-b border-[#2A2E3B]">
           <PostHeader post={post} commentsCount={commentsCount} />
+          {post.categories && post.categories.length > 0 && (
+            <div className="flex gap-2 mt-2">
+              {post.categories.map((category) => (
+                <Badge 
+                  key={category.slug}
+                  variant="secondary" 
+                  className="bg-[#2A2E3B] text-[#9b87f5]"
+                >
+                  {category.name}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex-1 relative">

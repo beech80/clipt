@@ -5,6 +5,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Collections from "@/pages/Collections";
 import CollectionDetail from "@/pages/CollectionDetail";
 import PostListPage from "@/pages/PostListPage";
+import Explore from "@/pages/Explore";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ function App() {
             <Route path="/" element={<PostListPage />} />
             <Route path="/collections" element={<Collections />} />
             <Route path="/collections/:id" element={<CollectionDetail />} />
+            <Route path="/explore" element={<Explore />} />
           </Routes>
         </Router>
       </AuthProvider>
