@@ -52,34 +52,22 @@ const Login = () => {
     let errorMessage = 'An error occurred during authentication.';
     
     if (error instanceof AuthApiError) {
-      try {
-        // Try to parse the error body if it exists
-        const errorBody = error.message && JSON.parse(error.message);
-        
-        switch (error.status) {
-          case 400:
-            if (error.message.includes('Invalid login credentials')) {
-              errorMessage = 'Invalid email or password. Please check your credentials.';
-            } else {
-              errorMessage = 'Invalid request. Please check your input.';
-            }
-            break;
-          case 422:
-            if (errorBody?.code === 'weak_password') {
-              errorMessage = errorBody.message || 'Password must be at least 6 characters long.';
-            } else {
-              errorMessage = 'Invalid email format. Please enter a valid email address.';
-            }
-            break;
-          case 429:
-            errorMessage = 'Too many login attempts. Please try again later.';
-            break;
-          default:
-            errorMessage = error.message;
-        }
-      } catch {
-        // If parsing fails, use the original error message
-        errorMessage = error.message;
+      switch (error.status) {
+        case 400:
+          if (error.message.includes('Invalid login credentials')) {
+            errorMessage = 'Invalid email or password. Please check your credentials.';
+          } else {
+            errorMessage = 'Invalid request. Please check your input.';
+          }
+          break;
+        case 422:
+          errorMessage = 'Invalid email format or weak password. Password must be at least 6 characters long.';
+          break;
+        case 429:
+          errorMessage = 'Too many login attempts. Please try again later.';
+          break;
+        default:
+          errorMessage = error.message;
       }
     }
     
