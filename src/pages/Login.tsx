@@ -31,8 +31,15 @@ const Login = () => {
       if (event === 'PASSWORD_RECOVERY') {
         setError('Please check your email to reset your password.');
       }
-      if (event === 'USER_DELETED') {
+      // Handle authentication errors through the event listener
+      if (event === 'USER_DELETED' as any) {
         setError('Your account has been deleted.');
+      }
+      if (event === 'INITIAL_SESSION') {
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          handleAuthError(error);
+        }
       }
     });
 
@@ -102,7 +109,6 @@ const Login = () => {
           }}
           providers={[]}
           redirectTo={window.location.origin}
-          onError={handleAuthError}
         />
       </div>
     </div>
