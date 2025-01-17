@@ -47,6 +47,48 @@ export type Database = {
           },
         ]
       }
+      achievement_progress: {
+        Row: {
+          achievement_id: string | null
+          created_at: string | null
+          current_value: number | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          achievement_id?: string | null
+          created_at?: string | null
+          current_value?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          achievement_id?: string | null
+          created_at?: string | null
+          current_value?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievement_progress_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "achievement_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       achievements: {
         Row: {
           created_at: string
@@ -55,6 +97,10 @@ export type Database = {
           id: string
           name: string
           points: number | null
+          progress_type: string
+          reward_type: string
+          reward_value: Json
+          target_value: number
         }
         Insert: {
           created_at?: string
@@ -63,6 +109,10 @@ export type Database = {
           id?: string
           name: string
           points?: number | null
+          progress_type?: string
+          reward_type?: string
+          reward_value?: Json
+          target_value?: number
         }
         Update: {
           created_at?: string
@@ -71,6 +121,10 @@ export type Database = {
           id?: string
           name?: string
           points?: number | null
+          progress_type?: string
+          reward_type?: string
+          reward_value?: Json
+          target_value?: number
         }
         Relationships: []
       }
