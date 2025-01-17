@@ -2,6 +2,7 @@ import { Search, TrendingUp, Gamepad2, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import GameBoyControls from "@/components/GameBoyControls";
 
 const TRENDING_GAMES = [
   { id: 1, name: "Fortnite", posts: 1234, image: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?w=300&h=200&fit=crop" },
@@ -25,7 +26,7 @@ const Discover = () => {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8 pb-40">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input className="pl-9" placeholder="Search games, players, or posts..." />
@@ -40,7 +41,7 @@ const Discover = () => {
           {TRENDING_GAMES.map((game) => (
             <div
               key={game.id}
-              className="group relative overflow-hidden rounded-lg border border-gaming-700/50 hover:border-gaming-500"
+              className="group relative overflow-hidden rounded-lg border border-gaming-700/50 hover:border-gaming-400"
             >
               <img 
                 src={game.image} 
@@ -74,7 +75,7 @@ const Discover = () => {
           {TRENDING_CREATORS.map((creator) => (
             <div
               key={creator.id}
-              className="flex items-center justify-between p-4 rounded-lg border border-gaming-700/50 hover:border-gaming-500"
+              className="flex items-center justify-between p-4 rounded-lg border border-gaming-700/50 hover:border-gaming-400"
             >
               <div className="flex items-center gap-3">
                 <img 
@@ -98,6 +99,7 @@ const Discover = () => {
           ))}
         </div>
       </div>
+      <GameBoyControls />
     </div>
   );
 };

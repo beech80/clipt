@@ -4,15 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { useState, Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 import { useSheetState } from "@/hooks/use-sheet-state";
 import GameBoyControls from "@/components/GameBoyControls";
 
-interface HomeProps {
-  onPostChange?: Dispatch<SetStateAction<string>>;
-}
-
-const Home = ({ onPostChange }: HomeProps) => {
+const Home = () => {
   const { user } = useAuth();
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("feed");

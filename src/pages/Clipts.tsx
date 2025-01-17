@@ -3,11 +3,9 @@ import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import GameBoyControls from "@/components/GameBoyControls";
 
 const Clipts = () => {
-  const { user } = useAuth();
-
   const { data: posts, isLoading } = useQuery({
     queryKey: ['clipts-feed'],
     queryFn: async () => {
@@ -19,10 +17,10 @@ const Clipts = () => {
             username,
             avatar_url
           ),
-          likes:likes (
+          likes (
             count
           ),
-          clip_votes:clip_votes (
+          clip_votes (
             count
           )
         `)
@@ -31,8 +29,7 @@ const Clipts = () => {
 
       if (error) throw error;
       return data;
-    },
-    enabled: !!user
+    }
   });
 
   if (isLoading) {
@@ -61,6 +58,7 @@ const Clipts = () => {
           ))}
         </div>
       </ScrollArea>
+      <GameBoyControls />
     </div>
   );
 };

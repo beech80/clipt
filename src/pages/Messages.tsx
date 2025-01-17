@@ -4,6 +4,7 @@ import { ChatList } from "@/components/messages/ChatList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Gamepad, Users } from "lucide-react";
+import GameBoyControls from "@/components/GameBoyControls";
 
 function MessagesContent() {
   const { selectedChat, setSelectedChat, messages, chats, isLoading, handleSendMessage } = useMessages();
@@ -15,10 +16,9 @@ function MessagesContent() {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl h-[calc(100vh-4rem)]">
+    <div className="mx-auto max-w-4xl h-[calc(100vh-4rem)] pb-40">
       <div className="h-full border rounded-lg grid grid-cols-1 md:grid-cols-3 divide-x">
         <div className="p-4 flex flex-col space-y-6">
-          {/* Welcome Message */}
           <div className="bg-gaming-900/50 rounded-lg p-4 border border-gaming-500/20">
             <div className="flex items-center space-x-2 mb-2">
               <Gamepad className="w-5 h-5 text-gaming-500" />
@@ -29,7 +29,6 @@ function MessagesContent() {
             </p>
           </div>
 
-          {/* Recent Gamers */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Users className="w-4 h-4 text-gaming-500" />
@@ -78,6 +77,7 @@ function MessagesContent() {
           )}
         </div>
       </div>
+      <GameBoyControls />
     </div>
   );
 }

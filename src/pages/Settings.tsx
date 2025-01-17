@@ -1,17 +1,16 @@
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import GameBoyControls from "@/components/GameBoyControls";
 
 export default function Settings() {
   const handleThemeChange = (theme: string) => {
-    // Apply theme changes
     document.documentElement.setAttribute('data-theme', theme);
     toast.success(`Theme changed to ${theme}`);
   };
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
+    <div className="container max-w-4xl mx-auto px-4 py-8 pb-40">
       <h1 className="text-3xl font-bold text-gaming-400 mb-8">Settings</h1>
       
       <Card className="p-6 bg-background/80 backdrop-blur-sm border-gaming-700/50">
@@ -85,6 +84,7 @@ export default function Settings() {
           </Button>
         </div>
       </Card>
+      <GameBoyControls />
     </div>
   );
 }

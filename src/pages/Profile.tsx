@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { useNavigate } from "react-router-dom";
 import { AchievementList } from "@/components/achievements/AchievementList";
+import GameBoyControls from "@/components/GameBoyControls";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-40">
       <div className="gaming-card">
         <div className="flex flex-col items-center mb-6">
           <img
@@ -177,6 +178,7 @@ const Profile = () => {
           )}
         </div>
       </div>
+      <GameBoyControls />
     </div>
   );
 };

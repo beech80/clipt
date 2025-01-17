@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
+import GameBoyControls from "@/components/GameBoyControls";
 
 const TopClips = () => {
   const { data: topPosts, isLoading } = useQuery({
@@ -52,7 +53,7 @@ const TopClips = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto pb-40">
       <h1 className="text-2xl font-bold mb-6 gaming-gradient">Top 10 Clips</h1>
       <ScrollArea className="h-[calc(100vh-200px)] w-full">
         {topPosts?.length === 0 ? (
@@ -69,6 +70,7 @@ const TopClips = () => {
           ))
         )}
       </ScrollArea>
+      <GameBoyControls />
     </div>
   );
 };
