@@ -36,7 +36,7 @@ export const StreamMetricsChart = ({ streamId }: { streamId: string }) => {
       );
       
       if (error) throw error;
-      return data[0];
+      return data[0] as EnhancedAnalytics;
     },
   });
 
