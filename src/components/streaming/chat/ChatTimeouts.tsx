@@ -5,7 +5,7 @@ import { toast } from "sonner";
 interface ChatTimeoutsProps {
   streamId: string;
   userId?: string;
-  onTimeoutChange: (timeouts: Record<string, string>) => void;
+  onTimeoutChange: React.Dispatch<React.SetStateAction<Record<string, string>>>;
 }
 
 export const ChatTimeouts = ({ streamId, userId, onTimeoutChange }: ChatTimeoutsProps) => {
@@ -23,7 +23,7 @@ export const ChatTimeouts = ({ streamId, userId, onTimeoutChange }: ChatTimeouts
           filter: `stream_id=eq.${streamId}`
         },
         (payload) => {
-          onTimeoutChange((prev) => ({
+          onTimeoutChange((prev: Record<string, string>) => ({
             ...prev,
             [payload.new.user_id]: payload.new.expires_at
           }));

@@ -7,7 +7,7 @@ interface ChatPresenceProps {
   streamId: string;
   userId?: string;
   onPresenceChange: (state: RealtimePresenceState) => void;
-  onActiveUsersChange: (users: Set<string>) => void;
+  onActiveUsersChange: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 export const ChatPresence = ({ 
@@ -35,7 +35,7 @@ export const ChatPresence = ({
         onActiveUsersChange(userIds);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        onActiveUsersChange((prev) => {
+        onActiveUsersChange((prev: Set<string>) => {
           const newSet = new Set(prev);
           newSet.add(key);
           return newSet;
@@ -44,7 +44,7 @@ export const ChatPresence = ({
         toast.success(`${username} joined the chat`);
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        onActiveUsersChange((prev) => {
+        onActiveUsersChange((prev: Set<string>) => {
           const newSet = new Set(prev);
           newSet.delete(key);
           return newSet;

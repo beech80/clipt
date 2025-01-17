@@ -13,7 +13,7 @@ interface ChatMessagesProps {
   isLive: boolean;
   messages: Message[];
   timeouts: Record<string, string>;
-  onMessagesChange: (messages: Message[]) => void;
+  onMessagesChange: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
 export const ChatMessages = ({
@@ -56,9 +56,9 @@ export const ChatMessages = ({
               }
             };
 
-            onMessagesChange([...messages, newMessage]);
+            onMessagesChange((prev: Message[]) => [...prev, newMessage]);
           } else if (payload.eventType === 'UPDATE' && payload.new.is_deleted) {
-            onMessagesChange(messages.filter(msg => msg.id !== payload.new.id));
+            onMessagesChange((prev: Message[]) => prev.filter(msg => msg.id !== payload.new.id));
           }
         }
       )
@@ -67,7 +67,7 @@ export const ChatMessages = ({
     return () => {
       supabase.removeChannel(chatChannel);
     };
-  }, [streamId, messages, onMessagesChange]);
+  }, [streamId, onMessagesChange]);
 
   const handleSendMessage = async (content: string) => {
     if (!userId || !streamId || !isLive) return;
