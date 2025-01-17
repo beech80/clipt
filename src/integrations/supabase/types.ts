@@ -777,6 +777,9 @@ export type Database = {
       }
       post_analytics: {
         Row: {
+          average_view_duration: unknown | null
+          bounce_rate: number | null
+          click_through_rate: number | null
           created_at: string | null
           engagement_rate: number | null
           id: string
@@ -786,6 +789,9 @@ export type Database = {
           views_count: number | null
         }
         Insert: {
+          average_view_duration?: unknown | null
+          bounce_rate?: number | null
+          click_through_rate?: number | null
           created_at?: string | null
           engagement_rate?: number | null
           id?: string
@@ -795,6 +801,9 @@ export type Database = {
           views_count?: number | null
         }
         Update: {
+          average_view_duration?: unknown | null
+          bounce_rate?: number | null
+          click_through_rate?: number | null
           created_at?: string | null
           engagement_rate?: number | null
           id?: string
@@ -1167,32 +1176,44 @@ export type Database = {
       stream_analytics: {
         Row: {
           average_viewers: number | null
+          average_watch_time: unknown | null
           chat_messages_count: number | null
           created_at: string | null
+          engagement_rate: number | null
           id: string
+          max_concurrent_viewers: number | null
           peak_viewers: number | null
           stream_duration: unknown | null
           stream_id: string | null
+          total_stream_time: unknown | null
           unique_chatters: number | null
         }
         Insert: {
           average_viewers?: number | null
+          average_watch_time?: unknown | null
           chat_messages_count?: number | null
           created_at?: string | null
+          engagement_rate?: number | null
           id?: string
+          max_concurrent_viewers?: number | null
           peak_viewers?: number | null
           stream_duration?: unknown | null
           stream_id?: string | null
+          total_stream_time?: unknown | null
           unique_chatters?: number | null
         }
         Update: {
           average_viewers?: number | null
+          average_watch_time?: unknown | null
           chat_messages_count?: number | null
           created_at?: string | null
+          engagement_rate?: number | null
           id?: string
+          max_concurrent_viewers?: number | null
           peak_viewers?: number | null
           stream_duration?: unknown | null
           stream_id?: string | null
+          total_stream_time?: unknown | null
           unique_chatters?: number | null
         }
         Relationships: [
@@ -1948,6 +1969,17 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_enhanced_analytics: {
+        Args: {
+          stream_id_param: string
+        }
+        Returns: {
+          engagement_rate: number
+          max_concurrent_viewers: number
+          total_stream_time: unknown
+          average_watch_time: unknown
+        }[]
+      }
       calculate_stream_revenue_metrics: {
         Args: {
           stream_id: string
