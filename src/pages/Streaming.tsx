@@ -9,6 +9,7 @@ import { StreamHealthMonitor } from "@/components/streaming/StreamHealthMonitor"
 import { StreamInfoCards } from "@/components/streaming/StreamInfoCards";
 import { StreamSettingsForm } from "@/components/streaming/StreamSettingsForm";
 import { StreamContentSettings } from "@/components/streaming/StreamContentSettings";
+import { StreamModeration } from "@/components/streaming/StreamModeration";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -104,8 +105,9 @@ const Streaming = () => {
         </div>
       ) : (
         <Tabs defaultValue="stream" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+          <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
             <TabsTrigger value="stream">Stream</TabsTrigger>
+            <TabsTrigger value="moderation">Moderation</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -154,6 +156,10 @@ const Streaming = () => {
                 />
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="moderation">
+            {stream?.id && <StreamModeration streamId={stream.id} />}
           </TabsContent>
 
           <TabsContent value="analytics">
