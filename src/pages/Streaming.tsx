@@ -14,6 +14,7 @@ import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const defaultSettings = {
   titleTemplate: "",
@@ -35,7 +36,7 @@ const Streaming = () => {
   const [settings, setSettings] = useState(defaultSettings);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: stream } = useQuery({
+  const { data: stream, error } = useQuery({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -43,9 +44,12 @@ const Streaming = () => {
         .from('streams')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        toast.error("Failed to load stream data");
+        throw error;
+      }
       return data;
     },
     enabled: !!user?.id
