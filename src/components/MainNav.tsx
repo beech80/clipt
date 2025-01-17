@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { UserMenu } from "./UserMenu";
+import UserMenu from "./UserMenu";
 import { ThemeToggle } from "./ThemeToggle";
-import { NotificationsPopover } from "./NotificationsPopover";
+import NotificationsPopover from "./NotificationsPopover";
 
 export function MainNav() {
   return (
