@@ -10,6 +10,7 @@ import GameBoyControls from "./components/GameBoyControls";
 import { Play } from "lucide-react";
 import React, { useEffect, useState } from 'react';
 import { useSheetState } from "./hooks/use-sheet-state";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import ForYou from "./pages/ForYou";
@@ -21,12 +22,18 @@ import Login from "./pages/Login";
 import Streaming from "./pages/Streaming";
 import TopClips from "./pages/TopClips";
 import Settings from "./pages/Settings";
+import { errorLogging } from "./services/errorLogging";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
       retry: 1,
+      onError: (error) => {
+        if (error instanceof Error) {
+          errorLogging.logError(error);
+        }
+      },
     },
   },
 });
@@ -67,15 +74,16 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <div className="min-h-screen bg-[#1A1F2C] pb-48 md:pb-48 md:pt-16">
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <MainNav />
-              <main className="container mx-auto px-4 py-4 retro-screen">
-                <Routes>
+      <ErrorBoundary>
+        <AuthProvider>
+          <TooltipProvider>
+            <div className="min-h-screen bg-[#1A1F2C] pb-48 md:pb-48 md:pt-16">
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <MainNav />
+                <main className="container mx-auto px-4 py-4 retro-screen">
+                  <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route
                     path="/"
@@ -158,21 +166,22 @@ const App = () => {
                       }
                     />
                     <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </main>
-              {!isMenuOpen && (
-                <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 z-[60]">
-                  <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
-                    <Play className="clip-button-icon" />
-                    <span className="clip-button-text">clipt</span>
+                  </Routes>
+                </main>
+                {!isMenuOpen && (
+                  <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 z-[60]">
+                    <div className={`clip-button ${shouldFade ? 'opacity-40' : 'opacity-100'} transition-opacity duration-300`}>
+                      <Play className="clip-button-icon" />
+                      <span className="clip-button-text">clipt</span>
+                    </div>
                   </div>
-                </div>
-              )}
-              <GameBoyControls currentPostId={currentPostId} />
-            </BrowserRouter>
-          </div>
-        </TooltipProvider>
-      </AuthProvider>
+                )}
+                <GameBoyControls currentPostId={currentPostId} />
+              </BrowserRouter>
+            </div>
+          </TooltipProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 };
