@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { MoreHorizontal, AlertTriangle } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -68,7 +68,7 @@ export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageP
         </p>
       </div>
 
-      {(onDelete && (isModeratorView || message.user_id === message.profiles.id)) && (
+      {(onDelete && (isModeratorView || message.user_id === message.user?.id)) && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
