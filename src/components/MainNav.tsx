@@ -1,95 +1,30 @@
-import { NavLink } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import { Home, MessageSquare, Video, Trophy, Settings, Gamepad } from "lucide-react";
+import { Link } from "react-router-dom";
+import { UserMenu } from "./UserMenu";
+import { ThemeToggle } from "./ThemeToggle";
+import { NotificationsPopover } from "./NotificationsPopover";
 
-export function MainNav({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLElement>) {
-  const { user } = useAuth();
-
+export function MainNav() {
   return (
-    <nav
-      className={cn("flex items-center space-x-4 lg:space-x-6", className)}
-      {...props}
-    >
-      <NavLink
-        to="/"
-        className={({ isActive }) =>
-          cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-            isActive ? "text-primary" : "text-muted-foreground"
-          )
-        }
-      >
-        <Home className="h-4 w-4" />
-        Home
-      </NavLink>
-      <NavLink
-        to="/discover"
-        className={({ isActive }) =>
-          cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-            isActive ? "text-primary" : "text-muted-foreground"
-          )
-        }
-      >
-        <Gamepad className="h-4 w-4" />
-        Discover
-      </NavLink>
-      <NavLink
-        to="/streaming"
-        className={({ isActive }) =>
-          cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-            isActive ? "text-primary" : "text-muted-foreground"
-          )
-        }
-      >
-        <Video className="h-4 w-4" />
-        Streaming
-      </NavLink>
-      <NavLink
-        to="/top-clips"
-        className={({ isActive }) =>
-          cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-            isActive ? "text-primary" : "text-muted-foreground"
-          )
-        }
-      >
-        <Trophy className="h-4 w-4" />
-        Top Clips
-      </NavLink>
-      {user?.id && (
-        <>
-          <NavLink
-            to="/clipts"
-            className={({ isActive }) =>
-              cn(
-                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-                isActive ? "text-primary" : "text-muted-foreground"
-              )
-            }
-          >
-            <Video className="h-4 w-4" />
-            Clipts
-          </NavLink>
-          <NavLink
-            to="/messages"
-            className={({ isActive }) =>
-              cn(
-                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-                isActive ? "text-primary" : "text-muted-foreground"
-              )
-            }
-          >
-            <MessageSquare className="h-4 w-4" />
-            Messages
-          </NavLink>
-        </>
-      )}
-    </nav>
+    <header className="border-b">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <nav className="flex items-center space-x-6">
+          <Link to="/" className="text-xl font-bold">
+            Clipt
+          </Link>
+          <Link to="/explore" className="text-sm">
+            Explore
+          </Link>
+          <Link to="/following" className="text-sm">
+            Following
+          </Link>
+        </nav>
+        
+        <div className="flex items-center space-x-4">
+          <ThemeToggle />
+          <NotificationsPopover />
+          <UserMenu />
+        </div>
+      </div>
+    </header>
   );
 }

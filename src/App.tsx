@@ -1,16 +1,20 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
+import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { KeyboardShortcutsProvider } from "@/components/KeyboardShortcutsProvider";
+import { Toaster } from "@/components/ui/toaster";
+import { MainNav } from "@/components/MainNav";
+import { Routes, Route } from "react-router-dom";
 import Home from "@/pages/Home";
 import Profile from "@/pages/Profile";
-import Messages from "@/pages/Messages";
-import Streaming from "@/pages/Streaming";
-import TopClips from "@/pages/TopClips";
-import Clipts from "@/pages/Clipts";
+import EditProfile from "@/pages/EditProfile";
 import Settings from "@/pages/Settings";
-import Discover from "@/pages/Discover";
-import Login from "@/pages/Login";
+import Messages from "@/pages/Messages";
+import Stream from "@/pages/Stream";
+import Explore from "@/pages/Explore";
+import Following from "@/pages/Following";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -18,20 +22,29 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/streaming" element={<Streaming />} />
-            <Route path="/top-clips" element={<TopClips />} />
-            <Route path="/clipts" element={<Clipts />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/discover" element={<Discover />} />
-          </Routes>
-          <Toaster />
-        </Router>
+        <ThemeProvider>
+          <KeyboardShortcutsProvider>
+            <BrowserRouter>
+              <div className="min-h-screen bg-background text-foreground">
+                <MainNav />
+                <main className="container mx-auto px-4 py-8">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile/edit" element={<EditProfile />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/messages" element={<Messages />} />
+                    <Route path="/stream" element={<Stream />} />
+                    <Route path="/explore" element={<Explore />} />
+                    <Route path="/following" element={<Following />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
+              <Toaster />
+            </BrowserRouter>
+          </KeyboardShortcutsProvider>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

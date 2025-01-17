@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      accessibility_settings: {
+        Row: {
+          caption_size: string | null
+          created_at: string | null
+          high_contrast: boolean | null
+          reduced_motion: boolean | null
+          screen_reader_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          caption_size?: string | null
+          created_at?: string | null
+          high_contrast?: boolean | null
+          reduced_motion?: boolean | null
+          screen_reader_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          caption_size?: string | null
+          created_at?: string | null
+          high_contrast?: boolean | null
+          reduced_motion?: boolean | null
+          screen_reader_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accessibility_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       achievements: {
         Row: {
           created_at: string
@@ -471,6 +509,38 @@ export type Database = {
         }
         Relationships: []
       }
+      keyboard_shortcuts: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          shortcut: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          shortcut: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          shortcut?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "keyboard_shortcuts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       likes: {
         Row: {
           created_at: string
@@ -905,10 +975,15 @@ export type Database = {
           created_at: string
           custom_theme: Json | null
           display_name: string | null
+          enable_notifications: boolean | null
+          enable_sounds: boolean | null
+          font_size: string | null
           id: string
           is_moderator: boolean | null
+          keyboard_shortcuts: boolean | null
           location: string | null
           social_links: Json | null
+          theme_preference: string | null
           username: string | null
           website: string | null
         }
@@ -919,10 +994,15 @@ export type Database = {
           created_at?: string
           custom_theme?: Json | null
           display_name?: string | null
+          enable_notifications?: boolean | null
+          enable_sounds?: boolean | null
+          font_size?: string | null
           id: string
           is_moderator?: boolean | null
+          keyboard_shortcuts?: boolean | null
           location?: string | null
           social_links?: Json | null
+          theme_preference?: string | null
           username?: string | null
           website?: string | null
         }
@@ -933,10 +1013,15 @@ export type Database = {
           created_at?: string
           custom_theme?: Json | null
           display_name?: string | null
+          enable_notifications?: boolean | null
+          enable_sounds?: boolean | null
+          font_size?: string | null
           id?: string
           is_moderator?: boolean | null
+          keyboard_shortcuts?: boolean | null
           location?: string | null
           social_links?: Json | null
+          theme_preference?: string | null
           username?: string | null
           website?: string | null
         }
