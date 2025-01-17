@@ -1185,6 +1185,44 @@ export type Database = {
           },
         ]
       }
+      search_history: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          filters: Json | null
+          id: string
+          query: string
+          result_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          filters?: Json | null
+          id?: string
+          query: string
+          result_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          filters?: Json | null
+          id?: string
+          query?: string
+          result_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_analytics: {
         Row: {
           average_viewers: number | null
@@ -2026,6 +2064,10 @@ export type Database = {
           replacement_text: string
           context_match: boolean
         }[]
+      }
+      clean_old_search_history: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       generate_stream_key: {
         Args: Record<PropertyKey, never>

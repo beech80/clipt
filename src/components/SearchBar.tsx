@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, History } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { SearchFilters } from "@/types/post";
 import { subDays } from "date-fns";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,11 +37,39 @@ export function SearchBar() {
     sortBy: 'recent'
   });
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Add search history query
+  const { data: searchHistory } = useQuery({
+    queryKey: ['search-history'],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('search_history')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user
+  });
 
   const { data: searchResults, isLoading } = useQuery({
     queryKey: ['search', searchTerm, filters],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) return null;
+
+      // Save search to history
+      if (user) {
+        await supabase.from('search_history').insert({
+          user_id: user.id,
+          query: searchTerm,
+          filters: filters,
+          category: filters.type
+        });
+      }
 
       const getDateFilter = () => {
         switch (filters.dateRange) {
@@ -56,7 +85,6 @@ export function SearchBar() {
       };
 
       const dateFilter = getDateFilter();
-
       const queries = [];
 
       if (filters.type === 'all' || filters.type === 'posts') {
@@ -132,6 +160,14 @@ export function SearchBar() {
     },
     enabled: searchTerm.length >= 2
   });
+
+  const handleSearchHistoryClick = (historyItem: any) => {
+    setSearchTerm(historyItem.query);
+    if (historyItem.filters) {
+      setFilters(historyItem.filters);
+    }
+    toast.success("Loaded search from history");
+  };
 
   const handleProfileClick = (id: string) => {
     navigate(`/profile/${id}`);
@@ -243,7 +279,7 @@ export function SearchBar() {
         </Sheet>
       </div>
 
-      {searchTerm.length >= 2 && (
+      {searchTerm.length >= 2 ? (
         <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-lg z-50">
           <ScrollArea className="h-[calc(100vh-200px)] sm:h-[300px]">
             {isLoading ? (
@@ -252,7 +288,6 @@ export function SearchBar() {
               </div>
             ) : searchResults ? (
               <div className="p-2 touch-manipulation">
-                {/* Profiles */}
                 {searchResults.profiles.length > 0 && (
                   <div className="mb-4">
                     <h3 className="px-2 text-sm font-medium text-muted-foreground">Users</h3>
@@ -331,6 +366,22 @@ export function SearchBar() {
               </div>
             ) : null}
           </ScrollArea>
+        </div>
+      ) : searchHistory && searchHistory.length > 0 && (
+        <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-lg z-50">
+          <div className="p-2">
+            <h3 className="px-2 text-sm font-medium text-muted-foreground mb-2">Recent Searches</h3>
+            {searchHistory.map((item: any) => (
+              <button
+                key={item.id}
+                className="w-full flex items-center gap-2 p-2 hover:bg-accent rounded-md"
+                onClick={() => handleSearchHistoryClick(item)}
+              >
+                <History className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">{item.query}</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
