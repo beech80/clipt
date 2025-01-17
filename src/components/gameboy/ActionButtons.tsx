@@ -123,30 +123,30 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
   return (
     <>
       <button 
-        className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+        className="action-button bg-[#1A1F2C] hover:bg-[#2A2F3C] transition-all hover:scale-110 active:scale-95 group"
         onClick={handleLike}
       >
-        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-[#FF0000] text-[#FF0000]' : 'text-[#FF0000]'} group-hover:text-[#FF3333]`} />
+        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-[#FF69B4] text-[#FF69B4]' : 'text-[#FF69B4]'} group-hover:text-[#FF69B4]`} />
       </button>
       <div className="flex gap-6 sm:gap-12 my-2 sm:my-3">
         <button 
-          className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+          className="action-button bg-[#1A1F2C] hover:bg-[#2A2F3C] transition-all hover:scale-110 active:scale-95 group"
           onClick={() => setIsCommentOpen(true)}
         >
-          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#0066FF] group-hover:text-[#3399FF]" />
+          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#87CEEB] group-hover:text-[#87CEEB]" />
         </button>
         <button 
-          className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+          className="action-button bg-[#1A1F2C] hover:bg-[#2A2F3C] transition-all hover:scale-110 active:scale-95 group"
           onClick={handleFollow}
         >
-          <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-[#33FF33]' : 'text-[#00FF00]'} group-hover:text-[#33FF33]`} />
+          <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-[#98FB98]' : 'text-[#98FB98]'} group-hover:text-[#98FB98]`} />
         </button>
       </div>
       <button 
-        className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+        className="action-button bg-[#1A1F2C] hover:bg-[#2A2F3C] transition-all hover:scale-110 active:scale-95 group"
         onClick={handleRank}
       >
-        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFD700] group-hover:text-[#FFDF33]" />
+        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFD700] group-hover:text-[#FFD700]" />
       </button>
 
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
