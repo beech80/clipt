@@ -25,6 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { SearchFilters } from "@/types/post";
 import { subDays } from "date-fns";
+import { toast } from "sonner";
 
 export function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -155,18 +156,22 @@ export function SearchBar() {
           <Input
             type="search"
             placeholder="Search posts, users, streams..."
-            className="pl-8"
+            className="pl-8 touch-manipulation"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="touch-manipulation active:scale-95 transition-transform"
+            >
               <SlidersHorizontal className="h-4 w-4" />
             </Button>
           </SheetTrigger>
-          <SheetContent>
+          <SheetContent className="w-full sm:max-w-md">
             <SheetHeader>
               <SheetTitle>Search Filters</SheetTitle>
             </SheetHeader>
@@ -175,9 +180,12 @@ export function SearchBar() {
                 <Label>Content Type</Label>
                 <Select
                   value={filters.type}
-                  onValueChange={(value: any) => setFilters({ ...filters, type: value })}
+                  onValueChange={(value: any) => {
+                    setFilters({ ...filters, type: value });
+                    toast.success(`Filtering by ${value}`);
+                  }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -236,14 +244,14 @@ export function SearchBar() {
       </div>
 
       {searchTerm.length >= 2 && (
-        <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-md z-50">
-          <ScrollArea className="h-[300px]">
+        <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-lg z-50">
+          <ScrollArea className="h-[calc(100vh-200px)] sm:h-[300px]">
             {isLoading ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
                 Searching...
               </div>
             ) : searchResults ? (
-              <div className="p-2">
+              <div className="p-2 touch-manipulation">
                 {/* Profiles */}
                 {searchResults.profiles.length > 0 && (
                   <div className="mb-4">
@@ -251,15 +259,15 @@ export function SearchBar() {
                     {searchResults.profiles.map((profile) => (
                       <button
                         key={profile.id}
-                        className="w-full flex items-center gap-2 p-2 hover:bg-accent rounded-md"
+                        className="w-full flex items-center gap-2 p-2 hover:bg-accent rounded-md active:scale-98 transition-transform"
                         onClick={() => handleProfileClick(profile.id)}
                       >
-                        <Avatar className="h-8 w-8">
+                        <Avatar className="h-8 w-8 shrink-0">
                           <AvatarImage src={profile.avatar_url || ''} />
                           <AvatarFallback>{profile.username?.[0]?.toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div className="text-left">
-                          <p className="text-sm font-medium">{profile.display_name}</p>
+                        <div className="text-left truncate">
+                          <p className="text-sm font-medium line-clamp-1">{profile.display_name}</p>
                           <p className="text-xs text-muted-foreground">@{profile.username}</p>
                         </div>
                       </button>
