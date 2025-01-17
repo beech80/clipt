@@ -68,7 +68,7 @@ export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageP
         </p>
       </div>
 
-      {(onDelete && (isModeratorView || message.user_id === message.user_id)) && (
+      {(onDelete && (isModeratorView || message.user_id === message.profiles.id)) && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
