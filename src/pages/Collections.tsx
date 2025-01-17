@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Folder, FolderOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 
 interface Collection {
   id: string;
@@ -15,6 +16,7 @@ interface Collection {
   is_private: boolean;
   created_at: string;
   user_id: string;
+  post_count?: number;
 }
 
 const Collections = () => {
@@ -23,18 +25,23 @@ const Collections = () => {
   const [newCollectionName, setNewCollectionName] = useState("");
   const [newCollectionDescription, setNewCollectionDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [isHovered, setIsHovered] = useState<string | null>(null);
 
   const { data: collections, isLoading } = useQuery({
     queryKey: ['collections', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: collectionsData, error: collectionsError } = await supabase
         .from('collections')
-        .select('*')
+        .select('*, collection_posts(count)')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as Collection[];
+      if (collectionsError) throw collectionsError;
+
+      return collectionsData.map(collection => ({
+        ...collection,
+        post_count: collection.collection_posts?.[0]?.count || 0
+      })) as Collection[];
     },
     enabled: !!user,
   });
@@ -45,12 +52,17 @@ const Collections = () => {
       return;
     }
 
+    if (!newCollectionName.trim()) {
+      toast.error("Collection name is required");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('collections')
         .insert({
-          name: newCollectionName,
-          description: newCollectionDescription,
+          name: newCollectionName.trim(),
+          description: newCollectionDescription.trim() || null,
           is_private: isPrivate,
           user_id: user.id,
         });
@@ -73,13 +85,13 @@ const Collections = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">My Collections</h1>
         <Dialog>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
+            <Button className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
               New Collection
             </Button>
           </DialogTrigger>
@@ -87,7 +99,7 @@ const Collections = () => {
             <DialogHeader>
               <DialogTitle>Create New Collection</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 pt-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium mb-1">
                   Name
@@ -132,7 +144,7 @@ const Collections = () => {
 
       <div className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search collections..."
@@ -148,17 +160,31 @@ const Collections = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCollections?.map((collection) => (
-            <div
+            <Card
               key={collection.id}
-              className="border rounded-lg p-4 hover:border-primary transition-colors"
+              className="transition-all duration-200 hover:shadow-lg"
+              onMouseEnter={() => setIsHovered(collection.id)}
+              onMouseLeave={() => setIsHovered(null)}
             >
-              <h3 className="text-lg font-semibold mb-2">{collection.name}</h3>
-              {collection.description && (
-                <p className="text-muted-foreground text-sm mb-4">
-                  {collection.description}
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  {isHovered === collection.id ? (
+                    <FolderOpen className="h-6 w-6 text-primary" />
+                  ) : (
+                    <Folder className="h-6 w-6 text-primary" />
+                  )}
+                  <CardTitle>{collection.name}</CardTitle>
+                </div>
+                {collection.description && (
+                  <CardDescription>{collection.description}</CardDescription>
+                )}
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {collection.post_count} posts
                 </p>
-              )}
-              <div className="flex items-center justify-between">
+              </CardContent>
+              <CardFooter className="flex justify-between">
                 <span className="text-xs text-muted-foreground">
                   {new Date(collection.created_at).toLocaleDateString()}
                 </span>
@@ -167,8 +193,8 @@ const Collections = () => {
                     Private
                   </span>
                 )}
-              </div>
-            </div>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}

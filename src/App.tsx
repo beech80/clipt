@@ -13,6 +13,7 @@ import Discover from "@/pages/Discover";
 import Login from "@/pages/Login";
 import ResetPassword from "@/pages/ResetPassword";
 import UpdatePassword from "@/pages/UpdatePassword";
+import Collections from "@/pages/Collections";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ function App() {
             <Route path="/clipts" element={<Clipts />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/discover" element={<Discover />} />
+            <Route path="/collections" element={<Collections />} />
           </Routes>
           <Toaster />
         </Router>
