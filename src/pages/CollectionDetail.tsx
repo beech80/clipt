@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { PostItem } from "@/components/PostItem";
+import PostItem from "@/components/PostItem";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -79,7 +79,6 @@ const CollectionDetail = () => {
           <PostItem
             key={post.id}
             post={post}
-            user={post.profiles}
           />
         ))}
         {posts?.length === 0 && (
