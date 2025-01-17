@@ -31,8 +31,7 @@ const CollectionDetail = () => {
       const { data, error } = await supabase
         .from('collection_posts')
         .select(`
-          post_id,
-          posts (
+          post:posts (
             id,
             content,
             image_url,
@@ -43,28 +42,36 @@ const CollectionDetail = () => {
               username,
               avatar_url,
               display_name
-            ),
-            (
-              select count(*) as likes_count 
-              from likes 
-              where likes.post_id = posts.id
-            ),
-            (
-              select count(*) as count
-              from clip_votes 
-              where clip_votes.post_id = posts.id
-            ) as clip_votes
+            )
           )
         `)
         .eq('collection_id', id);
 
       if (error) throw error;
-      
-      return data.map(item => ({
-        ...item.posts,
-        likes_count: item.posts.likes_count || 0,
-        clip_votes: [{ count: item.posts.clip_votes?.count || 0 }]
-      })) as Post[];
+
+      // Get likes count and clip votes for each post
+      const postsWithCounts = await Promise.all(
+        data.map(async ({ post }) => {
+          const [likesResponse, clipVotesResponse] = await Promise.all([
+            supabase
+              .from('likes')
+              .select('*', { count: 'exact' })
+              .eq('post_id', post.id),
+            supabase
+              .from('clip_votes')
+              .select('*', { count: 'exact' })
+              .eq('post_id', post.id),
+          ]);
+
+          return {
+            ...post,
+            likes_count: likesResponse.count || 0,
+            clip_votes: [{ count: clipVotesResponse.count || 0 }],
+          };
+        })
+      );
+
+      return postsWithCounts as Post[];
     },
     enabled: !!id,
   });

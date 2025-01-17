@@ -25,14 +25,19 @@ const ShareToSocial = ({ postId, content }: ShareToSocialProps) => {
 
     try {
       // Update analytics
+      const { data: existingAnalytics } = await supabase
+        .from('post_analytics')
+        .select('shares_count')
+        .eq('post_id', postId)
+        .single();
+
+      const currentShares = existingAnalytics?.shares_count || 0;
+
       await supabase
         .from('post_analytics')
         .upsert({ 
           post_id: postId,
-          shares_count: 1
-        }, { 
-          onConflict: 'post_id',
-          count: 'shares_count'
+          shares_count: currentShares + 1
         });
 
       switch (platform) {
