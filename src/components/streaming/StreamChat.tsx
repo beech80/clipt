@@ -6,9 +6,9 @@ import { MessageList } from "@/components/messages/MessageList";
 import { Message } from "@/types/message";
 import { toast } from "sonner";
 import { processCommand } from "@/utils/chatCommands";
-import type { StreamChatMessage } from "@/types/chat";
+import { Loader2, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface StreamChatProps {
   streamId: string;
@@ -20,6 +20,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [timeouts, setTimeouts] = useState<Record<string, string>>({});
   const [activeUsers, setActiveUsers] = useState<Set<string>>(new Set());
+  const [presenceState, setPresenceState] = useState<Record<string, any>>({});
 
   // Fetch initial messages
   const { data: initialMessages, isLoading } = useQuery({
@@ -71,7 +72,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
 
   // Set up real-time subscriptions
   useEffect(() => {
-    if (!streamId) return;
+    if (!streamId || !user) return;
 
     // Chat messages channel
     const chatChannel = supabase
@@ -115,7 +116,12 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
     const presenceChannel = supabase.channel(`presence_${streamId}`, {
       config: {
         presence: {
-          key: user?.id,
+          key: user.id,
+          presence_data: {
+            username: user.user_metadata?.username || 'Anonymous',
+            avatar_url: user.user_metadata?.avatar_url,
+            joined_at: new Date().toISOString(),
+          },
         },
       },
     });
@@ -123,18 +129,21 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState();
+        setPresenceState(state);
         const userIds = new Set(Object.keys(state));
         setActiveUsers(userIds);
       })
-      .on('presence', { event: 'join' }, ({ key }) => {
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         setActiveUsers(prev => new Set([...prev, key]));
+        toast.success(`${newPresences[0]?.username || 'Someone'} joined the chat`);
       })
-      .on('presence', { event: 'leave' }, ({ key }) => {
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         setActiveUsers(prev => {
           const newSet = new Set(prev);
           newSet.delete(key);
           return newSet;
         });
+        toast.info(`${leftPresences[0]?.username || 'Someone'} left the chat`);
       })
       .subscribe();
 
@@ -154,6 +163,11 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
             ...prev,
             [payload.new.user_id]: payload.new.expires_at
           }));
+          
+          if (payload.new.user_id === user.id) {
+            const timeLeft = Math.ceil((new Date(payload.new.expires_at).getTime() - Date.now()) / 1000);
+            toast.error(`You have been timed out for ${timeLeft} seconds`);
+          }
         }
       )
       .subscribe();
@@ -163,7 +177,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       supabase.removeChannel(presenceChannel);
       supabase.removeChannel(timeoutChannel);
     };
-  }, [streamId, user?.id]);
+  }, [streamId, user]);
 
   const handleSendMessage = async (content: string) => {
     if (!user || !streamId || !isLive) return;
@@ -202,9 +216,12 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
     <div className="flex flex-col h-[600px] border rounded-lg">
       <div className="p-4 border-b bg-muted flex items-center justify-between">
         <h3 className="font-semibold">Stream Chat</h3>
-        <span className="text-sm text-muted-foreground">
-          {activeUsers.size} watching
-        </span>
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          <Badge variant="secondary">
+            {activeUsers.size} watching
+          </Badge>
+        </div>
       </div>
       
       {isLoading ? (
