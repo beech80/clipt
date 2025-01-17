@@ -15,9 +15,10 @@ import type { StreamChatMessage } from "@/types/chat";
 interface ChatMessageProps {
   message: StreamChatMessage;
   onDelete?: (messageId: string) => void;
+  isModeratorView?: boolean;
 }
 
-export function ChatMessage({ message, onDelete }: ChatMessageProps) {
+export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -67,7 +68,7 @@ export function ChatMessage({ message, onDelete }: ChatMessageProps) {
         </p>
       </div>
 
-      {onDelete && (
+      {(onDelete && (isModeratorView || message.user_id === message.profiles.id)) && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
