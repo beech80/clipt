@@ -31,7 +31,6 @@ const Login = () => {
       if (event === 'PASSWORD_RECOVERY') {
         setError('Please check your email to reset your password.');
       }
-      // Handle authentication errors through the event listener
       if (event === 'USER_DELETED' as any) {
         setError('Your account has been deleted.');
       }
@@ -53,26 +52,34 @@ const Login = () => {
     let errorMessage = 'An error occurred during authentication.';
     
     if (error instanceof AuthApiError) {
-      switch (error.status) {
-        case 400:
-          if (error.message.includes('Invalid login credentials')) {
-            errorMessage = 'Invalid email or password. Please check your credentials.';
-          } else {
-            errorMessage = 'Invalid request. Please check your input.';
-          }
-          break;
-        case 422:
-          if (error.message.includes('Password should be')) {
-            errorMessage = 'Password must be at least 6 characters long.';
-          } else {
-            errorMessage = 'Invalid email format. Please enter a valid email address.';
-          }
-          break;
-        case 429:
-          errorMessage = 'Too many login attempts. Please try again later.';
-          break;
-        default:
-          errorMessage = error.message;
+      try {
+        // Try to parse the error body if it exists
+        const errorBody = error.message && JSON.parse(error.message);
+        
+        switch (error.status) {
+          case 400:
+            if (error.message.includes('Invalid login credentials')) {
+              errorMessage = 'Invalid email or password. Please check your credentials.';
+            } else {
+              errorMessage = 'Invalid request. Please check your input.';
+            }
+            break;
+          case 422:
+            if (errorBody?.code === 'weak_password') {
+              errorMessage = errorBody.message || 'Password must be at least 6 characters long.';
+            } else {
+              errorMessage = 'Invalid email format. Please enter a valid email address.';
+            }
+            break;
+          case 429:
+            errorMessage = 'Too many login attempts. Please try again later.';
+            break;
+          default:
+            errorMessage = error.message;
+        }
+      } catch {
+        // If parsing fails, use the original error message
+        errorMessage = error.message;
       }
     }
     
