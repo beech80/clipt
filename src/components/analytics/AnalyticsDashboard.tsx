@@ -6,7 +6,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Users, Clock, MessageSquare, TrendingUp } from 'lucide-react';
 import { StreamMetricsChart } from './StreamMetricsChart';
 import { ViewerEngagementChart } from './ViewerEngagementChart';
-import { RevenueMetrics } from './RevenueMetrics';
+import { EnhancedRevenueMetrics } from './EnhancedRevenueMetrics';
+import { PaymentStatusCard } from './PaymentStatusCard';
 
 interface StreamAnalytics {
   id: string;
@@ -19,14 +20,14 @@ interface StreamAnalytics {
 }
 
 export const AnalyticsDashboard = ({ streamId }: { streamId: string }) => {
-  const { data: analytics, isLoading, error } = useQuery<StreamAnalytics>({
+  const { data: analytics, isLoading, error } = useQuery({
     queryKey: ['stream-analytics', streamId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('stream_analytics')
         .select('*')
         .eq('stream_id', streamId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data as StreamAnalytics;
@@ -100,7 +101,8 @@ export const AnalyticsDashboard = ({ streamId }: { streamId: string }) => {
         <ViewerEngagementChart streamId={streamId} />
       </div>
 
-      <RevenueMetrics streamId={streamId} />
+      <EnhancedRevenueMetrics streamId={streamId} />
+      <PaymentStatusCard streamId={streamId} />
     </div>
   );
 };

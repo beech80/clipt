@@ -876,28 +876,40 @@ export type Database = {
           amount: number
           created_at: string | null
           currency: string | null
+          fee_amount: number | null
           id: string
+          payment_provider: string | null
+          payment_status: string | null
           revenue_type: string
           stream_id: string | null
           streamer_id: string | null
+          transaction_id: string | null
         }
         Insert: {
           amount: number
           created_at?: string | null
           currency?: string | null
+          fee_amount?: number | null
           id?: string
+          payment_provider?: string | null
+          payment_status?: string | null
           revenue_type: string
           stream_id?: string | null
           streamer_id?: string | null
+          transaction_id?: string | null
         }
         Update: {
           amount?: number
           created_at?: string | null
           currency?: string | null
+          fee_amount?: number | null
           id?: string
+          payment_provider?: string | null
+          payment_status?: string | null
           revenue_type?: string
           stream_id?: string | null
           streamer_id?: string | null
+          transaction_id?: string | null
         }
         Relationships: [
           {
