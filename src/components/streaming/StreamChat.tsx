@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ChatMessage } from './chat/ChatMessage';
-import ChatInput from './chat/ChatInput';
+import { ChatInput } from './chat/ChatInput';
 import { StreamChatHeader } from './chat/StreamChatHeader';
 import { StreamChatError } from './chat/StreamChatError';
 import { StreamChatOffline } from './chat/StreamChatOffline';
@@ -30,7 +30,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as unknown as StreamChatMessage[];
+      return data as StreamChatMessage[];
     },
     refetchInterval: isLive ? 1000 : false,
   });
@@ -62,7 +62,10 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
         ))}
       </div>
 
-      <ChatInput streamId={streamId} isLive={isLive} chatEnabled={chatEnabled} />
+      <ChatInput 
+        onSendMessage={() => {}} 
+        isDisabled={!isLive || !chatEnabled} 
+      />
     </div>
   );
 };

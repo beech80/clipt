@@ -4,8 +4,13 @@ import { Card } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
 
+interface ViewerEngagement {
+  viewer_id: string;
+  watch_duration: string;
+}
+
 export const ViewerEngagementChart = ({ streamId }: { streamId: string }) => {
-  const { data: engagementData, isLoading } = useQuery({
+  const { data: engagementData, isLoading } = useQuery<ViewerEngagement[]>({
     queryKey: ['viewer-engagement', streamId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -39,10 +44,6 @@ export const ViewerEngagementChart = ({ streamId }: { streamId: string }) => {
               dataKey="watch_duration" 
               fill="#82ca9d" 
               name="Watch Time (minutes)"
-              // Convert interval to minutes for display
-              formatter={(value: string) => 
-                Math.round(new Date(value).getTime() / 1000 / 60)
-              }
             />
           </BarChart>
         </ResponsiveContainer>

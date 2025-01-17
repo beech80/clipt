@@ -121,7 +121,8 @@ const Streaming = () => {
                 />
                 <StreamChat 
                   streamId={stream?.id || ''} 
-                  isLive={stream?.is_live || false} 
+                  isLive={stream?.is_live || false}
+                  chatEnabled={stream?.chat_enabled ?? true}
                 />
                 <StreamSettingsForm 
                   settings={settings}

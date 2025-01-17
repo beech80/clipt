@@ -34,3 +34,12 @@ export interface ChatCommand {
 export interface StreamChatHeaderProps {
   messageCount: number;
 }
+
+export interface ChatTypes {
+  stream_chat: {
+    Row: StreamChatMessage;
+  };
+  chat_emotes: {
+    Row: ChatEmote;
+  };
+}

@@ -8,8 +8,15 @@ import { StreamMetricsChart } from './StreamMetricsChart';
 import { ViewerEngagementChart } from './ViewerEngagementChart';
 import { RevenueMetrics } from './RevenueMetrics';
 
+interface StreamAnalytics {
+  peak_viewers: number;
+  average_viewers: number;
+  stream_duration: string;
+  chat_messages_count: number;
+}
+
 export const AnalyticsDashboard = ({ streamId }: { streamId: string }) => {
-  const { data: analytics, isLoading, error } = useQuery({
+  const { data: analytics, isLoading, error } = useQuery<StreamAnalytics>({
     queryKey: ['stream-analytics', streamId],
     queryFn: async () => {
       const { data, error } = await supabase
