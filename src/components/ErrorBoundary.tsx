@@ -23,7 +23,6 @@ class ErrorBoundary extends Component<Props, State> {
     console.error('Error caught by boundary:', error);
     console.error('Error info:', errorInfo);
     
-    // Log to your error logging service here
     this.logError(error, errorInfo);
   }
 
