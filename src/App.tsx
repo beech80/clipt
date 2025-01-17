@@ -3,8 +3,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Home from "@/pages/Home";
 import ExplorePage from "@/pages/Explore";
-import PostList from "@/pages/PostList"; // Assuming you have this import
-import Discover from "@/pages/Discover"; // Assuming you have this import
+import PostList from "@/pages/PostList";
+import Discover from "@/pages/Discover";
 
 const queryClient = new QueryClient();
 
