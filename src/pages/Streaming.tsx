@@ -8,10 +8,11 @@ import { StreamControls } from "@/components/streaming/StreamControls";
 import { StreamHealthMonitor } from "@/components/streaming/StreamHealthMonitor";
 import { StreamInfoCards } from "@/components/streaming/StreamInfoCards";
 import { StreamSettingsForm } from "@/components/streaming/StreamSettingsForm";
+import { StreamContentSettings } from "@/components/streaming/StreamContentSettings";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
 
 const defaultSettings = {
   titleTemplate: "",
@@ -137,6 +138,9 @@ const Streaming = () => {
                   fps={stream?.current_fps}
                   resolution={stream?.stream_resolution}
                 />
+                {stream?.id && (
+                  <StreamContentSettings streamId={stream.id} />
+                )}
                 <StreamChat 
                   streamId={stream?.id || ''} 
                   isLive={stream?.is_live || false}
