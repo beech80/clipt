@@ -24,8 +24,8 @@ const ModReports = () => {
         .from('content_reports')
         .select(`
           *,
-          reporter:reporter_id(username),
-          resolver:resolved_by(username)
+          reporter:profiles!content_reports_reporter_id_fkey(username),
+          resolver:profiles!content_reports_resolved_by_fkey(username)
         `)
         .order('created_at', { ascending: false });
 
