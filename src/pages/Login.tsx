@@ -109,9 +109,12 @@ const Login = () => {
           providers={[]}
           redirectTo={window.location.origin}
         />
-        <div className="mt-4 text-center">
-          <Link to="/reset-password" className="text-sm text-primary hover:underline">
+        <div className="mt-4 text-center space-y-2">
+          <Link to="/reset-password" className="text-sm text-primary hover:underline block">
             Forgot your password?
+          </Link>
+          <Link to="/resend-verification" className="text-sm text-primary hover:underline block">
+            Resend verification email
           </Link>
         </div>
       </div>
