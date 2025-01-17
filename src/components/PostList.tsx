@@ -35,7 +35,7 @@ interface Post {
 
 const PostList = () => {
   const { ref, inView } = useInView();
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [categories, setCategories] = useState<{ name: string; slug: string; }[]>([]);
 
   // Fetch categories
@@ -81,21 +81,23 @@ const PostList = () => {
         .order('created_at', { ascending: false })
         .range(pageParam * POSTS_PER_PAGE, (pageParam + 1) * POSTS_PER_PAGE - 1);
 
-      if (selectedCategory) {
-        const { data: categoryPosts } = await supabase
-          .from('post_category_mappings')
-          .select('post_id')
-          .eq('category_id', 
-            supabase
-              .from('post_categories')
-              .select('id')
-              .eq('slug', selectedCategory)
-              .single()
-          );
-        
-        if (categoryPosts) {
-          const postIds = categoryPosts.map(cp => cp.post_id);
-          query = query.in('id', postIds);
+      if (selectedCategory && selectedCategory !== 'all') {
+        const { data: category } = await supabase
+          .from('post_categories')
+          .select('id')
+          .eq('slug', selectedCategory)
+          .single();
+
+        if (category) {
+          const { data: categoryPosts } = await supabase
+            .from('post_category_mappings')
+            .select('post_id')
+            .eq('category_id', category.id);
+
+          if (categoryPosts && categoryPosts.length > 0) {
+            const postIds = categoryPosts.map(cp => cp.post_id);
+            query = query.in('id', postIds);
+          }
         }
       }
 
@@ -141,7 +143,7 @@ const PostList = () => {
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All categories</SelectItem>
+            <SelectItem value="all">All categories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category.slug} value={category.slug}>
                 {category.name}

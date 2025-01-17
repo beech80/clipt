@@ -8,7 +8,7 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
   // Add null checks and provide fallback values
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url || '';
-  const firstLetter = username[0]?.toUpperCase() || 'A';
+  const firstLetter = username.charAt(0).toUpperCase() || 'A';
 
   return (
     <div className="flex items-center gap-3 bg-[#1A1F2C]/80 backdrop-blur-sm p-3 border-b border-[#403E43]">
