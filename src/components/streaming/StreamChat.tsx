@@ -36,7 +36,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
           username: msg.profiles?.username || 'Anonymous',
           avatar_url: msg.profiles?.avatar_url || ''
         }
-      })) as StreamChatMessage[];
+      }));
     },
     refetchInterval: isLive ? 1000 : false,
   });
