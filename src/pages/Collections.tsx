@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface Collection {
   id: string;
@@ -148,7 +149,8 @@ const Collections = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCollections?.map((collection) => (
-            <div
+            <Link
+              to={`/collections/${collection.id}`}
               key={collection.id}
               className="border rounded-lg p-4 hover:border-primary transition-colors"
             >
@@ -168,7 +170,7 @@ const Collections = () => {
                   </span>
                 )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
