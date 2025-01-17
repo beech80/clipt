@@ -1,14 +1,14 @@
 import { Routes as RouterRoutes, Route } from "react-router-dom";
-import { Home } from "@/pages/Home";
-import { Profile } from "@/pages/Profile";
-import { Messages } from "@/pages/Messages";
-import { Settings } from "@/pages/Settings";
-import { Streaming } from "@/pages/Streaming";
-import { Discover } from "@/pages/Discover";
-import { ForYou } from "@/pages/ForYou";
-import { TopClips } from "@/pages/TopClips";
-import { EditProfile } from "@/pages/EditProfile";
-import { Login } from "@/pages/Login";
+import Home from "@/pages/Home";
+import Profile from "@/pages/Profile";
+import Messages from "@/pages/Messages";
+import Settings from "@/pages/Settings";
+import Streaming from "@/pages/Streaming";
+import Discover from "@/pages/Discover";
+import ForYou from "@/pages/ForYou";
+import TopClips from "@/pages/TopClips";
+import EditProfile from "@/pages/EditProfile";
+import Login from "@/pages/Login";
 
 const Routes = () => {
   return (

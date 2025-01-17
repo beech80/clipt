@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { GlobalErrorBoundary } from "@/components/errors/GlobalErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { EmoteProvider } from "@/contexts/EmoteContext";
-import Routes from "./Routes";
+import Routes from "@/Routes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
