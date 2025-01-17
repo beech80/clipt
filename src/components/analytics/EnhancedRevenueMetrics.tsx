@@ -23,6 +23,7 @@ interface RevenueData {
   date: string;
   amount: number;
   revenue_type: string;
+  created_at: string;
 }
 
 interface RevenueMetrics {

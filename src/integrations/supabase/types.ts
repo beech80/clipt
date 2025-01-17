@@ -1197,6 +1197,18 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_stream_revenue_metrics: {
+        Args: {
+          stream_id: string
+        }
+        Returns: {
+          total_revenue: number
+          subscription_revenue: number
+          donation_revenue: number
+          average_donation: number
+          unique_donors: number
+        }[]
+      }
       generate_stream_key: {
         Args: Record<PropertyKey, never>
         Returns: string
