@@ -116,7 +116,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
 
   return (
     <div className="flex flex-col h-[600px] border rounded-lg">
-      <StreamChatHeader />
+      <StreamChatHeader messageCount={messages.length} />
       <Suspense fallback={<Skeleton className="flex-1" />}>
         <ChatMessageList messages={messages} />
       </Suspense>
