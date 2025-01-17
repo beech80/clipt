@@ -389,31 +389,43 @@ export type Database = {
       content_filters: {
         Row: {
           category: string
+          context_rules: Json | null
           created_at: string
           created_by: string | null
+          filter_mode: string | null
           id: string
           is_active: boolean | null
           is_regex: boolean | null
+          language: string | null
+          replacement_text: string | null
           severity_level: string
           word: string
         }
         Insert: {
           category: string
+          context_rules?: Json | null
           created_at?: string
           created_by?: string | null
+          filter_mode?: string | null
           id?: string
           is_active?: boolean | null
           is_regex?: boolean | null
+          language?: string | null
+          replacement_text?: string | null
           severity_level: string
           word: string
         }
         Update: {
           category?: string
+          context_rules?: Json | null
           created_at?: string
           created_by?: string | null
+          filter_mode?: string | null
           id?: string
           is_active?: boolean | null
           is_regex?: boolean | null
+          language?: string | null
+          replacement_text?: string | null
           severity_level?: string
           word?: string
         }
@@ -2010,6 +2022,9 @@ export type Database = {
           matched_word: string
           category: string
           severity_level: string
+          filter_mode: string
+          replacement_text: string
+          context_match: boolean
         }[]
       }
       generate_stream_key: {
