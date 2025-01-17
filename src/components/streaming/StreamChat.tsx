@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Message } from "@/types/message";
+import { RealtimePresenceState } from "@/types/chat";
 import { ChatHeader } from "./chat/ChatHeader";
 import { ChatPresence } from "./chat/ChatPresence";
 import { ChatTimeouts } from "./chat/ChatTimeouts";
