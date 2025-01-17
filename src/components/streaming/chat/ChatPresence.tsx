@@ -5,64 +5,40 @@ import { RealtimePresenceState } from "@/types/chat";
 
 interface ChatPresenceProps {
   streamId: string;
-  userId?: string;
-  onPresenceChange: (state: RealtimePresenceState) => void;
-  onActiveUsersChange: React.Dispatch<React.SetStateAction<Set<string>>>;
+  onPresenceChange?: (state: RealtimePresenceState) => void;
 }
 
-export const ChatPresence = ({ 
-  streamId, 
-  userId, 
-  onPresenceChange, 
-  onActiveUsersChange 
-}: ChatPresenceProps) => {
+const ChatPresence = ({ streamId, onPresenceChange }: ChatPresenceProps) => {
   useEffect(() => {
-    if (!streamId || !userId) return;
+    const channel = supabase.channel(`presence:${streamId}`);
 
-    const presenceChannel = supabase.channel(`presence_${streamId}`, {
-      config: {
-        presence: {
-          key: userId,
-        },
-      },
-    });
-
-    presenceChannel
+    channel
       .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState();
-        onPresenceChange(state);
-        const userIds = new Set(Object.keys(state));
-        onActiveUsersChange(userIds);
+        const state = channel.presenceState<RealtimePresenceState>();
+        onPresenceChange?.(state);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        onActiveUsersChange((prev: Set<string>) => {
-          const newSet = new Set(prev);
-          newSet.add(key);
-          return newSet;
-        });
-        const username = newPresences[0]?.username || 'Someone';
-        toast.success(`${username} joined the chat`);
+        toast.info(`${newPresences[0]?.username || 'Someone'} joined the chat`);
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        onActiveUsersChange((prev: Set<string>) => {
-          const newSet = new Set(prev);
-          newSet.delete(key);
-          return newSet;
-        });
-        const username = leftPresences[0]?.username || 'Someone';
-        toast.info(`${username} left the chat`);
+        toast.info(`${leftPresences[0]?.username || 'Someone'} left the chat`);
       })
-      .subscribe(async () => {
-        await presenceChannel.track({
-          username: userId,
-          joined_at: new Date().toISOString(),
-        });
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            user_id: supabase.auth.user()?.id,
+            username: supabase.auth.user()?.user_metadata.username,
+            timestamp: new Date().getTime(),
+          });
+        }
       });
 
     return () => {
-      supabase.removeChannel(presenceChannel);
+      channel.unsubscribe();
     };
-  }, [streamId, userId, onPresenceChange, onActiveUsersChange]);
+  }, [streamId, onPresenceChange]);
 
   return null;
 };
+
+export default ChatPresence;
