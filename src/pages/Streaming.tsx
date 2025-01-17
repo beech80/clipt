@@ -11,6 +11,7 @@ import { StreamSettingsForm } from "@/components/streaming/StreamSettingsForm";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
 
 const defaultSettings = {
   titleTemplate: "",
@@ -35,10 +36,11 @@ const Streaming = () => {
   const { data: stream } = useQuery({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
+      if (!user?.id) return null;
       const { data, error } = await supabase
         .from('streams')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
 
       if (error) throw error;
@@ -72,25 +74,41 @@ const Streaming = () => {
     }
   };
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Sign in to Start Streaming</h2>
+          <p className="text-muted-foreground">
+            You need to be signed in to access streaming features.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       {isConfiguring ? (
-        <StreamForm 
-          title=""
-          description=""
-          onTitleChange={() => {}}
-          onDescriptionChange={() => {}}
-        />
+        <div className="max-w-2xl mx-auto">
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-6">Configure Your Stream</h2>
+            <StreamForm 
+              title=""
+              description=""
+              onTitleChange={() => {}}
+              onDescriptionChange={() => {}}
+            />
+          </Card>
+        </div>
       ) : (
         <Tabs defaultValue="stream" className="space-y-8">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
             <TabsTrigger value="stream">Stream</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="stream">
+          <TabsContent value="stream" className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
                 <StreamPreview 
