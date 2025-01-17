@@ -25,3 +25,9 @@ export interface PostMenuProps {
   imageUrl: string | null;
   videoUrl: string | null;
 }
+
+export interface PostActionsProps {
+  post: Post;
+  commentsCount: number;
+  onCommentClick: () => void;
+}
