@@ -1,6 +1,6 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,7 +29,7 @@ const Login = () => {
         navigate('/login');
       }
       if (event === 'PASSWORD_RECOVERY') {
-        setError('Please check your email to reset your password.');
+        navigate('/update-password');
       }
       if (event === 'USER_DELETED' as any) {
         setError('Your account has been deleted.');
@@ -109,6 +109,11 @@ const Login = () => {
           providers={[]}
           redirectTo={window.location.origin}
         />
+        <div className="mt-4 text-center">
+          <Link to="/reset-password" className="text-sm text-primary hover:underline">
+            Forgot your password?
+          </Link>
+        </div>
       </div>
     </div>
   );
