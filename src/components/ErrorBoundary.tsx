@@ -28,8 +28,6 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   private logError = async (error: Error, errorInfo: ErrorInfo) => {
-    // You can implement your error logging logic here
-    // For now, we'll just log to console and show a toast
     toast.error("An error occurred", {
       description: error.message,
       duration: 5000,
