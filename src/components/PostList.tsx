@@ -3,6 +3,7 @@ import PostItem from "./PostItem";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const POSTS_PER_PAGE = 5;
 
@@ -21,7 +22,6 @@ interface Post {
   clip_votes: { count: number }[];
 }
 
-// Sample data for testing with proper UUIDs
 const samplePosts: Post[] = [
   {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -109,6 +109,27 @@ const samplePosts: Post[] = [
   }
 ];
 
+const PostSkeleton = () => (
+  <div className="relative h-[calc(100vh-200px)] bg-[#1A1F2C]">
+    <div className="p-4 border-b border-[#2A2E3B]">
+      <div className="flex items-center space-x-4">
+        <Skeleton className="h-10 w-10 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+      </div>
+    </div>
+    <Skeleton className="h-[calc(100%-120px)]" />
+    <div className="p-4 border-t border-[#2A2E3B]">
+      <div className="flex justify-between">
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="h-8 w-24" />
+      </div>
+    </div>
+  </div>
+);
+
 const PostList = () => {
   const { ref, inView } = useInView();
 
@@ -140,16 +161,24 @@ const PostList = () => {
 
   if (status === "pending") {
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-        <Loader2 className="w-8 h-8 animate-spin text-gaming-400" />
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <PostSkeleton key={i} />
+        ))}
       </div>
     );
   }
 
   if (status === "error") {
     return (
-      <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] space-y-4">
         <p className="text-red-500">Error: {error.message}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-gaming-400 text-white rounded-md hover:bg-gaming-500 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
