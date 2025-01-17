@@ -6,9 +6,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MessageSquare, Loader2 } from "lucide-react";
+import { ArrowLeft, MessageSquare, Loader2, Flag } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import { useReportDialog } from "@/hooks/use-report-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Comment {
   id: string;
@@ -29,6 +36,7 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
   const [newComment, setNewComment] = useState("");
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { openReportDialog } = useReportDialog();
 
   const { data: comments, isLoading } = useQuery({
     queryKey: ['comments', postId],
@@ -81,6 +89,10 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
     }
   };
 
+  const handleReport = (commentId: string) => {
+    openReportDialog(commentId, 'comment');
+  };
+
   return (
     <div className="min-h-screen bg-gaming-900/95">
       <div className="fixed top-0 left-0 right-0 z-50 bg-gaming-800/90 backdrop-blur supports-[backdrop-filter]:bg-gaming-800/60 border-b border-gaming-700">
@@ -127,11 +139,25 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gaming-100">{comment.profiles.username}</span>
-                      <span className="text-sm text-gaming-500">
-                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                      </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gaming-100">{comment.profiles.username}</span>
+                        <span className="text-sm text-gaming-500">
+                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Flag className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleReport(comment.id)}>
+                            Report Comment
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                     <p className="mt-1 text-gaming-200">{comment.content}</p>
                   </div>

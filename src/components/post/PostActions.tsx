@@ -1,41 +1,24 @@
-import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import LikeButton from "./actions/LikeButton";
-import BookmarkButton from "./actions/BookmarkButton";
-import VoteButton from "./actions/VoteButton";
-import ShareButton from "./actions/ShareButton";
-import CommentList from "./CommentList";
-import { useState } from "react";
+import { Heart, MessageCircle, Trophy } from "lucide-react";
+import { PostActionsProps } from "@/types/post";
 
-interface PostActionsProps {
-  postId: string;
-  voteCount: number;
-}
-
-const PostActions = ({ postId, voteCount }: PostActionsProps) => {
-  const [showComments, setShowComments] = useState(false);
-
-  if (showComments) {
-    return <CommentList postId={postId} onBack={() => setShowComments(false)} />;
-  }
-
+export const PostActions = ({ post, commentsCount, onCommentClick }: PostActionsProps) => {
   return (
-    <div className="flex items-center justify-between pt-4 mt-4 border-t">
-      <LikeButton postId={postId} />
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setShowComments(true)}
-        className={cn("flex items-center gap-2")}
+    <div className="flex justify-around items-center p-4 border-t border-[#2A2E3B] bg-[#1A1F2C]">
+      <button className="flex items-center gap-2 text-[#FF6B6B]">
+        <Heart className="w-5 h-5" />
+        <span className="text-sm font-medium">{post.likes_count || 0}</span>
+      </button>
+      <button 
+        onClick={onCommentClick}
+        className="flex items-center gap-2 text-[#4CAF50] cursor-pointer"
       >
-        <MessageCircle className="w-4 h-4" />
-      </Button>
-      <ShareButton />
-      <BookmarkButton postId={postId} />
-      <VoteButton postId={postId} voteCount={voteCount} />
+        <MessageCircle className="w-5 h-5" />
+        <span className="text-sm font-medium">{commentsCount}</span>
+      </button>
+      <button className="flex items-center gap-2 text-[#FFD700]">
+        <Trophy className="w-5 h-5" />
+        <span className="text-sm font-medium">{post.clip_votes?.[0]?.count || 0}</span>
+      </button>
     </div>
   );
 };
-
-export default PostActions;
