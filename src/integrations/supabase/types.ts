@@ -2021,13 +2021,17 @@ export type Database = {
       }
       trending_posts: {
         Row: {
+          clip_votes_count: number | null
+          comments_count: number | null
           content: string | null
           created_at: string | null
           id: string | null
           image_url: string | null
+          likes_count: number | null
           trending_score: number | null
           user_id: string | null
           video_url: string | null
+          views_count: number | null
         }
         Relationships: [
           {
