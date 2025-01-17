@@ -173,10 +173,10 @@ export const StreamPlayer = ({
       )}
 
       <StreamMetricsDisplay
-        isLive={isLive}
-        healthStatus={healthStatus}
-        viewerCount={viewerCount}
-        metrics={streamMetrics}
+        bitrate={streamMetrics.bitrate}
+        fps={streamMetrics.fps}
+        resolution={streamMetrics.resolution}
+        className="absolute bottom-16 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
       />
       
       <QualitySelector
