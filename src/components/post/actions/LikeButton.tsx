@@ -73,9 +73,9 @@ const LikeButton = ({ postId }: LikeButtonProps) => {
       variant="ghost"
       size="sm"
       onClick={handleLike}
-      className={cn("flex items-center gap-2", isLiked && "text-red-500")}
+      className={cn("p-0", isLiked && "text-red-500")}
     >
-      <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
+      <Heart className={cn("w-5 h-5", isLiked && "fill-current")} />
     </Button>
   );
 };
