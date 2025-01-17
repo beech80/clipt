@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -77,6 +77,22 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
             </nav>
           </SheetContent>
         </Sheet>
+      </div>
+
+      {/* Clipt Button (Center) */}
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-6 sm:bottom-8">
+        <button 
+          onClick={() => navigate('/clipts')}
+          className="clip-button"
+          aria-label="Create Clipt"
+        >
+          <div className="clip-button-corners">
+            <div className="clip-button-corner"></div>
+            <div className="clip-button-corner"></div>
+          </div>
+          <Play className="clip-button-icon" />
+          <span className="clip-button-text">Clipt</span>
+        </button>
       </div>
 
       {/* D-Pad with Xbox-style joystick */}
