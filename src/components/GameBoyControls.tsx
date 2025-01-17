@@ -51,13 +51,14 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
   ];
 
   return (
-    <div className="gameboy-container h-[140px] sm:h-[160px] bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50">
+    <div className="gameboy-container h-[140px] sm:h-[160px] bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none">
       {/* Bottom Center Navigation Menu */}
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="rounded-full bg-gaming-400/20 p-2 sm:p-3 backdrop-blur-sm border border-gaming-400/30 hover:bg-gaming-400/30 transition-all duration-300">
-              <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-gaming-400" />
+            <button className="rounded-full bg-gaming-400/20 p-2.5 sm:p-3 backdrop-blur-sm border border-gaming-400/30 
+              hover:bg-gaming-400/30 transition-all duration-300 touch-none active:scale-95">
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gaming-400" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
@@ -69,7 +70,9 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
                     navigate(item.path);
                     toast.success(`Navigating to ${item.name}`);
                   }}
-                  className="p-2 sm:p-3 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 transition-all duration-300 text-gaming-400 font-medium text-sm"
+                  className="p-3 sm:p-4 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 
+                    active:bg-gaming-400/30 transition-all duration-300 text-gaming-400 
+                    font-medium text-sm sm:text-base active:scale-95"
                 >
                   {item.name}
                 </button>
@@ -83,7 +86,7 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
       <div className="fixed left-1/2 -translate-x-1/2 bottom-16 sm:bottom-20">
         <button 
           onClick={() => navigate('/clipts')}
-          className="clip-button"
+          className="clip-button active:scale-95 transition-transform"
           aria-label="Create Clipt"
         >
           <Play className="clip-button-icon" />
@@ -97,7 +100,7 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32 flex flex-col items-center justify-center">
+      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32">
         <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
       </div>
     </div>

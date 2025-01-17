@@ -24,15 +24,17 @@ const Home = () => {
                       border-y-2 border-l-2 border-gaming-400/50 text-white hover:from-gaming-700/50 hover:to-gaming-800/60
                       active:from-gaming-700/60 active:to-gaming-800/70 transform active:translate-y-0.5
                       transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                      hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none"
+                      hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none
+                      text-sm sm:text-base"
                     >
                       <span className="flex items-center -skew-x-12">
-                        <Video className="w-4 h-4 mr-2" />
-                        POST
+                        <Video className="w-4 h-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">POST</span>
+                        <span className="sm:hidden">+</span>
                       </span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px]">
+                  <DialogContent className="sm:max-w-[600px] w-[95%] mx-auto">
                     <PostForm onPostCreated={() => setIsPostFormOpen(false)} />
                   </DialogContent>
                 </Dialog>
@@ -44,12 +46,13 @@ const Home = () => {
                   border-y-2 border-r-2 border-gaming-400/50 text-white hover:from-gaming-700/50 hover:to-gaming-800/60
                   active:from-gaming-700/60 active:to-gaming-800/70 transform active:translate-y-0.5
                   transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none
+                  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none text-sm sm:text-base
                   ${activeTab === "squad" ? "from-gaming-600/50 to-gaming-700/60" : ""}`}
                   onClick={() => setActiveTab(activeTab === "squad" ? "feed" : "squad")}
                 >
                   <span className="flex items-center -skew-x-12 font-bold tracking-wider">
-                    SQUADS
+                    <span className="hidden sm:inline">SQUADS</span>
+                    <span className="sm:hidden">👥</span>
                   </span>
                 </Button>
               </div>
@@ -58,7 +61,7 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="retro-screen h-full pt-16 pb-[160px]">
+      <div className="retro-screen h-full pt-16 pb-[160px] sm:pb-[180px]">
         <PostList />
       </div>
 
