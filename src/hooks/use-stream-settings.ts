@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface StreamSettings {
   titleTemplate: string;
@@ -12,7 +13,7 @@ interface StreamSettings {
 }
 
 export const useStreamSettings = (userId: string) => {
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [settings, setSettings] = useState<StreamSettings>({
     titleTemplate: "",
     descriptionTemplate: "",
@@ -22,9 +23,9 @@ export const useStreamSettings = (userId: string) => {
     notificationEnabled: true,
   });
 
-  const loadSettings = async () => {
-    try {
-      setIsLoading(true);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['streamSettings', userId],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("stream_settings")
         .select("*")
@@ -32,61 +33,55 @@ export const useStreamSettings = (userId: string) => {
         .maybeSingle();
 
       if (error) throw error;
-
-      if (data) {
-        setSettings({
-          titleTemplate: data.stream_title_template || "",
-          descriptionTemplate: data.stream_description_template || "",
-          chatEnabled: data.chat_enabled ?? true,
-          chatFollowersOnly: data.chat_followers_only ?? false,
-          chatSlowMode: data.chat_slow_mode ?? 0,
-          notificationEnabled: data.notification_enabled ?? true,
-        });
-      }
-    } catch (error) {
-      console.error("Error loading settings:", error);
-      toast.error("Failed to load stream settings");
-    } finally {
-      setIsLoading(false);
+      return data;
     }
-  };
+  });
 
-  const saveSettings = async () => {
-    setIsLoading(true);
-    try {
+  const mutation = useMutation({
+    mutationFn: async (newSettings: StreamSettings) => {
       const { error } = await supabase
         .from("stream_settings")
         .upsert({
           user_id: userId,
-          stream_title_template: settings.titleTemplate,
-          stream_description_template: settings.descriptionTemplate,
-          chat_enabled: settings.chatEnabled,
-          chat_followers_only: settings.chatFollowersOnly,
-          chat_slow_mode: settings.chatSlowMode,
-          notification_enabled: settings.notificationEnabled,
+          stream_title_template: newSettings.titleTemplate,
+          stream_description_template: newSettings.descriptionTemplate,
+          chat_enabled: newSettings.chatEnabled,
+          chat_followers_only: newSettings.chatFollowersOnly,
+          chat_slow_mode: newSettings.chatSlowMode,
+          notification_enabled: newSettings.notificationEnabled,
         })
         .select();
 
       if (error) throw error;
+      return newSettings;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['streamSettings', userId] });
       toast.success("Settings saved successfully!");
-    } catch (error) {
-      console.error("Error saving settings:", error);
+    },
+    onError: () => {
       toast.error("Failed to save settings");
-    } finally {
-      setIsLoading(false);
     }
-  };
+  });
 
   useEffect(() => {
-    if (userId) {
-      loadSettings();
+    if (data) {
+      setSettings({
+        titleTemplate: data.stream_title_template || "",
+        descriptionTemplate: data.stream_description_template || "",
+        chatEnabled: data.chat_enabled ?? true,
+        chatFollowersOnly: data.chat_followers_only ?? false,
+        chatSlowMode: data.chat_slow_mode ?? 0,
+        notificationEnabled: data.notification_enabled ?? true,
+      });
     }
-  }, [userId]);
+  }, [data]);
 
   return {
     settings,
     setSettings,
-    isLoading,
-    saveSettings,
+    isLoading: isLoading || mutation.isPending,
+    saveSettings: () => mutation.mutate(settings),
+    error
   };
 };
