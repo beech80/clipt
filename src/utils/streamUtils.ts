@@ -28,7 +28,8 @@ export const startStream = async (userId: string, title: string, description: st
     return { 
       isLive: true, 
       streamKey: existingStream.stream_key, 
-      streamUrl: existingStream.stream_url 
+      streamUrl: existingStream.stream_url,
+      streamId: existingStream.id
     };
   }
 
@@ -53,7 +54,8 @@ export const startStream = async (userId: string, title: string, description: st
   return { 
     isLive: true, 
     streamKey: data.stream_key, 
-    streamUrl: data.stream_url 
+    streamUrl: data.stream_url,
+    streamId: data.id
   };
 };
 
@@ -70,7 +72,8 @@ export const endStream = async (userId: string) => {
   return { 
     isLive: false, 
     streamKey: null, 
-    streamUrl: null 
+    streamUrl: null,
+    streamId: null
   };
 };
 
