@@ -641,66 +641,6 @@ export type Database = {
           },
         ]
       }
-      post_categories: {
-        Row: {
-          created_at: string
-          description: string | null
-          icon_url: string | null
-          id: string
-          name: string
-          slug: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          name: string
-          slug: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          icon_url?: string | null
-          id?: string
-          name?: string
-          slug?: string
-        }
-        Relationships: []
-      }
-      post_category_mappings: {
-        Row: {
-          category_id: string
-          created_at: string
-          post_id: string
-        }
-        Insert: {
-          category_id: string
-          created_at?: string
-          post_id: string
-        }
-        Update: {
-          category_id?: string
-          created_at?: string
-          post_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "post_category_mappings_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "post_categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "post_category_mappings_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       post_edits: {
         Row: {
           created_at: string | null

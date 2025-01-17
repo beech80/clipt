@@ -1,8 +1,7 @@
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PostActionsProps } from "@/types/post";
 import LikeButton from "./actions/LikeButton";
-import ShareToSocial from "./actions/ShareToSocial";
 
 export const PostActions = ({ post, commentsCount, onCommentClick }: PostActionsProps) => {
   return (
@@ -18,7 +17,9 @@ export const PostActions = ({ post, commentsCount, onCommentClick }: PostActions
           >
             <MessageCircle className="w-4 h-4" />
           </Button>
-          <ShareToSocial postId={post.id} content={post.content || ''} />
+          <Button variant="ghost" size="sm">
+            <Share className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </div>

@@ -1,11 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
-import Collections from "@/pages/Collections";
-import CollectionDetail from "@/pages/CollectionDetail";
+import Home from "@/pages/Home";
+import ExplorePage from "@/pages/Explore";
 import PostListPage from "@/pages/PostListPage";
-import Explore from "@/pages/Explore";
+import Discover from "@/pages/Discover";
+import Collections from "@/pages/Collections";
 
 const queryClient = new QueryClient();
 
@@ -15,14 +16,15 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<PostListPage />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/posts" element={<PostListPage />} />
+            <Route path="/discover" element={<Discover />} />
             <Route path="/collections" element={<Collections />} />
-            <Route path="/collections/:id" element={<CollectionDetail />} />
-            <Route path="/explore" element={<Explore />} />
           </Routes>
+          <Toaster />
         </Router>
       </AuthProvider>
-      <Toaster />
     </QueryClientProvider>
   );
 }

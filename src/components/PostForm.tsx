@@ -8,11 +8,9 @@ import ImageUpload from "./post/ImageUpload";
 import VideoUpload from "./post/VideoUpload";
 import UploadProgress from "./post/form/UploadProgress";
 import MediaPreview from "./post/form/MediaPreview";
-import CategorySelect from "./post/form/CategorySelect";
 import { uploadImage, uploadVideo } from "@/utils/postUploadUtils";
 import { createPost } from "@/services/postService";
 import { extractMentions, createMention } from "@/utils/mentionUtils";
-import { supabase } from "@/lib/supabase";
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -25,7 +23,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [imageProgress, setImageProgress] = useState(0);
   const [videoProgress, setVideoProgress] = useState(0);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
@@ -84,27 +81,12 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         await createMention(username, post.id);
       }
 
-      // Add category mapping if a category was selected
-      if (selectedCategoryId) {
-        const { error: categoryError } = await supabase
-          .from('post_category_mappings')
-          .insert({
-            post_id: post.id,
-            category_id: selectedCategoryId
-          });
-
-        if (categoryError) {
-          console.error("Error mapping category:", categoryError);
-        }
-      }
-
       toast.success("Post created successfully!", { id: toastId });
       setContent("");
       setSelectedImage(null);
       setSelectedVideo(null);
       setImageProgress(0);
       setVideoProgress(0);
-      setSelectedCategoryId(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (videoInputRef.current) videoInputRef.current.value = '';
       queryClient.invalidateQueries({ queryKey: ['posts'] });
@@ -121,8 +103,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
     <div className="bg-card rounded-lg p-4 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-4">
         <PostFormContent content={content} onChange={setContent} />
-        
-        <CategorySelect onCategorySelect={setSelectedCategoryId} />
         
         {selectedImage && (
           <>
