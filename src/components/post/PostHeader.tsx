@@ -17,15 +17,15 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
           <span className="font-semibold text-[#9b87f5]">{post.profiles.username}</span>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
-              <Heart className="w-4 h-4 text-[#9b87f5]" />
+              <Heart className="w-4 h-4 text-[#ea384c]" />
               <span className="text-white">{post.likes_count || 0}</span>
             </div>
             <div className="flex items-center gap-1">
-              <MessageCircle className="w-4 h-4 text-[#9b87f5]" />
+              <MessageCircle className="w-4 h-4 text-[#1EAEDB]" />
               <span className="text-white">{commentsCount || 0}</span>
             </div>
             <div className="flex items-center gap-1">
-              <Trophy className="w-4 h-4 text-[#9b87f5]" />
+              <Trophy className="w-4 h-4 text-[#F97316]" />
               <span className="text-white">{post.clip_votes?.[0]?.count || 0}</span>
             </div>
           </div>
