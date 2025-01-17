@@ -68,7 +68,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       return data;
     },
     staleTime: 30000, // Consider data fresh for 30 seconds
-    cacheTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes
+    gcTime: 5 * 60 * 1000, // Keep unused data in cache for 5 minutes (replaced cacheTime)
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     retry: 3,
