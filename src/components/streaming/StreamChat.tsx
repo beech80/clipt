@@ -9,6 +9,7 @@ import { processCommand } from "@/utils/chatCommands";
 import { Loader2, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { RealtimePresenceState } from "@supabase/supabase-js";
 
 interface StreamChatProps {
   streamId: string;
@@ -20,7 +21,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [timeouts, setTimeouts] = useState<Record<string, string>>({});
   const [activeUsers, setActiveUsers] = useState<Set<string>>(new Set());
-  const [presenceState, setPresenceState] = useState<Record<string, any>>({});
+  const [presenceState, setPresenceState] = useState<RealtimePresenceState>({});
 
   // Fetch initial messages
   const { data: initialMessages, isLoading } = useQuery({
@@ -117,11 +118,6 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       config: {
         presence: {
           key: user.id,
-          presence_data: {
-            username: user.user_metadata?.username || 'Anonymous',
-            avatar_url: user.user_metadata?.avatar_url,
-            joined_at: new Date().toISOString(),
-          },
         },
       },
     });
@@ -135,7 +131,8 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
         setActiveUsers(prev => new Set([...prev, key]));
-        toast.success(`${newPresences[0]?.username || 'Someone'} joined the chat`);
+        const username = newPresences[0]?.username || 'Someone';
+        toast.success(`${username} joined the chat`);
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
         setActiveUsers(prev => {
@@ -143,9 +140,17 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
           newSet.delete(key);
           return newSet;
         });
-        toast.info(`${leftPresences[0]?.username || 'Someone'} left the chat`);
+        const username = leftPresences[0]?.username || 'Someone';
+        toast.info(`${username} left the chat`);
       })
-      .subscribe();
+      .subscribe(async () => {
+        // Track presence with user metadata after subscribing
+        await presenceChannel.track({
+          username: user.user_metadata?.username || 'Anonymous',
+          avatar_url: user.user_metadata?.avatar_url,
+          joined_at: new Date().toISOString(),
+        });
+      });
 
     // Timeout channel
     const timeoutChannel = supabase
