@@ -25,14 +25,18 @@ const LikeButton = ({ postId }: LikeButtonProps) => {
   const checkLikeStatus = async () => {
     if (!user) return;
 
-    const { data } = await supabase
-      .from('likes')
-      .select()
-      .eq('post_id', postId)
-      .eq('user_id', user.id)
-      .single();
+    try {
+      const { data } = await supabase
+        .from('likes')
+        .select()
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    setIsLiked(!!data);
+      setIsLiked(!!data);
+    } catch (error) {
+      console.error("Error checking like status:", error);
+    }
   };
 
   const handleLike = async () => {
@@ -64,6 +68,7 @@ const LikeButton = ({ postId }: LikeButtonProps) => {
       }
       queryClient.invalidateQueries({ queryKey: ['posts'] });
     } catch (error) {
+      console.error("Error updating like status:", error);
       toast.error("Error updating like status");
     }
   };
