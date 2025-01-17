@@ -8,25 +8,9 @@ import { supabase } from "@/lib/supabase";
 
 const POSTS_PER_PAGE = 5;
 
-interface Post {
-  id: string;
-  content: string | null;
-  image_url: string | null;
-  video_url: string | null;
-  created_at: string;
-  user_id: string;
-  profiles: {
-    username: string | null;
-    avatar_url: string | null;
-  } | null;
-  likes: { count: number }[];
-  clip_votes: { count: number }[];
-  trending_score: number;
-}
-
 const PostSkeleton = () => (
   <div className="relative h-[calc(100vh-200px)] bg-[#1A1F2C]">
-    <div className="p-4 border-b border-[#2A2E3B]">
+    <div className="p-3 sm:p-4 border-b border-[#2A2E3B]">
       <div className="flex items-center space-x-4">
         <Skeleton className="h-10 w-10 rounded-full" />
         <div className="space-y-2">
@@ -36,7 +20,7 @@ const PostSkeleton = () => (
       </div>
     </div>
     <Skeleton className="h-[calc(100%-120px)]" />
-    <div className="p-4 border-t border-[#2A2E3B]">
+    <div className="p-3 sm:p-4 border-t border-[#2A2E3B]">
       <div className="flex justify-between">
         <Skeleton className="h-8 w-24" />
         <Skeleton className="h-8 w-24" />
@@ -94,7 +78,7 @@ const PostList = () => {
 
   if (status === "pending") {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 touch-none">
         {[1, 2, 3].map((i) => (
           <PostSkeleton key={i} />
         ))}
@@ -108,7 +92,7 @@ const PostList = () => {
         <p className="text-red-500">Error: {error.message}</p>
         <button 
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-gaming-400 text-white rounded-md hover:bg-gaming-500 transition-colors"
+          className="px-4 py-2 bg-gaming-400 text-white rounded-md hover:bg-gaming-500 transition-colors active:scale-95 touch-manipulation"
         >
           Try Again
         </button>
@@ -117,7 +101,7 @@ const PostList = () => {
   }
 
   return (
-    <div className="post-container relative h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth">
+    <div className="post-container relative h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none">
       {data.pages.map((page, i) => (
         page.map((post) => (
           <div key={post.id} className="snap-start snap-always h-[calc(100vh-200px)]">
@@ -137,7 +121,7 @@ const PostList = () => {
           className="flex justify-center p-4"
         >
           {isFetchingNextPage && (
-            <Loader2 className="w-6 h-6 animate-spin text-gaming-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-gaming-400" />
           )}
         </div>
       )}

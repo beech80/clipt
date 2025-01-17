@@ -46,9 +46,9 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   return (
-    <div className="relative h-full w-full bg-[#1A1F2C]">
+    <div className="relative h-full w-full bg-[#1A1F2C] touch-none select-none">
       <div className="absolute inset-0 flex flex-col">
-        <div className="p-4 bg-[#1A1F2C] border-b border-[#2A2E3B]">
+        <div className="p-3 sm:p-4 bg-[#1A1F2C] border-b border-[#2A2E3B]">
           <PostHeader post={post} commentsCount={commentsCount} />
         </div>
 
