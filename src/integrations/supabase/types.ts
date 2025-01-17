@@ -313,8 +313,51 @@ export type Database = {
           },
         ]
       }
+      content_filters: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          is_regex: boolean | null
+          severity_level: string
+          word: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_regex?: boolean | null
+          severity_level: string
+          word: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_regex?: boolean | null
+          severity_level?: string
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_filters_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_reports: {
         Row: {
+          action_taken: string | null
+          automated_flags: Json | null
           content_id: string
           content_type: string
           created_at: string
@@ -324,9 +367,13 @@ export type Database = {
           reporter_id: string
           resolved_at: string | null
           resolved_by: string | null
+          review_priority: boolean | null
+          severity_level: string
           status: string
         }
         Insert: {
+          action_taken?: string | null
+          automated_flags?: Json | null
           content_id: string
           content_type: string
           created_at?: string
@@ -336,9 +383,13 @@ export type Database = {
           reporter_id: string
           resolved_at?: string | null
           resolved_by?: string | null
+          review_priority?: boolean | null
+          severity_level?: string
           status?: string
         }
         Update: {
+          action_taken?: string | null
+          automated_flags?: Json | null
           content_id?: string
           content_type?: string
           created_at?: string
@@ -348,6 +399,8 @@ export type Database = {
           reporter_id?: string
           resolved_at?: string | null
           resolved_by?: string | null
+          review_priority?: boolean | null
+          severity_level?: string
           status?: string
         }
         Relationships: [
@@ -1560,6 +1613,16 @@ export type Database = {
           donation_revenue: number
           average_donation: number
           unique_donors: number
+        }[]
+      }
+      check_content_against_filters: {
+        Args: {
+          content_text: string
+        }
+        Returns: {
+          matched_word: string
+          category: string
+          severity_level: string
         }[]
       }
       generate_stream_key: {
