@@ -1,5 +1,5 @@
 import { AchievementProgress } from "@/components/achievements/AchievementProgress";
-import { PostList } from "@/components/PostList";
+import PostList from "@/components/PostList";
 
 const Index = () => {
   return (
