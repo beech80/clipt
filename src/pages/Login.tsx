@@ -39,28 +39,6 @@ const Login = () => {
     };
   }, [user, navigate]);
 
-  const handleAuthError = (error: AuthError) => {
-    let errorMessage = 'An error occurred during authentication.';
-    
-    if (error instanceof AuthApiError) {
-      switch (error.status) {
-        case 400:
-          errorMessage = 'Invalid email or password. Please check your credentials.';
-          break;
-        case 422:
-          errorMessage = 'Invalid email format. Please enter a valid email address.';
-          break;
-        case 429:
-          errorMessage = 'Too many login attempts. Please try again later.';
-          break;
-        default:
-          errorMessage = error.message;
-      }
-    }
-    
-    setError(errorMessage);
-  };
-
   return (
     <div className="mx-auto max-w-md space-y-6 pt-12">
       <div className="text-center space-y-2">
