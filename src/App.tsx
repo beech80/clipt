@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthGuard } from "@/components/AuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 // Lazy load route components
 const Home = lazy(() => import('@/pages/Home'));
@@ -34,24 +35,26 @@ const PageLoader = () => (
 function App() {
   return (
     <ErrorBoundary>
-      <Router>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route element={<AuthGuard />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/for-you" element={<ForYou />} />
-              <Route path="/discover" element={<Discover />} />
-              <Route path="/profile/:username" element={<Profile />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/streaming" element={<Streaming />} />
-              <Route path="/edit-profile" element={<EditProfile />} />
-            </Route>
-          </Routes>
-        </Suspense>
-        <Toaster />
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route element={<AuthGuard />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/for-you" element={<ForYou />} />
+                <Route path="/discover" element={<Discover />} />
+                <Route path="/profile/:username" element={<Profile />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/streaming" element={<Streaming />} />
+                <Route path="/edit-profile" element={<EditProfile />} />
+              </Route>
+            </Routes>
+          </Suspense>
+          <Toaster />
+        </Router>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

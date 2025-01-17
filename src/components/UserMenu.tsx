@@ -10,9 +10,37 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+
+interface Profile {
+  username: string;
+  avatar_url: string;
+}
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      getProfile();
+    }
+  }, [user]);
+
+  const getProfile = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username, avatar_url')
+      .eq('id', user.id)
+      .single();
+      
+    if (!error && data) {
+      setProfile(data);
+    }
+  };
 
   if (!user) return null;
 
@@ -22,8 +50,8 @@ const UserMenu = () => {
         <Button variant="ghost" className="relative h-9 w-9 rounded-full">
           <Avatar className="h-9 w-9">
             <img
-              src={user.avatar_url || "/placeholder.svg"}
-              alt={user.username || "User avatar"}
+              src={profile?.avatar_url || "/placeholder.svg"}
+              alt={profile?.username || "User avatar"}
               className="object-cover"
             />
           </Avatar>
@@ -33,7 +61,7 @@ const UserMenu = () => {
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to={`/profile/${user.username}`}>Profile</Link>
+          <Link to={`/profile/${profile?.username || user.id}`}>Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/settings">Settings</Link>
