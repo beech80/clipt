@@ -32,10 +32,14 @@ export const StreamQualitySettings = ({ streamId }: StreamQualitySettingsProps) 
   });
 
   const updateQualityMutation = useMutation({
-    mutationFn: async (quality: string) => {
+    mutationFn: async ({ quality, bitrate, fps }: { quality: string, bitrate?: number, fps?: number }) => {
       const { error } = await supabase
         .from('streams')
-        .update({ stream_resolution: quality })
+        .update({ 
+          stream_resolution: quality,
+          ...(bitrate && { current_bitrate: bitrate }),
+          ...(fps && { current_fps: fps })
+        })
         .eq('id', streamId);
       
       if (error) throw error;
@@ -49,7 +53,6 @@ export const StreamQualitySettings = ({ streamId }: StreamQualitySettingsProps) 
     },
   });
 
-  // Parse the available qualities from the JSONB array
   const availableQualities = (stream?.available_qualities as string[]) || [];
   const currentQuality = stream?.stream_resolution || 'auto';
 
@@ -57,13 +60,32 @@ export const StreamQualitySettings = ({ streamId }: StreamQualitySettingsProps) 
     return <div>Loading quality settings...</div>;
   }
 
+  const handleQualityChange = (quality: string) => {
+    let bitrate = stream?.current_bitrate;
+    let fps = stream?.current_fps;
+
+    // Adjust bitrate and fps based on quality
+    if (quality === '1080p') {
+      bitrate = 6000;
+      fps = 60;
+    } else if (quality === '720p') {
+      bitrate = 4500;
+      fps = 60;
+    } else if (quality === '480p') {
+      bitrate = 2500;
+      fps = 30;
+    }
+
+    updateQualityMutation.mutate({ quality, bitrate, fps });
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <Label>Stream Quality</Label>
         <Select
           value={currentQuality}
-          onValueChange={(value) => updateQualityMutation.mutate(value)}
+          onValueChange={handleQualityChange}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select quality" />
@@ -106,7 +128,7 @@ export const StreamQualitySettings = ({ streamId }: StreamQualitySettingsProps) 
       <div className="flex justify-end">
         <Button
           variant="outline"
-          onClick={() => updateQualityMutation.mutate('auto')}
+          onClick={() => updateQualityMutation.mutate({ quality: 'auto' })}
           disabled={currentQuality === 'auto'}
         >
           Reset to Auto
