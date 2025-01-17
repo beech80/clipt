@@ -1,12 +1,11 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { ReactNode } from 'react';
+import { Outlet } from 'react-router-dom';
 
-export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const path = window.location.pathname;
+interface AuthGuardProps {
+  children?: ReactNode;
+}
 
-  // Allow access to all pages without authentication
-  return <>{children}</>;
+export const AuthGuard = ({ children }: AuthGuardProps) => {
+  // For now, we allow access to all pages without authentication
+  return children ? <>{children}</> : <Outlet />;
 };
