@@ -56,7 +56,7 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="rounded-full bg-gaming-400/20 p-2 sm:p-3 backdrop-blur-sm border border-gaming-400/30 hover:bg-gaming-400/30 transition-all duration-300">
+            <button className="gaming-button">
               <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-gaming-400" />
             </button>
           </SheetTrigger>
@@ -69,7 +69,7 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
                     navigate(item.path);
                     toast.success(`Navigating to ${item.name}`);
                   }}
-                  className="p-2 sm:p-3 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 transition-all duration-300 text-gaming-400 font-medium text-sm"
+                  className="gaming-button"
                 >
                   {item.name}
                 </button>
@@ -85,7 +85,7 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32 flex flex-col items-center justify-center">
+      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32">
         <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
       </div>
     </div>
