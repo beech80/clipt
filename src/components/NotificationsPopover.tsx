@@ -12,6 +12,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -32,6 +34,7 @@ interface Notification {
 const NotificationsPopover = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
 
   const { data: notifications, isLoading } = useQuery({
@@ -104,6 +107,24 @@ const NotificationsPopover = () => {
     }
   }, [notifications]);
 
+  const handleNotificationClick = (notification: Notification) => {
+    markAsRead.mutate(notification.id);
+    
+    if (notification.resource_type && notification.resource_id) {
+      switch (notification.resource_type) {
+        case 'post':
+          navigate(`/post/${notification.resource_id}`);
+          break;
+        case 'profile':
+          navigate(`/profile/${notification.resource_id}`);
+          break;
+        case 'stream':
+          navigate(`/stream/${notification.resource_id}`);
+          break;
+      }
+    }
+  };
+
   const getNotificationContent = (notification: Notification) => {
     const actor = notification.actor?.username || 'Someone';
     
@@ -153,14 +174,24 @@ const NotificationsPopover = () => {
                 {notifications?.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-2 rounded-lg text-sm ${
+                    className={`p-3 rounded-lg text-sm hover:bg-accent cursor-pointer ${
                       !notification.read ? 'bg-muted' : ''
                     }`}
-                    onClick={() => markAsRead.mutate(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                   >
-                    <div>{getNotificationContent(notification)}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={notification.actor?.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {notification.actor?.username?.[0]?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div>{getNotificationContent(notification)}</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
