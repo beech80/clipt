@@ -3,9 +3,17 @@ import PostContent from "./post/PostContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { formatDistanceToNow } from 'date-fns';
-import { MessageCircle, Heart, Trophy } from "lucide-react";
+import { MessageCircle, Heart, Trophy, Flag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { useReportDialog } from "@/hooks/use-report-dialog";
+import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PostItemProps {
   post: {
@@ -28,6 +36,7 @@ const PostItem = ({ post }: PostItemProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [commentsCount, setCommentsCount] = useState(0);
+  const { openReportDialog } = useReportDialog();
 
   useEffect(() => {
     const fetchCommentsCount = async () => {
@@ -42,6 +51,10 @@ const PostItem = ({ post }: PostItemProps) => {
 
   const handleCommentClick = () => {
     navigate(`/comments/${post.id}`);
+  };
+
+  const handleReport = () => {
+    openReportDialog(post.id, 'post');
   };
 
   return (
@@ -76,6 +89,18 @@ const PostItem = ({ post }: PostItemProps) => {
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
               </p>
             </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Flag className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleReport}>
+                  Report Content
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
