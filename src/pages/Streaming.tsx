@@ -93,6 +93,19 @@ const Streaming = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Error Loading Stream</h2>
+          <p className="text-muted-foreground">
+            There was an error loading your stream data. Please try again later.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       {isConfiguring ? (

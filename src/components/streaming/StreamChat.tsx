@@ -20,6 +20,11 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
   const { data: messages, error } = useQuery<StreamChatMessage[]>({
     queryKey: ['stream-chat', streamId],
     queryFn: async () => {
+      // Don't fetch if streamId is empty
+      if (!streamId) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('stream_chat')
         .select(`
@@ -52,6 +57,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
         }
       })) as StreamChatMessage[];
     },
+    enabled: !!streamId && isLive, // Only run query if streamId exists and stream is live
     refetchInterval: isLive ? 1000 : false,
   });
 
@@ -84,7 +90,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
 
       <ChatInput 
         onSendMessage={() => {}} 
-        disabled={!isLive || !chatEnabled} 
+        disabled={!isLive || !chatEnabled || !streamId} 
       />
     </div>
   );
