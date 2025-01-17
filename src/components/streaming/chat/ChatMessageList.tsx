@@ -1,5 +1,6 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
 import { StreamChatMessage } from "@/types/chat";
 import { ChatMessage } from './ChatMessage';
 
@@ -9,8 +10,9 @@ interface ChatMessageListProps {
   onDeleteMessage?: (messageId: string) => void;
 }
 
-export const ChatMessageList = ({ messages, isModeratorView, onDeleteMessage }: ChatMessageListProps) => {
+const ChatMessageList = ({ messages, isModeratorView, onDeleteMessage }: ChatMessageListProps) => {
   const parentRef = useRef<HTMLDivElement>(null);
+  const { ref: bottomRef, inView } = useInView();
 
   const virtualizer = useVirtualizer({
     count: messages.length,
@@ -18,6 +20,13 @@ export const ChatMessageList = ({ messages, isModeratorView, onDeleteMessage }: 
     estimateSize: () => 64,
     overscan: 5,
   });
+
+  // Auto-scroll to bottom when new messages arrive and user is at bottom
+  useEffect(() => {
+    if (inView) {
+      virtualizer.scrollToIndex(messages.length - 1);
+    }
+  }, [messages.length, inView, virtualizer]);
 
   return (
     <div 
@@ -53,6 +62,9 @@ export const ChatMessageList = ({ messages, isModeratorView, onDeleteMessage }: 
           );
         })}
       </div>
+      <div ref={bottomRef} style={{ height: 1 }} />
     </div>
   );
 };
+
+export default ChatMessageList;

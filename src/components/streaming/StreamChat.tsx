@@ -1,13 +1,18 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { processCommand } from "@/utils/chatCommands";
-import { ChatMessageList } from "./chat/ChatMessageList";
-import { ChatInput } from "./chat/ChatInput";
+import { StreamChatHeader } from "./chat/StreamChatHeader";
+import { StreamChatError } from "./chat/StreamChatError";
+import { StreamChatOffline } from "./chat/StreamChatOffline";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { StreamChatMessage } from "@/types/chat";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
+
+// Lazy load these components for better performance
+const ChatMessageList = lazy(() => import("./chat/ChatMessageList"));
+const ChatInput = lazy(() => import("./chat/ChatInput"));
 
 interface StreamChatProps {
   streamId: string;
@@ -106,27 +111,21 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   };
 
   if (isError) {
-    return (
-      <div className="flex flex-col h-[600px] border rounded-lg">
-        <div className="p-4 text-center text-destructive">
-          Failed to load chat messages
-        </div>
-      </div>
-    );
+    return <StreamChatError />;
   }
 
   return (
     <div className="flex flex-col h-[600px] border rounded-lg">
-      <div className="p-4 border-b bg-muted">
-        <h3 className="font-semibold">Stream Chat</h3>
-      </div>
-      <ChatMessageList messages={messages} />
+      <StreamChatHeader />
+      <Suspense fallback={<Skeleton className="flex-1" />}>
+        <ChatMessageList messages={messages} />
+      </Suspense>
       {isLive ? (
-        <ChatInput onSendMessage={handleSendMessage} />
+        <Suspense fallback={<Skeleton className="h-16 w-full" />}>
+          <ChatInput onSendMessage={handleSendMessage} />
+        </Suspense>
       ) : (
-        <div className="p-4 border-t text-center text-muted-foreground">
-          Chat is disabled while stream is offline
-        </div>
+        <StreamChatOffline />
       )}
     </div>
   );
