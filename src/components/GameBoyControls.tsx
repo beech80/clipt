@@ -51,13 +51,13 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
   ];
 
   return (
-    <div className="gameboy-container h-[140px] sm:h-[160px] bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50">
+    <div className="gameboy-container h-[140px] sm:h-[160px]">
       {/* Bottom Center Navigation Menu */}
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="gaming-button">
-              <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-gaming-400" />
+            <button className="clip-button">
+              <Menu className="clip-button-icon" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">

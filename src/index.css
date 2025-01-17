@@ -97,66 +97,54 @@
   @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-sm;
 }
 
-.action-buttons-container {
-  @apply fixed flex flex-col items-center justify-center;
-}
-
 .action-button {
-  @apply w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#222222] hover:bg-[#333333] active:bg-[#444444]
-    transition-all duration-300 border-2 border-[#403E43] flex items-center justify-center text-[#1EAEDB] backdrop-blur-sm;
-  box-shadow: inset 0 2px 4px rgba(255,255,255,0.1),
-              0 2px 4px rgba(0,0,0,0.2);
+  @apply w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all duration-300
+    border border-gaming-400/20 shadow-lg backdrop-blur-sm;
+  background: linear-gradient(145deg, #1A1F2C, #252A3C);
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.1),
+    0 4px 8px rgba(0,0,0,0.3);
 }
 
-.bg-radial-gradient {
-  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
+.action-button:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.15),
+    0 6px 12px rgba(0,0,0,0.4);
+}
+
+.action-button:active {
+  transform: scale(0.95);
+  box-shadow: 
+    inset 0 2px 4px rgba(0,0,0,0.2),
+    0 2px 4px rgba(0,0,0,0.2);
 }
 
 .clip-button {
-  @apply relative flex items-center justify-center gap-1;
-  width: 80px;  /* Increased slightly to fit text */
-  height: 60px; /* Kept same height */
-  border-radius: 30px; /* Changed to pill shape */
-  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
-  position: relative;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+  @apply relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300;
+  background: linear-gradient(145deg, #1A1F2C, #252A3C);
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.1),
+    0 4px 8px rgba(0,0,0,0.3);
+  border: 1px solid rgba(155, 135, 245, 0.2);
 }
 
-.clip-button::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  padding: 2px;
-  background: linear-gradient(45deg, #00C2FF, #8B5CF6, #FF1CF7);
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: rotate 4s linear infinite;
+.clip-button:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.15),
+    0 6px 12px rgba(0,0,0,0.4);
 }
 
-.clip-button::after {
-  content: '';
-  position: absolute;
-  inset: 6px;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+.clip-button:active {
+  transform: scale(0.95);
+  box-shadow: 
+    inset 0 2px 4px rgba(0,0,0,0.2),
+    0 2px 4px rgba(0,0,0,0.2);
 }
 
 .clip-button-icon {
-  position: relative;
-  z-index: 2;
-  width: 20px;  /* Slightly smaller */
-  height: 20px; /* Slightly smaller */
-  color: #fff;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
-  opacity: 0.9;
+  @apply w-5 h-5 text-gaming-400;
 }
 
 .clip-button-text {
@@ -243,4 +231,5 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
+
 

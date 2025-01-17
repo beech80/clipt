@@ -121,29 +121,27 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
   };
 
   return (
-    <>
+    <div className="grid grid-cols-2 gap-4">
       <button 
-        className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+        className="action-button bg-[#1A1F2C] hover:bg-[#252A3C] group"
         onClick={handleLike}
       >
         <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-[#FF0000] text-[#FF0000]' : 'text-[#FF0000]'} group-hover:text-[#FF3333]`} />
       </button>
-      <div className="flex gap-6 sm:gap-12 my-2 sm:my-3">
-        <button 
-          className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
-          onClick={() => setIsCommentOpen(true)}
-        >
-          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#0066FF] group-hover:text-[#3399FF]" />
-        </button>
-        <button 
-          className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
-          onClick={handleFollow}
-        >
-          <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-[#33FF33]' : 'text-[#00FF00]'} group-hover:text-[#33FF33]`} />
-        </button>
-      </div>
       <button 
-        className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+        className="action-button bg-[#1A1F2C] hover:bg-[#252A3C] group"
+        onClick={() => setIsCommentOpen(true)}
+      >
+        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#0066FF] group-hover:text-[#3399FF]" />
+      </button>
+      <button 
+        className="action-button bg-[#1A1F2C] hover:bg-[#252A3C] group"
+        onClick={handleFollow}
+      >
+        <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-[#33FF33]' : 'text-[#00FF00]'} group-hover:text-[#33FF33]`} />
+      </button>
+      <button 
+        className="action-button bg-[#1A1F2C] hover:bg-[#252A3C] group"
         onClick={handleRank}
       >
         <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFD700] group-hover:text-[#FFDF33]" />
@@ -187,7 +185,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 
