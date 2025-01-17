@@ -7,8 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import GameBoyControls from "@/components/GameBoyControls";
 import { AuthGuard } from "@/components/AuthGuard";
+import { ReportDialogProvider } from "@/components/report/ReportDialogProvider";
 
-// Lazy load route components
 const Home = lazy(() => import('@/pages/Home'));
 const ForYou = lazy(() => import('@/pages/ForYou'));
 const Discover = lazy(() => import('@/pages/Discover'));
@@ -57,6 +57,7 @@ function App() {
               </Routes>
             </Suspense>
             <GameBoyControls />
+            <ReportDialogProvider />
             <Toaster />
           </Router>
         </AuthProvider>
