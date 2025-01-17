@@ -4,6 +4,7 @@ import PostItem from "@/components/PostItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import GameBoyControls from "@/components/GameBoyControls";
+import { AuthGuard } from "@/components/AuthGuard";
 
 const TopClips = () => {
   const { data: topPosts, isLoading } = useQuery({
@@ -53,25 +54,27 @@ const TopClips = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto pb-40">
-      <h1 className="text-2xl font-bold mb-6 gaming-gradient">Top 10 Clips</h1>
-      <ScrollArea className="h-[calc(100vh-200px)] w-full">
-        {topPosts?.length === 0 ? (
-          <div className="text-center p-8">
-            <p className="text-lg text-muted-foreground">No clips have been voted on yet.</p>
-            <p className="text-sm text-muted-foreground">Be the first to vote on your favorite clips!</p>
-          </div>
-        ) : (
-          topPosts?.map((post) => (
-            <PostItem 
-              key={post.id} 
-              post={post} 
-            />
-          ))
-        )}
-      </ScrollArea>
-      <GameBoyControls />
-    </div>
+    <AuthGuard>
+      <div className="max-w-2xl mx-auto pb-40">
+        <h1 className="text-2xl font-bold mb-6 gaming-gradient">Top 10 Clips</h1>
+        <ScrollArea className="h-[calc(100vh-200px)] w-full">
+          {topPosts?.length === 0 ? (
+            <div className="text-center p-8">
+              <p className="text-lg text-muted-foreground">No clips have been voted on yet.</p>
+              <p className="text-sm text-muted-foreground">Be the first to vote on your favorite clips!</p>
+            </div>
+          ) : (
+            topPosts?.map((post) => (
+              <PostItem 
+                key={post.id} 
+                post={post} 
+              />
+            ))
+          )}
+        </ScrollArea>
+        <GameBoyControls />
+      </div>
+    </AuthGuard>
   );
 };
 
