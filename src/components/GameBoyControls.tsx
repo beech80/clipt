@@ -80,16 +80,12 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
       </div>
 
       {/* Clipt Button (Center) */}
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-6 sm:bottom-8">
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-12 sm:bottom-16">
         <button 
           onClick={() => navigate('/clipts')}
           className="clip-button"
           aria-label="Create Clipt"
         >
-          <div className="clip-button-corners">
-            <div className="clip-button-corner"></div>
-            <div className="clip-button-corner"></div>
-          </div>
           <Play className="clip-button-icon" />
           <span className="clip-button-text">Clipt</span>
         </button>
