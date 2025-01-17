@@ -49,21 +49,7 @@ const PostItem = ({ post }: PostItemProps) => {
     <div className="relative h-full w-full bg-[#1A1F2C]">
       <div className="absolute inset-0 flex flex-col">
         <div className="p-4 bg-[#1A1F2C] border-b border-[#2A2E3B]">
-          <div className="flex items-center justify-between">
-            <PostHeader post={post} commentsCount={commentsCount} />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Flag className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleReport}>
-                  Report Content
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <PostHeader post={post} commentsCount={commentsCount} />
         </div>
 
         <div className="flex-1 relative">
