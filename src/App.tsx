@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Collections from "@/pages/Collections";
 import CollectionDetail from "@/pages/CollectionDetail";
+import PostListPage from "@/pages/PostListPage";
 
 const queryClient = new QueryClient();
 
@@ -13,6 +14,7 @@ function App() {
       <AuthProvider>
         <Router>
           <Routes>
+            <Route path="/" element={<PostListPage />} />
             <Route path="/collections" element={<Collections />} />
             <Route path="/collections/:id" element={<CollectionDetail />} />
           </Routes>
