@@ -34,7 +34,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
           is_command,
           command_type,
           timeout_duration,
-          user:user_id (
+          user:profiles!user_id (
             username,
             avatar_url
           )
@@ -50,7 +50,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
           username: msg.user?.username || 'Anonymous',
           avatar_url: msg.user?.avatar_url || ''
         }
-      }));
+      })) as StreamChatMessage[];
     },
     refetchInterval: isLive ? 1000 : false,
   });
