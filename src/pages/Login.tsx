@@ -31,6 +31,9 @@ const Login = () => {
       if (event === 'PASSWORD_RECOVERY') {
         setError('Please check your email to reset your password.');
       }
+      if (event === 'USER_DELETED') {
+        setError('Your account has been deleted.');
+      }
     });
 
     return () => {
@@ -38,6 +41,32 @@ const Login = () => {
       setError(null);
     };
   }, [user, navigate]);
+
+  const handleAuthError = (error: AuthError) => {
+    let errorMessage = 'An error occurred during authentication.';
+    
+    if (error instanceof AuthApiError) {
+      switch (error.status) {
+        case 400:
+          if (error.message.includes('Invalid login credentials')) {
+            errorMessage = 'Invalid email or password. Please check your credentials.';
+          } else {
+            errorMessage = 'Invalid request. Please check your input.';
+          }
+          break;
+        case 422:
+          errorMessage = 'Invalid email format. Please enter a valid email address.';
+          break;
+        case 429:
+          errorMessage = 'Too many login attempts. Please try again later.';
+          break;
+        default:
+          errorMessage = error.message;
+      }
+    }
+    
+    setError(errorMessage);
+  };
 
   return (
     <div className="mx-auto max-w-md space-y-6 pt-12">
@@ -73,6 +102,7 @@ const Login = () => {
           }}
           providers={[]}
           redirectTo={window.location.origin}
+          onError={handleAuthError}
         />
       </div>
     </div>
