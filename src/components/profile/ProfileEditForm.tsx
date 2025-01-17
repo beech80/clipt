@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
+import { useEffect } from "react"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -28,7 +29,7 @@ const profileFormSchema = z.object({
     twitter: z.string().optional(),
     instagram: z.string().optional(),
     youtube: z.string().optional(),
-  }).optional(),
+  }),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
@@ -54,18 +55,41 @@ export function ProfileEditForm() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      username: profile?.username || "",
-      displayName: profile?.display_name || "",
-      bioDescription: profile?.bio_description || "",
-      location: profile?.location || "",
-      website: profile?.website || "",
-      socialLinks: profile?.social_links || {
+      username: "",
+      displayName: "",
+      bioDescription: "",
+      location: "",
+      website: "",
+      socialLinks: {
         twitter: "",
         instagram: "",
         youtube: "",
       },
     },
   })
+
+  useEffect(() => {
+    if (profile) {
+      const socialLinks = typeof profile.social_links === 'object' ? profile.social_links : {
+        twitter: "",
+        instagram: "",
+        youtube: "",
+      }
+      
+      form.reset({
+        username: profile.username || "",
+        displayName: profile.display_name || "",
+        bioDescription: profile.bio_description || "",
+        location: profile.location || "",
+        website: profile.website || "",
+        socialLinks: {
+          twitter: socialLinks.twitter || "",
+          instagram: socialLinks.instagram || "",
+          youtube: socialLinks.youtube || "",
+        },
+      })
+    }
+  }, [profile, form])
 
   async function onSubmit(data: ProfileFormValues) {
     try {
