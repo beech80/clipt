@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { Home, MessageSquare, Video, Trophy, Settings, Gamepad } from "lucide-react";
 
 export function MainNav({
   className,
@@ -17,74 +18,77 @@ export function MainNav({
         to="/"
         className={({ isActive }) =>
           cn(
-            "text-sm font-medium transition-colors hover:text-primary",
+            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
             isActive ? "text-primary" : "text-muted-foreground"
           )
         }
       >
+        <Home className="h-4 w-4" />
         Home
       </NavLink>
       <NavLink
         to="/discover"
         className={({ isActive }) =>
           cn(
-            "text-sm font-medium transition-colors hover:text-primary",
+            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
             isActive ? "text-primary" : "text-muted-foreground"
           )
         }
       >
+        <Gamepad className="h-4 w-4" />
         Discover
       </NavLink>
       <NavLink
         to="/streaming"
         className={({ isActive }) =>
           cn(
-            "text-sm font-medium transition-colors hover:text-primary",
+            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
             isActive ? "text-primary" : "text-muted-foreground"
           )
         }
       >
+        <Video className="h-4 w-4" />
         Streaming
+      </NavLink>
+      <NavLink
+        to="/top-clips"
+        className={({ isActive }) =>
+          cn(
+            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
+            isActive ? "text-primary" : "text-muted-foreground"
+          )
+        }
+      >
+        <Trophy className="h-4 w-4" />
+        Top Clips
       </NavLink>
       {user?.id && (
         <>
           <NavLink
-            to="/clips"
+            to="/clipts"
             className={({ isActive }) =>
               cn(
-                "text-sm font-medium transition-colors hover:text-primary",
+                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
                 isActive ? "text-primary" : "text-muted-foreground"
               )
             }
           >
-            Clips
+            <Video className="h-4 w-4" />
+            Clipts
           </NavLink>
           <NavLink
             to="/messages"
             className={({ isActive }) =>
               cn(
-                "text-sm font-medium transition-colors hover:text-primary",
+                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
                 isActive ? "text-primary" : "text-muted-foreground"
               )
             }
           >
+            <MessageSquare className="h-4 w-4" />
             Messages
           </NavLink>
         </>
-      )}
-      {/* Add moderator-only link */}
-      {user?.id && (
-        <NavLink
-          to="/mod/reports"
-          className={({ isActive }) =>
-            cn(
-              "text-sm font-medium transition-colors hover:text-primary",
-              isActive ? "text-primary" : "text-muted-foreground"
-            )
-          }
-        >
-          Reports
-        </NavLink>
       )}
     </nav>
   );

@@ -3,10 +3,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Home from "@/pages/Home";
-import ExplorePage from "@/pages/Explore";
-import PostListPage from "@/pages/PostListPage";
+import Profile from "@/pages/Profile";
+import Messages from "@/pages/Messages";
+import Streaming from "@/pages/Streaming";
+import TopClips from "@/pages/TopClips";
+import Clipts from "@/pages/Clipts";
+import Settings from "@/pages/Settings";
 import Discover from "@/pages/Discover";
-import Collections from "@/pages/Collections";
 
 const queryClient = new QueryClient();
 
@@ -17,10 +20,13 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/posts" element={<PostListPage />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/streaming" element={<Streaming />} />
+            <Route path="/top-clips" element={<TopClips />} />
+            <Route path="/clipts" element={<Clipts />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/discover" element={<Discover />} />
-            <Route path="/collections" element={<Collections />} />
           </Routes>
           <Toaster />
         </Router>
