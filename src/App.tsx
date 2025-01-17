@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import GameBoyControls from "@/components/GameBoyControls";
+import { AuthGuard } from "@/components/AuthGuard";
 
 // Lazy load route components
 const Home = lazy(() => import('@/pages/Home'));
