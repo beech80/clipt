@@ -5,6 +5,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 
+interface EnhancedAnalytics {
+  engagement_rate: number;
+  max_concurrent_viewers: number;
+  total_stream_time: string;
+  average_watch_time: string;
+}
+
 export const StreamMetricsChart = ({ streamId }: { streamId: string }) => {
   const { data: viewerData, isLoading } = useQuery({
     queryKey: ['stream-metrics', streamId],
@@ -20,7 +27,7 @@ export const StreamMetricsChart = ({ streamId }: { streamId: string }) => {
     },
   });
 
-  const { data: analytics } = useQuery({
+  const { data: analytics } = useQuery<EnhancedAnalytics>({
     queryKey: ['stream-enhanced-analytics', streamId],
     queryFn: async () => {
       const { data, error } = await supabase.rpc(
@@ -94,9 +101,7 @@ export const StreamMetricsChart = ({ streamId }: { streamId: string }) => {
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Total Stream Time</p>
             <p className="text-2xl font-bold">
-              {analytics?.total_stream_time ? 
-                analytics.total_stream_time.substring(0, 8) : 
-                '00:00:00'}
+              {analytics?.total_stream_time || '00:00:00'}
             </p>
           </div>
         </Card>
@@ -105,9 +110,7 @@ export const StreamMetricsChart = ({ streamId }: { streamId: string }) => {
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">Avg Watch Time</p>
             <p className="text-2xl font-bold">
-              {analytics?.average_watch_time ? 
-                analytics.average_watch_time.substring(0, 8) : 
-                '00:00:00'}
+              {analytics?.average_watch_time || '00:00:00'}
             </p>
           </div>
         </Card>
