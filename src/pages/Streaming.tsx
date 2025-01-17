@@ -8,6 +8,8 @@ import { StreamControls } from "@/components/streaming/StreamControls";
 import { StreamHealthMonitor } from "@/components/streaming/StreamHealthMonitor";
 import { StreamInfoCards } from "@/components/streaming/StreamInfoCards";
 import { StreamSettingsForm } from "@/components/streaming/StreamSettingsForm";
+import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 
 const defaultSettings = {
@@ -82,46 +84,59 @@ const Streaming = () => {
           onDescriptionChange={() => {}}
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <StreamPreview 
-              streamUrl={stream?.stream_url} 
-              isLive={stream?.is_live || false}
-            />
-            <StreamControls 
-              userId={user.id}
-              isLive={streamState.isLive}
-              onStreamUpdate={handleStreamUpdate}
-            />
-            <StreamHealthMonitor 
-              streamId={stream?.id || ''}
-            />
-          </div>
-          
-          <div className="space-y-6">
-            <StreamInfoCards 
-              isLive={streamState.isLive}
-              streamKey={streamState.streamKey}
-              streamUrl={streamState.streamUrl}
-              viewerCount={stream?.viewer_count}
-              startedAt={stream?.started_at}
-              healthStatus={stream?.health_status}
-              bitrate={stream?.current_bitrate}
-              fps={stream?.current_fps}
-              resolution={stream?.stream_resolution}
-            />
-            <StreamChat 
-              streamId={stream?.id || ''} 
-              isLive={stream?.is_live || false} 
-            />
-            <StreamSettingsForm 
-              settings={settings}
-              onSettingsChange={handleSettingsChange}
-              onSave={handleSettingsSave}
-              isLoading={isLoading}
-            />
-          </div>
-        </div>
+        <Tabs defaultValue="stream" className="space-y-8">
+          <TabsList>
+            <TabsTrigger value="stream">Stream</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="stream">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                <StreamPreview 
+                  streamUrl={stream?.stream_url} 
+                  isLive={stream?.is_live || false}
+                />
+                <StreamControls 
+                  userId={user.id}
+                  isLive={streamState.isLive}
+                  onStreamUpdate={handleStreamUpdate}
+                />
+                <StreamHealthMonitor 
+                  streamId={stream?.id || ''}
+                />
+              </div>
+              
+              <div className="space-y-6">
+                <StreamInfoCards 
+                  isLive={streamState.isLive}
+                  streamKey={streamState.streamKey}
+                  streamUrl={streamState.streamUrl}
+                  viewerCount={stream?.viewer_count}
+                  startedAt={stream?.started_at}
+                  healthStatus={stream?.health_status}
+                  bitrate={stream?.current_bitrate}
+                  fps={stream?.current_fps}
+                  resolution={stream?.stream_resolution}
+                />
+                <StreamChat 
+                  streamId={stream?.id || ''} 
+                  isLive={stream?.is_live || false} 
+                />
+                <StreamSettingsForm 
+                  settings={settings}
+                  onSettingsChange={handleSettingsChange}
+                  onSave={handleSettingsSave}
+                  isLoading={isLoading}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            {stream?.id && <AnalyticsDashboard streamId={stream.id} />}
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

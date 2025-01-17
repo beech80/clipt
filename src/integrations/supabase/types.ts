@@ -685,6 +685,54 @@ export type Database = {
           },
         ]
       }
+      stream_analytics: {
+        Row: {
+          average_viewers: number | null
+          chat_messages_count: number | null
+          created_at: string | null
+          id: string
+          peak_viewers: number | null
+          stream_duration: unknown | null
+          stream_id: string | null
+          unique_chatters: number | null
+        }
+        Insert: {
+          average_viewers?: number | null
+          chat_messages_count?: number | null
+          created_at?: string | null
+          id?: string
+          peak_viewers?: number | null
+          stream_duration?: unknown | null
+          stream_id?: string | null
+          unique_chatters?: number | null
+        }
+        Update: {
+          average_viewers?: number | null
+          chat_messages_count?: number | null
+          created_at?: string | null
+          id?: string
+          peak_viewers?: number | null
+          stream_duration?: unknown | null
+          stream_id?: string | null
+          unique_chatters?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_analytics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_analytics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_categories: {
         Row: {
           created_at: string
@@ -817,6 +865,58 @@ export type Database = {
           {
             foreignKeyName: "stream_chat_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_revenue: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          revenue_type: string
+          stream_id: string | null
+          streamer_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          revenue_type: string
+          stream_id?: string | null
+          streamer_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          revenue_type?: string
+          stream_id?: string | null
+          streamer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_revenue_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_revenue_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_revenue_streamer_id_fkey"
+            columns: ["streamer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -990,6 +1090,58 @@ export type Database = {
           {
             foreignKeyName: "streams_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      viewer_engagement: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_active: string | null
+          messages_sent: number | null
+          stream_id: string | null
+          viewer_id: string | null
+          watch_duration: unknown | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_active?: string | null
+          messages_sent?: number | null
+          stream_id?: string | null
+          viewer_id?: string | null
+          watch_duration?: unknown | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_active?: string | null
+          messages_sent?: number | null
+          stream_id?: string | null
+          viewer_id?: string | null
+          watch_duration?: unknown | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewer_engagement_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "viewer_engagement_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viewer_engagement_viewer_id_fkey"
+            columns: ["viewer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
