@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ChatMessage } from './chat/ChatMessage';
-import { ChatInput } from './chat/ChatInput';
+import ChatInput from './chat/ChatInput';
 import { StreamChatHeader } from './chat/StreamChatHeader';
 import { StreamChatError } from './chat/StreamChatError';
 import { StreamChatOffline } from './chat/StreamChatOffline';
@@ -52,7 +52,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <StreamChatHeader />
+      <StreamChatHeader messageCount={messages?.length || 0} />
       
       <div 
         ref={chatContainerRef}

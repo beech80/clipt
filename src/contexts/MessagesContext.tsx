@@ -1,37 +1,27 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-
-interface Message {
-  id: string;
-  content: string;
-  sender_id: string;
-  receiver_id: string;
-  created_at: string;
-  read: boolean;
-  sender?: {
-    id: string;
-    username: string;
-    avatar_url: string;
-  };
-  receiver?: {
-    id: string;
-    username: string;
-    avatar_url: string;
-  };
-}
+import { Message, ChatUser } from '@/types/message';
 
 interface MessagesContextType {
   messages: Message[];
   sendMessage: (content: string, receiverId: string) => Promise<void>;
   markAsRead: (messageId: string) => Promise<void>;
+  selectedChat: string | null;
+  setSelectedChat: (userId: string | null) => void;
+  chats: ChatUser[];
+  isLoading: boolean;
+  handleSendMessage: (content: string) => void;
 }
 
 const MessagesContext = createContext<MessagesContextType | undefined>(undefined);
 
 export const MessagesProvider = ({ children }: { children: React.ReactNode }) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [chats, setChats] = useState<ChatUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -53,7 +43,14 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
         return;
       }
 
-      setMessages(data || []);
+      const formattedMessages = data.map(msg => ({
+        ...msg,
+        sender: msg.sender as Message['sender'],
+        receiver: msg.receiver as Message['receiver']
+      }));
+
+      setMessages(formattedMessages);
+      setIsLoading(false);
     };
 
     fetchMessages();
@@ -65,7 +62,7 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
         schema: 'public',
         table: 'messages',
         filter: `sender_id=eq.${user.id},receiver_id=eq.${user.id}` 
-      }, (payload) => {
+      }, () => {
         fetchMessages();
       })
       .subscribe();
@@ -102,8 +99,25 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
     }
   };
 
+  const handleSendMessage = (content: string) => {
+    if (selectedChat) {
+      sendMessage(content, selectedChat);
+    }
+  };
+
   return (
-    <MessagesContext.Provider value={{ messages, sendMessage, markAsRead }}>
+    <MessagesContext.Provider 
+      value={{ 
+        messages, 
+        sendMessage, 
+        markAsRead,
+        selectedChat,
+        setSelectedChat,
+        chats,
+        isLoading,
+        handleSendMessage
+      }}
+    >
       {children}
     </MessagesContext.Provider>
   );
