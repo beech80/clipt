@@ -1,10 +1,10 @@
 import React from 'react';
 import { useStreamChat } from '@/hooks/use-stream-chat';
-import StreamChatHeader from './StreamChatHeader';
+import { StreamChatHeader } from './StreamChatHeader';
 import StreamChatMessageList from './ChatMessageList';
 import StreamChatInput from './ChatInput';
-import StreamChatError from './StreamChatError';
-import StreamChatOffline from './StreamChatOffline';
+import { StreamChatError } from './StreamChatError';
+import { StreamChatOffline } from './StreamChatOffline';
 import { Loader2 } from 'lucide-react';
 
 interface StreamChatContainerProps {
