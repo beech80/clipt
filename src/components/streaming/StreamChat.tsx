@@ -23,8 +23,18 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
       const { data, error } = await supabase
         .from('stream_chat')
         .select(`
-          *,
-          profiles:user_id (
+          id,
+          stream_id,
+          user_id,
+          message,
+          created_at,
+          is_deleted,
+          deleted_by,
+          deleted_at,
+          is_command,
+          command_type,
+          timeout_duration,
+          user:user_id (
             username,
             avatar_url
           )
@@ -37,8 +47,8 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
       return data.map(msg => ({
         ...msg,
         profiles: {
-          username: msg.profiles?.username || 'Anonymous',
-          avatar_url: msg.profiles?.avatar_url || ''
+          username: msg.user?.username || 'Anonymous',
+          avatar_url: msg.user?.avatar_url || ''
         }
       }));
     },
