@@ -10,9 +10,9 @@ export interface StreamChatMessage {
   is_command?: boolean;
   command_type?: string;
   timeout_duration?: number;
-  profiles?: {
-    username: string;
-    avatar_url: string;
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
   };
 }
 

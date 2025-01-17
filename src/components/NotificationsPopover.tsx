@@ -19,9 +19,13 @@ interface Notification {
   content: string;
   created_at: string;
   read: boolean;
+  actor_id: string;
+  user_id: string;
+  resource_id?: string;
+  resource_type?: string;
   actor: {
-    username: string;
-    avatar_url: string;
+    username: string | null;
+    avatar_url: string | null;
   } | null;
 }
 
@@ -30,7 +34,6 @@ const NotificationsPopover = () => {
   const queryClient = useQueryClient();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Query notifications
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
@@ -38,14 +41,14 @@ const NotificationsPopover = () => {
         .from('notifications')
         .select(`
           *,
-          actor:actor_id(username, avatar_url)
+          actor:profiles!notifications_actor_id_fkey(username, avatar_url)
         `)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
         .limit(20);
 
       if (error) throw error;
-      return data as Notification[];
+      return data as unknown as Notification[];
     },
     enabled: !!user,
   });

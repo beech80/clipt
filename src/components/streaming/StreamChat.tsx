@@ -30,8 +30,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-
-      return data as StreamChatMessage[];
+      return data as unknown as StreamChatMessage[];
     },
     refetchInterval: isLive ? 1000 : false,
   });
@@ -63,7 +62,7 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
         ))}
       </div>
 
-      <ChatInput streamId={streamId} isLive={isLive} />
+      <ChatInput streamId={streamId} isLive={isLive} chatEnabled={chatEnabled} />
     </div>
   );
 };

@@ -32,8 +32,8 @@ export const MessagesProvider = ({ children }: { children: React.ReactNode }) =>
         .from('messages')
         .select(`
           *,
-          sender:sender_id(id, username, avatar_url),
-          receiver:receiver_id(id, username, avatar_url)
+          sender:profiles!messages_sender_id_fkey(id, username, avatar_url),
+          receiver:profiles!messages_receiver_id_fkey(id, username, avatar_url)
         `)
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
