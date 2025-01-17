@@ -82,17 +82,21 @@ const PostList = () => {
         .range(pageParam * POSTS_PER_PAGE, (pageParam + 1) * POSTS_PER_PAGE - 1);
 
       if (selectedCategory) {
-        query = query.in('id', 
-          supabase
-            .from('post_category_mappings')
-            .select('post_id')
-            .eq('category_id', 
-              supabase
-                .from('post_categories')
-                .select('id')
-                .eq('slug', selectedCategory)
-            )
-        );
+        const { data: categoryPosts } = await supabase
+          .from('post_category_mappings')
+          .select('post_id')
+          .eq('category_id', 
+            supabase
+              .from('post_categories')
+              .select('id')
+              .eq('slug', selectedCategory)
+              .single()
+          );
+        
+        if (categoryPosts) {
+          const postIds = categoryPosts.map(cp => cp.post_id);
+          query = query.in('id', postIds);
+        }
       }
 
       const { data, error } = await query;

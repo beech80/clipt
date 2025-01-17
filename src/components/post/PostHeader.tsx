@@ -5,16 +5,21 @@ import { PostHeaderProps } from "@/types/post";
 import { Heart, MessageCircle, Trophy } from "lucide-react";
 
 export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
+  // Add null checks and provide fallback values
+  const username = post.profiles?.username || 'Anonymous';
+  const avatarUrl = post.profiles?.avatar_url || '';
+  const firstLetter = username[0]?.toUpperCase() || 'A';
+
   return (
     <div className="flex items-center gap-3 bg-[#1A1F2C]/80 backdrop-blur-sm p-3 border-b border-[#403E43]">
       <Avatar className="w-10 h-10 ring-2 ring-[#403E43] ring-offset-2 ring-offset-[#1A1F2C]">
-        <AvatarImage src={post.profiles.avatar_url || ""} />
-        <AvatarFallback>{post.profiles.username?.[0]?.toUpperCase()}</AvatarFallback>
+        <AvatarImage src={avatarUrl} />
+        <AvatarFallback>{firstLetter}</AvatarFallback>
       </Avatar>
       
       <div className="flex flex-col">
         <div className="flex items-center gap-4">
-          <span className="font-semibold text-[#9b87f5]">{post.profiles.username}</span>
+          <span className="font-semibold text-[#9b87f5]">{username}</span>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
               <Heart className="w-4 h-4 text-[#ea384c]" />
