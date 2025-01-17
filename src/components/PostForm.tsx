@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import PostFormContent from "./post/form/PostFormContent";
@@ -9,7 +8,8 @@ import ImageUpload from "./post/ImageUpload";
 import VideoUpload from "./post/VideoUpload";
 import UploadProgress from "./post/form/UploadProgress";
 import MediaPreview from "./post/form/MediaPreview";
-import { extractHashtags } from "@/utils/hashtagUtils";
+import { uploadImage, uploadVideo } from "@/utils/postUploadUtils";
+import { createPost } from "@/services/postService";
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -48,105 +48,27 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
     const toastId = toast.loading("Creating your post...");
 
     try {
-      let image_url = null;
-      let video_url = null;
+      let imageUrl = null;
+      let videoUrl = null;
 
       if (selectedImage) {
-        const fileExt = selectedImage.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const imageInterval = setInterval(() => {
-          setImageProgress(prev => Math.min(prev + 20, 90));
-        }, 500);
-
-        const { error: uploadError, data } = await supabase.storage
-          .from('posts')
-          .upload(filePath, selectedImage);
-
-        clearInterval(imageInterval);
-        setImageProgress(100);
-
-        if (uploadError) {
-          toast.error("Failed to upload image", { id: toastId });
-          throw uploadError;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('posts')
-          .getPublicUrl(filePath);
-
-        image_url = publicUrl;
+        const result = await uploadImage(selectedImage, setImageProgress);
+        if (result.error) throw result.error;
+        imageUrl = result.url;
       }
 
       if (selectedVideo) {
-        const fileExt = selectedVideo.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const videoInterval = setInterval(() => {
-          setVideoProgress(prev => Math.min(prev + 10, 90));
-        }, 500);
-
-        const { error: uploadError } = await supabase.storage
-          .from('videos')
-          .upload(filePath, selectedVideo);
-
-        clearInterval(videoInterval);
-        setVideoProgress(100);
-
-        if (uploadError) {
-          toast.error("Failed to upload video", { id: toastId });
-          throw uploadError;
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('videos')
-          .getPublicUrl(filePath);
-
-        video_url = publicUrl;
+        const result = await uploadVideo(selectedVideo, setVideoProgress);
+        if (result.error) throw result.error;
+        videoUrl = result.url;
       }
 
-      // Create the post
-      const { data: post, error: postError } = await supabase
-        .from('posts')
-        .insert({
-          content: content.trim(),
-          user_id: user.id,
-          image_url,
-          video_url
-        })
-        .select()
-        .single();
-
-      if (postError) throw postError;
-
-      // Extract and save hashtags
-      const hashtags = extractHashtags(content);
-      if (hashtags.length > 0) {
-        // Insert hashtags
-        const { data: hashtagData, error: hashtagError } = await supabase
-          .from('hashtags')
-          .upsert(
-            hashtags.map(tag => ({ name: tag.toLowerCase() })),
-            { onConflict: 'name' }
-          )
-          .select('id, name');
-
-        if (hashtagError) throw hashtagError;
-
-        // Link hashtags to post
-        const { error: linkError } = await supabase
-          .from('post_hashtags')
-          .insert(
-            hashtagData.map(tag => ({
-              post_id: post.id,
-              hashtag_id: tag.id
-            }))
-          );
-
-        if (linkError) throw linkError;
-      }
+      await createPost({
+        content,
+        userId: user.id,
+        imageUrl,
+        videoUrl
+      });
 
       toast.success("Post created successfully!", { id: toastId });
       setContent("");
