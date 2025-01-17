@@ -1174,6 +1174,62 @@ export type Database = {
           },
         ]
       }
+      stream_moderators: {
+        Row: {
+          assigned_by: string | null
+          created_at: string | null
+          id: string
+          moderator_id: string | null
+          permissions: Json | null
+          stream_id: string | null
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string | null
+          id?: string
+          moderator_id?: string | null
+          permissions?: Json | null
+          stream_id?: string | null
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string | null
+          id?: string
+          moderator_id?: string | null
+          permissions?: Json | null
+          stream_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_moderators_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_moderators_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_moderators_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_moderators_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_revenue: {
         Row: {
           amount: number
@@ -1242,7 +1298,11 @@ export type Database = {
         Row: {
           chat_enabled: boolean | null
           chat_followers_only: boolean | null
+          chat_link_protection: boolean | null
+          chat_moderation_enabled: boolean | null
           chat_slow_mode: number | null
+          chat_spam_detection: boolean | null
+          chat_word_filter_enabled: boolean | null
           created_at: string
           id: string
           notification_enabled: boolean | null
@@ -1253,7 +1313,11 @@ export type Database = {
         Insert: {
           chat_enabled?: boolean | null
           chat_followers_only?: boolean | null
+          chat_link_protection?: boolean | null
+          chat_moderation_enabled?: boolean | null
           chat_slow_mode?: number | null
+          chat_spam_detection?: boolean | null
+          chat_word_filter_enabled?: boolean | null
           created_at?: string
           id?: string
           notification_enabled?: boolean | null
@@ -1264,7 +1328,11 @@ export type Database = {
         Update: {
           chat_enabled?: boolean | null
           chat_followers_only?: boolean | null
+          chat_link_protection?: boolean | null
+          chat_moderation_enabled?: boolean | null
           chat_slow_mode?: number | null
+          chat_spam_detection?: boolean | null
+          chat_word_filter_enabled?: boolean | null
           created_at?: string
           id?: string
           notification_enabled?: boolean | null
