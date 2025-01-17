@@ -1,10 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { Heart, MessageCircle, Trophy } from "lucide-react";
-import { PostHeader as PostHeaderType } from "@/types/post";
+import { PostHeaderProps } from "@/types/post";
 import PostMenu from "./PostMenu";
 
-export const PostHeader = ({ post, commentsCount }: PostHeaderType) => {
+export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url || '';
   const firstLetter = username[0]?.toUpperCase() || 'A';
