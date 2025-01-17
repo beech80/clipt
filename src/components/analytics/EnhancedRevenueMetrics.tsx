@@ -56,7 +56,6 @@ export const EnhancedRevenueMetrics = ({ streamId }: { streamId: string }) => {
         .rpc('calculate_stream_revenue_metrics', { stream_id: streamId });
       
       if (error) throw error;
-      // Access the first row of the result since the function returns an array with one row
       return data[0] as RevenueMetrics;
     },
   });
