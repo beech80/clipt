@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -23,7 +23,7 @@ export const ChatTimeouts = ({ streamId, userId, onTimeoutChange }: ChatTimeouts
           filter: `stream_id=eq.${streamId}`
         },
         (payload) => {
-          onTimeoutChange(prev => ({
+          onTimeoutChange((prev) => ({
             ...prev,
             [payload.new.user_id]: payload.new.expires_at
           }));

@@ -56,9 +56,9 @@ export const ChatMessages = ({
               }
             };
 
-            onMessagesChange(prev => [...prev, newMessage]);
+            onMessagesChange([...messages, newMessage]);
           } else if (payload.eventType === 'UPDATE' && payload.new.is_deleted) {
-            onMessagesChange(prev => prev.filter(msg => msg.id !== payload.new.id));
+            onMessagesChange(messages.filter(msg => msg.id !== payload.new.id));
           }
         }
       )
@@ -67,7 +67,7 @@ export const ChatMessages = ({
     return () => {
       supabase.removeChannel(chatChannel);
     };
-  }, [streamId, onMessagesChange]);
+  }, [streamId, messages, onMessagesChange]);
 
   const handleSendMessage = async (content: string) => {
     if (!userId || !streamId || !isLive) return;

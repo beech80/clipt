@@ -35,12 +35,16 @@ export const ChatPresence = ({
         onActiveUsersChange(userIds);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        onActiveUsersChange(prev => new Set([...prev, key]));
+        onActiveUsersChange((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(key);
+          return newSet;
+        });
         const username = newPresences[0]?.username || 'Someone';
         toast.success(`${username} joined the chat`);
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        onActiveUsersChange(prev => {
+        onActiveUsersChange((prev) => {
           const newSet = new Set(prev);
           newSet.delete(key);
           return newSet;
