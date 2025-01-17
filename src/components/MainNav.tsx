@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Home, MessageSquare, Video, Trophy, Settings, Gamepad } from "lucide-react";
+import { SearchBar } from "./SearchBar";
 
 export function MainNav({
   className,
@@ -38,6 +39,7 @@ export function MainNav({
         <Gamepad className="h-4 w-4" />
         Discover
       </NavLink>
+      <SearchBar />
       <NavLink
         to="/streaming"
         className={({ isActive }) =>
