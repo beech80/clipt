@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string
+          description: string
+          icon_url: string | null
+          id: string
+          name: string
+          points: number | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon_url?: string | null
+          id?: string
+          name: string
+          points?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon_url?: string | null
+          id?: string
+          name?: string
+          points?: number | null
+        }
+        Relationships: []
+      }
       bookmarks: {
         Row: {
           created_at: string
@@ -667,30 +694,42 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          bio_description: string | null
           created_at: string
+          custom_theme: Json | null
           display_name: string | null
           id: string
           is_moderator: boolean | null
+          location: string | null
+          social_links: Json | null
           username: string | null
           website: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          bio_description?: string | null
           created_at?: string
+          custom_theme?: Json | null
           display_name?: string | null
           id: string
           is_moderator?: boolean | null
+          location?: string | null
+          social_links?: Json | null
           username?: string | null
           website?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          bio_description?: string | null
           created_at?: string
+          custom_theme?: Json | null
           display_name?: string | null
           id?: string
           is_moderator?: boolean | null
+          location?: string | null
+          social_links?: Json | null
           username?: string | null
           website?: string | null
         }
@@ -1160,6 +1199,109 @@ export type Database = {
             foreignKeyName: "streams_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      two_factor_auth: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string
+          is_enabled: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string
+          is_enabled?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string
+          is_enabled?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "two_factor_auth_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_privacy_settings: {
+        Row: {
+          allow_mentions: boolean | null
+          allow_messages: boolean | null
+          created_at: string
+          is_private: boolean | null
+          show_activity_status: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_mentions?: boolean | null
+          allow_messages?: boolean | null
+          created_at?: string
+          is_private?: boolean | null
+          show_activity_status?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_mentions?: boolean | null
+          allow_messages?: boolean | null
+          created_at?: string
+          is_private?: boolean | null
+          show_activity_status?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_privacy_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
