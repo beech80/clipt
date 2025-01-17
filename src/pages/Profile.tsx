@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { useNavigate } from "react-router-dom";
+import { AchievementList } from "@/components/achievements/AchievementList";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -49,12 +50,6 @@ const Profile = () => {
     { id: 1, name: "Fortnite", hours: 156, lastPlayed: "2 days ago" },
     { id: 2, name: "Minecraft", hours: 89, lastPlayed: "1 week ago" },
     { id: 3, name: "Call of Duty", hours: 234, lastPlayed: "3 days ago" }
-  ];
-
-  const achievements = [
-    { id: 1, name: "First Victory", description: "Won your first game", date: "2024-01-15" },
-    { id: 2, name: "Social Butterfly", description: "Made 100 friends", date: "2024-02-01" },
-    { id: 3, name: "Stream Star", description: "Reached 1000 viewers", date: "2024-02-15" }
   ];
 
   const handleAddFriend = () => {
@@ -178,20 +173,7 @@ const Profile = () => {
           )}
 
           {activeTab === 'achievements' && (
-            <div className="space-y-4">
-              {achievements.map(achievement => (
-                <div key={achievement.id} className="gaming-card hover:border-gaming-500 transition-all">
-                  <div className="flex items-center gap-4">
-                    <Trophy className="w-8 h-8 text-gaming-400" />
-                    <div>
-                      <h3 className="font-semibold gaming-gradient">{achievement.name}</h3>
-                      <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                      <p className="text-xs text-muted-foreground">Achieved on {achievement.date}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <AchievementList userId="123" />
           )}
         </div>
       </div>
