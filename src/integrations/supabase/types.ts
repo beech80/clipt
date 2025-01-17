@@ -286,6 +286,60 @@ export type Database = {
           },
         ]
       }
+      content_reports: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          reason: string
+          reporter_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reason: string
+          reporter_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          reason?: string
+          reporter_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -616,6 +670,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_moderator: boolean | null
           username: string | null
           website: string | null
         }
@@ -625,6 +680,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          is_moderator?: boolean | null
           username?: string | null
           website?: string | null
         }
@@ -634,6 +690,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_moderator?: boolean | null
           username?: string | null
           website?: string | null
         }
