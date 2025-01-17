@@ -7,8 +7,6 @@ import { Message } from "@/types/message";
 import { toast } from "sonner";
 import { processCommand } from "@/utils/chatCommands";
 import type { StreamChatMessage } from "@/types/chat";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
 
 interface StreamChatProps {
   streamId: string;
@@ -19,12 +17,11 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [timeouts, setTimeouts] = useState<Record<string, string>>({});
-  const [activeUsers, setActiveUsers] = useState<Set<string>>(new Set());
 
-  // Fetch initial messages
-  const { data: initialMessages, isLoading } = useQuery({
-    queryKey: ['stream-chat', streamId],
-    queryFn: async () => {
+  useEffect(() => {
+    if (!streamId) return;
+
+    const loadMessages = async () => {
       const { data, error } = await supabase
         .from('stream_chat')
         .select(`
@@ -44,18 +41,14 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         `)
         .eq('stream_id', streamId)
         .eq('is_deleted', false)
-        .order('created_at', { ascending: true })
-        .limit(100);
+        .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!streamId
-  });
+      if (error) {
+        toast.error("Failed to load chat messages");
+        return;
+      }
 
-  useEffect(() => {
-    if (initialMessages) {
-      const formattedMessages: Message[] = initialMessages.map(msg => ({
+      const formattedMessages: Message[] = data.map(msg => ({
         id: msg.id,
         content: msg.message,
         sender_id: msg.user_id,
@@ -65,17 +58,31 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
           avatar_url: msg.profiles?.avatar_url
         }
       }));
+
       setMessages(formattedMessages);
-    }
-  }, [initialMessages]);
+    };
 
-  // Set up real-time subscriptions
-  useEffect(() => {
-    if (!streamId) return;
+    const loadTimeouts = async () => {
+      const { data, error } = await supabase
+        .from('chat_timeouts')
+        .select('user_id, expires_at')
+        .eq('stream_id', streamId)
+        .gt('expires_at', new Date().toISOString());
 
-    // Chat messages channel
-    const chatChannel = supabase
-      .channel(`stream_chat:${streamId}`)
+      if (!error && data) {
+        const timeoutMap: Record<string, string> = {};
+        data.forEach(timeout => {
+          timeoutMap[timeout.user_id] = timeout.expires_at;
+        });
+        setTimeouts(timeoutMap);
+      }
+    };
+
+    loadMessages();
+    loadTimeouts();
+
+    const channel = supabase
+      .channel('stream_chat')
       .on(
         'postgres_changes',
         {
@@ -111,34 +118,6 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       )
       .subscribe();
 
-    // Presence channel for active users
-    const presenceChannel = supabase.channel(`presence_${streamId}`, {
-      config: {
-        presence: {
-          key: user?.id,
-        },
-      },
-    });
-
-    presenceChannel
-      .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState();
-        const userIds = new Set(Object.keys(state));
-        setActiveUsers(userIds);
-      })
-      .on('presence', { event: 'join' }, ({ key }) => {
-        setActiveUsers(prev => new Set([...prev, key]));
-      })
-      .on('presence', { event: 'leave' }, ({ key }) => {
-        setActiveUsers(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(key);
-          return newSet;
-        });
-      })
-      .subscribe();
-
-    // Timeout channel
     const timeoutChannel = supabase
       .channel('chat_timeouts')
       .on(
@@ -159,11 +138,10 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(chatChannel);
-      supabase.removeChannel(presenceChannel);
+      supabase.removeChannel(channel);
       supabase.removeChannel(timeoutChannel);
     };
-  }, [streamId, user?.id]);
+  }, [streamId]);
 
   const handleSendMessage = async (content: string) => {
     if (!user || !streamId || !isLive) return;
@@ -193,28 +171,16 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error sending message:', error);
       toast.error("Failed to send message");
     }
   };
 
   return (
     <div className="flex flex-col h-[600px] border rounded-lg">
-      <div className="p-4 border-b bg-muted flex items-center justify-between">
+      <div className="p-4 border-b bg-muted">
         <h3 className="font-semibold">Stream Chat</h3>
-        <span className="text-sm text-muted-foreground">
-          {activeUsers.size} watching
-        </span>
       </div>
-      
-      {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <MessageList messages={messages} />
-      )}
-      
+      <MessageList messages={messages} />
       {isLive ? (
         <MessageInput onSendMessage={handleSendMessage} />
       ) : (
