@@ -149,7 +149,11 @@ const NotificationsPopover = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative touch-manipulation active:scale-95 transition-transform"
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
@@ -159,35 +163,41 @@ const NotificationsPopover = () => {
           <span className="sr-only">Notifications</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80">
+      <PopoverContent 
+        className="w-[calc(100vw-32px)] sm:w-80 max-h-[80vh] overflow-hidden"
+        align="end"
+        sideOffset={8}
+      >
         <div className="space-y-4">
-          <div className="text-sm font-medium">Notifications</div>
+          <div className="text-sm font-medium px-1">Notifications</div>
           {isLoading ? (
-            <div className="text-sm text-muted-foreground">Loading...</div>
+            <div className="text-sm text-muted-foreground p-4 text-center">
+              Loading...
+            </div>
           ) : notifications?.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground p-4 text-center">
               No notifications
             </div>
           ) : (
-            <ScrollArea className="h-[300px]">
-              <div className="space-y-2">
+            <ScrollArea className="h-[calc(80vh-100px)] sm:h-[300px]">
+              <div className="space-y-1 p-1">
                 {notifications?.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-3 rounded-lg text-sm hover:bg-accent cursor-pointer ${
+                    className={`p-3 rounded-lg text-sm hover:bg-accent cursor-pointer active:scale-98 transition-transform touch-manipulation ${
                       !notification.read ? 'bg-muted' : ''
                     }`}
                     onClick={() => handleNotificationClick(notification)}
                   >
                     <div className="flex items-center space-x-3">
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-8 w-8 shrink-0">
                         <AvatarImage src={notification.actor?.avatar_url || undefined} />
                         <AvatarFallback>
                           {notification.actor?.username?.[0]?.toUpperCase() || '?'}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex-1">
-                        <div>{getNotificationContent(notification)}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="line-clamp-2">{getNotificationContent(notification)}</div>
                         <div className="text-xs text-muted-foreground mt-1">
                           {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
                         </div>
