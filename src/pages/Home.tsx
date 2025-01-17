@@ -1,18 +1,14 @@
 import PostList from "@/components/PostList";
-import PostForm from "@/components/PostForm";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
-import { useSheetState } from "@/hooks/use-sheet-state";
+import PostForm from "@/components/PostForm";
 import GameBoyControls from "@/components/GameBoyControls";
 
 const Home = () => {
-  const { user } = useAuth();
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("feed");
-  const { isOpen: isMenuOpen } = useSheetState();
 
   return (
     <div className="h-[calc(100vh-80px)] relative">
@@ -44,12 +40,13 @@ const Home = () => {
                 <div className="w-[2px] h-full bg-gaming-400/50" />
 
                 <Button 
-                  className="relative h-full w-1/2 bg-gradient-to-b from-gaming-700/40 to-gaming-800/50 
+                  className={`relative h-full w-1/2 bg-gradient-to-b from-gaming-700/40 to-gaming-800/50 
                   border-y-2 border-r-2 border-gaming-400/50 text-white hover:from-gaming-700/50 hover:to-gaming-800/60
                   active:from-gaming-700/60 active:to-gaming-800/70 transform active:translate-y-0.5
                   transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none"
-                  onClick={() => setActiveTab("squad")}
+                  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none
+                  ${activeTab === "squad" ? "from-gaming-600/50 to-gaming-700/60" : ""}`}
+                  onClick={() => setActiveTab(activeTab === "squad" ? "feed" : "squad")}
                 >
                   <span className="flex items-center -skew-x-12 font-bold tracking-wider">
                     SQUADS
@@ -62,13 +59,7 @@ const Home = () => {
       </div>
 
       <div className="retro-screen h-full pt-16 pb-[160px]">
-        {activeTab === "squad" ? (
-          <div className="flex items-center justify-center h-full text-gaming-400">
-            Squad feature coming soon!
-          </div>
-        ) : (
-          <PostList />
-        )}
+        <PostList />
       </div>
 
       <GameBoyControls />
