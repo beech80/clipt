@@ -1,5 +1,3 @@
-import { RealtimePresenceState as SupabasePresenceState } from "@supabase/supabase-js";
-
 export interface ChatEmote {
   id: string;
   name: string;
@@ -41,5 +39,3 @@ export interface StreamChatMessage {
     avatar_url: string | null;
   };
 }
-
-export type RealtimePresenceState = SupabasePresenceState;

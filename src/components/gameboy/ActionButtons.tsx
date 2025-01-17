@@ -121,38 +121,32 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <>
       <button 
-        className="action-button"
+        className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
         onClick={handleLike}
-        style={{ '--icon-glow-color': '255, 0, 0' } as React.CSSProperties}
       >
-        <Heart 
-          className={`${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'}`}
-        />
+        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-[#FF0000] text-[#FF0000]' : 'text-[#FF0000]'} group-hover:text-[#FF3333]`} />
       </button>
+      <div className="flex gap-6 sm:gap-12 my-2 sm:my-3">
+        <button 
+          className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+          onClick={() => setIsCommentOpen(true)}
+        >
+          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#0066FF] group-hover:text-[#3399FF]" />
+        </button>
+        <button 
+          className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
+          onClick={handleFollow}
+        >
+          <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-[#33FF33]' : 'text-[#00FF00]'} group-hover:text-[#33FF33]`} />
+        </button>
+      </div>
       <button 
-        className="action-button"
-        onClick={() => setIsCommentOpen(true)}
-        style={{ '--icon-glow-color': '0, 122, 255' } as React.CSSProperties}
-      >
-        <MessageSquare className="text-blue-500" />
-      </button>
-      <button 
-        className="action-button"
-        onClick={handleFollow}
-        style={{ '--icon-glow-color': '0, 255, 0' } as React.CSSProperties}
-      >
-        <UserPlus 
-          className={`${isFollowing ? 'text-green-400' : 'text-green-500'}`}
-        />
-      </button>
-      <button 
-        className="action-button"
+        className="action-button bg-[#222222] hover:bg-[#333333] transition-transform hover:scale-110 active:scale-95 group"
         onClick={handleRank}
-        style={{ '--icon-glow-color': '255, 215, 0' } as React.CSSProperties}
       >
-        <Trophy className="text-yellow-500" />
+        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFD700] group-hover:text-[#FFDF33]" />
       </button>
 
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
@@ -193,7 +187,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
 
