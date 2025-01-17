@@ -3,6 +3,11 @@ import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
+interface ThemeColors {
+  primary: string;
+  secondary: string;
+}
+
 const EditProfile = () => {
   const { data: profile } = useQuery({
     queryKey: ['profile'],
@@ -21,6 +26,20 @@ const EditProfile = () => {
     },
   });
 
+  const defaultTheme: ThemeColors = {
+    primary: "#1EAEDB",
+    secondary: "#000000"
+  };
+
+  const currentTheme: ThemeColors = profile?.custom_theme 
+    ? (typeof profile.custom_theme === 'object' && profile.custom_theme !== null
+        ? {
+            primary: (profile.custom_theme as any).primary || defaultTheme.primary,
+            secondary: (profile.custom_theme as any).secondary || defaultTheme.secondary
+          }
+        : defaultTheme)
+    : defaultTheme;
+
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="space-y-6">
@@ -36,7 +55,7 @@ const EditProfile = () => {
         {profile && (
           <ThemeSelector 
             userId={profile.id} 
-            currentTheme={profile.custom_theme || { primary: "#1EAEDB", secondary: "#000000" }} 
+            currentTheme={currentTheme}
           />
         )}
       </div>

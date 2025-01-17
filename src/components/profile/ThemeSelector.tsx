@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Paintbrush } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { Json } from "@/integrations/supabase/types";
 
 interface ThemeColors {
   primary: string;
@@ -19,9 +20,14 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
   const handleSave = async () => {
     try {
       setIsLoading(true);
+      const themeJson: Json = {
+        primary: theme.primary,
+        secondary: theme.secondary
+      };
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ custom_theme: theme })
+        .update({ custom_theme: themeJson })
         .eq('id', userId);
 
       if (error) throw error;
