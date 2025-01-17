@@ -10,6 +10,7 @@ import { SearchInput } from "./search/SearchInput";
 import { SearchFilters } from "./search/SearchFilters";
 import { SearchHistory } from "./search/SearchHistory";
 import { SearchResults } from "./search/SearchResults";
+import { Json } from "@/integrations/supabase/types";
 
 export function SearchBar() {
   const [searchTerm, setSearchTerm] = useState("");
