@@ -581,6 +581,66 @@ export type Database = {
         }
         Relationships: []
       }
+      stream_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          thumbnail_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          thumbnail_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          thumbnail_url?: string | null
+        }
+        Relationships: []
+      }
+      stream_category_mappings: {
+        Row: {
+          category_id: string
+          created_at: string
+          stream_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          stream_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          stream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_category_mappings_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "stream_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_category_mappings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_chat: {
         Row: {
           command_type: string | null
@@ -688,6 +748,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stream_tag_mappings: {
+        Row: {
+          created_at: string
+          stream_id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          stream_id: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          stream_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_tag_mappings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_tag_mappings_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "stream_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       streams: {
         Row: {

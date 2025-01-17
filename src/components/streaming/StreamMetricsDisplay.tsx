@@ -1,47 +1,58 @@
-import { StreamHealthIndicator } from './StreamHealthIndicator';
-import { StreamMetrics } from './StreamMetrics';
 import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { calculateHealthStatus, getHealthColor } from "@/utils/streamHealth";
 
 interface StreamMetricsDisplayProps {
-  isLive: boolean;
-  healthStatus: string;
-  viewerCount: number;
-  metrics: {
-    bitrate: number;
-    fps: number;
-    resolution: string;
-  };
+  bitrate: number;
+  fps: number;
+  resolution: string;
+  className?: string;
 }
 
 export const StreamMetricsDisplay = ({
-  isLive,
-  healthStatus,
-  viewerCount,
-  metrics
+  bitrate,
+  fps,
+  resolution,
+  className
 }: StreamMetricsDisplayProps) => {
-  if (!isLive) return null;
+  const healthStatus = calculateHealthStatus(bitrate, fps, resolution);
+  const healthColor = getHealthColor(healthStatus);
+
+  const getBitrateQuality = (value: number) => {
+    if (value >= 6000) return 100;
+    if (value >= 4500) return 75;
+    if (value >= 3000) return 50;
+    return 25;
+  };
+
+  const getFPSQuality = (value: number) => {
+    if (value >= 60) return 100;
+    if (value >= 30) return 75;
+    if (value >= 24) return 50;
+    return 25;
+  };
 
   return (
-    <>
-      <Card className="absolute top-4 left-4 bg-black/60 px-3 py-1">
-        <StreamHealthIndicator 
-          status={healthStatus}
-          bitrate={metrics.bitrate}
-          fps={metrics.fps}
-          resolution={metrics.resolution}
-        />
-      </Card>
-      
-      <Card className="absolute top-4 right-4 bg-black/60 px-3 py-1 text-white text-sm flex items-center space-x-2">
-        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-        <span>{viewerCount} watching</span>
-      </Card>
-      
-      <StreamMetrics
-        bitrate={metrics.bitrate}
-        fps={metrics.fps}
-        className="absolute top-14 right-4 bg-black/60"
-      />
-    </>
+    <Card className={`p-4 space-y-4 ${className}`}>
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span>Bitrate</span>
+          <span>{(bitrate / 1000).toFixed(1)} Mbps</span>
+        </div>
+        <Progress value={getBitrateQuality(bitrate)} className={healthColor} />
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span>FPS</span>
+          <span>{fps}</span>
+        </div>
+        <Progress value={getFPSQuality(fps)} className={healthColor} />
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        Resolution: {resolution}
+      </div>
+    </Card>
   );
 };
