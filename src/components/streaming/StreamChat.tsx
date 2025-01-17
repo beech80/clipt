@@ -24,12 +24,16 @@ export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) =
         .from('stream_chat')
         .select(`
           *,
-          profiles:user_id(username, avatar_url)
+          profiles:user_id (
+            username,
+            avatar_url
+          )
         `)
         .eq('stream_id', streamId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
+      
       return data.map(msg => ({
         ...msg,
         profiles: {

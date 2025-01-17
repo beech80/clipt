@@ -11,8 +11,8 @@ export interface StreamChatMessage {
   command_type?: string;
   timeout_duration?: number;
   profiles: {
-    username: string | null;
-    avatar_url: string | null;
+    username: string;
+    avatar_url: string;
   };
 }
 
