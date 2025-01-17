@@ -6,6 +6,7 @@ import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useState, Dispatch, SetStateAction } from "react";
 import { useSheetState } from "@/hooks/use-sheet-state";
+import GameBoyControls from "@/components/GameBoyControls";
 
 interface HomeProps {
   onPostChange?: Dispatch<SetStateAction<string>>;
@@ -64,7 +65,7 @@ const Home = ({ onPostChange }: HomeProps) => {
         </div>
       </div>
 
-      <div className="retro-screen h-full pt-16">
+      <div className="retro-screen h-full pt-16 pb-[160px]">
         {activeTab === "squad" ? (
           <div className="flex items-center justify-center h-full text-gaming-400">
             Squad feature coming soon!
@@ -73,6 +74,8 @@ const Home = ({ onPostChange }: HomeProps) => {
           <PostList />
         )}
       </div>
+
+      <GameBoyControls />
     </div>
   );
 };
