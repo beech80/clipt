@@ -16,18 +16,30 @@ const TopClips = () => {
             username,
             avatar_url
           ),
-          likes:likes (
+          likes (
             count
           ),
-          clip_votes:clip_votes (
-            count
+          clip_votes!inner (
+            id
           )
         `)
-        .order('clip_votes(count)', { ascending: false, nullsFirst: false })
         .limit(10);
 
       if (error) throw error;
-      return data;
+
+      // Count clip votes for each post
+      const postsWithCounts = data.map(post => ({
+        ...post,
+        likes_count: post.likes?.[0]?.count || 0,
+        clip_votes: [{
+          count: post.clip_votes?.length || 0
+        }]
+      }));
+
+      // Sort by clip votes count
+      return postsWithCounts.sort((a, b) => 
+        (b.clip_votes[0].count || 0) - (a.clip_votes[0].count || 0)
+      );
     }
   });
 
@@ -52,11 +64,7 @@ const TopClips = () => {
           topPosts?.map((post) => (
             <PostItem 
               key={post.id} 
-              post={{
-                ...post,
-                likes_count: post.likes?.[0]?.count || 0,
-                clip_votes: post.clip_votes || []
-              }} 
+              post={post} 
             />
           ))
         )}
