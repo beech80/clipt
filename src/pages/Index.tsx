@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet";
+import { SEO } from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { SeasonBanner } from "@/components/seasons/SeasonBanner";
 import { XPMultipliersList } from "@/components/multipliers/XPMultipliersList";
@@ -11,12 +11,11 @@ import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
 import { GamingHistory } from "@/components/gaming/GamingHistory";
 import { TournamentList } from "@/components/tournaments/TournamentList";
 import PostList from "@/components/PostList";
-import { SEO } from "@/components/SEO";
 
 export default function Index() {
   const { user } = useAuth();
 
-  // Structured data for the home page
+  // Structured data for the organization/website
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
