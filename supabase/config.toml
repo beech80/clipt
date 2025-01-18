@@ -13,9 +13,9 @@ enabled = true
 port = 54323
 
 [[functions]]
-name = "user-data-management"
+[functions.user-data-management]
 verify_jwt = true
 
 [[functions]]
-name = "cdn-config"
+[functions.cdn-config]
 verify_jwt = true
