@@ -430,6 +430,41 @@ export type Database = {
           },
         ]
       }
+      clip_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          template_data: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          template_data: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          template_data?: Json
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_templates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clip_votes: {
         Row: {
           created_at: string
@@ -771,6 +806,54 @@ export type Database = {
           },
         ]
       }
+      group_chat_invites: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          group_id: string | null
+          id: string
+          invite_code: string
+          max_uses: number | null
+          uses: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          group_id?: string | null
+          id?: string
+          invite_code: string
+          max_uses?: number | null
+          uses?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          group_id?: string | null
+          id?: string
+          invite_code?: string
+          max_uses?: number | null
+          uses?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_chat_invites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_chat_invites_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_chat_members: {
         Row: {
           group_id: string
@@ -810,32 +893,44 @@ export type Database = {
       group_chats: {
         Row: {
           avatar_url: string | null
+          chat_rules: string[] | null
           created_at: string
           created_by: string
+          custom_emotes: Json | null
           description: string | null
           id: string
           is_private: boolean | null
+          max_members: number | null
           name: string
+          slow_mode_interval: number | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          chat_rules?: string[] | null
           created_at?: string
           created_by: string
+          custom_emotes?: Json | null
           description?: string | null
           id?: string
           is_private?: boolean | null
+          max_members?: number | null
           name: string
+          slow_mode_interval?: number | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          chat_rules?: string[] | null
           created_at?: string
           created_by?: string
+          custom_emotes?: Json | null
           description?: string | null
           id?: string
           is_private?: boolean | null
+          max_members?: number | null
           name?: string
+          slow_mode_interval?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1083,29 +1178,82 @@ export type Database = {
           },
         ]
       }
+      message_attachments: {
+        Row: {
+          created_at: string | null
+          file_type: string
+          file_url: string
+          id: string
+          message_id: string | null
+          thumbnail_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_type: string
+          file_url: string
+          id?: string
+          message_id?: string | null
+          thumbnail_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          message_id?: string | null
+          thumbnail_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
           created_at: string
+          edited_at: string | null
           id: string
+          is_edited: boolean | null
+          message_type: string | null
+          metadata: Json | null
+          reactions: Json | null
           read: boolean | null
           receiver_id: string | null
+          reply_to: string | null
           sender_id: string | null
         }
         Insert: {
           content: string
           created_at?: string
+          edited_at?: string | null
           id?: string
+          is_edited?: boolean | null
+          message_type?: string | null
+          metadata?: Json | null
+          reactions?: Json | null
           read?: boolean | null
           receiver_id?: string | null
+          reply_to?: string | null
           sender_id?: string | null
         }
         Update: {
           content?: string
           created_at?: string
+          edited_at?: string | null
           id?: string
+          is_edited?: boolean | null
+          message_type?: string | null
+          metadata?: Json | null
+          reactions?: Json | null
           read?: boolean | null
           receiver_id?: string | null
+          reply_to?: string | null
           sender_id?: string | null
         }
         Relationships: [
@@ -1114,6 +1262,13 @@ export type Database = {
             columns: ["receiver_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_fkey"
+            columns: ["reply_to"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
           {
@@ -1964,11 +2119,15 @@ export type Database = {
       }
       stream_highlights: {
         Row: {
+          clip_segments: Json[] | null
           created_at: string | null
           description: string | null
           duration: unknown
+          edited_url: string | null
+          editing_metadata: Json | null
           highlight_url: string | null
           id: string
+          processing_status: string | null
           start_time: unknown
           stream_id: string | null
           thumbnail_url: string | null
@@ -1977,11 +2136,15 @@ export type Database = {
           view_count: number | null
         }
         Insert: {
+          clip_segments?: Json[] | null
           created_at?: string | null
           description?: string | null
           duration: unknown
+          edited_url?: string | null
+          editing_metadata?: Json | null
           highlight_url?: string | null
           id?: string
+          processing_status?: string | null
           start_time: unknown
           stream_id?: string | null
           thumbnail_url?: string | null
@@ -1990,11 +2153,15 @@ export type Database = {
           view_count?: number | null
         }
         Update: {
+          clip_segments?: Json[] | null
           created_at?: string | null
           description?: string | null
           duration?: unknown
+          edited_url?: string | null
+          editing_metadata?: Json | null
           highlight_url?: string | null
           id?: string
+          processing_status?: string | null
           start_time?: unknown
           stream_id?: string | null
           thumbnail_url?: string | null
