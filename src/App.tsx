@@ -20,6 +20,10 @@ import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
 import GroupChat from "@/pages/GroupChat";
 import Onboarding from "@/pages/Onboarding";
+import Connections from "@/pages/Connections";
+import Achievements from "@/pages/Achievements";
+import Analytics from "@/pages/Analytics";
+import Support from "@/pages/Support";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +50,10 @@ function App() {
               <Route path="/collections" element={<Collections />} />
               <Route path="/post/:id" element={<Post />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/connections" element={<Connections />} />
+              <Route path="/achievements" element={<Achievements />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/support" element={<Support />} />
             </Routes>
             <ReportDialogProvider />
             <Toaster />
