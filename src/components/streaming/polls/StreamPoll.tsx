@@ -17,6 +17,11 @@ interface StreamPollProps {
   pollId?: string;
 }
 
+interface PollData {
+  question: string;
+  options: PollOption[];
+}
+
 export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
   const { user } = useAuth();
   const [question, setQuestion] = useState("");
@@ -43,9 +48,10 @@ export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
       return;
     }
 
-    setQuestion(poll.question);
-    setOptions(poll.options);
-    calculateTotalVotes(poll.options);
+    const pollData = poll as PollData;
+    setQuestion(pollData.question);
+    setOptions(pollData.options);
+    calculateTotalVotes(pollData.options);
   };
 
   const subscribeToVotes = () => {

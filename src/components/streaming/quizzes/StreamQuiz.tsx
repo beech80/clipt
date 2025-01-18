@@ -19,6 +19,11 @@ interface StreamQuizProps {
   quizId?: string;
 }
 
+interface QuizData {
+  title: string;
+  questions: QuizQuestion[];
+}
+
 export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
@@ -46,8 +51,9 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
       return;
     }
 
-    setTitle(quiz.title);
-    setQuestions(quiz.questions);
+    const quizData = quiz as QuizData;
+    setTitle(quizData.title);
+    setQuestions(quizData.questions);
   };
 
   const handleAnswer = async () => {
