@@ -54,6 +54,7 @@ export function VirtualGiftSelector({ streamId, isLive }: VirtualGiftSelectorPro
       const { error } = await supabase.from("stream_gifts").insert({
         stream_id: streamId,
         gift_id: selectedGift.id,
+        sender_id: (await supabase.auth.getUser()).data.user?.id,
         amount: selectedGift.price,
         message: message.trim() || null,
       });
