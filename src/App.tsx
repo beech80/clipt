@@ -26,6 +26,8 @@ import Analytics from "@/pages/Analytics";
 import Support from "@/pages/Support";
 import Verification from "@/pages/Verification";
 import Schedule from "@/pages/Schedule";
+import PaymentSuccess from "@/pages/payment-success";
+import PaymentCancelled from "@/pages/payment-cancelled";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +60,8 @@ function App() {
               <Route path="/support" element={<Support />} />
               <Route path="/verification" element={<Verification />} />
               <Route path="/schedule" element={<Schedule />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-cancelled" element={<PaymentCancelled />} />
             </Routes>
             <ReportDialogProvider />
             <Toaster />
