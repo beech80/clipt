@@ -41,6 +41,20 @@ const Profile = () => {
     }
   });
 
+  // Query to get the user's profile data
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const userStats = {
     followers: 1234,
     following: 567,
@@ -178,7 +192,7 @@ const Profile = () => {
             <AchievementList userId="123" />
           )}
 
-          {!profile?.is_verified && (
+          {profile && !profile.is_verified && (
             <div className="mt-8 border-t pt-8">
               <VerificationRequestForm />
             </div>
