@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { Heart, MessageSquare, UserPlus, Trophy } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, MessageSquare, UserPlus, Trophy, ArrowLeft } from 'lucide-react';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft } from 'lucide-react';
 
 interface ActionButtonsProps {
   onAction: (action: string) => void;
