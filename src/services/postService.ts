@@ -74,3 +74,13 @@ export const createPost = async ({ content, userId, imageUrl, videoUrl }: Create
     return { data: null, error: error as Error };
   }
 };
+
+export const track_post_analytics = async (postId: string, metricType: 'view' | 'share' | 'share_click' | 'hashtag_click' | 'time_spent', value: number = 1) => {
+  const { error } = await supabase.rpc('track_post_analytics', {
+    post_id_param: postId,
+    metric_type: metricType,
+    increment_value: value
+  });
+
+  if (error) throw error;
+};
