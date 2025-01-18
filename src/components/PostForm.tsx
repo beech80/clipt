@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import { Grid } from "@giphy/react-components";
 import PostFormContent from "./post/form/PostFormContent";
@@ -19,8 +19,10 @@ import PostFormMediaEditor from "./post/form/PostFormMediaEditor";
 import { uploadImage, uploadVideo } from "@/utils/postUploadUtils";
 import { extractMentions, createMention } from "@/utils/mentionUtils";
 import { createPost } from "@/services/postService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-const gf = new GiphyFetch('pLURtkhVrUXr3KG25Gy5IvzziV5OrZGa'); // Giphy API key
+const gf = new GiphyFetch('pLURtkhVrUXr3KG25Gy5IvzziV5OrZGa');
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -38,25 +40,37 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [scheduledDate, setScheduledDate] = useState<Date>();
   const [scheduledTime, setScheduledTime] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateForm = () => {
     if (!user) {
-      toast.error("Please login to create a post");
-      return;
+      setError("Please login to create a post");
+      return false;
     }
 
     if (!content.trim() && !selectedImage && !selectedVideo && !selectedGif) {
-      toast.error("Please add some content, image, GIF, or video to your post");
-      return;
+      setError("Please add some content, image, GIF, or video to your post");
+      return false;
     }
 
     if ((selectedImage && selectedVideo) || (selectedImage && selectedGif) || (selectedVideo && selectedGif)) {
-      toast.error("Please choose only one type of media");
+      setError("Please choose only one type of media");
+      return false;
+    }
+
+    setError(null);
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
       return;
     }
 
@@ -107,24 +121,30 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         { id: toastId }
       );
       
-      setContent("");
-      setSelectedImage(null);
-      setSelectedVideo(null);
-      setSelectedGif(null);
-      setImageProgress(0);
-      setVideoProgress(0);
-      setScheduledDate(undefined);
-      setScheduledTime("");
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      if (videoInputRef.current) videoInputRef.current.value = '';
+      resetForm();
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       if (onPostCreated) onPostCreated();
     } catch (error) {
       console.error("Error creating post:", error);
       toast.error("Failed to create post", { id: toastId });
+      setError("Failed to create post. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setContent("");
+    setSelectedImage(null);
+    setSelectedVideo(null);
+    setSelectedGif(null);
+    setImageProgress(0);
+    setVideoProgress(0);
+    setScheduledDate(undefined);
+    setScheduledTime("");
+    setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (videoInputRef.current) videoInputRef.current.value = '';
   };
 
   const handleEditedMedia = (blob: Blob) => {
@@ -140,6 +160,12 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   return (
     <div className="bg-card rounded-lg p-4 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
         <PostFormContent content={content} onChange={setContent} />
         
         {selectedImage && (
@@ -154,6 +180,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
               type="button"
               variant="outline"
               onClick={() => setShowEditor(true)}
+              className="w-full sm:w-auto"
             >
               Edit Image
             </Button>
@@ -183,19 +210,18 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
               onRemove={() => setSelectedVideo(null)} 
             />
             <UploadProgress progress={videoProgress} type="video" />
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowEditor(true)}
-              >
-                Edit Video
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowEditor(true)}
+              className="w-full sm:w-auto"
+            >
+              Edit Video
+            </Button>
           </>
         )}
 
-        <div className="flex flex-wrap gap-2">
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-2`}>
           {!selectedVideo && !selectedGif && (
             <ImageUpload
               selectedImage={selectedImage}
@@ -217,7 +243,11 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
           {!selectedImage && !selectedVideo && (
             <Popover open={showGifPicker} onOpenChange={setShowGifPicker}>
               <PopoverTrigger asChild>
-                <Button type="button" variant="outline">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                >
                   Add GIF
                 </Button>
               </PopoverTrigger>
@@ -239,7 +269,11 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button type="button" variant="outline">
+              <Button 
+                type="button" 
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {scheduledDate ? format(scheduledDate, 'PPP') : 'Schedule'}
               </Button>
@@ -257,7 +291,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
                     type="time"
                     value={scheduledTime}
                     onChange={(e) => setScheduledTime(e.target.value)}
-                    className="px-3 py-2 border rounded-md"
+                    className="px-3 py-2 border rounded-md w-full"
                   />
                   {(scheduledDate || scheduledTime) && (
                     <Button

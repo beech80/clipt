@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const POSTS_PER_PAGE = 5;
 
 const PostSkeleton = () => (
-  <div className="relative h-[calc(100vh-200px)] bg-[#1A1F2C]">
+  <div className="relative h-[calc(100vh-200px)] sm:h-[500px] bg-[#1A1F2C]">
     <div className="p-3 sm:p-4 border-b border-[#2A2E3B]">
       <div className="flex items-center space-x-4">
         <Skeleton className="h-12 w-12 rounded-full" />
@@ -27,6 +30,7 @@ const PostSkeleton = () => (
 );
 
 const PostList = () => {
+  const isMobile = useIsMobile();
   const { ref, inView } = useInView({
     threshold: 0.5,
     rootMargin: "100px",
@@ -39,6 +43,7 @@ const PostList = () => {
     hasNextPage,
     isFetchingNextPage,
     status,
+    refetch
   } = useInfiniteQuery({
     queryKey: ['posts'],
     queryFn: async ({ pageParam = 0 }) => {
@@ -88,7 +93,7 @@ const PostList = () => {
 
   if (status === "pending") {
     return (
-      <div className="space-y-4 touch-none">
+      <div className="space-y-4 touch-none px-4 sm:px-0">
         {[...Array(3)].map((_, i) => (
           <PostSkeleton key={i} />
         ))}
@@ -98,23 +103,40 @@ const PostList = () => {
 
   if (status === "error") {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] space-y-4">
-        <p className="text-red-500">Error loading posts: {error.message}</p>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error?.message || "Error loading posts"}
+          </AlertDescription>
+        </Alert>
         <Button 
-          onClick={() => window.location.reload()}
+          onClick={() => refetch()}
           variant="secondary"
+          className="mt-4"
         >
-          Retry
+          Try Again
         </Button>
       </div>
     );
   }
 
+  if (!data?.pages || data.pages.length === 0 || data.pages[0].length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
+        <p className="text-muted-foreground text-center">
+          No posts found. Be the first to create one!
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="post-container relative h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none">
+    <div className={`post-container relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
+                    overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none px-4 sm:px-0`}>
       {data?.pages.map((page) => (
         page?.map((post) => (
-          <div key={post.id} className="snap-start">
+          <div key={post.id} className="snap-start mb-4">
             <PostItem post={post} />
           </div>
         ))
