@@ -49,7 +49,19 @@ const PostList = () => {
   } = useInfiniteQuery({
     queryKey: ['posts', user?.id],
     queryFn: async ({ pageParam = 0 }) => {
-      let query = supabase
+      // First, if user is logged in, get the list of followed user IDs
+      let followedUserIds: string[] = [];
+      if (user) {
+        const { data: followsData } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', user.id);
+        
+        followedUserIds = followsData?.map(follow => follow.following_id) || [];
+      }
+
+      // Then query posts
+      const query = supabase
         .from('posts')
         .select(`
           id,
@@ -73,14 +85,9 @@ const PostList = () => {
         .order('created_at', { ascending: false })
         .is('is_published', true);
 
-      // If user is logged in, prioritize posts from followed users
-      if (user) {
-        query = query.in('user_id', 
-          supabase
-            .from('follows')
-            .select('following_id')
-            .eq('follower_id', user.id)
-        );
+      // If user is logged in, filter by followed users
+      if (user && followedUserIds.length > 0) {
+        query.in('user_id', followedUserIds);
       }
 
       const { data, error } = await query;
