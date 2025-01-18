@@ -14,6 +14,7 @@ import Login from "@/pages/Login";
 import ResetPassword from "@/pages/ResetPassword";
 import UpdatePassword from "@/pages/UpdatePassword";
 import Collections from "@/pages/Collections";
+import Post from "@/pages/Post";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/discover" element={<Discover />} />
             <Route path="/collections" element={<Collections />} />
+            <Route path="/post/:id" element={<Post />} />
           </Routes>
           <Toaster />
         </Router>
