@@ -99,8 +99,8 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
         <Joystick onDirectionChange={handleVideoControl} />
       </div>
 
-      {/* Action Buttons - Reduced size from w-36/h-36 to w-32/h-32 */}
-      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-32 sm:w-32 h-32 sm:h-32">
+      {/* Action Buttons - Xbox diamond size */}
+      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-24 sm:w-28 h-24 sm:h-28">
         <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
       </div>
     </div>
