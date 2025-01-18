@@ -9,6 +9,7 @@ import { Post } from "@/types/post";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/contexts/AuthContext";
 
 const POSTS_PER_PAGE = 5;
 
@@ -30,6 +31,7 @@ const PostSkeleton = () => (
 );
 
 const PostList = () => {
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const { ref, inView } = useInView({
     threshold: 0.5,
@@ -45,9 +47,9 @@ const PostList = () => {
     status,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['posts'],
+    queryKey: ['posts', user?.id],
     queryFn: async ({ pageParam = 0 }) => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('posts')
         .select(`
           id,
@@ -69,9 +71,19 @@ const PostList = () => {
         `)
         .range(pageParam * POSTS_PER_PAGE, (pageParam + 1) * POSTS_PER_PAGE - 1)
         .order('created_at', { ascending: false })
-        .is('is_published', true)
-        .throwOnError();
+        .is('is_published', true);
 
+      // If user is logged in, prioritize posts from followed users
+      if (user) {
+        query = query.in('user_id', 
+          supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', user.id)
+        );
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Post[];
     },
@@ -124,9 +136,15 @@ const PostList = () => {
   if (!data?.pages || data.pages.length === 0 || data.pages[0].length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
-        <p className="text-muted-foreground text-center">
-          No posts found. Be the first to create one!
-        </p>
+        {user ? (
+          <p className="text-muted-foreground text-center">
+            Follow some creators to see their posts here!
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-center">
+            Sign in to see personalized content from creators you follow!
+          </p>
+        )}
       </div>
     );
   }

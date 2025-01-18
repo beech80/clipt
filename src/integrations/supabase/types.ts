@@ -1150,6 +1150,36 @@ export type Database = {
           },
         ]
       }
+      game_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gaming_history: {
         Row: {
           activity_type: string
@@ -2043,6 +2073,46 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_game_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          post_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          post_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_game_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "game_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_game_categories_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_game_categories_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "trending_posts"
             referencedColumns: ["id"]
           },
         ]
