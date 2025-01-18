@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import PostList from "@/components/PostList";
 import { Button } from "@/components/ui/button";
-import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import PostForm from "@/components/PostForm";
 import GameBoyControls from "@/components/GameBoyControls";
