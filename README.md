@@ -1,16 +1,121 @@
 # Clip - Social Gaming Platform
 
-## Overview
+## User Guide
 
-Clip is a modern social platform for gamers to share their best gaming moments, connect with fellow gamers, and build a vibrant gaming community. The platform offers features like:
+### Getting Started
 
-- 🎮 Share gaming clips and moments
-- 🎥 Live streaming capabilities
-- 💬 Real-time chat and messaging
-- 🏆 Achievement system and leveling
-- 🎯 Seasonal challenges and rewards
-- 👥 Social features (follow, like, comment)
-- 📊 Analytics and engagement tracking
+1. **Creating an Account**
+   - Click "Sign Up" in the top right
+   - Enter your email and password, or use social login
+   - Complete your profile setup with username and avatar
+
+2. **Navigation**
+   - Home: View your personalized feed
+   - Discover: Find new content and creators
+   - Streaming: Watch and create live streams
+   - Top Clips: Browse trending gaming moments
+   - Messages: Access your conversations
+   - Profile: Manage your account
+
+### Creating Content
+
+1. **Sharing Gaming Moments**
+   - Click the "New Post" button
+   - Upload images or videos
+   - Add GIFs using the GIF picker
+   - Write your caption
+   - Add hashtags for better discovery
+   - Schedule posts for later if desired
+
+2. **Live Streaming**
+   - Go to the Streaming tab
+   - Click "Start Stream"
+   - Set your stream title and category
+   - Configure quality settings
+   - Use stream key with your broadcasting software
+   - Interact with chat while live
+
+### Social Features
+
+1. **Connecting with Others**
+   - Follow users you're interested in
+   - Like and comment on posts
+   - Share content to your collections
+   - Send direct messages
+   - Create and join group chats
+
+2. **Collections**
+   - Create themed collections
+   - Save posts to collections
+   - Make collections private or public
+   - Share collections with others
+
+### Gaming Features
+
+1. **XP System**
+   - Earn XP through various activities:
+     - Creating posts
+     - Streaming
+     - Engaging with content
+     - Completing challenges
+   - Level up to unlock rewards
+   - Track progress in your profile
+
+2. **Achievements**
+   - View available achievements
+   - Track progress towards goals
+   - Display earned badges
+   - Complete achievement chains
+
+3. **Seasonal Events**
+   - Participate in seasonal challenges
+   - Earn exclusive rewards
+   - Compete on seasonal leaderboards
+   - Get XP multipliers during events
+
+### Privacy & Safety
+
+1. **Account Settings**
+   - Customize notification preferences
+   - Set privacy levels
+   - Manage blocked users
+   - Enable two-factor authentication
+
+2. **Content Controls**
+   - Report inappropriate content
+   - Block users
+   - Filter chat content
+   - Manage who can message you
+
+### Accessibility
+
+1. **Display Options**
+   - Toggle high contrast mode
+   - Adjust font sizes
+   - Enable screen reader optimization
+   - Customize color schemes
+
+2. **Keyboard Navigation**
+   - Use keyboard shortcuts
+   - Navigate with tab key
+   - Access quick actions menu
+   - Customize shortcuts
+
+### Technical Features
+
+1. **Offline Support**
+   - Access cached content offline
+   - Queue posts for when online
+   - Save drafts locally
+   - Sync when connection returns
+
+2. **Media Features**
+   - Edit clips before posting
+   - Convert videos to GIFs
+   - Trim video length
+   - Add filters and effects
+
+## Technical Documentation
 
 ## Tech Stack
 
