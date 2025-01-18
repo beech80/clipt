@@ -10,7 +10,8 @@
     {
       "src": "logo192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "logo512.png",
@@ -25,5 +26,19 @@
   "orientation": "portrait",
   "description": "Share your gaming moments",
   "screenshots": [],
-  "categories": ["games", "social", "entertainment"]
+  "categories": ["games", "social", "entertainment"],
+  "shortcuts": [
+    {
+      "name": "New Post",
+      "url": "/post/new",
+      "description": "Create a new post"
+    },
+    {
+      "name": "Messages",
+      "url": "/messages",
+      "description": "View your messages"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
