@@ -29,7 +29,7 @@
 
 @layer base {
   * {
-    @apply border-border touch-manipulation;
+    @apply border-[#403E43] touch-manipulation;
   }
   body {
     @apply text-white overscroll-none;

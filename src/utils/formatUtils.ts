@@ -1,4 +1,4 @@
-import { format, formatDistance, formatRelative } from "date-fns";
+import { format, formatDistance, formatRelative, Locale } from "date-fns";
 import { ar, es, fr, zhCN } from "date-fns/locale";
 
 const locales: { [key: string]: Locale } = {
