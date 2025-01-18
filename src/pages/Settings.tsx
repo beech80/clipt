@@ -1,97 +1,226 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import GameBoyControls from "@/components/GameBoyControls";
-import { AccessibilitySettings } from "@/components/accessibility/AccessibilitySettings";
-import { KeyboardShortcuts } from "@/components/keyboard/KeyboardShortcuts";
-import { ContentRecommendations } from "@/components/recommendations/ContentRecommendations";
+import { AuthGuard } from '@/components/AuthGuard';
+import { TwoFactorSettings } from '@/components/settings/TwoFactorSettings';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
-export default function Settings() {
-  const handleThemeChange = (theme: string) => {
-    document.documentElement.setAttribute('data-theme', theme);
-    toast.success(`Theme changed to ${theme}`);
+const Settings = () => {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState({
+    username: '',
+    display_name: '',
+    bio: '',
+    email_notifications: false,
+    push_notifications: false,
+    dark_mode: false
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      getProfile();
+    }
+  }, [user]);
+
+  const getProfile = async () => {
+    try {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      if (error) throw error;
+      if (data) {
+        setProfile({
+          ...profile,
+          ...data
+        });
+      }
+    } catch (error) {
+      toast.error('Error loading profile');
+    }
+  };
+
+  const updateProfile = async () => {
+    try {
+      setLoading(true);
+      if (!user) throw new Error('No user');
+
+      const updates = {
+        id: user.id,
+        username: profile.username,
+        display_name: profile.display_name,
+        bio: profile.bio,
+        email_notifications: profile.email_notifications,
+        push_notifications: profile.push_notifications,
+        dark_mode: profile.dark_mode,
+        updated_at: new Date()
+      };
+
+      const { error } = await supabase.from('profiles').upsert(updates);
+      if (error) throw error;
+      toast.success('Profile updated successfully');
+    } catch (error) {
+      toast.error('Error updating profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8 pb-40 space-y-8">
-      <h1 className="text-3xl font-bold text-gaming-400 mb-8">Settings</h1>
-      
-      <AccessibilitySettings />
-      <KeyboardShortcuts />
-      <ContentRecommendations />
-      
-      <Card className="p-6 bg-background/80 backdrop-blur-sm border-gaming-700/50">
-        <h2 className="text-xl font-semibold mb-6 text-gaming-400">Theme Settings</h2>
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <Button
-            variant="outline"
-            className="h-24 border-2 border-gaming-700 hover:border-gaming-400"
-            onClick={() => handleThemeChange('default')}
-          >
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-gaming-400 mx-auto mb-2"></div>
-              <span>Default</span>
-            </div>
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="h-24 border-2 border-gaming-700 hover:border-gaming-400"
-            onClick={() => handleThemeChange('dark')}
-          >
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-[#1A1F2C] mx-auto mb-2"></div>
-              <span>Dark</span>
-            </div>
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="h-24 border-2 border-gaming-700 hover:border-gaming-400"
-            onClick={() => handleThemeChange('light')}
-          >
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-[#F1F0FB] mx-auto mb-2"></div>
-              <span>Light</span>
-            </div>
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="h-24 border-2 border-gaming-700 hover:border-gaming-400"
-            onClick={() => handleThemeChange('purple')}
-          >
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-[#9b87f5] mx-auto mb-2"></div>
-              <span>Purple</span>
-            </div>
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="h-24 border-2 border-gaming-700 hover:border-gaming-400"
-            onClick={() => handleThemeChange('ocean')}
-          >
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-[#0EA5E9] mx-auto mb-2"></div>
-              <span>Ocean</span>
-            </div>
-          </Button>
-          
-          <Button
-            variant="outline"
-            className="h-24 border-2 border-gaming-700 hover:border-gaming-400"
-            onClick={() => handleThemeChange('sunset')}
-          >
-            <div className="text-center">
-              <div className="w-8 h-8 rounded-full bg-[#F97316] mx-auto mb-2"></div>
-              <span>Sunset</span>
-            </div>
-          </Button>
+    <AuthGuard>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Settings</h1>
+        <div className="space-y-6">
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="account">Account</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="security">Security</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Profile Settings</CardTitle>
+                  <CardDescription>
+                    Manage your public profile information
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      value={profile.username}
+                      onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="display_name">Display Name</Label>
+                    <Input
+                      id="display_name"
+                      value={profile.display_name}
+                      onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Input
+                      id="bio"
+                      value={profile.bio}
+                      onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                    />
+                  </div>
+                  <Button onClick={updateProfile} disabled={loading}>
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="notifications">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notification Preferences</CardTitle>
+                  <CardDescription>
+                    Choose how you want to receive notifications
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div>Email Notifications</div>
+                      <div className="text-sm text-muted-foreground">
+                        Receive notifications via email
+                      </div>
+                    </div>
+                    <Switch
+                      checked={profile.email_notifications}
+                      onCheckedChange={(checked) => setProfile({ ...profile, email_notifications: checked })}
+                    />
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div>Push Notifications</div>
+                      <div className="text-sm text-muted-foreground">
+                        Receive push notifications
+                      </div>
+                    </div>
+                    <Switch
+                      checked={profile.push_notifications}
+                      onCheckedChange={(checked) => setProfile({ ...profile, push_notifications: checked })}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="security">
+              <TwoFactorSettings />
+              <div className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Password</CardTitle>
+                    <CardDescription>
+                      Change your password or enable two-factor authentication
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button variant="outline" onClick={() => window.location.href = '/reset-password'}>
+                      Change Password
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="account">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Preferences</CardTitle>
+                  <CardDescription>
+                    Manage your account settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div>Dark Mode</div>
+                      <div className="text-sm text-muted-foreground">
+                        Toggle dark mode theme
+                      </div>
+                    </div>
+                    <Switch
+                      checked={profile.dark_mode}
+                      onCheckedChange={(checked) => setProfile({ ...profile, dark_mode: checked })}
+                    />
+                  </div>
+                  <Separator />
+                  <div className="pt-4">
+                    <Button variant="destructive">Delete Account</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-      </Card>
-      <GameBoyControls />
-    </div>
+      </div>
+    </AuthGuard>
   );
-}
+};
+
+export default Settings;

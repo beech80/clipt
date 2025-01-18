@@ -7,11 +7,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Gamepad2 } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError, AuthApiError } from '@supabase/supabase-js';
+import { useAuthSecurity } from '@/hooks/useAuthSecurity';
 
 const Login = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const { checkIPStatus, recordAuthAttempt, is2FAEnabled } = useAuthSecurity();
 
   useEffect(() => {
     if (user) {
@@ -20,6 +22,11 @@ const Login = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN') {
+        // Record successful login attempt
+        const ip = await fetch('https://api.ipify.org?format=json')
+          .then(res => res.json())
+          .then(data => data.ip);
+        await recordAuthAttempt(ip, session?.user?.email || '', true);
         navigate('/');
       }
       if (event === 'USER_UPDATED' && session?.user) {
@@ -42,13 +49,27 @@ const Login = () => {
       }
     });
 
+    // Check IP status on component mount
+    const checkIP = async () => {
+      const ip = await fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => data.ip);
+      
+      const isRestricted = await checkIPStatus(ip);
+      if (isRestricted) {
+        setError('Too many login attempts. Please try again later.');
+      }
+    };
+    
+    checkIP();
+
     return () => {
       subscription.unsubscribe();
       setError(null);
     };
-  }, [user, navigate]);
+  }, [user, navigate, checkIPStatus, recordAuthAttempt]);
 
-  const handleAuthError = (error: AuthError) => {
+  const handleAuthError = async (error: AuthError) => {
     let errorMessage = 'An error occurred during authentication.';
     
     if (error instanceof AuthApiError) {
@@ -56,6 +77,11 @@ const Login = () => {
         case 400:
           if (error.message.includes('Invalid login credentials')) {
             errorMessage = 'Invalid email or password. Please check your credentials.';
+            // Record failed attempt
+            const ip = await fetch('https://api.ipify.org?format=json')
+              .then(res => res.json())
+              .then(data => data.ip);
+            await recordAuthAttempt(ip, '', false);
           } else {
             errorMessage = 'Invalid request. Please check your input.';
           }
@@ -116,6 +142,11 @@ const Login = () => {
           <Link to="/resend-verification" className="text-sm text-primary hover:underline block">
             Resend verification email
           </Link>
+          {is2FAEnabled && (
+            <div className="text-sm text-muted-foreground">
+              Two-factor authentication is enabled for your account
+            </div>
+          )}
         </div>
       </div>
     </div>

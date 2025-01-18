@@ -234,6 +234,30 @@ export type Database = {
           },
         ]
       }
+      auth_attempts: {
+        Row: {
+          attempt_time: string | null
+          email: string | null
+          id: string
+          ip_address: string
+          is_successful: boolean | null
+        }
+        Insert: {
+          attempt_time?: string | null
+          email?: string | null
+          id?: string
+          ip_address: string
+          is_successful?: boolean | null
+        }
+        Update: {
+          attempt_time?: string | null
+          email?: string | null
+          id?: string
+          ip_address?: string
+          is_successful?: boolean | null
+        }
+        Relationships: []
+      }
       backup_logs: {
         Row: {
           backup_type: string
@@ -264,6 +288,30 @@ export type Database = {
           size_bytes?: number | null
           started_at?: string | null
           status?: string
+        }
+        Relationships: []
+      }
+      blocked_ips: {
+        Row: {
+          blocked_at: string | null
+          expires_at: string | null
+          ip_address: string
+          is_permanent: boolean | null
+          reason: string | null
+        }
+        Insert: {
+          blocked_at?: string | null
+          expires_at?: string | null
+          ip_address: string
+          is_permanent?: boolean | null
+          reason?: string | null
+        }
+        Update: {
+          blocked_at?: string | null
+          expires_at?: string | null
+          ip_address?: string
+          is_permanent?: boolean | null
+          reason?: string | null
         }
         Relationships: []
       }
@@ -4206,6 +4254,12 @@ export type Database = {
         }
         Returns: number
       }
+      check_auth_rate_limit: {
+        Args: {
+          check_ip: string
+        }
+        Returns: boolean
+      }
       check_content_against_filters: {
         Args: {
           content_text: string
@@ -4292,6 +4346,12 @@ export type Database = {
           payload: Json
         }
         Returns: string
+      }
+      is_ip_blocked: {
+        Args: {
+          check_ip: string
+        }
+        Returns: boolean
       }
       process_data_retention: {
         Args: Record<PropertyKey, never>
