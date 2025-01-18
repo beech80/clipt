@@ -17,6 +17,7 @@ import UpdatePassword from "@/pages/UpdatePassword";
 import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
 import GroupChat from "@/pages/GroupChat";
+import Onboarding from "@/pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ function App() {
               <Route path="/discover" element={<Discover />} />
               <Route path="/collections" element={<Collections />} />
               <Route path="/post/:id" element={<Post />} />
+              <Route path="/onboarding" element={<Onboarding />} />
             </Routes>
             <Toaster />
           </Router>
