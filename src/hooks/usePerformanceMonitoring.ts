@@ -50,6 +50,16 @@ export function usePerformanceMonitoring(componentName: string) {
       });
     }
 
+    // Track user interactions
+    const interactionHandler = () => {
+      LoggingService.trackMetric('user_interaction', 1, {
+        component: componentName
+      });
+    };
+
+    document.addEventListener('click', interactionHandler);
+    document.addEventListener('keypress', interactionHandler);
+
     return () => {
       // Track component unmount
       LoggingService.trackMetric(
@@ -57,6 +67,10 @@ export function usePerformanceMonitoring(componentName: string) {
         performance.now() - startTime,
         { component: componentName }
       );
+
+      // Clean up event listeners
+      document.removeEventListener('click', interactionHandler);
+      document.removeEventListener('keypress', interactionHandler);
     };
   }, [componentName]);
 }
