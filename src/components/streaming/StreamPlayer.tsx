@@ -2,11 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { QualitySelector } from './QualitySelector';
-import { StreamMetricsDisplay } from './StreamMetricsDisplay';
-import { ViewerCountManager } from './ViewerCountManager';
-import { VirtualGiftSelector } from './gifts/VirtualGiftSelector';
-import { GiftDisplay } from './gifts/GiftDisplay';
+import { StreamPlayerControls } from './player/StreamPlayerControls';
+import { StreamPlayerChat } from './player/StreamPlayerChat';
+import { StreamPlayerGifts } from './player/StreamPlayerGifts';
 
 interface StreamPlayerProps {
   streamUrl?: string | null;
@@ -39,7 +37,6 @@ export const StreamPlayer = ({
   useEffect(() => {
     if (!streamId) return;
 
-    // Subscribe to stream health updates
     const healthChannel = supabase
       .channel('stream-health')
       .on(
@@ -134,23 +131,6 @@ export const StreamPlayer = ({
     };
   }, [streamUrl, autoplay]);
 
-  const handleQualityChange = (quality: string) => {
-    const hls = hlsRef.current;
-    if (!hls) return;
-
-    setCurrentQuality(quality);
-    if (quality === 'auto') {
-      hls.currentLevel = -1;
-    } else {
-      const level = hls.levels.findIndex(
-        level => level.height === parseInt(quality)
-      );
-      if (level !== -1) {
-        hls.currentLevel = level;
-      }
-    }
-  };
-
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden group">
       {!isLive && !streamUrl && (
@@ -168,30 +148,24 @@ export const StreamPlayer = ({
       
       {streamId && (
         <>
-          <ViewerCountManager
+          <StreamPlayerChat
             streamId={streamId}
             viewerCount={viewerCount}
             onViewerCountChange={setViewerCount}
           />
-          <div className="absolute bottom-4 right-4 space-x-2">
-            <VirtualGiftSelector streamId={streamId} isLive={isLive} />
-          </div>
-          <GiftDisplay streamId={streamId} />
+          <StreamPlayerGifts
+            streamId={streamId}
+            isLive={isLive}
+          />
         </>
       )}
 
-      <StreamMetricsDisplay
-        bitrate={streamMetrics.bitrate}
-        fps={streamMetrics.fps}
-        resolution={streamMetrics.resolution}
-        className="absolute bottom-16 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
-      />
-      
-      <QualitySelector
+      <StreamPlayerControls
         qualities={qualities}
         currentQuality={currentQuality}
-        onQualityChange={handleQualityChange}
-        className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+        onQualityChange={setCurrentQuality}
+        streamMetrics={streamMetrics}
+        className="absolute bottom-0 right-0"
       />
     </div>
   );
