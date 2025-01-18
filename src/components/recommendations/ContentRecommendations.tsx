@@ -1,3 +1,16 @@
+/**
+ * ContentRecommendations Component
+ * 
+ * Displays personalized content recommendations for the authenticated user.
+ * Uses Supabase's built-in recommendation system to fetch relevant posts
+ * based on user interactions and preferences.
+ * 
+ * Features:
+ * - Personalized post recommendations
+ * - Loading states with skeleton UI
+ * - Error handling
+ * - Responsive design
+ */
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase";

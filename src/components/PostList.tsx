@@ -6,8 +6,17 @@ import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase";
 
+/**
+ * Number of posts to fetch per page for infinite scrolling
+ */
 const POSTS_PER_PAGE = 5;
 
+/**
+ * PostSkeleton Component
+ * 
+ * Displays a loading placeholder for posts while content is being fetched.
+ * Maintains the same dimensions and layout as actual posts for a smooth transition.
+ */
 const PostSkeleton = () => (
   <div className="relative h-[calc(100vh-200px)] bg-[#1A1F2C]">
     <div className="p-3 sm:p-4 border-b border-[#2A2E3B]">
@@ -29,9 +38,22 @@ const PostSkeleton = () => (
   </div>
 );
 
+/**
+ * PostList Component
+ * 
+ * Renders a list of posts with infinite scrolling functionality.
+ * Features:
+ * - Infinite scrolling using Intersection Observer
+ * - Loading states with skeleton placeholders
+ * - Error handling with retry option
+ * - Optimized performance with React Query
+ * - Responsive design for all screen sizes
+ */
 const PostList = () => {
+  // Set up intersection observer for infinite scrolling
   const { ref, inView } = useInView();
 
+  // Fetch posts with infinite query
   const {
     data,
     error,
@@ -70,12 +92,14 @@ const PostList = () => {
     },
   });
 
+  // Load more posts when user scrolls to bottom
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
+  // Show loading state
   if (status === "pending") {
     return (
       <div className="space-y-4 touch-none">
@@ -86,6 +110,7 @@ const PostList = () => {
     );
   }
 
+  // Show error state
   if (status === "error") {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] space-y-4">
@@ -100,6 +125,7 @@ const PostList = () => {
     );
   }
 
+  // Render post list
   return (
     <div className="post-container relative h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none">
       {data.pages.map((page) => (
