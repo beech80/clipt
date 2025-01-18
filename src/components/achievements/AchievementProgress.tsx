@@ -19,8 +19,7 @@ export const AchievementProgress = () => {
           current_streak,
           max_streak,
           achievements (
-            name,
-            category
+            name
           )
         `)
         .eq('user_id', user?.id)
@@ -82,7 +81,6 @@ export const AchievementProgress = () => {
                     <div>
                       <h4 className="font-medium">{p.achievement?.name}</h4>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{p.achievement?.category}</span>
                         {p.achievement?.reward_value?.points > 0 && (
                           <div className="flex items-center gap-1">
                             <Star className="w-4 h-4" />
