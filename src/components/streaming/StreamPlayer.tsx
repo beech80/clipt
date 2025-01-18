@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { QualitySelector } from './QualitySelector';
 import { StreamMetricsDisplay } from './StreamMetricsDisplay';
 import { ViewerCountManager } from './ViewerCountManager';
+import { VirtualGiftSelector } from './gifts/VirtualGiftSelector';
+import { GiftDisplay } from './gifts/GiftDisplay';
 
 interface StreamPlayerProps {
   streamUrl?: string | null;
