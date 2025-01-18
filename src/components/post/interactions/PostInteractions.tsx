@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Post } from "@/types/post";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Share2, Trophy } from "lucide-react";
+import { Share2, Trophy } from "lucide-react";
 import { track_post_analytics } from "@/services/postService";
 
 interface PostInteractionsProps {
@@ -16,34 +16,7 @@ interface PostInteractionsProps {
 
 export const PostInteractions = ({ post, commentsCount, onCommentClick }: PostInteractionsProps) => {
   const { user } = useAuth();
-  const [isLiked, setIsLiked] = useState(false);
   const navigate = useNavigate();
-
-  const handleLike = async () => {
-    if (!user) {
-      toast.error("Please login to like posts");
-      return;
-    }
-
-    try {
-      if (!isLiked) {
-        await supabase
-          .from('likes')
-          .insert([{ post_id: post.id, user_id: user.id }]);
-        setIsLiked(true);
-        toast.success("Post liked!");
-      } else {
-        await supabase
-          .from('likes')
-          .delete()
-          .match({ post_id: post.id, user_id: user.id });
-        setIsLiked(false);
-        toast.success("Post unliked!");
-      }
-    } catch (error) {
-      toast.error("Error updating like status");
-    }
-  };
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/post/${post.id}`;
@@ -103,20 +76,11 @@ export const PostInteractions = ({ post, commentsCount, onCommentClick }: PostIn
       <Button
         variant="ghost"
         size="sm"
-        onClick={handleLike}
-        className={`flex items-center gap-2 ${isLiked ? 'text-red-500' : ''}`}
-      >
-        <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onCommentClick}
+        onClick={handleRank}
         className="flex items-center gap-2"
       >
-        <MessageCircle className="w-4 h-4" />
-        {commentsCount > 0 && <span>{commentsCount}</span>}
+        <Trophy className="w-4 h-4" />
+        {post.clip_votes?.[0]?.count || 0}
       </Button>
 
       <Button
@@ -126,15 +90,6 @@ export const PostInteractions = ({ post, commentsCount, onCommentClick }: PostIn
         className="flex items-center gap-2"
       >
         <Share2 className="w-4 h-4" />
-      </Button>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleRank}
-        className="flex items-center gap-2"
-      >
-        <Trophy className="w-4 h-4" />
       </Button>
     </div>
   );
