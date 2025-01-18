@@ -7,6 +7,15 @@ import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface PostgresInterval {
+  hours?: number;
+  minutes?: number;
+  seconds?: number;
+  days?: number;
+  months?: number;
+  years?: number;
+}
+
 const Schedule = () => {
   const { user } = useAuth();
 
@@ -57,8 +66,8 @@ const Schedule = () => {
     const scheduledDate = new Date(stream.scheduled_start_time);
     const duration = typeof stream.scheduled_duration === 'string' 
       ? stream.scheduled_duration
-      : stream.scheduled_duration 
-        ? `${stream.scheduled_duration.minutes || 0} minutes`
+      : (stream.scheduled_duration as PostgresInterval)
+        ? `${(stream.scheduled_duration as PostgresInterval).minutes || 0} minutes`
         : null;
     
     return (
