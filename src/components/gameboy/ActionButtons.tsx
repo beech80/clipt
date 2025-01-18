@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, MessageSquare, UserPlus, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
 
 interface ActionButtonsProps {
   onAction: (action: string) => void;
@@ -41,10 +40,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
 
   return (
     <div className="relative w-full h-full bg-transparent">
-      {/* Top Button (SQUADS) */}
+      {/* Top Button */}
       <button
         onClick={() => handleAction('like')}
-        className={`${buttonClasses} top-0 left-1/2 -translate-x-1/2 flex flex-col gap-1`}
+        className={`${buttonClasses} top-0 left-1/2 -translate-x-1/2`}
         aria-label="Like"
       >
         <Heart
