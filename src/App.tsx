@@ -24,6 +24,8 @@ import Connections from "@/pages/Connections";
 import Achievements from "@/pages/Achievements";
 import Analytics from "@/pages/Analytics";
 import Support from "@/pages/Support";
+import Verification from "@/pages/Verification";
+import Schedule from "@/pages/Schedule";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +56,8 @@ function App() {
               <Route path="/achievements" element={<Achievements />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/support" element={<Support />} />
+              <Route path="/verification" element={<Verification />} />
+              <Route path="/schedule" element={<Schedule />} />
             </Routes>
             <ReportDialogProvider />
             <Toaster />
