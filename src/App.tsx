@@ -14,6 +14,7 @@ import Discover from "@/pages/Discover";
 import Login from "@/pages/Login";
 import ResetPassword from "@/pages/ResetPassword";
 import UpdatePassword from "@/pages/UpdatePassword";
+import ResendVerification from "@/pages/ResendVerification";
 import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
 import GroupChat from "@/pages/GroupChat";
@@ -32,6 +33,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/update-password" element={<UpdatePassword />} />
+              <Route path="/resend-verification" element={<ResendVerification />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/group-chat" element={<GroupChat />} />
