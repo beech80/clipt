@@ -14,9 +14,13 @@ export function LanguageSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative hover:bg-accent"
+          aria-label={translate("select_language")}
+        >
           <Globe className="h-5 w-5" />
-          <span className="sr-only">{translate("select_language")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[200px]">
@@ -24,10 +28,12 @@ export function LanguageSelector() {
           <DropdownMenuItem
             key={lang.id}
             onClick={() => setLanguage(lang)}
-            className={currentLanguage.id === lang.id ? "bg-accent" : ""}
+            className={`flex items-center justify-between ${
+              currentLanguage.id === lang.id ? "bg-accent" : ""
+            }`}
           >
-            <span className="flex-1">{lang.native_name}</span>
-            <span className="text-muted-foreground">({lang.name})</span>
+            <span>{lang.native_name}</span>
+            <span className="text-muted-foreground text-sm">({lang.name})</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
