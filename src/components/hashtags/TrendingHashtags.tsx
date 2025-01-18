@@ -24,14 +24,28 @@ export function TrendingHashtags() {
           hashtag_id,
           hashtags!inner (
             name
-          ),
-          count:count(*) over (partition by hashtag_id)
+          )
         `)
-        .order('count', { ascending: false })
+        .order('hashtag_id', { ascending: false })
         .limit(5);
 
       if (error) throw error;
-      return data as TrendingHashtag[];
+
+      // Get counts in a separate query
+      const { data: counts, error: countError } = await supabase
+        .from('post_hashtags')
+        .select('hashtag_id, count:count(*)', { count: 'exact' })
+        .group('hashtag_id');
+
+      if (countError) throw countError;
+
+      // Combine the data
+      const combined = data.map(tag => ({
+        ...tag,
+        count: counts?.find(c => c.hashtag_id === tag.hashtag_id)?.count || 0
+      }));
+
+      return combined as TrendingHashtag[];
     }
   });
 
