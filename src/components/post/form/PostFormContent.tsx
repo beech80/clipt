@@ -4,6 +4,7 @@ import HashtagSuggestions from "./HashtagSuggestions";
 import MentionSuggestions from "@/components/mentions/MentionSuggestions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { toast } from "@/hooks/use-toast";
 
 interface PostFormContentProps {
   content: string;
@@ -15,7 +16,7 @@ const PostFormContent = ({ content, onChange }: PostFormContentProps) => {
   const [mentionSearch, setMentionSearch] = useState<string>("");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
 
-  const { data: hashtagSuggestions } = useQuery({
+  const { data: hashtagSuggestions, isLoading } = useQuery({
     queryKey: ['hashtag-suggestions', hashtagSearch],
     queryFn: async () => {
       if (!hashtagSearch) return [];
@@ -26,7 +27,14 @@ const PostFormContent = ({ content, onChange }: PostFormContentProps) => {
         .ilike('name', `${hashtagSearch}%`)
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load hashtag suggestions",
+          variant: "destructive",
+        });
+        throw error;
+      }
       return data;
     },
     enabled: hashtagSearch.length > 0
@@ -61,6 +69,11 @@ const PostFormContent = ({ content, onChange }: PostFormContentProps) => {
         onSelect={(e) => setCursorPosition(e.currentTarget.selectionStart)}
         className="min-h-[100px] resize-none"
       />
+      {isLoading && hashtagSearch && (
+        <div className="absolute z-10 w-full max-w-md bg-background border border-border rounded-md shadow-lg mt-1 p-2">
+          Loading suggestions...
+        </div>
+      )}
       {hashtagSearch && hashtagSuggestions && (
         <div className="absolute z-10 w-full max-w-md bg-background border border-border rounded-md shadow-lg mt-1">
           <ul className="py-1">

@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { SEO } from "@/components/SEO";
 import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import PostList from "@/components/PostList";
 import { SeasonBanner } from "@/components/seasons/SeasonBanner";
 import { ContentFilters } from "@/components/home/ContentFilters";
@@ -15,6 +15,7 @@ import { OnboardingSection } from "@/components/home/OnboardingSection";
 import { WelcomeSection } from "@/components/home/WelcomeSection";
 import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
+import { toast } from "@/hooks/use-toast";
 
 export default function Index() {
   const { user } = useAuth();
@@ -36,10 +37,18 @@ export default function Index() {
       return data;
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
-    gcTime: 1000 * 60 * 30, // Cache garbage collection time
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+    meta: {
+      onSuccess: () => {
+        toast({
+          title: "Profile loaded",
+          description: "Your profile data has been loaded successfully.",
+        });
+      },
+    },
   });
 
   if (profileLoading) {
@@ -92,36 +101,43 @@ export default function Index() {
       >
         <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-4 md:py-8 space-y-4 md:space-y-8`}>
           <AnimatePresence mode="wait">
-            <ContentFilters
-              contentFilter={contentFilter}
-              setContentFilter={setContentFilter}
-              sortOrder={sortOrder}
-              setSortOrder={setSortOrder}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ContentFilters
+                contentFilter={contentFilter}
+                setContentFilter={setContentFilter}
+                sortOrder={sortOrder}
+                setSortOrder={setSortOrder}
+              />
 
-            {user && !isCompleted && (
-              <OnboardingSection show={true} />
-            )}
+              {user && !isCompleted && (
+                <OnboardingSection show={true} />
+              )}
 
-            <SeasonBanner />
-            
-            {user ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-                <MainContent />
-                <SidebarContent />
-              </div>
-            ) : (
-              <div className="space-y-8" role="region" aria-label="Welcome section">
-                <WelcomeSection />
-                <section 
-                  aria-label="Latest posts"
-                  tabIndex={0}
-                  className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
-                >
-                  <PostList />
-                </section>
-              </div>
-            )}
+              <SeasonBanner />
+              
+              {user ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
+                  <MainContent />
+                  <SidebarContent />
+                </div>
+              ) : (
+                <div className="space-y-8" role="region" aria-label="Welcome section">
+                  <WelcomeSection />
+                  <section 
+                    aria-label="Latest posts"
+                    tabIndex={0}
+                    className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
+                  >
+                    <PostList />
+                  </section>
+                </div>
+              )}
+            </motion.div>
           </AnimatePresence>
         </div>
       </main>
