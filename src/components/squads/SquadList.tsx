@@ -46,7 +46,7 @@ export function SquadList() {
         </h2>
         <Button>
           <UserPlus className="h-4 w-4 mr-2" />
-          Create Squad
+          squad
         </Button>
       </div>
 
