@@ -123,7 +123,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
     <>
       {/* Y Button - Like (Yellow) - Top */}
       <button 
-        className="action-button absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[20%]
+        className="action-button absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[120%]
           bg-gradient-to-b from-yellow-500/20 to-yellow-600/30
           border-yellow-400 hover:border-yellow-300
           shadow-[0_0_15px_rgba(234,179,8,0.3)]
@@ -137,7 +137,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
 
       {/* X Button - Comment (Blue) - Left */}
       <button 
-        className="action-button absolute left-0 top-1/2 -translate-x-[20%] -translate-y-1/2
+        className="action-button absolute left-0 top-1/2 -translate-x-[120%] -translate-y-1/2
           bg-gradient-to-b from-blue-500/20 to-blue-600/30
           border-blue-400 hover:border-blue-300
           shadow-[0_0_15px_rgba(59,130,246,0.3)]
@@ -151,7 +151,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
 
       {/* B Button - Follow (Red) - Right */}
       <button 
-        className="action-button absolute right-0 top-1/2 translate-x-[20%] -translate-y-1/2
+        className="action-button absolute right-0 top-1/2 translate-x-[120%] -translate-y-1/2
           bg-gradient-to-b from-red-500/20 to-red-600/30
           border-red-400 hover:border-red-300
           shadow-[0_0_15px_rgba(239,68,68,0.3)]
@@ -165,7 +165,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
 
       {/* A Button - Rank (Green) - Bottom */}
       <button 
-        className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[20%]
+        className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[120%]
           bg-gradient-to-b from-green-500/20 to-green-600/30
           border-green-400 hover:border-green-300
           shadow-[0_0_15px_rgba(34,197,94,0.3)]
