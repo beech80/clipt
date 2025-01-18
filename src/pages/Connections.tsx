@@ -17,7 +17,7 @@ const Connections = () => {
       const { data, error } = await supabase
         .from('follows')
         .select(`
-          follower:follower_id(
+          follower:profiles!follows_follower_id_fkey(
             id,
             username,
             avatar_url,
@@ -38,7 +38,7 @@ const Connections = () => {
       const { data, error } = await supabase
         .from('follows')
         .select(`
-          following:following_id(
+          following:profiles!follows_following_id_fkey(
             id,
             username,
             avatar_url,
