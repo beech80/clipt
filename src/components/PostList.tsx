@@ -1,10 +1,11 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import PostItem from "./PostItem";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase";
+import { PostFilters, PostSortOption, PostFilterOption } from "./post/PostFilters";
 
 const POSTS_PER_PAGE = 5;
 
@@ -31,6 +32,8 @@ const PostSkeleton = () => (
 
 const PostList = () => {
   const { ref, inView } = useInView();
+  const [sortBy, setSortBy] = useState<PostSortOption>('recent');
+  const [filter, setFilter] = useState<PostFilterOption>('all');
 
   const {
     data,
@@ -40,9 +43,9 @@ const PostList = () => {
     isFetchingNextPage,
     status,
   } = useInfiniteQuery({
-    queryKey: ['trending-posts'],
+    queryKey: ['trending-posts', sortBy, filter],
     queryFn: async ({ pageParam = 0 }) => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('trending_posts')
         .select(`
           *,
@@ -57,8 +60,25 @@ const PostList = () => {
             count
           )
         `)
-        .range(pageParam * POSTS_PER_PAGE, (pageParam + 1) * POSTS_PER_PAGE - 1)
-        .order('trending_score', { ascending: false });
+        .range(pageParam * POSTS_PER_PAGE, (pageParam + 1) * POSTS_PER_PAGE - 1);
+
+      // Apply filters
+      if (filter === 'images') {
+        query = query.not('image_url', 'is', null);
+      } else if (filter === 'videos') {
+        query = query.not('video_url', 'is', null);
+      }
+
+      // Apply sorting
+      if (sortBy === 'recent') {
+        query = query.order('created_at', { ascending: false });
+      } else if (sortBy === 'trending') {
+        query = query.order('trending_score', { ascending: false });
+      } else if (sortBy === 'most_liked') {
+        query = query.order('likes_count', { ascending: false });
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data;
@@ -101,30 +121,36 @@ const PostList = () => {
   }
 
   return (
-    <div className="post-container relative h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none">
-      {data.pages.map((page, i) => (
-        page.map((post) => (
-          <div key={post.id} className="snap-start snap-always h-[calc(100vh-200px)]">
-            <PostItem 
-              post={{
-                ...post,
-                likes_count: post.likes?.[0]?.count || 0,
-                clip_votes: post.clip_votes || []
-              }} 
-            />
+    <div className="space-y-4">
+      <PostFilters 
+        onSortChange={setSortBy}
+        onFilterChange={setFilter}
+      />
+      <div className="post-container relative h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none">
+        {data.pages.map((page, i) => (
+          page.map((post) => (
+            <div key={post.id} className="snap-start snap-always h-[calc(100vh-200px)]">
+              <PostItem 
+                post={{
+                  ...post,
+                  likes_count: post.likes?.[0]?.count || 0,
+                  clip_votes: post.clip_votes || []
+                }} 
+              />
+            </div>
+          ))
+        ))}
+        {hasNextPage && (
+          <div
+            ref={ref}
+            className="flex justify-center p-4"
+          >
+            {isFetchingNextPage && (
+              <Loader2 className="h-8 w-8 animate-spin text-gaming-400" />
+            )}
           </div>
-        ))
-      ))}
-      {hasNextPage && (
-        <div
-          ref={ref}
-          className="flex justify-center p-4"
-        >
-          {isFetchingNextPage && (
-            <Loader2 className="h-8 w-8 animate-spin text-gaming-400" />
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
