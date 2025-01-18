@@ -99,7 +99,7 @@ export const PostInteractions = ({ post, commentsCount, onCommentClick }: PostIn
   };
 
   return (
-    <>
+    <div className="flex items-center gap-4 p-4">
       <Button
         variant="ghost"
         size="sm"
@@ -136,6 +136,6 @@ export const PostInteractions = ({ post, commentsCount, onCommentClick }: PostIn
       >
         <Trophy className="w-4 h-4" />
       </Button>
-    </>
+    </div>
   );
 };
