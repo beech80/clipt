@@ -89,10 +89,58 @@ export type Database = {
           },
         ]
       }
+      achievement_streaks: {
+        Row: {
+          achievement_id: string | null
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          last_earned_at: string | null
+          max_streak: number | null
+          user_id: string | null
+        }
+        Insert: {
+          achievement_id?: string | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_earned_at?: string | null
+          max_streak?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          achievement_id?: string | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_earned_at?: string | null
+          max_streak?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievement_streaks_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "achievement_streaks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       achievements: {
         Row: {
+          category: string | null
+          chain_requirement: string | null
           created_at: string
           description: string
+          frequency: string | null
           icon_url: string | null
           id: string
           name: string
@@ -103,8 +151,11 @@ export type Database = {
           target_value: number
         }
         Insert: {
+          category?: string | null
+          chain_requirement?: string | null
           created_at?: string
           description: string
+          frequency?: string | null
           icon_url?: string | null
           id?: string
           name: string
@@ -115,8 +166,11 @@ export type Database = {
           target_value?: number
         }
         Update: {
+          category?: string | null
+          chain_requirement?: string | null
           created_at?: string
           description?: string
+          frequency?: string | null
           icon_url?: string | null
           id?: string
           name?: string
@@ -126,7 +180,15 @@ export type Database = {
           reward_value?: Json
           target_value?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "achievements_chain_requirement_fkey"
+            columns: ["chain_requirement"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bookmarks: {
         Row: {
@@ -171,43 +233,103 @@ export type Database = {
           },
         ]
       }
+      challenge_leaderboard: {
+        Row: {
+          challenge_id: string | null
+          id: string
+          rank: number | null
+          score: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id?: string | null
+          id?: string
+          rank?: number | null
+          score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string | null
+          id?: string
+          rank?: number | null
+          score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_leaderboard_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_leaderboard_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenges: {
         Row: {
+          category: string | null
           challenge_type: string
           created_at: string | null
+          current_participants: number | null
           description: string | null
           end_date: string | null
           id: string
           is_active: boolean | null
+          leaderboard_enabled: boolean | null
+          max_participants: number | null
+          min_level: number | null
           requirement_count: number | null
           reward_amount: number
           reward_type: string
+          season_id: string | null
           start_date: string | null
           title: string
         }
         Insert: {
+          category?: string | null
           challenge_type: string
           created_at?: string | null
+          current_participants?: number | null
           description?: string | null
           end_date?: string | null
           id?: string
           is_active?: boolean | null
+          leaderboard_enabled?: boolean | null
+          max_participants?: number | null
+          min_level?: number | null
           requirement_count?: number | null
           reward_amount: number
           reward_type: string
+          season_id?: string | null
           start_date?: string | null
           title: string
         }
         Update: {
+          category?: string | null
           challenge_type?: string
           created_at?: string | null
+          current_participants?: number | null
           description?: string | null
           end_date?: string | null
           id?: string
           is_active?: boolean | null
+          leaderboard_enabled?: boolean | null
+          max_participants?: number | null
+          min_level?: number | null
           requirement_count?: number | null
           reward_amount?: number
           reward_type?: string
+          season_id?: string | null
           start_date?: string | null
           title?: string
         }
@@ -1513,6 +1635,39 @@ export type Database = {
           },
         ]
       }
+      seasons: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          multiplier: number | null
+          name: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          multiplier?: number | null
+          name: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          multiplier?: number | null
+          name?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       stream_analytics: {
         Row: {
           average_viewers: number | null
@@ -2539,6 +2694,44 @@ export type Database = {
           {
             foreignKeyName: "viewer_engagement_viewer_id_fkey"
             columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      xp_multipliers: {
+        Row: {
+          created_at: string | null
+          end_time: string | null
+          id: string
+          multiplier: number | null
+          reason: string | null
+          start_time: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          multiplier?: number | null
+          reason?: string | null
+          start_time?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          multiplier?: number | null
+          reason?: string | null
+          start_time?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_multipliers_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
