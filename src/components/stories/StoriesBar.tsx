@@ -59,16 +59,16 @@ export const StoriesBar = () => {
     }
 
     // Group stories by user
-    const groups = data.reduce((acc: StoryGroup[], story: Story) => {
+    const groups = data.reduce<StoryGroup[]>((acc, story) => {
       const existingGroup = acc.find(g => g.user_id === story.user_id);
       if (existingGroup) {
-        existingGroup.stories.push(story);
+        existingGroup.stories.push(story as Story);
       } else {
         acc.push({
           user_id: story.user_id,
           username: story.profiles.username,
           avatar_url: story.profiles.avatar_url,
-          stories: [story]
+          stories: [story as Story]
         });
       }
       return acc;

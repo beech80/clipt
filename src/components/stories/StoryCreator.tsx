@@ -12,6 +12,16 @@ interface StoryCreatorProps {
   onSuccess?: () => void;
 }
 
+interface Story {
+  user_id: string;
+  media_url: string;
+  media_type: 'image' | 'video';
+  text_content?: string;
+  background_color?: string;
+  font_style?: string;
+  expires_at: string;
+}
+
 export const StoryCreator = ({ onSuccess }: StoryCreatorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
