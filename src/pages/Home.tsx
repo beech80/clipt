@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useState } from "react";
 import PostForm from "@/components/PostForm";
 import GameBoyControls from "@/components/GameBoyControls";
+import { StoriesBar } from "@/components/stories/StoriesBar";
 
 const Home = () => {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
@@ -15,6 +16,7 @@ const Home = () => {
       <div className="absolute top-0 left-0 right-0 z-20">
         <div className="w-full bg-[#1A1F2C]/80 backdrop-blur-sm">
           <div className="flex flex-col items-center">
+            <StoriesBar />
             <div className="w-full h-12 sm:h-14">
               <div className="flex w-full h-full">
                 <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>

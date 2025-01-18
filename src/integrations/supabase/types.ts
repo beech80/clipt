@@ -552,6 +552,65 @@ export type Database = {
           },
         ]
       }
+      collab_streams: {
+        Row: {
+          collaborator_id: string | null
+          id: string
+          joined_at: string | null
+          main_stream_id: string | null
+          permissions: Json | null
+          role: string
+          status: string | null
+        }
+        Insert: {
+          collaborator_id?: string | null
+          id?: string
+          joined_at?: string | null
+          main_stream_id?: string | null
+          permissions?: Json | null
+          role: string
+          status?: string | null
+        }
+        Update: {
+          collaborator_id?: string | null
+          id?: string
+          joined_at?: string | null
+          main_stream_id?: string | null
+          permissions?: Json | null
+          role?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collab_streams_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collab_streams_main_stream_id_fkey"
+            columns: ["main_stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "collab_streams_main_stream_id_fkey"
+            columns: ["main_stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "collab_streams_main_stream_id_fkey"
+            columns: ["main_stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collection_posts: {
         Row: {
           added_at: string | null
@@ -1546,6 +1605,45 @@ export type Database = {
         }
         Relationships: []
       }
+      poll_responses: {
+        Row: {
+          created_at: string | null
+          id: string
+          poll_id: string | null
+          selected_options: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          poll_id?: string | null
+          selected_options: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          poll_id?: string | null
+          selected_options?: Json
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_responses_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "stream_polls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_analytics: {
         Row: {
           average_view_duration: unknown | null
@@ -2007,6 +2105,48 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_responses: {
+        Row: {
+          answers: Json
+          created_at: string | null
+          id: string
+          quiz_id: string | null
+          score: number | null
+          user_id: string | null
+        }
+        Insert: {
+          answers: Json
+          created_at?: string | null
+          id?: string
+          quiz_id?: string | null
+          score?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          answers?: Json
+          created_at?: string | null
+          id?: string
+          quiz_id?: string | null
+          score?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_responses_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "stream_quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recommended_streams: {
         Row: {
           created_at: string
@@ -2199,6 +2339,95 @@ export type Database = {
           {
             foreignKeyName: "squads_leader_id_fkey"
             columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stories: {
+        Row: {
+          background_color: string | null
+          created_at: string
+          expires_at: string
+          font_style: string | null
+          id: string
+          is_expired: boolean | null
+          media_type: string
+          media_url: string
+          sticker_data: Json | null
+          text_content: string | null
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          background_color?: string | null
+          created_at?: string
+          expires_at: string
+          font_style?: string | null
+          id?: string
+          is_expired?: boolean | null
+          media_type: string
+          media_url: string
+          sticker_data?: Json | null
+          text_content?: string | null
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          background_color?: string | null
+          created_at?: string
+          expires_at?: string
+          font_style?: string | null
+          id?: string
+          is_expired?: boolean | null
+          media_type?: string
+          media_url?: string
+          sticker_data?: Json | null
+          text_content?: string | null
+          user_id?: string
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_views: {
+        Row: {
+          id: string
+          story_id: string | null
+          viewed_at: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          id?: string
+          story_id?: string | null
+          viewed_at?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          id?: string
+          story_id?: string | null
+          viewed_at?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_views_viewer_id_fkey"
+            columns: ["viewer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -2563,6 +2792,136 @@ export type Database = {
           },
           {
             foreignKeyName: "stream_moderators_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_polls: {
+        Row: {
+          allow_multiple_choices: boolean | null
+          created_at: string | null
+          creator_id: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          options: Json
+          question: string
+          stream_id: string | null
+        }
+        Insert: {
+          allow_multiple_choices?: boolean | null
+          created_at?: string | null
+          creator_id?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          options: Json
+          question: string
+          stream_id?: string | null
+        }
+        Update: {
+          allow_multiple_choices?: boolean | null
+          created_at?: string | null
+          creator_id?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          options?: Json
+          question?: string
+          stream_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_polls_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_polls_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_polls_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_polls_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_quizzes: {
+        Row: {
+          created_at: string | null
+          creator_id: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          questions: Json
+          show_correct_answers: boolean | null
+          stream_id: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          creator_id?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          questions: Json
+          show_correct_answers?: boolean | null
+          stream_id?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          creator_id?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          questions?: Json
+          show_correct_answers?: boolean | null
+          stream_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_quizzes_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_quizzes_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_quizzes_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_quizzes_stream_id_fkey"
             columns: ["stream_id"]
             isOneToOne: false
             referencedRelation: "trending_streams"
@@ -3721,6 +4080,10 @@ export type Database = {
           replacement_text: string
           context_match: boolean
         }[]
+      }
+      clean_expired_stories: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       clean_old_search_history: {
         Args: Record<PropertyKey, never>
