@@ -4,6 +4,14 @@ import { Hash, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
+interface TrendingHashtag {
+  hashtag_id: string;
+  hashtags: {
+    name: string;
+  };
+  count: number;
+}
+
 export function TrendingHashtags() {
   const navigate = useNavigate();
   
@@ -14,16 +22,22 @@ export function TrendingHashtags() {
         .from('post_hashtags')
         .select(`
           hashtag_id,
-          hashtags (
+          hashtags!inner (
+            name
+          )
+        `)
+        .select(`
+          hashtag_id,
+          hashtags!inner (
             name
           ),
-          count: count(*) over (partition by hashtag_id)
-        `)
+          count
+        `, { count: 'exact', head: false })
         .order('count', { ascending: false })
         .limit(5);
 
       if (error) throw error;
-      return data;
+      return data as TrendingHashtag[];
     }
   });
 
