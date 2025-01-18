@@ -18,6 +18,7 @@ export function TrendingHashtags() {
   const { data: trendingHashtags, isLoading } = useQuery({
     queryKey: ['trending-hashtags'],
     queryFn: async () => {
+      // First get all hashtags with their names
       const { data, error } = await supabase
         .from('post_hashtags')
         .select(`
@@ -31,21 +32,23 @@ export function TrendingHashtags() {
 
       if (error) throw error;
 
-      // Get counts in a separate query
-      const { data: counts, error: countError } = await supabase
-        .from('post_hashtags')
-        .select('hashtag_id, count:count(*)', { count: 'exact' })
-        .group('hashtag_id');
+      // Then count the occurrences of each hashtag
+      const countPromises = data.map(async (tag) => {
+        const { count, error: countError } = await supabase
+          .from('post_hashtags')
+          .select('*', { count: 'exact', head: true })
+          .eq('hashtag_id', tag.hashtag_id);
+          
+        if (countError) throw countError;
+        
+        return {
+          ...tag,
+          count: count || 0
+        };
+      });
 
-      if (countError) throw countError;
-
-      // Combine the data
-      const combined = data.map(tag => ({
-        ...tag,
-        count: counts?.find(c => c.hashtag_id === tag.hashtag_id)?.count || 0
-      }));
-
-      return combined as TrendingHashtag[];
+      const results = await Promise.all(countPromises);
+      return results as TrendingHashtag[];
     }
   });
 
