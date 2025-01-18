@@ -122,50 +122,52 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
 
   return (
     <>
-      {/* Y Button - Like */}
+      {/* Y Button - Like (Yellow) */}
       <button 
-        className="action-button bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
-        shadow-[0_0_15px_rgba(255,105,180,0.3)] border-[#FF69B4]/30
-        hover:shadow-[0_0_20px_rgba(255,105,180,0.4)] transition-all hover:scale-110 active:scale-95 group"
+        className="action-button absolute top-0 left-1/2 -translate-x-1/2
+        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
+        shadow-[0_0_15px_rgba(255,255,0,0.3)] border-yellow-400/30
+        hover:shadow-[0_0_20px_rgba(255,255,0,0.4)] transition-all hover:scale-110 active:scale-95"
         onClick={handleLike}
       >
-        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-[#FF69B4] text-[#FF69B4]' : 'text-[#FF69B4]'} 
-          drop-shadow-[0_0_8px_rgba(255,105,180,0.5)]`} />
+        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-yellow-400 text-yellow-400' : 'text-yellow-400'} 
+          drop-shadow-[0_0_8px_rgba(255,255,0,0.5)]`} />
       </button>
 
-      <div className="flex gap-6 sm:gap-12 my-2 sm:my-3">
-        {/* X Button - Comment */}
-        <button 
-          className="action-button bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-          shadow-[0_0_15px_rgba(135,206,235,0.3)] border-[#87CEEB]/30
-          hover:shadow-[0_0_20px_rgba(135,206,235,0.4)] transition-all hover:scale-110 active:scale-95 group"
-          onClick={() => setIsCommentOpen(true)}
-        >
-          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-[#87CEEB] 
-            drop-shadow-[0_0_8px_rgba(135,206,235,0.5)]" />
-        </button>
-
-        {/* B Button - Follow */}
-        <button 
-          className="action-button bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-          shadow-[0_0_15px_rgba(152,251,152,0.3)] border-[#98FB98]/30
-          hover:shadow-[0_0_20px_rgba(152,251,152,0.4)] transition-all hover:scale-110 active:scale-95 group"
-          onClick={handleFollow}
-        >
-          <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-[#98FB98]' : 'text-[#98FB98]'}
-            drop-shadow-[0_0_8px_rgba(152,251,152,0.5)]`} />
-        </button>
-      </div>
-
-      {/* A Button - Rank */}
+      {/* X Button - Comment (Blue) */}
       <button 
-        className="action-button bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(255,215,0,0.3)] border-[#FFD700]/30
-        hover:shadow-[0_0_20px_rgba(255,215,0,0.4)] transition-all hover:scale-110 active:scale-95 group"
+        className="action-button absolute left-0 top-1/2 -translate-y-1/2
+        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
+        shadow-[0_0_15px_rgba(0,120,255,0.3)] border-blue-400/30
+        hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110 active:scale-95"
+        onClick={() => setIsCommentOpen(true)}
+      >
+        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400
+          drop-shadow-[0_0_8px_rgba(0,120,255,0.5)]" />
+      </button>
+
+      {/* B Button - Follow (Red) */}
+      <button 
+        className="action-button absolute right-0 top-1/2 -translate-y-1/2
+        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
+        shadow-[0_0_15px_rgba(255,0,0,0.3)] border-red-400/30
+        hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110 active:scale-95"
+        onClick={handleFollow}
+      >
+        <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-red-400' : 'text-red-400'}
+          drop-shadow-[0_0_8px_rgba(255,0,0,0.5)]`} />
+      </button>
+
+      {/* A Button - Rank (Green) */}
+      <button 
+        className="action-button absolute bottom-0 left-1/2 -translate-x-1/2
+        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
+        shadow-[0_0_15px_rgba(0,255,0,0.3)] border-green-400/30
+        hover:shadow-[0_0_20px_rgba(0,255,0,0.4)] transition-all hover:scale-110 active:scale-95"
         onClick={handleRank}
       >
-        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFD700]
-          drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]" />
+        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-green-400
+          drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]" />
       </button>
 
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
