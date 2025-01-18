@@ -20,7 +20,7 @@ interface ClipEditingSession {
   user_id?: string;
   clip_id?: string;
   effects: Effect[];
-  edit_history?: Effect[][];
+  edit_history: Effect[][];
   status?: string;
   created_at?: string;
   updated_at?: string;
@@ -30,8 +30,8 @@ interface DatabaseClipSession {
   id: string;
   user_id: string;
   clip_id: string;
-  effects: any;
-  edit_history: any[];
+  effects: Record<string, any>[];
+  edit_history: Record<string, any>[][];
   status: string;
   created_at: string;
   updated_at: string;
@@ -69,14 +69,23 @@ const ClipEditor = () => {
       
       if (error && error.code !== 'PGRST116') throw error;
       
-      // Transform database data to match our frontend types
       if (data) {
         const transformedData: ClipEditingSession = {
           id: data.id,
           user_id: data.user_id,
           clip_id: data.clip_id,
-          effects: Array.isArray(data.effects) ? data.effects : [],
-          edit_history: Array.isArray(data.edit_history) ? data.edit_history : [],
+          effects: (data.effects || []).map((effect: any) => ({
+            id: effect.id,
+            type: effect.type,
+            settings: effect.settings || {}
+          })),
+          edit_history: (data.edit_history || []).map((history: any[]) =>
+            history.map((effect: any) => ({
+              id: effect.id,
+              type: effect.type,
+              settings: effect.settings || {}
+            }))
+          ),
           status: data.status,
           created_at: data.created_at,
           updated_at: data.updated_at
@@ -92,8 +101,18 @@ const ClipEditor = () => {
     mutationFn: async () => {
       const sessionData = {
         clip_id: id,
-        effects: appliedEffects,
-        edit_history: editHistory,
+        effects: appliedEffects.map(effect => ({
+          id: effect.id,
+          type: effect.type,
+          settings: effect.settings
+        })),
+        edit_history: editHistory.map(history =>
+          history.map(effect => ({
+            id: effect.id,
+            type: effect.type,
+            settings: effect.settings
+          }))
+        ),
         status: 'draft'
       };
 
@@ -187,7 +206,6 @@ const ClipEditor = () => {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-9">
           <Card className="p-4">
-            {/* Video preview will go here */}
             <div className="aspect-video bg-black rounded-lg" />
           </Card>
         </div>
