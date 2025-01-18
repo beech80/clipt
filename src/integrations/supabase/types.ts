@@ -2997,6 +2997,75 @@ export type Database = {
           },
         ]
       }
+      stream_gifts: {
+        Row: {
+          amount: number
+          created_at: string | null
+          gift_id: string
+          id: string
+          message: string | null
+          quantity: number
+          sender_id: string
+          stream_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          gift_id: string
+          id?: string
+          message?: string | null
+          quantity?: number
+          sender_id: string
+          stream_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          gift_id?: string
+          id?: string
+          message?: string | null
+          quantity?: number
+          sender_id?: string
+          stream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_gifts_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_gifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_gifts_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_gifts_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_gifts_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_gifts_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_highlights: {
         Row: {
           clip_segments: Json[] | null
@@ -4246,6 +4315,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      virtual_gifts: {
+        Row: {
+          animation_url: string | null
+          created_at: string | null
+          description: string | null
+          icon_url: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          animation_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          animation_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       xp_multipliers: {
         Row: {

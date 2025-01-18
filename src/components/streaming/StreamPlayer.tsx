@@ -165,11 +165,17 @@ export const StreamPlayer = ({
       />
       
       {streamId && (
-        <ViewerCountManager
-          streamId={streamId}
-          viewerCount={viewerCount}
-          onViewerCountChange={setViewerCount}
-        />
+        <>
+          <ViewerCountManager
+            streamId={streamId}
+            viewerCount={viewerCount}
+            onViewerCountChange={setViewerCount}
+          />
+          <div className="absolute bottom-4 right-4 space-x-2">
+            <VirtualGiftSelector streamId={streamId} isLive={isLive} />
+          </div>
+          <GiftDisplay streamId={streamId} />
+        </>
       )}
 
       <StreamMetricsDisplay
