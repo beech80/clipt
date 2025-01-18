@@ -213,7 +213,7 @@ export const StreamControls = ({ userId, isLive = false, onStreamUpdate }: Strea
             <StreamScheduleForm 
               streamId={stream.id} 
               onScheduled={() => {
-                queryClient.invalidateQueries(['stream', userId]);
+                queryClient.invalidateQueries({ queryKey: ['stream', userId] });
               }} 
             />
           )}
