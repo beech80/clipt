@@ -22,6 +22,15 @@ interface PollData {
   options: PollOption[];
 }
 
+interface SupabasePollData {
+  question: string;
+  options: {
+    id: string;
+    text: string;
+    votes: number;
+  }[];
+}
+
 export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
   const { user } = useAuth();
   const [question, setQuestion] = useState("");
@@ -48,7 +57,16 @@ export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
       return;
     }
 
-    const pollData = poll as PollData;
+    const supabasePoll = poll as SupabasePollData;
+    const pollData: PollData = {
+      question: supabasePoll.question,
+      options: supabasePoll.options.map(opt => ({
+        id: opt.id,
+        text: opt.text,
+        votes: opt.votes
+      }))
+    };
+
     setQuestion(pollData.question);
     setOptions(pollData.options);
     calculateTotalVotes(pollData.options);

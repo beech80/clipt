@@ -24,6 +24,16 @@ interface QuizData {
   questions: QuizQuestion[];
 }
 
+interface SupabaseQuizData {
+  title: string;
+  questions: {
+    id: string;
+    question: string;
+    options: string[];
+    correct_answer: string;
+  }[];
+}
+
 export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
   const { user } = useAuth();
   const [title, setTitle] = useState("");
@@ -51,7 +61,17 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
       return;
     }
 
-    const quizData = quiz as QuizData;
+    const supabaseQuiz = quiz as SupabaseQuizData;
+    const quizData: QuizData = {
+      title: supabaseQuiz.title,
+      questions: supabaseQuiz.questions.map(q => ({
+        id: q.id,
+        question: q.question,
+        options: q.options,
+        correct_answer: q.correct_answer
+      }))
+    };
+
     setTitle(quizData.title);
     setQuestions(quizData.questions);
   };
@@ -122,13 +142,13 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
           <p className="text-sm text-muted-foreground mb-2">
             Question {currentQuestion + 1} of {questions.length}
           </p>
-          <p className="text-lg mb-4">{currentQ.question}</p>
+          <p className="text-lg mb-4">{questions[currentQuestion]?.question}</p>
           <RadioGroup
             value={selectedAnswer}
             onValueChange={setSelectedAnswer}
             className="space-y-2"
           >
-            {currentQ.options.map((option, index) => (
+            {questions[currentQuestion]?.options.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
                 <RadioGroupItem value={option} id={`option-${index}`} />
                 <Label htmlFor={`option-${index}`}>{option}</Label>
