@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import PostItem from "./PostItem";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase";
 
@@ -12,19 +12,15 @@ const PostSkeleton = () => (
   <div className="relative h-[calc(100vh-200px)] bg-[#1A1F2C]">
     <div className="p-3 sm:p-4 border-b border-[#2A2E3B]">
       <div className="flex items-center space-x-4">
-        <Skeleton className="h-10 w-10 rounded-full" />
+        <Skeleton className="h-12 w-12 rounded-full" />
         <div className="space-y-2">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-[200px]" />
+          <Skeleton className="h-4 w-[100px]" />
         </div>
       </div>
     </div>
-    <Skeleton className="h-[calc(100%-120px)]" />
-    <div className="p-3 sm:p-4 border-t border-[#2A2E3B]">
-      <div className="flex justify-between">
-        <Skeleton className="h-8 w-24" />
-        <Skeleton className="h-8 w-24" />
-      </div>
+    <div className="h-[calc(100%-88px)]">
+      <Skeleton className="h-full w-full" />
     </div>
   </div>
 );
@@ -50,10 +46,10 @@ const PostList = () => {
             username,
             avatar_url
           ),
-          likes (
+          likes:likes!post_id (
             count
           ),
-          clip_votes (
+          clip_votes:clip_votes!post_id (
             count
           )
         `)
@@ -63,10 +59,8 @@ const PostList = () => {
       if (error) throw error;
       return data;
     },
-    initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => {
-      if (!lastPage || lastPage.length < POSTS_PER_PAGE) return undefined;
-      return pages.length;
+      return lastPage?.length === POSTS_PER_PAGE ? pages.length : undefined;
     },
   });
 
@@ -79,7 +73,7 @@ const PostList = () => {
   if (status === "pending") {
     return (
       <div className="space-y-4 touch-none">
-        {[1, 2, 3].map((i) => (
+        {[...Array(3)].map((_, i) => (
           <PostSkeleton key={i} />
         ))}
       </div>
@@ -89,13 +83,13 @@ const PostList = () => {
   if (status === "error") {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] space-y-4">
-        <p className="text-red-500">Error: {error.message}</p>
-        <button 
+        <p className="text-red-500">Error loading posts: {error.message}</p>
+        <Button 
           onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-gaming-400 text-white rounded-md hover:bg-gaming-500 transition-colors active:scale-95 touch-manipulation"
+          variant="secondary"
         >
-          Try Again
-        </button>
+          Retry
+        </Button>
       </div>
     );
   }
@@ -103,26 +97,15 @@ const PostList = () => {
   return (
     <div className="post-container relative h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none">
       {data.pages.map((page) => (
-        page.map((post) => (
-          <div key={post.id} className="snap-start snap-always h-[calc(100vh-200px)]">
-            <PostItem 
-              post={{
-                ...post,
-                likes_count: post.likes?.[0]?.count || 0,
-                clip_votes: post.clip_votes || []
-              }} 
-            />
+        page?.map((post) => (
+          <div key={post.id} className="snap-start">
+            <PostItem post={post} />
           </div>
         ))
       ))}
       {hasNextPage && (
-        <div
-          ref={ref}
-          className="flex justify-center p-4"
-        >
-          {isFetchingNextPage && (
-            <Loader2 className="h-8 w-8 animate-spin text-gaming-400" />
-          )}
+        <div ref={ref} className="h-20 flex items-center justify-center">
+          {isFetchingNextPage && <PostSkeleton />}
         </div>
       )}
     </div>
