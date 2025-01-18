@@ -56,15 +56,12 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
       return;
     }
 
-    // Cast the JSON questions to the correct type
-    const supabaseQuiz = {
-      title: quiz.title,
-      questions: quiz.questions as QuizQuestion[]
-    };
-
+    // First cast to unknown, then to our expected type to safely handle the JSON data
+    const quizQuestions = (quiz.questions as unknown) as QuizQuestion[];
+    
     const quizData: QuizData = {
-      title: supabaseQuiz.title,
-      questions: supabaseQuiz.questions
+      title: quiz.title,
+      questions: quizQuestions
     };
 
     setTitle(quizData.title);

@@ -53,15 +53,12 @@ export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
       return;
     }
 
-    // Cast the JSON options to the correct type
-    const supabasePoll = {
-      question: poll.question,
-      options: poll.options as PollOption[]
-    };
-
+    // First cast to unknown, then to our expected type to safely handle the JSON data
+    const pollOptions = (poll.options as unknown) as PollOption[];
+    
     const pollData: PollData = {
-      question: supabasePoll.question,
-      options: supabasePoll.options
+      question: poll.question,
+      options: pollOptions
     };
 
     setQuestion(pollData.question);
