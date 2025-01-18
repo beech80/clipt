@@ -3219,6 +3219,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_personalized_recommendations: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: {
+          post_id: string
+          recommendation_score: number
+        }[]
+      }
       gtrgm_compress: {
         Args: {
           "": unknown
@@ -3248,6 +3257,10 @@ export type Database = {
           "": unknown
         }
         Returns: unknown
+      }
+      refresh_trending_posts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       set_limit: {
         Args: {
