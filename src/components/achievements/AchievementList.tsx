@@ -56,6 +56,7 @@ export const AchievementList = ({ userId }: { userId: string }) => {
       {achievements.map((achievement) => (
         <AchievementCard
           key={achievement.id}
+          achievementId={achievement.id}
           name={achievement.name}
           description={achievement.description}
           iconUrl={achievement.icon_url}
