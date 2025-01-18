@@ -125,49 +125,57 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
       {/* Y Button - Like (Yellow) */}
       <button 
         className="action-button absolute top-0 left-1/2 -translate-x-1/2
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
-        shadow-[0_0_15px_rgba(255,255,0,0.3)] border-yellow-400/30
-        hover:shadow-[0_0_20px_rgba(255,255,0,0.4)] transition-all hover:scale-110 active:scale-95"
+          bg-gradient-to-b from-yellow-500/20 to-yellow-600/30
+          border-yellow-400 hover:border-yellow-300
+          shadow-[0_0_15px_rgba(234,179,8,0.3)]
+          hover:shadow-[0_0_20px_rgba(234,179,8,0.5)]
+          transition-all hover:scale-110 active:scale-95"
         onClick={handleLike}
       >
         <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-yellow-400 text-yellow-400' : 'text-yellow-400'} 
-          drop-shadow-[0_0_8px_rgba(255,255,0,0.5)]`} />
+          drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]`} />
       </button>
 
       {/* X Button - Comment (Blue) */}
       <button 
         className="action-button absolute left-0 top-1/2 -translate-y-1/2
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(0,120,255,0.3)] border-blue-400/30
-        hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110 active:scale-95"
+          bg-gradient-to-b from-blue-500/20 to-blue-600/30
+          border-blue-400 hover:border-blue-300
+          shadow-[0_0_15px_rgba(59,130,246,0.3)]
+          hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]
+          transition-all hover:scale-110 active:scale-95"
         onClick={() => setIsCommentOpen(true)}
       >
         <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400
-          drop-shadow-[0_0_8px_rgba(0,120,255,0.5)]" />
+          drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
       </button>
 
       {/* B Button - Follow (Red) */}
       <button 
         className="action-button absolute right-0 top-1/2 -translate-y-1/2
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(255,0,0,0.3)] border-red-400/30
-        hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110 active:scale-95"
+          bg-gradient-to-b from-red-500/20 to-red-600/30
+          border-red-400 hover:border-red-300
+          shadow-[0_0_15px_rgba(239,68,68,0.3)]
+          hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]
+          transition-all hover:scale-110 active:scale-95"
         onClick={handleFollow}
       >
         <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-red-400' : 'text-red-400'}
-          drop-shadow-[0_0_8px_rgba(255,0,0,0.5)]`} />
+          drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]`} />
       </button>
 
       {/* A Button - Rank (Green) */}
       <button 
         className="action-button absolute bottom-0 left-1/2 -translate-x-1/2
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(0,255,0,0.3)] border-green-400/30
-        hover:shadow-[0_0_20px_rgba(0,255,0,0.4)] transition-all hover:scale-110 active:scale-95"
+          bg-gradient-to-b from-green-500/20 to-green-600/30
+          border-green-400 hover:border-green-300
+          shadow-[0_0_15px_rgba(34,197,94,0.3)]
+          hover:shadow-[0_0_20px_rgba(34,197,94,0.5)]
+          transition-all hover:scale-110 active:scale-95"
         onClick={handleRank}
       >
         <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-green-400
-          drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]" />
+          drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
       </button>
 
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
