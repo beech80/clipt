@@ -50,7 +50,6 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
         <Heart
           className={`w-6 h-6 ${isLiked ? 'fill-[#ea384c] text-[#ea384c]' : 'text-[#ea384c]'}`}
         />
-        <span className="text-xs text-white">SQUADS</span>
       </button>
 
       {/* Left Button */}
