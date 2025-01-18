@@ -15,7 +15,6 @@ import PostList from "@/components/PostList";
 export default function Index() {
   const { user } = useAuth();
 
-  // Structured data for the organization/website
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -39,42 +38,88 @@ export default function Index() {
         route="/"
       />
 
-      <div className="container mx-auto p-4 space-y-8">
+      <main 
+        role="main"
+        aria-label="Home page content"
+        className="container mx-auto p-4 space-y-8"
+      >
         <SeasonBanner />
         
         {user ? (
           <>
-            <FeaturedCarousel />
+            <section aria-label="Featured content">
+              <FeaturedCarousel />
+            </section>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <EnhancedFeed />
-                <TournamentList />
-                <SquadList />
+              <div 
+                className="lg:col-span-2 space-y-8"
+                role="region"
+                aria-label="Main content"
+              >
+                <nav aria-label="Social feed navigation">
+                  <EnhancedFeed />
+                </nav>
+                <section aria-label="Active tournaments">
+                  <TournamentList />
+                </section>
+                <section aria-label="Your squads">
+                  <SquadList />
+                </section>
               </div>
 
-              <div className="space-y-8">
-                <XPMultipliersList />
-                <ActiveChallenges />
-                <GamingHistory />
-                <ContentRecommendations />
-              </div>
+              <aside 
+                className="space-y-8"
+                role="complementary"
+                aria-label="Additional information"
+              >
+                <section aria-label="XP Multipliers">
+                  <XPMultipliersList />
+                </section>
+                <section aria-label="Active challenges">
+                  <ActiveChallenges />
+                </section>
+                <section aria-label="Gaming history">
+                  <GamingHistory />
+                </section>
+                <section aria-label="Recommended content">
+                  <ContentRecommendations />
+                </section>
+              </aside>
             </div>
           </>
         ) : (
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gaming-400 to-gaming-600">
+          <div 
+            className="space-y-6"
+            role="region"
+            aria-label="Welcome section"
+          >
+            <header 
+              className="text-center py-12"
+              role="banner"
+            >
+              <h1 
+                className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gaming-400 to-gaming-600"
+                tabIndex={0}
+              >
                 Share Your Epic Gaming Moments
               </h1>
-              <p className="text-xl text-muted-foreground mb-8">
+              <p 
+                className="text-xl text-muted-foreground mb-8"
+                tabIndex={0}
+              >
                 Join thousands of gamers sharing their best plays, fails, and everything in between
               </p>
-            </div>
-            <PostList />
+            </header>
+            <section 
+              aria-label="Latest posts"
+              tabIndex={0}
+            >
+              <PostList />
+            </section>
           </div>
         )}
-      </div>
+      </main>
     </>
   );
 }
