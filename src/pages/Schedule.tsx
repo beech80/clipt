@@ -55,6 +55,11 @@ const Schedule = () => {
     if (!stream?.scheduled_start_time) return null;
 
     const scheduledDate = new Date(stream.scheduled_start_time);
+    const duration = typeof stream.scheduled_duration === 'string' 
+      ? stream.scheduled_duration
+      : stream.scheduled_duration 
+        ? `${stream.scheduled_duration.minutes || 0} minutes`
+        : null;
     
     return (
       <Card className="p-6 mb-6">
@@ -68,9 +73,9 @@ const Schedule = () => {
             <Clock className="w-4 h-4 text-muted-foreground" />
             <span>{format(scheduledDate, 'h:mm a')}</span>
           </div>
-          {stream.scheduled_duration && (
+          {duration && (
             <div className="text-sm text-muted-foreground">
-              Duration: {stream.scheduled_duration} minutes
+              Duration: {duration}
             </div>
           )}
         </div>
