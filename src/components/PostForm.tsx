@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import PostFormContent from "./post/form/PostFormContent";
 import ImageUpload from "./post/ImageUpload";
 import VideoUpload from "./post/VideoUpload";
