@@ -848,9 +848,12 @@ export type Database = {
           click_through_rate: number | null
           created_at: string | null
           engagement_rate: number | null
+          hashtag_clicks: number | null
           id: string
           post_id: string | null
+          share_clicks: number | null
           shares_count: number | null
+          time_spent_seconds: number | null
           updated_at: string | null
           views_count: number | null
         }
@@ -860,9 +863,12 @@ export type Database = {
           click_through_rate?: number | null
           created_at?: string | null
           engagement_rate?: number | null
+          hashtag_clicks?: number | null
           id?: string
           post_id?: string | null
+          share_clicks?: number | null
           shares_count?: number | null
+          time_spent_seconds?: number | null
           updated_at?: string | null
           views_count?: number | null
         }
@@ -872,9 +878,12 @@ export type Database = {
           click_through_rate?: number | null
           created_at?: string | null
           engagement_rate?: number | null
+          hashtag_clicks?: number | null
           id?: string
           post_id?: string | null
+          share_clicks?: number | null
           shares_count?: number | null
+          time_spent_seconds?: number | null
           updated_at?: string | null
           views_count?: number | null
         }
@@ -1001,6 +1010,44 @@ export type Database = {
           },
           {
             foreignKeyName: "post_edits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_filters: {
+        Row: {
+          created_at: string | null
+          filter_type: string
+          filter_value: Json
+          id: string
+          is_default: boolean | null
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          filter_type: string
+          filter_value: Json
+          id?: string
+          is_default?: boolean | null
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          filter_type?: string
+          filter_value?: Json
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_filters_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -2176,6 +2223,14 @@ export type Database = {
           "": string
         }
         Returns: string[]
+      }
+      track_post_analytics: {
+        Args: {
+          post_id_param: string
+          metric_type: string
+          increment_value?: number
+        }
+        Returns: undefined
       }
       update_stream_recommendations: {
         Args: Record<PropertyKey, never>
