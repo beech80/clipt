@@ -24,7 +24,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Index() {
   const { user } = useAuth();
-  const { isCompleted, isLoading: onboardingLoading } = useOnboarding();
+  const { isCompleted } = useOnboarding();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
@@ -43,22 +43,7 @@ export default function Index() {
     enabled: !!user?.id,
   });
 
-  const isLoading = onboardingLoading || profileLoading;
-
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Clip - Share Your Gaming Moments",
-    "description": "Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers.",
-    "url": window.location.origin,
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": `${window.location.origin}/search?q={search_term_string}`,
-      "query-input": "required name=search_term_string"
-    }
-  };
-
-  if (isLoading) {
+  if (profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -77,6 +62,19 @@ export default function Index() {
       </div>
     );
   }
+
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Clip - Share Your Gaming Moments",
+    "description": "Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers.",
+    "url": window.location.origin,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": `${window.location.origin}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string"
+    }
+  };
 
   return (
     <>
