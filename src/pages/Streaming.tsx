@@ -11,6 +11,7 @@ import { StreamSettingsForm } from "@/components/streaming/StreamSettingsForm";
 import { StreamContentSettings } from "@/components/streaming/StreamContentSettings";
 import { StreamModeration } from "@/components/streaming/StreamModeration";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
+import { StreamRecordingManager } from "@/components/streaming/StreamRecordingManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -122,8 +123,9 @@ const Streaming = () => {
         </div>
       ) : (
         <Tabs defaultValue="stream" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[600px]">
+          <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
             <TabsTrigger value="stream">Stream</TabsTrigger>
+            <TabsTrigger value="recordings">Recordings</TabsTrigger>
             <TabsTrigger value="moderation">Moderation</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
@@ -173,6 +175,10 @@ const Streaming = () => {
                 />
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="recordings">
+            {stream?.id && <StreamRecordingManager streamId={stream.id} />}
           </TabsContent>
 
           <TabsContent value="moderation">

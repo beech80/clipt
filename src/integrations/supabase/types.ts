@@ -171,6 +171,48 @@ export type Database = {
           },
         ]
       }
+      challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          requirement_count: number | null
+          reward_amount: number
+          reward_type: string
+          start_date: string | null
+          title: string
+        }
+        Insert: {
+          challenge_type: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          requirement_count?: number | null
+          reward_amount: number
+          reward_type: string
+          start_date?: string | null
+          title: string
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          requirement_count?: number | null
+          reward_amount?: number
+          reward_type?: string
+          start_date?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       chat_emotes: {
         Row: {
           created_at: string
@@ -1690,6 +1732,77 @@ export type Database = {
           },
         ]
       }
+      stream_highlights: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration: unknown
+          highlight_url: string | null
+          id: string
+          start_time: unknown
+          stream_id: string | null
+          thumbnail_url: string | null
+          title: string
+          user_id: string | null
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration: unknown
+          highlight_url?: string | null
+          id?: string
+          start_time: unknown
+          stream_id?: string | null
+          thumbnail_url?: string | null
+          title: string
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration?: unknown
+          highlight_url?: string | null
+          id?: string
+          start_time?: unknown
+          stream_id?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          user_id?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_highlights_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_highlights_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_highlights_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_highlights_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_moderators: {
         Row: {
           assigned_by: string | null
@@ -1746,6 +1859,64 @@ export type Database = {
           },
           {
             foreignKeyName: "stream_moderators_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_recordings: {
+        Row: {
+          created_at: string | null
+          duration: unknown | null
+          id: string
+          recording_url: string
+          size_bytes: number | null
+          status: string | null
+          stream_id: string | null
+          thumbnail_url: string | null
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration?: unknown | null
+          id?: string
+          recording_url: string
+          size_bytes?: number | null
+          status?: string | null
+          stream_id?: string | null
+          thumbnail_url?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          duration?: unknown | null
+          id?: string
+          recording_url?: string
+          size_bytes?: number | null
+          status?: string | null
+          stream_id?: string | null
+          thumbnail_url?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_recordings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_recordings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_recordings_stream_id_fkey"
             columns: ["stream_id"]
             isOneToOne: false
             referencedRelation: "trending_streams"
@@ -2114,6 +2285,121 @@ export type Database = {
           },
         ]
       }
+      user_challenges: {
+        Row: {
+          challenge_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          progress: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          progress?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          progress?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_challenges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_levels: {
+        Row: {
+          created_at: string | null
+          current_level: number | null
+          current_xp: number | null
+          id: string
+          total_xp: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_level?: number | null
+          current_xp?: number | null
+          id?: string
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_level?: number | null
+          current_xp?: number | null
+          id?: string
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_levels_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_points: {
+        Row: {
+          created_at: string | null
+          id: string
+          points: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          points?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          points?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_points_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_privacy_settings: {
         Row: {
           allow_mentions: boolean | null
@@ -2352,6 +2638,13 @@ export type Database = {
       }
     }
     Functions: {
+      award_user_xp: {
+        Args: {
+          user_id_param: string
+          xp_amount: number
+        }
+        Returns: undefined
+      }
       calculate_enhanced_analytics: {
         Args: {
           stream_id_param: string
@@ -2362,6 +2655,12 @@ export type Database = {
           total_stream_time: unknown
           average_watch_time: unknown
         }[]
+      }
+      calculate_level_from_xp: {
+        Args: {
+          xp: number
+        }
+        Returns: number
       }
       calculate_stream_revenue_metrics: {
         Args: {
