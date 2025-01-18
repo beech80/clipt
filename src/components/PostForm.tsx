@@ -8,9 +8,18 @@ import ImageUpload from "./post/ImageUpload";
 import VideoUpload from "./post/VideoUpload";
 import UploadProgress from "./post/form/UploadProgress";
 import MediaPreview from "./post/form/MediaPreview";
+import VideoEditor from "./post/VideoEditor";
+import ImageEditor from "./post/ImageEditor";
+import GifConverter from "./post/GifConverter";
 import { uploadImage, uploadVideo } from "@/utils/postUploadUtils";
 import { createPost } from "@/services/postService";
 import { extractMentions, createMention } from "@/utils/mentionUtils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -23,6 +32,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
   const [imageProgress, setImageProgress] = useState(0);
   const [videoProgress, setVideoProgress] = useState(0);
+  const [showEditor, setShowEditor] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
@@ -64,7 +74,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         videoUrl = result.url;
       }
 
-      // Create the post
       const { data: post, error: postError } = await createPost({
         content,
         userId: user.id,
@@ -75,7 +84,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
       if (postError) throw postError;
       if (!post) throw new Error("Failed to create post");
 
-      // Handle mentions
       const mentions = extractMentions(content);
       for (const username of mentions) {
         await createMention(username, post.id);
@@ -99,6 +107,16 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
     }
   };
 
+  const handleEditedMedia = (blob: Blob) => {
+    const file = new File([blob], 'edited_media', { type: blob.type });
+    if (blob.type.startsWith('image/')) {
+      setSelectedImage(file);
+    } else if (blob.type.startsWith('video/')) {
+      setSelectedVideo(file);
+    }
+    setShowEditor(false);
+  };
+
   return (
     <div className="bg-card rounded-lg p-4 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,6 +130,13 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
               onRemove={() => setSelectedImage(null)} 
             />
             <UploadProgress progress={imageProgress} type="image" />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowEditor(true)}
+            >
+              Edit Image
+            </Button>
           </>
         )}
 
@@ -123,6 +148,22 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
               onRemove={() => setSelectedVideo(null)} 
             />
             <UploadProgress progress={videoProgress} type="video" />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowEditor(true)}
+              >
+                Edit Video
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowEditor(true)}
+              >
+                Convert to GIF
+              </Button>
+            </div>
           </>
         )}
 
@@ -150,6 +191,36 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
           </Button>
         </div>
       </form>
+
+      <Dialog open={showEditor} onOpenChange={setShowEditor}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedImage ? "Edit Image" : selectedVideo ? "Edit Video" : "Edit Media"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedImage && (
+            <ImageEditor
+              imageFile={selectedImage}
+              onSave={handleEditedMedia}
+            />
+          )}
+          
+          {selectedVideo && (
+            <>
+              <VideoEditor
+                videoFile={selectedVideo}
+                onSave={handleEditedMedia}
+              />
+              <GifConverter
+                videoFile={selectedVideo}
+                onConvert={handleEditedMedia}
+              />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
