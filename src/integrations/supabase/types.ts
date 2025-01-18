@@ -2740,6 +2740,12 @@ export type Database = {
       }
     }
     Views: {
+      active_season_multiplier: {
+        Row: {
+          current_multiplier: number | null
+        }
+        Relationships: []
+      }
       stream_recommendations: {
         Row: {
           description: string | null
@@ -2866,6 +2872,12 @@ export type Database = {
           average_donation: number
           unique_donors: number
         }[]
+      }
+      calculate_total_multiplier: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: number
       }
       calculate_trending_score: {
         Args: {
