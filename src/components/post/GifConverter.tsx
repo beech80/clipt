@@ -2,7 +2,8 @@ import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { toBlobURL, fetchFile } from '@ffmpeg/util';
 import { Clapperboard, Loader2 } from "lucide-react";
 
 interface GifConverterProps {
@@ -14,33 +15,45 @@ const GifConverter = ({ videoFile, onConvert }: GifConverterProps) => {
   const [isConverting, setIsConverting] = useState(false);
   const [quality, setQuality] = useState(70);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const ffmpegRef = useRef(new FFmpeg());
 
   const convertToGif = async () => {
+    const ffmpeg = ffmpegRef.current;
+    
     try {
       setIsConverting(true);
-      const ffmpeg = createFFmpeg({ log: true });
-      await ffmpeg.load();
+      
+      // Load FFmpeg
+      if (!ffmpeg.loaded) {
+        await ffmpeg.load({
+          coreURL: await toBlobURL(`/node_modules/@ffmpeg/core/dist/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`/node_modules/@ffmpeg/core/dist/ffmpeg-core.wasm`, 'application/wasm'),
+        });
+      }
 
       const inputName = 'input.mp4';
       const outputName = 'output.gif';
 
-      ffmpeg.FS('writeFile', inputName, await fetchFile(videoFile));
+      // Write the video file to FFmpeg's file system
+      await ffmpeg.writeFile(inputName, await fetchFile(videoFile));
 
-      await ffmpeg.run(
+      // Run FFmpeg command
+      await ffmpeg.exec([
         '-i', inputName,
         '-vf', `fps=10,scale=480:-1:flags=lanczos`,
         '-q:v', String(Math.round((100 - quality) / 10)),
         outputName
-      );
+      ]);
 
-      const data = ffmpeg.FS('readFile', outputName);
-      const gifBlob = new Blob([data.buffer], { type: 'image/gif' });
+      // Read the resulting file
+      const data = await ffmpeg.readFile(outputName);
+      const gifBlob = new Blob([data], { type: 'image/gif' });
       
       onConvert(gifBlob);
       toast.success("Video converted to GIF successfully!");
     } catch (error) {
-      toast.error("Error converting to GIF");
       console.error("Error converting to GIF:", error);
+      toast.error("Error converting to GIF");
     } finally {
       setIsConverting(false);
     }
