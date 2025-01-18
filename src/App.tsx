@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast"; // Add this import
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ReportDialogProvider } from "@/components/report/ReportDialogProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
