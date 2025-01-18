@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { BlockUserButton } from "./BlockUserButton";
 
 interface Profile {
   username: string;
