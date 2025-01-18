@@ -1664,6 +1664,8 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          is_published: boolean | null
+          scheduled_publish_time: string | null
           user_id: string | null
           video_url: string | null
         }
@@ -1672,6 +1674,8 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_published?: boolean | null
+          scheduled_publish_time?: string | null
           user_id?: string | null
           video_url?: string | null
         }
@@ -1680,6 +1684,8 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_published?: boolean | null
+          scheduled_publish_time?: string | null
           user_id?: string | null
           video_url?: string | null
         }
@@ -3299,6 +3305,10 @@ export type Database = {
           "": unknown
         }
         Returns: unknown
+      }
+      publish_scheduled_posts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       refresh_trending_posts: {
         Args: Record<PropertyKey, never>
