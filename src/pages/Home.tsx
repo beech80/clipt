@@ -32,7 +32,7 @@ const Home: React.FC = () => {
 
           <Button 
             className={`w-1/2 h-14 bg-[#553C9A] hover:bg-[#553C9A]/90 
-              text-white text-xl font-semibold rounded-none
+              text-white text-xl font-semibold rounded-none border-l border-[#6B46C1]
               transition-all duration-200 ${activeTab === "squad" ? "bg-[#6B46C1]" : ""}`}
             onClick={() => setActiveTab(activeTab === "squad" ? "feed" : "squad")}
           >
