@@ -24,9 +24,9 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <Router>
+      <Router>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -45,9 +45,9 @@ function App() {
               <Route path="/onboarding" element={<Onboarding />} />
             </Routes>
             <Toaster />
-          </Router>
-        </AuthProvider>
-      </QueryClientProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </Router>
     </React.StrictMode>
   );
 }
