@@ -1,0 +1,39 @@
+.gaming-cartridge {
+  @apply relative border-4 border-[#403E43] rounded-lg overflow-hidden bg-[#222222];
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.1),
+    0 4px 8px rgba(0,0,0,0.3);
+}
+
+.gaming-cartridge::before {
+  content: '';
+  @apply absolute top-0 left-1/2 -translate-x-1/2 w-20 h-2 bg-[#403E43];
+}
+
+.gaming-cartridge::after {
+  content: '';
+  @apply absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-2 bg-[#403E43];
+}
+
+.gaming-card {
+  @apply relative overflow-hidden rounded-none border-2 border-[#9b87f5] bg-[#1A1F2C] p-4 transition-all hover:border-[#8B5CF6];
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+}
+
+.gaming-gradient {
+  @apply bg-gradient-to-r from-[#9b87f5] to-[#8B5CF6] bg-clip-text text-transparent;
+}
+
+.gaming-button {
+  @apply inline-flex items-center justify-center rounded-none border-2 px-4 py-2 text-sm font-medium 
+    transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 
+    disabled:pointer-events-none disabled:opacity-50 touch-manipulation;
+  border-color: var(--button-override, #9b87f5);
+  background-color: var(--background-override, #1A1F2C);
+  color: var(--text-override, #FFFFFF);
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+}
+
+.gaming-button:hover {
+  border-color: var(--button-override, #8B5CF6);
+}
