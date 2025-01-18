@@ -6,6 +6,8 @@ interface CreatePostParams {
   userId: string;
   imageUrl?: string | null;
   videoUrl?: string | null;
+  scheduledPublishTime?: string | null;
+  isPublished?: boolean;
 }
 
 interface CreatePostResponse {
@@ -20,7 +22,7 @@ interface CreatePostResponse {
   error: Error | null;
 }
 
-export const createPost = async ({ content, userId, imageUrl, videoUrl }: CreatePostParams): Promise<CreatePostResponse> => {
+export const createPost = async ({ content, userId, imageUrl, videoUrl, scheduledPublishTime, isPublished }: CreatePostParams): Promise<CreatePostResponse> => {
   try {
     // Create the post
     const { data: post, error: postError } = await supabase
@@ -29,7 +31,9 @@ export const createPost = async ({ content, userId, imageUrl, videoUrl }: Create
         content: content.trim(),
         user_id: userId,
         image_url: imageUrl,
-        video_url: videoUrl
+        video_url: videoUrl,
+        scheduled_publish_time: scheduledPublishTime,
+        is_published: isPublished
       })
       .select()
       .single();
