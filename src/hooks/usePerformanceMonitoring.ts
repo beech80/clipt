@@ -1,6 +1,16 @@
 import { useEffect } from 'react';
 import LoggingService from '@/services/loggingService';
 
+interface MemoryInfo {
+  usedJSHeapSize: number;
+  totalJSHeapSize: number;
+  jsHeapSizeLimit: number;
+}
+
+interface ExtendedPerformance extends Performance {
+  memory?: MemoryInfo;
+}
+
 export function usePerformanceMonitoring(componentName: string) {
   useEffect(() => {
     const startTime = performance.now();
@@ -11,8 +21,9 @@ export function usePerformanceMonitoring(componentName: string) {
     });
 
     // Track memory usage if available
-    if (performance.memory) {
-      LoggingService.trackMetric('heap_size', performance.memory.usedJSHeapSize, {
+    const extendedPerf = performance as ExtendedPerformance;
+    if (extendedPerf.memory) {
+      LoggingService.trackMetric('heap_size', extendedPerf.memory.usedJSHeapSize, {
         component: componentName
       });
     }
