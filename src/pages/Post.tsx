@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { Post as PostType } from "@/types/post";
 
 const Post = () => {
   const { id } = useParams();
@@ -27,7 +28,13 @@ const Post = () => {
 
       if (error) throw error;
       if (!data) throw new Error('Post not found');
-      return data;
+
+      // Transform the data to match the Post type
+      return {
+        ...data,
+        likes_count: data.likes_count?.[0]?.count || 0,
+        clip_votes: data.clip_votes || []
+      } as PostType;
     },
   });
 
