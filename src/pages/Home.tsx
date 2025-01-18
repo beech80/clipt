@@ -54,7 +54,7 @@ const Home = () => {
                 >
                   <span className="flex items-center -skew-x-12 font-bold tracking-wider">
                     <span className="hidden sm:inline">SQUADS</span>
-                    <span className="sm:hidden">👥</span>
+                    <span className="sm:hidden">SQUADS</span>
                   </span>
                 </Button>
               </div>
