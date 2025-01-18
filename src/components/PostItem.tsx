@@ -54,7 +54,6 @@ const PostItem = ({ post }: PostItemProps) => {
 
         <div className="flex-1 relative">
           <PostContent
-            content={post.content}
             imageUrl={post.image_url}
             videoUrl={post.video_url}
             postId={post.id}

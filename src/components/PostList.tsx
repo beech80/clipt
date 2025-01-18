@@ -86,7 +86,7 @@ const PostList = () => {
     }
   }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  if (status === "loading") {
+  if (status === "pending") {
     return (
       <div className="space-y-4 touch-none">
         {[...Array(3)].map((_, i) => (
