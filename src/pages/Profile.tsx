@@ -9,6 +9,7 @@ import PostItem from "@/components/PostItem";
 import { useNavigate } from "react-router-dom";
 import { AchievementList } from "@/components/achievements/AchievementList";
 import GameBoyControls from "@/components/GameBoyControls";
+import { VerificationRequestForm } from "@/components/verification/VerificationRequestForm";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -175,6 +176,12 @@ const Profile = () => {
 
           {activeTab === 'achievements' && (
             <AchievementList userId="123" />
+          )}
+
+          {!profile?.is_verified && (
+            <div className="mt-8 border-t pt-8">
+              <VerificationRequestForm />
+            </div>
           )}
         </div>
       </div>

@@ -15,6 +15,7 @@ import ResetPassword from "@/pages/ResetPassword";
 import UpdatePassword from "@/pages/UpdatePassword";
 import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
+import GroupChat from "@/pages/GroupChat";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function App() {
             <Route path="/update-password" element={<UpdatePassword />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/group-chat" element={<GroupChat />} />
             <Route path="/streaming" element={<Streaming />} />
             <Route path="/top-clips" element={<TopClips />} />
             <Route path="/clipts" element={<Clipts />} />
