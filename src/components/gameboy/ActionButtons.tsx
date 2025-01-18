@@ -37,15 +37,14 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
     }
   };
 
+  const buttonClasses = "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 border-[#2D3748]/50 hover:border-[#2D3748] transition-all duration-300 active:scale-95 shadow-lg absolute";
+
   return (
     <div className="relative w-full h-full bg-transparent">
-      {/* Y Button (Top) */}
+      {/* Top Button (SQUADS) */}
       <button
         onClick={() => handleAction('like')}
-        className="absolute top-[15%] left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 
-          rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
-          border-[#2D3748]/50 hover:border-[#2D3748] transition-all duration-300
-          active:scale-95 shadow-lg"
+        className={`${buttonClasses} top-0 left-1/2 -translate-x-1/2`}
         aria-label="Like"
       >
         <Heart
@@ -53,25 +52,19 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
         />
       </button>
 
-      {/* X Button (Left) */}
+      {/* Left Button */}
       <button
         onClick={() => handleAction('comment')}
-        className="absolute left-[15%] top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 
-          rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
-          border-[#2D3748]/50 hover:border-[#2D3748] transition-all duration-300
-          active:scale-95 shadow-lg"
+        className={`${buttonClasses} top-1/2 left-0 -translate-y-1/2`}
         aria-label="Comment"
       >
         <MessageSquare className="w-6 h-6 text-[#0EA5E9]" />
       </button>
 
-      {/* B Button (Right) */}
+      {/* Right Button */}
       <button
         onClick={() => handleAction('follow')}
-        className="absolute right-[15%] top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 
-          rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
-          border-[#2D3748]/50 hover:border-[#2D3748] transition-all duration-300
-          active:scale-95 shadow-lg"
+        className={`${buttonClasses} top-1/2 right-0 -translate-y-1/2`}
         aria-label="Follow"
       >
         <UserPlus
@@ -79,13 +72,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
         />
       </button>
 
-      {/* A Button (Bottom) */}
+      {/* Bottom Button */}
       <button
         onClick={() => handleAction('rank')}
-        className="absolute bottom-[15%] left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 
-          rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
-          border-[#2D3748]/50 hover:border-[#2D3748] transition-all duration-300
-          active:scale-95 shadow-lg"
+        className={`${buttonClasses} bottom-0 left-1/2 -translate-x-1/2`}
         aria-label="Rank"
       >
         <Trophy className="w-6 h-6 text-[#EAB308]" />
