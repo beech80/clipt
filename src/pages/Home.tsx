@@ -53,8 +53,7 @@ const Home: React.FC = () => {
                   onClick={() => setActiveTab(activeTab === "squad" ? "feed" : "squad")}
                 >
                   <span className="flex items-center -skew-x-12 font-bold tracking-wider">
-                    <span className="hidden sm:inline">SQUADS</span>
-                    <span className="sm:hidden">SQUADS</span>
+                    SQUADS
                   </span>
                 </Button>
               </div>
