@@ -100,7 +100,7 @@ const GameBoyControls = ({ currentPostId }: GameBoyControlsProps) => {
       </div>
 
       {/* Action Buttons */}
-      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32">
+      <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-36 sm:w-40 h-36 sm:h-40">
         <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
       </div>
     </div>
