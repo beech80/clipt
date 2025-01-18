@@ -24,15 +24,10 @@ export function TrendingHashtags() {
           hashtag_id,
           hashtags!inner (
             name
-          )
-        `)
-        .select(`
-          hashtag_id,
-          hashtags!inner (
-            name
           ),
-          count
-        `, { count: 'exact', head: false })
+          count:count(*)
+        `)
+        .group('hashtag_id, hashtags!inner(name)')
         .order('count', { ascending: false })
         .limit(5);
 
