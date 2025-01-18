@@ -1161,6 +1161,36 @@ export type Database = {
           },
         ]
       }
+      onboarding_steps: {
+        Row: {
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          step_name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          step_name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          step_name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       post_analytics: {
         Row: {
           average_view_duration: unknown | null
@@ -1509,6 +1539,8 @@ export type Database = {
           is_verified: boolean | null
           keyboard_shortcuts: boolean | null
           location: string | null
+          onboarding_completed: boolean | null
+          onboarding_step: string | null
           social_links: Json | null
           theme_preference: string | null
           username: string | null
@@ -1533,6 +1565,8 @@ export type Database = {
           is_verified?: boolean | null
           keyboard_shortcuts?: boolean | null
           location?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: string | null
           social_links?: Json | null
           theme_preference?: string | null
           username?: string | null
@@ -1557,6 +1591,8 @@ export type Database = {
           is_verified?: boolean | null
           keyboard_shortcuts?: boolean | null
           location?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: string | null
           social_links?: Json | null
           theme_preference?: string | null
           username?: string | null
