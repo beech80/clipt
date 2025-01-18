@@ -1653,6 +1653,7 @@ export type Database = {
           engagement_rate: number | null
           hashtag_clicks: number | null
           id: string
+          interaction_types: Json | null
           post_id: string | null
           share_clicks: number | null
           shares_count: number | null
@@ -1668,6 +1669,7 @@ export type Database = {
           engagement_rate?: number | null
           hashtag_clicks?: number | null
           id?: string
+          interaction_types?: Json | null
           post_id?: string | null
           share_clicks?: number | null
           shares_count?: number | null
@@ -1683,6 +1685,7 @@ export type Database = {
           engagement_rate?: number | null
           hashtag_clicks?: number | null
           id?: string
+          interaction_types?: Json | null
           post_id?: string | null
           share_clicks?: number | null
           shares_count?: number | null

@@ -1,19 +1,9 @@
 import { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
-import { useAuth } from "@/contexts/AuthContext";
-import { Flag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { useReportDialog } from "@/hooks/use-report-dialog";
-import { Button } from "./ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { PostHeader } from "./post/PostHeader";
-import { PostActions } from "./post/PostActions";
+import { PostInteractions } from "./post/interactions/PostInteractions";
 import { Post } from "@/types/post";
 
 interface PostItemProps {
@@ -21,10 +11,8 @@ interface PostItemProps {
 }
 
 const PostItem = ({ post }: PostItemProps) => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [commentsCount, setCommentsCount] = useState(0);
-  const { openReportDialog } = useReportDialog();
 
   useEffect(() => {
     const fetchCommentsCount = async () => {
@@ -39,10 +27,6 @@ const PostItem = ({ post }: PostItemProps) => {
 
   const handleCommentClick = () => {
     navigate(`/comments/${post.id}`);
-  };
-
-  const handleReport = () => {
-    openReportDialog(post.id, 'post');
   };
 
   return (
@@ -60,7 +44,7 @@ const PostItem = ({ post }: PostItemProps) => {
           />
         </div>
 
-        <PostActions 
+        <PostInteractions 
           post={post} 
           commentsCount={commentsCount} 
           onCommentClick={handleCommentClick}
