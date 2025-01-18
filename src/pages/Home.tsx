@@ -1,13 +1,13 @@
+import React, { useState } from "react";
 import PostList from "@/components/PostList";
 import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { useState } from "react";
 import PostForm from "@/components/PostForm";
 import GameBoyControls from "@/components/GameBoyControls";
 import { StoriesBar } from "@/components/stories/StoriesBar";
 
-const Home = () => {
+const Home: React.FC = () => {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("feed");
 
