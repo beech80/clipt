@@ -30,9 +30,8 @@ const Home: React.FC = () => {
                       text-sm sm:text-base touch-manipulation"
                     >
                       <span className="flex items-center -skew-x-12">
-                        <Video className="w-4 h-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">POST</span>
-                        <span className="sm:hidden">+</span>
+                        <span className="hidden sm:inline">SQUADS</span>
+                        <span className="sm:hidden">SQUADS</span>
                       </span>
                     </Button>
                   </DialogTrigger>
