@@ -1186,11 +1186,16 @@ export type Database = {
           font_size: string | null
           id: string
           is_moderator: boolean | null
+          is_verified: boolean | null
           keyboard_shortcuts: boolean | null
           location: string | null
           social_links: Json | null
           theme_preference: string | null
           username: string | null
+          verification_approved_at: string | null
+          verification_rejected_at: string | null
+          verification_rejected_reason: string | null
+          verification_requested_at: string | null
           website: string | null
         }
         Insert: {
@@ -1205,11 +1210,16 @@ export type Database = {
           font_size?: string | null
           id: string
           is_moderator?: boolean | null
+          is_verified?: boolean | null
           keyboard_shortcuts?: boolean | null
           location?: string | null
           social_links?: Json | null
           theme_preference?: string | null
           username?: string | null
+          verification_approved_at?: string | null
+          verification_rejected_at?: string | null
+          verification_rejected_reason?: string | null
+          verification_requested_at?: string | null
           website?: string | null
         }
         Update: {
@@ -1224,11 +1234,16 @@ export type Database = {
           font_size?: string | null
           id?: string
           is_moderator?: boolean | null
+          is_verified?: boolean | null
           keyboard_shortcuts?: boolean | null
           location?: string | null
           social_links?: Json | null
           theme_preference?: string | null
           username?: string | null
+          verification_approved_at?: string | null
+          verification_rejected_at?: string | null
+          verification_rejected_reason?: string | null
+          verification_requested_at?: string | null
           website?: string | null
         }
         Relationships: []
@@ -2000,6 +2015,54 @@ export type Database = {
             foreignKeyName: "user_privacy_settings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verification_requests: {
+        Row: {
+          evidence_urls: string[] | null
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          rejection_reason: string | null
+          status: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          evidence_urls?: string[] | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          evidence_urls?: string[] | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_requests_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
