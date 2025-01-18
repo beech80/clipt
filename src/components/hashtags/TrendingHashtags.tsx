@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Hashtag, TrendingUp } from "lucide-react";
+import { Hash, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -17,9 +17,10 @@ export function TrendingHashtags() {
           hashtags (
             name
           ),
-          count
+          count: count(*)
         `)
-        .select('*', { count: 'exact' })
+        .group('hashtag_id, hashtags(name)')
+        .order('count', { ascending: false })
         .limit(5);
 
       if (error) throw error;
@@ -54,7 +55,7 @@ export function TrendingHashtags() {
             className="w-full justify-start gap-2 text-left"
             onClick={() => navigate(`/hashtag/${tag.hashtags.name}`)}
           >
-            <Hashtag className="w-4 h-4 text-gaming-400" />
+            <Hash className="w-4 h-4 text-gaming-400" />
             <span>#{tag.hashtags.name}</span>
             <span className="ml-auto text-muted-foreground text-sm">
               {tag.count} posts
