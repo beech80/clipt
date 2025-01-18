@@ -10,28 +10,35 @@ import { EnhancedFeed } from "@/components/social/EnhancedFeed";
 import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
 import { GamingHistory } from "@/components/gaming/GamingHistory";
 import { TournamentList } from "@/components/tournaments/TournamentList";
-import PostList from "@/components/PostList"; // Added this import
+import PostList from "@/components/PostList";
+import { SEO } from "@/components/SEO";
 
 export default function Index() {
   const { user } = useAuth();
 
+  // Structured data for the home page
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Clip - Share Your Gaming Moments",
+    "description": "Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers.",
+    "url": window.location.origin,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": `${window.location.origin}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Clip - Share Your Gaming Moments</title>
-        <meta name="description" content="Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers." />
-        <meta name="keywords" content="gaming, clips, streaming, gaming community, esports" />
-        
-        <meta property="og:title" content="Clip - Share Your Gaming Moments" />
-        <meta property="og:description" content="Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers." />
-        <meta property="og:type" content="website" />
-        <meta property="og:image" content="/og-image.png" />
-        
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Clip - Share Your Gaming Moments" />
-        <meta name="twitter:description" content="Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers." />
-        <meta name="twitter:image" content="/og-image.png" />
-      </Helmet>
+      <SEO 
+        title="Clip - Share Your Gaming Moments"
+        description="Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers."
+        type="website"
+        structuredData={structuredData}
+        route="/"
+      />
 
       <div className="container mx-auto p-4 space-y-8">
         <SeasonBanner />

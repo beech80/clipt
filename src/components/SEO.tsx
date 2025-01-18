@@ -6,6 +6,7 @@ interface SEOProps {
   image?: string;
   type?: 'website' | 'article' | 'profile';
   structuredData?: object;
+  route?: string;
 }
 
 export const SEO = ({ 
@@ -13,15 +14,30 @@ export const SEO = ({
   description = "Share your gaming moments",
   image = "/og-image.png",
   type = "website",
-  structuredData
+  structuredData,
+  route
 }: SEOProps) => {
   const baseUrl = window.location.origin;
-  const currentUrl = window.location.href;
+  const currentUrl = route ? `${baseUrl}${route}` : window.location.href;
+
+  // Default structured data for the organization
+  const defaultStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Clip",
+    "url": baseUrl,
+    "logo": `${baseUrl}/og-image.png`,
+    "description": "Share your gaming moments"
+  };
+
+  // Merge with any additional structured data
+  const finalStructuredData = structuredData || defaultStructuredData;
 
   return (
     <Helmet>
       <title>{title}</title>
       <meta name="description" content={description} />
+      <link rel="canonical" href={currentUrl} />
 
       {/* Open Graph */}
       <meta property="og:title" content={title} />
@@ -37,11 +53,9 @@ export const SEO = ({
       <meta name="twitter:image" content={`${baseUrl}${image}`} />
 
       {/* Structured Data */}
-      {structuredData && (
-        <script type="application/ld+json">
-          {JSON.stringify(structuredData)}
-        </script>
-      )}
+      <script type="application/ld+json">
+        {JSON.stringify(finalStructuredData)}
+      </script>
     </Helmet>
   );
 };
