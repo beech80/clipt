@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle, UserPlus, Trophy } from 'lucide-react';
+import { Heart, MessageSquare, UserPlus, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 interface ActionButtonsProps {
   onAction: (action: string) => void;
@@ -44,12 +44,12 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
         onClick={() => handleAction('like')}
         className="absolute top-[15%] left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 
           rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
-          border-gaming-400/50 hover:border-gaming-400 transition-all duration-300
-          active:scale-95 shadow-lg hover:shadow-gaming-400/20"
+          border-[#2D3748]/50 hover:border-[#2D3748] transition-all duration-300
+          active:scale-95 shadow-lg"
         aria-label="Like"
       >
         <Heart
-          className={`w-6 h-6 ${isLiked ? 'text-red-500 fill-red-500' : 'text-gaming-400'}`}
+          className={`w-6 h-6 ${isLiked ? 'fill-[#ea384c] text-[#ea384c]' : 'text-[#ea384c]'}`}
         />
       </button>
 
@@ -58,11 +58,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
         onClick={() => handleAction('comment')}
         className="absolute left-[15%] top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 
           rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
-          border-gaming-400/50 hover:border-gaming-400 transition-all duration-300
-          active:scale-95 shadow-lg hover:shadow-gaming-400/20"
+          border-[#2D3748]/50 hover:border-[#2D3748] transition-all duration-300
+          active:scale-95 shadow-lg"
         aria-label="Comment"
       >
-        <MessageCircle className="w-6 h-6 text-gaming-400" />
+        <MessageSquare className="w-6 h-6 text-[#0EA5E9]" />
       </button>
 
       {/* B Button (Right) */}
@@ -70,12 +70,12 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
         onClick={() => handleAction('follow')}
         className="absolute right-[15%] top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 
           rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
-          border-gaming-400/50 hover:border-gaming-400 transition-all duration-300
-          active:scale-95 shadow-lg hover:shadow-gaming-400/20"
+          border-[#2D3748]/50 hover:border-[#2D3748] transition-all duration-300
+          active:scale-95 shadow-lg"
         aria-label="Follow"
       >
         <UserPlus
-          className={`w-6 h-6 ${isFollowed ? 'text-green-500' : 'text-gaming-400'}`}
+          className={`w-6 h-6 ${isFollowed ? 'text-[#22C55E]' : 'text-[#22C55E]'}`}
         />
       </button>
 
@@ -84,11 +84,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
         onClick={() => handleAction('rank')}
         className="absolute bottom-[15%] left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 
           rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
-          border-gaming-400/50 hover:border-gaming-400 transition-all duration-300
-          active:scale-95 shadow-lg hover:shadow-gaming-400/20"
+          border-[#2D3748]/50 hover:border-[#2D3748] transition-all duration-300
+          active:scale-95 shadow-lg"
         aria-label="Rank"
       >
-        <Trophy className="w-6 h-6 text-gaming-400" />
+        <Trophy className="w-6 h-6 text-[#EAB308]" />
       </button>
     </div>
   );
