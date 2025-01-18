@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { StreamForm } from "./StreamForm";
 import { startStream, endStream } from "@/utils/streamUtils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,11 +26,28 @@ interface StreamControlsProps {
 
 export const StreamControls = ({ userId, isLive = false, onStreamUpdate }: StreamControlsProps) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const { data: stream } = useQuery({
+    queryKey: ['stream', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase
+        .from('streams')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId
+  });
 
   const { data: categories } = useQuery({
     queryKey: ['streamCategories'],
@@ -192,13 +209,14 @@ export const StreamControls = ({ userId, isLive = false, onStreamUpdate }: Strea
             </div>
           </div>
 
-          <StreamScheduleForm 
-            streamId={stream?.id || ''} 
-            onScheduled={() => {
-              // Refresh stream data after scheduling
-              queryClient.invalidateQueries(['stream', userId]);
-            }} 
-          />
+          {stream?.id && (
+            <StreamScheduleForm 
+              streamId={stream.id} 
+              onScheduled={() => {
+                queryClient.invalidateQueries(['stream', userId]);
+              }} 
+            />
+          )}
 
           <Button 
             onClick={handleStartStream}

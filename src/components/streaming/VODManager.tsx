@@ -38,7 +38,14 @@ export const VODManager = ({ streamId }: VODManagerProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRecordings(data || []);
+      
+      // Convert duration to string if it's not already
+      const formattedData = data?.map(recording => ({
+        ...recording,
+        duration: recording.duration?.toString() || '0:00'
+      })) || [];
+      
+      setRecordings(formattedData);
     } catch (error) {
       console.error('Error loading recordings:', error);
       toast.error('Failed to load recordings');
