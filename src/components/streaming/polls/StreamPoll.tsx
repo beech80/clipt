@@ -24,11 +24,7 @@ interface PollData {
 
 interface SupabasePollData {
   question: string;
-  options: {
-    id: string;
-    text: string;
-    votes: number;
-  }[];
+  options: PollOption[];
 }
 
 export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
@@ -57,14 +53,15 @@ export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
       return;
     }
 
-    const supabasePoll = poll as SupabasePollData;
+    // Cast the JSON options to the correct type
+    const supabasePoll = {
+      question: poll.question,
+      options: poll.options as PollOption[]
+    };
+
     const pollData: PollData = {
       question: supabasePoll.question,
-      options: supabasePoll.options.map(opt => ({
-        id: opt.id,
-        text: opt.text,
-        votes: opt.votes
-      }))
+      options: supabasePoll.options
     };
 
     setQuestion(pollData.question);

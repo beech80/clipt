@@ -26,12 +26,7 @@ interface QuizData {
 
 interface SupabaseQuizData {
   title: string;
-  questions: {
-    id: string;
-    question: string;
-    options: string[];
-    correct_answer: string;
-  }[];
+  questions: QuizQuestion[];
 }
 
 export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
@@ -61,15 +56,15 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
       return;
     }
 
-    const supabaseQuiz = quiz as SupabaseQuizData;
+    // Cast the JSON questions to the correct type
+    const supabaseQuiz = {
+      title: quiz.title,
+      questions: quiz.questions as QuizQuestion[]
+    };
+
     const quizData: QuizData = {
       title: supabaseQuiz.title,
-      questions: supabaseQuiz.questions.map(q => ({
-        id: q.id,
-        question: q.question,
-        options: q.options,
-        correct_answer: q.correct_answer
-      }))
+      questions: supabaseQuiz.questions
     };
 
     setTitle(quizData.title);
@@ -131,8 +126,6 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
       </Card>
     );
   }
-
-  const currentQ = questions[currentQuestion];
 
   return (
     <Card className="p-6">
