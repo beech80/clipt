@@ -3778,6 +3778,30 @@ export type Database = {
           },
         ]
       }
+      user_data_archives: {
+        Row: {
+          archived_at: string | null
+          archived_data: Json
+          id: string
+          retention_expires_at: string | null
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          archived_data: Json
+          id?: string
+          retention_expires_at?: string | null
+          user_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          archived_data?: Json
+          id?: string
+          retention_expires_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_levels: {
         Row: {
           created_at: string | null
@@ -4203,6 +4227,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      delete_user_account: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: boolean
+      }
       generate_stream_key: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -4215,6 +4245,12 @@ export type Database = {
           post_id: string
           recommendation_score: number
         }[]
+      }
+      get_user_data_export: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: Json
       }
       gtrgm_compress: {
         Args: {
