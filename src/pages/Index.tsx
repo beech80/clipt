@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
 import { SeasonBanner } from "@/components/seasons/SeasonBanner";
@@ -36,11 +37,15 @@ export default function Index() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+    cacheTime: 1000 * 60 * 30, // Cache persists for 30 minutes
+    retry: 2,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   if (profileLoading) {
