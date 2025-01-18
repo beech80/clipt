@@ -11,9 +11,15 @@ import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
 import { GamingHistory } from "@/components/gaming/GamingHistory";
 import { TournamentList } from "@/components/tournaments/TournamentList";
 import PostList from "@/components/PostList";
+import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function Index() {
   const { user } = useAuth();
+  const { isCompleted } = useOnboarding();
+  const navigate = useNavigate();
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -43,6 +49,18 @@ export default function Index() {
         aria-label="Home page content"
         className="container mx-auto p-4 space-y-8"
       >
+        {user && !isCompleted && (
+          <div className="bg-muted p-6 rounded-lg shadow-sm">
+            <OnboardingProgress />
+            <Button
+              onClick={() => navigate('/onboarding')}
+              className="mt-4"
+            >
+              Continue Onboarding
+            </Button>
+          </div>
+        )}
+
         <SeasonBanner />
         
         {user ? (
