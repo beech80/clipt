@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Heart, MessageCircle, UserPlus, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,7 +42,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
       {/* Y Button (Top) */}
       <button
         onClick={() => handleAction('like')}
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 
+        className="absolute top-[15%] left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 
           rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
           border-gaming-400/50 hover:border-gaming-400 transition-all duration-300
           active:scale-95 shadow-lg hover:shadow-gaming-400/20"
@@ -56,7 +56,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
       {/* X Button (Left) */}
       <button
         onClick={() => handleAction('comment')}
-        className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 
+        className="absolute left-[15%] top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 
           rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
           border-gaming-400/50 hover:border-gaming-400 transition-all duration-300
           active:scale-95 shadow-lg hover:shadow-gaming-400/20"
@@ -68,7 +68,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
       {/* B Button (Right) */}
       <button
         onClick={() => handleAction('follow')}
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 
+        className="absolute right-[15%] top-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 
           rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
           border-gaming-400/50 hover:border-gaming-400 transition-all duration-300
           active:scale-95 shadow-lg hover:shadow-gaming-400/20"
@@ -82,7 +82,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
       {/* A Button (Bottom) */}
       <button
         onClick={() => handleAction('rank')}
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 
+        className="absolute bottom-[15%] left-1/2 -translate-x-1/2 w-12 h-12 sm:w-14 sm:h-14 
           rounded-full flex items-center justify-center bg-[#1A1F2C]/90 border-2 
           border-gaming-400/50 hover:border-gaming-400 transition-all duration-300
           active:scale-95 shadow-lg hover:shadow-gaming-400/20"
