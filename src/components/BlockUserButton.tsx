@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface BlockUserButtonProps {
   userId: string;
@@ -28,20 +29,31 @@ export function BlockUserButton({ userId, username, variant = "ghost", size = "i
 
   useEffect(() => {
     const checkBlockStatus = async () => {
-      const blocked = await checkIfBlocked(userId);
-      setIsBlocked(blocked);
+      try {
+        const blocked = await checkIfBlocked(userId);
+        setIsBlocked(blocked);
+      } catch (error) {
+        console.error("Error checking block status:", error);
+      }
     };
     checkBlockStatus();
-  }, [userId]);
+  }, [userId, checkIfBlocked]);
 
   const handleBlock = async () => {
-    if (isBlocked) {
-      await unblockUser(userId);
-    } else {
-      await blockUser(userId);
+    try {
+      if (isBlocked) {
+        await unblockUser(userId);
+        toast.success(`Unblocked ${username}`);
+      } else {
+        await blockUser(userId);
+        toast.success(`Blocked ${username}`);
+      }
+      setIsBlocked(!isBlocked);
+      setShowDialog(false);
+    } catch (error) {
+      toast.error("Failed to update block status");
+      console.error("Error updating block status:", error);
     }
-    setIsBlocked(!isBlocked);
-    setShowDialog(false);
   };
 
   return (

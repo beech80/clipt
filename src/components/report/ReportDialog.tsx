@@ -42,6 +42,7 @@ export function ReportDialog({ isOpen, onClose, contentId, contentType }: Report
     }
 
     setIsSubmitting(true);
+    const toastId = toast.loading("Submitting report...");
 
     try {
       const { error } = await supabase
@@ -51,16 +52,20 @@ export function ReportDialog({ isOpen, onClose, contentId, contentType }: Report
           content_id: contentId,
           content_type: contentType,
           reason: reason,
-          notes: details.trim() || null
+          notes: details.trim() || null,
+          severity_level: 'medium',
+          review_priority: reason === 'violence' || reason === 'harassment'
         });
 
       if (error) throw error;
 
-      toast.success("Report submitted successfully");
+      toast.success("Report submitted successfully", { id: toastId });
       onClose();
+      setReason('');
+      setDetails('');
     } catch (error) {
       console.error('Error submitting report:', error);
-      toast.error("Failed to submit report");
+      toast.error("Failed to submit report", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -102,7 +107,7 @@ export function ReportDialog({ isOpen, onClose, contentId, contentType }: Report
         </div>
 
         <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button 
