@@ -4,9 +4,10 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Play, Pause, Volume2, VolumeX, Heart } from "lucide-react";
 
-interface PostContentProps {
-  videoUrl?: string;
-  imageUrl?: string;
+export interface PostContentProps {
+  videoUrl?: string | null;
+  imageUrl?: string | null;
+  postId?: string;
   onLike?: () => void;
 }
 

@@ -70,10 +70,11 @@ const PostList = () => {
       if (error) throw error;
       return data as Post[];
     },
+    initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => {
-      return lastPage?.length === POSTS_PER_PAGE ? pages.length : undefined;
+      return lastPage && lastPage.length === POSTS_PER_PAGE ? pages.length : undefined;
     },
-    gcTime: 1000 * 60 * 30, // Keep cache for 30 minutes (renamed from cacheTime)
+    gcTime: 1000 * 60 * 30, // Keep cache for 30 minutes
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -111,7 +112,7 @@ const PostList = () => {
 
   return (
     <div className="post-container relative h-[calc(100vh-200px)] overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none">
-      {data.pages.map((page) => (
+      {data?.pages.map((page) => (
         page?.map((post) => (
           <div key={post.id} className="snap-start">
             <PostItem post={post} />
