@@ -15,6 +15,17 @@ interface Effect {
   settings: Record<string, any>;
 }
 
+interface ClipEditingSession {
+  id?: string;
+  user_id?: string;
+  clip_id?: string;
+  effects: Effect[];
+  edit_history?: Effect[][];
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 const ClipEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -46,21 +57,23 @@ const ClipEditor = () => {
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data;
+      return data as ClipEditingSession;
     },
     enabled: !!id
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const sessionData: ClipEditingSession = {
+        clip_id: id,
+        effects: appliedEffects,
+        edit_history: editHistory,
+        status: 'draft'
+      };
+
       const { error } = await supabase
         .from('clip_editing_sessions')
-        .upsert({
-          clip_id: id,
-          effects: appliedEffects,
-          edit_history: editHistory,
-          status: 'draft'
-        });
+        .upsert(sessionData);
 
       if (error) throw error;
     },
