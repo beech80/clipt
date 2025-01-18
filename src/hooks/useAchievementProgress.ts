@@ -1,8 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-interface AchievementProgress {
+export interface AchievementProgress {
   id: string;
   user_id: string;
   achievement_id: string;
@@ -17,6 +17,11 @@ interface AchievementProgress {
     reward_type: string;
     reward_value: {
       points: number;
+    };
+    chain_requirement?: {
+      id: string;
+      name: string;
+      description: string;
     };
   };
 }
@@ -37,7 +42,12 @@ export const useAchievementProgress = (userId: string) => {
             target_value,
             progress_type,
             reward_type,
-            reward_value
+            reward_value,
+            chain_requirement (
+              id,
+              name,
+              description
+            )
           )
         `)
         .eq('user_id', userId);
@@ -61,11 +71,9 @@ export const useAchievementProgress = (userId: string) => {
         .select('id, current_value')
         .eq('user_id', userId)
         .eq('achievement_id', achievementId)
-        .single();
+        .maybeSingle();
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
+      if (fetchError) throw fetchError;
 
       if (existing) {
         const { error } = await supabase

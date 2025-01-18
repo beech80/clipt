@@ -938,6 +938,30 @@ export type Database = {
           },
         ]
       }
+      level_rewards: {
+        Row: {
+          created_at: string | null
+          id: string
+          level: number
+          reward_type: string
+          reward_value: Json
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          level: number
+          reward_type: string
+          reward_value?: Json
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          level?: number
+          reward_type?: string
+          reward_value?: Json
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
