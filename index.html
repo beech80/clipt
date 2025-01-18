@@ -8,10 +8,26 @@
     <meta property="og:title" content="Clip" />
     <meta property="og:description" content="Share your gaming moments" />
     <meta property="og:image" content="/og-image.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1A1F2C" />
+    <link rel="apple-touch-icon" href="/logo192.png" />
     <title>Clip</title>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('ServiceWorker registration successful');
+            })
+            .catch(err => {
+              console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+      }
+    </script>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
