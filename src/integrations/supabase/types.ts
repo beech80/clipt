@@ -190,6 +190,50 @@ export type Database = {
           },
         ]
       }
+      application_logs: {
+        Row: {
+          component: string | null
+          context: Json | null
+          created_at: string | null
+          error_stack: string | null
+          id: string
+          level: string
+          message: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          component?: string | null
+          context?: Json | null
+          created_at?: string | null
+          error_stack?: string | null
+          id?: string
+          level: string
+          message: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          component?: string | null
+          context?: Json | null
+          created_at?: string | null
+          error_stack?: string | null
+          id?: string
+          level?: string
+          message?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookmarks: {
         Row: {
           created_at: string
@@ -767,6 +811,50 @@ export type Database = {
           {
             foreignKeyName: "content_reports_resolved_by_fkey"
             columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      error_reports: {
+        Row: {
+          browser_info: Json | null
+          component_stack: string | null
+          created_at: string | null
+          error_type: string
+          id: string
+          message: string
+          stack_trace: string | null
+          url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser_info?: Json | null
+          component_stack?: string | null
+          created_at?: string | null
+          error_type: string
+          id?: string
+          message: string
+          stack_trace?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser_info?: Json | null
+          component_stack?: string | null
+          created_at?: string | null
+          error_type?: string
+          id?: string
+          message?: string
+          stack_trace?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_reports_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1358,6 +1446,30 @@ export type Database = {
           step_name?: string
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      performance_metrics: {
+        Row: {
+          id: string
+          metric_name: string
+          tags: Json | null
+          timestamp: string | null
+          value: number
+        }
+        Insert: {
+          id?: string
+          metric_name: string
+          tags?: Json | null
+          timestamp?: string | null
+          value: number
+        }
+        Update: {
+          id?: string
+          metric_name?: string
+          tags?: Json | null
+          timestamp?: string | null
+          value?: number
         }
         Relationships: []
       }

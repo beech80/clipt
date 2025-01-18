@@ -1,6 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { toast } from "sonner";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import LoggingService from '@/services/loggingService';
 
 interface Props {
   children: ReactNode;
@@ -21,55 +20,26 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught by boundary:', error);
-    console.error('Error info:', errorInfo);
-    
-    this.logError(error, errorInfo);
+    LoggingService.reportError(error, 'react_error', errorInfo.componentStack);
   }
-
-  private logError = async (error: Error, errorInfo: ErrorInfo) => {
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.group('🚨 Error Boundary Caught Error');
-      console.error('Error:', error);
-      console.error('Error Info:', errorInfo);
-      console.groupEnd();
-    }
-
-    // Show toast notification
-    toast.error("An error occurred", {
-      description: error.message,
-      duration: 5000,
-      action: {
-        label: "Refresh",
-        onClick: () => window.location.reload(),
-      },
-    });
-
-    // Here you could add integration with external error tracking services
-    // like Sentry, LogRocket, etc.
-  };
 
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] p-8 bg-[#9BA4B5] border-4 border-[#2B2B2B] rounded-lg shadow-lg m-4">
-          <div className="bg-[#2B2B2B] p-6 rounded-lg text-center space-y-4 max-w-md w-full" style={{ 
-            fontFamily: "'Press Start 2P', monospace",
-            imageRendering: 'pixelated'
-          }}>
-            <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-lg text-[#86C06C] mb-4">GAME OVER</h2>
-            <p className="text-sm text-[#86C06C] mb-6 leading-relaxed">
-              {this.state.error?.message || "An unexpected error occurred"}
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+          <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">
+              Oops! Something went wrong
+            </h2>
+            <p className="text-gray-600 mb-4">
+              We're sorry, but something went wrong. Please try refreshing the page
+              or contact support if the problem persists.
             </p>
             <button
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
               onClick={() => window.location.reload()}
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-[#86C06C] text-[#2B2B2B] rounded hover:bg-[#9BC17D] transition-colors"
-              style={{ fontFamily: "'Press Start 2P', monospace" }}
             >
-              <RefreshCw className="w-4 h-4" />
-              <span className="text-xs">CONTINUE?</span>
+              Refresh Page
             </button>
           </div>
         </div>
