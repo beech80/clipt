@@ -235,7 +235,7 @@ export default function Index() {
                 </section>
               </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </main>
     </>
