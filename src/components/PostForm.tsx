@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
@@ -8,18 +7,11 @@ import ImageUpload from "./post/ImageUpload";
 import VideoUpload from "./post/VideoUpload";
 import UploadProgress from "./post/form/UploadProgress";
 import MediaPreview from "./post/form/MediaPreview";
-import VideoEditor from "./post/VideoEditor";
-import ImageEditor from "./post/ImageEditor";
-import GifConverter from "./post/GifConverter";
+import PostFormActions from "./post/form/PostFormActions";
+import PostFormMediaEditor from "./post/form/PostFormMediaEditor";
 import { uploadImage, uploadVideo } from "@/utils/postUploadUtils";
-import { createPost } from "@/services/postService";
 import { extractMentions, createMention } from "@/utils/mentionUtils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { createPost } from "@/services/postService";
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -185,42 +177,16 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
           />
         )}
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Posting..." : "Post"}
-          </Button>
-        </div>
+        <PostFormActions isSubmitting={isSubmitting} />
       </form>
 
-      <Dialog open={showEditor} onOpenChange={setShowEditor}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedImage ? "Edit Image" : selectedVideo ? "Edit Video" : "Edit Media"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedImage && (
-            <ImageEditor
-              imageFile={selectedImage}
-              onSave={handleEditedMedia}
-            />
-          )}
-          
-          {selectedVideo && (
-            <>
-              <VideoEditor
-                videoFile={selectedVideo}
-                onSave={handleEditedMedia}
-              />
-              <GifConverter
-                videoFile={selectedVideo}
-                onConvert={handleEditedMedia}
-              />
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PostFormMediaEditor 
+        showEditor={showEditor}
+        setShowEditor={setShowEditor}
+        selectedImage={selectedImage}
+        selectedVideo={selectedVideo}
+        onEditedMedia={handleEditedMedia}
+      />
     </div>
   );
 };
