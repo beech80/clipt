@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { StreamScheduleForm } from "./StreamScheduleForm";
+import { VODManager } from "./VODManager";
 
 interface StreamControlsProps {
   userId?: string;
@@ -190,6 +192,14 @@ export const StreamControls = ({ userId, isLive = false, onStreamUpdate }: Strea
             </div>
           </div>
 
+          <StreamScheduleForm 
+            streamId={stream?.id || ''} 
+            onScheduled={() => {
+              // Refresh stream data after scheduling
+              queryClient.invalidateQueries(['stream', userId]);
+            }} 
+          />
+
           <Button 
             onClick={handleStartStream}
             className="w-full bg-gaming-500 hover:bg-gaming-600 text-white px-8 py-6 text-lg"
@@ -200,14 +210,18 @@ export const StreamControls = ({ userId, isLive = false, onStreamUpdate }: Strea
           </Button>
         </div>
       ) : (
-        <Button 
-          onClick={handleEndStream}
-          className="w-full bg-red-500 hover:bg-red-600 text-white"
-          disabled={isLoading}
-        >
-          <Video className="h-4 w-4 mr-2" />
-          End Stream
-        </Button>
+        <div className="space-y-6">
+          <Button 
+            onClick={handleEndStream}
+            className="w-full bg-red-500 hover:bg-red-600 text-white"
+            disabled={isLoading}
+          >
+            <Video className="h-4 w-4 mr-2" />
+            End Stream
+          </Button>
+
+          {stream?.id && <VODManager streamId={stream.id} />}
+        </div>
       )}
     </div>
   );

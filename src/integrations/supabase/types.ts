@@ -2210,6 +2210,55 @@ export type Database = {
           },
         ]
       }
+      stream_schedule_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          notification_type: string
+          sent: boolean | null
+          stream_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notification_type: string
+          sent?: boolean | null
+          stream_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notification_type?: string
+          sent?: boolean | null
+          stream_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_schedule_notifications_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_schedule_notifications_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_schedule_notifications_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_settings: {
         Row: {
           chat_enabled: boolean | null
@@ -2343,6 +2392,10 @@ export type Database = {
           health_status: string | null
           id: string
           is_live: boolean | null
+          recurring_schedule: Json | null
+          schedule_status: string | null
+          scheduled_duration: unknown | null
+          scheduled_start_time: string | null
           started_at: string | null
           stream_key: string
           stream_resolution: string | null
@@ -2351,6 +2404,8 @@ export type Database = {
           title: string
           user_id: string
           viewer_count: number | null
+          vod_enabled: boolean | null
+          vod_processing_status: string | null
         }
         Insert: {
           available_qualities?: Json | null
@@ -2363,6 +2418,10 @@ export type Database = {
           health_status?: string | null
           id?: string
           is_live?: boolean | null
+          recurring_schedule?: Json | null
+          schedule_status?: string | null
+          scheduled_duration?: unknown | null
+          scheduled_start_time?: string | null
           started_at?: string | null
           stream_key: string
           stream_resolution?: string | null
@@ -2371,6 +2430,8 @@ export type Database = {
           title: string
           user_id: string
           viewer_count?: number | null
+          vod_enabled?: boolean | null
+          vod_processing_status?: string | null
         }
         Update: {
           available_qualities?: Json | null
@@ -2383,6 +2444,10 @@ export type Database = {
           health_status?: string | null
           id?: string
           is_live?: boolean | null
+          recurring_schedule?: Json | null
+          schedule_status?: string | null
+          scheduled_duration?: unknown | null
+          scheduled_start_time?: string | null
           started_at?: string | null
           stream_key?: string
           stream_resolution?: string | null
@@ -2391,6 +2456,8 @@ export type Database = {
           title?: string
           user_id?: string
           viewer_count?: number | null
+          vod_enabled?: boolean | null
+          vod_processing_status?: string | null
         }
         Relationships: [
           {
