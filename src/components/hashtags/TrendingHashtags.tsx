@@ -17,9 +17,8 @@ export function TrendingHashtags() {
           hashtags (
             name
           ),
-          count: count(*)
+          count: count(*) over (partition by hashtag_id)
         `)
-        .group('hashtag_id, hashtags(name)')
         .order('count', { ascending: false })
         .limit(5);
 
