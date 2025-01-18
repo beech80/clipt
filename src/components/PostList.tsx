@@ -65,17 +65,17 @@ const PostList = () => {
     queryKey: ['trending-posts'],
     queryFn: async ({ pageParam = 0 }) => {
       const { data, error } = await supabase
-        .from('trending_posts')
+        .from('posts')
         .select(`
           *,
           profiles:user_id (
             username,
             avatar_url
           ),
-          likes (
+          likes:likes (
             count
           ),
-          clip_votes (
+          clip_votes:clip_votes (
             count
           )
         `)
