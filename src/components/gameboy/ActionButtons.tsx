@@ -44,12 +44,13 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
       {/* Top Button (SQUADS) */}
       <button
         onClick={() => handleAction('like')}
-        className={`${buttonClasses} top-0 left-1/2 -translate-x-1/2`}
+        className={`${buttonClasses} top-0 left-1/2 -translate-x-1/2 flex flex-col gap-1`}
         aria-label="Like"
       >
         <Heart
           className={`w-6 h-6 ${isLiked ? 'fill-[#ea384c] text-[#ea384c]' : 'text-[#ea384c]'}`}
         />
+        <span className="text-xs text-white">SQUADS</span>
       </button>
 
       {/* Left Button */}
