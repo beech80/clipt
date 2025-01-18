@@ -1,16 +1,3 @@
-import { useEffect } from "react";
-import { Helmet } from "react-helmet";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
-import { SeasonBanner } from "@/components/seasons/SeasonBanner";
-import { XPMultipliersList } from "@/components/multipliers/XPMultipliersList";
-import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
-import PostList from "@/components/PostList";
-import { ContentRecommendations } from "@/components/recommendations/ContentRecommendations";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-
 /**
  * Index Page Component
  * 
@@ -30,6 +17,19 @@ import { Skeleton } from "@/components/ui/skeleton";
  * 
  * The page is fully responsive and uses a grid layout on larger screens.
  */
+import { useEffect } from "react";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { SeasonBanner } from "@/components/seasons/SeasonBanner";
+import { XPMultipliersList } from "@/components/multipliers/XPMultipliersList";
+import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
+import PostList from "@/components/PostList";
+import { ContentRecommendations } from "@/components/recommendations/ContentRecommendations";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function Index() {
   // Get authentication context
   const { user } = useAuth();

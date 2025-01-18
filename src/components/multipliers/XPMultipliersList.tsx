@@ -1,3 +1,16 @@
+/**
+ * XPMultipliersList Component
+ * 
+ * Displays active XP multipliers for the current user.
+ * Shows temporary boosts, seasonal multipliers, and other active bonuses.
+ * 
+ * Features:
+ * - Real-time multiplier status
+ * - Expiration countdown
+ * - Visual indicators for different multiplier types
+ * - Automatic refresh when multipliers change
+ * - Responsive card layout
+ */
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Percent } from "lucide-react";

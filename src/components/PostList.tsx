@@ -1,3 +1,14 @@
+/**
+ * PostList Component
+ * 
+ * Renders a list of posts with infinite scrolling functionality.
+ * Features:
+ * - Infinite scrolling using Intersection Observer
+ * - Loading states with skeleton placeholders
+ * - Error handling with retry option
+ * - Optimized performance with React Query
+ * - Responsive design for all screen sizes
+ */
 import { useInfiniteQuery } from "@tanstack/react-query";
 import PostItem from "./PostItem";
 import { useEffect } from "react";
@@ -38,17 +49,6 @@ const PostSkeleton = () => (
   </div>
 );
 
-/**
- * PostList Component
- * 
- * Renders a list of posts with infinite scrolling functionality.
- * Features:
- * - Infinite scrolling using Intersection Observer
- * - Loading states with skeleton placeholders
- * - Error handling with retry option
- * - Optimized performance with React Query
- * - Responsive design for all screen sizes
- */
 const PostList = () => {
   // Set up intersection observer for infinite scrolling
   const { ref, inView } = useInView();
