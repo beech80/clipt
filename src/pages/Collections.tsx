@@ -2,12 +2,15 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Folder, FolderOpen } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { CollectionCard } from "@/components/collections/CollectionCard";
+import { CollectionFilters } from "@/components/collections/CollectionFilters";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface Collection {
   id: string;
@@ -16,16 +19,22 @@ interface Collection {
   is_private: boolean;
   created_at: string;
   user_id: string;
+  thumbnail_url: string | null;
+  category: string;
+  tags: string[];
   post_count?: number;
 }
 
 const Collections = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
   const [newCollectionName, setNewCollectionName] = useState("");
   const [newCollectionDescription, setNewCollectionDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
-  const [isHovered, setIsHovered] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("general");
+  const [tags, setTags] = useState("");
 
   const { data: collections, isLoading } = useQuery({
     queryKey: ['collections', user?.id],
@@ -65,6 +74,8 @@ const Collections = () => {
           description: newCollectionDescription.trim() || null,
           is_private: isPrivate,
           user_id: user.id,
+          category: selectedCategory,
+          tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
         });
 
       if (error) throw error;
@@ -73,16 +84,36 @@ const Collections = () => {
       setNewCollectionName("");
       setNewCollectionDescription("");
       setIsPrivate(false);
+      setSelectedCategory("general");
+      setTags("");
     } catch (error) {
       console.error("Error creating collection:", error);
       toast.error("Failed to create collection");
     }
   };
 
-  const filteredCollections = collections?.filter(collection =>
-    collection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    collection.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAndSortedCollections = collections
+    ?.filter(collection =>
+      (searchQuery
+        ? collection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          collection.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        : true) &&
+      (category !== "all"
+        ? collection.category === category
+        : true)
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "oldest":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "posts":
+          return (b.post_count || 0) - (a.post_count || 0);
+        default: // newest
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -101,9 +132,7 @@ const Collections = () => {
             </DialogHeader>
             <div className="space-y-4 pt-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium mb-1">
-                  Name
-                </label>
+                <Label htmlFor="name">Name</Label>
                 <Input
                   id="name"
                   value={newCollectionName}
@@ -112,9 +141,7 @@ const Collections = () => {
                 />
               </div>
               <div>
-                <label htmlFor="description" className="block text-sm font-medium mb-1">
-                  Description
-                </label>
+                <Label htmlFor="description">Description</Label>
                 <Input
                   id="description"
                   value={newCollectionDescription}
@@ -122,17 +149,31 @@ const Collections = () => {
                   placeholder="Collection description"
                 />
               </div>
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Input
+                  id="category"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  placeholder="Collection category"
+                />
+              </div>
+              <div>
+                <Label htmlFor="tags">Tags (comma-separated)</Label>
+                <Input
+                  id="tags"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="tag1, tag2, tag3"
+                />
+              </div>
               <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
+                <Switch
                   id="private"
                   checked={isPrivate}
-                  onChange={(e) => setIsPrivate(e.target.checked)}
-                  className="rounded border-gray-300"
+                  onCheckedChange={setIsPrivate}
                 />
-                <label htmlFor="private" className="text-sm">
-                  Make this collection private
-                </label>
+                <Label htmlFor="private">Make this collection private</Label>
               </div>
               <Button onClick={createCollection} className="w-full">
                 Create Collection
@@ -142,59 +183,32 @@ const Collections = () => {
         </Dialog>
       </div>
 
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search collections..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
+      <CollectionFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        category={category}
+        onCategoryChange={setCategory}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
 
       {isLoading ? (
         <div className="text-center py-8">Loading collections...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCollections?.map((collection) => (
-            <Card
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+          {filteredAndSortedCollections?.map((collection) => (
+            <CollectionCard
               key={collection.id}
-              className="transition-all duration-200 hover:shadow-lg"
-              onMouseEnter={() => setIsHovered(collection.id)}
-              onMouseLeave={() => setIsHovered(null)}
-            >
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  {isHovered === collection.id ? (
-                    <FolderOpen className="h-6 w-6 text-primary" />
-                  ) : (
-                    <Folder className="h-6 w-6 text-primary" />
-                  )}
-                  <CardTitle>{collection.name}</CardTitle>
-                </div>
-                {collection.description && (
-                  <CardDescription>{collection.description}</CardDescription>
-                )}
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  {collection.post_count} posts
-                </p>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <span className="text-xs text-muted-foreground">
-                  {new Date(collection.created_at).toLocaleDateString()}
-                </span>
-                {collection.is_private && (
-                  <span className="text-xs bg-secondary px-2 py-1 rounded">
-                    Private
-                  </span>
-                )}
-              </CardFooter>
-            </Card>
+              id={collection.id}
+              name={collection.name}
+              description={collection.description}
+              isPrivate={collection.is_private}
+              createdAt={collection.created_at}
+              thumbnailUrl={collection.thumbnail_url}
+              category={collection.category}
+              tags={collection.tags}
+              postCount={collection.post_count || 0}
+            />
           ))}
         </div>
       )}
