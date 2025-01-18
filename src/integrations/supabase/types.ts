@@ -234,6 +234,39 @@ export type Database = {
           },
         ]
       }
+      backup_logs: {
+        Row: {
+          backup_type: string
+          completed_at: string | null
+          error_message: string | null
+          file_path: string | null
+          id: string
+          size_bytes: number | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          backup_type: string
+          completed_at?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          id?: string
+          size_bytes?: number | null
+          started_at?: string | null
+          status: string
+        }
+        Update: {
+          backup_type?: string
+          completed_at?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          id?: string
+          size_bytes?: number | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       bookmarks: {
         Row: {
           created_at: string
@@ -914,6 +947,36 @@ export type Database = {
           },
         ]
       }
+      data_retention_policies: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          resource_type: string
+          retention_period: unknown
+          updated_at: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          resource_type: string
+          retention_period: unknown
+          updated_at?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          resource_type?: string
+          retention_period?: unknown
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       error_reports: {
         Row: {
           browser_info: Json | null
@@ -957,6 +1020,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      failed_operations: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          last_retry_at: string | null
+          max_retries: number | null
+          next_retry_at: string | null
+          operation_type: string
+          payload: Json | null
+          resource_id: string
+          resource_type: string
+          retry_count: number | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_retry_at?: string | null
+          max_retries?: number | null
+          next_retry_at?: string | null
+          operation_type: string
+          payload?: Json | null
+          resource_id: string
+          resource_type: string
+          retry_count?: number | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_retry_at?: string | null
+          max_retries?: number | null
+          next_retry_at?: string | null
+          operation_type?: string
+          payload?: Json | null
+          resource_id?: string
+          resource_type?: string
+          retry_count?: number | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       follows: {
         Row: {
@@ -4134,6 +4245,21 @@ export type Database = {
           "": unknown
         }
         Returns: unknown
+      }
+      handle_failed_operation: {
+        Args: {
+          operation_type: string
+          resource_type: string
+          resource_id: string
+          user_id: string
+          error_message: string
+          payload: Json
+        }
+        Returns: string
+      }
+      process_data_retention: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       publish_scheduled_posts: {
         Args: Record<PropertyKey, never>
