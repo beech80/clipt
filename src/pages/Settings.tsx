@@ -2,6 +2,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import GameBoyControls from "@/components/GameBoyControls";
+import { AccessibilitySettings } from "@/components/accessibility/AccessibilitySettings";
+import { KeyboardShortcuts } from "@/components/keyboard/KeyboardShortcuts";
+import { ContentRecommendations } from "@/components/recommendations/ContentRecommendations";
 
 export default function Settings() {
   const handleThemeChange = (theme: string) => {
@@ -10,8 +13,12 @@ export default function Settings() {
   };
 
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8 pb-40">
+    <div className="container max-w-4xl mx-auto px-4 py-8 pb-40 space-y-8">
       <h1 className="text-3xl font-bold text-gaming-400 mb-8">Settings</h1>
+      
+      <AccessibilitySettings />
+      <KeyboardShortcuts />
+      <ContentRecommendations />
       
       <Card className="p-6 bg-background/80 backdrop-blur-sm border-gaming-700/50">
         <h2 className="text-xl font-semibold mb-6 text-gaming-400">Theme Settings</h2>
