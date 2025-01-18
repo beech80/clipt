@@ -18,36 +18,58 @@
             color: #fff;
             text-align: center;
         }
-        .icon {
-            width: 64px;
-            height: 64px;
-            margin-bottom: 24px;
+        .alert {
+            background-color: #dc2626;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            max-width: 400px;
+            width: 100%;
         }
-        h1 {
+        .icon {
+            width: 16px;
+            height: 16px;
+            margin-bottom: 8px;
+        }
+        .title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
             margin-bottom: 16px;
         }
-        p {
-            margin-bottom: 24px;
-            color: #9BA1B0;
-        }
-        button {
+        .button {
             background: #3B82F6;
             color: white;
             border: none;
             padding: 12px 24px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            width: 100%;
+            max-width: 400px;
         }
-        button:hover {
+        .button:hover {
             background: #2563EB;
         }
     </style>
 </head>
 <body>
-    <img src="/logo192.png" alt="Clip Logo" class="icon">
-    <h1>You're Offline</h1>
-    <p>Please check your internet connection and try again.</p>
-    <button onclick="window.location.reload()">Retry</button>
+    <div class="alert">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <div class="title">You're Offline</div>
+        <div class="description">Please check your internet connection and try again.</div>
+    </div>
+    <button onclick="window.location.reload()" class="button">
+        Retry Connection
+    </button>
 </body>
 </html>

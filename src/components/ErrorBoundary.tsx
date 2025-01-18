@@ -1,46 +1,97 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import LoggingService from '@/services/loggingService';
+import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
   hasError: boolean;
   error?: Error;
+  isOffline: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
-    hasError: false
+    hasError: false,
+    isOffline: !navigator.onLine
   };
 
+  private handleOnline = () => {
+    this.setState({ isOffline: false });
+  };
+
+  private handleOffline = () => {
+    this.setState({ isOffline: true });
+  };
+
+  public componentDidMount() {
+    window.addEventListener('online', this.handleOnline);
+    window.addEventListener('offline', this.handleOffline);
+  }
+
+  public componentWillUnmount() {
+    window.removeEventListener('online', this.handleOnline);
+    window.removeEventListener('offline', this.handleOffline);
+  }
+
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, isOffline: !navigator.onLine };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     LoggingService.reportError(error, 'react_error', errorInfo.componentStack);
   }
 
+  private handleRetry = () => {
+    this.setState({ hasError: false });
+    window.location.reload();
+  };
+
   public render() {
-    if (this.state.hasError) {
+    if (this.state.isOffline) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-          <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">
-              Oops! Something went wrong
-            </h2>
-            <p className="text-gray-600 mb-4">
-              We're sorry, but something went wrong. Please try refreshing the page
-              or contact support if the problem persists.
-            </p>
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-              onClick={() => window.location.reload()}
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="max-w-md w-full space-y-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>You're Offline</AlertTitle>
+              <AlertDescription>
+                Please check your internet connection and try again.
+              </AlertDescription>
+            </Alert>
+            <Button 
+              onClick={() => window.location.reload()} 
+              className="w-full"
             >
-              Refresh Page
-            </button>
+              Retry Connection
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <div className="max-w-md w-full space-y-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Something went wrong</AlertTitle>
+              <AlertDescription>
+                {this.state.error?.message || 'An unexpected error occurred'}
+              </AlertDescription>
+            </Alert>
+            <Button 
+              onClick={this.handleRetry} 
+              className="w-full"
+            >
+              Try Again
+            </Button>
           </div>
         </div>
       );
