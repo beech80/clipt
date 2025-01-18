@@ -1,134 +1,81 @@
-import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
-import { Volume2, VolumeX, Play, Pause, Heart } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { handleVideoControl } from '../gameboy/VideoControls';
-import { linkifyHashtags } from '@/utils/hashtagUtils';
-import { linkifyMentions } from '@/utils/mentionUtils';
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { Play, Pause, Volume2, VolumeX, Heart } from "lucide-react";
 
 interface PostContentProps {
-  content: string;
-  imageUrl: string | null;
-  videoUrl?: string | null;
-  postId: string;
+  videoUrl?: string;
+  imageUrl?: string;
+  onLike?: () => void;
 }
 
-const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [lastTap, setLastTap] = useState(0);
-  const { user } = useAuth();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const handleVideoClick = () => {
+    togglePlay();
+  };
+
+  const handleDoubleTap = () => {
+    if (onLike) {
+      onLike();
+      setShowLikeAnimation(true);
+      setTimeout(() => setShowLikeAnimation(false), 1000);
+    }
+  };
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const updateProgress = () => {
+      if (videoRef.current) {
+        const currentTime = videoRef.current.currentTime;
+        const duration = videoRef.current.duration;
+        setProgress((currentTime / duration) * 100);
+      }
+    };
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting && !video.paused) {
-            video.pause();
-            setIsPlaying(false);
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
-
-    observerRef.current.observe(video);
+    const videoElement = videoRef.current;
+    if (videoElement) {
+      videoElement.addEventListener("timeupdate", updateProgress);
+    }
 
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
+      if (videoElement) {
+        videoElement.removeEventListener("timeupdate", updateProgress);
       }
     };
-  }, []);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const handleTimeUpdate = () => {
-      const progress = (video.currentTime / video.duration) * 100;
-      setProgress(progress);
-    };
-
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    return () => video.removeEventListener('timeupdate', handleTimeUpdate);
-  }, []);
-
-  const handleVideoClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.paused) {
-      video.play();
-      setIsPlaying(true);
-    } else {
-      video.pause();
-      setIsPlaying(false);
-    }
-  };
-
-  const handleDoubleTap = async () => {
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
-    
-    if (now - lastTap < DOUBLE_TAP_DELAY) {
-      if (!user) {
-        toast.error("Please login to like posts");
-        return;
-      }
-
-      try {
-        setShowLikeAnimation(true);
-        const { error } = await supabase
-          .from('likes')
-          .insert({
-            post_id: postId,
-            user_id: user.id
-          });
-
-        if (error) throw error;
-        toast.success("Post liked!");
-
-        setTimeout(() => {
-          setShowLikeAnimation(false);
-        }, 1000);
-      } catch (error) {
-        console.error("Error liking post:", error);
-        toast.error("Failed to like post");
-      }
-    }
-    
-    setLastTap(now);
-  };
-
-  const toggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.muted = !video.muted;
-    setIsMuted(video.muted);
-  };
+  }, [videoRef]);
 
   return (
     <div 
-      ref={containerRef}
-      className="relative w-full h-[calc(100vh-200px)] bg-black group"
-      onClick={handleDoubleTap}
+      ref={containerRef} 
+      className="relative w-full h-full group"
+      onDoubleClick={handleDoubleTap}
     >
       {videoUrl ? (
         <>
@@ -144,7 +91,6 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
             muted={isMuted}
             onClick={handleVideoClick}
             onLoadedData={() => setIsVideoLoaded(true)}
-            loading="lazy"
           />
           {!isVideoLoaded && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -154,26 +100,30 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
             <Progress value={progress} className="h-1 mb-4" />
             <div className="flex items-center gap-4">
-              <button
-                onClick={handleVideoClick}
-                className="text-white hover:text-gaming-400 transition-colors"
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={togglePlay}
+                className="text-white hover:text-white/80"
               >
                 {isPlaying ? (
-                  <Pause className="w-6 h-6" />
+                  <Pause className="h-6 w-6" />
                 ) : (
-                  <Play className="w-6 h-6" />
+                  <Play className="h-6 w-6" />
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={toggleMute}
-                className="text-white hover:text-gaming-400 transition-colors"
+                className="text-white hover:text-white/80"
               >
                 {isMuted ? (
-                  <VolumeX className="w-6 h-6" />
+                  <VolumeX className="h-6 w-6" />
                 ) : (
-                  <Volume2 className="w-6 h-6" />
+                  <Volume2 className="h-6 w-6" />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
         </>
@@ -199,22 +149,7 @@ const PostContent = ({ content, imageUrl, videoUrl, postId }: PostContentProps) 
       
       {showLikeAnimation && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <Heart className="w-24 h-24 text-red-500 animate-scale-up" />
-        </div>
-      )}
-
-      <div className={cn(
-        "absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/50",
-        content && "pb-16"
-      )} />
-      {content && (
-        <div className="absolute bottom-4 left-4 right-4 text-white">
-          <p 
-            className="text-sm"
-            dangerouslySetInnerHTML={{ 
-              __html: linkifyMentions(linkifyHashtags(content))
-            }}
-          />
+          <Heart className="text-red-500 h-24 w-24 animate-like" fill="currentColor" />
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import { useInView } from "react-intersection-observer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase";
+import { Post } from "@/types/post";
 
 const POSTS_PER_PAGE = 5;
 
@@ -67,13 +68,13 @@ const PostList = () => {
         .throwOnError();
 
       if (error) throw error;
-      return data;
+      return data as Post[];
     },
     getNextPageParam: (lastPage, pages) => {
       return lastPage?.length === POSTS_PER_PAGE ? pages.length : undefined;
     },
+    gcTime: 1000 * 60 * 30, // Keep cache for 30 minutes (renamed from cacheTime)
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    cacheTime: 1000 * 60 * 30, // Keep cache for 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
@@ -84,7 +85,7 @@ const PostList = () => {
     }
   }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  if (status === "pending") {
+  if (status === "loading") {
     return (
       <div className="space-y-4 touch-none">
         {[...Array(3)].map((_, i) => (
