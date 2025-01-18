@@ -1,47 +1,69 @@
-import React, { useState } from "react";
 import PostList from "@/components/PostList";
 import { Button } from "@/components/ui/button";
+import { Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
 import PostForm from "@/components/PostForm";
 import GameBoyControls from "@/components/GameBoyControls";
-import { Video } from "lucide-react";
+import { StoriesBar } from "@/components/stories/StoriesBar";
 
-const Home: React.FC = () => {
+const Home = () => {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("feed");
 
   return (
-    <div className="min-h-screen bg-[#1A1F2C]">
-      <div className="fixed top-0 left-0 right-0 z-20">
-        <div className="flex w-full">
-          <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                className="w-1/2 h-14 bg-[#553C9A] hover:bg-[#553C9A]/90 
-                  text-white text-xl font-semibold rounded-none border-r border-[#6B46C1]
-                  transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <Video className="h-5 w-5" />
-                POST
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] w-[95%] mx-auto">
-              <PostForm onPostCreated={() => setIsPostFormOpen(false)} />
-            </DialogContent>
-          </Dialog>
+    <div className="h-[calc(100vh-80px)] relative">
+      <div className="absolute top-0 left-0 right-0 z-20">
+        <div className="w-full bg-[#1A1F2C]/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center">
+            <StoriesBar />
+            <div className="w-full h-12 sm:h-14">
+              <div className="flex w-full h-full">
+                <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="relative h-full w-1/2 bg-gradient-to-b from-gaming-700/40 to-gaming-800/50 
+                      border-y-2 border-l-2 border-gaming-400/50 text-white hover:from-gaming-700/50 hover:to-gaming-800/60
+                      active:from-gaming-700/60 active:to-gaming-800/70 transform active:translate-y-0.5
+                      transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
+                      hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none
+                      text-sm sm:text-base touch-manipulation"
+                    >
+                      <span className="flex items-center -skew-x-12">
+                        <Video className="w-4 h-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">POST</span>
+                        <span className="sm:hidden">+</span>
+                      </span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px] w-[95%] mx-auto">
+                    <PostForm onPostCreated={() => setIsPostFormOpen(false)} />
+                  </DialogContent>
+                </Dialog>
 
-          <Button 
-            className={`w-1/2 h-14 bg-[#553C9A] hover:bg-[#553C9A]/90 
-              text-white text-xl font-semibold rounded-none border-l border-[#6B46C1]
-              transition-all duration-200 ${activeTab === "squad" ? "bg-[#6B46C1]" : ""}`}
-            onClick={() => setActiveTab(activeTab === "squad" ? "feed" : "squad")}
-          >
-            SQUADS
-          </Button>
+                <div className="w-[2px] h-full bg-gaming-400/50" />
+
+                <Button 
+                  className={`relative h-full w-1/2 bg-gradient-to-b from-gaming-700/40 to-gaming-800/50 
+                  border-y-2 border-r-2 border-gaming-400/50 text-white hover:from-gaming-700/50 hover:to-gaming-800/60
+                  active:from-gaming-700/60 active:to-gaming-800/70 transform active:translate-y-0.5
+                  transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
+                  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none text-sm sm:text-base touch-manipulation
+                  ${activeTab === "squad" ? "from-gaming-600/50 to-gaming-700/60" : ""}`}
+                  onClick={() => setActiveTab(activeTab === "squad" ? "feed" : "squad")}
+                >
+                  <span className="flex items-center -skew-x-12 font-bold tracking-wider">
+                    <span className="hidden sm:inline">SQUADS</span>
+                    <span className="sm:hidden">👥</span>
+                  </span>
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="pt-14 pb-[140px] sm:pb-[160px]">
+      <div className="retro-screen h-full pt-16 pb-[160px] sm:pb-[180px] overscroll-none">
         <PostList />
       </div>
 
