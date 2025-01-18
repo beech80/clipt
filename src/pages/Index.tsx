@@ -10,6 +10,7 @@ import { EnhancedFeed } from "@/components/social/EnhancedFeed";
 import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
 import { GamingHistory } from "@/components/gaming/GamingHistory";
 import { TournamentList } from "@/components/tournaments/TournamentList";
+import PostList from "@/components/PostList"; // Added this import
 
 export default function Index() {
   const { user } = useAuth();
