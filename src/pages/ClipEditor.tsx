@@ -61,7 +61,7 @@ const ClipEditor = () => {
   const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['editing-session', id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: dbData, error } = await supabase
         .from('clip_editing_sessions')
         .select('*')
         .eq('clip_id', id)
@@ -69,23 +69,24 @@ const ClipEditor = () => {
       
       if (error && error.code !== 'PGRST116') throw error;
       
-      if (data) {
+      if (dbData) {
+        const data = dbData as DatabaseClipSession;
         const transformedData: ClipEditingSession = {
           id: data.id,
           user_id: data.user_id,
           clip_id: data.clip_id,
-          effects: (data.effects || []).map((effect: any) => ({
+          effects: Array.isArray(data.effects) ? data.effects.map(effect => ({
             id: effect.id,
             type: effect.type,
             settings: effect.settings || {}
-          })),
-          edit_history: (data.edit_history || []).map((history: any[]) =>
-            history.map((effect: any) => ({
+          })) : [],
+          edit_history: Array.isArray(data.edit_history) ? data.edit_history.map(history =>
+            history.map(effect => ({
               id: effect.id,
               type: effect.type,
               settings: effect.settings || {}
             }))
-          ),
+          ) : [],
           status: data.status,
           created_at: data.created_at,
           updated_at: data.updated_at
