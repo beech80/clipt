@@ -1,22 +1,13 @@
-import { useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { CalendarIcon, Clock, Repeat } from 'lucide-react';
-import { format } from 'date-fns';
+import { useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { Calendar as CalendarIcon, Clock } from "lucide-react";
 
 interface StreamScheduleFormProps {
   streamId: string;
@@ -24,13 +15,10 @@ interface StreamScheduleFormProps {
 }
 
 export const StreamScheduleForm = ({ streamId, onScheduled }: StreamScheduleFormProps) => {
-  const { user } = useAuth();
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState('60');
   const [isRecurring, setIsRecurring] = useState(false);
-  const [recurringPattern, setRecurringPattern] = useState('weekly');
-  const [vodEnabled, setVodEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSchedule = async () => {
@@ -51,8 +39,7 @@ export const StreamScheduleForm = ({ streamId, onScheduled }: StreamScheduleForm
           scheduled_start_time: scheduledDateTime.toISOString(),
           scheduled_duration: `${duration} minutes`,
           schedule_status: 'scheduled',
-          recurring_schedule: isRecurring ? { pattern: recurringPattern } : null,
-          vod_enabled: vodEnabled
+          recurring_schedule: isRecurring ? { pattern: 'weekly' } : null
         })
         .eq('id', streamId);
 
@@ -76,13 +63,16 @@ export const StreamScheduleForm = ({ streamId, onScheduled }: StreamScheduleForm
         <div className="space-y-4">
           <div className="flex flex-col space-y-2">
             <Label>Date</Label>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              className="rounded-md border"
-              disabled={(date) => date < new Date()}
-            />
+            <div className="flex items-center space-x-2">
+              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="rounded-md border"
+                disabled={(date) => date < new Date()}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col space-y-2">
@@ -116,32 +106,6 @@ export const StreamScheduleForm = ({ streamId, onScheduled }: StreamScheduleForm
               id="recurring"
             />
             <Label htmlFor="recurring">Recurring Schedule</Label>
-          </div>
-
-          {isRecurring && (
-            <div className="flex flex-col space-y-2">
-              <Label>Repeat Pattern</Label>
-              <Select value={recurringPattern} onValueChange={setRecurringPattern}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={vodEnabled}
-              onCheckedChange={setVodEnabled}
-              id="vod"
-            />
-            <Label htmlFor="vod">Enable VOD Recording</Label>
           </div>
         </div>
 
