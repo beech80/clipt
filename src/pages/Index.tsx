@@ -1,41 +1,24 @@
-import { useState, useEffect } from "react";
-import { SEO } from "@/components/SEO";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Filter } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-// Import existing components
-import { SeasonBanner } from "@/components/seasons/SeasonBanner";
-import { XPMultipliersList } from "@/components/multipliers/XPMultipliersList";
-import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
-import { ContentRecommendations } from "@/components/recommendations/ContentRecommendations";
-import { SquadList } from "@/components/squads/SquadList";
-import { EnhancedFeed } from "@/components/social/EnhancedFeed";
-import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
-import { GamingHistory } from "@/components/gaming/GamingHistory";
-import { TournamentList } from "@/components/tournaments/TournamentList";
-import PostList from "@/components/PostList";
-import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { SEO } from "@/components/SEO";
+import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AnimatePresence } from "framer-motion";
+import PostList from "@/components/PostList";
+import { SeasonBanner } from "@/components/seasons/SeasonBanner";
+import { ContentFilters } from "@/components/home/ContentFilters";
+import { OnboardingSection } from "@/components/home/OnboardingSection";
+import { WelcomeSection } from "@/components/home/WelcomeSection";
+import { MainContent } from "@/components/home/MainContent";
+import { SidebarContent } from "@/components/home/SidebarContent";
 
 export default function Index() {
   const { user } = useAuth();
   const { isCompleted } = useOnboarding();
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [contentFilter, setContentFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("recent");
@@ -54,48 +37,9 @@ export default function Index() {
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
-    gcTime: 1000 * 60 * 30, // Cache garbage collection time (formerly cacheTime)
+    gcTime: 1000 * 60 * 30, // Cache garbage collection time
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-  });
-
-  // Enhanced content discovery query
-  const { data: discoveryData } = useQuery({
-    queryKey: ['content-discovery', contentFilter, sortOrder],
-    queryFn: async () => {
-      const query = supabase
-        .from('posts')
-        .select(`
-          *,
-          profiles:user_id (username, avatar_url),
-          likes:likes(count),
-          clip_votes:clip_votes(count)
-        `)
-        .eq('is_published', true);
-
-      // Apply content filters
-      if (contentFilter !== 'all') {
-        query.eq('content_type', contentFilter);
-      }
-
-      // Apply sorting
-      switch (sortOrder) {
-        case 'trending':
-          query.order('engagement_rate', { ascending: false });
-          break;
-        case 'popular':
-          query.order('likes', { ascending: false });
-          break;
-        default:
-          query.order('created_at', { ascending: false });
-      }
-
-      const { data, error } = await query.limit(20);
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 1000 * 60 * 2, // Stay fresh for 2 minutes
-    gcTime: 1000 * 60 * 10, // Garbage collect after 10 minutes
   });
 
   if (profileLoading) {
@@ -148,163 +92,27 @@ export default function Index() {
       >
         <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-4 md:py-8 space-y-4 md:space-y-8`}>
           <AnimatePresence mode="wait">
-            {/* Content Filtering Controls */}
-            <div className="flex gap-4 items-center bg-gaming-800/50 p-4 rounded-lg">
-              <Select value={contentFilter} onValueChange={setContentFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter content" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Content</SelectItem>
-                  <SelectItem value="clips">Clips Only</SelectItem>
-                  <SelectItem value="streams">Streams Only</SelectItem>
-                  <SelectItem value="posts">Posts Only</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={sortOrder} onValueChange={setSortOrder}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="recent">Most Recent</SelectItem>
-                  <SelectItem value="trending">Trending</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <ContentFilters
+              contentFilter={contentFilter}
+              setContentFilter={setContentFilter}
+              sortOrder={sortOrder}
+              setSortOrder={setSortOrder}
+            />
 
             {user && !isCompleted && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 p-4 md:p-6 rounded-lg shadow-xl"
-              >
-                <OnboardingProgress />
-                <Button
-                  onClick={() => navigate('/onboarding')}
-                  className="mt-4 bg-gaming-600 hover:bg-gaming-500 text-white w-full md:w-auto"
-                >
-                  Continue Onboarding
-                </Button>
-              </motion.div>
+              <OnboardingSection show={true} />
             )}
 
             <SeasonBanner />
             
             {user ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-4 md:space-y-8"
-              >
-                <motion.section 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="relative overflow-hidden rounded-xl"
-                  aria-label="Featured content"
-                >
-                  <FeaturedCarousel />
-                </motion.section>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-                  <motion.div 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="lg:col-span-2 space-y-4 md:space-y-8"
-                    role="region"
-                    aria-label="Main content"
-                  >
-                    <nav aria-label="Social feed navigation">
-                      <EnhancedFeed />
-                    </nav>
-                    <section 
-                      className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
-                      aria-label="Active tournaments"
-                    >
-                      <TournamentList />
-                    </section>
-                    <section 
-                      className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
-                      aria-label="Your squads"
-                    >
-                      <SquadList />
-                    </section>
-                  </motion.div>
-
-                  <motion.aside 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="space-y-4 md:space-y-6"
-                    role="complementary"
-                    aria-label="Additional information"
-                  >
-                    <ScrollArea className={`${isMobile ? 'h-[400px]' : 'h-[calc(100vh-2rem)]'} pr-4`}>
-                      <div className="space-y-4">
-                        <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
-                          <XPMultipliersList />
-                        </section>
-                        <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
-                          <ActiveChallenges />
-                        </section>
-                        <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
-                          <GamingHistory />
-                        </section>
-                        <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
-                          <ContentRecommendations />
-                        </section>
-                      </div>
-                    </ScrollArea>
-                  </motion.aside>
-                </div>
-              </motion.div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
+                <MainContent />
+                <SidebarContent />
+              </div>
             ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="space-y-8"
-                role="region"
-                aria-label="Welcome section"
-              >
-                <header 
-                  className={`text-center py-8 ${isMobile ? 'py-12' : 'py-16'} relative overflow-hidden`}
-                  role="banner"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-gaming-600/20 to-gaming-400/20 animate-gradient" />
-                  <motion.h1 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gaming-400 to-gaming-600`}
-                    tabIndex={0}
-                  >
-                    Share Your Epic Gaming Moments
-                  </motion.h1>
-                  <motion.p 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-lg md:text-xl text-gaming-300 mb-8 max-w-2xl mx-auto px-4"
-                    tabIndex={0}
-                  >
-                    Join thousands of gamers sharing their best plays, fails, and everything in between
-                  </motion.p>
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    <Button
-                      onClick={() => navigate('/signup')}
-                      className="bg-gaming-500 hover:bg-gaming-400 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      Get Started
-                    </Button>
-                  </motion.div>
-                </header>
+              <div className="space-y-8" role="region" aria-label="Welcome section">
+                <WelcomeSection />
                 <section 
                   aria-label="Latest posts"
                   tabIndex={0}
@@ -312,7 +120,7 @@ export default function Index() {
                 >
                   <PostList />
                 </section>
-              </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </div>
