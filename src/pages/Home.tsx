@@ -5,32 +5,29 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import PostForm from "@/components/PostForm";
 import GameBoyControls from "@/components/GameBoyControls";
 import { StoriesBar } from "@/components/stories/StoriesBar";
+import { Video } from "lucide-react";
 
 const Home: React.FC = () => {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("feed");
 
   return (
-    <div className="h-[calc(100vh-80px)] relative">
+    <div className="h-[calc(100vh-80px)] relative bg-[#1A1F2C]">
       <div className="absolute top-0 left-0 right-0 z-20">
-        <div className="w-full bg-[#1A1F2C]/80 backdrop-blur-sm">
+        <div className="w-full bg-[#1A1F2C]">
           <div className="flex flex-col items-center">
             <StoriesBar />
-            <div className="w-full h-12 sm:h-14">
+            <div className="w-full h-14">
               <div className="flex w-full h-full">
                 <Dialog open={isPostFormOpen} onOpenChange={setIsPostFormOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="relative h-full w-1/2 bg-gradient-to-b from-gaming-700/40 to-gaming-800/50 
-                      border-y-2 border-l-2 border-gaming-400/50 text-white hover:from-gaming-700/50 hover:to-gaming-800/60
-                      active:from-gaming-700/60 active:to-gaming-800/70 transform active:translate-y-0.5
-                      transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                      hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none
-                      text-sm sm:text-base touch-manipulation"
+                      className="relative h-full w-1/2 bg-[#6B46C1] hover:bg-[#553C9A] 
+                        text-white text-lg font-semibold rounded-none border-r border-[#553C9A]
+                        transition-all duration-200"
                     >
-                      <span className="flex items-center -skew-x-12">
-                        <span>SQUADS</span>
-                      </span>
+                      <Video className="mr-2 h-5 w-5" />
+                      POST
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[600px] w-[95%] mx-auto">
@@ -38,20 +35,13 @@ const Home: React.FC = () => {
                   </DialogContent>
                 </Dialog>
 
-                <div className="w-[2px] h-full bg-gaming-400/50" />
-
                 <Button 
-                  className={`relative h-full w-1/2 bg-gradient-to-b from-gaming-700/40 to-gaming-800/50 
-                  border-y-2 border-r-2 border-gaming-400/50 text-white hover:from-gaming-700/50 hover:to-gaming-800/60
-                  active:from-gaming-700/60 active:to-gaming-800/70 transform active:translate-y-0.5
-                  transition-all duration-200 shadow-[0_0_15px_rgba(155,135,245,0.3)]
-                  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)] rounded-none text-sm sm:text-base touch-manipulation
-                  ${activeTab === "squad" ? "from-gaming-600/50 to-gaming-700/60" : ""}`}
+                  className={`relative h-full w-1/2 bg-[#6B46C1] hover:bg-[#553C9A] 
+                    text-white text-lg font-semibold rounded-none
+                    transition-all duration-200 ${activeTab === "squad" ? "bg-[#553C9A]" : ""}`}
                   onClick={() => setActiveTab(activeTab === "squad" ? "feed" : "squad")}
                 >
-                  <span className="flex items-center -skew-x-12 font-bold tracking-wider">
-                    SQUADS
-                  </span>
+                  SQUADS
                 </Button>
               </div>
             </div>
@@ -59,7 +49,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      <div className="retro-screen h-full pt-16 pb-[160px] sm:pb-[180px] overscroll-none">
+      <div className="h-full pt-16 pb-[160px] sm:pb-[180px] overscroll-none">
         <PostList />
       </div>
 

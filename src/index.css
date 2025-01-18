@@ -33,7 +33,7 @@
   }
   body {
     @apply text-white overscroll-none;
-    background-color: var(--background-override, #1A1F2C);
+    background-color: #1A1F2C;
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
