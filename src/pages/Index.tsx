@@ -1,11 +1,28 @@
 import { useState, useEffect } from "react";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Filter } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Import existing components
 import { SeasonBanner } from "@/components/seasons/SeasonBanner";
 import { XPMultipliersList } from "@/components/multipliers/XPMultipliersList";
 import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
 import { ContentRecommendations } from "@/components/recommendations/ContentRecommendations";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { SquadList } from "@/components/squads/SquadList";
 import { EnhancedFeed } from "@/components/social/EnhancedFeed";
 import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
@@ -14,20 +31,14 @@ import { TournamentList } from "@/components/tournaments/TournamentList";
 import PostList from "@/components/PostList";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { useOnboarding } from "@/hooks/useOnboarding";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Index() {
   const { user } = useAuth();
   const { isCompleted } = useOnboarding();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [contentFilter, setContentFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("recent");
 
   const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ['profile', user?.id],
@@ -46,6 +57,45 @@ export default function Index() {
     gcTime: 1000 * 60 * 30, // Cache garbage collection time (formerly cacheTime)
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+
+  // Enhanced content discovery query
+  const { data: discoveryData } = useQuery({
+    queryKey: ['content-discovery', contentFilter, sortOrder],
+    queryFn: async () => {
+      const query = supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url),
+          likes:likes(count),
+          clip_votes:clip_votes(count)
+        `)
+        .eq('is_published', true);
+
+      // Apply content filters
+      if (contentFilter !== 'all') {
+        query.eq('content_type', contentFilter);
+      }
+
+      // Apply sorting
+      switch (sortOrder) {
+        case 'trending':
+          query.order('engagement_rate', { ascending: false });
+          break;
+        case 'popular':
+          query.order('likes', { ascending: false });
+          break;
+        default:
+          query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query.limit(20);
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 1000 * 60 * 2, // Stay fresh for 2 minutes
+    gcTime: 1000 * 60 * 10, // Garbage collect after 10 minutes
   });
 
   if (profileLoading) {
@@ -98,6 +148,32 @@ export default function Index() {
       >
         <div className={`container mx-auto ${isMobile ? 'px-2' : 'px-4'} py-4 md:py-8 space-y-4 md:space-y-8`}>
           <AnimatePresence mode="wait">
+            {/* Content Filtering Controls */}
+            <div className="flex gap-4 items-center bg-gaming-800/50 p-4 rounded-lg">
+              <Select value={contentFilter} onValueChange={setContentFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter content" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Content</SelectItem>
+                  <SelectItem value="clips">Clips Only</SelectItem>
+                  <SelectItem value="streams">Streams Only</SelectItem>
+                  <SelectItem value="posts">Posts Only</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Most Recent</SelectItem>
+                  <SelectItem value="trending">Trending</SelectItem>
+                  <SelectItem value="popular">Most Popular</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {user && !isCompleted && (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
