@@ -26,7 +26,10 @@ const PostSkeleton = () => (
 );
 
 const PostList = () => {
-  const { ref, inView } = useInView();
+  const { ref, inView } = useInView({
+    threshold: 0.5,
+    rootMargin: "100px",
+  });
 
   const {
     data,
@@ -41,7 +44,12 @@ const PostList = () => {
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          *,
+          id,
+          content,
+          image_url,
+          video_url,
+          created_at,
+          user_id,
           profiles:user_id (
             username,
             avatar_url
@@ -54,7 +62,9 @@ const PostList = () => {
           )
         `)
         .range(pageParam * POSTS_PER_PAGE, (pageParam + 1) * POSTS_PER_PAGE - 1)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .is('is_published', true)
+        .throwOnError();
 
       if (error) throw error;
       return data;
@@ -62,6 +72,10 @@ const PostList = () => {
     getNextPageParam: (lastPage, pages) => {
       return lastPage?.length === POSTS_PER_PAGE ? pages.length : undefined;
     },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    cacheTime: 1000 * 60 * 30, // Keep cache for 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   useEffect(() => {
