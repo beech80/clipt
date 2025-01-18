@@ -5,6 +5,7 @@ import PostItem from "@/components/PostItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Post as PostType } from "@/types/post";
+import { SEO } from "@/components/SEO";
 
 const Post = () => {
   const { id } = useParams();
@@ -29,7 +30,6 @@ const Post = () => {
       if (error) throw error;
       if (!data) throw new Error('Post not found');
 
-      // Transform the data to match the Post type
       return {
         ...data,
         likes_count: data.likes_count?.[0]?.count || 0,
@@ -51,10 +51,39 @@ const Post = () => {
     return <div className="p-4">Post not found</div>;
   }
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SocialMediaPosting",
+    "headline": post.content || "Gaming clip",
+    "author": {
+      "@type": "Person",
+      "name": post.profiles?.username || "Unknown"
+    },
+    "datePublished": post.created_at,
+    "image": post.image_url,
+    "video": post.video_url,
+    "interactionStatistic": [
+      {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/LikeAction",
+        "userInteractionCount": post.likes_count
+      }
+    ]
+  };
+
   return (
-    <div className="container mx-auto max-w-2xl py-8">
-      <PostItem post={post} />
-    </div>
+    <>
+      <SEO 
+        title={`${post.content || "Gaming clip"} - Clip`}
+        description={post.content || "Check out this gaming clip on Clip"}
+        image={post.image_url || "/og-image.png"}
+        type="article"
+        structuredData={structuredData}
+      />
+      <div className="container mx-auto max-w-2xl py-8">
+        <PostItem post={post} />
+      </div>
+    </>
   );
 };
 
