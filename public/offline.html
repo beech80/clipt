@@ -19,57 +19,63 @@
             text-align: center;
         }
         .alert {
-            background-color: #dc2626;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
+            background-color: #2A2E3B;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
             max-width: 400px;
             width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .icon {
-            width: 16px;
-            height: 16px;
-            margin-bottom: 8px;
-        }
-        .title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .description {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.8);
+            width: 48px;
+            height: 48px;
             margin-bottom: 16px;
         }
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .description {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
         .button {
-            background: #3B82F6;
+            background: #9B87F5;
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 500;
             width: 100%;
             max-width: 400px;
+            transition: background-color 0.2s;
         }
         .button:hover {
-            background: #2563EB;
+            background: #8A74E8;
+        }
+        .offline-image {
+            width: 200px;
+            height: 200px;
+            margin-bottom: 24px;
         }
     </style>
 </head>
 <body>
+    <img src="/offline-image.svg" alt="Offline" class="offline-image">
     <div class="alert">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
         <div class="title">You're Offline</div>
-        <div class="description">Please check your internet connection and try again.</div>
+        <div class="description">
+            Looks like you lost your internet connection. Check your connection and try again. Don't worry, your data is safely stored and will sync when you're back online.
+        </div>
     </div>
     <button onclick="window.location.reload()" class="button">
-        Retry Connection
+        Try Again
     </button>
 </body>
 </html>

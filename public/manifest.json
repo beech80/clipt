@@ -19,13 +19,21 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "id": "/",
+  "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "theme_color": "#1A1F2C",
   "background_color": "#1A1F2C",
-  "orientation": "portrait",
   "description": "Share your gaming moments",
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "type": "image/png",
+      "sizes": "1080x1920",
+      "form_factor": "narrow"
+    }
+  ],
   "categories": ["games", "social", "entertainment"],
   "shortcuts": [
     {
@@ -39,6 +47,11 @@
       "description": "View your messages"
     }
   ],
-  "related_applications": [],
-  "prefer_related_applications": false
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }
