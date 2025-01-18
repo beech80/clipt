@@ -122,9 +122,9 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
 
   return (
     <>
-      {/* Y Button - Like (Yellow) */}
+      {/* Y Button - Like (Yellow) - Top */}
       <button 
-        className="action-button absolute top-0 left-1/2 -translate-x-1/2
+        className="action-button absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[40%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
         shadow-[0_0_15px_rgba(255,255,0,0.3)] border-yellow-400/30
         hover:shadow-[0_0_20px_rgba(255,255,0,0.4)] transition-all hover:scale-110 active:scale-95"
@@ -134,9 +134,9 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(255,255,0,0.5)]`} />
       </button>
 
-      {/* X Button - Comment (Blue) */}
+      {/* X Button - Comment (Blue) - Left */}
       <button 
-        className="action-button absolute left-0 top-1/2 -translate-y-1/2
+        className="action-button absolute left-0 top-1/2 -translate-x-[40%] -translate-y-1/2
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
         shadow-[0_0_15px_rgba(0,120,255,0.3)] border-blue-400/30
         hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110 active:scale-95"
@@ -146,9 +146,9 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(0,120,255,0.5)]" />
       </button>
 
-      {/* B Button - Follow (Red) */}
+      {/* B Button - Follow (Red) - Right */}
       <button 
-        className="action-button absolute right-0 top-1/2 -translate-y-1/2
+        className="action-button absolute right-0 top-1/2 translate-x-[40%] -translate-y-1/2
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
         shadow-[0_0_15px_rgba(255,0,0,0.3)] border-red-400/30
         hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110 active:scale-95"
@@ -158,9 +158,9 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(255,0,0,0.5)]`} />
       </button>
 
-      {/* A Button - Rank (Green) */}
+      {/* A Button - Rank (Green) - Bottom */}
       <button 
-        className="action-button absolute bottom-0 left-1/2 -translate-x-1/2
+        className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[40%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
         shadow-[0_0_15px_rgba(0,255,0,0.3)] border-green-400/30
         hover:shadow-[0_0_20px_rgba(0,255,0,0.4)] transition-all hover:scale-110 active:scale-95"
