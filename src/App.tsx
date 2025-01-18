@@ -27,6 +27,7 @@ import Verification from "@/pages/Verification";
 import Schedule from "@/pages/Schedule";
 import PaymentSuccess from "@/pages/payment-success";
 import PaymentCancelled from "@/pages/payment-cancelled";
+import ClipEditor from "@/pages/ClipEditor";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ function App() {
             <Route path="/discover" element={<Discover />} />
             <Route path="/collections" element={<Collections />} />
             <Route path="/post/:id" element={<Post />} />
+            <Route path="/clip-editor/:id" element={<ClipEditor />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/connections" element={<Connections />} />
             <Route path="/achievements" element={<Achievements />} />

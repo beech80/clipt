@@ -555,6 +555,91 @@ export type Database = {
           },
         ]
       }
+      clip_editing_sessions: {
+        Row: {
+          clip_id: string | null
+          created_at: string
+          edit_history: Json[] | null
+          effects: Json
+          id: string
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          clip_id?: string | null
+          created_at?: string
+          edit_history?: Json[] | null
+          effects?: Json
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          clip_id?: string | null
+          created_at?: string
+          edit_history?: Json[] | null
+          effects?: Json
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clip_editing_sessions_clip_id_fkey"
+            columns: ["clip_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clip_editing_sessions_clip_id_fkey"
+            columns: ["clip_id"]
+            isOneToOne: false
+            referencedRelation: "trending_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clip_editing_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clip_effects: {
+        Row: {
+          created_at: string
+          id: string
+          is_premium: boolean | null
+          name: string
+          preview_url: string | null
+          settings: Json
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_premium?: boolean | null
+          name: string
+          preview_url?: string | null
+          settings?: Json
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_premium?: boolean | null
+          name?: string
+          preview_url?: string | null
+          settings?: Json
+          type?: string
+        }
+        Relationships: []
+      }
       clip_templates: {
         Row: {
           created_at: string | null
