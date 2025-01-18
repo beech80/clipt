@@ -8,7 +8,7 @@ interface ActionButtonsProps {
   postId: string;
 }
 
-const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({ onAction, postId }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
 
