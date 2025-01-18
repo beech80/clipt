@@ -26,6 +26,17 @@ interface ClipEditingSession {
   updated_at?: string;
 }
 
+interface DatabaseClipSession {
+  id: string;
+  user_id: string;
+  clip_id: string;
+  effects: any;
+  edit_history: any[];
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const ClipEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -57,14 +68,29 @@ const ClipEditor = () => {
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data as ClipEditingSession;
+      
+      // Transform database data to match our frontend types
+      if (data) {
+        const transformedData: ClipEditingSession = {
+          id: data.id,
+          user_id: data.user_id,
+          clip_id: data.clip_id,
+          effects: Array.isArray(data.effects) ? data.effects : [],
+          edit_history: Array.isArray(data.edit_history) ? data.edit_history : [],
+          status: data.status,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        return transformedData;
+      }
+      return null;
     },
     enabled: !!id
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const sessionData: ClipEditingSession = {
+      const sessionData = {
         clip_id: id,
         effects: appliedEffects,
         edit_history: editHistory,
