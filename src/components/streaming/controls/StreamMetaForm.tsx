@@ -21,10 +21,10 @@ export const StreamMetaForm = ({
   tags,
 }: StreamMetaFormProps) => {
   const handleTagSelect = (tagId: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tagId) 
-        ? prev.filter(id => id !== tagId)
-        : [...prev, tagId]
+    setSelectedTags(
+      selectedTags.includes(tagId)
+        ? selectedTags.filter(id => id !== tagId)
+        : [...selectedTags, tagId]
     );
   };
 
