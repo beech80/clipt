@@ -1,104 +1,57 @@
-import { useMessages, MessagesProvider } from "@/contexts/MessagesContext";
-import { MessageList } from "@/components/messages/MessageList";
-import { ChatList } from "@/components/messages/ChatList";
-import { MessageInput } from "@/components/messages/MessageInput";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Gamepad, Users, MessageSquare } from "lucide-react";
-import GameBoyControls from "@/components/GameBoyControls";
 import { useNavigate } from "react-router-dom";
+import { MessageSquareplus, Users } from "lucide-react";
+import { ChatList } from "@/components/messages/ChatList";
+import { MessageList } from "@/components/messages/MessageList";
+import { MessageInput } from "@/components/messages/MessageInput";
 
-function MessagesContent() {
-  const { selectedChat, setSelectedChat, messages, chats, isLoading, handleSendMessage } = useMessages();
+const Messages = () => {
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const recentGamers = [
-    { id: '1', tag: 'ProGamer123', avatar: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop' },
-    { id: '2', tag: 'NinjaWarrior', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop' },
-    { id: '3', tag: 'PixelQueen', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop' },
-  ];
-
   return (
-    <div className="mx-auto max-w-4xl h-[calc(100vh-4rem)] pb-40">
-      <div className="h-full border rounded-lg grid grid-cols-1 md:grid-cols-3 divide-x">
-        <div className="p-4 flex flex-col space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="bg-gaming-900/50 rounded-lg p-4 border border-gaming-500/20 flex-1 mr-2">
-              <div className="flex items-center space-x-2 mb-2">
-                <Gamepad className="w-5 h-5 text-gaming-500" />
-                <h3 className="font-bold text-gaming-100">Game Chat Hub</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Connect with fellow gamers!
-              </p>
-            </div>
-            <Button 
-              variant="outline" 
-              size="icon"
-              className="h-14 w-14 shrink-0"
-              onClick={() => navigate('/group-chat')}
-            >
-              <Users className="h-6 w-6" />
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Users className="w-4 h-4 text-gaming-500" />
-              <h4 className="text-sm font-semibold">Recent Players</h4>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {recentGamers.map((gamer) => (
-                <div 
-                  key={gamer.id}
-                  className="flex items-center space-x-2 bg-gaming-900/30 p-2 rounded-lg hover:bg-gaming-900/50 transition-colors cursor-pointer"
-                >
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={gamer.avatar} alt={gamer.tag} />
-                    <AvatarFallback>{gamer.tag.slice(0, 2)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-gaming-100">{gamer.tag}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <ChatList
-            chats={chats}
-            selectedChat={selectedChat}
-            onSelectChat={setSelectedChat}
-          />
+    <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Messages</h1>
+        <div className="space-x-2">
+          <Button 
+            variant="outline"
+            onClick={() => navigate("/group-chat")}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Group Chats
+          </Button>
+          <Button>
+            <MessageSquareplus className="h-4 w-4 mr-2" />
+            New Message
+          </Button>
         </div>
+      </div>
 
-        <div className="col-span-2 flex flex-col h-full">
-          {isLoading ? (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              Loading messages...
-            </div>
-          ) : selectedChat ? (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
+        <div className="md:col-span-1 border rounded-lg p-4 overflow-y-auto">
+          <ChatList onSelectChat={setSelectedChat} selectedChat={selectedChat} />
+        </div>
+        <div className="md:col-span-2 border rounded-lg flex flex-col">
+          {selectedChat ? (
             <>
-              <MessageList messages={messages} />
-              <MessageInput onSendMessage={handleSendMessage} />
+              <div className="flex-1 overflow-y-auto p-4">
+                <MessageList chatId={selectedChat} />
+              </div>
+              <div className="border-t p-4">
+                <MessageInput chatId={selectedChat} />
+              </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <MessageSquare className="w-12 h-12 mx-auto text-gaming-500 opacity-50" />
-                <p className="text-muted-foreground">Select a chat to start messaging</p>
-              </div>
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              Select a conversation to start chatting
             </div>
           )}
         </div>
       </div>
-      <GameBoyControls />
     </div>
   );
-}
+};
 
-export default function Messages() {
-  return (
-    <MessagesProvider>
-      <MessagesContent />
-    </MessagesProvider>
-  );
-}
+export default Messages;

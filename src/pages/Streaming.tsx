@@ -1,200 +1,63 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
-import { StreamForm } from "@/components/streaming/StreamForm";
-import { StreamPreview } from "@/components/streaming/StreamPreview";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { StreamPlayer } from "@/components/streaming/StreamPlayer";
 import { StreamChat } from "@/components/streaming/StreamChat";
+import { StreamForm } from "@/components/streaming/StreamForm";
 import { StreamControls } from "@/components/streaming/StreamControls";
-import { StreamHealthMonitor } from "@/components/streaming/StreamHealthMonitor";
-import { StreamInfoCards } from "@/components/streaming/StreamInfoCards";
-import { StreamSettingsForm } from "@/components/streaming/StreamSettingsForm";
-import { StreamContentSettings } from "@/components/streaming/StreamContentSettings";
-import { StreamModeration } from "@/components/streaming/StreamModeration";
-import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
-import { StreamRecordingManager } from "@/components/streaming/StreamRecordingManager";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { StreamInteractivePanel } from "@/components/streaming/StreamInteractivePanel";
-
-const defaultSettings = {
-  titleTemplate: "",
-  descriptionTemplate: "",
-  chatEnabled: true,
-  chatFollowersOnly: false,
-  chatSlowMode: 0,
-  notificationEnabled: true,
-};
+import { StreamSettings } from "@/components/streaming/StreamSettings";
+import { StreamScheduleForm } from "@/components/streaming/StreamScheduleForm";
+import { Calendar, Settings, Video } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const Streaming = () => {
-  const { user } = useAuth();
-  const [isConfiguring, setIsConfiguring] = useState(false);
-  const [streamState, setStreamState] = useState({
-    isLive: false,
-    streamKey: null,
-    streamUrl: null,
-  });
-  const [settings, setSettings] = useState(defaultSettings);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const { data: stream, error } = useQuery({
-    queryKey: ['stream', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from('streams')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        toast.error("Failed to load stream data");
-        throw error;
-      }
-      return data;
-    },
-    enabled: !!user?.id
-  });
-
-  useEffect(() => {
-    if (!stream) {
-      setIsConfiguring(true);
-    }
-  }, [stream]);
-
-  const handleStreamUpdate = (data: { isLive: boolean; streamKey: string | null; streamUrl: string | null }) => {
-    setStreamState(data);
-  };
-
-  const handleSettingsChange = (newSettings: typeof settings) => {
-    setSettings(newSettings);
-  };
-
-  const handleSettingsSave = async () => {
-    setIsLoading(true);
-    try {
-      // Save settings logic here
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Failed to save settings:', error);
-      setIsLoading(false);
-    }
-  };
-
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Sign in to Start Streaming</h2>
-          <p className="text-muted-foreground">
-            You need to be signed in to access streaming features.
-          </p>
-        </Card>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Error Loading Stream</h2>
-          <p className="text-muted-foreground">
-            There was an error loading your stream data. Please try again later.
-          </p>
-        </Card>
-      </div>
-    );
-  }
+  const [isLive, setIsLive] = useState(false);
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      {isConfiguring ? (
-        <div className="max-w-2xl mx-auto">
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-6">Configure Your Stream</h2>
-            <StreamForm 
-              title=""
-              description=""
-              onTitleChange={() => {}}
-              onDescriptionChange={() => {}}
-            />
-          </Card>
+    <div className="container mx-auto p-4 space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Streaming</h1>
+        <div className="space-x-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule Stream
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <StreamScheduleForm />
+            </DialogContent>
+          </Dialog>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Settings className="h-4 w-4 mr-2" />
+                Stream Settings
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <StreamSettings />
+            </DialogContent>
+          </Dialog>
+
+          <Button onClick={() => setIsLive(!isLive)}>
+            <Video className="h-4 w-4 mr-2" />
+            {isLive ? "End Stream" : "Go Live"}
+          </Button>
         </div>
-      ) : (
-        <Tabs defaultValue="stream" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
-            <TabsTrigger value="stream">Stream</TabsTrigger>
-            <TabsTrigger value="recordings">Recordings</TabsTrigger>
-            <TabsTrigger value="moderation">Moderation</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
+      </div>
 
-          <TabsContent value="stream" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                <StreamPreview 
-                  streamUrl={stream?.stream_url} 
-                  isLive={stream?.is_live || false}
-                />
-                <StreamControls 
-                  userId={user.id}
-                  isLive={streamState.isLive}
-                  onStreamUpdate={handleStreamUpdate}
-                />
-                <StreamHealthMonitor 
-                  streamId={stream?.id || ''}
-                />
-                <StreamInteractivePanel
-                  streamId={stream?.id || ''}
-                  isStreamer={stream?.user_id === user?.id}
-                />
-              </div>
-              
-              <div className="space-y-6">
-                <StreamInfoCards 
-                  isLive={streamState.isLive}
-                  streamKey={streamState.streamKey}
-                  streamUrl={streamState.streamUrl}
-                  viewerCount={stream?.viewer_count}
-                  startedAt={stream?.started_at}
-                  healthStatus={stream?.health_status}
-                  bitrate={stream?.current_bitrate}
-                  fps={stream?.current_fps}
-                  resolution={stream?.stream_resolution}
-                />
-                {stream?.id && (
-                  <StreamContentSettings streamId={stream.id} />
-                )}
-                <StreamChat 
-                  streamId={stream?.id || ''} 
-                  isLive={stream?.is_live || false}
-                  chatEnabled={stream?.chat_enabled ?? true}
-                />
-                <StreamSettingsForm 
-                  settings={settings}
-                  onSettingsChange={handleSettingsChange}
-                  onSave={handleSettingsSave}
-                  isLoading={isLoading}
-                />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="recordings">
-            {stream?.id && <StreamRecordingManager streamId={stream.id} />}
-          </TabsContent>
-
-          <TabsContent value="moderation">
-            {stream?.id && <StreamModeration streamId={stream.id} />}
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            {stream?.id && <AnalyticsDashboard streamId={stream.id} />}
-          </TabsContent>
-        </Tabs>
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-3 space-y-4">
+          <StreamPlayer />
+          {!isLive && <StreamForm />}
+          {isLive && <StreamControls />}
+        </div>
+        <div className="lg:col-span-1">
+          <StreamChat />
+        </div>
+      </div>
     </div>
   );
 };
