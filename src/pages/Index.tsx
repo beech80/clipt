@@ -1,17 +1,16 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOnboarding } from "@/hooks/useOnboarding";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { SEO } from "@/components/SEO";
-import { Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AnimatePresence, motion } from "framer-motion";
-import PostList from "@/components/PostList";
-import { SeasonBanner } from "@/components/seasons/SeasonBanner";
 import { ContentFilters } from "@/components/home/ContentFilters";
 import { OnboardingSection } from "@/components/home/OnboardingSection";
+import { SeasonBanner } from "@/components/seasons/SeasonBanner";
 import { WelcomeSection } from "@/components/home/WelcomeSection";
 import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
@@ -37,7 +36,10 @@ export default function Index() {
           .eq('id', user.id)
           .maybeSingle();
         
-        if (error) throw error;
+        if (error) {
+          console.error('Profile fetch error:', error);
+          throw error;
+        }
         return data;
       } catch (error) {
         console.error('Profile fetch error:', error);
@@ -45,9 +47,7 @@ export default function Index() {
       }
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
-    retry: 2,
+    retry: 1,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
@@ -128,13 +128,6 @@ export default function Index() {
               ) : (
                 <div className="space-y-8" role="region" aria-label="Welcome section">
                   <WelcomeSection />
-                  <section 
-                    aria-label="Latest posts"
-                    tabIndex={0}
-                    className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
-                  >
-                    <PostList />
-                  </section>
                 </div>
               )}
             </motion.div>
