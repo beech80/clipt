@@ -72,53 +72,58 @@ const Home = () => {
       <div className="absolute top-0 left-0 right-0 z-20">
         <div className="w-full bg-[#1A1F2C]/80 backdrop-blur-sm">
           <div className="flex flex-col items-center">
-            {user && (
-              <Card className="w-full p-4 mb-4 border-none bg-transparent">
+            {/* Stats Card - Always visible now, with a message if not logged in */}
+            <Card className="w-full p-4 mb-4 bg-gaming-800/90 border-gaming-600">
+              {user ? (
                 <div className="flex items-center justify-between px-4">
                   <div className="flex items-center space-x-4">
                     {isLoadingProfile ? (
-                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <Skeleton className="h-12 w-12 rounded-full" />
                     ) : (
-                      <Avatar className="h-10 w-10 border-2 border-gaming-500">
+                      <Avatar className="h-12 w-12 border-2 border-gaming-500 ring-2 ring-gaming-400/50">
                         <AvatarImage src={profile?.avatar_url} />
-                        <AvatarFallback>
-                          <User className="h-6 w-6" />
+                        <AvatarFallback className="bg-gaming-700">
+                          <User className="h-6 w-6 text-gaming-300" />
                         </AvatarFallback>
                       </Avatar>
                     )}
                     <div className="space-y-1">
                       {isLoadingProfile ? (
-                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-5 w-32" />
                       ) : (
-                        <p className="text-sm font-medium leading-none">
+                        <p className="text-lg font-bold text-gaming-100">
                           {profile?.username || 'User'}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex space-x-6">
+                  <div className="flex space-x-8">
                     <div className="flex items-center space-x-2">
-                      <Heart className="h-4 w-4 text-red-500" />
-                      <span className="text-sm font-medium">
-                        {isLoadingStats ? <Skeleton className="h-4 w-8" /> : userStats?.likes || 0}
+                      <Heart className="h-5 w-5 text-red-500" />
+                      <span className="text-base font-bold text-gaming-100">
+                        {isLoadingStats ? <Skeleton className="h-5 w-10" /> : userStats?.likes || 0}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <MessageSquare className="h-4 w-4 text-gaming-400" />
-                      <span className="text-sm font-medium">
-                        {isLoadingStats ? <Skeleton className="h-4 w-8" /> : userStats?.comments || 0}
+                      <MessageSquare className="h-5 w-5 text-gaming-400" />
+                      <span className="text-base font-bold text-gaming-100">
+                        {isLoadingStats ? <Skeleton className="h-5 w-10" /> : userStats?.comments || 0}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Trophy className="h-4 w-4 text-yellow-500" />
-                      <span className="text-sm font-medium">
-                        {isLoadingStats ? <Skeleton className="h-4 w-8" /> : userStats?.achievements || 0}
+                      <Trophy className="h-5 w-5 text-yellow-500" />
+                      <span className="text-base font-bold text-gaming-100">
+                        {isLoadingStats ? <Skeleton className="h-5 w-10" /> : userStats?.achievements || 0}
                       </span>
                     </div>
                   </div>
                 </div>
-              </Card>
-            )}
+              ) : (
+                <div className="text-center py-2">
+                  <p className="text-gaming-100">Sign in to see your stats!</p>
+                </div>
+              )}
+            </Card>
             <StoriesBar />
             <div className="w-full h-12 sm:h-14">
               <div className="flex w-full h-full">
