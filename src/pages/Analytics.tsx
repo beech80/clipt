@@ -1,10 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp, Calendar } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState("7d");
+  const [currentStreamId, setCurrentStreamId] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchLatestStream = async () => {
+      if (!user) return;
+      
+      const { data, error } = await supabase
+        .from('streams')
+        .select('id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (data && !error) {
+        setCurrentStreamId(data.id);
+      }
+    };
+
+    fetchLatestStream();
+  }, [user]);
+
+  if (!currentStreamId) {
+    return (
+      <div className="container mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-4">Analytics</h1>
+        <p>No streams found. Start streaming to see your analytics!</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -28,7 +61,7 @@ const Analytics = () => {
         </Select>
       </div>
 
-      <AnalyticsDashboard timeRange={timeRange} />
+      <AnalyticsDashboard streamId={currentStreamId} />
     </div>
   );
 };
