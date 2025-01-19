@@ -5,6 +5,16 @@ import { formatDistanceToNow } from "date-fns";
 import { History, Trophy, Flag, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface GamingHistoryItem {
+  id: string;
+  activity_type: string;
+  details: {
+    description: string;
+    [key: string]: any;
+  };
+  created_at: string;
+}
+
 const ActivityHistory = () => {
   const { user } = useAuth();
 
@@ -18,7 +28,7 @@ const ActivityHistory = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as GamingHistoryItem[];
     },
     enabled: !!user,
   });
