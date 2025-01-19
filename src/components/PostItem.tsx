@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { PostHeader } from "./post/PostHeader";
 import { PostInteractions } from "./post/interactions/PostInteractions";
 import { Post } from "@/types/post";
 
@@ -32,10 +31,6 @@ const PostItem = ({ post }: PostItemProps) => {
   return (
     <div className="relative h-full w-full bg-[#1A1F2C] touch-none select-none">
       <div className="absolute inset-0 flex flex-col">
-        <div className="p-3 sm:p-4 bg-[#1A1F2C] border-b border-[#2A2E3B]">
-          <PostHeader post={post} commentsCount={commentsCount} />
-        </div>
-
         <div className="flex-1 relative">
           <PostContent
             imageUrl={post.image_url}
