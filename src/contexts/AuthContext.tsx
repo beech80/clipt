@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -25,6 +25,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
       if (error) throw error;
       toast.success('Successfully signed in!');
+      navigate('/home');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error signing in');
       throw error;
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success('Successfully signed out!');
+      navigate('/');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error signing out');
       throw error;
