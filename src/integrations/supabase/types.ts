@@ -2384,7 +2384,9 @@ export type Database = {
           created_at: string
           id: string
           image_url: string | null
+          is_premium: boolean | null
           is_published: boolean | null
+          required_tier_id: string | null
           scheduled_publish_time: string | null
           user_id: string | null
           video_url: string | null
@@ -2394,7 +2396,9 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_premium?: boolean | null
           is_published?: boolean | null
+          required_tier_id?: string | null
           scheduled_publish_time?: string | null
           user_id?: string | null
           video_url?: string | null
@@ -2404,12 +2408,21 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string | null
+          is_premium?: boolean | null
           is_published?: boolean | null
+          required_tier_id?: string | null
           scheduled_publish_time?: string | null
           user_id?: string | null
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "posts_required_tier_id_fkey"
+            columns: ["required_tier_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_tiers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "posts_user_id_fkey"
             columns: ["user_id"]
@@ -3880,6 +3893,39 @@ export type Database = {
           },
         ]
       }
+      subscription_tiers: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+          stripe_price_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price: number
+          stripe_price_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          stripe_price_id?: string | null
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           created_at: string | null
@@ -4419,6 +4465,54 @@ export type Database = {
             foreignKeyName: "user_privacy_settings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          started_at: string
+          status: string
+          stripe_subscription_id: string | null
+          tier_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          started_at?: string
+          status: string
+          stripe_subscription_id?: string | null
+          tier_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          tier_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_tiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
