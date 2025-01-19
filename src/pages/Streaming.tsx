@@ -8,9 +8,21 @@ import { StreamSettings } from "@/components/streaming/StreamSettings";
 import { StreamScheduleForm } from "@/components/streaming/StreamScheduleForm";
 import { Calendar, Settings, Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Streaming = () => {
   const [isLive, setIsLive] = useState(false);
+  const { user } = useAuth();
+  const [streamData, setStreamData] = useState({
+    title: "",
+    description: "",
+  });
+
+  if (!user) return null;
+
+  const handleStreamUpdate = () => {
+    // Handle stream update logic
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-4">
@@ -25,7 +37,7 @@ const Streaming = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <StreamScheduleForm />
+              <StreamScheduleForm streamId={user.id} />
             </DialogContent>
           </Dialog>
 
@@ -37,7 +49,7 @@ const Streaming = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <StreamSettings />
+              <StreamSettings userId={user.id} />
             </DialogContent>
           </Dialog>
 
@@ -51,11 +63,18 @@ const Streaming = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <div className="lg:col-span-3 space-y-4">
           <StreamPlayer />
-          {!isLive && <StreamForm />}
-          {isLive && <StreamControls />}
+          {!isLive && (
+            <StreamForm
+              title={streamData.title}
+              description={streamData.description}
+              onTitleChange={(title) => setStreamData({ ...streamData, title })}
+              onDescriptionChange={(description) => setStreamData({ ...streamData, description })}
+            />
+          )}
+          {isLive && <StreamControls onStreamUpdate={handleStreamUpdate} />}
         </div>
         <div className="lg:col-span-1">
-          <StreamChat />
+          <StreamChat streamId={user.id} isLive={isLive} chatEnabled={true} />
         </div>
       </div>
     </div>

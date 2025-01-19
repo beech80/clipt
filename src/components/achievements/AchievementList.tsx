@@ -13,19 +13,32 @@ interface Achievement {
   earned_at?: string;
 }
 
-export const AchievementList = ({ userId }: { userId: string }) => {
+interface AchievementListProps {
+  userId: string;
+  filter?: 'all' | 'in-progress' | 'completed';
+}
+
+export const AchievementList = ({ userId, filter = 'all' }: AchievementListProps) => {
   const { data: achievements, isLoading } = useQuery({
-    queryKey: ['user-achievements', userId],
+    queryKey: ['user-achievements', userId, filter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('achievements')
         .select(`
           *,
           user_achievements!inner(earned_at)
         `)
-        .eq('user_achievements.user_id', userId)
-        .order('points', { ascending: false });
+        .eq('user_achievements.user_id', userId);
 
+      if (filter === 'completed') {
+        query = query.not('user_achievements.earned_at', 'is', null);
+      } else if (filter === 'in-progress') {
+        query = query.is('user_achievements.earned_at', null);
+      }
+
+      query = query.order('points', { ascending: false });
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Achievement[];
     },

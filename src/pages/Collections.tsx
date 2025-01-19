@@ -9,6 +9,9 @@ import { FolderPlus } from "lucide-react";
 
 const Collections = () => {
   const [newCollectionName, setNewCollectionName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   const handleCreateCollection = () => {
     // Implementation for creating collection
@@ -45,10 +48,26 @@ const Collections = () => {
         </Dialog>
       </div>
 
-      <CollectionFilters />
+      <CollectionFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        category={category}
+        onCategoryChange={setCategory}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <CollectionCard />
+        <CollectionCard
+          id="1"
+          name="Sample Collection"
+          description="This is a sample collection"
+          isPrivate={false}
+          createdAt={new Date().toISOString()}
+          category="general"
+          tags={["sample"]}
+          postCount={0}
+        />
       </div>
     </div>
   );

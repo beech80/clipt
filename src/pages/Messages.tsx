@@ -1,14 +1,22 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { MessageSquareplus, Users } from "lucide-react";
+import { MessageSquarePlus, Users } from "lucide-react";
 import { ChatList } from "@/components/messages/ChatList";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
+import { useMessages } from "@/contexts/MessagesContext";
 
 const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { chats, messages, sendMessage } = useMessages();
+
+  const handleSendMessage = (content: string) => {
+    if (selectedChat) {
+      sendMessage(content, selectedChat);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -23,7 +31,7 @@ const Messages = () => {
             Group Chats
           </Button>
           <Button>
-            <MessageSquareplus className="h-4 w-4 mr-2" />
+            <MessageSquarePlus className="h-4 w-4 mr-2" />
             New Message
           </Button>
         </div>
@@ -31,16 +39,20 @@ const Messages = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
         <div className="md:col-span-1 border rounded-lg p-4 overflow-y-auto">
-          <ChatList onSelectChat={setSelectedChat} selectedChat={selectedChat} />
+          <ChatList 
+            chats={chats} 
+            selectedChat={selectedChat} 
+            onSelectChat={setSelectedChat} 
+          />
         </div>
         <div className="md:col-span-2 border rounded-lg flex flex-col">
           {selectedChat ? (
             <>
               <div className="flex-1 overflow-y-auto p-4">
-                <MessageList chatId={selectedChat} />
+                <MessageList messages={messages} />
               </div>
               <div className="border-t p-4">
-                <MessageInput chatId={selectedChat} />
+                <MessageInput onSendMessage={handleSendMessage} />
               </div>
             </>
           ) : (

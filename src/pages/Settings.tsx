@@ -6,8 +6,17 @@ import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { AccessibilitySettings } from "@/components/accessibility/AccessibilitySettings";
 import { KeyboardShortcuts } from "@/components/keyboard/KeyboardShortcuts";
 import { VerificationRequestForm } from "@/components/verification/VerificationRequestForm";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Settings = () => {
+  const { user } = useAuth();
+  const currentTheme = {
+    primary: "#1EAEDB",
+    secondary: "#000000"
+  };
+
+  if (!user) return null;
+
   return (
     <div className="container mx-auto py-6 space-y-8">
       <h1 className="text-3xl font-bold">Settings</h1>
@@ -23,7 +32,7 @@ const Settings = () => {
 
         <TabsContent value="profile" className="space-y-6">
           <ProfileEditForm />
-          <ThemeSelector />
+          <ThemeSelector userId={user.id} currentTheme={currentTheme} />
         </TabsContent>
 
         <TabsContent value="security" className="space-y-6">
