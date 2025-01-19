@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Shield } from 'lucide-react';
 
 const Settings = () => {
   const { user } = useAuth();
@@ -20,7 +21,9 @@ const Settings = () => {
     bio: '',
     email_notifications: false,
     push_notifications: false,
-    dark_mode: false
+    dark_mode: false,
+    is_verified: false,
+    verification_requested_at: null as string | null
   });
   const [loading, setLoading] = useState(false);
 
@@ -73,6 +76,35 @@ const Settings = () => {
       toast.success('Profile updated successfully');
     } catch (error) {
       toast.error('Error updating profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const requestVerification = async () => {
+    try {
+      setLoading(true);
+      if (!user) throw new Error('No user');
+
+      const { error } = await supabase
+        .from('verification_requests')
+        .insert([{ user_id: user.id }]);
+
+      if (error) throw error;
+
+      await supabase
+        .from('profiles')
+        .update({ verification_requested_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      setProfile(prev => ({
+        ...prev,
+        verification_requested_at: new Date().toISOString()
+      }));
+
+      toast.success('Verification request submitted successfully');
+    } catch (error) {
+      toast.error('Error submitting verification request');
     } finally {
       setLoading(false);
     }
@@ -170,8 +202,37 @@ const Settings = () => {
             </TabsContent>
 
             <TabsContent value="security">
-              <TwoFactorSettings />
-              <div className="mt-6">
+              <div className="space-y-6">
+                <TwoFactorSettings />
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5" />
+                      Account Verification
+                    </CardTitle>
+                    <CardDescription>
+                      Get verified to unlock additional features and build trust with other users
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {profile.is_verified ? (
+                      <div className="flex items-center gap-2 text-green-500">
+                        <Shield className="h-5 w-5" />
+                        Your account is verified
+                      </div>
+                    ) : profile.verification_requested_at ? (
+                      <div className="text-muted-foreground">
+                        Verification request pending. Submitted on {new Date(profile.verification_requested_at).toLocaleDateString()}
+                      </div>
+                    ) : (
+                      <Button onClick={requestVerification} disabled={loading}>
+                        Request Verification
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardHeader>
                     <CardTitle>Password</CardTitle>

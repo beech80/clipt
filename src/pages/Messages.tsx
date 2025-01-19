@@ -3,11 +3,14 @@ import { MessageList } from "@/components/messages/MessageList";
 import { ChatList } from "@/components/messages/ChatList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Gamepad, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Gamepad, Users, MessageSquare } from "lucide-react";
 import GameBoyControls from "@/components/GameBoyControls";
+import { useNavigate } from "react-router-dom";
 
 function MessagesContent() {
   const { selectedChat, setSelectedChat, messages, chats, isLoading, handleSendMessage } = useMessages();
+  const navigate = useNavigate();
 
   const recentGamers = [
     { id: '1', tag: 'ProGamer123', avatar: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop' },
@@ -19,14 +22,24 @@ function MessagesContent() {
     <div className="mx-auto max-w-4xl h-[calc(100vh-4rem)] pb-40">
       <div className="h-full border rounded-lg grid grid-cols-1 md:grid-cols-3 divide-x">
         <div className="p-4 flex flex-col space-y-6">
-          <div className="bg-gaming-900/50 rounded-lg p-4 border border-gaming-500/20">
-            <div className="flex items-center space-x-2 mb-2">
-              <Gamepad className="w-5 h-5 text-gaming-500" />
-              <h3 className="font-bold text-gaming-100">Game Chat Hub</h3>
+          <div className="flex items-center justify-between">
+            <div className="bg-gaming-900/50 rounded-lg p-4 border border-gaming-500/20 flex-1 mr-2">
+              <div className="flex items-center space-x-2 mb-2">
+                <Gamepad className="w-5 h-5 text-gaming-500" />
+                <h3 className="font-bold text-gaming-100">Game Chat Hub</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Connect with fellow gamers!
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Connect with fellow gamers and coordinate your next epic battle!
-            </p>
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="h-14 w-14 shrink-0"
+              onClick={() => navigate('/group-chat')}
+            >
+              <Users className="h-6 w-6" />
+            </Button>
           </div>
 
           <div className="space-y-4">
@@ -70,7 +83,7 @@ function MessagesContent() {
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-2">
-                <Gamepad className="w-12 h-12 mx-auto text-gaming-500 opacity-50" />
+                <MessageSquare className="w-12 h-12 mx-auto text-gaming-500 opacity-50" />
                 <p className="text-muted-foreground">Select a chat to start messaging</p>
               </div>
             </div>
