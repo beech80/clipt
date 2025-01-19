@@ -43,8 +43,8 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <React.StrictMode>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <Router>
             <AuthProvider>
@@ -80,8 +80,8 @@ function App() {
             </AuthProvider>
           </Router>
         </QueryClientProvider>
-      </ErrorBoundary>
-    </React.StrictMode>
+      </React.StrictMode>
+    </ErrorBoundary>
   );
 }
 
