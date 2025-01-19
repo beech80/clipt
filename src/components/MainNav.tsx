@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Home, MessageSquare, Video, Trophy, Settings, Gamepad } from "lucide-react";
 import { SearchBar } from "./SearchBar";
-import { LanguageSelector } from "./LanguageSelector";
 
 export function MainNav({
   className,
@@ -41,7 +40,6 @@ export function MainNav({
         Discover
       </NavLink>
       <SearchBar />
-      <LanguageSelector />
       <NavLink
         to="/streaming"
         className={({ isActive }) =>

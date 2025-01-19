@@ -2386,7 +2386,6 @@ export type Database = {
           location: string | null
           onboarding_completed: boolean | null
           onboarding_step: string | null
-          preferred_language: string | null
           social_links: Json | null
           theme_preference: string | null
           username: string | null
@@ -2413,7 +2412,6 @@ export type Database = {
           location?: string | null
           onboarding_completed?: boolean | null
           onboarding_step?: string | null
-          preferred_language?: string | null
           social_links?: Json | null
           theme_preference?: string | null
           username?: string | null
@@ -2440,7 +2438,6 @@ export type Database = {
           location?: string | null
           onboarding_completed?: boolean | null
           onboarding_step?: string | null
-          preferred_language?: string | null
           social_links?: Json | null
           theme_preference?: string | null
           username?: string | null
@@ -2450,15 +2447,7 @@ export type Database = {
           verification_requested_at?: string | null
           website?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_preferred_language_fkey"
-            columns: ["preferred_language"]
-            isOneToOne: false
-            referencedRelation: "supported_languages"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       quiz_responses: {
         Row: {
@@ -3782,33 +3771,6 @@ export type Database = {
           },
         ]
       }
-      supported_languages: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          is_rtl: boolean | null
-          name: string
-          native_name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id: string
-          is_active?: boolean | null
-          is_rtl?: boolean | null
-          name: string
-          native_name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_rtl?: boolean | null
-          name?: string
-          native_name?: string
-        }
-        Relationships: []
-      }
       tournament_matches: {
         Row: {
           completed_at: string | null
@@ -3968,44 +3930,6 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      translations: {
-        Row: {
-          created_at: string | null
-          id: string
-          key: string
-          language_id: string | null
-          namespace: string
-          updated_at: string | null
-          value: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          key: string
-          language_id?: string | null
-          namespace: string
-          updated_at?: string | null
-          value: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          key?: string
-          language_id?: string | null
-          namespace?: string
-          updated_at?: string | null
-          value?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "translations_language_id_fkey"
-            columns: ["language_id"]
-            isOneToOne: false
-            referencedRelation: "supported_languages"
             referencedColumns: ["id"]
           },
         ]
