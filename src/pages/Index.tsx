@@ -15,7 +15,8 @@ import { OnboardingSection } from "@/components/home/OnboardingSection";
 import { WelcomeSection } from "@/components/home/WelcomeSection";
 import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export default function Index() {
   const { user } = useAuth();
@@ -23,32 +24,31 @@ export default function Index() {
   const isMobile = useIsMobile();
   const [contentFilter, setContentFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("recent");
+  const { toast } = useToast();
 
   const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      try {
+        if (!user?.id) return null;
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Profile fetch error:', error);
+        throw error;
+      }
     },
     enabled: !!user?.id,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    meta: {
-      onSuccess: () => {
-        toast({
-          title: "Profile loaded",
-          description: "Your profile data has been loaded successfully.",
-        });
-      },
-    },
   });
 
   if (profileLoading) {
@@ -85,7 +85,7 @@ export default function Index() {
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <SEO 
         title="Clip - Share Your Gaming Moments"
         description="Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers."
@@ -141,6 +141,6 @@ export default function Index() {
           </AnimatePresence>
         </div>
       </main>
-    </>
+    </ErrorBoundary>
   );
 }
