@@ -9,17 +9,15 @@ import Post from "@/pages/Post";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Index from "@/pages/Index";
-import React from "react";
 
-// Create a client
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <LanguageProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <BrowserRouter>
             <MainNav />
             <Routes>
               <Route path="/" element={<Index />} />
@@ -28,9 +26,9 @@ function App() {
               <Route path="/profile/:username" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
-          </LanguageProvider>
-        </AuthProvider>
-      </BrowserRouter>
+          </BrowserRouter>
+        </LanguageProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
