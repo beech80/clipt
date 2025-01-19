@@ -27,7 +27,8 @@ const Clipts = () => {
           ),
           clip_votes (
             count
-          )
+          ),
+          comments:comments(count)
         `)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -103,13 +104,13 @@ const Clipts = () => {
                     <div className="flex items-center space-x-1">
                       <Heart className="h-5 w-5 text-red-500" />
                       <span className="text-sm font-bold text-white">
-                        {post.likes_count || 0}
+                        {post.likes?.[0]?.count || 0}
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <MessageSquare className="h-5 w-5 text-white" />
                       <span className="text-sm font-bold text-white">
-                        {post.comments_count || 0}
+                        {post.comments?.[0]?.count || 0}
                       </span>
                     </div>
                     <div className="flex items-center space-x-1">
