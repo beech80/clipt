@@ -6,16 +6,119 @@ import { useState } from "react";
 import PostForm from "@/components/PostForm";
 import GameBoyControls from "@/components/GameBoyControls";
 import { StoriesBar } from "@/components/stories/StoriesBar";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card } from "@/components/ui/card";
+import { User, Heart, MessageSquare, Trophy } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Home = () => {
   const [isPostFormOpen, setIsPostFormOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("feed");
+  const { user } = useAuth();
+
+  const { data: userStats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['user-stats', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+
+      const [likesCount, commentsCount, achievementsCount] = await Promise.all([
+        supabase
+          .from('likes')
+          .select('*', { count: 'exact' })
+          .eq('user_id', user.id)
+          .then(({ count }) => count),
+        supabase
+          .from('comments')
+          .select('*', { count: 'exact' })
+          .eq('user_id', user.id)
+          .then(({ count }) => count),
+        supabase
+          .from('user_achievements')
+          .select('*', { count: 'exact' })
+          .eq('user_id', user.id)
+          .then(({ count }) => count)
+      ]);
+
+      return {
+        likes: likesCount || 0,
+        comments: commentsCount || 0,
+        achievements: achievementsCount || 0
+      };
+    },
+    enabled: !!user?.id
+  });
+
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
 
   return (
     <div className="h-[calc(100vh-80px)] relative">
       <div className="absolute top-0 left-0 right-0 z-20">
         <div className="w-full bg-[#1A1F2C]/80 backdrop-blur-sm">
           <div className="flex flex-col items-center">
+            {user && (
+              <Card className="w-full p-4 mb-4 border-none bg-transparent">
+                <div className="flex items-center justify-between px-4">
+                  <div className="flex items-center space-x-4">
+                    {isLoadingProfile ? (
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                    ) : (
+                      <Avatar className="h-10 w-10 border-2 border-gaming-500">
+                        <AvatarImage src={profile?.avatar_url} />
+                        <AvatarFallback>
+                          <User className="h-6 w-6" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="space-y-1">
+                      {isLoadingProfile ? (
+                        <Skeleton className="h-4 w-24" />
+                      ) : (
+                        <p className="text-sm font-medium leading-none">
+                          {profile?.username || 'User'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex space-x-6">
+                    <div className="flex items-center space-x-2">
+                      <Heart className="h-4 w-4 text-red-500" />
+                      <span className="text-sm font-medium">
+                        {isLoadingStats ? <Skeleton className="h-4 w-8" /> : userStats?.likes || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <MessageSquare className="h-4 w-4 text-gaming-400" />
+                      <span className="text-sm font-medium">
+                        {isLoadingStats ? <Skeleton className="h-4 w-8" /> : userStats?.comments || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Trophy className="h-4 w-4 text-yellow-500" />
+                      <span className="text-sm font-medium">
+                        {isLoadingStats ? <Skeleton className="h-4 w-8" /> : userStats?.achievements || 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
             <StoriesBar />
             <div className="w-full h-12 sm:h-14">
               <div className="flex w-full h-full">
