@@ -43,45 +43,43 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <AuthProvider>
-            <ErrorBoundary>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/update-password" element={<UpdatePassword />} />
-                <Route path="/resend-verification" element={<ResendVerification />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/group-chat" element={<GroupChat />} />
-                <Route path="/streaming" element={<Streaming />} />
-                <Route path="/top-clips" element={<TopClips />} />
-                <Route path="/clipts" element={<Clipts />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/discover" element={<Discover />} />
-                <Route path="/collections" element={<Collections />} />
-                <Route path="/post/:id" element={<Post />} />
-                <Route path="/clip-editor/:id" element={<ClipEditor />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/connections" element={<Connections />} />
-                <Route path="/achievements" element={<Achievements />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/support" element={<Support />} />
-                <Route path="/verification" element={<Verification />} />
-                <Route path="/schedule" element={<Schedule />} />
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-                <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-              </Routes>
-              <ReportDialogProvider />
-              <Toaster />
-            </ErrorBoundary>
-          </AuthProvider>
-        </Router>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <AuthProvider>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/update-password" element={<UpdatePassword />} />
+              <Route path="/resend-verification" element={<ResendVerification />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/group-chat" element={<GroupChat />} />
+              <Route path="/streaming" element={<Streaming />} />
+              <Route path="/top-clips" element={<TopClips />} />
+              <Route path="/clipts" element={<Clipts />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/discover" element={<Discover />} />
+              <Route path="/collections" element={<Collections />} />
+              <Route path="/post/:id" element={<Post />} />
+              <Route path="/clip-editor/:id" element={<ClipEditor />} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/connections" element={<Connections />} />
+              <Route path="/achievements" element={<Achievements />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/verification" element={<Verification />} />
+              <Route path="/schedule" element={<Schedule />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+            </Routes>
+            <ReportDialogProvider />
+            <Toaster />
+          </ErrorBoundary>
+        </AuthProvider>
+      </Router>
+    </QueryClientProvider>
   );
 }
 
