@@ -11,12 +11,15 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
+  // Temporarily commenting out the auth redirect
+  /*
   useEffect(() => {
     if (!loading && !user) {
       toast.error('Please sign in to access this page');
       navigate('/login');
     }
   }, [user, loading, navigate]);
+  */
 
   if (loading) {
     return (
@@ -26,9 +29,6 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
+  // Temporarily removed the user check
   return children ? <>{children}</> : <Outlet />;
 };
