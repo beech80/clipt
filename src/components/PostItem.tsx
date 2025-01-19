@@ -4,8 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { PostInteractions } from "./post/interactions/PostInteractions";
 import { Post } from "@/types/post";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageSquare, Trophy, User } from "lucide-react";
+import { Heart, MessageSquare, Trophy } from "lucide-react";
 
 interface PostItemProps {
   post: Post;
@@ -31,24 +30,14 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   const username = post.profiles?.username || 'Anonymous';
-  const avatarUrl = post.profiles?.avatar_url;
-  const firstLetter = username[0]?.toUpperCase() || 'A';
 
   return (
     <div className="relative h-full w-full bg-[#1A1F2C] touch-none select-none">
       <div className="absolute inset-0 flex flex-col">
-        {/* User Info Header */}
-        <div className="flex items-center space-x-4 p-4 border-b border-gaming-600/30 bg-gaming-800/90">
-          <Avatar className="h-10 w-10 border-2 border-gaming-500 ring-2 ring-gaming-400/50">
-            <AvatarImage src={avatarUrl} />
-            <AvatarFallback className="bg-gaming-700">
-              <User className="h-6 w-6 text-gaming-300" />
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-gaming-100">{username}</h3>
-          </div>
-          <div className="flex space-x-4">
+        {/* Simplified Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gaming-600/30 bg-gaming-800/90">
+          <span className="text-lg font-bold text-gaming-100">{username}</span>
+          <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
               <Heart className="h-5 w-5 text-red-500" />
               <span className="text-sm font-bold text-gaming-100">
