@@ -8,11 +8,10 @@ import { useAuth } from "@/contexts/AuthContext";
 interface GamingHistoryItem {
   id: string;
   activity_type: string;
-  details: {
-    description: string;
-    [key: string]: any;
-  };
+  details: any; // Changed from strict type to any since Supabase returns Json type
   created_at: string;
+  user_id: string;
+  game_type: string;
 }
 
 const ActivityHistory = () => {
