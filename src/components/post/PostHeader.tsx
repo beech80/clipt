@@ -10,7 +10,7 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
   const firstLetter = username[0]?.toUpperCase() || 'A';
 
   return (
-    <div className="flex items-center justify-between p-4 border-b border-[#2A2E3B]">
+    <div>
       <div className="flex items-center space-x-4">
         <Avatar className="ring-2 ring-gaming-500 ring-offset-2 ring-offset-background">
           <AvatarImage src={avatarUrl} />
