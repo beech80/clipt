@@ -16,24 +16,22 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
+        <AuthProvider>
           <LanguageProvider>
-            <AuthProvider>
-              <MainNav />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/post/:id" element={<Post />} />
-                <Route path="/profile/:username" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
-            </AuthProvider>
+            <MainNav />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/post/:id" element={<Post />} />
+              <Route path="/profile/:username" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
           </LanguageProvider>
-        </QueryClientProvider>
+        </AuthProvider>
       </BrowserRouter>
-    </React.StrictMode>
+    </QueryClientProvider>
   );
 }
 
