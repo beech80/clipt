@@ -31,6 +31,7 @@ import Schedule from "@/pages/Schedule";
 import PaymentSuccess from "@/pages/payment-success";
 import PaymentCancelled from "@/pages/payment-cancelled";
 import ClipEditor from "@/pages/ClipEditor";
+import GamePage from "@/pages/GamePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,7 @@ function App() {
                 <Route path="/schedule" element={<Schedule />} />
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+                <Route path="/game/:slug" element={<GamePage />} />
               </Routes>
               <ReportDialogProvider />
               <Toaster />

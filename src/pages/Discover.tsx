@@ -9,12 +9,13 @@ import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
 
 const TRENDING_GAMES = [
-  { id: 1, name: "Fortnite", posts: 1234, image: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?w=300&h=200&fit=crop" },
-  { id: 2, name: "Minecraft", posts: 987, image: "https://images.unsplash.com/photo-1587573089734-09cb69c0f2b4?w=300&h=200&fit=crop" },
-  { id: 3, name: "Call of Duty", posts: 856, image: "https://images.unsplash.com/photo-1616565441778-e8c263973f68?w=300&h=200&fit=crop" },
-  { id: 4, name: "League of Legends", posts: 743, image: "https://images.unsplash.com/photo-1542751110-97427bbecf20?w=300&h=200&fit=crop" },
+  { id: 1, name: "Fortnite", posts: 1234, image: "https://images.unsplash.com/photo-1589241062272-c0a000072dfa?w=300&h=200&fit=crop", slug: "fortnite" },
+  { id: 2, name: "Minecraft", posts: 987, image: "https://images.unsplash.com/photo-1587573089734-09cb69c0f2b4?w=300&h=200&fit=crop", slug: "minecraft" },
+  { id: 3, name: "Call of Duty", posts: 856, image: "https://images.unsplash.com/photo-1616565441778-e8c263973f68?w=300&h=200&fit=crop", slug: "call-of-duty" },
+  { id: 4, name: "League of Legends", posts: 743, image: "https://images.unsplash.com/photo-1542751110-97427bbecf20?w=300&h=200&fit=crop", slug: "league-of-legends" },
 ];
 
 const TRENDING_CREATORS = [
@@ -25,6 +26,7 @@ const TRENDING_CREATORS = [
 const Discover = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const { data: gameClips, isLoading } = useQuery({
     queryKey: ['game-clips', selectedGame],
@@ -67,9 +69,8 @@ const Discover = () => {
     toast.success("Creator followed successfully!");
   };
 
-  const handleExplore = (game: string) => {
-    setSelectedGame(game);
-    toast.info(`Showing ${game} clips...`);
+  const handleGameClick = (slug: string) => {
+    navigate(`/game/${slug}`);
   };
 
   return (
@@ -100,7 +101,8 @@ const Discover = () => {
               {TRENDING_GAMES.map((game) => (
                 <div
                   key={game.id}
-                  className="group relative overflow-hidden rounded-lg border border-gaming-700/50 hover:border-gaming-400"
+                  className="group relative overflow-hidden rounded-lg border border-gaming-700/50 hover:border-gaming-400 cursor-pointer"
+                  onClick={() => handleGameClick(game.slug)}
                 >
                   <img 
                     src={game.image} 
@@ -114,7 +116,6 @@ const Discover = () => {
                       <Button 
                         size="sm" 
                         className="gaming-button"
-                        onClick={() => handleExplore(game.name)}
                       >
                         Watch Clips
                       </Button>
