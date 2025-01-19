@@ -5,7 +5,6 @@ import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { AccessibilitySettings } from "@/components/accessibility/AccessibilitySettings";
 import { KeyboardShortcuts } from "@/components/keyboard/KeyboardShortcuts";
-import { VerificationRequestForm } from "@/components/verification/VerificationRequestForm";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Settings = () => {
@@ -27,7 +26,6 @@ const Settings = () => {
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="privacy">Privacy</TabsTrigger>
           <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
-          <TabsTrigger value="verification">Verification</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -46,10 +44,6 @@ const Settings = () => {
 
         <TabsContent value="accessibility" className="space-y-6">
           <AccessibilitySettings />
-        </TabsContent>
-
-        <TabsContent value="verification" className="space-y-6">
-          <VerificationRequestForm />
         </TabsContent>
       </Tabs>
     </div>

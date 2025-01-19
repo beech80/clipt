@@ -1,6 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
-import { VerificationRequestForm } from "@/components/verification/VerificationRequestForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Shield, ShieldCheck, ShieldX } from "lucide-react";
@@ -33,7 +32,7 @@ const Verification = () => {
         <Card className="p-8 text-center">
           <h2 className="text-2xl font-bold mb-4">Sign in Required</h2>
           <p className="text-muted-foreground">
-            Please sign in to request verification.
+            Please sign in to view verification status.
           </p>
         </Card>
       </div>
@@ -95,12 +94,7 @@ const Verification = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Account Verification</h1>
-      
       {renderStatus()}
-      
-      {(!verificationRequest || verificationRequest.status === 'rejected') && (
-        <VerificationRequestForm />
-      )}
     </div>
   );
 };
