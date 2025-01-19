@@ -11,6 +11,7 @@ export interface Post {
   } | null;
   likes_count?: number;
   clip_votes?: any[];
+  comments_count?: number;
 }
 
 export interface PostHeaderProps {
