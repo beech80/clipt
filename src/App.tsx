@@ -43,9 +43,9 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <React.StrictMode>
+    <Router>
       <QueryClientProvider client={queryClient}>
-        <Router>
+        <React.StrictMode>
           <ErrorBoundary>
             <AuthProvider>
               <Routes>
@@ -79,9 +79,9 @@ function App() {
               <Toaster />
             </AuthProvider>
           </ErrorBoundary>
-        </Router>
+        </React.StrictMode>
       </QueryClientProvider>
-    </React.StrictMode>
+    </Router>
   );
 }
 
