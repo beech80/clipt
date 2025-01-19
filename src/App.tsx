@@ -9,27 +9,31 @@ import Post from "@/pages/Post";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Index from "@/pages/Index";
+import React from "react";
 
+// Create a client
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LanguageProvider>
-          <BrowserRouter>
-            <MainNav />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/post/:id" element={<Post />} />
-              <Route path="/profile/:username" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </BrowserRouter>
-        </LanguageProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <LanguageProvider>
+            <AuthProvider>
+              <MainNav />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/post/:id" element={<Post />} />
+                <Route path="/profile/:username" element={<Profile />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </AuthProvider>
+          </LanguageProvider>
+        </QueryClientProvider>
+      </BrowserRouter>
+    </React.StrictMode>
   );
 }
 
