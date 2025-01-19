@@ -32,9 +32,9 @@ function App() {
           </p>
         </div>
       }>
-        <AuthProvider>
-          <LanguageProvider>
-            <BrowserRouter>
+        <BrowserRouter>
+          <AuthProvider>
+            <LanguageProvider>
               <MainNav />
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -43,10 +43,10 @@ function App() {
                 <Route path="/profile/:username" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
-            </BrowserRouter>
-            <Toaster />
-          </LanguageProvider>
-        </AuthProvider>
+              <Toaster />
+            </LanguageProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </ErrorBoundary>
     </QueryClientProvider>
   );
