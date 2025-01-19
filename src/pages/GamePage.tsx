@@ -19,7 +19,7 @@ const GamePage = () => {
         .from('game_categories')
         .select('*')
         .eq('slug', slug)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -39,7 +39,13 @@ const GamePage = () => {
           ),
           likes (count),
           clip_votes (count),
-          comments (count)
+          comments (count),
+          post_game_categories!inner (
+            game_categories (
+              name,
+              slug
+            )
+          )
         `)
         .eq('post_game_categories.game_categories.slug', slug)
         .order('created_at', { ascending: false });
