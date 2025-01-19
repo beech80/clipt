@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import PostItem from "@/components/PostItem";
 import { Loader2, Plus } from "lucide-react";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -83,13 +83,38 @@ const Clipts = () => {
               key={post.id} 
               className="h-screen w-full snap-start snap-always"
             >
-              <PostItem 
-                post={{
-                  ...post,
-                  likes_count: post.likes?.[0]?.count || 0,
-                  clip_votes: post.clip_votes || []
-                }} 
-              />
+              <div className="relative h-full w-full bg-[#1A1F2C] touch-none select-none">
+                {/* Post Header - Styled like the image */}
+                <div className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 p-4 bg-gradient-to-b from-black/80 to-transparent">
+                  <Avatar className="h-10 w-10 border-2 border-blue-500">
+                    <AvatarImage src={post.profiles?.avatar_url} />
+                    <AvatarFallback className="bg-blue-900">
+                      {post.profiles?.username?.[0]?.toUpperCase() || 'A'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-white font-medium">
+                    {post.profiles?.username || 'Anonymous'}
+                  </span>
+                </div>
+
+                {/* Post Content */}
+                <div className="absolute inset-0">
+                  {post.image_url && (
+                    <img 
+                      src={post.image_url} 
+                      alt="Post content"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                  {post.video_url && (
+                    <video 
+                      src={post.video_url}
+                      className="w-full h-full object-cover"
+                      controls
+                    />
+                  )}
+                </div>
+              </div>
             </div>
           ))
         )}
