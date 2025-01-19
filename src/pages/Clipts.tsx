@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Heart, MessageSquare, Trophy } from "lucide-react";
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -84,17 +85,40 @@ const Clipts = () => {
               className="h-screen w-full snap-start snap-always"
             >
               <div className="relative h-full w-full bg-[#1A1F2C] touch-none select-none">
-                {/* Post Header - Styled like the image */}
-                <div className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 p-4 bg-gradient-to-b from-black/80 to-transparent">
-                  <Avatar className="h-10 w-10 border-2 border-blue-500">
-                    <AvatarImage src={post.profiles?.avatar_url} />
-                    <AvatarFallback className="bg-blue-900">
-                      {post.profiles?.username?.[0]?.toUpperCase() || 'A'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-white font-medium">
-                    {post.profiles?.username || 'Anonymous'}
-                  </span>
+                {/* Post Header */}
+                <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border-2 border-blue-500">
+                      <AvatarImage src={post.profiles?.avatar_url} />
+                      <AvatarFallback className="bg-blue-900">
+                        {post.profiles?.username?.[0]?.toUpperCase() || 'A'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-white font-medium">
+                      {post.profiles?.username || 'Anonymous'}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1">
+                      <Heart className="h-5 w-5 text-red-500" />
+                      <span className="text-sm font-bold text-white">
+                        {post.likes_count || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <MessageSquare className="h-5 w-5 text-white" />
+                      <span className="text-sm font-bold text-white">
+                        {post.comments_count || 0}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Trophy className="h-5 w-5 text-yellow-500" />
+                      <span className="text-sm font-bold text-white">
+                        {post.clip_votes?.[0]?.count || 0}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Post Content */}
