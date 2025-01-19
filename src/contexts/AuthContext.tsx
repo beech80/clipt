@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, AuthError, AuthApiError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -22,7 +22,7 @@ interface AuthProviderProps {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
