@@ -127,12 +127,28 @@ const Discover = () => {
 
           {selectedGame && (
             <ScrollArea className="h-[500px] w-full rounded-md border p-4">
-              <h3 className="text-lg font-semibold mb-4">{selectedGame} Clips</h3>
-              <div className="space-y-4">
-                {gameClips?.map((post) => (
-                  <PostItem key={post.id} post={post} />
-                ))}
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">{selectedGame} Clips</h3>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedGame(null)}
+                >
+                  Show All Games
+                </Button>
               </div>
+              {isLoading ? (
+                <div className="text-center py-4">Loading clips...</div>
+              ) : gameClips && gameClips.length > 0 ? (
+                <div className="space-y-4">
+                  {gameClips.map((post) => (
+                    <PostItem key={post.id} post={post} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  No clips found for {selectedGame}
+                </div>
+              )}
             </ScrollArea>
           )}
         </TabsContent>
