@@ -24,6 +24,9 @@ const Clips = () => {
           ),
           clip_votes:clip_votes (
             count
+          ),
+          comments:comments (
+            count
           )
         `)
         .in('id', (await supabase
@@ -63,7 +66,8 @@ const Clips = () => {
               post={{
                 ...post,
                 likes_count: post.likes?.[0]?.count || 0,
-                clip_votes: post.clip_votes || []
+                clip_votes: post.clip_votes || [],
+                comments_count: post.comments?.[0]?.count || 0
               }} 
             />
           ))
