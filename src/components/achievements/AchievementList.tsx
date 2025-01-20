@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { AchievementCard } from './AchievementCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trophy } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Achievement {
   id: string;
@@ -11,6 +12,7 @@ interface Achievement {
   icon_url?: string;
   points: number;
   earned_at?: string;
+  category: string;
 }
 
 interface AchievementListProps {
@@ -64,19 +66,49 @@ export const AchievementList = ({ userId, filter = 'all' }: AchievementListProps
     );
   }
 
+  const trophyAchievements = achievements.filter(a => a.category === 'trophies');
+  const otherAchievements = achievements.filter(a => a.category !== 'trophies');
+
   return (
-    <div className="space-y-4">
-      {achievements.map((achievement) => (
-        <AchievementCard
-          key={achievement.id}
-          achievementId={achievement.id}
-          name={achievement.name}
-          description={achievement.description}
-          iconUrl={achievement.icon_url}
-          points={achievement.points}
-          earnedAt={achievement.earned_at}
-        />
-      ))}
+    <div className="space-y-6">
+      <Tabs defaultValue="trophies" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="trophies" className="flex items-center gap-2">
+            <Trophy className="w-4 h-4" />
+            Trophies
+          </TabsTrigger>
+          <TabsTrigger value="other">Other Achievements</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="trophies" className="space-y-4 mt-4">
+          {trophyAchievements.map((achievement) => (
+            <AchievementCard
+              key={achievement.id}
+              achievementId={achievement.id}
+              name={achievement.name}
+              description={achievement.description}
+              iconUrl={achievement.icon_url}
+              points={achievement.points}
+              earnedAt={achievement.earned_at}
+              showChain={true}
+            />
+          ))}
+        </TabsContent>
+
+        <TabsContent value="other" className="space-y-4 mt-4">
+          {otherAchievements.map((achievement) => (
+            <AchievementCard
+              key={achievement.id}
+              achievementId={achievement.id}
+              name={achievement.name}
+              description={achievement.description}
+              iconUrl={achievement.icon_url}
+              points={achievement.points}
+              earnedAt={achievement.earned_at}
+            />
+          ))}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
