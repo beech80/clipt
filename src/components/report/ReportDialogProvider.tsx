@@ -1,15 +1,23 @@
 import { ReportDialog } from "./ReportDialog";
 import { useReportDialog } from "@/hooks/use-report-dialog";
+import { ReactNode } from "react";
 
-export function ReportDialogProvider() {
+interface ReportDialogProviderProps {
+  children: ReactNode;
+}
+
+export function ReportDialogProvider({ children }: ReportDialogProviderProps) {
   const { isOpen, contentId, contentType, closeReportDialog } = useReportDialog();
 
   return (
-    <ReportDialog
-      isOpen={isOpen}
-      onClose={closeReportDialog}
-      contentId={contentId}
-      contentType={contentType}
-    />
+    <>
+      <ReportDialog
+        isOpen={isOpen}
+        onClose={closeReportDialog}
+        contentId={contentId}
+        contentType={contentType}
+      />
+      {children}
+    </>
   );
 }
