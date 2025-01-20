@@ -19,6 +19,16 @@ interface ThemeColors {
   secondary: string;
 }
 
+interface Profile {
+  custom_theme?: {
+    primary: string;
+    secondary: string;
+  };
+  theme_preference?: string;
+  enable_notifications?: boolean;
+  enable_sounds?: boolean;
+}
+
 const Settings = () => {
   const { user } = useAuth();
 
@@ -33,7 +43,7 @@ const Settings = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Profile;
     },
     enabled: !!user?.id
   });
@@ -75,7 +85,10 @@ const Settings = () => {
     secondary: "#1A1F2C"
   };
 
-  const currentTheme = profile?.custom_theme as ThemeColors || defaultTheme;
+  const currentTheme: ThemeColors = {
+    primary: profile?.custom_theme?.primary || defaultTheme.primary,
+    secondary: profile?.custom_theme?.secondary || defaultTheme.secondary
+  };
 
   return (
     <div className="container mx-auto py-6 space-y-8">
