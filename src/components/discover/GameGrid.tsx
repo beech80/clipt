@@ -36,7 +36,7 @@ export function GameGrid() {
       {games?.map((game) => (
         <div
           key={game.id}
-          className="group relative overflow-hidden rounded-lg border border-gaming-700/50 hover:border-gaming-400 cursor-pointer"
+          className="gaming-card group relative overflow-hidden cursor-pointer"
           onClick={() => navigate(`/game/${game.slug}`)}
         >
           <img 
