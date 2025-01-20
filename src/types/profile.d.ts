@@ -1,3 +1,5 @@
+import { Json } from './database';
+
 export interface CustomTheme {
   primary: string;
   secondary: string;
@@ -15,4 +17,8 @@ export interface Profile {
   theme_preference?: string;
   enable_notifications?: boolean;
   enable_sounds?: boolean;
+}
+
+export interface DatabaseProfile extends Omit<Profile, 'custom_theme'> {
+  custom_theme?: Json;
 }

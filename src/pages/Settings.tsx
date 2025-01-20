@@ -18,7 +18,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Profile, CustomTheme } from "@/types/profile";
+import { Profile, CustomTheme, DatabaseProfile } from "@/types/profile";
 
 const Settings = () => {
   const { user } = useAuth();
@@ -27,30 +27,30 @@ const Settings = () => {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', user?.id)
         .single();
 
       if (error) throw error;
       
+      const dbProfile = data as DatabaseProfile;
+      const customTheme = dbProfile.custom_theme as CustomTheme || {
+        primary: "#1EAEDB",
+        secondary: "#1A1F2C"
+      };
+
       return {
-        ...data,
-        custom_theme: data.custom_theme as CustomTheme || {
-          primary: "#1EAEDB",
-          secondary: "#1A1F2C"
-        }
+        ...dbProfile,
+        custom_theme: customTheme
       } as Profile;
     },
     enabled: !!user?.id
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: async (settings: Partial<Profile>) => {
+    mutationFn: async (settings: Partial<DatabaseProfile>) => {
       const { error } = await supabase
         .from('profiles')
         .update(settings)
