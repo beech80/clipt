@@ -17,14 +17,9 @@ import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect } from "react"
-
-// Define the shape of social links
-interface SocialLinks {
-  twitter?: string;
-  instagram?: string;
-  youtube?: string;
-}
+import { useEffect, useRef, useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Camera } from "lucide-react"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -43,8 +38,10 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 
 export function ProfileEditForm() {
   const { user } = useAuth()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
 
-  const { data: profile } = useQuery({
+  const { data: profile, refetch } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -77,8 +74,7 @@ export function ProfileEditForm() {
 
   useEffect(() => {
     if (profile) {
-      // Safely parse social_links with proper type checking
-      let socialLinks: SocialLinks = {
+      let socialLinks = {
         twitter: "",
         instagram: "",
         youtube: "",
@@ -106,6 +102,50 @@ export function ProfileEditForm() {
     }
   }, [profile, form])
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!event.target.files || event.target.files.length === 0) {
+        return
+      }
+      const file = event.target.files[0]
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user?.id}.${fileExt}`
+
+      setUploading(true)
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true })
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName)
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user?.id)
+
+      if (updateError) throw updateError
+
+      toast.success("Profile picture updated successfully!")
+      refetch()
+    } catch (error) {
+      toast.error("Error updating profile picture")
+      console.error(error)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   async function onSubmit(data: ProfileFormValues) {
     try {
       const { error } = await supabase
@@ -131,6 +171,29 @@ export function ProfileEditForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative">
+            <Avatar className="w-24 h-24 cursor-pointer hover:opacity-90 transition-opacity" onClick={handleAvatarClick}>
+              <AvatarImage src={profile?.avatar_url || ''} />
+              <AvatarFallback className="bg-primary/10">
+                {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || '?'}
+              </AvatarFallback>
+              <div className="absolute bottom-0 right-0 p-1 bg-primary rounded-full">
+                <Camera className="w-4 h-4 text-white" />
+              </div>
+            </Avatar>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarChange}
+              className="hidden"
+              accept="image/*"
+              disabled={uploading}
+            />
+          </div>
+          {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
+        </div>
+
         <FormField
           control={form.control}
           name="username"
