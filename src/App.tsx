@@ -35,6 +35,7 @@ import PaymentSuccess from "@/pages/payment-success";
 import PaymentCancelled from "@/pages/payment-cancelled";
 import ClipEditor from "@/pages/ClipEditor";
 import GamePage from "@/pages/GamePage";
+import Index from "@/pages/Index";
 
 // Create QueryClient instance outside of component
 const queryClient = new QueryClient({
@@ -55,7 +56,8 @@ function App() {
           <MessagesProvider>
             <ErrorBoundary>
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/update-password" element={<UpdatePassword />} />
