@@ -36,7 +36,6 @@ import PaymentCancelled from "@/pages/payment-cancelled";
 import ClipEditor from "@/pages/ClipEditor";
 import GamePage from "@/pages/GamePage";
 import Explore from "@/pages/Explore";
-import ForYou from "@/pages/ForYou";
 import Clips from "@/pages/Clips";
 
 // Create QueryClient instance outside of component
@@ -86,7 +85,6 @@ function App() {
                 <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                 <Route path="/game/:slug" element={<GamePage />} />
                 <Route path="/explore" element={<Explore />} />
-                <Route path="/for-you" element={<ForYou />} />
                 <Route path="/clips" element={<Clips />} />
               </Routes>
               <ReportDialogProvider />
