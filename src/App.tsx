@@ -35,7 +35,6 @@ import PaymentSuccess from "@/pages/payment-success";
 import PaymentCancelled from "@/pages/payment-cancelled";
 import ClipEditor from "@/pages/ClipEditor";
 import GamePage from "@/pages/GamePage";
-import Clips from "@/pages/Clips";
 
 // Create QueryClient instance outside of component
 const queryClient = new QueryClient({
@@ -83,7 +82,6 @@ function App() {
                 <Route path="/payment-success" element={<PaymentSuccess />} />
                 <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                 <Route path="/game/:slug" element={<GamePage />} />
-                <Route path="/clips" element={<Clips />} />
               </Routes>
               <ReportDialogProvider />
               <Toaster />
