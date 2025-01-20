@@ -8,6 +8,7 @@ import { MessagesProvider } from "@/contexts/MessagesContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Home from "@/pages/Home";
 import Profile from "@/pages/Profile";
+import EditProfile from "@/pages/EditProfile";
 import Messages from "@/pages/Messages";
 import Streaming from "@/pages/Streaming";
 import TopClips from "@/pages/TopClips";
@@ -57,6 +58,7 @@ function App() {
                 <Route path="/update-password" element={<UpdatePassword />} />
                 <Route path="/resend-verification" element={<ResendVerification />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/edit" element={<EditProfile />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/group-chat" element={<GroupChat />} />
                 <Route path="/streaming" element={<Streaming />} />
