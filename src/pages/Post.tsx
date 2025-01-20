@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Post as PostType } from "@/types/post";
 import { SEO } from "@/components/SEO";
+import { BackButton } from "@/components/ui/back-button";
 
 const Post = () => {
   const { id } = useParams();
@@ -40,15 +41,30 @@ const Post = () => {
 
   if (error) {
     toast.error("Failed to load post");
-    return <div className="p-4">Failed to load post</div>;
+    return (
+      <div className="container mx-auto max-w-2xl py-8">
+        <BackButton />
+        <div className="p-4">Failed to load post</div>
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <Skeleton className="h-[600px] w-full" />;
+    return (
+      <div className="container mx-auto max-w-2xl py-8">
+        <BackButton />
+        <Skeleton className="h-[600px] w-full" />
+      </div>
+    );
   }
 
   if (!post) {
-    return <div className="p-4">Post not found</div>;
+    return (
+      <div className="container mx-auto max-w-2xl py-8">
+        <BackButton />
+        <div className="p-4">Post not found</div>
+      </div>
+    );
   }
 
   const structuredData = {
@@ -81,7 +97,10 @@ const Post = () => {
         structuredData={structuredData}
       />
       <div className="container mx-auto max-w-2xl py-8">
-        <PostItem post={post} />
+        <BackButton />
+        <div className="mt-4">
+          <PostItem post={post} />
+        </div>
       </div>
     </>
   );
