@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, ArrowLeft } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, ArrowLeft, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'clips' | 'games' | 'achievements'>('clips');
+  const [activeTab, setActiveTab] = useState<'clips' | 'games' | 'achievements' | 'collections'>('clips');
 
   const { data: userClips } = useQuery({
     queryKey: ['user-clips'],
@@ -166,6 +166,16 @@ const Profile = () => {
         >
           <Trophy className="w-4 h-4 mr-2" /> Achievements
         </Toggle>
+        <Toggle
+          pressed={activeTab === 'collections'}
+          onPressedChange={() => {
+            setActiveTab('collections');
+            navigate('/collections');
+          }}
+          className="data-[state=on]:bg-purple-600 data-[state=on]:text-white"
+        >
+          <Bookmark className="w-4 h-4 mr-2" /> Collections
+        </Toggle>
       </div>
 
       <div className="mt-6">
@@ -214,6 +224,14 @@ const Profile = () => {
 
         {activeTab === 'achievements' && (
           <AchievementList userId="123" />
+        )}
+
+        {activeTab === 'collections' && (
+          <Card className="p-12 text-center">
+            <Bookmark className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-semibold">View your collections</h3>
+            <p className="text-gray-500">Organize and manage your favorite content!</p>
+          </Card>
         )}
       </div>
       
