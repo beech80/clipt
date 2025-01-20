@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { User, AuthError, AuthApiError } from '@supabase/supabase-js';
+import { User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
