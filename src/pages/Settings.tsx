@@ -19,12 +19,14 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+interface CustomTheme {
+  primary: string;
+  secondary: string;
+}
+
 interface Profile {
   id: string;
-  custom_theme: {
-    primary: string;
-    secondary: string;
-  } | null;
+  custom_theme: CustomTheme;
   theme_preference: string;
   enable_notifications: boolean;
   enable_sounds: boolean;
@@ -37,14 +39,30 @@ const Settings = () => {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
 
       if (error) throw error;
-      return data as Profile;
+      
+      // Ensure custom_theme has the correct shape
+      const customTheme = data.custom_theme as CustomTheme || {
+        primary: "#1EAEDB",
+        secondary: "#1A1F2C"
+      };
+      
+      return {
+        id: data.id,
+        custom_theme: customTheme,
+        theme_preference: data.theme_preference,
+        enable_notifications: data.enable_notifications,
+        enable_sounds: data.enable_sounds
+      } as Profile;
     },
     enabled: !!user?.id
   });
@@ -84,10 +102,7 @@ const Settings = () => {
     secondary: "#1A1F2C"
   };
 
-  const currentTheme = {
-    primary: profile?.custom_theme?.primary || defaultTheme.primary,
-    secondary: profile?.custom_theme?.secondary || defaultTheme.secondary
-  };
+  const currentTheme = profile?.custom_theme || defaultTheme;
 
   return (
     <div className="container mx-auto py-6 space-y-8">
