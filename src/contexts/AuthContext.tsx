@@ -21,7 +21,7 @@ interface AuthProviderProps {
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
-function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = React.useState<User | null>(null);
   const [loading, setLoading] = React.useState(true);
   const navigate = useNavigate();
@@ -163,4 +163,4 @@ export function useAuth() {
   return context;
 }
 
-export { AuthProvider };
+export { AuthContext };
