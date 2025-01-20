@@ -9,6 +9,7 @@ import { StreamScheduleForm } from "@/components/streaming/StreamScheduleForm";
 import { Calendar, Settings, Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { BackButton } from "@/components/ui/back-button";
 
 const Streaming = () => {
   const [isLive, setIsLive] = useState(false);
@@ -27,7 +28,10 @@ const Streaming = () => {
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Streaming</h1>
+        <div className="flex items-center gap-2">
+          <BackButton />
+          <h1 className="text-2xl font-bold">Streaming</h1>
+        </div>
         <div className="space-x-2">
           <Dialog>
             <DialogTrigger asChild>

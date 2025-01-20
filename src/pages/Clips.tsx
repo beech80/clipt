@@ -4,6 +4,7 @@ import PostItem from "@/components/PostItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { BackButton } from "@/components/ui/back-button";
 
 const Clips = () => {
   const { user } = useAuth();
@@ -52,7 +53,10 @@ const Clips = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 gaming-gradient">Your Liked Clips</h1>
+      <div className="flex items-center mb-6">
+        <BackButton />
+        <h1 className="text-2xl font-bold gaming-gradient">Your Liked Clips</h1>
+      </div>
       <ScrollArea className="h-[calc(100vh-200px)] w-full">
         {likedPosts?.length === 0 ? (
           <div className="text-center p-8">

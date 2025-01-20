@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TrendingUp, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { BackButton } from "@/components/ui/back-button";
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState("7d");
@@ -33,7 +34,10 @@ const Analytics = () => {
   if (!currentStreamId) {
     return (
       <div className="container mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-4">Analytics</h1>
+        <div className="flex items-center gap-2">
+          <BackButton />
+          <h1 className="text-2xl font-bold mb-4">Analytics</h1>
+        </div>
         <p>No streams found. Start streaming to see your analytics!</p>
       </div>
     );
@@ -43,6 +47,7 @@ const Analytics = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
+          <BackButton />
           <TrendingUp className="h-6 w-6" />
           <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
         </div>

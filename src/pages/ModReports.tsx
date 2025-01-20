@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BackButton } from "@/components/ui/back-button";
 import {
   Table,
   TableBody,
@@ -54,7 +55,10 @@ const ModReports = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Content Reports</h1>
+      <div className="flex items-center mb-6">
+        <BackButton />
+        <h1 className="text-2xl font-bold">Content Reports</h1>
+      </div>
       
       <div className="rounded-md border">
         <Table>

@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BackButton } from "@/components/ui/back-button";
 
 interface PostgresInterval {
   hours?: number;
@@ -38,6 +39,10 @@ const Schedule = () => {
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center mb-4">
+          <BackButton />
+          <h1 className="text-2xl font-bold">Stream Schedule</h1>
+        </div>
         <Card className="p-8 text-center">
           <h2 className="text-2xl font-bold mb-4">Sign in Required</h2>
           <p className="text-muted-foreground">
@@ -51,6 +56,10 @@ const Schedule = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center mb-4">
+          <BackButton />
+          <h1 className="text-2xl font-bold">Stream Schedule</h1>
+        </div>
         <Card className="p-8">
           <Skeleton className="h-8 w-64 mb-4" />
           <Skeleton className="h-4 w-full mb-2" />
@@ -94,7 +103,10 @@ const Schedule = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Stream Schedule</h1>
+      <div className="flex items-center mb-4">
+        <BackButton />
+        <h1 className="text-3xl font-bold">Stream Schedule</h1>
+      </div>
       
       {renderUpcomingStream()}
       
@@ -102,7 +114,6 @@ const Schedule = () => {
         <StreamScheduleForm 
           streamId={stream.id}
           onScheduled={() => {
-            // Refetch stream data after scheduling
             window.location.reload();
           }}
         />

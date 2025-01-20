@@ -6,6 +6,7 @@ import { ChatList } from "@/components/messages/ChatList";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { useMessages } from "@/contexts/MessagesContext";
+import { BackButton } from "@/components/ui/back-button";
 
 const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
@@ -20,7 +21,10 @@ const Messages = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Messages</h1>
+      <div className="flex items-center mb-4">
+        <BackButton />
+        <h1 className="text-2xl font-bold">Messages</h1>
+      </div>
       
       <div className="flex gap-2 justify-center mb-4">
         <Button 

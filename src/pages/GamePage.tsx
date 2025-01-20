@@ -3,13 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { BackButton } from "@/components/ui/back-button";
 
 export default function GamePage() {
   const { slug } = useParams();
-  const navigate = useNavigate();
 
   const { data: game, isLoading: isLoadingGame } = useQuery({
     queryKey: ['game', slug],
@@ -57,13 +54,7 @@ export default function GamePage() {
   return (
     <div className="container mx-auto max-w-4xl py-6 space-y-6">
       <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <BackButton />
         <h1 className="text-2xl font-bold">{game?.name}</h1>
       </div>
       

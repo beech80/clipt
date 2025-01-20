@@ -6,6 +6,7 @@ import { Trophy, Star, Award, LogIn } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { BackButton } from "@/components/ui/back-button";
 
 const Achievements = () => {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ const Achievements = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
+          <BackButton />
           <Trophy className="h-6 w-6 text-gaming-400" />
           <h1 className="text-2xl font-bold">Achievements</h1>
         </div>
