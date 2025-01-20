@@ -20,24 +20,9 @@ const Messages = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Messages</h1>
-        <div className="space-x-2">
-          <Button 
-            variant="outline"
-            onClick={() => navigate("/group-chat")}
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Group Chats
-          </Button>
-          <Button>
-            <MessageSquarePlus className="h-4 w-4 mr-2" />
-            New Message
-          </Button>
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold mb-4">Messages</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]">
         <div className="md:col-span-1 border rounded-lg p-4 overflow-y-auto">
           <ChatList 
             chats={chats} 
@@ -61,6 +46,20 @@ const Messages = () => {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-4 flex gap-2 justify-center">
+        <Button 
+          variant="outline"
+          onClick={() => navigate("/group-chat")}
+        >
+          <Users className="h-4 w-4 mr-2" />
+          Group Chats
+        </Button>
+        <Button>
+          <MessageSquarePlus className="h-4 w-4 mr-2" />
+          New Message
+        </Button>
       </div>
     </div>
   );
