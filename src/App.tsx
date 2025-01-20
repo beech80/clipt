@@ -4,7 +4,6 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import AppRoutes from '@/routes';
 import './App.css';
 
@@ -25,7 +24,6 @@ const App = () => {
           <ThemeProvider>
             <Toaster position="top-center" richColors />
             <AppRoutes />
-            <ReactQueryDevtools initialIsOpen={false} />
           </ThemeProvider>
         </AuthProvider>
       </QueryClientProvider>
