@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FolderPlus } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
 
 const Collections = () => {
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -21,7 +22,10 @@ const Collections = () => {
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Collections</h1>
+        <div className="flex items-center">
+          <BackButton />
+          <h1 className="text-2xl font-bold">Collections</h1>
+        </div>
         <Dialog>
           <DialogTrigger asChild>
             <Button>
