@@ -18,19 +18,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-interface CustomTheme {
-  primary: string;
-  secondary: string;
-}
-
-interface Profile {
-  id: string;
-  custom_theme: CustomTheme;
-  theme_preference: string;
-  enable_notifications: boolean;
-  enable_sounds: boolean;
-}
+import { Profile, CustomTheme } from "@/types/profile";
 
 const Settings = () => {
   const { user } = useAuth();
@@ -50,18 +38,12 @@ const Settings = () => {
 
       if (error) throw error;
       
-      // Ensure custom_theme has the correct shape
-      const customTheme = data.custom_theme as CustomTheme || {
-        primary: "#1EAEDB",
-        secondary: "#1A1F2C"
-      };
-      
       return {
-        id: data.id,
-        custom_theme: customTheme,
-        theme_preference: data.theme_preference,
-        enable_notifications: data.enable_notifications,
-        enable_sounds: data.enable_sounds
+        ...data,
+        custom_theme: data.custom_theme as CustomTheme || {
+          primary: "#1EAEDB",
+          secondary: "#1A1F2C"
+        }
       } as Profile;
     },
     enabled: !!user?.id
@@ -96,13 +78,6 @@ const Settings = () => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
-
-  const defaultTheme = {
-    primary: "#1EAEDB",
-    secondary: "#1A1F2C"
-  };
-
-  const currentTheme = profile?.custom_theme || defaultTheme;
 
   return (
     <div className="container mx-auto py-6 space-y-8">
@@ -188,7 +163,7 @@ const Settings = () => {
               </div>
               <ThemeSelector 
                 userId={profile.id} 
-                currentTheme={currentTheme}
+                currentTheme={profile.custom_theme}
               />
             </Card>
           )}
