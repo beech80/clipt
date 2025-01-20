@@ -19,11 +19,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-interface ThemeColors {
-  primary: string;
-  secondary: string;
-}
-
 interface Profile {
   id: string;
   custom_theme: {
@@ -49,7 +44,7 @@ const Settings = () => {
         .single();
 
       if (error) throw error;
-      return data as unknown as Profile;
+      return data as Profile;
     },
     enabled: !!user?.id
   });
@@ -84,12 +79,12 @@ const Settings = () => {
     return <div>Loading...</div>;
   }
 
-  const defaultTheme: ThemeColors = {
+  const defaultTheme = {
     primary: "#1EAEDB",
     secondary: "#1A1F2C"
   };
 
-  const currentTheme: ThemeColors = {
+  const currentTheme = {
     primary: profile?.custom_theme?.primary || defaultTheme.primary,
     secondary: profile?.custom_theme?.secondary || defaultTheme.secondary
   };
