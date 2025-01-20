@@ -14,6 +14,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
+interface ThemeColors {
+  primary: string;
+  secondary: string;
+}
+
 const Settings = () => {
   const { user } = useAuth();
 
@@ -65,6 +70,13 @@ const Settings = () => {
 
   if (!user) return null;
 
+  const defaultTheme: ThemeColors = {
+    primary: "#9b87f5",
+    secondary: "#1A1F2C"
+  };
+
+  const currentTheme = profile?.custom_theme as ThemeColors || defaultTheme;
+
   return (
     <div className="container mx-auto py-6 space-y-8">
       <h1 className="text-3xl font-bold">Settings</h1>
@@ -82,7 +94,7 @@ const Settings = () => {
         </TabsContent>
 
         <TabsContent value="appearance" className="space-y-6">
-          <ThemeSelector userId={user.id} currentTheme={profile?.custom_theme || { primary: "#9b87f5", secondary: "#1A1F2C" }} />
+          <ThemeSelector userId={user.id} currentTheme={currentTheme} />
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Theme Preference</h3>
             <div className="space-y-4">

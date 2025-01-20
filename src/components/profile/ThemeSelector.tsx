@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Paintbrush } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Json } from "@/integrations/supabase/types";
 
 interface ThemeColors {
   primary: string;
@@ -14,27 +13,31 @@ interface ThemeColors {
 }
 
 export const ThemeSelector = ({ userId, currentTheme }: { userId: string; currentTheme: ThemeColors }) => {
-  const [theme, setTheme] = useState<ThemeColors>(currentTheme);
+  const [theme, setTheme] = useState<ThemeColors>({
+    primary: currentTheme?.primary || "#9b87f5",
+    secondary: currentTheme?.secondary || "#1A1F2C"
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
     try {
       setIsLoading(true);
-      const themeJson: Json = {
-        primary: theme.primary,
-        secondary: theme.secondary
-      };
       
       const { error } = await supabase
         .from('profiles')
-        .update({ custom_theme: themeJson })
+        .update({ 
+          custom_theme: {
+            primary: theme.primary,
+            secondary: theme.secondary
+          }
+        })
         .eq('id', userId);
 
       if (error) throw error;
 
       // Update CSS variables
-      document.documentElement.style.setProperty('--primary', theme.primary);
-      document.documentElement.style.setProperty('--background', theme.secondary);
+      document.documentElement.style.setProperty('--background-override', theme.secondary);
+      document.documentElement.style.setProperty('--button-override', theme.primary);
 
       toast.success("Theme updated successfully!");
     } catch (error) {
