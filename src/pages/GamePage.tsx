@@ -1,124 +1,94 @@
-import React from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
 import PostItem from "@/components/PostItem";
-import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const GamePage = () => {
+export default function GamePage() {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const { data: gameData, isLoading: gameLoading } = useQuery({
+  const { data: game, isLoading: isLoadingGame } = useQuery({
     queryKey: ['game', slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('game_categories')
         .select('*')
         .eq('slug', slug)
-        .maybeSingle();
-
+        .single();
+      
       if (error) throw error;
       return data;
-    },
+    }
   });
 
-  const { data: gamePosts, isLoading: postsLoading } = useQuery({
+  const { data: posts, isLoading: isLoadingPosts } = useQuery({
     queryKey: ['game-posts', slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
         .select(`
           *,
-          profiles:user_id (
-            username,
-            avatar_url
-          ),
+          profiles:user_id (username, avatar_url),
           likes (count),
           clip_votes (count),
-          comments (count),
           post_game_categories!inner (
             game_categories (
-              name,
-              slug
+              name
             )
           )
         `)
         .eq('post_game_categories.game_categories.slug', slug)
         .order('created_at', { ascending: false });
-
+      
       if (error) throw error;
       return data;
     },
-    enabled: !!slug,
+    enabled: !!slug
   });
 
-  if (gameLoading) {
-    return (
-      <div className="container mx-auto p-4 space-y-4">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-40 w-full" />
-      </div>
-    );
-  }
-
-  if (!gameData) {
-    toast.error("Game not found");
-    navigate("/discover");
-    return null;
+  if (isLoadingGame) {
+    return <Skeleton className="h-screen" />;
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto max-w-4xl py-6 space-y-6">
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
+        <Button 
+          variant="ghost" 
           size="icon"
-          onClick={() => navigate("/discover")}
-          className="rounded-full"
+          onClick={() => navigate(-1)}
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold">{gameData.name}</h1>
+        <h1 className="text-2xl font-bold">{game?.name}</h1>
       </div>
+      
+      <p className="text-muted-foreground">{game?.description}</p>
 
-      {gameData.description && (
-        <p className="text-muted-foreground">{gameData.description}</p>
-      )}
-
-      {gameData.thumbnail_url && (
-        <img
-          src={gameData.thumbnail_url}
-          alt={gameData.name}
-          className="w-full h-48 object-cover rounded-lg"
-        />
-      )}
-
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h2 className="text-xl font-semibold">Latest Clips</h2>
-        {postsLoading ? (
+        {isLoadingPosts ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-[400px] w-full" />
+              <Skeleton key={i} className="h-96" />
             ))}
           </div>
-        ) : gamePosts && gamePosts.length > 0 ? (
+        ) : posts && posts.length > 0 ? (
           <div className="space-y-4">
-            {gamePosts.map((post) => (
+            {posts.map((post) => (
               <PostItem key={post.id} post={post} />
             ))}
           </div>
         ) : (
-          <p className="text-center text-muted-foreground py-8">
+          <p className="text-center text-muted-foreground py-12">
             No clips found for this game yet.
           </p>
         )}
       </div>
     </div>
   );
-};
-
-export default GamePage;
+}
