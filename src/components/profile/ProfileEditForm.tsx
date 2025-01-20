@@ -1,153 +1,218 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
-import { Avatar } from "@/components/ui/avatar";
-import { Loader2 } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { useAuth } from "@/contexts/AuthContext"
+import { supabase } from "@/lib/supabase"
+import { toast } from "sonner"
+import { useQuery } from "@tanstack/react-query"
+import { useEffect, useRef } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card } from "@/components/ui/card"
+import { Camera } from "lucide-react"
 
-interface ProfileFormData {
-  display_name: string;
-  bio: string;
-}
+const profileFormSchema = z.object({
+  username: z.string().min(3).max(50),
+  displayName: z.string().min(2).max(50),
+  bioDescription: z.string().max(500).optional(),
+})
 
-export const ProfileEditForm = () => {
-  const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+type ProfileFormValues = z.infer<typeof profileFormSchema>
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ProfileFormData>();
+export function ProfileEditForm() {
+  const { user } = useAuth()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const onAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      setAvatarUrl(URL.createObjectURL(file));
+  const { data: profile, refetch } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    enabled: !!user
+  })
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      username: "",
+      displayName: "",
+      bioDescription: "",
+    },
+  })
+
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        username: profile.username || "",
+        displayName: profile.display_name || "",
+        bioDescription: profile.bio_description || "",
+      })
     }
-  };
+  }, [profile, form])
 
-  const uploadAvatar = async (userId: string): Promise<string | null> => {
-    if (!avatarFile) return null;
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !user) return
 
-    const fileExt = avatarFile.name.split('.').pop();
-    const filePath = `${userId}-${Math.random()}.${fileExt}`;
+    if (file.size > 5000000) {
+      toast.error("Image size should be less than 5MB")
+      return
+    }
 
     try {
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${user.id}-${Date.now()}.${fileExt}`
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, avatarFile);
+        .upload(filePath, file)
 
-      if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(filePath)
 
-      return publicUrl;
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id)
+
+      if (updateError) throw updateError
+
+      toast.success("Profile picture updated successfully!")
+      refetch()
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      return null;
+      toast.error("Error updating profile picture")
+      console.error(error)
     }
-  };
+  }
 
-  const onSubmit = async (data: ProfileFormData) => {
-    if (!user) return;
-    
-    setIsLoading(true);
+  async function onSubmit(data: ProfileFormValues) {
     try {
-      let avatarPublicUrl = null;
-      
-      if (avatarFile) {
-        avatarPublicUrl = await uploadAvatar(user.id);
-      }
-
       const { error } = await supabase
         .from('profiles')
         .update({
-          display_name: data.display_name,
-          bio: data.bio,
-          ...(avatarPublicUrl && { avatar_url: avatarPublicUrl }),
+          username: data.username,
+          display_name: data.displayName,
+          bio_description: data.bioDescription,
         })
-        .eq('id', user.id);
+        .eq('id', user?.id)
 
-      if (error) throw error;
-
-      toast.success('Profile updated successfully!');
+      if (error) throw error
+      toast.success("Profile updated successfully!")
+      refetch()
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile. Please try again.');
-    } finally {
-      setIsLoading(false);
+      toast.error("Failed to update profile")
+      console.error(error)
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="flex flex-col items-center space-y-4">
-        <Avatar className="w-24 h-24">
-          <img
-            src={avatarUrl || "/placeholder.svg"}
-            alt="Profile avatar"
-            className="w-full h-full object-cover"
-          />
-        </Avatar>
-        <div className="flex items-center space-x-2">
-          <Input
+    <Card className="p-6 max-w-2xl mx-auto">
+      <div className="space-y-8">
+        <div className="flex flex-col items-center space-y-4">
+          <Avatar className="w-24 h-24 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+            <AvatarImage src={profile?.avatar_url} />
+            <AvatarFallback>
+              {profile?.display_name?.charAt(0) || user?.email?.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Camera className="w-4 h-4" />
+            Change Profile Picture
+          </Button>
+          <input
             type="file"
+            ref={fileInputRef}
+            className="hidden"
             accept="image/*"
-            onChange={onAvatarChange}
-            className="max-w-[200px]"
+            onChange={handleImageUpload}
           />
         </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="displayName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Display Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your display name" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    This is your public display name.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="username" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    This is your unique username.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="bioDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bio</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Tell us about yourself"
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" className="w-full">
+              Update Profile
+            </Button>
+          </form>
+        </Form>
       </div>
-
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="display_name" className="block text-sm font-medium mb-1">
-            Display Name
-          </label>
-          <Input
-            id="display_name"
-            {...register("display_name", { required: "Display name is required" })}
-            className="w-full"
-          />
-          {errors.display_name && (
-            <p className="text-red-500 text-sm mt-1">{errors.display_name.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label htmlFor="bio" className="block text-sm font-medium mb-1">
-            Bio
-          </label>
-          <Textarea
-            id="bio"
-            {...register("bio")}
-            className="w-full h-32"
-            placeholder="Tell us about yourself..."
-          />
-        </div>
-
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Updating...
-            </>
-          ) : (
-            'Update Profile'
-          )}
-        </Button>
-      </div>
-    </form>
-  );
-};
+    </Card>
+  )
+}
