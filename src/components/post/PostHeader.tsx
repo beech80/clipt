@@ -5,7 +5,8 @@ import { PostHeaderProps } from "@/types/post";
 import PostMenu from "./PostMenu";
 
 export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
-  const username = post.profiles?.username || 'Anonymous';
+  // Get username from profiles, fallback to display_name, then to 'Anonymous'
+  const username = post.profiles?.display_name || post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url || '';
   const firstLetter = username[0]?.toUpperCase() || 'A';
 
