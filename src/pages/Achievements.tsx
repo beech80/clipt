@@ -3,11 +3,22 @@ import { AchievementList } from "@/components/achievements/AchievementList";
 import { AchievementProgress } from "@/components/achievements/AchievementProgress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Star, Award } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 const Achievements = () => {
   const { user } = useAuth();
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="p-12 text-center">
+          <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold">Please log in</h3>
+          <p className="text-muted-foreground">Log in to view your achievements</p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
