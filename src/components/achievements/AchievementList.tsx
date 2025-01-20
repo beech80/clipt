@@ -2,8 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { AchievementCard } from './AchievementCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trophy } from 'lucide-react';
+import { Trophy, Star, Award } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from '@/components/ui/card';
 
 interface Achievement {
   id: string;
@@ -48,9 +49,9 @@ export const AchievementList = ({ userId, filter = 'all' }: AchievementListProps
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-[100px] w-full" />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, i) => (
+          <Skeleton key={i} className="h-[200px] w-full" />
         ))}
       </div>
     );
@@ -58,11 +59,11 @@ export const AchievementList = ({ userId, filter = 'all' }: AchievementListProps
 
   if (!achievements?.length) {
     return (
-      <div className="text-center py-8">
+      <Card className="p-12 text-center">
         <Trophy className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold">No achievements yet</h3>
         <p className="text-muted-foreground">Keep playing to earn achievements!</p>
-      </div>
+      </Card>
     );
   }
 
@@ -77,36 +78,43 @@ export const AchievementList = ({ userId, filter = 'all' }: AchievementListProps
             <Trophy className="w-4 h-4" />
             Trophies
           </TabsTrigger>
-          <TabsTrigger value="other">Other Achievements</TabsTrigger>
+          <TabsTrigger value="other">
+            <Star className="w-4 h-4 mr-2" />
+            Other Achievements
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="trophies" className="space-y-4 mt-4">
-          {trophyAchievements.map((achievement) => (
-            <AchievementCard
-              key={achievement.id}
-              achievementId={achievement.id}
-              name={achievement.name}
-              description={achievement.description}
-              iconUrl={achievement.icon_url}
-              points={achievement.points}
-              earnedAt={achievement.earned_at}
-              showChain={true}
-            />
-          ))}
+        <TabsContent value="trophies" className="mt-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {trophyAchievements.map((achievement) => (
+              <AchievementCard
+                key={achievement.id}
+                achievementId={achievement.id}
+                name={achievement.name}
+                description={achievement.description}
+                iconUrl={achievement.icon_url}
+                points={achievement.points}
+                earnedAt={achievement.earned_at}
+                showChain={true}
+              />
+            ))}
+          </div>
         </TabsContent>
 
-        <TabsContent value="other" className="space-y-4 mt-4">
-          {otherAchievements.map((achievement) => (
-            <AchievementCard
-              key={achievement.id}
-              achievementId={achievement.id}
-              name={achievement.name}
-              description={achievement.description}
-              iconUrl={achievement.icon_url}
-              points={achievement.points}
-              earnedAt={achievement.earned_at}
-            />
-          ))}
+        <TabsContent value="other" className="mt-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {otherAchievements.map((achievement) => (
+              <AchievementCard
+                key={achievement.id}
+                achievementId={achievement.id}
+                name={achievement.name}
+                description={achievement.description}
+                iconUrl={achievement.icon_url}
+                points={achievement.points}
+                earnedAt={achievement.earned_at}
+              />
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
