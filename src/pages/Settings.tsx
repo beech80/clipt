@@ -1,18 +1,23 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DataPrivacySettings } from "@/components/settings/DataPrivacySettings";
-import { TwoFactorSettings } from "@/components/settings/TwoFactorSettings";
-import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
-import { ThemeSelector } from "@/components/profile/ThemeSelector";
-import { AccessibilitySettings } from "@/components/accessibility/AccessibilitySettings";
-import { KeyboardShortcuts } from "@/components/keyboard/KeyboardShortcuts";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ThemeSelector } from "@/components/profile/ThemeSelector";
+import {
+  Bell,
+  Volume2,
+  Moon,
+  Paintbrush,
+  Shield,
+  UserCog,
+  ArrowLeft,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ThemeColors {
   primary: string;
@@ -20,68 +25,67 @@ interface ThemeColors {
 }
 
 interface Profile {
-  custom_theme?: {
+  id: string;
+  custom_theme: {
     primary: string;
     secondary: string;
-  };
-  theme_preference?: string;
-  enable_notifications?: boolean;
-  enable_sounds?: boolean;
+  } | null;
+  theme_preference: string;
+  enable_notifications: boolean;
+  enable_sounds: boolean;
 }
 
 const Settings = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      if (!user?.id) return null;
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', user?.id)
         .single();
 
       if (error) throw error;
-      return data as Profile;
+      return data as unknown as Profile;
     },
     enabled: !!user?.id
   });
 
-  const handleNotificationToggle = async (enabled: boolean) => {
-    try {
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settings: Partial<Profile>) => {
       const { error } = await supabase
         .from('profiles')
-        .update({ enable_notifications: enabled })
+        .update(settings)
         .eq('id', user?.id);
 
       if (error) throw error;
-      toast.success("Notification settings updated");
-    } catch (error) {
-      toast.error("Failed to update notification settings");
-      console.error(error);
+    },
+    onSuccess: () => {
+      toast.success("Settings updated successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to update settings");
+      console.error("Settings update error:", error);
     }
+  });
+
+  const handleToggle = (setting: keyof Profile) => {
+    if (!profile) return;
+    
+    updateSettingsMutation.mutate({
+      [setting]: !profile[setting]
+    });
   };
 
-  const handleSoundToggle = async (enabled: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ enable_sounds: enabled })
-        .eq('id', user?.id);
-
-      if (error) throw error;
-      toast.success("Sound settings updated");
-    } catch (error) {
-      toast.error("Failed to update sound settings");
-      console.error(error);
-    }
-  };
-
-  if (!user) return null;
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   const defaultTheme: ThemeColors = {
-    primary: "#9b87f5",
+    primary: "#1EAEDB",
     secondary: "#1A1F2C"
   };
 
@@ -92,79 +96,108 @@ const Settings = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-8">
-      <h1 className="text-3xl font-bold">Settings</h1>
-      
-      <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="accessibility">Accessibility</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile" className="space-y-6">
-          <ProfileEditForm />
-        </TabsContent>
-
-        <TabsContent value="appearance" className="space-y-6">
-          <ThemeSelector userId={user.id} currentTheme={currentTheme} />
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Theme Preference</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="theme-preference">Dark Mode</Label>
-                <Switch 
-                  id="theme-preference"
-                  checked={profile?.theme_preference === 'dark'}
-                  onCheckedChange={async (checked) => {
-                    try {
-                      const { error } = await supabase
-                        .from('profiles')
-                        .update({ theme_preference: checked ? 'dark' : 'light' })
-                        .eq('id', user.id);
-                      
-                      if (error) throw error;
-                      toast.success("Theme preference updated");
-                    } catch (error) {
-                      toast.error("Failed to update theme preference");
-                      console.error(error);
-                    }
-                  }}
-                />
-              </div>
+      {/* Header */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Settings</h1>
+              <p className="text-muted-foreground">
+                Manage your account settings and preferences
+              </p>
             </div>
-          </Card>
-        </TabsContent>
+          </div>
+        </div>
+        <Separator />
+      </div>
 
-        <TabsContent value="notifications" className="space-y-6">
+      {/* Settings Grid */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Left Column */}
+        <div className="space-y-6">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Notification Settings</h3>
+            <div className="flex items-center gap-2 mb-6">
+              <UserCog className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Account Settings</h2>
+            </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label htmlFor="notifications">Enable Notifications</Label>
-                <Switch 
-                  id="notifications"
+                <div className="space-y-0.5">
+                  <Label>Notifications</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Receive notifications about activity
+                  </p>
+                </div>
+                <Switch
                   checked={profile?.enable_notifications}
-                  onCheckedChange={handleNotificationToggle}
+                  onCheckedChange={() => handleToggle('enable_notifications')}
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="sounds">Enable Sounds</Label>
-                <Switch 
-                  id="sounds"
+                <div className="space-y-0.5">
+                  <Label>Sound Effects</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Play sounds for interactions
+                  </p>
+                </div>
+                <Switch
                   checked={profile?.enable_sounds}
-                  onCheckedChange={handleSoundToggle}
+                  onCheckedChange={() => handleToggle('enable_sounds')}
                 />
               </div>
             </div>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="accessibility" className="space-y-6">
-          <AccessibilitySettings />
-          <KeyboardShortcuts />
-        </TabsContent>
-      </Tabs>
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Shield className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Privacy & Security</h2>
+            </div>
+            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Shield className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-gray-500">Coming soon</p>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          {profile && (
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Paintbrush className="w-5 h-5 text-purple-500" />
+                <h2 className="text-xl font-semibold">Theme Customization</h2>
+              </div>
+              <ThemeSelector 
+                userId={profile.id} 
+                currentTheme={currentTheme}
+              />
+            </Card>
+          )}
+
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Bell className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Notification Preferences</h2>
+            </div>
+            <p className="text-muted-foreground mb-4">
+              Configure how you receive notifications and updates
+            </p>
+            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Bell className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-gray-500">Coming soon</p>
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
