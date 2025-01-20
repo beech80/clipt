@@ -17,24 +17,34 @@ import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useRef } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card } from "@/components/ui/card"
-import { Camera } from "lucide-react"
+import { useEffect } from "react"
+
+// Define the shape of social links
+interface SocialLinks {
+  twitter?: string;
+  instagram?: string;
+  youtube?: string;
+}
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
   displayName: z.string().min(2).max(50),
   bioDescription: z.string().max(500).optional(),
+  location: z.string().max(100).optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  socialLinks: z.object({
+    twitter: z.string().optional(),
+    instagram: z.string().optional(),
+    youtube: z.string().optional(),
+  }),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
 
 export function ProfileEditForm() {
   const { user } = useAuth()
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const { data: profile, refetch } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -55,56 +65,46 @@ export function ProfileEditForm() {
       username: "",
       displayName: "",
       bioDescription: "",
+      location: "",
+      website: "",
+      socialLinks: {
+        twitter: "",
+        instagram: "",
+        youtube: "",
+      },
     },
   })
 
   useEffect(() => {
     if (profile) {
+      // Safely parse social_links with proper type checking
+      let socialLinks: SocialLinks = {
+        twitter: "",
+        instagram: "",
+        youtube: "",
+      }
+
+      if (profile.social_links && 
+          typeof profile.social_links === 'object' && 
+          !Array.isArray(profile.social_links)) {
+        const links = profile.social_links as Record<string, unknown>
+        socialLinks = {
+          twitter: typeof links.twitter === 'string' ? links.twitter : "",
+          instagram: typeof links.instagram === 'string' ? links.instagram : "",
+          youtube: typeof links.youtube === 'string' ? links.youtube : "",
+        }
+      }
+      
       form.reset({
         username: profile.username || "",
         displayName: profile.display_name || "",
         bioDescription: profile.bio_description || "",
+        location: profile.location || "",
+        website: profile.website || "",
+        socialLinks,
       })
     }
   }, [profile, form])
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file || !user) return
-
-    if (file.size > 5000000) {
-      toast.error("Image size should be less than 5MB")
-      return
-    }
-
-    try {
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${user.id}-${Date.now()}.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath)
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id)
-
-      if (updateError) throw updateError
-
-      toast.success("Profile picture updated successfully!")
-      refetch()
-    } catch (error) {
-      toast.error("Error updating profile picture")
-      console.error(error)
-    }
-  }
 
   async function onSubmit(data: ProfileFormValues) {
     try {
@@ -114,12 +114,14 @@ export function ProfileEditForm() {
           username: data.username,
           display_name: data.displayName,
           bio_description: data.bioDescription,
+          location: data.location,
+          website: data.website,
+          social_links: data.socialLinks,
         })
         .eq('id', user?.id)
 
       if (error) throw error
       toast.success("Profile updated successfully!")
-      refetch()
     } catch (error) {
       toast.error("Failed to update profile")
       console.error(error)
@@ -127,92 +129,132 @@ export function ProfileEditForm() {
   }
 
   return (
-    <Card className="p-6 max-w-2xl mx-auto">
-      <div className="space-y-8">
-        <div className="flex flex-col items-center space-y-4">
-          <Avatar className="w-24 h-24 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-            <AvatarImage src={profile?.avatar_url} />
-            <AvatarFallback>
-              {profile?.display_name?.charAt(0) || user?.email?.charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Camera className="w-4 h-4" />
-            Change Profile Picture
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept="image/*"
-            onChange={handleImageUpload}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="username" {...field} />
+              </FormControl>
+              <FormDescription>
+                This is your public display name.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="displayName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Display Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Display Name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="bioDescription"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bio</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Tell us about yourself"
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Location</FormLabel>
+              <FormControl>
+                <Input placeholder="Your location" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="website"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Website</FormLabel>
+              <FormControl>
+                <Input placeholder="https://your-website.com" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Social Links</h3>
+          <FormField
+            control={form.control}
+            name="socialLinks.twitter"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Twitter</FormLabel>
+                <FormControl>
+                  <Input placeholder="Twitter username" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="socialLinks.instagram"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Instagram</FormLabel>
+                <FormControl>
+                  <Input placeholder="Instagram username" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="socialLinks.youtube"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>YouTube</FormLabel>
+                <FormControl>
+                  <Input placeholder="YouTube channel" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="displayName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Display Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Your display name" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    This is your public display name.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input placeholder="username" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    This is your unique username.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="bioDescription"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bio</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Tell us about yourself"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button type="submit" className="w-full">
-              Update Profile
-            </Button>
-          </form>
-        </Form>
-      </div>
-    </Card>
+        <Button type="submit">Update profile</Button>
+      </form>
+    </Form>
   )
 }
