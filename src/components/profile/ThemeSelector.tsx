@@ -31,6 +31,11 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
         .eq('id', userId);
 
       if (error) throw error;
+
+      // Update CSS variables
+      document.documentElement.style.setProperty('--primary', theme.primary);
+      document.documentElement.style.setProperty('--background', theme.secondary);
+
       toast.success("Theme updated successfully!");
     } catch (error) {
       console.error('Error updating theme:', error);
@@ -63,13 +68,13 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
               value={theme.primary}
               onChange={(e) => setTheme({ ...theme, primary: e.target.value })}
               className="flex-1"
-              placeholder="#1EAEDB"
+              placeholder="#9b87f5"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="secondary">Secondary Color</Label>
+          <Label htmlFor="secondary">Background Color</Label>
           <div className="flex gap-2">
             <Input
               id="secondary"
@@ -83,7 +88,7 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
               value={theme.secondary}
               onChange={(e) => setTheme({ ...theme, secondary: e.target.value })}
               className="flex-1"
-              placeholder="#000000"
+              placeholder="#1A1F2C"
             />
           </div>
         </div>
