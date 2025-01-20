@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { UserCog, Paintbrush, Shield, Bell } from "lucide-react";
+import { UserCog, Paintbrush, Shield, Bell, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -47,19 +47,26 @@ const EditProfile = () => {
     : defaultTheme;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8">
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Profile Settings</h1>
-            <p className="text-muted-foreground">
-              Manage your account settings and preferences
-            </p>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate('/profile')}
+              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Profile Settings</h1>
+              <p className="text-muted-foreground">
+                Manage your account settings and preferences
+              </p>
+            </div>
           </div>
-          <Button variant="outline" onClick={() => navigate('/profile')}>
-            Back to Profile
-          </Button>
         </div>
         <Separator />
       </div>
@@ -69,8 +76,8 @@ const EditProfile = () => {
         {/* Left Column */}
         <div className="space-y-6">
           <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <UserCog className="w-5 h-5 text-muted-foreground" />
+            <div className="flex items-center gap-2 mb-6">
+              <UserCog className="w-5 h-5 text-purple-500" />
               <h2 className="text-xl font-semibold">Basic Information</h2>
             </div>
             <ProfileEditForm />
@@ -78,15 +85,15 @@ const EditProfile = () => {
 
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Bell className="w-5 h-5 text-muted-foreground" />
+              <Bell className="w-5 h-5 text-purple-500" />
               <h2 className="text-xl font-semibold">Notification Preferences</h2>
             </div>
             <p className="text-muted-foreground mb-4">
               Configure how you receive notifications and updates
             </p>
-            {/* Notification settings will be implemented later */}
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              Coming soon
+            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Bell className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-gray-500">Coming soon</p>
             </div>
           </Card>
         </div>
@@ -94,23 +101,29 @@ const EditProfile = () => {
         {/* Right Column */}
         <div className="space-y-6">
           {profile && (
-            <ThemeSelector 
-              userId={profile.id} 
-              currentTheme={currentTheme}
-            />
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Paintbrush className="w-5 h-5 text-purple-500" />
+                <h2 className="text-xl font-semibold">Theme Customization</h2>
+              </div>
+              <ThemeSelector 
+                userId={profile.id} 
+                currentTheme={currentTheme}
+              />
+            </Card>
           )}
 
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-5 h-5 text-muted-foreground" />
+              <Shield className="w-5 h-5 text-purple-500" />
               <h2 className="text-xl font-semibold">Privacy & Security</h2>
             </div>
             <p className="text-muted-foreground mb-4">
               Manage your account security and privacy settings
             </p>
-            {/* Privacy settings will be implemented later */}
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              Coming soon
+            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Shield className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-gray-500">Coming soon</p>
             </div>
           </Card>
         </div>
