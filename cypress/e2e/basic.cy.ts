@@ -36,6 +36,19 @@ describe('Basic Navigation', () => {
   it('should show post content', () => {
     cy.get('.relative.h-full.w-full').should('exist');
   });
+
+  it('should have working navigation links', () => {
+    cy.get('nav').within(() => {
+      cy.contains('Home').should('be.visible');
+      cy.contains('Discover').should('be.visible');
+      cy.contains('Streaming').should('be.visible');
+      cy.contains('Top Clips').should('be.visible');
+    });
+  });
+
+  it('should have a working search bar', () => {
+    cy.get('input[type="search"]').should('exist');
+  });
 });
 
 describe('Post Interactions', () => {
@@ -45,5 +58,10 @@ describe('Post Interactions', () => {
 
   it('should display post interaction elements correctly', () => {
     cy.get('.flex.items-center.space-x-1').should('have.length.at.least', 3);
+  });
+
+  it('should show welcome section for non-authenticated users', () => {
+    cy.contains('Share Your Epic Gaming Moments').should('be.visible');
+    cy.contains('Get Started').should('be.visible');
   });
 });
