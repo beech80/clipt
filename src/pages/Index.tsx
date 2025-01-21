@@ -15,6 +15,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { useTheme } from "@/hooks/use-theme";
 
+interface ThemeColors {
+  primary: string;
+  secondary: string;
+}
+
 const LoadingSkeleton = () => (
   <div className="space-y-6 animate-pulse">
     <Skeleton className="h-[200px] w-full rounded-lg bg-gaming-600/20" />
@@ -34,7 +39,7 @@ export default function Index() {
   const { user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   const { reset } = useQueryErrorResetBoundary();
-  const { theme } = useTheme();
+  const { theme, customColors } = useTheme();
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -51,6 +56,11 @@ export default function Index() {
       </div>
     );
   }
+
+  const currentTheme: ThemeColors = {
+    primary: customColors.primary,
+    secondary: customColors.secondary
+  };
 
   return (
     <>
@@ -103,7 +113,7 @@ export default function Index() {
                 </ErrorBoundary>
                 {user && (
                   <div className="mt-6">
-                    <ThemeSelector userId={user.id} currentTheme={theme} />
+                    <ThemeSelector userId={user.id} currentTheme={currentTheme} />
                   </div>
                 )}
               </div>
