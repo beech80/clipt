@@ -5,9 +5,9 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
-import ChatList from "@/components/messages/ChatList";
-import MessageList from "@/components/messages/MessageList";
-import MessageInput from "@/components/messages/MessageInput";
+import { ChatList } from "@/components/messages/ChatList";
+import { MessageList } from "@/components/messages/MessageList";
+import { MessageInput } from "@/components/messages/MessageInput";
 
 export default function Messages() {
   const { user } = useAuth();
