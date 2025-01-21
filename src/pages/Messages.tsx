@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ChatList } from "@/components/messages/ChatList";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
-import { ChatUser } from "@/types/message";
+import { ChatUser, Message } from "@/types/message";
 
 export default function Messages() {
   const { user } = useAuth();
@@ -22,7 +22,11 @@ export default function Messages() {
       const { data, error } = await supabase
         .from('messages')
         .select(`
-          distinct on (sender_id, receiver_id) *,
+          id,
+          sender_id,
+          receiver_id,
+          content,
+          created_at,
           sender:profiles!messages_sender_id_fkey (
             id,
             username,
@@ -40,27 +44,51 @@ export default function Messages() {
       if (error) throw error;
 
       // Transform the data into ChatUser format
-      const chatUsers: ChatUser[] = data.map(msg => {
+      const chatUsers = new Map<string, ChatUser>();
+
+      data.forEach(msg => {
         const otherUser = msg.sender_id === user.id ? msg.receiver : msg.sender;
-        return {
-          id: otherUser.id,
-          username: otherUser.username,
-          avatar_url: otherUser.avatar_url,
-          last_message: msg.content,
-          unread_count: 0 // You might want to calculate this
-        };
+        if (!otherUser) return;
+
+        if (!chatUsers.has(otherUser.id)) {
+          chatUsers.set(otherUser.id, {
+            id: otherUser.id,
+            username: otherUser.username,
+            avatar_url: otherUser.avatar_url,
+            last_message: msg.content,
+            unread_count: 0 // You might want to calculate this
+          });
+        }
       });
 
-      return chatUsers;
+      return Array.from(chatUsers.values());
     },
     enabled: !!user,
   });
 
-  useEffect(() => {
-    if (chats && chats.length > 0 && !selectedChat) {
-      setSelectedChat(chats[0].id);
-    }
-  }, [chats, selectedChat]);
+  const { data: messages = [] } = useQuery({
+    queryKey: ['messages', selectedChat],
+    queryFn: async () => {
+      if (!user || !selectedChat) return [];
+
+      const { data, error } = await supabase
+        .from('messages')
+        .select(`
+          id,
+          content,
+          created_at,
+          sender_id,
+          receiver_id
+        `)
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedChat}),and(sender_id.eq.${selectedChat},receiver_id.eq.${user.id})`)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      return data as Message[];
+    },
+    enabled: !!user && !!selectedChat,
+  });
 
   if (!user) {
     return (
@@ -108,7 +136,7 @@ export default function Messages() {
           {selectedChat ? (
             <>
               <ScrollArea className="flex-1 p-4">
-                <MessageList messages={[]} />
+                <MessageList messages={messages} />
               </ScrollArea>
               <div className="p-4 border-t border-border/50">
                 <MessageInput onSendMessage={() => {}} />
