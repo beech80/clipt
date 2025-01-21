@@ -93,7 +93,12 @@ const NotificationsPopover = () => {
           toast.info("New notification received", {
             action: {
               label: "View",
-              onClick: () => document.querySelector('[aria-label="Notifications"]')?.click(),
+              onClick: () => {
+                const notificationTrigger = document.querySelector('[aria-label="Notifications"]');
+                if (notificationTrigger instanceof HTMLElement) {
+                  notificationTrigger.click();
+                }
+              },
             },
           });
         }
