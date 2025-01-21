@@ -6,7 +6,7 @@ import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ const LoadingSkeleton = () => (
 );
 
 export default function Index() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   const { reset } = useQueryErrorResetBoundary();
 

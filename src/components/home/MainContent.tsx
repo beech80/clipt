@@ -3,7 +3,7 @@ import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
 import { EnhancedFeed } from "@/components/social/EnhancedFeed";
 import { TournamentList } from "@/components/tournaments/TournamentList";
 import { SquadList } from "@/components/squads/SquadList";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const MainContent = () => {
   return (

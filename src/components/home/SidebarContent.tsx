@@ -5,7 +5,7 @@ import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
 import { GamingHistory } from "@/components/gaming/GamingHistory";
 import { ContentRecommendations } from "@/components/recommendations/ContentRecommendations";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const SidebarContent = () => {
   const isMobile = useIsMobile();
