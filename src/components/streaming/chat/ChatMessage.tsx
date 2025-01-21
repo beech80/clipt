@@ -3,19 +3,10 @@ import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useEmotes } from '@/contexts/EmoteContext';
+import type { StreamChatMessage } from '@/types/chat';
 
 interface ChatMessageProps {
-  message: {
-    id: string;
-    content: string;
-    user_id: string;
-    profiles?: {
-      username: string;
-      avatar_url: string;
-    };
-    is_deleted?: boolean;
-    deleted_by?: string;
-  };
+  message: StreamChatMessage;
   isHighlighted?: boolean;
 }
 
@@ -81,7 +72,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isHighlighted
           </div>
           
           <div className="text-sm mt-1 break-words">
-            {renderMessageContent(message.content)}
+            {renderMessageContent(message.message)}
           </div>
         </div>
       </div>
