@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { SlidersHorizontal } from "lucide-react";
 import { SearchFilters as SearchFiltersType } from "@/types/post";
 import { toast } from "sonner";
@@ -63,6 +64,26 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
           </div>
 
           <div className="space-y-2">
+            <Label>Category</Label>
+            <Select
+              value={filters.category}
+              onValueChange={(value: any) => onFiltersChange({ ...filters, category: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="gaming">Gaming</SelectItem>
+                <SelectItem value="irl">IRL</SelectItem>
+                <SelectItem value="creative">Creative</SelectItem>
+                <SelectItem value="esports">Esports</SelectItem>
+                <SelectItem value="music">Music</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>Date Range</Label>
             <Select
               value={filters.dateRange}
@@ -80,14 +101,6 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
             </Select>
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label>Has Media</Label>
-            <Switch
-              checked={filters.hasMedia}
-              onCheckedChange={(checked) => onFiltersChange({ ...filters, hasMedia: checked })}
-            />
-          </div>
-
           <div className="space-y-2">
             <Label>Sort By</Label>
             <Select
@@ -99,9 +112,67 @@ export function SearchFilters({ filters, onFiltersChange }: SearchFiltersProps) 
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="recent">Most Recent</SelectItem>
+                <SelectItem value="popular">Most Popular</SelectItem>
                 <SelectItem value="relevant">Most Relevant</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Language</Label>
+            <Select
+              value={filters.language}
+              onValueChange={(value: any) => onFiltersChange({ ...filters, language: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Languages</SelectItem>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="es">Spanish</SelectItem>
+                <SelectItem value="fr">French</SelectItem>
+                <SelectItem value="de">German</SelectItem>
+                <SelectItem value="ja">Japanese</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Maximum Results</Label>
+            <Slider
+              value={[filters.maxResults]}
+              onValueChange={(value) => onFiltersChange({ ...filters, maxResults: value[0] })}
+              min={5}
+              max={50}
+              step={5}
+              className="mt-2"
+            />
+            <p className="text-sm text-muted-foreground text-right">{filters.maxResults} results</p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label>Has Media</Label>
+            <Switch
+              checked={filters.hasMedia}
+              onCheckedChange={(checked) => onFiltersChange({ ...filters, hasMedia: checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label>Verified Only</Label>
+            <Switch
+              checked={filters.verifiedOnly}
+              onCheckedChange={(checked) => onFiltersChange({ ...filters, verifiedOnly: checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label>Include NSFW</Label>
+            <Switch
+              checked={filters.includeNSFW}
+              onCheckedChange={(checked) => onFiltersChange({ ...filters, includeNSFW: checked })}
+            />
           </div>
         </div>
       </SheetContent>

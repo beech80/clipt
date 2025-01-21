@@ -18,7 +18,13 @@ export function SearchBar() {
     type: 'all',
     dateRange: 'all',
     hasMedia: false,
-    sortBy: 'recent'
+    sortBy: 'recent',
+    category: 'all',
+    language: 'all',
+    minRating: 0,
+    maxResults: 20,
+    includeNSFW: false,
+    verifiedOnly: false
   });
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -44,7 +50,6 @@ export function SearchBar() {
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) return null;
 
-      // Save search to history
       if (user) {
         const searchData = {
           user_id: user.id,
@@ -71,6 +76,7 @@ export function SearchBar() {
       const dateFilter = getDateFilter();
       const queries = [];
 
+      // Enhanced post search
       if (filters.type === 'all' || filters.type === 'posts') {
         let query = supabase
           .from('posts')
@@ -80,10 +86,15 @@ export function SearchBar() {
             created_at,
             image_url,
             video_url,
-            profiles:user_id (username, avatar_url)
+            profiles:user_id (
+              username, 
+              avatar_url, 
+              is_verified
+            ),
+            likes:likes(count),
+            comments:comments(count)
           `)
-          .ilike('content', `%${searchTerm}%`)
-          .limit(5);
+          .ilike('content', `%${searchTerm}%`);
 
         if (dateFilter) {
           query = query.gte('created_at', dateFilter);
@@ -93,23 +104,40 @@ export function SearchBar() {
           query = query.or('image_url.neq.null,video_url.neq.null');
         }
 
+        if (filters.verifiedOnly) {
+          query = query.eq('profiles.is_verified', true);
+        }
+
+        if (filters.category !== 'all') {
+          query = query.eq('category', filters.category);
+        }
+
         if (filters.sortBy === 'recent') {
           query = query.order('created_at', { ascending: false });
+        } else if (filters.sortBy === 'popular') {
+          query = query.order('likes.count', { ascending: false });
+        }
+
+        query = query.limit(filters.maxResults);
+        queries.push(query);
+      }
+
+      // Enhanced profile search
+      if (filters.type === 'all' || filters.type === 'profiles') {
+        let query = supabase
+          .from('profiles')
+          .select('id, username, avatar_url, display_name, is_verified, bio')
+          .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
+          .limit(filters.maxResults);
+
+        if (filters.verifiedOnly) {
+          query = query.eq('is_verified', true);
         }
 
         queries.push(query);
       }
 
-      if (filters.type === 'all' || filters.type === 'profiles') {
-        queries.push(
-          supabase
-            .from('profiles')
-            .select('id, username, avatar_url, display_name')
-            .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
-            .limit(5)
-        );
-      }
-
+      // Enhanced stream search
       if (filters.type === 'all' || filters.type === 'streams') {
         let query = supabase
           .from('streams')
@@ -118,19 +146,31 @@ export function SearchBar() {
             title,
             description,
             created_at,
-            profiles:user_id (username, avatar_url)
+            viewer_count,
+            is_live,
+            profiles:user_id (
+              username, 
+              avatar_url,
+              is_verified
+            )
           `)
-          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
-          .limit(5);
+          .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
 
         if (dateFilter) {
           query = query.gte('created_at', dateFilter);
         }
 
-        if (filters.sortBy === 'recent') {
-          query = query.order('created_at', { ascending: false });
+        if (filters.verifiedOnly) {
+          query = query.eq('profiles.is_verified', true);
         }
 
+        if (filters.sortBy === 'recent') {
+          query = query.order('created_at', { ascending: false });
+        } else if (filters.sortBy === 'popular') {
+          query = query.order('viewer_count', { ascending: false });
+        }
+
+        query = query.limit(filters.maxResults);
         queries.push(query);
       }
 
