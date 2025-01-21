@@ -19,16 +19,16 @@ export const SidebarContent = () => {
     >
       <ScrollArea className={`${isMobile ? 'h-[400px]' : 'h-[calc(100vh-2rem)]'} pr-4`}>
         <div className="space-y-4">
-          <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
+          <section className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 md:p-6">
             <XPMultipliersList />
           </section>
-          <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
+          <section className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 md:p-6">
             <ActiveChallenges />
           </section>
-          <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
+          <section className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 md:p-6">
             <GamingHistory />
           </section>
-          <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
+          <section className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 md:p-6">
             <ContentRecommendations />
           </section>
         </div>

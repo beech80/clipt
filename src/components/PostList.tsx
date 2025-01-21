@@ -14,8 +14,8 @@ import { useAuth } from "@/contexts/AuthContext";
 const POSTS_PER_PAGE = 5;
 
 const PostSkeleton = () => (
-  <div className="relative h-[calc(100vh-200px)] sm:h-[500px] bg-[#1A1F2C] rounded-lg overflow-hidden shadow-lg">
-    <div className="p-4 border-b border-gaming-600/20">
+  <div className="relative h-[calc(100vh-200px)] sm:h-[500px] bg-card/50 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg border border-border/50">
+    <div className="p-4 border-b border-border/50">
       <div className="flex items-center space-x-4">
         <Skeleton className="h-10 w-10 rounded-full" />
         <div className="space-y-2">
