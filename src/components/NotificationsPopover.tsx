@@ -14,10 +14,11 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 interface Notification {
   id: string;
-  type: 'follow' | 'like' | 'comment' | 'mention' | 'stream_live' | 'reply';
+  type: 'follow' | 'like' | 'comment' | 'mention' | 'stream_live' | 'reply' | 'achievement' | 'level_up';
   content: string;
   created_at: string;
   read: boolean;
@@ -56,7 +57,6 @@ const NotificationsPopover = () => {
     enabled: !!user,
   });
 
-  // Mark notifications as read
   const markAsRead = useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
@@ -90,7 +90,12 @@ const NotificationsPopover = () => {
         },
         (payload) => {
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
-          toast.info("New notification received");
+          toast.info("New notification received", {
+            action: {
+              label: "View",
+              onClick: () => document.querySelector('[aria-label="Notifications"]')?.click(),
+            },
+          });
         }
       )
       .subscribe();
@@ -121,7 +126,33 @@ const NotificationsPopover = () => {
         case 'stream':
           navigate(`/stream/${notification.resource_id}`);
           break;
+        case 'achievement':
+          navigate(`/achievements`);
+          break;
       }
+    }
+  };
+
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'achievement':
+        return '🏆';
+      case 'level_up':
+        return '⭐';
+      case 'follow':
+        return '👥';
+      case 'like':
+        return '❤️';
+      case 'comment':
+        return '💬';
+      case 'mention':
+        return '@';
+      case 'stream_live':
+        return '🎥';
+      case 'reply':
+        return '↩️';
+      default:
+        return '📢';
     }
   };
 
@@ -141,9 +172,32 @@ const NotificationsPopover = () => {
         return `${actor} went live`;
       case 'reply':
         return `${actor} replied to your comment`;
+      case 'achievement':
+        return `You earned a new achievement!`;
+      case 'level_up':
+        return `You reached a new level!`;
       default:
         return notification.content || 'New notification';
     }
+  };
+
+  const groupNotifications = (notifications: Notification[]) => {
+    const today: Notification[] = [];
+    const yesterday: Notification[] = [];
+    const older: Notification[] = [];
+
+    notifications.forEach(notification => {
+      const date = new Date(notification.created_at);
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+      const isYesterday = date.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString();
+
+      if (isToday) today.push(notification);
+      else if (isYesterday) yesterday.push(notification);
+      else older.push(notification);
+    });
+
+    return { today, yesterday, older };
   };
 
   return (
@@ -153,14 +207,17 @@ const NotificationsPopover = () => {
           variant="ghost" 
           size="icon" 
           className="relative touch-manipulation active:scale-95 transition-transform"
+          aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+            >
               {unreadCount}
-            </span>
+            </Badge>
           )}
-          <span className="sr-only">Notifications</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent 
@@ -180,30 +237,41 @@ const NotificationsPopover = () => {
             </div>
           ) : (
             <ScrollArea className="h-[calc(80vh-100px)] sm:h-[300px]">
-              <div className="space-y-1 p-1">
-                {notifications?.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-3 rounded-lg text-sm hover:bg-accent cursor-pointer active:scale-98 transition-transform touch-manipulation ${
-                      !notification.read ? 'bg-muted' : ''
-                    }`}
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-8 w-8 shrink-0">
-                        <AvatarImage src={notification.actor?.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {notification.actor?.username?.[0]?.toUpperCase() || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="line-clamp-2">{getNotificationContent(notification)}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                        </div>
+              <div className="space-y-4 p-1">
+                {notifications && Object.entries(groupNotifications(notifications)).map(([group, items]) => (
+                  items.length > 0 && (
+                    <div key={group} className="space-y-1">
+                      <div className="text-xs font-medium text-muted-foreground px-3 py-1">
+                        {group === 'today' ? 'Today' : 
+                         group === 'yesterday' ? 'Yesterday' : 
+                         'Older'}
                       </div>
+                      {items.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-3 rounded-lg text-sm hover:bg-accent cursor-pointer active:scale-98 transition-transform touch-manipulation ${
+                            !notification.read ? 'bg-muted' : ''
+                          }`}
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-8 w-8 shrink-0">
+                              <AvatarImage src={notification.actor?.avatar_url || undefined} />
+                              <AvatarFallback>
+                                {getNotificationIcon(notification.type)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="line-clamp-2">{getNotificationContent(notification)}</div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  )
                 ))}
               </div>
             </ScrollArea>
