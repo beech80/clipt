@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Flag, MoreVertical, Crown, Shield } from 'lucide-react';
+import { Flag, MoreVertical, Shield } from 'lucide-react';
 import { useReportDialog } from '@/hooks/use-report-dialog';
 import type { StreamChatMessage } from '@/types/chat';
 import { toast } from 'sonner';
@@ -76,7 +76,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const isOwnMessage = user?.id === message.user_id;
   const timeAgo = formatDistanceToNow(new Date(message.created_at), { addSuffix: true });
-  const isModerator = message.user?.is_moderator || false;
+  const isModerator = message.profiles?.is_moderator || false;
 
   return (
     <motion.div
