@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Post as PostType } from "@/types/post";
 import { SEO } from "@/components/SEO";
 import { BackButton } from "@/components/ui/back-button";
+import { Calendar, MessageSquare, Share2, User } from "lucide-react";
 
 const Post = () => {
   const { id } = useParams();
@@ -42,27 +43,43 @@ const Post = () => {
   if (error) {
     toast.error("Failed to load post");
     return (
-      <div className="container mx-auto max-w-2xl py-8">
-        <BackButton />
-        <div className="p-4">Failed to load post</div>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto max-w-2xl px-4 py-6">
+          <BackButton />
+          <div className="mt-8 text-center">
+            <h2 className="text-xl font-semibold text-red-500">Failed to load post</h2>
+            <p className="mt-2 text-muted-foreground">Please try again later</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-2xl py-8">
-        <BackButton />
-        <Skeleton className="h-[600px] w-full" />
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto max-w-2xl px-4 py-6">
+          <BackButton />
+          <div className="mt-4 space-y-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-[400px] w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!post) {
     return (
-      <div className="container mx-auto max-w-2xl py-8">
-        <BackButton />
-        <div className="p-4">Post not found</div>
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto max-w-2xl px-4 py-6">
+          <BackButton />
+          <div className="mt-8 text-center">
+            <h2 className="text-xl font-semibold">Post not found</h2>
+            <p className="mt-2 text-muted-foreground">This post may have been deleted or is no longer available</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -87,6 +104,12 @@ const Post = () => {
     ]
   };
 
+  const formattedDate = new Date(post.created_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
   return (
     <>
       <SEO 
@@ -96,10 +119,25 @@ const Post = () => {
         type="article"
         structuredData={structuredData}
       />
-      <div className="container mx-auto max-w-2xl py-8">
-        <BackButton />
-        <div className="mt-4">
-          <PostItem post={post} />
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto max-w-2xl px-4 py-6">
+          <div className="mb-6 flex items-center justify-between">
+            <BackButton />
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <div className="flex items-center space-x-1">
+                <Calendar className="h-4 w-4" />
+                <span>{formattedDate}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <User className="h-4 w-4" />
+                <span>{post.profiles?.username || "Anonymous"}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="gaming-card">
+            <PostItem post={post} />
+          </div>
         </div>
       </div>
     </>
