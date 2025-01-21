@@ -1,5 +1,3 @@
-import { supabase } from "@/lib/supabase";
-
 export const getOptimizedImageUrl = (url: string, options: {
   width?: number;
   height?: number;
