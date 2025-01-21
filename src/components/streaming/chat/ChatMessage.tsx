@@ -101,7 +101,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             <span className="font-semibold text-sm">
               {message.profiles?.username}
             </span>
-            {message.profiles?.is_moderator && (
+            {message.user?.is_moderator && (
               <Badge variant="secondary" className="px-1 py-0">
                 <Shield className="h-3 w-3 mr-1" />
                 Mod
