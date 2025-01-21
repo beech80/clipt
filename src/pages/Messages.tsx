@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ChatList } from "@/components/messages/ChatList";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
+import { ChatUser } from "@/types/message";
 
 export default function Messages() {
   const { user } = useAuth();
@@ -21,17 +22,36 @@ export default function Messages() {
       const { data, error } = await supabase
         .from('messages')
         .select(`
-          id,
-          content,
-          created_at,
-          sender:sender_id(id, username, avatar_url),
-          receiver:receiver_id(id, username, avatar_url)
+          distinct on (sender_id, receiver_id) *,
+          sender:profiles!messages_sender_id_fkey (
+            id,
+            username,
+            avatar_url
+          ),
+          receiver:profiles!messages_receiver_id_fkey (
+            id,
+            username,
+            avatar_url
+          )
         `)
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      // Transform the data into ChatUser format
+      const chatUsers: ChatUser[] = data.map(msg => {
+        const otherUser = msg.sender_id === user.id ? msg.receiver : msg.sender;
+        return {
+          id: otherUser.id,
+          username: otherUser.username,
+          avatar_url: otherUser.avatar_url,
+          last_message: msg.content,
+          unread_count: 0 // You might want to calculate this
+        };
+      });
+
+      return chatUsers;
     },
     enabled: !!user,
   });
@@ -78,7 +98,6 @@ export default function Messages() {
                 chats={chats || []}
                 selectedChat={selectedChat}
                 onSelectChat={setSelectedChat}
-                currentUser={user}
               />
             )}
           </ScrollArea>
@@ -89,10 +108,10 @@ export default function Messages() {
           {selectedChat ? (
             <>
               <ScrollArea className="flex-1 p-4">
-                <MessageList chatId={selectedChat} />
+                <MessageList messages={[]} />
               </ScrollArea>
               <div className="p-4 border-t border-border/50">
-                <MessageInput chatId={selectedChat} />
+                <MessageInput onSendMessage={() => {}} />
               </div>
             </>
           ) : (
