@@ -51,9 +51,9 @@ function App() {
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <AuthProvider>
-            <MessagesProvider>
-              <ErrorBoundary>
+          <ErrorBoundary>
+            <AuthProvider>
+              <MessagesProvider>
                 <ReportDialogProvider>
                   <Routes>
                     <Route path="/" element={<Index />} />
@@ -86,9 +86,9 @@ function App() {
                   </Routes>
                   <Toaster />
                 </ReportDialogProvider>
-              </ErrorBoundary>
-            </MessagesProvider>
-          </AuthProvider>
+              </MessagesProvider>
+            </AuthProvider>
+          </ErrorBoundary>
         </Router>
       </QueryClientProvider>
     </React.StrictMode>
