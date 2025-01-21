@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { BackButton } from "@/components/ui/back-button";
 import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
 
 const Streaming = () => {
   const [isLive, setIsLive] = useState(false);
@@ -23,8 +24,8 @@ const Streaming = () => {
   if (!user) {
     return (
       <div className="container mx-auto p-4">
-        <Card className="p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Please Login</h2>
+        <Card className="p-8 text-center space-y-4 bg-card/50 backdrop-blur-sm border border-border/50">
+          <h2 className="text-2xl font-bold">Please Login</h2>
           <p className="text-muted-foreground">
             You need to be logged in to access streaming features.
           </p>
@@ -38,16 +39,20 @@ const Streaming = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <div className="flex justify-between items-center">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="container mx-auto p-4 space-y-6"
+    >
+      <div className="flex justify-between items-center bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4">
         <div className="flex items-center gap-2">
           <BackButton />
-          <h1 className="text-2xl font-bold">Streaming</h1>
+          <h1 className="text-2xl font-bold">Streaming Studio</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2 hover:bg-accent">
                 <Calendar className="h-4 w-4" />
                 Schedule Stream
               </Button>
@@ -59,7 +64,7 @@ const Streaming = () => {
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2 hover:bg-accent">
                 <Settings className="h-4 w-4" />
                 Stream Settings
               </Button>
@@ -72,7 +77,7 @@ const Streaming = () => {
           <Button 
             onClick={() => setIsLive(!isLive)}
             variant={isLive ? "destructive" : "default"}
-            className="gap-2"
+            className="gap-2 min-w-[120px] transition-all duration-300"
           >
             <Video className="h-4 w-4" />
             {isLive ? "End Stream" : "Go Live"}
@@ -81,8 +86,12 @@ const Streaming = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 space-y-6">
-          <Card className="overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="lg:col-span-3 space-y-6"
+        >
+          <Card className="overflow-hidden border border-border/50 rounded-xl">
             <StreamPlayer 
               isLive={isLive}
               autoplay={true}
@@ -91,7 +100,7 @@ const Streaming = () => {
           </Card>
           
           {!isLive && (
-            <Card className="p-6">
+            <Card className="p-6 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl">
               <StreamForm
                 title={streamData.title}
                 description={streamData.description}
@@ -104,7 +113,7 @@ const Streaming = () => {
           )}
           
           {isLive && (
-            <Card className="p-6">
+            <Card className="p-6 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl">
               <StreamControls 
                 userId={user.id}
                 isLive={isLive}
@@ -112,19 +121,23 @@ const Streaming = () => {
               />
             </Card>
           )}
-        </div>
+        </motion.div>
         
-        <div className="lg:col-span-1">
-          <Card className="h-full">
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="lg:col-span-1"
+        >
+          <Card className="h-full bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl">
             <StreamChat 
               streamId={user.id} 
               isLive={isLive} 
               chatEnabled={true}
             />
           </Card>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
