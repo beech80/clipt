@@ -64,64 +64,33 @@ export default {
           900: "#312e81",
         },
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
       keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+        "slide-in": {
+          "0%": { transform: "translateX(-100%)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
         },
-        glow: {
-          "0%, 100%": {
-            boxShadow: "0 0 15px rgba(155, 135, 245, 0.5)",
-          },
-          "50%": {
-            boxShadow: "0 0 30px rgba(155, 135, 245, 0.8)",
-          },
-        },
-        gradient: {
-          "0%": { backgroundPosition: "200% 200%" },
-          "100%": { backgroundPosition: "0% 0%" },
-        },
-        "scale-up": {
-          "0%": { transform: "scale(0)", opacity: "0" },
-          "50%": { transform: "scale(1.2)", opacity: "0.5" },
-          "100%": { transform: "scale(1)", opacity: "0" },
-        },
-        "game-slide": {
+        "slide-in-right": {
           "0%": { transform: "translateX(100%)", opacity: "0" },
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
-        "game-fade": {
-          "0%": { opacity: "0", transform: "scale(0.95)" },
-          "100%": { opacity: "1", transform: "scale(1)" },
+        "neon-pulse": {
+          "0%, 100%": {
+            textShadow: "0 0 7px #fff, 0 0 10px #fff, 0 0 21px #fff, 0 0 42px var(--primary), 0 0 82px var(--primary), 0 0 92px var(--primary), 0 0 102px var(--primary), 0 0 151px var(--primary)",
+          },
+          "50%": {
+            textShadow: "0 0 4px #fff, 0 0 7px #fff, 0 0 18px #fff, 0 0 39px var(--primary), 0 0 79px var(--primary), 0 0 89px var(--primary), 0 0 99px var(--primary), 0 0 148px var(--primary)",
+          },
         },
-        "emote-float": {
-          "0%": { transform: "translateY(0px)" },
-          "50%": { transform: "translateY(-20px)" },
-          "100%": { transform: "translateY(0px)" },
-        },
-        "power-pulse": {
-          "0%, 100%": { transform: "scale(1)" },
-          "50%": { transform: "scale(1.1)", filter: "brightness(1.2)" },
-        }
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        glow: "glow 2s ease-in-out infinite",
-        "scale-up": "scale-up 0.6s ease-out",
-        "game-slide": "game-slide 0.4s ease-out",
-        "game-fade": "game-fade 0.3s ease-out",
-        "emote-float": "emote-float 2s ease-in-out infinite",
-        "power-pulse": "power-pulse 2s ease-in-out infinite"
+        "fade-in": "fade-in 0.6s ease-out",
+        "slide-in": "slide-in 0.6s ease-out",
+        "slide-in-right": "slide-in-right 0.6s ease-out",
+        "neon-pulse": "neon-pulse 1.5s ease-in-out infinite alternate",
       },
     },
   },

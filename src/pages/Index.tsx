@@ -12,17 +12,19 @@ import { useQueryErrorResetBoundary } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ThemeSelector } from "@/components/profile/ThemeSelector";
+import { useTheme } from "@/hooks/use-theme";
 
 const LoadingSkeleton = () => (
-  <div className="space-y-6">
-    <Skeleton className="h-[200px] w-full rounded-lg" />
+  <div className="space-y-6 animate-pulse">
+    <Skeleton className="h-[200px] w-full rounded-lg bg-gaming-600/20" />
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-4">
-        <Skeleton className="h-[400px] w-full rounded-lg" />
-        <Skeleton className="h-[400px] w-full rounded-lg" />
+        <Skeleton className="h-[400px] w-full rounded-lg bg-gaming-600/20" />
+        <Skeleton className="h-[400px] w-full rounded-lg bg-gaming-600/20" />
       </div>
       <div className="lg:col-span-1">
-        <Skeleton className="h-[800px] w-full rounded-lg" />
+        <Skeleton className="h-[800px] w-full rounded-lg bg-gaming-600/20" />
       </div>
     </div>
   </div>
@@ -32,6 +34,7 @@ export default function Index() {
   const { user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   const { reset } = useQueryErrorResetBoundary();
+  const { theme } = useTheme();
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -62,16 +65,18 @@ export default function Index() {
       <main 
         role="main"
         aria-label="Home page content"
-        className="min-h-screen bg-gradient-to-b from-gaming-900 to-gaming-800"
+        className={`min-h-screen bg-gradient-to-b from-gaming-900 to-gaming-800 transition-colors duration-300 ${
+          theme === 'dark' ? 'dark' : ''
+        }`}
       >
         <div className="container mx-auto px-4 py-4 max-w-7xl">
-          <MainNav className="mb-6" />
+          <MainNav className="mb-6 animate-fade-in" />
           
           <div className={`mt-8 ${isMobile ? 'space-y-6' : 'space-y-8'}`}>
             {!user && <WelcomeSection />}
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 animate-slide-in">
                 <ErrorBoundary
                   fallback={
                     <Alert variant="destructive" className="mb-4">
@@ -92,10 +97,15 @@ export default function Index() {
                   <MainContent />
                 </ErrorBoundary>
               </div>
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-1 animate-slide-in-right">
                 <ErrorBoundary>
                   <SidebarContent />
                 </ErrorBoundary>
+                {user && (
+                  <div className="mt-6">
+                    <ThemeSelector userId={user.id} currentTheme={theme} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
