@@ -1,6 +1,6 @@
+import { ReactNode } from "react";
 import { ReportDialog } from "./ReportDialog";
 import { useReportDialog } from "@/hooks/use-report-dialog";
-import { ReactNode } from "react";
 
 interface ReportDialogProviderProps {
   children: ReactNode;
