@@ -13,10 +13,12 @@ export interface StreamChatMessage {
   user: {
     username: string | null;
     avatar_url: string | null;
+    is_moderator?: boolean;
   } | null;
   profiles: {
     username: string;
     avatar_url: string;
+    is_moderator?: boolean; // Added here since it comes from profiles table
   };
 }
 
