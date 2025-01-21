@@ -3,7 +3,18 @@ import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useEmotes } from '@/contexts/EmoteContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Flag, MoreVertical } from 'lucide-react';
+import { useReportDialog } from '@/hooks/use-report-dialog';
 import type { StreamChatMessage } from '@/types/chat';
+import { toast } from 'sonner';
 
 interface ChatMessageProps {
   message: StreamChatMessage;
@@ -19,6 +30,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   onDelete 
 }) => {
   const { emotes } = useEmotes();
+  const { user } = useAuth();
+  const { openReportDialog } = useReportDialog();
   
   const renderMessageContent = (content: string) => {
     const words = content.split(' ');
@@ -45,6 +58,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     });
   };
 
+  const handleReport = () => {
+    openReportDialog(message.id, 'chat_message');
+    toast.success('Report submitted successfully');
+  };
+
   if (message.is_deleted) {
     return (
       <div className="px-4 py-2 text-sm text-muted-foreground italic">
@@ -52,6 +70,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       </div>
     );
   }
+
+  const isOwnMessage = user?.id === message.user_id;
 
   return (
     <motion.div
@@ -74,7 +94,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               {message.profiles?.username}
             </span>
             <span className="text-xs text-muted-foreground">
-              {new Date().toLocaleTimeString()}
+              {new Date(message.created_at).toLocaleTimeString()}
             </span>
           </div>
           
@@ -83,14 +103,38 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           </div>
         </div>
 
-        {isModeratorView && onDelete && (
-          <button
-            onClick={() => onDelete(message.id)}
-            className="opacity-0 group-hover:opacity-100 text-xs text-red-500 hover:text-red-600 transition-opacity"
-          >
-            Delete
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {isModeratorView && onDelete && (
+            <Button
+              onClick={() => onDelete(message.id)}
+              variant="ghost"
+              size="sm"
+              className="opacity-0 group-hover:opacity-100 text-xs text-red-500 hover:text-red-600 transition-opacity"
+            >
+              Delete
+            </Button>
+          )}
+
+          {!isOwnMessage && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleReport}>
+                  <Flag className="h-4 w-4 mr-2" />
+                  Report Message
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
     </motion.div>
   );
