@@ -76,6 +76,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
   const isOwnMessage = user?.id === message.user_id;
   const timeAgo = formatDistanceToNow(new Date(message.created_at), { addSuffix: true });
+  const isModerator = message.user?.is_moderator || false;
 
   return (
     <motion.div
@@ -101,7 +102,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             <span className="font-semibold text-sm">
               {message.profiles?.username}
             </span>
-            {message.profiles?.is_moderator && (
+            {isModerator && (
               <Badge variant="secondary" className="px-1 py-0">
                 <Shield className="h-3 w-3 mr-1" />
                 Mod
@@ -111,10 +112,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               {timeAgo}
             </span>
           </div>
-          
-          <div className="text-sm break-words">
-            {renderMessageContent(message.message)}
-          </div>
+        </div>
+        
+        <div className="text-sm break-words">
+          {renderMessageContent(message.message)}
         </div>
 
         <div className="flex items-center gap-2">
