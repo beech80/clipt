@@ -10,6 +10,7 @@ import { Calendar, Settings, Video } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { BackButton } from "@/components/ui/back-button";
+import { Card } from "@/components/ui/card";
 
 const Streaming = () => {
   const [isLive, setIsLive] = useState(false);
@@ -19,24 +20,35 @@ const Streaming = () => {
     description: "",
   });
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Please Login</h2>
+          <p className="text-muted-foreground">
+            You need to be logged in to access streaming features.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   const handleStreamUpdate = () => {
     // Handle stream update logic
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
+    <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <BackButton />
           <h1 className="text-2xl font-bold">Streaming</h1>
         </div>
-        <div className="space-x-2">
+        <div className="flex items-center gap-2">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <Calendar className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="gap-2">
+                <Calendar className="h-4 w-4" />
                 Schedule Stream
               </Button>
             </DialogTrigger>
@@ -47,8 +59,8 @@ const Streaming = () => {
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <Settings className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="gap-2">
+                <Settings className="h-4 w-4" />
                 Stream Settings
               </Button>
             </DialogTrigger>
@@ -57,28 +69,59 @@ const Streaming = () => {
             </DialogContent>
           </Dialog>
 
-          <Button onClick={() => setIsLive(!isLive)}>
-            <Video className="h-4 w-4 mr-2" />
+          <Button 
+            onClick={() => setIsLive(!isLive)}
+            variant={isLive ? "destructive" : "default"}
+            className="gap-2"
+          >
+            <Video className="h-4 w-4" />
             {isLive ? "End Stream" : "Go Live"}
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <div className="lg:col-span-3 space-y-4">
-          <StreamPlayer />
-          {!isLive && (
-            <StreamForm
-              title={streamData.title}
-              description={streamData.description}
-              onTitleChange={(title) => setStreamData({ ...streamData, title })}
-              onDescriptionChange={(description) => setStreamData({ ...streamData, description })}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 space-y-6">
+          <Card className="overflow-hidden">
+            <StreamPlayer 
+              isLive={isLive}
+              autoplay={true}
+              controls={true}
             />
+          </Card>
+          
+          {!isLive && (
+            <Card className="p-6">
+              <StreamForm
+                title={streamData.title}
+                description={streamData.description}
+                onTitleChange={(title) => setStreamData({ ...streamData, title })}
+                onDescriptionChange={(description) => 
+                  setStreamData({ ...streamData, description })
+                }
+              />
+            </Card>
           )}
-          {isLive && <StreamControls onStreamUpdate={handleStreamUpdate} />}
+          
+          {isLive && (
+            <Card className="p-6">
+              <StreamControls 
+                userId={user.id}
+                isLive={isLive}
+                onStreamUpdate={handleStreamUpdate}
+              />
+            </Card>
+          )}
         </div>
+        
         <div className="lg:col-span-1">
-          <StreamChat streamId={user.id} isLive={isLive} chatEnabled={true} />
+          <Card className="h-full">
+            <StreamChat 
+              streamId={user.id} 
+              isLive={isLive} 
+              chatEnabled={true}
+            />
+          </Card>
         </div>
       </div>
     </div>
