@@ -8,9 +8,16 @@ import type { StreamChatMessage } from '@/types/chat';
 interface ChatMessageProps {
   message: StreamChatMessage;
   isHighlighted?: boolean;
+  isModeratorView?: boolean;
+  onDelete?: (messageId: string) => void;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isHighlighted }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ 
+  message, 
+  isHighlighted,
+  isModeratorView,
+  onDelete 
+}) => {
   const { emotes } = useEmotes();
   
   const renderMessageContent = (content: string) => {
@@ -51,7 +58,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isHighlighted
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "px-4 py-2 hover:bg-gaming-400/5 transition-colors group",
+        "px-4 py-2 hover:bg-gaming-400/5 transition-colors group relative",
         isHighlighted && "bg-gaming-400/10"
       )}
     >
@@ -75,6 +82,15 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isHighlighted
             {renderMessageContent(message.message)}
           </div>
         </div>
+
+        {isModeratorView && onDelete && (
+          <button
+            onClick={() => onDelete(message.id)}
+            className="opacity-0 group-hover:opacity-100 text-xs text-red-500 hover:text-red-600 transition-opacity"
+          >
+            Delete
+          </button>
+        )}
       </div>
     </motion.div>
   );
