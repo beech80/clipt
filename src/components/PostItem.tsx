@@ -32,33 +32,38 @@ const PostItem = ({ post }: PostItemProps) => {
   const username = post.profiles?.username || 'Anonymous';
 
   return (
-    <div className="relative h-full w-full bg-[#1A1F2C] touch-none select-none">
+    <div className="relative w-full bg-[#1A1F2C] rounded-lg overflow-hidden shadow-lg transition-shadow hover:shadow-xl">
       <div className="absolute inset-0 flex flex-col">
-        {/* Simplified Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gaming-600/30 bg-gaming-800/90">
-          <span className="text-lg font-bold text-gaming-100">{username}</span>
-          <div className="flex items-center space-x-4">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gaming-600/20 backdrop-blur-sm bg-gaming-800/80">
+          <div className="flex items-center space-x-3">
+            <span className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-colors">
+              {username}
+            </span>
+          </div>
+          <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-1">
               <Heart className="h-5 w-5 text-red-500" />
-              <span className="text-sm font-bold text-gaming-100">
+              <span className="text-sm font-medium text-gaming-100">
                 {post.likes_count || 0}
               </span>
             </div>
             <div className="flex items-center space-x-1">
               <MessageSquare className="h-5 w-5 text-gaming-400" />
-              <span className="text-sm font-bold text-gaming-100">
+              <span className="text-sm font-medium text-gaming-100">
                 {commentsCount}
               </span>
             </div>
             <div className="flex items-center space-x-1">
               <Trophy className="h-5 w-5 text-yellow-500" />
-              <span className="text-sm font-bold text-gaming-100">
+              <span className="text-sm font-medium text-gaming-100">
                 {post.clip_votes?.[0]?.count || 0}
               </span>
             </div>
           </div>
         </div>
 
+        {/* Content */}
         <div className="flex-1 relative">
           <PostContent
             imageUrl={post.image_url}
@@ -67,6 +72,7 @@ const PostItem = ({ post }: PostItemProps) => {
           />
         </div>
 
+        {/* Interactions */}
         <PostInteractions 
           post={post} 
           commentsCount={commentsCount} 

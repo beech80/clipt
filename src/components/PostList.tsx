@@ -14,17 +14,17 @@ import { useAuth } from "@/contexts/AuthContext";
 const POSTS_PER_PAGE = 5;
 
 const PostSkeleton = () => (
-  <div className="relative h-[calc(100vh-200px)] sm:h-[500px] bg-[#1A1F2C]">
-    <div className="p-3 sm:p-4 border-b border-[#2A2E3B]">
+  <div className="relative h-[calc(100vh-200px)] sm:h-[500px] bg-[#1A1F2C] rounded-lg overflow-hidden shadow-lg">
+    <div className="p-4 border-b border-gaming-600/20">
       <div className="flex items-center space-x-4">
-        <Skeleton className="h-12 w-12 rounded-full" />
+        <Skeleton className="h-10 w-10 rounded-full" />
         <div className="space-y-2">
-          <Skeleton className="h-4 w-[200px]" />
-          <Skeleton className="h-4 w-[100px]" />
+          <Skeleton className="h-4 w-[150px]" />
+          <Skeleton className="h-3 w-[100px]" />
         </div>
       </div>
     </div>
-    <div className="h-[calc(100%-88px)]">
+    <div className="h-[calc(100%-76px)]">
       <Skeleton className="h-full w-full" />
     </div>
   </div>
@@ -49,7 +49,6 @@ const PostList = () => {
   } = useInfiniteQuery({
     queryKey: ['posts', user?.id],
     queryFn: async ({ pageParam = 0 }) => {
-      // First, if user is logged in, get the list of followed user IDs
       let followedUserIds: string[] = [];
       if (user) {
         const { data: followsData } = await supabase
@@ -60,7 +59,6 @@ const PostList = () => {
         followedUserIds = followsData?.map(follow => follow.following_id) || [];
       }
 
-      // Then query posts
       const query = supabase
         .from('posts')
         .select(`
@@ -85,7 +83,6 @@ const PostList = () => {
         .order('created_at', { ascending: false })
         .is('is_published', true);
 
-      // If user is logged in, filter by followed users
       if (user && followedUserIds.length > 0) {
         query.in('user_id', followedUserIds);
       }
@@ -98,8 +95,8 @@ const PostList = () => {
     getNextPageParam: (lastPage, pages) => {
       return lastPage && lastPage.length === POSTS_PER_PAGE ? pages.length : undefined;
     },
-    gcTime: 1000 * 60 * 30, // Keep cache for 30 minutes
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
@@ -112,8 +109,8 @@ const PostList = () => {
 
   if (status === "pending") {
     return (
-      <div className="space-y-4 touch-none px-4 sm:px-0">
-        {[...Array(3)].map((_, i) => (
+      <div className="space-y-6 px-4 sm:px-0 max-w-3xl mx-auto">
+        {[...Array(2)].map((_, i) => (
           <PostSkeleton key={i} />
         ))}
       </div>
@@ -123,7 +120,7 @@ const PostList = () => {
   if (status === "error") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
-        <Alert variant="destructive" className="mb-4">
+        <Alert variant="destructive" className="mb-4 max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             {error?.message || "Error loading posts"}
@@ -144,11 +141,11 @@ const PostList = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
         {user ? (
-          <p className="text-muted-foreground text-center">
+          <p className="text-muted-foreground text-center max-w-md">
             Follow some creators to see their posts here!
           </p>
         ) : (
-          <p className="text-muted-foreground text-center">
+          <p className="text-muted-foreground text-center max-w-md">
             Sign in to see personalized content from creators you follow!
           </p>
         )}
@@ -157,20 +154,22 @@ const PostList = () => {
   }
 
   return (
-    <div className={`post-container relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
-                    overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none px-4 sm:px-0`}>
-      {data?.pages.map((page) => (
-        page?.map((post) => (
-          <div key={post.id} className="snap-start mb-4">
-            <PostItem post={post} />
+    <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
+                    overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none`}>
+      <div className="space-y-6 px-4 sm:px-0 max-w-3xl mx-auto pb-6">
+        {data?.pages.map((page) => (
+          page?.map((post) => (
+            <div key={post.id} className="snap-start">
+              <PostItem post={post} />
+            </div>
+          ))
+        ))}
+        {hasNextPage && (
+          <div ref={ref} className="h-20 flex items-center justify-center">
+            {isFetchingNextPage && <PostSkeleton />}
           </div>
-        ))
-      ))}
-      {hasNextPage && (
-        <div ref={ref} className="h-20 flex items-center justify-center">
-          {isFetchingNextPage && <PostSkeleton />}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
