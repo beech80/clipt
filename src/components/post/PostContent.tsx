@@ -1,160 +1,117 @@
-import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-import { Play, Pause, Volume2, VolumeX, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getOptimizedImageUrl, preloadImage, getVideoThumbnail } from "@/utils/mediaOptimization";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export interface PostContentProps {
-  videoUrl?: string | null;
+interface PostContentProps {
   imageUrl?: string | null;
-  postId?: string;
-  onLike?: () => void;
+  videoUrl?: string | null;
+  postId: string;
 }
 
-const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [showLikeAnimation, setShowLikeAnimation] = useState(false);
+const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [videoThumbnail, setVideoThumbnail] = useState<string>('');
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
+  useEffect(() => {
+    const loadMedia = async () => {
+      try {
+        if (imageUrl) {
+          const optimizedUrl = getOptimizedImageUrl(imageUrl, {
+            width: 1080,
+            quality: 80,
+            format: 'webp'
+          });
+          await preloadImage(optimizedUrl);
+        } else if (videoUrl && !videoThumbnail) {
+          const thumbnail = await getVideoThumbnail(videoUrl);
+          setVideoThumbnail(thumbnail);
+        }
+      } catch (error) {
+        console.error('Error loading media:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsPlaying(!isPlaying);
-    }
-  };
+    };
 
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
+    loadMedia();
+  }, [imageUrl, videoUrl, videoThumbnail]);
 
-  const handleVideoClick = () => {
-    togglePlay();
-  };
-
-  const handleDoubleTap = () => {
-    if (onLike) {
-      onLike();
-      setShowLikeAnimation(true);
-      setTimeout(() => setShowLikeAnimation(false), 1000);
-    }
+  const handleVideoIntersection = (entries: IntersectionObserverEntry[]) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const video = entry.target as HTMLVideoElement;
+        video.play().catch(console.error);
+        setIsVideoPlaying(true);
+      } else {
+        const video = entry.target as HTMLVideoElement;
+        video.pause();
+        setIsVideoPlaying(false);
+      }
+    });
   };
 
   useEffect(() => {
-    const updateProgress = () => {
-      if (videoRef.current) {
-        const currentTime = videoRef.current.currentTime;
-        const duration = videoRef.current.duration;
-        setProgress((currentTime / duration) * 100);
-      }
-    };
+    const videoElement = document.querySelector(`#video-${postId}`);
+    if (!videoElement) return;
 
-    const videoElement = videoRef.current;
-    if (videoElement) {
-      videoElement.addEventListener("timeupdate", updateProgress);
-    }
+    const observer = new IntersectionObserver(handleVideoIntersection, {
+      threshold: 0.5
+    });
+
+    observer.observe(videoElement);
 
     return () => {
-      if (videoElement) {
-        videoElement.removeEventListener("timeupdate", updateProgress);
-      }
+      observer.disconnect();
     };
-  }, [videoRef]);
+  }, [postId]);
 
-  return (
-    <div 
-      ref={containerRef} 
-      className="relative w-full h-full group"
-      onDoubleClick={handleDoubleTap}
-    >
-      {videoUrl ? (
-        <>
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            className={cn(
-              "w-full h-full object-cover",
-              !isVideoLoaded && "invisible"
-            )}
-            playsInline
-            loop
-            muted={isMuted}
-            onClick={handleVideoClick}
-            onLoadedData={() => setIsVideoLoaded(true)}
-          />
-          {!isVideoLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            </div>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-            <Progress value={progress} className="h-1 mb-4" />
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={togglePlay}
-                className="text-white hover:text-white/80"
-              >
-                {isPlaying ? (
-                  <Pause className="h-6 w-6" />
-                ) : (
-                  <Play className="h-6 w-6" />
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleMute}
-                className="text-white hover:text-white/80"
-              >
-                {isMuted ? (
-                  <VolumeX className="h-6 w-6" />
-                ) : (
-                  <Volume2 className="h-6 w-6" />
-                )}
-              </Button>
-            </div>
+  if (isLoading) {
+    return <Skeleton className="w-full h-full" />;
+  }
+
+  if (imageUrl) {
+    return (
+      <img
+        src={getOptimizedImageUrl(imageUrl, {
+          width: 1080,
+          quality: 80,
+          format: 'webp'
+        })}
+        alt="Post content"
+        className="w-full h-full object-cover"
+        loading="lazy"
+      />
+    );
+  }
+
+  if (videoUrl) {
+    return (
+      <div className="relative w-full h-full">
+        <video
+          id={`video-${postId}`}
+          src={videoUrl}
+          className="w-full h-full object-cover"
+          loop
+          muted
+          playsInline
+          poster={videoThumbnail}
+          preload="metadata"
+        />
+        {!isVideoPlaying && videoThumbnail && (
+          <div className="absolute inset-0">
+            <img
+              src={videoThumbnail}
+              alt="Video thumbnail"
+              className="w-full h-full object-cover"
+            />
           </div>
-        </>
-      ) : imageUrl ? (
-        <>
-          <img
-            src={imageUrl}
-            alt="Post content"
-            className={cn(
-              "w-full h-full object-cover",
-              !isImageLoaded && "invisible"
-            )}
-            onLoad={() => setIsImageLoaded(true)}
-            loading="lazy"
-          />
-          {!isImageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            </div>
-          )}
-        </>
-      ) : null}
-      
-      {showLikeAnimation && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Heart className="text-red-500 h-24 w-24 animate-like" fill="currentColor" />
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default PostContent;
