@@ -19,7 +19,7 @@ interface ChatMessageProps {
   isHighlighted?: boolean;
 }
 
-const ChatMessage = ({ message, isHighlighted }: ChatMessageProps) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isHighlighted }) => {
   const { emotes } = useEmotes();
   
   const renderMessageContent = (content: string) => {
