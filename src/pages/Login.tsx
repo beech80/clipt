@@ -16,9 +16,7 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const { error } = await signIn(email, password);
-      if (error) throw error;
-      toast.success("Successfully signed in!");
+      await signIn(email, password);
     } catch (err) {
       const error = err as AuthError;
       toast.error(error.message);
@@ -31,9 +29,7 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const { error } = await signUp(email, password);
-      if (error) throw error;
-      toast.success("Check your email to confirm your account!");
+      await signUp(email, password);
     } catch (err) {
       const error = err as AuthError;
       toast.error(error.message);
