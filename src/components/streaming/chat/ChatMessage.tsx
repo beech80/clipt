@@ -1,39 +1,50 @@
-import { useState } from "react";
-import { format } from "date-fns";
-import { MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import React from 'react';
+import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { toast } from "sonner";
-import type { StreamChatMessage } from "@/types/chat";
+import { cn } from "@/lib/utils";
+import { useEmotes } from '@/contexts/EmoteContext';
 
 interface ChatMessageProps {
-  message: StreamChatMessage;
-  onDelete?: (messageId: string) => void;
-  isModeratorView?: boolean;
+  message: {
+    id: string;
+    content: string;
+    user_id: string;
+    profiles?: {
+      username: string;
+      avatar_url: string;
+    };
+    is_deleted?: boolean;
+    deleted_by?: string;
+  };
+  isHighlighted?: boolean;
 }
 
-export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDelete = async () => {
-    if (!onDelete) return;
+const ChatMessage = ({ message, isHighlighted }: ChatMessageProps) => {
+  const { emotes } = useEmotes();
+  
+  const renderMessageContent = (content: string) => {
+    const words = content.split(' ');
     
-    try {
-      setIsDeleting(true);
-      await onDelete(message.id);
-      toast.success("Message deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete message");
-      console.error("Error deleting message:", error);
-    } finally {
-      setIsDeleting(false);
-    }
+    return words.map((word, index) => {
+      const emote = emotes.find(e => `:${e.name}:` === word);
+      
+      if (emote) {
+        return (
+          <motion.img
+            key={`${index}-${emote.id}`}
+            src={emote.url}
+            alt={emote.name}
+            className="inline-block w-6 h-6 mx-1 align-middle"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            whileHover={{ scale: 1.2 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+          />
+        );
+      }
+      
+      return <span key={index}>{word} </span>;
+    });
   };
 
   if (message.is_deleted) {
@@ -45,51 +56,37 @@ export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageP
   }
 
   return (
-    <div className="group px-4 py-2 hover:bg-muted/50 flex items-start gap-2">
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={message.profiles.avatar_url} />
-        <AvatarFallback>
-          {message.profiles.username.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm">
-            {message.profiles.username}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {format(new Date(message.created_at), 'HH:mm')}
-          </span>
-        </div>
-        
-        <p className="text-sm break-words">
-          {message.message}
-        </p>
-      </div>
-
-      {(onDelete && (isModeratorView || message.user_id === message.user_id)) && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="opacity-0 group-hover:opacity-100"
-              disabled={isDeleting}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={handleDelete}
-              className="text-destructive"
-            >
-              Delete Message
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "px-4 py-2 hover:bg-gaming-400/5 transition-colors group",
+        isHighlighted && "bg-gaming-400/10"
       )}
-    </div>
+    >
+      <div className="flex items-start gap-2">
+        <Avatar className="w-6 h-6">
+          <AvatarImage src={message.profiles?.avatar_url} />
+          <AvatarFallback>{message.profiles?.username?.[0]}</AvatarFallback>
+        </Avatar>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="font-medium text-sm text-gaming-400">
+              {message.profiles?.username}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {new Date().toLocaleTimeString()}
+            </span>
+          </div>
+          
+          <div className="text-sm mt-1 break-words">
+            {renderMessageContent(message.content)}
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
-}
+};
+
+export default ChatMessage;
