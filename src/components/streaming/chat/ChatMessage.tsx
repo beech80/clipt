@@ -32,6 +32,15 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   const { user } = useAuth();
   const { openReportDialog } = useReportDialog();
   
+  // Early return for deleted messages
+  if (message.is_deleted) {
+    return (
+      <div className="px-4 py-2 text-sm text-muted-foreground italic">
+        Message deleted
+      </div>
+    );
+  }
+
   const renderMessageContent = (content: string) => {
     const words = content.split(' ');
     return words.map((word, index) => {
@@ -66,16 +75,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     toast.success('Report submitted successfully');
   };
 
-  if (message.is_deleted) {
-    return (
-      <div className="px-4 py-2 text-sm text-muted-foreground italic">
-        Message deleted
-      </div>
-    );
-  }
-
   const isOwnMessage = user?.id === message.user_id;
   const timeAgo = formatDistanceToNow(new Date(message.created_at), { addSuffix: true });
+  const isModerator = message.profiles?.is_moderator ?? false;
 
   return (
     <motion.div
@@ -90,7 +92,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         <Avatar className="h-8 w-8">
           <AvatarImage src={message.profiles?.avatar_url} />
           <AvatarFallback>
-            {message.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+            {message.profiles?.username?.[0]?.toUpperCase() || 'U'}
           </AvatarFallback>
         </Avatar>
       </div>
@@ -101,7 +103,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             <span className="font-semibold text-sm">
               {message.profiles?.username}
             </span>
-            {message.profiles?.is_moderator && (
+            {isModerator && (
               <Badge variant="secondary" className="px-1 py-0">
                 <Shield className="h-3 w-3 mr-1" />
                 Mod
