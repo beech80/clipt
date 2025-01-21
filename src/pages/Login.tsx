@@ -38,14 +38,8 @@ const Login = () => {
       if (event === 'PASSWORD_RECOVERY') {
         navigate('/update-password');
       }
-      if (event === 'USER_DELETED' as any) {
+      if (event === 'USER_DELETED') {
         setError('Your account has been deleted.');
-      }
-      if (event === 'INITIAL_SESSION') {
-        const { error } = await supabase.auth.getSession();
-        if (error) {
-          handleAuthError(error);
-        }
       }
     });
 
@@ -68,37 +62,6 @@ const Login = () => {
       setError(null);
     };
   }, [user, navigate, checkIPStatus, recordAuthAttempt]);
-
-  const handleAuthError = async (error: AuthError) => {
-    let errorMessage = 'An error occurred during authentication.';
-    
-    if (error instanceof AuthApiError) {
-      switch (error.status) {
-        case 400:
-          if (error.message.includes('Invalid login credentials')) {
-            errorMessage = 'Invalid email or password. Please check your credentials.';
-            // Record failed attempt
-            const ip = await fetch('https://api.ipify.org?format=json')
-              .then(res => res.json())
-              .then(data => data.ip);
-            await recordAuthAttempt(ip, '', false);
-          } else {
-            errorMessage = 'Invalid request. Please check your input.';
-          }
-          break;
-        case 422:
-          errorMessage = 'Invalid email format or weak password. Password must be at least 6 characters long.';
-          break;
-        case 429:
-          errorMessage = 'Too many login attempts. Please try again later.';
-          break;
-        default:
-          errorMessage = error.message;
-      }
-    }
-    
-    setError(errorMessage);
-  };
 
   return (
     <div className="mx-auto max-w-md space-y-6 pt-12">
@@ -134,6 +97,8 @@ const Login = () => {
           }}
           providers={[]}
           redirectTo={window.location.origin}
+          showLinks={true}
+          view="sign_in"
         />
         <div className="mt-4 text-center space-y-2">
           <Link to="/reset-password" className="text-sm text-primary hover:underline block">

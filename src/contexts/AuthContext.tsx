@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { User, AuthError } from '@supabase/supabase-js';
+import { User, AuthError, AuthApiError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -34,21 +34,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
 
     // Listen for changes on auth state (signed in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // Check onboarding status for new sign-ins
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('onboarding_completed')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile && !profile.onboarding_completed) {
-          navigate('/onboarding');
-        }
+      if (event === 'SIGNED_IN') {
+        navigate('/');
+      } else if (event === 'SIGNED_OUT') {
+        navigate('/login');
+      } else if (event === 'USER_UPDATED') {
+        setUser(session?.user ?? null);
       }
     });
 
@@ -64,24 +59,71 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) throw error;
       toast.success('Successfully signed in!');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error signing in');
+      if (error instanceof AuthApiError) {
+        switch (error.status) {
+          case 400:
+            if (error.message.includes('Email not confirmed')) {
+              toast.error('Please verify your email before signing in');
+              return;
+            }
+            toast.error('Invalid email or password');
+            break;
+          case 422:
+            toast.error('Invalid email format');
+            break;
+          case 429:
+            toast.error('Too many login attempts. Please try again later');
+            break;
+          default:
+            toast.error(error.message);
+        }
+      } else {
+        toast.error('An unexpected error occurred');
+      }
       throw error;
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
+      
       if (error) throw error;
-      toast.success('Check your email to confirm your account!');
+      
+      if (data.user && !data.user.confirmed_at) {
+        toast.success('Please check your email to confirm your account!', {
+          duration: 6000,
+        });
+        // Add a button to resend verification email
+        toast('Didn\'t receive the email?', {
+          action: {
+            label: 'Resend',
+            onClick: () => resendVerificationEmail(email),
+          },
+          duration: 10000,
+        });
+      }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error signing up');
+      if (error instanceof AuthApiError) {
+        switch (error.status) {
+          case 422:
+            toast.error('Invalid email format or weak password. Password must be at least 6 characters long.');
+            break;
+          case 400:
+            toast.error('This email is already registered.');
+            break;
+          default:
+            toast.error(error.message);
+        }
+      } else {
+        toast.error('An unexpected error occurred during sign up');
+      }
       throw error;
     }
   };
@@ -130,7 +172,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         email: email,
       });
       if (error) throw error;
-      toast.success('Verification email resent!');
+      toast.success('Verification email resent! Please check your inbox.');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error resending verification email');
       throw error;
