@@ -6,7 +6,7 @@ import { MessagesProvider } from "@/contexts/MessagesContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GameBoyControls from "@/components/GameBoyControls";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
 import { router } from "./routes";
 
 const queryClient = new QueryClient({
@@ -18,9 +18,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Create a router instance
-const browserRouter = createBrowserRouter(router);
-
 // Create an AppContent component to wrap providers that need router context
 function AppContent() {
   return (
@@ -29,7 +26,7 @@ function AppContent() {
         <EmoteProvider>
           <MessagesProvider>
             <div className="min-h-screen w-full bg-gaming-900 text-white">
-              <RouterProvider router={browserRouter} />
+              <RouterProvider router={router} />
               <GameBoyControls />
             </div>
           </MessagesProvider>
