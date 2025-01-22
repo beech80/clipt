@@ -8,7 +8,7 @@ import { SearchResults } from "./search/SearchResults";
 import { useSearch } from "@/hooks/useSearch";
 import { useSearchContext } from "@/contexts/SearchContext";
 import { debounce } from "@/utils/debounce";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export function SearchBar() {
   const navigate = useNavigate();
@@ -21,9 +21,10 @@ export function SearchBar() {
     enabled: searchTerm.length >= 2,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-    onError: (error) => {
-      toast.error("Search failed. Please try again.");
-      console.error("Search error:", error);
+    meta: {
+      onError: () => {
+        toast.error("Search failed. Please try again.");
+      }
     }
   });
 
