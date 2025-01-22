@@ -8,6 +8,7 @@ import { MessagesProvider } from "@/contexts/MessagesContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import GameBoyControls from "@/components/GameBoyControls";
 
 // Pages
 import Home from "@/pages/Home";
@@ -88,6 +89,7 @@ function App() {
                         <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                         <Route path="/game/:slug" element={<GamePage />} />
                       </Routes>
+                      <GameBoyControls />
                       <Toaster />
                     </ReportDialogProvider>
                   </MessagesProvider>
