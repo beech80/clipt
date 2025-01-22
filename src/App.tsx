@@ -9,6 +9,8 @@ import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GameBoyControls from "@/components/GameBoyControls";
+import { MainContent } from "@/components/home/MainContent";
+import { SidebarContent } from "@/components/home/SidebarContent";
 
 // Pages
 import Home from "@/pages/Home";
@@ -37,8 +39,6 @@ import PaymentSuccess from "@/pages/payment-success";
 import PaymentCancelled from "@/pages/payment-cancelled";
 import ClipEditor from "@/pages/ClipEditor";
 import GamePage from "@/pages/GamePage";
-import { MainContent } from "@/components/home/MainContent";
-import { SidebarContent } from "@/components/home/SidebarContent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
