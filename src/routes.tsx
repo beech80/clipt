@@ -1,26 +1,26 @@
-import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Outlet } from 'react-router-dom';
-import { Loader2 } from "lucide-react";
+import { createBrowserRouter, Outlet } from "react-router-dom";
+import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { EmoteProvider } from "@/contexts/EmoteContext";
 import { MessagesProvider } from "@/contexts/MessagesContext";
-import { SecurityProvider } from "@/components/security/SecurityProvider";
 import GameBoyControls from "@/components/GameBoyControls";
 
-// Enhanced loading component with proper ARIA labels
-const PageLoader = () => (
-  <div 
-    className="flex items-center justify-center min-h-screen"
-    role="progressbar"
-    aria-label="Loading page content"
-    aria-busy="true"
-  >
-    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-    <span className="sr-only">Loading page content...</span>
-  </div>
-);
+import Home from "@/pages/Home";
+import Clips from "@/pages/Clips";
+import Settings from "@/pages/Settings";
+import TopClips from "@/pages/TopClips";
+import Messages from "@/pages/Messages";
+import Profile from "@/pages/Profile";
+import Search from "@/pages/Search";
+import Notifications from "@/pages/Notifications";
+import Onboarding from "@/pages/Onboarding";
+import Stream from "@/pages/Stream";
+import Tournament from "@/pages/Tournament";
+import Squad from "@/pages/Squad";
+import Analytics from "@/pages/Analytics";
+import Comments from "@/pages/Comments";
+import Hashtag from "@/pages/Hashtag";
 
-// Root layout component that provides context
 const RootLayout = () => {
   return (
     <SecurityProvider>
@@ -28,9 +28,7 @@ const RootLayout = () => {
         <EmoteProvider>
           <MessagesProvider>
             <div className="min-h-screen w-full bg-gaming-900 text-white">
-              <Suspense fallback={<PageLoader />}>
-                <Outlet />
-              </Suspense>
+              <Outlet />
               <GameBoyControls />
             </div>
           </MessagesProvider>
@@ -40,124 +38,71 @@ const RootLayout = () => {
   );
 };
 
-// Lazy load route components with error boundaries
-const lazyLoad = (Component: React.ComponentType) => (
-  <Suspense fallback={<PageLoader />}>
-    <Component />
-  </Suspense>
-);
-
-// Lazy loaded components with descriptive chunk names
-const Home = lazy(() => import('./pages/Home' /* webpackChunkName: "home" */));
-const Post = lazy(() => import('./pages/Post' /* webpackChunkName: "post" */));
-const Profile = lazy(() => import('./pages/Profile' /* webpackChunkName: "profile" */));
-const EditProfile = lazy(() => import('./pages/EditProfile' /* webpackChunkName: "edit-profile" */));
-const Settings = lazy(() => import('./pages/Settings' /* webpackChunkName: "settings" */));
-const Clips = lazy(() => import('./pages/Clips' /* webpackChunkName: "clips" */));
-const ClipEditor = lazy(() => import('./pages/ClipEditor' /* webpackChunkName: "clip-editor" */));
-const GamePage = lazy(() => import('./pages/GamePage' /* webpackChunkName: "game" */));
-const Messages = lazy(() => import('./pages/Messages' /* webpackChunkName: "messages" */));
-const Collections = lazy(() => import('./pages/Collections' /* webpackChunkName: "collections" */));
-const Discover = lazy(() => import('./pages/Discover' /* webpackChunkName: "discover" */));
-const Analytics = lazy(() => import('./pages/Analytics' /* webpackChunkName: "analytics" */));
-const Achievements = lazy(() => import('./pages/Achievements' /* webpackChunkName: "achievements" */));
-const ModReports = lazy(() => import('./pages/ModReports' /* webpackChunkName: "mod-reports" */));
-const GroupChat = lazy(() => import('./pages/GroupChat' /* webpackChunkName: "group-chat" */));
-const Onboarding = lazy(() => import('./pages/Onboarding' /* webpackChunkName: "onboarding" */));
-const Login = lazy(() => import('./pages/Login' /* webpackChunkName: "login" */));
-const Support = lazy(() => import('./pages/Support' /* webpackChunkName: "support" */));
-const Schedule = lazy(() => import('./pages/Schedule' /* webpackChunkName: "schedule" */));
-const Streaming = lazy(() => import('./pages/Streaming' /* webpackChunkName: "streaming" */));
-const TopClips = lazy(() => import('./pages/TopClips' /* webpackChunkName: "top-clips" */));
-
 export const router = createBrowserRouter([
   {
+    path: "/",
     element: <RootLayout />,
     children: [
       {
-        path: "/",
-        element: lazyLoad(Home),
+        index: true,
+        element: <Home />,
       },
       {
-        path: "/post/:id",
-        element: lazyLoad(Post),
+        path: "clips",
+        element: <Clips />,
       },
       {
-        path: "/profile/:username",
-        element: lazyLoad(Profile),
+        path: "settings",
+        element: <Settings />,
       },
       {
-        path: "/edit-profile",
-        element: lazyLoad(EditProfile),
+        path: "top-clips",
+        element: <TopClips />,
       },
       {
-        path: "/settings",
-        element: lazyLoad(Settings),
+        path: "messages",
+        element: <Messages />,
       },
       {
-        path: "/clips",
-        element: lazyLoad(Clips),
+        path: "profile/:username",
+        element: <Profile />,
       },
       {
-        path: "/clip-editor/:id",
-        element: lazyLoad(ClipEditor),
+        path: "search",
+        element: <Search />,
       },
       {
-        path: "/game/:slug",
-        element: lazyLoad(GamePage),
+        path: "notifications",
+        element: <Notifications />,
       },
       {
-        path: "/messages",
-        element: lazyLoad(Messages),
+        path: "onboarding",
+        element: <Onboarding />,
       },
       {
-        path: "/collections",
-        element: lazyLoad(Collections),
+        path: "stream/:streamId",
+        element: <Stream />,
       },
       {
-        path: "/discover",
-        element: lazyLoad(Discover),
+        path: "tournament/:tournamentId",
+        element: <Tournament />,
       },
       {
-        path: "/analytics",
-        element: lazyLoad(Analytics),
+        path: "squad/:squadId",
+        element: <Squad />,
       },
       {
-        path: "/achievements",
-        element: lazyLoad(Achievements),
+        path: "analytics",
+        element: <Analytics />,
       },
       {
-        path: "/mod-reports",
-        element: lazyLoad(ModReports),
+        path: "comments/:postId",
+        element: <Comments />,
       },
       {
-        path: "/group-chat",
-        element: lazyLoad(GroupChat),
-      },
-      {
-        path: "/onboarding",
-        element: lazyLoad(Onboarding),
-      },
-      {
-        path: "/login",
-        element: lazyLoad(Login),
-      },
-      {
-        path: "/support",
-        element: lazyLoad(Support),
-      },
-      {
-        path: "/schedule",
-        element: lazyLoad(Schedule),
-      },
-      {
-        path: "/streaming",
-        element: lazyLoad(Streaming),
-      },
-      {
-        path: "/top-clips",
-        element: lazyLoad(TopClips),
+        path: "hashtag/:tag",
+        element: <Hashtag />,
       }
-    ]
-  }
+    ],
+  },
 ]);
