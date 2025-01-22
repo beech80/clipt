@@ -1,28 +1,17 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { GiphyFetch } from "@giphy/js-fetch-api";
-import { Grid } from "@giphy/react-components";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import PostFormContent from "./post/form/PostFormContent";
-import ImageUpload from "./post/ImageUpload";
-import VideoUpload from "./post/VideoUpload";
-import UploadProgress from "./post/form/UploadProgress";
-import MediaPreview from "./post/form/MediaPreview";
 import PostFormActions from "./post/form/PostFormActions";
 import PostFormMediaEditor from "./post/form/PostFormMediaEditor";
+import PostFormMedia from "./post/form/PostFormMedia";
+import PostFormScheduler from "./post/form/PostFormScheduler";
 import { uploadImage, uploadVideo } from "@/utils/postUploadUtils";
 import { extractMentions, createMention } from "@/utils/mentionUtils";
 import { createPost } from "@/services/postService";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-const gf = new GiphyFetch('pLURtkhVrUXr3KG25Gy5IvzziV5OrZGa');
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -41,8 +30,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   const [scheduledDate, setScheduledDate] = useState<Date>();
   const [scheduledTime, setScheduledTime] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -143,8 +130,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
     setScheduledDate(undefined);
     setScheduledTime("");
     setError(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (videoInputRef.current) videoInputRef.current.value = '';
   };
 
   const handleEditedMedia = (blob: Blob) => {
@@ -168,147 +153,27 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         
         <PostFormContent content={content} onChange={setContent} />
         
-        {selectedImage && (
-          <>
-            <MediaPreview 
-              file={selectedImage} 
-              type="image" 
-              onRemove={() => setSelectedImage(null)} 
-            />
-            <UploadProgress progress={imageProgress} type="image" />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowEditor(true)}
-              className="w-full sm:w-auto"
-            >
-              Edit Image
-            </Button>
-          </>
-        )}
-
-        {selectedGif && (
-          <div className="relative">
-            <img src={selectedGif} alt="Selected GIF" className="rounded-lg max-h-96 w-auto" />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="absolute top-2 right-2"
-              onClick={() => setSelectedGif(null)}
-            >
-              Remove
-            </Button>
-          </div>
-        )}
-
-        {selectedVideo && (
-          <>
-            <MediaPreview 
-              file={selectedVideo} 
-              type="video" 
-              onRemove={() => setSelectedVideo(null)} 
-            />
-            <UploadProgress progress={videoProgress} type="video" />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowEditor(true)}
-              className="w-full sm:w-auto"
-            >
-              Edit Video
-            </Button>
-          </>
-        )}
+        <PostFormMedia
+          selectedImage={selectedImage}
+          selectedVideo={selectedVideo}
+          selectedGif={selectedGif}
+          imageProgress={imageProgress}
+          videoProgress={videoProgress}
+          showGifPicker={showGifPicker}
+          onImageSelect={setSelectedImage}
+          onVideoSelect={setSelectedVideo}
+          onGifSelect={setSelectedGif}
+          onShowGifPickerChange={setShowGifPicker}
+          onShowEditor={() => setShowEditor(true)}
+        />
 
         <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-2`}>
-          {!selectedVideo && !selectedGif && (
-            <ImageUpload
-              selectedImage={selectedImage}
-              onImageSelect={setSelectedImage}
-              fileInputRef={fileInputRef}
-            />
-          )}
-
-          {!selectedImage && !selectedGif && (
-            <VideoUpload
-              selectedVideo={selectedVideo}
-              onVideoSelect={setSelectedVideo}
-              videoInputRef={videoInputRef}
-              uploadProgress={videoProgress}
-              setUploadProgress={setVideoProgress}
-            />
-          )}
-
-          {!selectedImage && !selectedVideo && (
-            <Popover open={showGifPicker} onOpenChange={setShowGifPicker}>
-              <PopoverTrigger asChild>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                >
-                  Add GIF
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[320px] p-0" align="start">
-                <div className="h-[300px] overflow-auto">
-                  <Grid
-                    width={300}
-                    columns={2}
-                    fetchGifs={(offset: number) => gf.trending({ offset, limit: 10 })}
-                    onGifClick={(gif) => {
-                      setSelectedGif(gif.images.fixed_height.url);
-                      setShowGifPicker(false);
-                    }}
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
-          )}
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button 
-                type="button" 
-                variant="outline"
-                className="w-full sm:w-auto"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {scheduledDate ? format(scheduledDate, 'PPP') : 'Schedule'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-4" align="start">
-              <div className="space-y-4">
-                <Calendar
-                  mode="single"
-                  selected={scheduledDate}
-                  onSelect={setScheduledDate}
-                  disabled={(date) => date < new Date()}
-                />
-                <div className="flex items-center gap-2">
-                  <input
-                    type="time"
-                    value={scheduledTime}
-                    onChange={(e) => setScheduledTime(e.target.value)}
-                    className="px-3 py-2 border rounded-md w-full"
-                  />
-                  {(scheduledDate || scheduledTime) && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        setScheduledDate(undefined);
-                        setScheduledTime("");
-                      }}
-                    >
-                      Clear
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <PostFormScheduler
+            scheduledDate={scheduledDate}
+            scheduledTime={scheduledTime}
+            onScheduledDateChange={setScheduledDate}
+            onScheduledTimeChange={setScheduledTime}
+          />
         </div>
 
         <PostFormActions isSubmitting={isSubmitting} />
