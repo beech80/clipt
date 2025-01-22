@@ -9,6 +9,7 @@ import { useSearch } from "@/hooks/useSearch";
 import { useSearchContext } from "@/contexts/SearchContext";
 import { debounce } from "@/utils/debounce";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { Loader2 } from "lucide-react";
 
 export function SearchBar() {
   const navigate = useNavigate();
@@ -76,6 +77,7 @@ export function SearchBar() {
             aria-expanded={searchTerm.length >= 2}
             aria-controls="search-results"
             aria-describedby={error ? "search-error" : undefined}
+            isLoading={isLoading}
           />
           <SearchFilters 
             filters={filters} 
@@ -101,8 +103,18 @@ export function SearchBar() {
           </div>
         )}
 
-        <div id="search-results" role="region" aria-live="polite">
-          {searchTerm.length >= 2 ? (
+        <div 
+          id="search-results" 
+          role="region" 
+          aria-live="polite"
+          aria-busy={isLoading}
+        >
+          {isLoading && searchTerm.length >= 2 ? (
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
+            </div>
+          ) : searchTerm.length >= 2 ? (
             <SearchResults
               isLoading={isLoading}
               results={searchResults}
