@@ -22,7 +22,12 @@ class LoggingService {
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight
-      }
+      },
+      connection: navigator.connection ? {
+        effectiveType: (navigator.connection as any).effectiveType,
+        downlink: (navigator.connection as any).downlink,
+        rtt: (navigator.connection as any).rtt
+      } : null
     };
   }
 
@@ -50,7 +55,6 @@ class LoggingService {
         console.error('Failed to save log:', error);
       }
 
-      // Also log to console in development
       if (process.env.NODE_ENV === 'development') {
         console.log(`[${level.toUpperCase()}] ${message}`, {
           component,
@@ -63,20 +67,20 @@ class LoggingService {
     }
   }
 
-  static async logWarning(message: string, details?: Record<string, unknown>) {
-    await this.log('warn', message, undefined, details);
-  }
-
   static async trackMetric(
     metricName: string,
     value: number,
-    tags?: Record<string, string>
+    tags?: Record<string, any>
   ) {
     try {
-      const { error } = await supabase.from('performance_metrics').insert({
+      const browserInfo = this.getBrowserInfo();
+      const { error } = await supabase.from('performance_metrics_enhanced').insert({
         metric_name: metricName,
         value,
-        tags
+        browser_info: browserInfo,
+        metadata: tags,
+        component: tags?.component,
+        page_url: window.location.href
       });
 
       if (error) {
@@ -85,6 +89,10 @@ class LoggingService {
     } catch (err) {
       console.error('Metric tracking failed:', err);
     }
+  }
+
+  static async logWarning(message: string, details?: Record<string, unknown>) {
+    await this.log('warn', message, undefined, details);
   }
 
   static async reportError(
