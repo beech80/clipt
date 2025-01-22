@@ -20,7 +20,7 @@ interface PostFormProps {
   onPostCreated?: () => void;
 }
 
-function PostFormContent({ onPostCreated }: PostFormProps) {
+function PostFormInner({ onPostCreated }: PostFormProps) {
   const {
     content,
     selectedImage,
@@ -36,6 +36,10 @@ function PostFormContent({ onPostCreated }: PostFormProps) {
     setImageProgress,
     setVideoProgress,
     setShowEditor,
+    setSelectedImage,
+    setSelectedVideo,
+    setScheduledDate,
+    setScheduledTime,
     resetForm,
   } = usePostForm();
   
@@ -127,19 +131,38 @@ function PostFormContent({ onPostCreated }: PostFormProps) {
         
         <PostFormContent />
         <PostFormMediaPreview />
-        <PostFormMedia />
+        <PostFormMedia 
+          selectedImage={selectedImage}
+          selectedVideo={selectedVideo}
+          selectedGif={selectedGif}
+          imageProgress={imageProgress}
+          videoProgress={videoProgress}
+          showGifPicker={false}
+          onImageSelect={setSelectedImage}
+          onVideoSelect={setSelectedVideo}
+          onGifSelect={() => {}}
+          onShowGifPickerChange={() => {}}
+          onShowEditor={() => setShowEditor(true)}
+        />
 
         <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-2`}>
-          <PostFormScheduler />
+          <PostFormScheduler 
+            scheduledDate={scheduledDate}
+            scheduledTime={scheduledTime}
+            onScheduledDateChange={setScheduledDate}
+            onScheduledTimeChange={setScheduledTime}
+          />
         </div>
 
-        <PostFormActions />
+        <PostFormActions isSubmitting={isSubmitting} />
       </form>
 
       <PostFormMediaEditor 
         showEditor={showEditor}
         setShowEditor={setShowEditor}
         onEditedMedia={handleEditedMedia}
+        selectedImage={selectedImage}
+        selectedVideo={selectedVideo}
       />
     </div>
   );
@@ -148,7 +171,7 @@ function PostFormContent({ onPostCreated }: PostFormProps) {
 export default function PostForm(props: PostFormProps) {
   return (
     <PostFormProvider>
-      <PostFormContent {...props} />
+      <PostFormInner {...props} />
     </PostFormProvider>
   );
 }
