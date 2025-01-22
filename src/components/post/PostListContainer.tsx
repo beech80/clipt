@@ -3,7 +3,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { usePostList } from "@/hooks/usePostList";
 import { PostListError } from "./PostListError";
 import { PostListLoading } from "./PostListLoading";
-import { PostListEmpty } from "./EmptyPostList";
+import { EmptyPostList } from "./EmptyPostList";
 import { PostListVirtualized } from "./PostListVirtualized";
 
 export const PostListContainer = () => {
@@ -29,7 +29,7 @@ export const PostListContainer = () => {
   }
 
   if (!data?.pages || data.pages.length === 0 || data.pages[0].length === 0) {
-    return <PostListEmpty />;
+    return <EmptyPostList />;
   }
 
   return (
