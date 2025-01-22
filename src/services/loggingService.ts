@@ -63,6 +63,10 @@ class LoggingService {
     }
   }
 
+  static async logWarning(message: string, details?: Record<string, unknown>) {
+    await this.log('warn', message, undefined, details);
+  }
+
   static async trackMetric(
     metricName: string,
     value: number,
