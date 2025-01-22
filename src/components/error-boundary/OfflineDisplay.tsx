@@ -1,8 +1,12 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
-export const OfflineDisplay = () => {
+interface OfflineDisplayProps {
+  onRetry: () => void;
+}
+
+export const OfflineDisplay = ({ onRetry }: OfflineDisplayProps) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="max-w-md w-full space-y-4">
@@ -14,9 +18,11 @@ export const OfflineDisplay = () => {
           </AlertDescription>
         </Alert>
         <Button 
-          onClick={() => window.location.reload()} 
+          onClick={onRetry} 
           className="w-full"
+          variant="default"
         >
+          <RefreshCw className="mr-2 h-4 w-4" />
           Retry Connection
         </Button>
       </div>
