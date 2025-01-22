@@ -30,8 +30,12 @@ export class MediaService {
   }
 
   private static simulateProgress(setProgress: (progress: number) => void): NodeJS.Timeout {
+    let currentProgress = 0;
     return setInterval(() => {
-      setProgress((prev: number) => Math.min(90, prev + Math.random() * 10));
+      if (currentProgress < 90) {
+        currentProgress += Math.random() * 10;
+        setProgress(Math.min(90, currentProgress));
+      }
     }, 500);
   }
 
