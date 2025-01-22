@@ -53,15 +53,15 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         gaming: {
-          100: "#e0e7ff",
-          200: "#c7d2fe",
-          300: "#a5b4fc",
-          400: "#818cf8",
-          500: "#6366f1",
-          600: "#4f46e5",
-          700: "#4338ca",
-          800: "#3730a3",
-          900: "#312e81",
+          100: "#E5DEFF", // Soft Purple
+          200: "#D6BCFA", // Light Purple
+          300: "#9b87f5", // Primary Purple
+          400: "#8B5CF6", // Vivid Purple
+          500: "#7E69AB", // Secondary Purple
+          600: "#6E59A5", // Tertiary Purple
+          700: "#5D4994", // Darker Purple
+          800: "#4C3883", // Deep Purple
+          900: "#1A1F2C", // Dark Purple
         },
       },
       keyframes: {

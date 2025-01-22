@@ -4,132 +4,67 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 250 33% 99%;
+    --foreground: 250 10% 3.9%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card: 250 33% 99%;
+    --card-foreground: 250 10% 3.9%;
  
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: 250 33% 99%;
+    --popover-foreground: 250 10% 3.9%;
  
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 250 84% 74%;
+    --primary-foreground: 250 0% 98%;
  
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 250 30% 96%;
+    --secondary-foreground: 250 10% 3.9%;
  
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 250 30% 96%;
+    --muted-foreground: 250 10% 46.1%;
  
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 250 30% 96%;
+    --accent-foreground: 250 10% 3.9%;
  
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
+    --border: 250 10% 90%;
+    --input: 250 10% 90%;
+    --ring: 250 84% 74%;
  
     --radius: 0.5rem;
 
-    --gaming-gradient: linear-gradient(to bottom right, #2A2F4E, #1A1F2C);
+    --gaming-gradient: linear-gradient(to bottom right, #9b87f5, #1A1F2C);
   }
  
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 250 10% 3.9%;
+    --foreground: 250 0% 98%;
  
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 250 10% 3.9%;
+    --card-foreground: 250 0% 98%;
  
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 250 10% 3.9%;
+    --popover-foreground: 250 0% 98%;
  
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
+    --primary: 250 84% 74%;
+    --primary-foreground: 250 0% 98%;
  
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 250 37% 15.9%;
+    --secondary-foreground: 250 0% 98%;
  
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 250 37% 15.9%;
+    --muted-foreground: 250 50% 64.9%;
  
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 250 37% 15.9%;
+    --accent-foreground: 250 0% 98%;
  
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 250 0% 98%;
  
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-  }
-}
-
-@layer utilities {
-  .gaming-card {
-    @apply relative overflow-hidden;
-  }
-  
-  .gaming-card::before {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-gaming-900/50 to-gaming-800/50 opacity-0 transition-opacity duration-300;
-  }
-  
-  .gaming-card:hover::before {
-    @apply opacity-100;
-  }
-
-  .animate-pulse {
-    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: .85;
-      transform: scale(0.98);
-    }
-  }
-
-  .page-transition-enter {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  .page-transition-enter-active {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 300ms, transform 300ms;
-  }
-
-  .page-transition-exit {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .page-transition-exit-active {
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 300ms, transform 300ms;
-  }
-
-  .hover-scale {
-    @apply transition-transform duration-200 hover:scale-105;
-  }
-
-  .hover-glow {
-    @apply transition-all duration-300;
-  }
-  
-  .hover-glow:hover {
-    @apply shadow-lg;
-    box-shadow: 0 0 15px var(--gaming-glow, rgba(155, 135, 245, 0.3));
+    --border: 250 37% 15.9%;
+    --input: 250 37% 15.9%;
+    --ring: 250 84% 74%;
   }
 }
 
