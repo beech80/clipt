@@ -1,15 +1,18 @@
+import { useState, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { SearchInput } from "./search/SearchInput";
 import { SearchFilters } from "./search/SearchFilters";
-import { SearchHistory } from "./search/SearchHistory";
-import { SearchResults } from "./search/SearchResults";
 import { useSearch } from "@/hooks/useSearch";
 import { useSearchContext } from "@/contexts/SearchContext";
 import { debounce } from "@/utils/debounce";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
+
+// Lazy load components that aren't immediately needed
+const SearchHistory = React.lazy(() => import("./search/SearchHistory"));
+const SearchResults = React.lazy(() => import("./search/SearchResults"));
 
 export function SearchBar() {
   const navigate = useNavigate();
@@ -24,7 +27,7 @@ export function SearchBar() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     staleTime: 1000 * 60 * 5, // Results stay fresh for 5 minutes
     gcTime: 1000 * 60 * 30, // Cache results for 30 minutes
-    placeholderData: (previousData) => previousData, // Replace keepPreviousData with placeholderData
+    placeholderData: (previousData) => previousData,
     meta: {
       onError: () => {
         toast.error("Search failed. Please try again.");
@@ -108,26 +111,34 @@ export function SearchBar() {
           role="region" 
           aria-live="polite"
           aria-busy={isLoading}
+          aria-atomic="true"
         >
-          {isLoading && searchTerm.length >= 2 ? (
+          <Suspense fallback={
             <div className="flex items-center justify-center p-4">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
+              <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
             </div>
-          ) : searchTerm.length >= 2 ? (
-            <SearchResults
-              isLoading={isLoading}
-              results={searchResults}
-              onProfileClick={handleProfileClick}
-              onPostClick={handlePostClick}
-              onStreamClick={handleStreamClick}
-            />
-          ) : (
-            <SearchHistory
-              searchHistory={searchHistory || []}
-              onHistoryItemClick={handleSearchHistoryClick}
-            />
-          )}
+          }>
+            {isLoading && searchTerm.length >= 2 ? (
+              <div className="flex items-center justify-center p-4">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
+              </div>
+            ) : searchTerm.length >= 2 ? (
+              <SearchResults
+                isLoading={isLoading}
+                results={searchResults}
+                onProfileClick={handleProfileClick}
+                onPostClick={handlePostClick}
+                onStreamClick={handleStreamClick}
+              />
+            ) : (
+              <SearchHistory
+                searchHistory={searchHistory || []}
+                onHistoryItemClick={handleSearchHistoryClick}
+              />
+            )}
+          </Suspense>
         </div>
       </div>
     </ErrorBoundary>
