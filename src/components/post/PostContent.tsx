@@ -21,7 +21,10 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
           setIsIntersecting(entry.isIntersecting);
         });
       },
-      { threshold: 0.1 }
+      { 
+        threshold: 0.1,
+        rootMargin: '50px 0px' // Preload when within 50px of viewport
+      }
     );
 
     const element = document.querySelector(`#post-content-${postId}`);
@@ -107,6 +110,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
           alt="Post content"
           className="w-full h-full object-cover"
           loading="lazy"
+          decoding="async"
         />
       )}
 
@@ -129,6 +133,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 alt="Video thumbnail"
                 className="w-full h-full object-cover"
                 loading="lazy"
+                decoding="async"
               />
             </div>
           )}

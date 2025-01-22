@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import PostContent from "./post/PostContent";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -10,7 +10,7 @@ interface PostItemProps {
   post: Post;
 }
 
-const PostItem = ({ post }: PostItemProps) => {
+const PostItem = memo(({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [commentsCount, setCommentsCount] = useState(0);
 
@@ -81,6 +81,15 @@ const PostItem = ({ post }: PostItemProps) => {
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function to prevent unnecessary re-renders
+  return (
+    prevProps.post.id === nextProps.post.id &&
+    prevProps.post.likes_count === nextProps.post.likes_count &&
+    prevProps.post.clip_votes?.[0]?.count === nextProps.post.clip_votes?.[0]?.count
+  );
+});
+
+PostItem.displayName = 'PostItem';
 
 export default PostItem;
