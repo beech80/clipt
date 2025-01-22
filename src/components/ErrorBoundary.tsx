@@ -1,8 +1,8 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import LoggingService from '@/services/loggingService';
-import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Component, ErrorInfo, ReactNode } from 'react';
+import ErrorBoundaryCore from './error-boundary/ErrorBoundaryCore';
+import { ErrorDisplay } from './error-boundary/ErrorDisplay';
+import { OfflineDisplay } from './error-boundary/OfflineDisplay';
+import { errorReportingService } from '@/services/errorReportingService';
 
 interface Props {
   children: ReactNode;
@@ -10,14 +10,11 @@ interface Props {
 }
 
 interface State {
-  hasError: boolean;
-  error?: Error;
   isOffline: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
-    hasError: false,
     isOffline: !navigator.onLine
   };
 
@@ -39,65 +36,37 @@ class ErrorBoundary extends Component<Props, State> {
     window.removeEventListener('offline', this.handleOffline);
   }
 
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, isOffline: !navigator.onLine };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    LoggingService.reportError(error, 'react_error', errorInfo.componentStack);
-  }
+  private handleError = (error: Error, errorInfo: ErrorInfo) => {
+    errorReportingService.reportError({
+      error,
+      context: 'react_error',
+      componentStack: errorInfo.componentStack
+    });
+  };
 
   private handleRetry = () => {
-    this.setState({ hasError: false });
     window.location.reload();
   };
 
   public render() {
     if (this.state.isOffline) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="max-w-md w-full space-y-4">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>You're Offline</AlertTitle>
-              <AlertDescription>
-                Please check your internet connection and try again.
-              </AlertDescription>
-            </Alert>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="w-full"
-            >
-              Retry Connection
-            </Button>
-          </div>
-        </div>
-      );
+      return <OfflineDisplay />;
     }
 
-    if (this.state.hasError) {
-      return this.props.fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="max-w-md w-full space-y-4">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Something went wrong</AlertTitle>
-              <AlertDescription>
-                {this.state.error?.message || 'An unexpected error occurred'}
-              </AlertDescription>
-            </Alert>
-            <Button 
-              onClick={this.handleRetry} 
-              className="w-full"
-            >
-              Try Again
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
+    return (
+      <ErrorBoundaryCore onError={this.handleError}>
+        {this.props.fallback ? (
+          this.props.fallback
+        ) : (
+          <ErrorDisplay
+            title="Something went wrong"
+            description="An unexpected error occurred"
+            onRetry={this.handleRetry}
+          />
+        )}
+        {this.props.children}
+      </ErrorBoundaryCore>
+    );
   }
 }
 
