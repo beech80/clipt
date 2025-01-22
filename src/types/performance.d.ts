@@ -21,7 +21,7 @@ export interface PerformanceData {
   component: string;
   page_url: string;
   user_id: string;
-  browser_info: BrowserInfo;
+  browser_info: Record<string, any>;
   metadata: Record<string, any>;
 }
 

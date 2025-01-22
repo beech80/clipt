@@ -80,7 +80,7 @@ class LoggingService {
       const { error } = await supabase.from('performance_metrics_enhanced').insert({
         metric_name: metricName,
         value,
-        browser_info: browserInfo,
+        browser_info: browserInfo as Record<string, any>,
         metadata: tags,
         component: tags?.component,
         page_url: window.location.href
@@ -110,7 +110,7 @@ class LoggingService {
         message: error.message,
         stack_trace: error.stack,
         component_stack: componentStack,
-        browser_info: browserInfo
+        browser_info: browserInfo as Record<string, any>
       });
 
       if (dbError) {
