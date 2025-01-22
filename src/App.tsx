@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -11,34 +11,8 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import GameBoyControls from "@/components/GameBoyControls";
 import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
-
-// Pages
-import Home from "@/pages/Home";
-import Profile from "@/pages/Profile";
-import EditProfile from "@/pages/EditProfile";
-import Messages from "@/pages/Messages";
-import Streaming from "@/pages/Streaming";
-import TopClips from "@/pages/TopClips";
-import Clipts from "@/pages/Clipts";
-import Settings from "@/pages/Settings";
-import Discover from "@/pages/Discover";
-import Login from "@/pages/Login";
-import ResetPassword from "@/pages/ResetPassword";
-import UpdatePassword from "@/pages/UpdatePassword";
-import ResendVerification from "@/pages/ResendVerification";
-import Collections from "@/pages/Collections";
-import Post from "@/pages/Post";
-import GroupChat from "@/pages/GroupChat";
-import Onboarding from "@/pages/Onboarding";
-import Achievements from "@/pages/Achievements";
-import Analytics from "@/pages/Analytics";
-import Support from "@/pages/Support";
-import Verification from "@/pages/Verification";
-import Schedule from "@/pages/Schedule";
-import PaymentSuccess from "@/pages/payment-success";
-import PaymentCancelled from "@/pages/payment-cancelled";
-import ClipEditor from "@/pages/ClipEditor";
-import GamePage from "@/pages/GamePage";
+import { router } from "./routes";
+import { RouterProvider } from "react-router-dom";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,64 +26,23 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <ErrorBoundary>
-            <AuthProvider>
-              <SecurityProvider>
-                <AccessibilityProvider>
-                  <MessagesProvider>
-                    <ReportDialogProvider>
-                      <Routes>
-                        <Route path="/" element={
-                          <div className="min-h-screen bg-gradient-to-b from-gaming-900 to-gaming-800">
-                            <div className="container mx-auto p-4 md:p-6">
-                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <MainContent />
-                                <SidebarContent />
-                              </div>
-                            </div>
-                          </div>
-                        } />
-                        <Route path="/home" element={<Home />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/reset-password" element={<ResetPassword />} />
-                        <Route path="/update-password" element={<UpdatePassword />} />
-                        <Route path="/resend-verification" element={<ResendVerification />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/profile/edit" element={<EditProfile />} />
-                        <Route path="/messages" element={<Messages />} />
-                        <Route path="/group-chat" element={<GroupChat />} />
-                        <Route path="/streaming" element={<Streaming />} />
-                        <Route path="/top-clips" element={<TopClips />} />
-                        <Route path="/clipts" element={<Clipts />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/discover" element={<Discover />} />
-                        <Route path="/collections" element={<Collections />} />
-                        <Route path="/post/:id" element={<Post />} />
-                        <Route path="/clip-editor/:id" element={<ClipEditor />} />
-                        <Route path="/onboarding" element={<Onboarding />} />
-                        <Route path="/achievements" element={<Achievements />} />
-                        <Route path="/analytics" element={<Analytics />} />
-                        <Route path="/support" element={<Support />} />
-                        <Route path="/verification" element={<Verification />} />
-                        <Route path="/schedule" element={<Schedule />} />
-                        <Route path="/payment-success" element={<PaymentSuccess />} />
-                        <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-                        <Route path="/game/:slug" element={<GamePage />} />
-                      </Routes>
-                      <GameBoyControls />
-                      <Toaster />
-                    </ReportDialogProvider>
-                  </MessagesProvider>
-                </AccessibilityProvider>
-              </SecurityProvider>
-            </AuthProvider>
-          </ErrorBoundary>
-        </Router>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
+        <AuthProvider>
+          <SecurityProvider>
+            <AccessibilityProvider>
+              <MessagesProvider>
+                <ReportDialogProvider>
+                  <RouterProvider router={router} />
+                  <GameBoyControls />
+                  <Toaster />
+                </ReportDialogProvider>
+              </MessagesProvider>
+            </AccessibilityProvider>
+          </SecurityProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </QueryClientProvider>
   );
 }
 
