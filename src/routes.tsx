@@ -16,10 +16,8 @@ const PageLoader = () => (
 );
 
 // Lazy load route components with error boundaries
-const lazyLoad = (Component: React.ComponentType, label: string) => (
-  <Suspense 
-    fallback={<PageLoader />}
-  >
+const lazyLoad = (Component: React.ComponentType) => (
+  <Suspense fallback={<PageLoader />}>
     <Component />
   </Suspense>
 );
@@ -39,42 +37,42 @@ const Discover = lazy(() => import('./pages/Discover' /* webpackChunkName: "disc
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: lazyLoad(Home, 'Home Page'),
+    element: lazyLoad(Home),
   },
   {
     path: "/post/:id",
-    element: lazyLoad(Post, 'Post Page'),
+    element: lazyLoad(Post),
   },
   {
     path: "/profile/:username",
-    element: lazyLoad(Profile, 'Profile Page'),
+    element: lazyLoad(Profile),
   },
   {
     path: "/edit-profile",
-    element: lazyLoad(EditProfile, 'Edit Profile Page'),
+    element: lazyLoad(EditProfile),
   },
   {
     path: "/settings",
-    element: lazyLoad(Settings, 'Settings Page'),
+    element: lazyLoad(Settings),
   },
   {
     path: "/clips",
-    element: lazyLoad(Clips, 'Clips Page'),
+    element: lazyLoad(Clips),
   },
   {
     path: "/game/:slug",
-    element: lazyLoad(GamePage, 'Game Page'),
+    element: lazyLoad(GamePage),
   },
   {
     path: "/messages",
-    element: lazyLoad(Messages, 'Messages Page'),
+    element: lazyLoad(Messages),
   },
   {
     path: "/collections",
-    element: lazyLoad(Collections, 'Collections Page'),
+    element: lazyLoad(Collections),
   },
   {
     path: "/discover",
-    element: lazyLoad(Discover, 'Discover Page'),
+    element: lazyLoad(Discover),
   },
 ]);

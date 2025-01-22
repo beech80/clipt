@@ -1,5 +1,3 @@
-import React from "react";
-import { BrowserRouter as Router } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -9,10 +7,8 @@ import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GameBoyControls from "@/components/GameBoyControls";
-import { MainContent } from "@/components/home/MainContent";
-import { SidebarContent } from "@/components/home/SidebarContent";
-import { router } from "./routes";
 import { RouterProvider } from "react-router-dom";
+import { router } from "./routes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
