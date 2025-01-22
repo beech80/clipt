@@ -1,126 +1,85 @@
-import { SEO } from "@/components/SEO";
-import { MainNav } from "@/components/MainNav";
-import PostList from "@/components/PostList";
-import { WelcomeSection } from "@/components/home/WelcomeSection";
-import { MainContent } from "@/components/home/MainContent";
-import { SidebarContent } from "@/components/home/SidebarContent";
-import { useAuth } from "@/contexts/AuthContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useQueryErrorResetBoundary } from "@tanstack/react-query";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ThemeSelector } from "@/components/profile/ThemeSelector";
-import { useTheme } from "@/hooks/use-theme";
-
-interface ThemeColors {
-  primary: string;
-  secondary: string;
-}
-
-const LoadingSkeleton = () => (
-  <div className="space-y-6 animate-pulse">
-    <Skeleton className="h-[200px] w-full rounded-lg bg-gaming-600/20" />
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-4">
-        <Skeleton className="h-[400px] w-full rounded-lg bg-gaming-600/20" />
-        <Skeleton className="h-[400px] w-full rounded-lg bg-gaming-600/20" />
-      </div>
-      <div className="lg:col-span-1">
-        <Skeleton className="h-[800px] w-full rounded-lg bg-gaming-600/20" />
-      </div>
-    </div>
-  </div>
-);
+import { FormFeedback } from "@/components/ui/form-feedback";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { Loader2 } from "lucide-react";
 
 export default function Index() {
-  const { user, loading: authLoading } = useAuth();
-  const isMobile = useIsMobile();
-  const { reset } = useQueryErrorResetBoundary();
-  const { theme, customColors } = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { user } = useAuth();
 
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Clip - Share Your Gaming Moments",
-    "description": "Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers.",
-    "url": window.location.origin,
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // Example form submission
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Operation completed successfully!");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      toast.error("Failed to complete operation");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  if (authLoading) {
-    return (
-      <div className="container mx-auto px-4 py-4 max-w-7xl" role="status" aria-label="Loading content">
-        <LoadingSkeleton />
-      </div>
-    );
-  }
-
-  const currentTheme: ThemeColors = {
-    primary: customColors.primary,
-    secondary: customColors.secondary
+  const handleDelete = async () => {
+    try {
+      // Example deletion
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success("Item deleted successfully");
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error("Deletion error:", error);
+      toast.error("Failed to delete item");
+    }
   };
 
   return (
-    <>
-      <SEO 
-        title="Clip - Share Your Gaming Moments"
-        description="Join the ultimate gaming community. Share your best gaming moments, stream live, and connect with fellow gamers."
-        type="website"
-        structuredData={structuredData}
-        route="/"
-      />
+    <div className="container mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Welcome to the App</h1>
 
-      <main 
-        role="main"
-        aria-label="Home page content"
-        className={`min-h-screen bg-gradient-to-b from-gaming-900 to-gaming-800 transition-colors duration-300 ${
-          theme === 'dark' ? 'dark' : ''
-        }`}
-      >
-        <div className="container mx-auto px-4 py-4 max-w-7xl">
-          <MainNav className="mb-6 animate-fade-in" />
-          
-          <div className={`mt-8 ${isMobile ? 'space-y-6' : 'space-y-8'}`}>
-            {!user && <WelcomeSection />}
-            
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-              <div className="lg:col-span-2 animate-slide-in">
-                <ErrorBoundary
-                  fallback={
-                    <Alert variant="destructive" className="mb-4">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        There was an error loading the content. Please try again.
-                      </AlertDescription>
-                      <Button 
-                        onClick={reset}
-                        variant="outline"
-                        className="mt-2"
-                      >
-                        Try Again
-                      </Button>
-                    </Alert>
-                  }
-                >
-                  <MainContent />
-                </ErrorBoundary>
-              </div>
-              <div className="lg:col-span-1 animate-slide-in-right">
-                <ErrorBoundary>
-                  <SidebarContent />
-                </ErrorBoundary>
-                {user && (
-                  <div className="mt-6">
-                    <ThemeSelector userId={user.id} currentTheme={currentTheme} />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Form fields would go here */}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            "Submit"
+          )}
+        </Button>
+
+        <FormFeedback
+          isLoading={isLoading}
+          message={isLoading ? "Processing your request..." : undefined}
+        />
+      </form>
+
+      <div className="pt-4">
+        <Button
+          variant="destructive"
+          onClick={() => setShowDeleteConfirm(true)}
+        >
+          Delete Item
+        </Button>
+      </div>
+
+      <ConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Item"
+        description="Are you sure you want to delete this item? This action cannot be undone."
+        confirmText="Delete"
+      />
+    </div>
   );
 }
