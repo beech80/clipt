@@ -9,20 +9,45 @@ import { useSearchContext } from "@/contexts/SearchContext";
 import { debounce } from "@/utils/debounce";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import DOMPurify from 'dompurify';
 
 // Lazy load components that aren't immediately needed
 const SearchHistory = React.lazy(() => import("./search/SearchHistory"));
 const SearchResults = React.lazy(() => import("./search/SearchResults"));
 
+const MAX_SEARCH_LENGTH = 100;
+const SEARCH_MIN_LENGTH = 2;
+
 export function SearchBar() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { searchTerm, setSearchTerm, searchHistory, executeSearch } = useSearch();
   const { filters, setFilters } = useSearchContext();
 
+  // Validate and sanitize search input
+  const validateSearchTerm = (term: string): boolean => {
+    if (term.length > MAX_SEARCH_LENGTH) {
+      toast.error(`Search term must be less than ${MAX_SEARCH_LENGTH} characters`);
+      return false;
+    }
+    // Check for potentially malicious patterns
+    const maliciousPatterns = [/<script/i, /javascript:/i, /data:/i, /vbscript:/i];
+    if (maliciousPatterns.some(pattern => pattern.test(term))) {
+      toast.error("Invalid search term");
+      return false;
+    }
+    return true;
+  };
+
   const { data: searchResults, isLoading, error, refetch } = useQuery({
     queryKey: ['search', searchTerm, filters],
-    queryFn: () => executeSearch(searchTerm, filters),
-    enabled: searchTerm.length >= 2,
+    queryFn: () => {
+      // Sanitize search term before sending to backend
+      const sanitizedTerm = DOMPurify.sanitize(searchTerm);
+      return executeSearch(sanitizedTerm, filters);
+    },
+    enabled: searchTerm.length >= SEARCH_MIN_LENGTH && validateSearchTerm(searchTerm),
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     staleTime: 1000 * 60 * 5, // Results stay fresh for 5 minutes
@@ -36,6 +61,7 @@ export function SearchBar() {
   });
 
   const handleSearchHistoryClick = (historyItem: any) => {
+    if (!validateSearchTerm(historyItem.query)) return;
     setSearchTerm(historyItem.query);
     if (historyItem.filters) {
       setFilters(historyItem.filters);
@@ -44,6 +70,11 @@ export function SearchBar() {
   };
 
   const handleProfileClick = (id: string) => {
+    if (!user) {
+      toast.error("Please sign in to view profiles");
+      navigate('/login');
+      return;
+    }
     navigate(`/profile/${id}`);
     setSearchTerm("");
   };
@@ -63,7 +94,11 @@ export function SearchBar() {
     refetch();
   };
 
-  const debouncedSetSearchTerm = debounce(setSearchTerm, 300);
+  const debouncedSetSearchTerm = debounce((term: string) => {
+    if (validateSearchTerm(term)) {
+      setSearchTerm(term);
+    }
+  }, 300);
 
   return (
     <ErrorBoundary>
@@ -77,7 +112,7 @@ export function SearchBar() {
             searchTerm={searchTerm} 
             onSearchChange={debouncedSetSearchTerm}
             aria-label="Search input"
-            aria-expanded={searchTerm.length >= 2}
+            aria-expanded={searchTerm.length >= SEARCH_MIN_LENGTH}
             aria-controls="search-results"
             aria-describedby={error ? "search-error" : undefined}
             isLoading={isLoading}
@@ -119,12 +154,12 @@ export function SearchBar() {
               <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
             </div>
           }>
-            {isLoading && searchTerm.length >= 2 ? (
+            {isLoading && searchTerm.length >= SEARCH_MIN_LENGTH ? (
               <div className="flex items-center justify-center p-4">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
               </div>
-            ) : searchTerm.length >= 2 ? (
+            ) : searchTerm.length >= SEARCH_MIN_LENGTH ? (
               <SearchResults
                 isLoading={isLoading}
                 results={searchResults}
