@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import {
   LineChart,
@@ -8,29 +9,13 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar
+  ResponsiveContainer
 } from 'recharts';
-import { format } from 'date-fns';
 import { Card } from '@/components/ui/card';
-import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-interface PerformanceData {
-  timestamp: string;
-  metric_name: string;
-  value: number;
-  component: string;
-  browser_info: {
-    userAgent: string;
-    platform: string;
-    language: string;
-  };
-  metadata: Record<string, any>;
-}
+import type { PerformanceData } from '@/types/performance';
 
 const MonitoringDashboard = () => {
   const { data: metrics, isLoading, error } = useQuery({
@@ -43,9 +28,10 @@ const MonitoringDashboard = () => {
         .limit(1000);
 
       if (error) throw error;
-      return data as PerformanceData[];
+      
+      return data as unknown as PerformanceData[];
     },
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 30000
   });
 
   if (isLoading) {
@@ -70,7 +56,7 @@ const MonitoringDashboard = () => {
     return metrics
       ?.filter(m => m.metric_name === metricName)
       .map(m => ({
-        timestamp: format(new Date(m.timestamp), 'HH:mm:ss'),
+        timestamp: new Date(m.timestamp).toLocaleTimeString(),
         value: m.value,
         component: m.component
       }));
@@ -105,37 +91,17 @@ const MonitoringDashboard = () => {
         <h2 className="text-xl font-semibold mb-4">Component Render Times</h2>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={formatMetricsForChart('component_lifecycle')}>
+            <LineChart data={formatMetricsForChart('component_lifecycle')}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="component" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar
-                dataKey="value"
-                fill="#82ca9d"
-                name="Render Time (ms)"
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
-
-      <Card className="p-4">
-        <h2 className="text-xl font-semibold mb-4">Network Performance</h2>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={formatMetricsForChart('resource_timing')}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="timestamp" />
               <YAxis />
               <Tooltip />
               <Legend />
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#ffc658"
-                name="Response Time (ms)"
+                stroke="#82ca9d"
+                name="Render Time (ms)"
               />
             </LineChart>
           </ResponsiveContainer>

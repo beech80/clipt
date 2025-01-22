@@ -1,33 +1,27 @@
 import { useEffect } from 'react';
 import LoggingService from '@/services/loggingService';
 
-interface PerformanceMetrics {
-  timeToFirstByte: number;
-  firstContentfulPaint: number;
-  domInteractive: number;
-  loadComplete: number;
-  resourceTiming: {
-    name: string;
-    duration: number;
-    startTime: number;
-    initiatorType: string;
-  }[];
-  memoryUsage?: {
-    jsHeapSizeLimit: number;
-    totalJSHeapSize: number;
-    usedJSHeapSize: number;
-  };
+interface PerformanceEntry extends PerformanceEntryPolyfill {
+  entryType: string;
+  startTime: number;
+  duration: number;
+  name: string;
+  interactionId?: number;
+}
+
+interface PerformanceEntryPolyfill {
+  toJSON(): any;
 }
 
 export function usePerformanceMonitoring(componentName: string) {
   useEffect(() => {
     const startTime = performance.now();
-    let metrics: PerformanceMetrics;
+    let metrics: Record<string, any>;
 
     // Track initial render performance
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
-      entries.forEach((entry) => {
+      entries.forEach((entry: PerformanceEntry) => {
         LoggingService.trackMetric(entry.name, entry.startTime, {
           component: componentName,
           duration: entry.duration,
@@ -52,8 +46,8 @@ export function usePerformanceMonitoring(componentName: string) {
 
     // Track long tasks
     const longTaskObserver = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry) => {
-        if (entry.duration > 50) { // Tasks longer than 50ms
+      list.getEntries().forEach((entry: PerformanceEntry) => {
+        if (entry.duration > 50) {
           LoggingService.trackMetric('long_task', entry.duration, {
             component: componentName,
             startTime: entry.startTime
@@ -66,14 +60,13 @@ export function usePerformanceMonitoring(componentName: string) {
 
     // Track network requests
     const networkObserver = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry) => {
-        const resource = entry as PerformanceResourceTiming;
-        LoggingService.trackMetric('resource_timing', resource.duration, {
+      list.getEntries().forEach((entry: PerformanceResourceTiming) => {
+        LoggingService.trackMetric('resource_timing', entry.duration, {
           component: componentName,
-          resourceName: resource.name,
-          initiatorType: resource.initiatorType,
-          transferSize: resource.transferSize,
-          encodedBodySize: resource.encodedBodySize
+          resourceName: entry.name,
+          initiatorType: entry.initiatorType,
+          transferSize: entry.transferSize,
+          encodedBodySize: entry.encodedBodySize
         });
       });
     });
@@ -82,10 +75,10 @@ export function usePerformanceMonitoring(componentName: string) {
 
     // Track user interactions
     const interactionObserver = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry) => {
+      list.getEntries().forEach((entry: PerformanceEntry) => {
         LoggingService.trackMetric('interaction', entry.duration, {
           component: componentName,
-          interactionId: entry.id,
+          interactionId: entry.interactionId,
           type: entry.name
         });
       });
@@ -96,7 +89,6 @@ export function usePerformanceMonitoring(componentName: string) {
     // Periodic memory checks
     const memoryInterval = setInterval(trackMemoryUsage, 30000);
 
-    // Cleanup
     return () => {
       observer.disconnect();
       longTaskObserver.disconnect();

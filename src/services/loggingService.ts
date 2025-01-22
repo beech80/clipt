@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { BrowserInfo } from '@/types/performance';
 
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
@@ -14,20 +15,22 @@ interface LogMetadata {
 }
 
 class LoggingService {
-  private static getBrowserInfo(): LogMetadata {
+  private static getBrowserInfo(): BrowserInfo {
+    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+    
     return {
-      browser: navigator.userAgent,
-      os: navigator.platform,
-      url: window.location.href,
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language,
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight
       },
-      connection: navigator.connection ? {
-        effectiveType: (navigator.connection as any).effectiveType,
-        downlink: (navigator.connection as any).downlink,
-        rtt: (navigator.connection as any).rtt
-      } : null
+      connection: connection ? {
+        effectiveType: connection.effectiveType,
+        downlink: connection.downlink,
+        rtt: connection.rtt
+      } : undefined
     };
   }
 
