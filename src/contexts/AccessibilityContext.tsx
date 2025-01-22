@@ -84,7 +84,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       }}
     >
       {children}
-    </AccessibilityProvider>
+    </AccessibilityContext.Provider>
   );
 }
 
