@@ -33,6 +33,7 @@ function PostFormInner({ onPostCreated }: PostFormProps) {
     scheduledTime,
     error,
     isSubmitting,
+    setContent,
     setImageProgress,
     setVideoProgress,
     setShowEditor,
@@ -129,7 +130,10 @@ function PostFormInner({ onPostCreated }: PostFormProps) {
           </Alert>
         )}
         
-        <PostFormContent />
+        <PostFormContent 
+          content={content}
+          onChange={setContent}
+        />
         <PostFormMediaPreview />
         <PostFormMedia 
           selectedImage={selectedImage}
