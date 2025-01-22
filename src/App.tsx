@@ -1,9 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ReportDialogProvider } from "@/components/report/ReportDialogProvider";
+import { EmoteProvider } from "@/contexts/EmoteContext";
 import { MessagesProvider } from "@/contexts/MessagesContext";
-import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GameBoyControls from "@/components/GameBoyControls";
@@ -13,34 +11,34 @@ import { router } from "./routes";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
-      refetchOnWindowFocus: false,
       staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
     },
   },
 });
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorBoundary>
+    <div className="min-h-screen bg-gaming-900">
+      <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <AuthProvider>
+          <ErrorBoundary>
             <SecurityProvider>
-              <AccessibilityProvider>
-                <MessagesProvider>
-                  <ReportDialogProvider>
-                    <RouterProvider router={router} />
-                    <GameBoyControls />
-                    <Toaster />
-                  </ReportDialogProvider>
-                </MessagesProvider>
-              </AccessibilityProvider>
+              <AuthProvider>
+                <EmoteProvider>
+                  <MessagesProvider>
+                    <div className="min-h-screen bg-gaming-900 text-white">
+                      <RouterProvider router={router} />
+                      <GameBoyControls />
+                    </div>
+                  </MessagesProvider>
+                </EmoteProvider>
+              </AuthProvider>
             </SecurityProvider>
-          </AuthProvider>
+          </ErrorBoundary>
         </BrowserRouter>
-      </ErrorBoundary>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </div>
   );
 }
 

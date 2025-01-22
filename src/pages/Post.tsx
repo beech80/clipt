@@ -43,7 +43,7 @@ const Post = () => {
   if (error) {
     toast.error("Failed to load post");
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gaming-900">
         <div className="container mx-auto max-w-2xl px-4 py-6">
           <BackButton />
           <div className="mt-8 text-center">
@@ -57,7 +57,7 @@ const Post = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gaming-900">
         <div className="container mx-auto max-w-2xl px-4 py-6">
           <BackButton />
           <div className="mt-4 space-y-4">
@@ -72,11 +72,11 @@ const Post = () => {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gaming-900">
         <div className="container mx-auto max-w-2xl px-4 py-6">
           <BackButton />
           <div className="mt-8 text-center">
-            <h2 className="text-xl font-semibold">Post not found</h2>
+            <h2 className="text-xl font-semibold text-white">Post not found</h2>
             <p className="mt-2 text-muted-foreground">This post may have been deleted or is no longer available</p>
           </div>
         </div>
@@ -119,7 +119,7 @@ const Post = () => {
         type="article"
         structuredData={structuredData}
       />
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-gaming-900">
         <div className="container mx-auto max-w-2xl px-4 py-6">
           <div className="mb-6 flex items-center justify-between">
             <BackButton />
