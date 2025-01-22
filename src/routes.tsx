@@ -23,8 +23,8 @@ const PageLoader = () => (
 // Root layout component that provides context
 const RootLayout = () => {
   return (
-    <AuthProvider>
-      <SecurityProvider>
+    <SecurityProvider>
+      <AuthProvider>
         <EmoteProvider>
           <MessagesProvider>
             <div className="min-h-screen w-full bg-gaming-900 text-white">
@@ -35,8 +35,8 @@ const RootLayout = () => {
             </div>
           </MessagesProvider>
         </EmoteProvider>
-      </SecurityProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </SecurityProvider>
   );
 };
 
