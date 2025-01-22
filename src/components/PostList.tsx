@@ -28,21 +28,19 @@ const PostList = () => {
   const virtualizer = useVirtualizer({
     count: hasNextPage ? allPosts.length + 1 : allPosts.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => isMobile ? window.innerHeight - 120 : window.innerHeight - 200,
-    overscan: 2,
+    estimateSize: () => isMobile ? window.innerHeight - 80 : window.innerHeight - 200,
+    overscan: isMobile ? 1 : 2,
   });
 
-  const virtualItems = virtualizer.getVirtualItems();
-
   // Load more posts when reaching the end
-  const lastItem = virtualItems[virtualItems.length - 1];
+  const lastItem = virtualizer.getVirtualItems()[virtualizer.getVirtualItems().length - 1];
   if (lastItem && !isFetchingNextPage && hasNextPage && lastItem.index >= allPosts.length - 1) {
     fetchNextPage();
   }
 
   if (status === "pending") {
     return (
-      <div className="space-y-6 px-4 sm:px-0 max-w-3xl mx-auto">
+      <div className="space-y-4 px-4 sm:px-0 max-w-3xl mx-auto">
         {[...Array(2)].map((_, i) => (
           <PostSkeleton key={i} />
         ))}
@@ -53,7 +51,7 @@ const PostList = () => {
   if (status === "error") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
-        <Alert variant="destructive" className="mb-4 max-w-md">
+        <Alert variant="destructive" className="mb-4 max-w-md w-full">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             {error?.message || "Error loading posts"}
@@ -77,23 +75,22 @@ const PostList = () => {
   return (
     <div 
       ref={parentRef}
-      className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
-                  overflow-y-auto scroll-smooth touch-none overscroll-none`}
+      className={`relative overflow-y-auto scroll-smooth touch-none overscroll-none ${isMobile ? "h-[calc(100vh-80px)]" : "h-[calc(100vh-200px)]"}`}
     >
       <div 
-        className="relative space-y-6 px-4 sm:px-0 max-w-3xl mx-auto pb-6"
+        className="relative space-y-4 px-4 sm:px-0 max-w-3xl mx-auto pb-6"
         style={{
           height: `${virtualizer.getTotalSize()}px`,
         }}
       >
-        {virtualItems.map((virtualItem) => {
+        {virtualizer.getVirtualItems().map((virtualItem) => {
           const post = allPosts[virtualItem.index];
           return (
             <div
               key={virtualItem.key}
               data-index={virtualItem.index}
               ref={virtualizer.measureElement}
-              className="absolute top-0 left-0 w-full"
+              className={`absolute top-0 left-0 w-full ${isMobile ? "px-2" : ""}`}
               style={{
                 transform: `translateY(${virtualItem.start}px)`,
               }}

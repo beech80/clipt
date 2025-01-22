@@ -80,4 +80,64 @@ body {
     radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
   background-attachment: fixed;
   -webkit-tap-highlight-color: transparent;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* Mobile Optimization */
+@media (max-width: 640px) {
+  #root {
+    padding: 1rem;
+  }
+  
+  .post-container {
+    margin: -1rem;
+    width: calc(100% + 2rem);
+  }
+
+  /* Improve touch targets */
+  button, 
+  [role="button"],
+  a {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Prevent text from being too small */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Better spacing for mobile */
+  .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    @apply my-3;
+  }
+
+  /* Improved mobile form elements */
+  input,
+  select,
+  textarea {
+    @apply text-base; /* Prevent zoom on focus in iOS */
+    @apply px-4 py-3; /* Larger touch targets */
+  }
+
+  /* Bottom navigation spacing */
+  .bottom-nav {
+    @apply pb-safe;
+  }
+}
+
+/* iOS Safe Areas */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+
+.pr-safe {
+  padding-right: env(safe-area-inset-right);
 }
