@@ -1,3 +1,4 @@
+import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { EmoteProvider } from "@/contexts/EmoteContext";
@@ -19,9 +20,9 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <div className="min-h-screen w-full bg-[#1A1F2C]">
-      <QueryClientProvider client={queryClient}>
-        <ErrorBoundary>
+    <React.StrictMode>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <SecurityProvider>
               <EmoteProvider>
@@ -34,9 +35,9 @@ function App() {
               </EmoteProvider>
             </SecurityProvider>
           </AuthProvider>
-        </ErrorBoundary>
-      </QueryClientProvider>
-    </div>
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </React.StrictMode>
   );
 }
 
