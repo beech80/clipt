@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { PostFormProvider, usePostForm } from "@/contexts/PostFormContext";
 import { usePostFormValidation } from "@/hooks/usePostFormValidation";
-import { uploadImage, uploadVideo } from "@/utils/postUploadUtils";
+import { MediaService } from "@/services/mediaService";
 import { extractMentions, createMention } from "@/utils/mentionUtils";
 import { createPost } from "@/services/postService";
 import { format } from "date-fns";
@@ -14,6 +14,7 @@ import PostFormMedia from "./PostFormMedia";
 import PostFormScheduler from "./PostFormScheduler";
 import PostFormMediaPreview from "./PostFormMediaPreview";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface PostFormContainerProps {
   onPostCreated?: () => void;
@@ -64,15 +65,24 @@ function PostFormInner({ onPostCreated }: PostFormContainerProps) {
       let videoUrl = null;
 
       if (selectedImage) {
-        const result = await uploadImage(selectedImage, setImageProgress);
+        const result = await MediaService.uploadImage(selectedImage, {
+          setProgress: setImageProgress
+        });
         if (result.error) throw result.error;
         imageUrl = result.url;
       }
 
       if (selectedVideo) {
-        const result = await uploadVideo(selectedVideo, setVideoProgress);
+        const result = await MediaService.uploadVideo(selectedVideo, {
+          setProgress: setVideoProgress
+        });
         if (result.error) throw result.error;
         videoUrl = result.url;
+      }
+
+      // Validate GIF URL if selected
+      if (selectedGif && !(await MediaService.validateMediaUrl(selectedGif))) {
+        throw new Error("Invalid GIF URL");
       }
 
       const scheduledPublishTime = scheduledDate && scheduledTime
@@ -125,6 +135,16 @@ function PostFormInner({ onPostCreated }: PostFormContainerProps) {
     setShowEditor(false);
   };
 
+  if (!user) {
+    return (
+      <Alert>
+        <AlertDescription>
+          Please log in to create a post
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="bg-card rounded-lg p-4 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -137,8 +157,11 @@ function PostFormInner({ onPostCreated }: PostFormContainerProps) {
         <PostFormContent 
           content={content}
           onChange={setContent}
+          disabled={isSubmitting}
         />
+
         <PostFormMediaPreview />
+
         <PostFormMedia 
           selectedImage={selectedImage}
           selectedVideo={selectedVideo}
@@ -151,6 +174,7 @@ function PostFormInner({ onPostCreated }: PostFormContainerProps) {
           onGifSelect={() => {}}
           onShowGifPickerChange={() => {}}
           onShowEditor={() => setShowEditor(true)}
+          disabled={isSubmitting}
         />
 
         <PostFormScheduler 
@@ -158,9 +182,16 @@ function PostFormInner({ onPostCreated }: PostFormContainerProps) {
           scheduledTime={scheduledTime}
           onScheduledDateChange={setScheduledDate}
           onScheduledTimeChange={setScheduledTime}
+          disabled={isSubmitting}
         />
 
         <PostFormActions isSubmitting={isSubmitting} />
+
+        {isSubmitting && (
+          <div className="flex justify-center">
+            <LoadingSpinner />
+          </div>
+        )}
       </form>
 
       <PostFormMediaEditor 
