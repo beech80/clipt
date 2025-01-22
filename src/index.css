@@ -2,84 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 250 33% 99%;
-    --foreground: 250 10% 3.9%;
-
-    --card: 250 33% 99%;
-    --card-foreground: 250 10% 3.9%;
- 
-    --popover: 250 33% 99%;
-    --popover-foreground: 250 10% 3.9%;
- 
-    --primary: 250 84% 74%;
-    --primary-foreground: 250 0% 98%;
- 
-    --secondary: 250 30% 96%;
-    --secondary-foreground: 250 10% 3.9%;
- 
-    --muted: 250 30% 96%;
-    --muted-foreground: 250 10% 46.1%;
- 
-    --accent: 250 30% 96%;
-    --accent-foreground: 250 10% 3.9%;
- 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 250 10% 90%;
-    --input: 250 10% 90%;
-    --ring: 250 84% 74%;
- 
-    --radius: 0.5rem;
-
-    --gaming-gradient: linear-gradient(to bottom right, #9b87f5, #1A1F2C);
-  }
- 
-  .dark {
-    --background: 250 10% 3.9%;
-    --foreground: 250 0% 98%;
- 
-    --card: 250 10% 3.9%;
-    --card-foreground: 250 0% 98%;
- 
-    --popover: 250 10% 3.9%;
-    --popover-foreground: 250 0% 98%;
- 
-    --primary: 250 84% 74%;
-    --primary-foreground: 250 0% 98%;
- 
-    --secondary: 250 37% 15.9%;
-    --secondary-foreground: 250 0% 98%;
- 
-    --muted: 250 37% 15.9%;
-    --muted-foreground: 250 50% 64.9%;
- 
-    --accent: 250 37% 15.9%;
-    --accent-foreground: 250 0% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 250 0% 98%;
- 
-    --border: 250 37% 15.9%;
-    --input: 250 37% 15.9%;
-    --ring: 250 84% 74%;
-  }
+/* Clip Button Styles */
+.clip-button {
+  @apply relative flex items-center gap-2 px-4 py-2 rounded-full 
+  bg-gaming-400/20 backdrop-blur-sm border border-gaming-400/30
+  hover:bg-gaming-400/30 text-gaming-300 font-medium;
 }
 
-* {
-  @apply border-border touch-manipulation;
+.clip-button-icon {
+  @apply w-5 h-5;
 }
 
-body {
-  @apply text-white overscroll-none;
-  background-color: var(--background-override, #1A1F2C);
-  background-image: 
-    radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
-  background-attachment: fixed;
-  -webkit-tap-highlight-color: transparent;
+.clip-button-text {
+  @apply text-sm sm:text-base font-bold tracking-wide;
+}
+
+/* Custom Scrollbar */
+.retro-screen {
+  @apply overflow-y-auto overflow-x-hidden;
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.gaming.400') theme('colors.gaming.900');
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
@@ -103,48 +45,7 @@ body {
   active:scale-95 transition-all duration-300;
 }
 
-@media (max-width: 640px) {
-  #root {
-    padding: 1rem;
-  }
-  
-  .post-container {
-    margin: -1rem;
-    width: calc(100% + 2rem);
-  }
-
-  /* Improve touch targets */
-  button, 
-  [role="button"],
-  a {
-    @apply min-h-[44px] min-w-[44px];
-  }
-
-  /* Prevent text from being too small */
-  html {
-    -webkit-text-size-adjust: 100%;
-  }
-
-  /* Better spacing for mobile */
-  .space-y-4 > :not([hidden]) ~ :not([hidden]) {
-    @apply my-3;
-  }
-
-  /* Improved mobile form elements */
-  input,
-  select,
-  textarea {
-    @apply text-base; /* Prevent zoom on focus in iOS */
-    @apply px-4 py-3; /* Larger touch targets */
-  }
-
-  /* Bottom navigation spacing */
-  .bottom-nav {
-    @apply pb-safe;
-  }
-}
-
-/* iOS Safe Areas */
+/* Safe Area Insets */
 .pt-safe {
   padding-top: env(safe-area-inset-top);
 }

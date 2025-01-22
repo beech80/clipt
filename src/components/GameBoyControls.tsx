@@ -84,7 +84,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       <div className="fixed left-1/2 -translate-x-1/2 bottom-16 sm:bottom-20">
         <button 
           onClick={() => navigate('/clipts')}
-          className="clip-button active:scale-95 transition-transform"
+          className="clip-button active:scale-95 transition-transform animate-neon-pulse"
           aria-label="Create Clipt"
         >
           <Play className="clip-button-icon" />
