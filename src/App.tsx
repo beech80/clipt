@@ -23,8 +23,8 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <ErrorBoundary>
-            <SecurityProvider>
-              <AuthProvider>
+            <AuthProvider>
+              <SecurityProvider>
                 <EmoteProvider>
                   <MessagesProvider>
                     <div className="min-h-screen bg-gaming-900 text-white">
@@ -33,8 +33,8 @@ function App() {
                     </div>
                   </MessagesProvider>
                 </EmoteProvider>
-              </AuthProvider>
-            </SecurityProvider>
+              </SecurityProvider>
+            </AuthProvider>
           </ErrorBoundary>
         </BrowserRouter>
       </QueryClientProvider>
