@@ -18,29 +18,11 @@ const queryClient = new QueryClient({
   },
 });
 
-// Create an AppContent component to wrap providers that need router context
-function AppContent() {
-  return (
-    <AuthProvider>
-      <SecurityProvider>
-        <EmoteProvider>
-          <MessagesProvider>
-            <div className="min-h-screen w-full bg-gaming-900 text-white">
-              <RouterProvider router={router} />
-              <GameBoyControls />
-            </div>
-          </MessagesProvider>
-        </EmoteProvider>
-      </SecurityProvider>
-    </AuthProvider>
-  );
-}
-
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AppContent />
+        <RouterProvider router={router} />
       </QueryClientProvider>
     </ErrorBoundary>
   );
