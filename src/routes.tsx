@@ -29,10 +29,21 @@ const Profile = lazy(() => import('./pages/Profile' /* webpackChunkName: "profil
 const EditProfile = lazy(() => import('./pages/EditProfile' /* webpackChunkName: "edit-profile" */));
 const Settings = lazy(() => import('./pages/Settings' /* webpackChunkName: "settings" */));
 const Clips = lazy(() => import('./pages/Clips' /* webpackChunkName: "clips" */));
+const ClipEditor = lazy(() => import('./pages/ClipEditor' /* webpackChunkName: "clip-editor" */));
 const GamePage = lazy(() => import('./pages/GamePage' /* webpackChunkName: "game" */));
 const Messages = lazy(() => import('./pages/Messages' /* webpackChunkName: "messages" */));
 const Collections = lazy(() => import('./pages/Collections' /* webpackChunkName: "collections" */));
 const Discover = lazy(() => import('./pages/Discover' /* webpackChunkName: "discover" */));
+const Analytics = lazy(() => import('./pages/Analytics' /* webpackChunkName: "analytics" */));
+const Achievements = lazy(() => import('./pages/Achievements' /* webpackChunkName: "achievements" */));
+const ModReports = lazy(() => import('./pages/ModReports' /* webpackChunkName: "mod-reports" */));
+const GroupChat = lazy(() => import('./pages/GroupChat' /* webpackChunkName: "group-chat" */));
+const Onboarding = lazy(() => import('./pages/Onboarding' /* webpackChunkName: "onboarding" */));
+const Login = lazy(() => import('./pages/Login' /* webpackChunkName: "login" */));
+const Support = lazy(() => import('./pages/Support' /* webpackChunkName: "support" */));
+const Schedule = lazy(() => import('./pages/Schedule' /* webpackChunkName: "schedule" */));
+const Streaming = lazy(() => import('./pages/Streaming' /* webpackChunkName: "streaming" */));
+const TopClips = lazy(() => import('./pages/TopClips' /* webpackChunkName: "top-clips" */));
 
 export const router = createBrowserRouter([
   {
@@ -60,6 +71,10 @@ export const router = createBrowserRouter([
     element: lazyLoad(Clips),
   },
   {
+    path: "/clip-editor/:id",
+    element: lazyLoad(ClipEditor),
+  },
+  {
     path: "/game/:slug",
     element: lazyLoad(GamePage),
   },
@@ -75,4 +90,44 @@ export const router = createBrowserRouter([
     path: "/discover",
     element: lazyLoad(Discover),
   },
+  {
+    path: "/analytics",
+    element: lazyLoad(Analytics),
+  },
+  {
+    path: "/achievements",
+    element: lazyLoad(Achievements),
+  },
+  {
+    path: "/mod-reports",
+    element: lazyLoad(ModReports),
+  },
+  {
+    path: "/group-chat",
+    element: lazyLoad(GroupChat),
+  },
+  {
+    path: "/onboarding",
+    element: lazyLoad(Onboarding),
+  },
+  {
+    path: "/login",
+    element: lazyLoad(Login),
+  },
+  {
+    path: "/support",
+    element: lazyLoad(Support),
+  },
+  {
+    path: "/schedule",
+    element: lazyLoad(Schedule),
+  },
+  {
+    path: "/streaming",
+    element: lazyLoad(Streaming),
+  },
+  {
+    path: "/top-clips",
+    element: lazyLoad(TopClips),
+  }
 ]);
