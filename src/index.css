@@ -83,7 +83,26 @@ body {
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
-/* Mobile Optimization */
+.xbox-joystick {
+  @apply relative w-full h-full rounded-full bg-gaming-300/20 border-2 border-gaming-300/30
+  shadow-[0_0_15px_rgba(155,135,245,0.2)] backdrop-blur-sm transition-all duration-300;
+}
+
+.xbox-joystick-thumb {
+  @apply absolute top-1/2 left-1/2 w-12 h-12 -translate-x-1/2 -translate-y-1/2
+  rounded-full bg-gaming-300 border-2 border-gaming-400/50 
+  shadow-[0_0_20px_rgba(155,135,245,0.4)] cursor-pointer transition-transform duration-75
+  active:scale-95 touch-none;
+}
+
+.action-button {
+  @apply w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center
+  bg-gaming-300/20 border-2 border-gaming-300/30
+  shadow-[0_0_15px_rgba(155,135,245,0.2)] backdrop-blur-sm
+  hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]
+  active:scale-95 transition-all duration-300;
+}
+
 @media (max-width: 640px) {
   #root {
     padding: 1rem;
