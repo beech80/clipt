@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Bell } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -11,34 +10,18 @@ import {
 } from "@/components/ui/popover";
 import { NotificationBadge } from "./notifications/NotificationBadge";
 import { NotificationList } from "./notifications/NotificationList";
-import type { Notification } from "@/types/notifications";
+import { NotificationService } from "@/services/notificationService";
 
 export const NotificationsPopover = () => {
   const queryClient = useQueryClient();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      return data as Notification[];
-    },
+    queryFn: NotificationService.fetchNotifications,
   });
 
   const markAsReadMutation = useMutation({
-    mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-
-      if (error) throw error;
-    },
+    mutationFn: NotificationService.markAsRead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
@@ -47,34 +30,23 @@ export const NotificationsPopover = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
+    const unsubscribe = NotificationService.subscribeToNewNotifications((payload) => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      toast.info("New notification received", {
+        action: {
+          label: "View",
+          onClick: () => {
+            const notificationTrigger = document.querySelector('[aria-label="Notifications"]');
+            if (notificationTrigger instanceof HTMLElement) {
+              notificationTrigger.click();
+            }
+          },
         },
-        (payload) => {
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
-          toast.info("New notification received", {
-            action: {
-              label: "View",
-              onClick: () => {
-                const notificationTrigger = document.querySelector('[aria-label="Notifications"]');
-                if (notificationTrigger instanceof HTMLElement) {
-                  notificationTrigger.click();
-                }
-              },
-            },
-          });
-        }
-      )
-      .subscribe();
+      });
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [queryClient]);
 
