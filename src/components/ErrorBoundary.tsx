@@ -10,11 +10,15 @@ interface Props {
 }
 
 interface State {
+  hasError: boolean;
+  error: Error | null;
   isOffline: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
+    hasError: false,
+    error: null,
     isOffline: !navigator.onLine
   };
 
@@ -36,7 +40,12 @@ class ErrorBoundary extends Component<Props, State> {
     window.removeEventListener('offline', this.handleOffline);
   }
 
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error, isOffline: !navigator.onLine };
+  }
+
   private handleError = (error: Error, errorInfo: ErrorInfo) => {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
     errorReportingService.reportError({
       error,
       context: 'react_error',
@@ -45,6 +54,7 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleRetry = () => {
+    this.setState({ hasError: false, error: null });
     window.location.reload();
   };
 
@@ -53,17 +63,20 @@ class ErrorBoundary extends Component<Props, State> {
       return <OfflineDisplay />;
     }
 
+    if (this.state.hasError) {
+      return this.props.fallback ? (
+        this.props.fallback
+      ) : (
+        <ErrorDisplay
+          title="Something went wrong"
+          description={this.state.error?.message || "An unexpected error occurred"}
+          onRetry={this.handleRetry}
+        />
+      );
+    }
+
     return (
       <ErrorBoundaryCore onError={this.handleError}>
-        {this.props.fallback ? (
-          this.props.fallback
-        ) : (
-          <ErrorDisplay
-            title="Something went wrong"
-            description="An unexpected error occurred"
-            onRetry={this.handleRetry}
-          />
-        )}
         {this.props.children}
       </ErrorBoundaryCore>
     );
