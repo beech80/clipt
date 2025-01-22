@@ -52,7 +52,10 @@ export function AccessibilitySettings() {
       setHighContrast(data.high_contrast);
       setScreenReaderEnabled(data.screen_reader_enabled);
       setReducedMotion(data.reduced_motion);
-      setCaptionSize(data.caption_size);
+      // Ensure we only set valid caption sizes
+      if (data.caption_size === "small" || data.caption_size === "medium" || data.caption_size === "large") {
+        setCaptionSize(data.caption_size);
+      }
     }
   };
 
