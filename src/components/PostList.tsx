@@ -1,37 +1,15 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
 import PostItem from "./PostItem";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/lib/supabase";
-import { Post } from "@/types/post";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/contexts/AuthContext";
-
-const POSTS_PER_PAGE = 5;
-
-const PostSkeleton = () => (
-  <div className="relative h-[calc(100vh-200px)] sm:h-[500px] bg-card/50 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg border border-border/50">
-    <div className="p-4 border-b border-border/50">
-      <div className="flex items-center space-x-4">
-        <Skeleton className="h-10 w-10 rounded-full" />
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-[150px]" />
-          <Skeleton className="h-3 w-[100px]" />
-        </div>
-      </div>
-    </div>
-    <div className="h-[calc(100%-76px)]">
-      <Skeleton className="h-full w-full" />
-    </div>
-  </div>
-);
+import { PostSkeleton } from "./post/PostSkeleton";
+import { EmptyPostList } from "./post/EmptyPostList";
+import { usePostList } from "@/hooks/usePostList";
 
 const PostList = () => {
-  const { user } = useAuth();
   const isMobile = useIsMobile();
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -43,58 +21,7 @@ const PostList = () => {
     isFetchingNextPage,
     status,
     refetch
-  } = useInfiniteQuery({
-    queryKey: ['posts', user?.id],
-    queryFn: async ({ pageParam = 0 }) => {
-      let followedUserIds: string[] = [];
-      if (user) {
-        const { data: followsData } = await supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', user.id);
-        
-        followedUserIds = followsData?.map(follow => follow.following_id) || [];
-      }
-
-      const query = supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          image_url,
-          video_url,
-          created_at,
-          user_id,
-          profiles:user_id (
-            username,
-            avatar_url
-          ),
-          likes:likes!post_id (
-            count
-          ),
-          clip_votes:clip_votes!post_id (
-            count
-          )
-        `)
-        .range(pageParam * POSTS_PER_PAGE, (pageParam + 1) * POSTS_PER_PAGE - 1)
-        .order('created_at', { ascending: false })
-        .is('is_published', true);
-
-      if (user && followedUserIds.length > 0) {
-        query.in('user_id', followedUserIds);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Post[];
-    },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, pages) => {
-      return lastPage && lastPage.length === POSTS_PER_PAGE ? pages.length : undefined;
-    },
-    gcTime: 1000 * 60 * 30, // Cache for 30 minutes
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-  });
+  } = usePostList();
 
   const allPosts = data?.pages.flat() ?? [];
 
@@ -144,19 +71,7 @@ const PostList = () => {
   }
 
   if (!data?.pages || data.pages.length === 0 || data.pages[0].length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
-        {user ? (
-          <p className="text-muted-foreground text-center max-w-md">
-            Follow some creators to see their posts here!
-          </p>
-        ) : (
-          <p className="text-muted-foreground text-center max-w-md">
-            Sign in to see personalized content from creators you follow!
-          </p>
-        )}
-      </div>
-    );
+    return <EmptyPostList />;
   }
 
   return (
