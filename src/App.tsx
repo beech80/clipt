@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ReportDialogProvider } from "@/components/report/ReportDialogProvider";
 import { MessagesProvider } from "@/contexts/MessagesContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Pages
@@ -54,42 +55,44 @@ function App() {
         <Router>
           <ErrorBoundary>
             <AuthProvider>
-              <AccessibilityProvider>
-                <MessagesProvider>
-                  <ReportDialogProvider>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/home" element={<Home />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/reset-password" element={<ResetPassword />} />
-                      <Route path="/update-password" element={<UpdatePassword />} />
-                      <Route path="/resend-verification" element={<ResendVerification />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/profile/edit" element={<EditProfile />} />
-                      <Route path="/messages" element={<Messages />} />
-                      <Route path="/group-chat" element={<GroupChat />} />
-                      <Route path="/streaming" element={<Streaming />} />
-                      <Route path="/top-clips" element={<TopClips />} />
-                      <Route path="/clipts" element={<Clipts />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/discover" element={<Discover />} />
-                      <Route path="/collections" element={<Collections />} />
-                      <Route path="/post/:id" element={<Post />} />
-                      <Route path="/clip-editor/:id" element={<ClipEditor />} />
-                      <Route path="/onboarding" element={<Onboarding />} />
-                      <Route path="/achievements" element={<Achievements />} />
-                      <Route path="/analytics" element={<Analytics />} />
-                      <Route path="/support" element={<Support />} />
-                      <Route path="/verification" element={<Verification />} />
-                      <Route path="/schedule" element={<Schedule />} />
-                      <Route path="/payment-success" element={<PaymentSuccess />} />
-                      <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-                      <Route path="/game/:slug" element={<GamePage />} />
-                    </Routes>
-                    <Toaster />
-                  </ReportDialogProvider>
-                </MessagesProvider>
-              </AccessibilityProvider>
+              <SecurityProvider>
+                <AccessibilityProvider>
+                  <MessagesProvider>
+                    <ReportDialogProvider>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/home" element={<Home />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
+                        <Route path="/update-password" element={<UpdatePassword />} />
+                        <Route path="/resend-verification" element={<ResendVerification />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/profile/edit" element={<EditProfile />} />
+                        <Route path="/messages" element={<Messages />} />
+                        <Route path="/group-chat" element={<GroupChat />} />
+                        <Route path="/streaming" element={<Streaming />} />
+                        <Route path="/top-clips" element={<TopClips />} />
+                        <Route path="/clipts" element={<Clipts />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="/discover" element={<Discover />} />
+                        <Route path="/collections" element={<Collections />} />
+                        <Route path="/post/:id" element={<Post />} />
+                        <Route path="/clip-editor/:id" element={<ClipEditor />} />
+                        <Route path="/onboarding" element={<Onboarding />} />
+                        <Route path="/achievements" element={<Achievements />} />
+                        <Route path="/analytics" element={<Analytics />} />
+                        <Route path="/support" element={<Support />} />
+                        <Route path="/verification" element={<Verification />} />
+                        <Route path="/schedule" element={<Schedule />} />
+                        <Route path="/payment-success" element={<PaymentSuccess />} />
+                        <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+                        <Route path="/game/:slug" element={<GamePage />} />
+                      </Routes>
+                      <Toaster />
+                    </ReportDialogProvider>
+                  </MessagesProvider>
+                </AccessibilityProvider>
+              </SecurityProvider>
             </AuthProvider>
           </ErrorBoundary>
         </Router>

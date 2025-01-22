@@ -2724,6 +2724,30 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          endpoint: string
+          id: string
+          ip_address: string
+          request_count: number | null
+          window_start: string | null
+        }
+        Insert: {
+          endpoint: string
+          id?: string
+          ip_address: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Update: {
+          endpoint?: string
+          id?: string
+          ip_address?: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       reactions: {
         Row: {
           created_at: string
@@ -2891,6 +2915,45 @@ export type Database = {
           multiplier?: number | null
           name?: string
           start_date?: string
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -5167,6 +5230,15 @@ export type Database = {
           context_match: boolean
         }[]
       }
+      check_rate_limit: {
+        Args: {
+          check_ip: string
+          check_endpoint: string
+          max_requests: number
+          window_minutes: number
+        }
+        Returns: boolean
+      }
       clean_expired_stories: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5255,6 +5327,17 @@ export type Database = {
           check_ip: string
         }
         Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          event_type: string
+          severity: string
+          user_id: string
+          ip_address: string
+          user_agent: string
+          details?: Json
+        }
+        Returns: string
       }
       process_data_retention: {
         Args: Record<PropertyKey, never>
