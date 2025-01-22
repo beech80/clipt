@@ -26,8 +26,8 @@ class ErrorReportingService {
 
     // Store in Supabase for analysis
     try {
-      await supabase.from('error_reports').insert({
-        error_type: additionalInfo?.errorType || 'unknown',
+      const errorData = {
+        error_type: String(additionalInfo?.errorType || 'unknown'),
         message: error.message,
         stack_trace: error.stack,
         component_stack: componentStack,
@@ -35,9 +35,10 @@ class ErrorReportingService {
           userAgent: navigator.userAgent,
           platform: navigator.platform,
           language: navigator.language,
-        },
-        metadata: additionalInfo
-      });
+        }
+      };
+
+      await supabase.from('error_reports').insert(errorData);
     } catch (e) {
       console.error('Failed to store error report:', e);
     }

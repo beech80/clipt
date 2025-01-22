@@ -7,9 +7,8 @@ import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GameBoyControls from "@/components/GameBoyControls";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, RouterProvider } from "react-router-dom";
 import { router } from "./routes";
-import { RouterProvider } from "@tanstack/react-router";
 
 const queryClient = new QueryClient({
   defaultOptions: {
