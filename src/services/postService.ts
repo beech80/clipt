@@ -2,15 +2,22 @@ import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 
-interface FetchPostsParams {
-  page: number;
-  limit: number;
-  userId?: string;
-  followedUserIds?: string[];
+interface CreatePostParams {
+  content: string;
+  userId: string;
+  imageUrl?: string | null;
+  videoUrl?: string | null;
+  scheduledPublishTime?: string | null;
+  isPublished?: boolean;
 }
 
 export const postService = {
-  async fetchPosts({ page, limit, userId, followedUserIds }: FetchPostsParams) {
+  async fetchPosts({ page, limit, userId, followedUserIds }: {
+    page: number;
+    limit: number;
+    userId?: string;
+    followedUserIds?: string[];
+  }) {
     try {
       const query = supabase
         .from('posts')
@@ -48,6 +55,30 @@ export const postService = {
       const { handleError } = useErrorHandler();
       handleError(error, 'Error fetching posts');
       throw error;
+    }
+  },
+
+  async createPost(params: CreatePostParams) {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .insert({
+          content: params.content,
+          user_id: params.userId,
+          image_url: params.imageUrl,
+          video_url: params.videoUrl,
+          scheduled_publish_time: params.scheduledPublishTime,
+          is_published: params.isPublished
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as Post, error: null };
+    } catch (error) {
+      const { handleError } = useErrorHandler();
+      handleError(error, 'Error creating post');
+      return { data: null, error };
     }
   },
 
@@ -95,3 +126,6 @@ export const postService = {
     }
   }
 };
+
+// Export individual functions for direct import
+export const { createPost, fetchPosts } = postService;
