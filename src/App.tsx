@@ -5,7 +5,7 @@ import { MessagesProvider } from "@/contexts/MessagesContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GameBoyControls from "@/components/GameBoyControls";
-import { BrowserRouter, RouterProvider } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
 import { router } from "./routes";
 
 const queryClient = new QueryClient({
@@ -21,22 +21,20 @@ function App() {
   return (
     <div className="min-h-screen w-full bg-[#1A1F2C]">
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <ErrorBoundary>
-            <AuthProvider>
-              <SecurityProvider>
-                <EmoteProvider>
-                  <MessagesProvider>
-                    <div className="min-h-screen w-full bg-[#1A1F2C] text-white">
-                      <RouterProvider router={router} />
-                      <GameBoyControls />
-                    </div>
-                  </MessagesProvider>
-                </EmoteProvider>
-              </SecurityProvider>
-            </AuthProvider>
-          </ErrorBoundary>
-        </BrowserRouter>
+        <ErrorBoundary>
+          <AuthProvider>
+            <SecurityProvider>
+              <EmoteProvider>
+                <MessagesProvider>
+                  <div className="min-h-screen w-full bg-[#1A1F2C] text-white">
+                    <RouterProvider router={router} />
+                    <GameBoyControls />
+                  </div>
+                </MessagesProvider>
+              </EmoteProvider>
+            </SecurityProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </QueryClientProvider>
     </div>
   );
