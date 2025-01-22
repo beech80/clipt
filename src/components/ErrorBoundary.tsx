@@ -3,7 +3,7 @@ import ErrorBoundaryCore from './error-boundary/ErrorBoundaryCore';
 import { ErrorDisplay } from './error-boundary/ErrorDisplay';
 import { OfflineDisplay } from './error-boundary/OfflineDisplay';
 import { errorReportingService } from '@/services/errorReportingService';
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 interface Props {
   children: ReactNode;

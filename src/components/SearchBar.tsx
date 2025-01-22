@@ -8,16 +8,23 @@ import { SearchResults } from "./search/SearchResults";
 import { useSearch } from "@/hooks/useSearch";
 import { useSearchContext } from "@/contexts/SearchContext";
 import { debounce } from "@/utils/debounce";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export function SearchBar() {
   const navigate = useNavigate();
   const { searchTerm, setSearchTerm, searchHistory, executeSearch } = useSearch();
   const { filters, setFilters } = useSearchContext();
 
-  const { data: searchResults, isLoading } = useQuery({
+  const { data: searchResults, isLoading, error, refetch } = useQuery({
     queryKey: ['search', searchTerm, filters],
     queryFn: () => executeSearch(searchTerm, filters),
-    enabled: searchTerm.length >= 2
+    enabled: searchTerm.length >= 2,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    onError: (error) => {
+      toast.error("Search failed. Please try again.");
+      console.error("Search error:", error);
+    }
   });
 
   const handleSearchHistoryClick = (historyItem: any) => {
@@ -43,35 +50,70 @@ export function SearchBar() {
     setSearchTerm("");
   };
 
+  const handleRetry = () => {
+    toast.loading("Retrying search...");
+    refetch();
+  };
+
   const debouncedSetSearchTerm = debounce(setSearchTerm, 300);
 
   return (
-    <div className="relative w-full max-w-sm">
-      <div className="relative flex gap-2">
-        <SearchInput 
-          searchTerm={searchTerm} 
-          onSearchChange={debouncedSetSearchTerm} 
-        />
-        <SearchFilters 
-          filters={filters} 
-          onFiltersChange={setFilters} 
-        />
-      </div>
+    <ErrorBoundary>
+      <div 
+        className="relative w-full max-w-sm"
+        role="search"
+        aria-label="Site search"
+      >
+        <div className="relative flex gap-2">
+          <SearchInput 
+            searchTerm={searchTerm} 
+            onSearchChange={debouncedSetSearchTerm}
+            aria-label="Search input"
+            aria-expanded={searchTerm.length >= 2}
+            aria-controls="search-results"
+            aria-describedby={error ? "search-error" : undefined}
+          />
+          <SearchFilters 
+            filters={filters} 
+            onFiltersChange={setFilters}
+            aria-label="Search filters"
+          />
+        </div>
 
-      {searchTerm.length >= 2 ? (
-        <SearchResults
-          isLoading={isLoading}
-          results={searchResults}
-          onProfileClick={handleProfileClick}
-          onPostClick={handlePostClick}
-          onStreamClick={handleStreamClick}
-        />
-      ) : (
-        <SearchHistory
-          searchHistory={searchHistory || []}
-          onHistoryItemClick={handleSearchHistoryClick}
-        />
-      )}
-    </div>
+        {error && (
+          <div 
+            id="search-error"
+            role="alert"
+            className="mt-2 text-sm text-red-500"
+          >
+            Search failed. 
+            <button 
+              onClick={handleRetry}
+              className="ml-2 underline hover:text-red-600"
+              aria-label="Retry search"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        <div id="search-results" role="region" aria-live="polite">
+          {searchTerm.length >= 2 ? (
+            <SearchResults
+              isLoading={isLoading}
+              results={searchResults}
+              onProfileClick={handleProfileClick}
+              onPostClick={handlePostClick}
+              onStreamClick={handleStreamClick}
+            />
+          ) : (
+            <SearchHistory
+              searchHistory={searchHistory || []}
+              onHistoryItemClick={handleSearchHistoryClick}
+            />
+          )}
+        </div>
+      </div>
+    </ErrorBoundary>
   );
 }
