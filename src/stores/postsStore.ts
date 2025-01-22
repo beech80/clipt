@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { createAsyncAction } from './appStore';
 
 interface Post {
@@ -68,15 +68,15 @@ export const createPost = createAsyncAction(
 );
 
 export const deletePost = createAsyncAction(
-  async (id: string) => {
-    const { error } = await supabase.from('posts').delete().eq('id', id);
+  async (postId: string) => {
+    const { error } = await supabase.from('posts').delete().eq('id', postId);
     if (error) throw error;
-    return id;
+    return postId;
   },
   {
-    optimisticKey: `delete-post-${id}`,
-    onSuccess: (id) => {
-      usePostsStore.getState().removePost(id);
+    optimisticKey: `delete-post`,
+    onSuccess: (postId) => {
+      usePostsStore.getState().removePost(postId);
     },
   }
 );
