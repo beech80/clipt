@@ -21,6 +21,9 @@ export function SearchBar() {
     enabled: searchTerm.length >= 2,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    staleTime: 1000 * 60 * 5, // Results stay fresh for 5 minutes
+    cacheTime: 1000 * 60 * 30, // Cache results for 30 minutes
+    keepPreviousData: true, // Keep showing previous results while fetching new ones
     meta: {
       onError: () => {
         toast.error("Search failed. Please try again.");
