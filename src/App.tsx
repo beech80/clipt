@@ -37,7 +37,8 @@ import PaymentSuccess from "@/pages/payment-success";
 import PaymentCancelled from "@/pages/payment-cancelled";
 import ClipEditor from "@/pages/ClipEditor";
 import GamePage from "@/pages/GamePage";
-import Index from "@/pages/Index";
+import { MainContent } from "@/components/home/MainContent";
+import { SidebarContent } from "@/components/home/SidebarContent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,7 +62,14 @@ function App() {
                   <MessagesProvider>
                     <ReportDialogProvider>
                       <Routes>
-                        <Route path="/" element={<Index />} />
+                        <Route path="/" element={
+                          <div className="container mx-auto p-4 md:p-6 min-h-screen">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                              <MainContent />
+                              <SidebarContent />
+                            </div>
+                          </div>
+                        } />
                         <Route path="/home" element={<Home />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
