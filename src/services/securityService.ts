@@ -57,11 +57,11 @@ export class SecurityService {
   public async logSecurityEvent(
     eventType: string,
     severity: 'low' | 'medium' | 'high' | 'critical',
-    userId?: string,
+    userId?: string | null,
     details: Record<string, any> = {}
   ): Promise<void> {
     try {
-      await supabase.rpc('log_security_event', {
+      const { error } = await supabase.rpc('log_security_event', {
         event_type: eventType,
         severity,
         user_id: userId,
@@ -69,6 +69,10 @@ export class SecurityService {
         user_agent: navigator.userAgent,
         details
       });
+      
+      if (error) {
+        console.error('Failed to log security event:', error);
+      }
     } catch (error) {
       console.error('Failed to log security event:', error);
     }
