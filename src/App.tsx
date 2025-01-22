@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <div className="min-h-screen bg-gaming-900">
+    <div className="min-h-screen w-full bg-[#1A1F2C]">
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <ErrorBoundary>
@@ -27,7 +27,7 @@ function App() {
               <SecurityProvider>
                 <EmoteProvider>
                   <MessagesProvider>
-                    <div className="min-h-screen bg-gaming-900 text-white">
+                    <div className="min-h-screen w-full bg-[#1A1F2C] text-white">
                       <RouterProvider router={router} />
                       <GameBoyControls />
                     </div>

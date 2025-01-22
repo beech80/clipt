@@ -5,7 +5,11 @@
   text-align: center;
 }
 
-/* ... keep existing code */
+body {
+  background-color: #1A1F2C;
+  color: white;
+  min-height: 100vh;
+}
 
 /* Accessibility Styles */
 .high-contrast {
