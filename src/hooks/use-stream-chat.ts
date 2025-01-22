@@ -24,7 +24,8 @@ export const useStreamChat = (streamId: string) => {
           )
         `)
         .eq('stream_id', streamId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: true })
+        .throwOnError();
 
       if (error) throw error;
       setMessages(data || []);
@@ -49,9 +50,11 @@ export const useStreamChat = (streamId: string) => {
           stream_id: streamId,
           user_id: user.id,
           message: content,
-        });
+        })
+        .throwOnError();
 
       if (error) throw error;
+      toast.success('Message sent');
     } catch (err) {
       handleError(err, 'Error sending message');
       toast.error('Failed to send message');
@@ -62,8 +65,13 @@ export const useStreamChat = (streamId: string) => {
     try {
       const { error } = await supabase
         .from('stream_chat')
-        .update({ is_deleted: true, deleted_by: user?.id, deleted_at: new Date().toISOString() })
-        .eq('id', messageId);
+        .update({ 
+          is_deleted: true, 
+          deleted_by: user?.id, 
+          deleted_at: new Date().toISOString() 
+        })
+        .eq('id', messageId)
+        .throwOnError();
 
       if (error) throw error;
       toast.success('Message deleted');
@@ -76,7 +84,6 @@ export const useStreamChat = (streamId: string) => {
   useEffect(() => {
     fetchMessages();
 
-    // Subscribe to new messages
     const subscription = supabase
       .channel(`stream_chat:${streamId}`)
       .on('postgres_changes', {
