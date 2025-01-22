@@ -97,7 +97,7 @@ class ErrorBoundary extends Component<Props, State> {
       context: 'react_error',
       componentStack: errorInfo.componentStack,
       additionalInfo: {
-        category: errorCategory,
+        errorType: errorCategory,
         retryCount: this.state.retryCount,
         userAgent: navigator.userAgent,
         timestamp: new Date().toISOString()

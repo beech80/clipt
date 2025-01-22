@@ -7,8 +7,9 @@ import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import GameBoyControls from "@/components/GameBoyControls";
-import { RouterProvider } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { router } from "./routes";
+import { RouterProvider } from "@tanstack/react-router";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,19 +25,21 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
-        <AuthProvider>
-          <SecurityProvider>
-            <AccessibilityProvider>
-              <MessagesProvider>
-                <ReportDialogProvider>
-                  <RouterProvider router={router} />
-                  <GameBoyControls />
-                  <Toaster />
-                </ReportDialogProvider>
-              </MessagesProvider>
-            </AccessibilityProvider>
-          </SecurityProvider>
-        </AuthProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <SecurityProvider>
+              <AccessibilityProvider>
+                <MessagesProvider>
+                  <ReportDialogProvider>
+                    <RouterProvider router={router} />
+                    <GameBoyControls />
+                    <Toaster />
+                  </ReportDialogProvider>
+                </MessagesProvider>
+              </AccessibilityProvider>
+            </SecurityProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </ErrorBoundary>
     </QueryClientProvider>
   );
