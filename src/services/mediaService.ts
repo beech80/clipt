@@ -29,9 +29,9 @@ export class MediaService {
     return null;
   }
 
-  private static simulateProgress(setProgress: (progress: number) => void): NodeJS.Timer {
+  private static simulateProgress(setProgress: (progress: number) => void): NodeJS.Timeout {
     return setInterval(() => {
-      setProgress((prev) => Math.min(90, prev + Math.random() * 10));
+      setProgress((prev: number) => Math.min(90, prev + Math.random() * 10));
     }, 500);
   }
 

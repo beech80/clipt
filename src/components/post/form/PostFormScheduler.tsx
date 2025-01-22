@@ -1,66 +1,37 @@
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import React from "react";
 
 interface PostFormSchedulerProps {
-  scheduledDate: Date | undefined;
+  scheduledDate?: Date;
   scheduledTime: string;
   onScheduledDateChange: (date: Date | undefined) => void;
   onScheduledTimeChange: (time: string) => void;
+  disabled?: boolean;
 }
 
-const PostFormScheduler = ({
+export default function PostFormScheduler({
   scheduledDate,
   scheduledTime,
   onScheduledDateChange,
   onScheduledTimeChange,
-}: PostFormSchedulerProps) => {
+  disabled
+}: PostFormSchedulerProps) {
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button 
-          type="button" 
-          variant="outline"
-          className="w-full sm:w-auto"
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {scheduledDate ? format(scheduledDate, 'PPP') : 'Schedule'}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-4" align="start">
-        <div className="space-y-4">
-          <Calendar
-            mode="single"
-            selected={scheduledDate}
-            onSelect={onScheduledDateChange}
-            disabled={(date) => date < new Date()}
-          />
-          <div className="flex items-center gap-2">
-            <input
-              type="time"
-              value={scheduledTime}
-              onChange={(e) => onScheduledTimeChange(e.target.value)}
-              className="px-3 py-2 border rounded-md w-full"
-            />
-            {(scheduledDate || scheduledTime) && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  onScheduledDateChange(undefined);
-                  onScheduledTimeChange("");
-                }}
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+    <div className="flex flex-col space-y-2">
+      <label className="text-sm font-medium">Schedule Post</label>
+      <input
+        type="date"
+        value={scheduledDate ? scheduledDate.toISOString().split("T")[0] : ""}
+        onChange={(e) => onScheduledDateChange(e.target.value ? new Date(e.target.value) : undefined)}
+        disabled={disabled}
+        className="border border-border rounded-lg p-2"
+      />
+      <input
+        type="time"
+        value={scheduledTime}
+        onChange={(e) => onScheduledTimeChange(e.target.value)}
+        disabled={disabled}
+        className="border border-border rounded-lg p-2"
+      />
+    </div>
   );
-};
-
-export default PostFormScheduler;
+}
