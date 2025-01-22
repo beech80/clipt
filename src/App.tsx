@@ -20,24 +20,22 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <React.StrictMode>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <SecurityProvider>
-              <EmoteProvider>
-                <MessagesProvider>
-                  <div className="min-h-screen w-full bg-[#1A1F2C] text-white">
-                    <RouterProvider router={router} />
-                    <GameBoyControls />
-                  </div>
-                </MessagesProvider>
-              </EmoteProvider>
-            </SecurityProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </React.StrictMode>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <SecurityProvider>
+            <EmoteProvider>
+              <MessagesProvider>
+                <div className="min-h-screen w-full bg-[#1A1F2C] text-white">
+                  <RouterProvider router={router} />
+                  <GameBoyControls />
+                </div>
+              </MessagesProvider>
+            </EmoteProvider>
+          </SecurityProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
