@@ -43,11 +43,11 @@ const Post = () => {
   if (error) {
     toast.error("Failed to load post");
     return (
-      <div className="min-h-screen bg-gaming-900">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto max-w-2xl px-4 py-6">
           <BackButton />
           <div className="mt-8 text-center">
-            <h2 className="text-xl font-semibold text-red-500">Failed to load post</h2>
+            <h2 className="text-xl font-semibold text-destructive">Failed to load post</h2>
             <p className="mt-2 text-muted-foreground">Please try again later</p>
           </div>
         </div>
@@ -57,13 +57,13 @@ const Post = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gaming-900">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto max-w-2xl px-4 py-6">
           <BackButton />
           <div className="mt-4 space-y-4">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-[400px] w-full" />
-            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-12 w-full bg-muted/50" />
+            <Skeleton className="h-[400px] w-full bg-muted/50" />
+            <Skeleton className="h-20 w-full bg-muted/50" />
           </div>
         </div>
       </div>
@@ -72,11 +72,11 @@ const Post = () => {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-gaming-900">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto max-w-2xl px-4 py-6">
           <BackButton />
           <div className="mt-8 text-center">
-            <h2 className="text-xl font-semibold text-white">Post not found</h2>
+            <h2 className="text-xl font-semibold text-foreground">Post not found</h2>
             <p className="mt-2 text-muted-foreground">This post may have been deleted or is no longer available</p>
           </div>
         </div>
@@ -119,7 +119,7 @@ const Post = () => {
         type="article"
         structuredData={structuredData}
       />
-      <div className="min-h-screen bg-gaming-900">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto max-w-2xl px-4 py-6">
           <div className="mb-6 flex items-center justify-between">
             <BackButton />
@@ -135,7 +135,7 @@ const Post = () => {
             </div>
           </div>
           
-          <div className="gaming-card">
+          <div className="rounded-lg border border-border bg-card shadow-lg">
             <PostItem post={post} />
           </div>
         </div>
