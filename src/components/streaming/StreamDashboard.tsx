@@ -3,6 +3,7 @@ import { ViewerCountManager } from "./ViewerCountManager";
 import { StreamHealthMonitor } from "./StreamHealthMonitor";
 import { StreamMetrics } from "./StreamMetrics";
 import { StreamInteractivePanel } from "./StreamInteractivePanel";
+import { useState } from "react";
 
 interface StreamDashboardProps {
   userId: string;
@@ -10,11 +11,21 @@ interface StreamDashboardProps {
 }
 
 export function StreamDashboard({ userId, isLive }: StreamDashboardProps) {
+  const [viewerCount, setViewerCount] = useState(0);
+  const [streamMetrics, setStreamMetrics] = useState({
+    bitrate: 0,
+    fps: 0
+  });
+
   return (
     <div className="grid gap-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-4">
-          <ViewerCountManager streamId={userId} />
+          <ViewerCountManager 
+            streamId={userId} 
+            viewerCount={viewerCount}
+            onViewerCountChange={setViewerCount}
+          />
         </Card>
         <Card className="p-4">
           <StreamHealthMonitor streamId={userId} />
@@ -22,7 +33,10 @@ export function StreamDashboard({ userId, isLive }: StreamDashboardProps) {
       </div>
 
       <Card className="p-4">
-        <StreamMetrics streamId={userId} />
+        <StreamMetrics 
+          bitrate={streamMetrics.bitrate} 
+          fps={streamMetrics.fps} 
+        />
       </Card>
 
       <Card className="p-4">
