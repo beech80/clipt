@@ -83,7 +83,7 @@ const Profile = () => {
 
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4">Posts</h2>
-            <PostList userId={profile?.id} />
+            {profile && <PostList key={profile.id} />}
           </div>
         </Card>
       </div>
