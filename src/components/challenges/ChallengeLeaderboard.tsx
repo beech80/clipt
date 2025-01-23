@@ -4,7 +4,7 @@ import { Trophy } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export const ChallengeLeaderboard = ({ challengeId }: { challengeId: string }) => {
-  const { data: leaderboard } = useQuery({
+  const { data: leaderboard, isLoading } = useQuery({
     queryKey: ['challenge-leaderboard', challengeId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -15,12 +15,35 @@ export const ChallengeLeaderboard = ({ challengeId }: { challengeId: string }) =
         `)
         .eq('challenge_id', challengeId)
         .order('score', { ascending: false })
-        .limit(10);
+        .limit(10)
+        .throwOnError();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching leaderboard:', error);
+        throw error;
+      }
       return data;
     },
   });
+
+  if (isLoading) {
+    return (
+      <Card className="p-4">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-muted rounded w-1/3"></div>
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-6 h-4 bg-muted rounded"></div>
+                <div className="flex-1 h-4 bg-muted rounded"></div>
+                <div className="w-12 h-4 bg-muted rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   if (!leaderboard?.length) return null;
 

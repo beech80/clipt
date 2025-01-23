@@ -1,41 +1,29 @@
-import { useState } from "react";
-import { format } from "date-fns";
-import { MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { motion } from "framer-motion";
+import { useAuth } from '@/contexts/AuthContext';
+import { useReportDialog } from '@/hooks/use-report-dialog';
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import type { StreamChatMessage } from "@/types/chat";
+import type { StreamChatMessage } from '@/types/chat';
+import { ChatMessageAvatar } from "./message/ChatMessageAvatar";
+import { ChatMessageHeader } from "./message/ChatMessageHeader";
+import { ChatMessageContent } from "./message/ChatMessageContent";
+import { ChatMessageActions } from "./message/ChatMessageActions";
 
 interface ChatMessageProps {
   message: StreamChatMessage;
-  onDelete?: (messageId: string) => void;
   isModeratorView?: boolean;
+  onDelete?: (messageId: string) => void;
 }
 
-export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageProps) {
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDelete = async () => {
-    if (!onDelete) return;
-    
-    try {
-      setIsDeleting(true);
-      await onDelete(message.id);
-      toast.success("Message deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete message");
-      console.error("Error deleting message:", error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
+export const ChatMessage = ({
+  message,
+  isModeratorView,
+  onDelete 
+}: ChatMessageProps) => {
+  const { user } = useAuth();
+  const { openReportDialog } = useReportDialog();
+  
+  // Early return for deleted messages
   if (message.is_deleted) {
     return (
       <div className="px-4 py-2 text-sm text-muted-foreground italic">
@@ -44,52 +32,47 @@ export function ChatMessage({ message, onDelete, isModeratorView }: ChatMessageP
     );
   }
 
-  return (
-    <div className="group px-4 py-2 hover:bg-muted/50 flex items-start gap-2">
-      <Avatar className="h-8 w-8">
-        <AvatarImage src={message.profiles.avatar_url} />
-        <AvatarFallback>
-          {message.profiles.username.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-      
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm">
-            {message.profiles.username}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {format(new Date(message.created_at), 'HH:mm')}
-          </span>
-        </div>
-        
-        <p className="text-sm break-words">
-          {message.message}
-        </p>
-      </div>
+  const handleReport = () => {
+    openReportDialog(message.id, 'chat_message');
+    toast.success('Report submitted successfully');
+  };
 
-      {(onDelete && (isModeratorView || message.user_id === message.user_id)) && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              className="opacity-0 group-hover:opacity-100"
-              disabled={isDeleting}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={handleDelete}
-              className="text-destructive"
-            >
-              Delete Message
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+  const isOwnMessage = user?.id === message.user_id;
+  const isModerator = message.profiles?.is_moderator ?? false;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "group relative flex items-start gap-2 px-4 py-2 hover:bg-accent/50 transition-colors",
+        isOwnMessage && "bg-accent/20"
       )}
-    </div>
+    >
+      <ChatMessageAvatar 
+        avatarUrl={message.profiles?.avatar_url}
+        username={message.profiles?.username}
+      />
+
+      <div className="flex-1 min-w-0">
+        <ChatMessageHeader 
+          username={message.profiles?.username}
+          isModerator={isModerator}
+          createdAt={message.created_at}
+        />
+        
+        <ChatMessageContent content={message.message} />
+
+        <ChatMessageActions 
+          isModeratorView={isModeratorView}
+          isOwnMessage={isOwnMessage}
+          onDelete={onDelete}
+          onReport={handleReport}
+          messageId={message.id}
+        />
+      </div>
+    </motion.div>
   );
-}
+};
+
+export default ChatMessage;

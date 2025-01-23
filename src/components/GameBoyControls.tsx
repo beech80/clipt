@@ -51,7 +51,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   ];
 
   return (
-    <div className="gameboy-container h-[140px] sm:h-[160px] bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none">
+    <div className="gameboy-container h-[140px] sm:h-[160px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none">
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet>
           <SheetTrigger asChild>
@@ -60,7 +60,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
               <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gaming-400" />
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-background/95 backdrop-blur-xl border-gaming-400/30">
+          <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-gaming-900/95 backdrop-blur-xl border-gaming-400/30">
             <nav className="grid grid-cols-2 gap-2 p-3">
               {navigationItems.map((item) => (
                 <button
@@ -84,7 +84,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       <div className="fixed left-1/2 -translate-x-1/2 bottom-16 sm:bottom-20">
         <button 
           onClick={() => navigate('/clipts')}
-          className="clip-button active:scale-95 transition-transform"
+          className="clip-button active:scale-95 transition-transform animate-neon-pulse"
           aria-label="Create Clipt"
         >
           <Play className="clip-button-icon" />

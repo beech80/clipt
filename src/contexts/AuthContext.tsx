@@ -1,54 +1,45 @@
-import * as React from 'react';
-import { User, AuthError, AuthApiError } from '@supabase/supabase-js';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
+  session: Session | null;
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  updatePassword: (newPassword: string) => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<void>;
 }
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = React.useState<User | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const navigate = useNavigate();
-
-  React.useEffect(() => {
-    // Check active sessions and sets the user
+  useEffect(() => {
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for changes on auth state (signed in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-
-      if (event === 'SIGNED_IN') {
-        navigate('/');
-      } else if (event === 'SIGNED_OUT') {
-        navigate('/login');
-      } else if (event === 'USER_UPDATED') {
-        setUser(session?.user ?? null);
-      }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -57,73 +48,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         password,
       });
       if (error) throw error;
-      toast.success('Successfully signed in!');
     } catch (error) {
-      if (error instanceof AuthApiError) {
-        switch (error.status) {
-          case 400:
-            if (error.message.includes('Email not confirmed')) {
-              toast.error('Please verify your email before signing in');
-              return;
-            }
-            toast.error('Invalid email or password');
-            break;
-          case 422:
-            toast.error('Invalid email format');
-            break;
-          case 429:
-            toast.error('Too many login attempts. Please try again later');
-            break;
-          default:
-            toast.error(error.message);
-        }
-      } else {
-        toast.error('An unexpected error occurred');
-      }
+      const authError = error as AuthError;
+      toast.error(authError.message);
       throw error;
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error, data } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
       });
-      
       if (error) throw error;
-      
-      if (data.user && !data.user.confirmed_at) {
-        toast.success('Please check your email to confirm your account!', {
-          duration: 6000,
-        });
-        // Add a button to resend verification email
-        toast('Didn\'t receive the email?', {
-          action: {
-            label: 'Resend',
-            onClick: () => resendVerificationEmail(email),
-          },
-          duration: 10000,
-        });
-      }
+      toast.success('Check your email for the confirmation link');
     } catch (error) {
-      if (error instanceof AuthApiError) {
-        switch (error.status) {
-          case 422:
-            toast.error('Invalid email format or weak password. Password must be at least 6 characters long.');
-            break;
-          case 400:
-            toast.error('This email is already registered.');
-            break;
-          default:
-            toast.error(error.message);
-        }
-      } else {
-        toast.error('An unexpected error occurred during sign up');
-      }
+      const authError = error as AuthError;
+      toast.error(authError.message);
       throw error;
     }
   };
@@ -132,35 +74,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      toast.success('Successfully signed out!');
+      setSession(null);
+      setUser(null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error signing out');
+      const authError = error as AuthError;
+      toast.error(authError.message);
       throw error;
     }
   };
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/update-password`,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) throw error;
-      toast.success('Check your email for password reset instructions!');
+      toast.success('Check your email for the password reset link');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error resetting password');
-      throw error;
-    }
-  };
-
-  const updatePassword = async (newPassword: string) => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      if (error) throw error;
-      toast.success('Password updated successfully!');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error updating password');
+      const authError = error as AuthError;
+      toast.error(authError.message);
       throw error;
     }
   };
@@ -169,40 +99,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: email,
+        email,
       });
       if (error) throw error;
-      toast.success('Verification email resent! Please check your inbox.');
+      toast.success('Verification email resent');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error resending verification email');
+      const authError = error as AuthError;
+      toast.error(authError.message);
       throw error;
     }
   };
 
   const value = {
+    session,
     user,
     loading,
     signIn,
     signUp,
     signOut,
     resetPassword,
-    updatePassword,
     resendVerificationEmail,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const context = React.useContext(AuthContext);
+  const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
-
-export { AuthContext };

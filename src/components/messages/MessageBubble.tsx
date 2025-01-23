@@ -1,16 +1,18 @@
 import { cn } from "@/lib/utils";
 import { Message } from "@/types/message";
 import { useAuth } from "@/contexts/AuthContext";
-import { Check, CheckCheck, Flag } from "lucide-react";
+import { Check, CheckCheck, Flag, Clock } from "lucide-react";
 import { useEmotes } from "@/contexts/EmoteContext";
 import { useReportDialog } from "@/hooks/use-report-dialog";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface MessageBubbleProps {
   message: Message;
@@ -23,6 +25,18 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   const isOwn = message.sender_id === user?.id;
 
   const renderMessageContent = (content: string) => {
+    // Handle attachments
+    if (content.startsWith('[Attachment]')) {
+      const url = content.match(/\((.*?)\)/)?.[1];
+      if (!url) return content;
+
+      if (url.match(/\.(jpg|jpeg|png|gif)$/i)) {
+        return <img src={url} alt="attachment" className="max-w-xs rounded-lg" />;
+      }
+      return <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">View Attachment</a>;
+    }
+
+    // Handle emotes
     const parts = content.split(/(:[a-zA-Z0-9_]+:)/g);
     return parts.map((part, index) => {
       if (part.match(/^:[a-zA-Z0-9_]+:$/)) {
@@ -48,45 +62,58 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   };
 
   return (
-    <div className={cn("mb-4 group", isOwn ? "text-right" : "text-left")}>
-      <div className="relative inline-block">
-        <div
-          className={cn(
-            "p-3 rounded-lg max-w-[80%]",
-            isOwn ? "bg-primary text-primary-foreground" : "bg-muted"
-          )}
-        >
+    <div className={cn(
+      "mb-4 group flex gap-2",
+      isOwn ? "flex-row-reverse" : "flex-row"
+    )}>
+      <Avatar className="h-8 w-8 flex-shrink-0">
+        <AvatarImage src={isOwn ? message.sender?.avatar_url : message.receiver?.avatar_url} />
+        <AvatarFallback>
+          {(isOwn ? message.sender?.username : message.receiver?.username)?.[0]?.toUpperCase() || '?'}
+        </AvatarFallback>
+      </Avatar>
+
+      <div className="flex flex-col max-w-[70%]">
+        <div className={cn(
+          "px-3 py-2 rounded-lg",
+          isOwn ? "bg-primary text-primary-foreground" : "bg-muted"
+        )}>
           {renderMessageContent(message.content)}
         </div>
-        {!isOwn && (
-          <div className="absolute -right-8 top-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
-                  <Flag className="h-3 w-3 text-muted-foreground" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleReport}>
-                  Report Message
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
-        {isOwn && (
-          <span className="absolute -bottom-4 right-0 text-muted-foreground">
-            {message.read ? (
-              <CheckCheck className="h-4 w-4" />
+        
+        <div className={cn(
+          "flex items-center gap-1 mt-1 text-xs text-muted-foreground",
+          isOwn ? "justify-end" : "justify-start"
+        )}>
+          {format(new Date(message.created_at), 'HH:mm')}
+          {isOwn && (
+            message.read ? (
+              <CheckCheck className="h-3 w-3" />
             ) : (
-              <Check className="h-4 w-4" />
-            )}
-          </span>
-        )}
+              <Check className="h-3 w-3" />
+            )
+          )}
+        </div>
       </div>
-      <div className="text-xs text-muted-foreground mt-1">
-        {new Date(message.created_at).toLocaleTimeString()}
-      </div>
+
+      {!isOwn && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Flag className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleReport}>
+              Report Message
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }

@@ -9,7 +9,7 @@ interface SearchResultsProps {
   onStreamClick: (id: string) => void;
 }
 
-export function SearchResults({ 
+export default function SearchResults({ 
   isLoading, 
   results, 
   onProfileClick,
@@ -21,23 +21,21 @@ export function SearchResults({
   return (
     <div className="absolute top-full mt-2 w-full rounded-md border bg-popover text-popover-foreground shadow-lg z-50">
       <ScrollArea className="h-[calc(100vh-200px)] sm:h-[300px]">
-        {isLoading ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            Searching...
-          </div>
-        ) : (
-          <div className="p-2 touch-manipulation">
-            {results.profiles.length > 0 && (
-              <div className="mb-4">
-                <h3 className="px-2 text-sm font-medium text-muted-foreground">Users</h3>
+        <div className="p-2 touch-manipulation">
+          {results.profiles.length > 0 && (
+            <div className="mb-4">
+              <h3 className="px-2 text-sm font-medium text-muted-foreground" id="search-profiles">User Results</h3>
+              <div role="list" aria-labelledby="search-profiles">
                 {results.profiles.map((profile: any) => (
                   <button
                     key={profile.id}
                     className="w-full flex items-center gap-2 p-2 hover:bg-accent rounded-md active:scale-98 transition-transform"
                     onClick={() => onProfileClick(profile.id)}
+                    role="listitem"
+                    aria-label={`View profile of ${profile.display_name}`}
                   >
                     <Avatar className="h-8 w-8 shrink-0">
-                      <AvatarImage src={profile.avatar_url || ''} />
+                      <AvatarImage src={profile.avatar_url || ''} alt={profile.username} />
                       <AvatarFallback>{profile.username?.[0]?.toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="text-left truncate">
@@ -47,7 +45,8 @@ export function SearchResults({
                   </button>
                 ))}
               </div>
-            )}
+            </div>
+          )}
 
             {results.posts.length > 0 && (
               <div className="mb-4">
@@ -100,8 +99,7 @@ export function SearchResults({
                   No results found
                 </div>
               )}
-          </div>
-        )}
+        </div>
       </ScrollArea>
     </div>
   );
