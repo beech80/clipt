@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
 
@@ -14,7 +15,7 @@ export const StreamStartButton = ({ onClick, isLoading }: StreamStartButtonProps
       disabled={isLoading}
     >
       <Video className="h-6 w-6 mr-3" />
-      Go Live
+      {isLoading ? "Starting Stream..." : "Go Live"}
     </Button>
   );
 };
