@@ -34,13 +34,13 @@ export default function Index() {
         aria-label="Home page content"
         className="min-h-screen bg-gradient-to-b from-gaming-900 to-gaming-800"
       >
-        <div className="container mx-auto px-4 py-4 max-w-7xl">
-          <MainNav className="mb-6" />
+        <div className="container mx-auto px-4 py-4">
+          <MainNav />
           
-          <div className={`mt-8 ${isMobile ? 'space-y-6' : 'space-y-8'}`}>
+          <div className={`mt-6 ${isMobile ? 'space-y-4' : 'space-y-8'}`}>
             {!user && <WelcomeSection />}
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
               <div className="lg:col-span-2">
                 <MainContent />
               </div>
