@@ -18,7 +18,6 @@ export function TrendingHashtags() {
   const { data: trendingHashtags, isLoading } = useQuery({
     queryKey: ['trending-hashtags'],
     queryFn: async () => {
-      // First get all hashtags with their names
       const { data, error } = await supabase
         .from('post_hashtags')
         .select(`
@@ -44,11 +43,10 @@ export function TrendingHashtags() {
         return {
           ...tag,
           count: count || 0
-        };
+        } as TrendingHashtag;
       });
 
-      const results = await Promise.all(countPromises);
-      return results as TrendingHashtag[];
+      return await Promise.all(countPromises);
     }
   });
 

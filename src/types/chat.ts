@@ -16,14 +16,22 @@ export interface StreamChatMessage {
   };
 }
 
-export interface StreamGift {
+export interface ChatEmote {
   id: string;
-  gift: {
-    name: string;
-    icon_url: string;
-  };
-  sender: {
-    username: string;
-  };
-  message: string | null;
+  name: string;
+  url: string;
+  created_at: string;
+  created_by?: string;
+}
+
+export interface ChatCommand {
+  name: string;
+  description: string;
+  execute: (args: string[]) => void;
+}
+
+export interface ChatTypes {
+  message: StreamChatMessage;
+  emote: ChatEmote;
+  command: ChatCommand;
 }

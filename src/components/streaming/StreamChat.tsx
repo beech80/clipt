@@ -5,9 +5,11 @@ import { StreamChatMessage } from '@/types/chat';
 
 interface StreamChatProps {
   streamId: string;
+  isLive?: boolean;
+  chatEnabled?: boolean;
 }
 
-const StreamChat: React.FC<StreamChatProps> = ({ streamId }) => {
+const StreamChat: React.FC<StreamChatProps> = ({ streamId, isLive = false, chatEnabled = true }) => {
   const { data: messages } = useQuery({
     queryKey: ['stream-chat', streamId],
     queryFn: async () => {
@@ -35,7 +37,6 @@ const StreamChat: React.FC<StreamChatProps> = ({ streamId }) => {
 
       if (error) throw error;
 
-      // Transform the data to match the StreamChatMessage type
       return data.map(message => ({
         ...message,
         profiles: message.profiles || { username: '', avatar_url: '' }
@@ -43,12 +44,27 @@ const StreamChat: React.FC<StreamChatProps> = ({ streamId }) => {
     },
   });
 
+  if (!isLive || !chatEnabled) {
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        Chat is currently unavailable
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="h-full overflow-y-auto p-4 space-y-4">
       {messages?.map(message => (
         <div key={message.id} className={`message ${message.is_deleted ? 'deleted' : ''}`}>
-          <img src={message.profiles.avatar_url} alt={message.profiles.username} />
-          <span>{message.profiles.username}: {message.message}</span>
+          <div className="flex items-center gap-2">
+            <img 
+              src={message.profiles.avatar_url} 
+              alt={message.profiles.username} 
+              className="w-6 h-6 rounded-full"
+            />
+            <span className="font-medium">{message.profiles.username}</span>
+          </div>
+          <p className="ml-8 text-sm">{message.message}</p>
         </div>
       ))}
     </div>
