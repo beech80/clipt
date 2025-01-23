@@ -3851,6 +3851,64 @@ export type Database = {
           },
         ]
       }
+      stream_dvr_segments: {
+        Row: {
+          cdn_edge_location: string | null
+          cdn_performance_metrics: Json | null
+          created_at: string | null
+          id: string
+          segment_duration: unknown
+          segment_index: number
+          segment_url: string
+          storage_status: string | null
+          stream_id: string | null
+        }
+        Insert: {
+          cdn_edge_location?: string | null
+          cdn_performance_metrics?: Json | null
+          created_at?: string | null
+          id?: string
+          segment_duration: unknown
+          segment_index: number
+          segment_url: string
+          storage_status?: string | null
+          stream_id?: string | null
+        }
+        Update: {
+          cdn_edge_location?: string | null
+          cdn_performance_metrics?: Json | null
+          created_at?: string | null
+          id?: string
+          segment_duration?: unknown
+          segment_index?: number
+          segment_url?: string
+          storage_status?: string | null
+          stream_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_dvr_segments_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_dvr_segments_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_dvr_segments_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_gifts: {
         Row: {
           amount: number
@@ -4912,9 +4970,13 @@ export type Database = {
       streaming_config: {
         Row: {
           cdn_config: Json | null
+          cdn_edge_rules: Json | null
+          cdn_failover_endpoints: Json | null
           cdn_provider: string | null
           created_at: string
           dvr_enabled: boolean | null
+          dvr_retention_days: number | null
+          dvr_storage_bucket: string | null
           dvr_window_seconds: number | null
           id: string
           ingest_endpoint: string
@@ -4924,9 +4986,13 @@ export type Database = {
         }
         Insert: {
           cdn_config?: Json | null
+          cdn_edge_rules?: Json | null
+          cdn_failover_endpoints?: Json | null
           cdn_provider?: string | null
           created_at?: string
           dvr_enabled?: boolean | null
+          dvr_retention_days?: number | null
+          dvr_storage_bucket?: string | null
           dvr_window_seconds?: number | null
           id?: string
           ingest_endpoint: string
@@ -4936,9 +5002,13 @@ export type Database = {
         }
         Update: {
           cdn_config?: Json | null
+          cdn_edge_rules?: Json | null
+          cdn_failover_endpoints?: Json | null
           cdn_provider?: string | null
           created_at?: string
           dvr_enabled?: boolean | null
+          dvr_retention_days?: number | null
+          dvr_storage_bucket?: string | null
           dvr_window_seconds?: number | null
           id?: string
           ingest_endpoint?: string

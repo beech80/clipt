@@ -6,6 +6,8 @@ import { StreamPlayerControls } from './player/StreamPlayerControls';
 import { StreamPlayerChat } from './player/StreamPlayerChat';
 import { StreamPlayerGifts } from './player/StreamPlayerGifts';
 import { ViewerCountManager } from './ViewerCountManager';
+import { CDNManager } from './CDNManager';
+import { DVRControls } from './DVRControls';
 
 interface StreamPlayerProps {
   streamUrl?: string | null;
@@ -29,55 +31,22 @@ export const StreamPlayer = ({
   const [currentQuality, setCurrentQuality] = useState<string>('auto');
   const [healthStatus, setHealthStatus] = useState<string>('unknown');
   const [viewerCount, setViewerCount] = useState<number>(0);
+  const [currentCDN, setCurrentCDN] = useState(streamUrl);
   const [streamMetrics, setStreamMetrics] = useState({
     bitrate: 0,
     fps: 0,
     resolution: ''
   });
 
-  useEffect(() => {
-    if (!streamId) return;
-
-    // Subscribe to stream health updates
-    const healthChannel = supabase
-      .channel('stream-health')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'streams',
-          filter: `id=eq.${streamId}`
-        },
-        (payload) => {
-          const { 
-            health_status, 
-            current_bitrate, 
-            current_fps, 
-            stream_resolution
-          } = payload.new;
-          
-          setHealthStatus(health_status || 'unknown');
-          setStreamMetrics({
-            bitrate: current_bitrate || 0,
-            fps: current_fps || 0,
-            resolution: stream_resolution || ''
-          });
-
-          if (health_status === 'critical') {
-            toast.error('Stream health is critical. Please check your connection.');
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(healthChannel);
-    };
-  }, [streamId]);
+  const handleCDNChange = (newUrl: string) => {
+    setCurrentCDN(newUrl);
+    if (hlsRef.current) {
+      hlsRef.current.loadSource(newUrl);
+    }
+  };
 
   useEffect(() => {
-    if (!streamUrl || !videoRef.current) return;
+    if (!currentCDN || !videoRef.current) return;
 
     const initPlayer = () => {
       if (Hls.isSupported()) {
@@ -88,7 +57,7 @@ export const StreamPlayer = ({
         });
 
         hlsRef.current = hls;
-        hls.loadSource(streamUrl);
+        hls.loadSource(currentCDN);
         hls.attachMedia(videoRef.current!);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -115,7 +84,7 @@ export const StreamPlayer = ({
           }
         });
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        videoRef.current.src = streamUrl;
+        videoRef.current.src = currentCDN;
         if (autoplay) {
           videoRef.current.play().catch(() => {
             toast.error("Autoplay blocked. Please click play.");
@@ -131,15 +100,16 @@ export const StreamPlayer = ({
         hlsRef.current.destroy();
       }
     };
-  }, [streamUrl, autoplay]);
+  }, [currentCDN, autoplay]);
 
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden group">
-      {!isLive && !streamUrl && (
+      {!isLive && !currentCDN && (
         <div className="absolute inset-0 flex items-center justify-center text-white">
           Stream is offline
         </div>
       )}
+      
       <video
         ref={videoRef}
         className="w-full h-full"
@@ -159,6 +129,10 @@ export const StreamPlayer = ({
             streamId={streamId}
             isLive={isLive}
           />
+          <DVRControls
+            streamId={streamId}
+            videoRef={videoRef}
+          />
         </>
       )}
 
@@ -168,6 +142,11 @@ export const StreamPlayer = ({
         onQualityChange={setCurrentQuality}
         streamMetrics={streamMetrics}
         className="absolute bottom-0 right-0"
+      />
+
+      <CDNManager
+        streamUrl={streamUrl || ''}
+        onCDNChange={handleCDNChange}
       />
 
       {streamId && (
