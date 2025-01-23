@@ -41,7 +41,8 @@ export function TrendingHashtags() {
         if (countError) throw countError;
         
         return {
-          ...tag,
+          hashtag_id: tag.hashtag_id,
+          hashtags: tag.hashtags,
           count: count || 0
         } as TrendingHashtag;
       });

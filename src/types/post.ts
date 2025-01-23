@@ -18,6 +18,13 @@ export interface Post {
   scheduled_publish_time?: string | null;
 }
 
+export interface SearchFilters {
+  type: 'all' | 'posts' | 'profiles' | 'streams';
+  dateRange: 'all' | 'today' | 'week' | 'month';
+  hasMedia: boolean;
+  sortBy: 'recent' | 'relevant';
+}
+
 export interface PostHeaderProps {
   post: Post;
   commentsCount: number;

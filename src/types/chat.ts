@@ -27,7 +27,20 @@ export interface ChatEmote {
 export interface ChatCommand {
   name: string;
   description: string;
-  execute: (args: string[]) => void;
+  execute: (args: string[], userId: string, streamId: string) => Promise<void>;
+  moderatorOnly?: boolean;
+}
+
+export interface StreamGift {
+  id: string;
+  gift: {
+    name: string;
+    icon_url: string;
+  };
+  sender: {
+    username: string;
+  };
+  message?: string;
 }
 
 export interface ChatTypes {
