@@ -56,7 +56,7 @@ const Clips = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center mb-8 space-x-4">
           <BackButton />
-          <h1 className="text-3xl font-bold gaming-gradient-text">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gaming-300 to-gaming-500 bg-clip-text text-transparent">
             Your Liked Clips
           </h1>
         </div>
