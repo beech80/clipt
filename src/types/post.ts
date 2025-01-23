@@ -5,14 +5,13 @@ export interface Post {
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles?: {
+  profiles: {
     username: string | null;
     avatar_url: string | null;
     display_name?: string | null;
-  } | null;
-  likes_count?: number;
-  clip_votes?: Array<{ count: number }>;
-  comments_count?: number;
+  };
+  likes: Array<{ count: number }>;
+  clip_votes: Array<{ count: number }>;
   is_published?: boolean;
   is_premium?: boolean;
   required_tier_id?: string | null;
