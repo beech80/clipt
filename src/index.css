@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-[#1A1F2C] text-gaming-300;
+  }
+}
+
+/* Gaming Theme Components */
+.gaming-card {
+  @apply bg-gaming-900/95 backdrop-blur-sm border border-gaming-400/30 
+  rounded-xl shadow-[0_0_15px_rgba(155,135,245,0.1)];
+}
+
+.gaming-gradient-text {
+  @apply bg-gradient-to-r from-gaming-300 to-gaming-400 bg-clip-text text-transparent;
+}
+
+.gaming-button {
+  @apply px-4 py-2 rounded-lg bg-gaming-400/20 backdrop-blur-sm 
+  border border-gaming-400/30 hover:bg-gaming-400/30 text-gaming-300 
+  transition-all duration-300 active:scale-95;
+}
+
+.gaming-input {
+  @apply bg-gaming-900/50 border border-gaming-400/30 rounded-lg px-4 py-2 
+  text-gaming-300 placeholder:text-gaming-400/50 focus:ring-2 
+  focus:ring-gaming-400/50 focus:border-transparent;
+}
+
 /* Clip Button Styles */
 .clip-button {
   @apply relative flex items-center gap-2 px-4 py-2 rounded-full 
@@ -22,9 +50,22 @@
   @apply overflow-y-auto overflow-x-hidden;
   scrollbar-width: thin;
   scrollbar-color: theme('colors.gaming.400') theme('colors.gaming.900');
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
+.retro-screen::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.retro-screen::-webkit-scrollbar-track {
+  @apply bg-gaming-900;
+}
+
+.retro-screen::-webkit-scrollbar-thumb {
+  @apply bg-gaming-400/30 rounded-full hover:bg-gaming-400/50;
+}
+
+/* Xbox-style Joystick */
 .xbox-joystick {
   @apply relative w-full h-full rounded-full bg-gaming-300/20 border-2 border-gaming-300/30
   shadow-[0_0_15px_rgba(155,135,245,0.2)] backdrop-blur-sm transition-all duration-300;
@@ -37,12 +78,27 @@
   active:scale-95 touch-none;
 }
 
+/* Action Buttons */
 .action-button {
   @apply w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center
   bg-gaming-300/20 border-2 border-gaming-300/30
   shadow-[0_0_15px_rgba(155,135,245,0.2)] backdrop-blur-sm
   hover:shadow-[0_0_20px_rgba(155,135,245,0.4)]
   active:scale-95 transition-all duration-300;
+}
+
+/* Animations */
+@keyframes neon-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(155,135,245,0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(155,135,245,0.4);
+  }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
 }
 
 /* Safe Area Insets */
@@ -60,4 +116,25 @@
 
 .pr-safe {
   padding-right: env(safe-area-inset-right);
+}
+
+/* Card Hover Effects */
+.gaming-card-hover {
+  @apply transition-all duration-300 hover:shadow-[0_0_30px_rgba(155,135,245,0.15)]
+  hover:border-gaming-400/40 hover:scale-[1.02];
+}
+
+/* Gaming Section Headers */
+.gaming-section-header {
+  @apply text-2xl font-bold gaming-gradient-text mb-6;
+}
+
+/* Gaming Navigation */
+.gaming-nav-item {
+  @apply px-4 py-2 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20
+  border border-gaming-400/20 text-gaming-300 transition-all duration-300;
+}
+
+.gaming-nav-item.active {
+  @apply bg-gaming-400/30 border-gaming-400/40;
 }
