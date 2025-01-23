@@ -1089,33 +1089,6 @@ export type Database = {
           },
         ]
       }
-      content_similarities: {
-        Row: {
-          content_type: string
-          created_at: string | null
-          id: string
-          similarity_score: number
-          source_id: string
-          target_id: string
-        }
-        Insert: {
-          content_type: string
-          created_at?: string | null
-          id?: string
-          similarity_score: number
-          source_id: string
-          target_id: string
-        }
-        Update: {
-          content_type?: string
-          created_at?: string | null
-          id?: string
-          similarity_score?: number
-          source_id?: string
-          target_id?: string
-        }
-        Relationships: []
-      }
       creator_analytics: {
         Row: {
           created_at: string | null
@@ -2459,51 +2432,6 @@ export type Database = {
           },
         ]
       }
-      prediction_bets: {
-        Row: {
-          created_at: string | null
-          id: string
-          option_index: number
-          points_wagered: number
-          points_won: number | null
-          prediction_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          option_index: number
-          points_wagered: number
-          points_won?: number | null
-          prediction_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          option_index?: number
-          points_wagered?: number
-          points_won?: number | null
-          prediction_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "prediction_bets_prediction_id_fkey"
-            columns: ["prediction_id"]
-            isOneToOne: false
-            referencedRelation: "stream_predictions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "prediction_bets_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profile_badges: {
         Row: {
           achievement_id: string | null
@@ -3086,7 +3014,6 @@ export type Database = {
           description: string | null
           id: string
           name: string
-          recommendation_weight: number | null
           slug: string
           thumbnail_url: string | null
         }
@@ -3095,7 +3022,6 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
-          recommendation_weight?: number | null
           slug: string
           thumbnail_url?: string | null
         }
@@ -3104,7 +3030,6 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
-          recommendation_weight?: number | null
           slug?: string
           thumbnail_url?: string | null
         }
@@ -3515,77 +3440,6 @@ export type Database = {
           },
         ]
       }
-      stream_predictions: {
-        Row: {
-          created_at: string | null
-          created_by: string | null
-          id: string
-          locked_at: string | null
-          options: Json
-          outcome: string | null
-          points_pool: number | null
-          resolved_at: string | null
-          status: string
-          stream_id: string
-          title: string
-        }
-        Insert: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          locked_at?: string | null
-          options?: Json
-          outcome?: string | null
-          points_pool?: number | null
-          resolved_at?: string | null
-          status?: string
-          stream_id: string
-          title: string
-        }
-        Update: {
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          locked_at?: string | null
-          options?: Json
-          outcome?: string | null
-          points_pool?: number | null
-          resolved_at?: string | null
-          status?: string
-          stream_id?: string
-          title?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stream_predictions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stream_predictions_stream_id_fkey"
-            columns: ["stream_id"]
-            isOneToOne: false
-            referencedRelation: "stream_recommendations"
-            referencedColumns: ["stream_id"]
-          },
-          {
-            foreignKeyName: "stream_predictions_stream_id_fkey"
-            columns: ["stream_id"]
-            isOneToOne: false
-            referencedRelation: "streams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stream_predictions_stream_id_fkey"
-            columns: ["stream_id"]
-            isOneToOne: false
-            referencedRelation: "trending_streams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       stream_quizzes: {
         Row: {
           created_at: string | null
@@ -3645,73 +3499,6 @@ export type Database = {
           {
             foreignKeyName: "stream_quizzes_stream_id_fkey"
             columns: ["stream_id"]
-            isOneToOne: false
-            referencedRelation: "trending_streams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      stream_raids: {
-        Row: {
-          created_at: string | null
-          id: string
-          raider_count: number | null
-          source_stream_id: string
-          target_stream_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          raider_count?: number | null
-          source_stream_id: string
-          target_stream_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          raider_count?: number | null
-          source_stream_id?: string
-          target_stream_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stream_raids_source_stream_id_fkey"
-            columns: ["source_stream_id"]
-            isOneToOne: false
-            referencedRelation: "stream_recommendations"
-            referencedColumns: ["stream_id"]
-          },
-          {
-            foreignKeyName: "stream_raids_source_stream_id_fkey"
-            columns: ["source_stream_id"]
-            isOneToOne: false
-            referencedRelation: "streams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stream_raids_source_stream_id_fkey"
-            columns: ["source_stream_id"]
-            isOneToOne: false
-            referencedRelation: "trending_streams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stream_raids_target_stream_id_fkey"
-            columns: ["target_stream_id"]
-            isOneToOne: false
-            referencedRelation: "stream_recommendations"
-            referencedColumns: ["stream_id"]
-          },
-          {
-            foreignKeyName: "stream_raids_target_stream_id_fkey"
-            columns: ["target_stream_id"]
-            isOneToOne: false
-            referencedRelation: "streams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stream_raids_target_stream_id_fkey"
-            columns: ["target_stream_id"]
             isOneToOne: false
             referencedRelation: "trending_streams"
             referencedColumns: ["id"]
@@ -5099,15 +4886,6 @@ export type Database = {
       generate_stream_key: {
         Args: Record<PropertyKey, never>
         Returns: string
-      }
-      get_enhanced_stream_recommendations: {
-        Args: {
-          user_id_param: string
-        }
-        Returns: {
-          stream_id: string
-          score: number
-        }[]
       }
       get_personalized_recommendations: {
         Args: {

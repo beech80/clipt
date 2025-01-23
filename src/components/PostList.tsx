@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { useRef } from "react";
 import PostItem from "./PostItem";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase";
@@ -33,7 +33,10 @@ const PostSkeleton = () => (
 const PostList = () => {
   const { user } = useAuth();
   const isMobile = useIsMobile();
-  const parentRef = useRef<HTMLDivElement>(null);
+  const { ref, inView } = useInView({
+    threshold: 0.5,
+    rootMargin: "100px",
+  });
 
   const {
     data,
@@ -92,26 +95,17 @@ const PostList = () => {
     getNextPageParam: (lastPage, pages) => {
       return lastPage && lastPage.length === POSTS_PER_PAGE ? pages.length : undefined;
     },
-    gcTime: 1000 * 60 * 30, // Cache for 30 minutes
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
-  const allPosts = data?.pages.flat() ?? [];
-
-  const virtualizer = useVirtualizer({
-    count: hasNextPage ? allPosts.length + 1 : allPosts.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => isMobile ? window.innerHeight - 120 : window.innerHeight - 200,
-    overscan: 2,
-  });
-
-  const virtualItems = virtualizer.getVirtualItems();
-
-  // Load more posts when reaching the end
-  const lastItem = virtualItems[virtualItems.length - 1];
-  if (lastItem && !isFetchingNextPage && hasNextPage && lastItem.index >= allPosts.length - 1) {
-    fetchNextPage();
-  }
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   if (status === "pending") {
     return (
@@ -160,37 +154,21 @@ const PostList = () => {
   }
 
   return (
-    <div 
-      ref={parentRef}
-      className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
-                  overflow-y-auto scroll-smooth touch-none overscroll-none`}
-    >
-      <div 
-        className="relative space-y-6 px-4 sm:px-0 max-w-3xl mx-auto pb-6"
-        style={{
-          height: `${virtualizer.getTotalSize()}px`,
-        }}
-      >
-        {virtualItems.map((virtualItem) => {
-          const post = allPosts[virtualItem.index];
-          return (
-            <div
-              key={virtualItem.key}
-              data-index={virtualItem.index}
-              ref={virtualizer.measureElement}
-              className="absolute top-0 left-0 w-full"
-              style={{
-                transform: `translateY(${virtualItem.start}px)`,
-              }}
-            >
-              {post ? (
-                <PostItem post={post} />
-              ) : isFetchingNextPage ? (
-                <PostSkeleton />
-              ) : null}
+    <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
+                    overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none`}>
+      <div className="space-y-6 px-4 sm:px-0 max-w-3xl mx-auto pb-6">
+        {data?.pages.map((page) => (
+          page?.map((post) => (
+            <div key={post.id} className="snap-start">
+              <PostItem post={post} />
             </div>
-          );
-        })}
+          ))
+        ))}
+        {hasNextPage && (
+          <div ref={ref} className="h-20 flex items-center justify-center">
+            {isFetchingNextPage && <PostSkeleton />}
+          </div>
+        )}
       </div>
     </div>
   );

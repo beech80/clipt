@@ -21,7 +21,7 @@ interface AuthProviderProps {
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: AuthProviderProps): React.ReactElement {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = React.useState<User | null>(null);
   const [loading, setLoading] = React.useState(true);
   const navigate = useNavigate();
@@ -100,6 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps): React.ReactElemen
         toast.success('Please check your email to confirm your account!', {
           duration: 6000,
         });
+        // Add a button to resend verification email
         toast('Didn\'t receive the email?', {
           action: {
             label: 'Resend',
