@@ -53,7 +53,12 @@ export const StreamQuiz = ({ streamId }: StreamQuizProps) => {
       const formattedQuiz: Quiz = {
         id: data.id,
         title: data.title,
-        questions: Array.isArray(data.questions) ? data.questions : []
+        questions: (data.questions as any[]).map(q => ({
+          id: q.id,
+          question: q.question,
+          options: q.options,
+          correct_answer: q.correct_answer
+        }))
       };
       setQuiz(formattedQuiz);
     }

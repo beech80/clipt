@@ -51,7 +51,11 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
       const formattedPoll: Poll = {
         id: data.id,
         question: data.question,
-        options: Array.isArray(data.options) ? data.options : []
+        options: (data.options as any[]).map(option => ({
+          id: option.id,
+          text: option.text,
+          votes: option.votes || 0
+        }))
       };
       setPoll(formattedPoll);
       calculateTotalVotes(formattedPoll.options);
@@ -74,7 +78,11 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
             const updatedPoll: Poll = {
               id: payload.new.id,
               question: payload.new.question,
-              options: Array.isArray(payload.new.options) ? payload.new.options : []
+              options: (payload.new.options as any[]).map(option => ({
+                id: option.id,
+                text: option.text,
+                votes: option.votes || 0
+              }))
             };
             setPoll(updatedPoll);
             calculateTotalVotes(updatedPoll.options);
