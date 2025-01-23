@@ -4,11 +4,13 @@ import { Hash, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
+interface HashtagData {
+  name: string;
+}
+
 interface TrendingHashtag {
   hashtag_id: string;
-  hashtags: {
-    name: string;
-  };
+  hashtags: HashtagData;
   count: number;
 }
 
@@ -31,7 +33,7 @@ export function TrendingHashtags() {
 
       if (error) throw error;
 
-      // Then count the occurrences of each hashtag
+      // Count occurrences of each hashtag
       const countPromises = data.map(async (tag) => {
         const { count, error: countError } = await supabase
           .from('post_hashtags')
