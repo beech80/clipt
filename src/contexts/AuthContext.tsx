@@ -100,7 +100,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         toast.success('Please check your email to confirm your account!', {
           duration: 6000,
         });
-        // Add a button to resend verification email
         toast('Didn\'t receive the email?', {
           action: {
             label: 'Resend',
