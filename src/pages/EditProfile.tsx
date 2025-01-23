@@ -54,44 +54,46 @@ const EditProfile = () => {
                 variant="ghost" 
                 size="icon"
                 onClick={() => navigate('/profile')}
-                className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="hover:bg-gaming-800/50"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="text-3xl font-bold">Profile Settings</h1>
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gaming-400 to-gaming-600">
+                  Profile Settings
+                </h1>
                 <p className="text-muted-foreground">
                   Manage your account settings and preferences
                 </p>
               </div>
             </div>
           </div>
-          <Separator />
+          <Separator className="bg-gaming-700/50" />
         </div>
 
         {/* Main Content */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Left Column */}
           <div className="space-y-6">
-            <Card className="p-6">
+            <Card className="p-6 border-gaming-700/50 bg-gaming-800/30 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-6">
-                <UserCog className="w-5 h-5 text-purple-500" />
-                <h2 className="text-xl font-semibold">Basic Information</h2>
+                <UserCog className="w-5 h-5 text-gaming-400" />
+                <h2 className="text-xl font-semibold text-gaming-100">Basic Information</h2>
               </div>
               <ProfileEditForm />
             </Card>
 
-            <Card className="p-6">
+            <Card className="p-6 border-gaming-700/50 bg-gaming-800/30 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-4">
-                <Bell className="w-5 h-5 text-purple-500" />
-                <h2 className="text-xl font-semibold">Notification Preferences</h2>
+                <Bell className="w-5 h-5 text-gaming-400" />
+                <h2 className="text-xl font-semibold text-gaming-100">Notification Preferences</h2>
               </div>
               <p className="text-muted-foreground mb-4">
                 Configure how you receive notifications and updates
               </p>
-              <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <Bell className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-500">Coming soon</p>
+              <div className="text-center p-8 bg-gaming-800/50 rounded-lg">
+                <Bell className="w-8 h-8 mx-auto text-gaming-400 mb-2" />
+                <p className="text-gaming-300">Coming soon</p>
               </div>
             </Card>
           </div>
@@ -99,10 +101,10 @@ const EditProfile = () => {
           {/* Right Column */}
           <div className="space-y-6">
             {profile && (
-              <Card className="p-6">
+              <Card className="p-6 border-gaming-700/50 bg-gaming-800/30 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-6">
-                  <Paintbrush className="w-5 h-5 text-purple-500" />
-                  <h2 className="text-xl font-semibold">Theme Customization</h2>
+                  <Paintbrush className="w-5 h-5 text-gaming-400" />
+                  <h2 className="text-xl font-semibold text-gaming-100">Theme Customization</h2>
                 </div>
                 <ThemeSelector 
                   userId={profile.id} 
@@ -111,17 +113,17 @@ const EditProfile = () => {
               </Card>
             )}
 
-            <Card className="p-6">
+            <Card className="p-6 border-gaming-700/50 bg-gaming-800/30 backdrop-blur-sm">
               <div className="flex items-center gap-2 mb-4">
-                <Shield className="w-5 h-5 text-purple-500" />
-                <h2 className="text-xl font-semibold">Privacy & Security</h2>
+                <Shield className="w-5 h-5 text-gaming-400" />
+                <h2 className="text-xl font-semibold text-gaming-100">Privacy & Security</h2>
               </div>
               <p className="text-muted-foreground mb-4">
                 Manage your account security and privacy settings
               </p>
-              <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <Shield className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-500">Coming soon</p>
+              <div className="text-center p-8 bg-gaming-800/50 rounded-lg">
+                <Shield className="w-8 h-8 mx-auto text-gaming-400 mb-2" />
+                <p className="text-gaming-300">Coming soon</p>
               </div>
             </Card>
           </div>
