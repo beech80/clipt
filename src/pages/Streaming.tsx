@@ -6,7 +6,7 @@ import { StreamForm } from "@/components/streaming/StreamForm";
 import { StreamControls } from "@/components/streaming/StreamControls";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
 import { StreamScheduleForm } from "@/components/streaming/StreamScheduleForm";
-import { StreamDashboard } from "@/components/streaming/StreamDashboard";
+import { EnhancedStreamDashboard } from "@/components/streaming/EnhancedStreamDashboard";
 import { Calendar, Settings, Layout, Users, Activity } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,7 +74,6 @@ const Streaming = () => {
       </div>
 
       <div className="grid grid-cols-12 gap-6">
-        {/* Main Content Area */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
           <Tabs defaultValue="stream" className="w-full">
             <TabsList className="mb-4">
@@ -125,12 +124,11 @@ const Streaming = () => {
             </TabsContent>
 
             <TabsContent value="dashboard">
-              <StreamDashboard userId={user.id} isLive={isLive} />
+              <EnhancedStreamDashboard userId={user.id} isLive={isLive} />
             </TabsContent>
           </Tabs>
         </div>
 
-        {/* Sidebar */}
         <div className="col-span-12 lg:col-span-4 space-y-6">
           <Card className="h-[calc(100vh-12rem)]">
             <div className="flex flex-col h-full">
