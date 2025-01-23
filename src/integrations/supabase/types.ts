@@ -1189,6 +1189,56 @@ export type Database = {
           },
         ]
       }
+      custom_overlays: {
+        Row: {
+          created_at: string
+          css_content: string | null
+          html_content: string | null
+          id: string
+          is_active: boolean | null
+          js_content: string | null
+          name: string
+          settings: Json
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          css_content?: string | null
+          html_content?: string | null
+          id?: string
+          is_active?: boolean | null
+          js_content?: string | null
+          name: string
+          settings?: Json
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          css_content?: string | null
+          html_content?: string | null
+          id?: string
+          is_active?: boolean | null
+          js_content?: string | null
+          name?: string
+          settings?: Json
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_overlays_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       data_retention_policies: {
         Row: {
           action_type: string
