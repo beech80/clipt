@@ -3860,6 +3860,67 @@ export type Database = {
           },
         ]
       }
+      stream_protection_settings: {
+        Row: {
+          created_at: string
+          drm_settings: Json | null
+          encryption_enabled: boolean | null
+          fingerprint_enabled: boolean | null
+          id: string
+          stream_id: string
+          updated_at: string
+          watermark_enabled: boolean | null
+          watermark_opacity: number | null
+          watermark_text: string | null
+        }
+        Insert: {
+          created_at?: string
+          drm_settings?: Json | null
+          encryption_enabled?: boolean | null
+          fingerprint_enabled?: boolean | null
+          id?: string
+          stream_id: string
+          updated_at?: string
+          watermark_enabled?: boolean | null
+          watermark_opacity?: number | null
+          watermark_text?: string | null
+        }
+        Update: {
+          created_at?: string
+          drm_settings?: Json | null
+          encryption_enabled?: boolean | null
+          fingerprint_enabled?: boolean | null
+          id?: string
+          stream_id?: string
+          updated_at?: string
+          watermark_enabled?: boolean | null
+          watermark_opacity?: number | null
+          watermark_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_protection_settings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_protection_settings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_protection_settings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_quality_metrics: {
         Row: {
           audio_bitrate: number | null
@@ -4360,6 +4421,151 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      stream_viewer_sessions: {
+        Row: {
+          ended_at: string | null
+          geolocation: Json | null
+          id: string
+          ip_address: string
+          last_active_at: string
+          session_token: string
+          started_at: string
+          stream_id: string
+          suspicious_activity: boolean | null
+          suspicious_flags: Json | null
+          user_agent: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          ended_at?: string | null
+          geolocation?: Json | null
+          id?: string
+          ip_address: string
+          last_active_at?: string
+          session_token: string
+          started_at?: string
+          stream_id: string
+          suspicious_activity?: boolean | null
+          suspicious_flags?: Json | null
+          user_agent?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          ended_at?: string | null
+          geolocation?: Json | null
+          id?: string
+          ip_address?: string
+          last_active_at?: string
+          session_token?: string
+          started_at?: string
+          stream_id?: string
+          suspicious_activity?: boolean | null
+          suspicious_flags?: Json | null
+          user_agent?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_viewer_sessions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_viewer_sessions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_viewer_sessions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_viewer_sessions_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_violations: {
+        Row: {
+          action_taken: string | null
+          detected_at: string
+          detected_url: string | null
+          detection_method: string
+          evidence_data: Json
+          id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+          stream_id: string
+          violation_type: string
+        }
+        Insert: {
+          action_taken?: string | null
+          detected_at?: string
+          detected_url?: string | null
+          detection_method: string
+          evidence_data?: Json
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          stream_id: string
+          violation_type: string
+        }
+        Update: {
+          action_taken?: string | null
+          detected_at?: string
+          detected_url?: string | null
+          detection_method?: string
+          evidence_data?: Json
+          id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+          stream_id?: string
+          violation_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_violations_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_violations_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_violations_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_violations_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       streaming_config: {
         Row: {
