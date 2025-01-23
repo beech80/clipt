@@ -6,7 +6,7 @@ import { StreamForm } from "@/components/streaming/StreamForm";
 import { StreamControls } from "@/components/streaming/StreamControls";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
 import { StreamScheduleForm } from "@/components/streaming/StreamScheduleForm";
-import { Calendar, Settings, Video } from "lucide-react";
+import { Calendar, Settings } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { BackButton } from "@/components/ui/back-button";
@@ -42,7 +42,7 @@ const Streaming = () => {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <BackButton />
-          <h1 className="text-2xl font-bold">Streaming</h1>
+          <h1 className="text-2xl font-bold">Streaming Studio</h1>
         </div>
         <div className="flex items-center gap-2">
           <Dialog>
@@ -68,15 +68,6 @@ const Streaming = () => {
               <StreamSettings userId={user.id} />
             </DialogContent>
           </Dialog>
-
-          <Button 
-            onClick={() => setIsLive(!isLive)}
-            variant={isLive ? "destructive" : "default"}
-            className="gap-2"
-          >
-            <Video className="h-4 w-4" />
-            {isLive ? "End Stream" : "Go Live"}
-          </Button>
         </div>
       </div>
 
@@ -90,28 +81,31 @@ const Streaming = () => {
             />
           </Card>
           
-          {!isLive && (
-            <Card className="p-6">
-              <StreamForm
-                title={streamData.title}
-                description={streamData.description}
-                onTitleChange={(title) => setStreamData({ ...streamData, title })}
-                onDescriptionChange={(description) => 
-                  setStreamData({ ...streamData, description })
-                }
-              />
-            </Card>
-          )}
-          
-          {isLive && (
-            <Card className="p-6">
+          <Card className="p-6">
+            {!isLive ? (
+              <div className="space-y-6">
+                <StreamForm
+                  title={streamData.title}
+                  description={streamData.description}
+                  onTitleChange={(title) => setStreamData({ ...streamData, title })}
+                  onDescriptionChange={(description) => 
+                    setStreamData({ ...streamData, description })
+                  }
+                />
+                <StreamControls 
+                  userId={user.id}
+                  isLive={isLive}
+                  onStreamUpdate={handleStreamUpdate}
+                />
+              </div>
+            ) : (
               <StreamControls 
                 userId={user.id}
                 isLive={isLive}
                 onStreamUpdate={handleStreamUpdate}
               />
-            </Card>
-          )}
+            )}
+          </Card>
         </div>
         
         <div className="lg:col-span-1">

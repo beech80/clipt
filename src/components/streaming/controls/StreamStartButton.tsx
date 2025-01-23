@@ -10,11 +10,11 @@ export const StreamStartButton = ({ onClick, isLoading }: StreamStartButtonProps
   return (
     <Button 
       onClick={onClick}
-      className="w-full bg-gaming-500 hover:bg-gaming-600 text-white px-8 py-6 text-lg"
+      className="w-full bg-red-500 hover:bg-red-600 text-white px-8 py-6 text-xl font-bold rounded-lg"
       disabled={isLoading}
     >
-      <Video className="h-5 w-5 mr-2" />
-      Start Stream
+      <Video className="h-6 w-6 mr-3" />
+      Go Live
     </Button>
   );
 };
