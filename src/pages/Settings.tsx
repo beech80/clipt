@@ -68,6 +68,19 @@ const Settings = () => {
     });
   };
 
+  const handleStreamUpdate = (data: { 
+    isLive: boolean; 
+    streamKey: string | null; 
+    streamUrl: string | null 
+  }) => {
+    // Handle stream updates
+    if (data.isLive) {
+      toast.success("Stream started successfully!");
+    } else {
+      toast.success("Stream ended successfully!");
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -106,7 +119,10 @@ const Settings = () => {
                 <h2 className="text-xl font-semibold">Streaming Settings</h2>
               </div>
               {user && <StreamSettings userId={user.id} />}
-              {user && <StreamControls userId={user.id} />}
+              {user && <StreamControls 
+                userId={user.id} 
+                onStreamUpdate={handleStreamUpdate}
+              />}
             </Card>
 
             <Card className="p-6">
