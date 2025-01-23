@@ -190,6 +190,205 @@ export type Database = {
           },
         ]
       }
+      ad_campaigns: {
+        Row: {
+          budget: number
+          created_at: string | null
+          daily_spend_limit: number | null
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string
+          status: string | null
+          targeting_rules: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          budget: number
+          created_at?: string | null
+          daily_spend_limit?: number | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date: string
+          status?: string | null
+          targeting_rules?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          budget?: number
+          created_at?: string | null
+          daily_spend_limit?: number | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string
+          status?: string | null
+          targeting_rules?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_campaigns_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_creatives: {
+        Row: {
+          campaign_id: string
+          content: Json
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          performance_metrics: Json | null
+          preview_url: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          campaign_id: string
+          content: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          performance_metrics?: Json | null
+          preview_url?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          content?: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          performance_metrics?: Json | null
+          preview_url?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_creatives_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_metrics: {
+        Row: {
+          clicks: number | null
+          conversions: number | null
+          created_at: string | null
+          creative_id: string
+          date: string
+          id: string
+          impressions: number | null
+          spend: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          creative_id: string
+          date: string
+          id?: string
+          impressions?: number | null
+          spend?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          creative_id?: string
+          date?: string
+          id?: string
+          impressions?: number | null
+          spend?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_metrics_creative_id_fkey"
+            columns: ["creative_id"]
+            isOneToOne: false
+            referencedRelation: "ad_creatives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_placements: {
+        Row: {
+          availability_rules: Json | null
+          base_price: number
+          created_at: string | null
+          id: string
+          position: string
+          price_model: string
+          size: string
+          stream_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          availability_rules?: Json | null
+          base_price: number
+          created_at?: string | null
+          id?: string
+          position: string
+          price_model: string
+          size: string
+          stream_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          availability_rules?: Json | null
+          base_price?: number
+          created_at?: string | null
+          id?: string
+          position?: string
+          price_model?: string
+          size?: string
+          stream_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_placements_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "ad_placements_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_placements_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       application_logs: {
         Row: {
           component: string | null
@@ -1873,6 +2072,149 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "trending_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchandise_order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string
+          price_at_time: number
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id: string
+          price_at_time: number
+          product_id: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          price_at_time?: number
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchandise_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "merchandise_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchandise_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "merchandise_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchandise_orders: {
+        Row: {
+          buyer_id: string
+          created_at: string | null
+          id: string
+          seller_id: string
+          shipping_address: Json
+          status: string
+          total_amount: number
+          tracking_number: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string | null
+          id?: string
+          seller_id: string
+          shipping_address: Json
+          status?: string
+          total_amount: number
+          tracking_number?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string | null
+          id?: string
+          seller_id?: string
+          shipping_address?: Json
+          status?: string
+          total_amount?: number
+          tracking_number?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchandise_orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchandise_orders_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchandise_products: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          price: number
+          stock_quantity: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          price: number
+          stock_quantity?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          stock_quantity?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchandise_products_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
