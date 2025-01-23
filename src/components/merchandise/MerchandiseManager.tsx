@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Package, DollarSign, ShoppingCart } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MerchandiseProduct {
   id: string;
@@ -18,9 +19,19 @@ interface MerchandiseProduct {
   is_active: boolean;
 }
 
+interface NewProduct {
+  name: string;
+  description: string;
+  price: number;
+  stock_quantity: number;
+  category: string;
+  user_id: string;
+}
+
 export function MerchandiseManager() {
   const queryClient = useQueryClient();
-  const [newProduct, setNewProduct] = useState<Partial<MerchandiseProduct>>({
+  const { user } = useAuth();
+  const [newProduct, setNewProduct] = useState<Partial<NewProduct>>({
     name: "",
     description: "",
     price: 0,
@@ -37,12 +48,12 @@ export function MerchandiseManager() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as MerchandiseProduct[];
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: async (product: Partial<MerchandiseProduct>) => {
+    mutationFn: async (product: NewProduct) => {
       const { data, error } = await supabase
         .from('merchandise_products')
         .insert([product])
@@ -82,6 +93,23 @@ export function MerchandiseManager() {
       toast.success("Stock updated successfully!");
     },
   });
+
+  const handleCreateProduct = () => {
+    if (!user?.id) {
+      toast.error("Please log in to add products");
+      return;
+    }
+
+    if (!newProduct.name || !newProduct.price) {
+      toast.error("Please fill in required fields");
+      return;
+    }
+
+    createMutation.mutate({
+      ...newProduct as NewProduct,
+      user_id: user.id,
+    });
+  };
 
   if (isLoading) {
     return <div>Loading merchandise...</div>;
@@ -128,7 +156,7 @@ export function MerchandiseManager() {
         
         <Button 
           className="mt-4"
-          onClick={() => createMutation.mutate(newProduct)}
+          onClick={handleCreateProduct}
         >
           Add Product
         </Button>
