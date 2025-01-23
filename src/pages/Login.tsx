@@ -1,92 +1,154 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { Gamepad2 } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthError, AuthApiError } from '@supabase/supabase-js';
+import { useAuthSecurity } from '@/hooks/useAuthSecurity';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const { checkIPStatus, recordAuthAttempt, is2FAEnabled } = useAuthSecurity();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const { error } = await signIn(email, password);
-      if (error) throw error;
-      toast.success('Successfully logged in!');
+  useEffect(() => {
+    if (user) {
       navigate('/');
-    } catch (error) {
-      toast.error('Failed to log in');
-      console.error('Login error:', error);
-    } finally {
-      setLoading(false);
     }
-  };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const { error } = await signUp(email, password);
-      if (error) throw error;
-      toast.success('Check your email for verification link');
-    } catch (error) {
-      toast.error('Failed to sign up');
-      console.error('Signup error:', error);
-    } finally {
-      setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN') {
+        // Record successful login attempt
+        const ip = await fetch('https://api.ipify.org?format=json')
+          .then(res => res.json())
+          .then(data => data.ip);
+        await recordAuthAttempt(ip, session?.user?.email || '', true);
+        navigate('/');
+      }
+      if (event === 'USER_UPDATED' && session?.user) {
+        navigate('/');
+      }
+      if (event === 'SIGNED_OUT') {
+        navigate('/login');
+      }
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/update-password');
+      }
+      if (event === 'USER_DELETED' as any) {
+        setError('Your account has been deleted.');
+      }
+      if (event === 'INITIAL_SESSION') {
+        const { error } = await supabase.auth.getSession();
+        if (error) {
+          handleAuthError(error);
+        }
+      }
+    });
+
+    // Check IP status on component mount
+    const checkIP = async () => {
+      const ip = await fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => data.ip);
+      
+      const isRestricted = await checkIPStatus(ip);
+      if (isRestricted) {
+        setError('Too many login attempts. Please try again later.');
+      }
+    };
+    
+    checkIP();
+
+    return () => {
+      subscription.unsubscribe();
+      setError(null);
+    };
+  }, [user, navigate, checkIPStatus, recordAuthAttempt]);
+
+  const handleAuthError = async (error: AuthError) => {
+    let errorMessage = 'An error occurred during authentication.';
+    
+    if (error instanceof AuthApiError) {
+      switch (error.status) {
+        case 400:
+          if (error.message.includes('Invalid login credentials')) {
+            errorMessage = 'Invalid email or password. Please check your credentials.';
+            // Record failed attempt
+            const ip = await fetch('https://api.ipify.org?format=json')
+              .then(res => res.json())
+              .then(data => data.ip);
+            await recordAuthAttempt(ip, '', false);
+          } else {
+            errorMessage = 'Invalid request. Please check your input.';
+          }
+          break;
+        case 422:
+          errorMessage = 'Invalid email format or weak password. Password must be at least 6 characters long.';
+          break;
+        case 429:
+          errorMessage = 'Too many login attempts. Please try again later.';
+          break;
+        default:
+          errorMessage = error.message;
+      }
     }
+    
+    setError(errorMessage);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="p-8 w-full max-w-md space-y-4">
-        <h2 className="text-2xl font-bold text-center">Welcome</h2>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+    <div className="mx-auto max-w-md space-y-6 pt-12">
+      <div className="text-center space-y-2">
+        <div className="flex justify-center mb-4">
+          <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
+            <Gamepad2 className="h-6 w-6 text-gaming-400" />
           </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? 'Loading...' : 'Login'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleSignUp}
-              disabled={loading}
-            >
-              Sign Up
-            </Button>
-          </div>
-        </form>
-      </Card>
+        </div>
+        <h1 className="text-4xl font-bold">Clip</h1>
+        <p className="text-muted-foreground">Share your gaming moments</p>
+      </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="bg-card rounded-lg p-4 shadow-sm">
+        <Auth
+          supabaseClient={supabase}
+          appearance={{
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#8B5CF6',
+                  brandAccent: '#7C3AED',
+                }
+              }
+            }
+          }}
+          providers={[]}
+          redirectTo={window.location.origin}
+        />
+        <div className="mt-4 text-center space-y-2">
+          <Link to="/reset-password" className="text-sm text-primary hover:underline block">
+            Forgot your password?
+          </Link>
+          <Link to="/resend-verification" className="text-sm text-primary hover:underline block">
+            Resend verification email
+          </Link>
+          {is2FAEnabled && (
+            <div className="text-sm text-muted-foreground">
+              Two-factor authentication is enabled for your account
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
