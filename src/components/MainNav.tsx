@@ -1,97 +1,105 @@
-import { NavLink } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/UserMenu";
+import { NotificationsPopover } from "@/components/NotificationsPopover";
+import { SearchBar } from "@/components/SearchBar";
 import { useAuth } from "@/contexts/AuthContext";
-import { Home, MessageSquare, Video, Trophy, Settings, Gamepad } from "lucide-react";
-import { SearchBar } from "./SearchBar";
+import {
+  Home,
+  Tv,
+  Video,
+  Trophy,
+  Gamepad2,
+  MessageSquare,
+  Settings,
+  FolderHeart,
+} from "lucide-react";
 
-export function MainNav({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLElement>) {
+export function MainNav() {
   const { user } = useAuth();
 
   return (
-    <nav
-      className={cn("flex items-center space-x-4 lg:space-x-6", className)}
-      {...props}
-    >
-      <NavLink
-        to="/"
-        className={({ isActive }) =>
-          cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-            isActive ? "text-primary" : "text-muted-foreground"
-          )
-        }
-      >
-        <Home className="h-4 w-4" />
-        Home
-      </NavLink>
-      <NavLink
-        to="/discover"
-        className={({ isActive }) =>
-          cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-            isActive ? "text-primary" : "text-muted-foreground"
-          )
-        }
-      >
-        <Gamepad className="h-4 w-4" />
-        Discover
-      </NavLink>
-      <SearchBar />
-      <NavLink
-        to="/streaming"
-        className={({ isActive }) =>
-          cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-            isActive ? "text-primary" : "text-muted-foreground"
-          )
-        }
-      >
-        <Video className="h-4 w-4" />
-        Streaming
-      </NavLink>
-      <NavLink
-        to="/top-clips"
-        className={({ isActive }) =>
-          cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-            isActive ? "text-primary" : "text-muted-foreground"
-          )
-        }
-      >
-        <Trophy className="h-4 w-4" />
-        Top Clips
-      </NavLink>
-      {user?.id && (
-        <>
-          <NavLink
-            to="/clipts"
-            className={({ isActive }) =>
-              cn(
-                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-                isActive ? "text-primary" : "text-muted-foreground"
-              )
-            }
-          >
-            <Video className="h-4 w-4" />
-            Clipts
-          </NavLink>
-          <NavLink
-            to="/messages"
-            className={({ isActive }) =>
-              cn(
-                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
-                isActive ? "text-primary" : "text-muted-foreground"
-              )
-            }
-          >
-            <MessageSquare className="h-4 w-4" />
-            Messages
-          </NavLink>
-        </>
-      )}
+    <nav className="flex items-center justify-between p-4 border-b border-gaming-600/20 backdrop-blur-sm bg-gaming-800/80">
+      <div className="flex items-center gap-6">
+        <Link to="/" className="text-2xl font-bold text-gaming-100">
+          Clip
+        </Link>
+
+        {user && (
+          <div className="hidden md:flex items-center space-x-4">
+            <Link to="/home">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                Home
+              </Button>
+            </Link>
+            <Link to="/streaming">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <Tv className="h-4 w-4" />
+                Streaming
+              </Button>
+            </Link>
+            <Link to="/top-clips">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <Video className="h-4 w-4" />
+                Top Clips
+              </Button>
+            </Link>
+            <Link to="/achievements">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <Trophy className="h-4 w-4" />
+                Achievements
+              </Button>
+            </Link>
+            <Link to="/discover">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <Gamepad2 className="h-4 w-4" />
+                Discover
+              </Button>
+            </Link>
+            <Link to="/collections">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <FolderHeart className="h-4 w-4" />
+                Collections
+              </Button>
+            </Link>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-4">
+        <div className="hidden md:block w-72">
+          <SearchBar />
+        </div>
+
+        {user ? (
+          <div className="flex items-center gap-2">
+            <Link to="/messages">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Messages
+              </Button>
+            </Link>
+            <Link to="/settings">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
+              </Button>
+            </Link>
+            <NotificationsPopover />
+            <UserMenu />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Link to="/login">
+              <Button variant="ghost">Login</Button>
+            </Link>
+            <Link to="/signup">
+              <Button>Sign Up</Button>
+            </Link>
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
