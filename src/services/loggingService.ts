@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase';
-import { BrowserInfo } from '@/types/performance';
 
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
@@ -15,22 +14,15 @@ interface LogMetadata {
 }
 
 class LoggingService {
-  private static getBrowserInfo(): BrowserInfo {
-    const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
-    
+  private static getBrowserInfo(): LogMetadata {
     return {
-      userAgent: navigator.userAgent,
-      platform: navigator.platform,
-      language: navigator.language,
+      browser: navigator.userAgent,
+      os: navigator.platform,
+      url: window.location.href,
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight
-      },
-      connection: connection ? {
-        effectiveType: connection.effectiveType,
-        downlink: connection.downlink,
-        rtt: connection.rtt
-      } : undefined
+      }
     };
   }
 
@@ -58,6 +50,7 @@ class LoggingService {
         console.error('Failed to save log:', error);
       }
 
+      // Also log to console in development
       if (process.env.NODE_ENV === 'development') {
         console.log(`[${level.toUpperCase()}] ${message}`, {
           component,
@@ -73,17 +66,13 @@ class LoggingService {
   static async trackMetric(
     metricName: string,
     value: number,
-    tags?: Record<string, any>
+    tags?: Record<string, string>
   ) {
     try {
-      const browserInfo = this.getBrowserInfo();
-      const { error } = await supabase.from('performance_metrics_enhanced').insert({
+      const { error } = await supabase.from('performance_metrics').insert({
         metric_name: metricName,
         value,
-        browser_info: browserInfo as Record<string, any>,
-        metadata: tags,
-        component: tags?.component,
-        page_url: window.location.href
+        tags
       });
 
       if (error) {
@@ -92,10 +81,6 @@ class LoggingService {
     } catch (err) {
       console.error('Metric tracking failed:', err);
     }
-  }
-
-  static async logWarning(message: string, details?: Record<string, unknown>) {
-    await this.log('warn', message, undefined, details);
   }
 
   static async reportError(
@@ -110,7 +95,7 @@ class LoggingService {
         message: error.message,
         stack_trace: error.stack,
         component_stack: componentStack,
-        browser_info: browserInfo as Record<string, any>
+        browser_info: browserInfo
       });
 
       if (dbError) {

@@ -5,7 +5,6 @@ import { Progress } from '@/components/ui/progress';
 import { Trophy, Star, Calendar } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ChallengeLeaderboard } from './ChallengeLeaderboard';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface Challenge {
   id: string;
@@ -21,38 +20,17 @@ interface Challenge {
   max_participants: number | null;
   progress?: number;
   leaderboard_enabled: boolean;
-  user_challenges?: {
-    progress: number;
-    completed_at: string | null;
-  }[];
 }
 
 export const ActiveChallenges = () => {
-  const { user } = useAuth();
-
-  const { data: userLevel } = useQuery({
-    queryKey: ['user-level'],
+  const { data: challenges, isLoading } = useQuery({
+    queryKey: ['active-challenges'],
     queryFn: async () => {
-      if (!user) return { current_level: 1 };
-      
-      const { data, error } = await supabase
+      const { data: userLevel } = await supabase
         .from('user_levels')
         .select('current_level')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .single();
 
-      if (error) {
-        console.error('Error fetching user level:', error);
-        return { current_level: 1 };
-      }
-      
-      return data || { current_level: 1 };
-    },
-  });
-
-  const { data: challenges, isLoading } = useQuery({
-    queryKey: ['active-challenges', userLevel?.current_level],
-    queryFn: async () => {
       const { data, error } = await supabase
         .from('challenges')
         .select(`
@@ -64,16 +42,12 @@ export const ActiveChallenges = () => {
         `)
         .eq('is_active', true)
         .lte('min_level', userLevel?.current_level || 1)
+        .is('completed_at', null)
         .order('end_date', { ascending: true });
 
       if (error) throw error;
-
-      // Filter out completed challenges
-      return (data as Challenge[]).filter(challenge => 
-        !challenge.user_challenges?.[0]?.completed_at
-      );
+      return data as Challenge[];
     },
-    enabled: !!userLevel,
   });
 
   if (isLoading) {
@@ -109,10 +83,10 @@ export const ActiveChallenges = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Progress</span>
-                  <span>{challenge.user_challenges?.[0]?.progress || 0} / {challenge.requirement_count}</span>
+                  <span>{challenge.progress || 0} / {challenge.requirement_count}</span>
                 </div>
                 <Progress 
-                  value={((challenge.user_challenges?.[0]?.progress || 0) / challenge.requirement_count) * 100} 
+                  value={((challenge.progress || 0) / challenge.requirement_count) * 100} 
                 />
               </div>
 

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -11,24 +11,16 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
 
 export function AccessibilitySettings() {
   const { user } = useAuth();
-  const {
-    highContrast,
-    screenReaderEnabled,
-    reducedMotion,
-    captionSize,
-    focusRingColor,
-    setHighContrast,
-    setScreenReaderEnabled,
-    setReducedMotion,
-    setCaptionSize,
-    setFocusRingColor,
-  } = useAccessibility();
+  const [settings, setSettings] = useState({
+    highContrast: false,
+    screenReaderEnabled: false,
+    reducedMotion: false,
+    captionSize: "medium",
+  });
 
   useEffect(() => {
     if (user) {
@@ -49,22 +41,42 @@ export function AccessibilitySettings() {
     }
 
     if (data) {
-      setHighContrast(data.high_contrast);
-      setScreenReaderEnabled(data.screen_reader_enabled);
-      setReducedMotion(data.reduced_motion);
-      // Ensure we only set valid caption sizes
-      if (data.caption_size === "small" || data.caption_size === "medium" || data.caption_size === "large") {
-        setCaptionSize(data.caption_size);
-      }
+      setSettings({
+        highContrast: data.high_contrast,
+        screenReaderEnabled: data.screen_reader_enabled,
+        reducedMotion: data.reduced_motion,
+        captionSize: data.caption_size,
+      });
+      applySettings(data);
+    }
+  };
+
+  const applySettings = (settings: any) => {
+    if (settings.high_contrast) {
+      document.documentElement.classList.add("high-contrast");
+    } else {
+      document.documentElement.classList.remove("high-contrast");
+    }
+
+    if (settings.reduced_motion) {
+      document.documentElement.classList.add("reduce-motion");
+    } else {
+      document.documentElement.classList.remove("reduce-motion");
     }
   };
 
   const updateSetting = async (key: string, value: any) => {
+    const newSettings = { ...settings, [key]: value };
+    setSettings(newSettings);
+
     const { error } = await supabase
       .from("accessibility_settings")
       .upsert({
         user_id: user?.id,
-        [key]: value,
+        high_contrast: newSettings.highContrast,
+        screen_reader_enabled: newSettings.screenReaderEnabled,
+        reduced_motion: newSettings.reducedMotion,
+        caption_size: newSettings.captionSize,
       });
 
     if (error) {
@@ -72,13 +84,14 @@ export function AccessibilitySettings() {
       return;
     }
 
+    applySettings(newSettings);
     toast.success("Settings updated successfully");
   };
 
   return (
     <Card className="p-6 space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold" tabIndex={0}>Accessibility Settings</h2>
+        <h2 className="text-2xl font-bold">Accessibility Settings</h2>
         <p className="text-muted-foreground">
           Customize your viewing experience
         </p>
@@ -89,12 +102,8 @@ export function AccessibilitySettings() {
           <Label htmlFor="high-contrast">High Contrast</Label>
           <Switch
             id="high-contrast"
-            checked={highContrast}
-            onCheckedChange={(checked) => {
-              setHighContrast(checked);
-              updateSetting("high_contrast", checked);
-            }}
-            aria-label="Toggle high contrast mode"
+            checked={settings.highContrast}
+            onCheckedChange={(checked) => updateSetting("highContrast", checked)}
           />
         </div>
 
@@ -102,12 +111,10 @@ export function AccessibilitySettings() {
           <Label htmlFor="screen-reader">Screen Reader Support</Label>
           <Switch
             id="screen-reader"
-            checked={screenReaderEnabled}
-            onCheckedChange={(checked) => {
-              setScreenReaderEnabled(checked);
-              updateSetting("screen_reader_enabled", checked);
-            }}
-            aria-label="Toggle screen reader optimizations"
+            checked={settings.screenReaderEnabled}
+            onCheckedChange={(checked) =>
+              updateSetting("screenReaderEnabled", checked)
+            }
           />
         </div>
 
@@ -115,25 +122,18 @@ export function AccessibilitySettings() {
           <Label htmlFor="reduced-motion">Reduced Motion</Label>
           <Switch
             id="reduced-motion"
-            checked={reducedMotion}
-            onCheckedChange={(checked) => {
-              setReducedMotion(checked);
-              updateSetting("reduced_motion", checked);
-            }}
-            aria-label="Toggle reduced motion"
+            checked={settings.reducedMotion}
+            onCheckedChange={(checked) => updateSetting("reducedMotion", checked)}
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="caption-size">Caption Size</Label>
           <Select
-            value={captionSize}
-            onValueChange={(value: "small" | "medium" | "large") => {
-              setCaptionSize(value);
-              updateSetting("caption_size", value);
-            }}
+            value={settings.captionSize}
+            onValueChange={(value) => updateSetting("captionSize", value)}
           >
-            <SelectTrigger id="caption-size" aria-label="Select caption size">
+            <SelectTrigger>
               <SelectValue placeholder="Select caption size" />
             </SelectTrigger>
             <SelectContent>
@@ -142,21 +142,6 @@ export function AccessibilitySettings() {
               <SelectItem value="large">Large</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="focus-ring-color">Focus Ring Color</Label>
-          <Input
-            id="focus-ring-color"
-            type="color"
-            value={focusRingColor}
-            onChange={(e) => {
-              setFocusRingColor(e.target.value);
-              updateSetting("focus_ring_color", e.target.value);
-            }}
-            aria-label="Choose focus ring color"
-            className="h-10 p-1"
-          />
         </div>
       </div>
     </Card>

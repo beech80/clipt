@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tag, Hash } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface StreamMetaFormProps {
   selectedCategory: string;
-  setSelectedCategory: (category: string) => void;
+  setSelectedCategory: (value: string) => void;
   selectedTags: string[];
   setSelectedTags: (tags: string[]) => void;
-  categories?: any[];
-  tags?: any[];
+  categories?: { id: string; name: string }[];
+  tags?: { id: string; name: string }[];
 }
 
 export const StreamMetaForm = ({
@@ -18,21 +18,26 @@ export const StreamMetaForm = ({
   selectedTags,
   setSelectedTags,
   categories,
-  tags
+  tags,
 }: StreamMetaFormProps) => {
+  const handleTagSelect = (tagId: string) => {
+    setSelectedTags(
+      selectedTags.includes(tagId)
+        ? selectedTags.filter(id => id !== tagId)
+        : [...selectedTags, tagId]
+    );
+  };
+
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Category</label>
-        <Select
-          value={selectedCategory}
-          onValueChange={setSelectedCategory}
-        >
-          <SelectTrigger>
+      <div className="flex items-center space-x-2">
+        <Tag className="h-5 w-5 text-gaming-400" />
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a category" />
           </SelectTrigger>
           <SelectContent>
-            {categories?.map((category) => (
+            {categories?.map(category => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}
               </SelectItem>
@@ -42,45 +47,21 @@ export const StreamMetaForm = ({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Tags</label>
-        <Select
-          value={selectedTags[0]}
-          onValueChange={(value) => setSelectedTags([...selectedTags, value])}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Add tags" />
-          </SelectTrigger>
-          <SelectContent>
-            {tags?.map((tag) => (
-              <SelectItem 
-                key={tag.id} 
-                value={tag.id}
-                disabled={selectedTags.includes(tag.id)}
-              >
-                {tag.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <div className="flex flex-wrap gap-2 mt-2">
-          {selectedTags.map((tagId) => {
-            const tag = tags?.find((t) => t.id === tagId);
-            return (
-              <div 
-                key={tagId}
-                className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm flex items-center gap-1"
-              >
-                {tag?.name}
-                <button
-                  onClick={() => setSelectedTags(selectedTags.filter(id => id !== tagId))}
-                  className="hover:text-destructive"
-                >
-                  ×
-                </button>
-              </div>
-            );
-          })}
+        <div className="flex items-center space-x-2">
+          <Hash className="h-5 w-5 text-gaming-400" />
+          <span className="text-sm font-medium">Tags</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {tags?.map(tag => (
+            <Badge
+              key={tag.id}
+              variant={selectedTags.includes(tag.id) ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => handleTagSelect(tag.id)}
+            >
+              {tag.name}
+            </Badge>
+          ))}
         </div>
       </div>
     </div>

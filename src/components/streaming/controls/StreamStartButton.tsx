@@ -8,13 +8,13 @@ interface StreamStartButtonProps {
 
 export const StreamStartButton = ({ onClick, isLoading }: StreamStartButtonProps) => {
   return (
-    <Button
-      className="w-full bg-gaming-500 hover:bg-gaming-600 text-white px-8 py-6 text-lg"
+    <Button 
       onClick={onClick}
+      className="w-full bg-gaming-500 hover:bg-gaming-600 text-white px-8 py-6 text-lg"
       disabled={isLoading}
     >
-      <Video className="w-5 h-5 mr-2" />
-      {isLoading ? "Starting Stream..." : "Start Stream"}
+      <Video className="h-5 w-5 mr-2" />
+      Start Stream
     </Button>
   );
 };

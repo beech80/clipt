@@ -1,9 +1,14 @@
-import { type Config } from "tailwindcss";
-import { fontFamily } from "tailwindcss/defaultTheme";
+import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./src/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
+  prefix: "",
   theme: {
     container: {
       center: true,
@@ -19,18 +24,6 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        gaming: {
-          '50': '#f5f3ff',
-          '100': '#ede9fe',
-          '200': '#ddd6fe',
-          '300': '#9b87f5',
-          '400': '#8b5cf6',
-          '500': '#7c3aed',
-          '600': '#6d28d9',
-          '700': '#5b21b6',
-          '800': '#1A1F2C',
-          '900': '#131620',
-        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -59,14 +52,22 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        gaming: {
+          100: "#e0e7ff",
+          200: "#c7d2fe",
+          300: "#a5b4fc",
+          400: "#818cf8",
+          500: "#6366f1",
+          600: "#4f46e5",
+          700: "#4338ca",
+          800: "#3730a3",
+          900: "#312e81",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-      },
-      fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
       },
       keyframes: {
         "accordion-down": {
@@ -77,10 +78,50 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        glow: {
+          "0%, 100%": {
+            boxShadow: "0 0 15px rgba(155, 135, 245, 0.5)",
+          },
+          "50%": {
+            boxShadow: "0 0 30px rgba(155, 135, 245, 0.8)",
+          },
+        },
+        gradient: {
+          "0%": { backgroundPosition: "200% 200%" },
+          "100%": { backgroundPosition: "0% 0%" },
+        },
+        "scale-up": {
+          "0%": { transform: "scale(0)", opacity: "0" },
+          "50%": { transform: "scale(1.2)", opacity: "0.5" },
+          "100%": { transform: "scale(1)", opacity: "0" },
+        },
+        "game-slide": {
+          "0%": { transform: "translateX(100%)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
+        },
+        "game-fade": {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "emote-float": {
+          "0%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+          "100%": { transform: "translateY(0px)" },
+        },
+        "power-pulse": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.1)", filter: "brightness(1.2)" },
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        glow: "glow 2s ease-in-out infinite",
+        "scale-up": "scale-up 0.6s ease-out",
+        "game-slide": "game-slide 0.4s ease-out",
+        "game-fade": "game-fade 0.3s ease-out",
+        "emote-float": "emote-float 2s ease-in-out infinite",
+        "power-pulse": "power-pulse 2s ease-in-out infinite"
       },
     },
   },

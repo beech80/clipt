@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { getOptimizedImageUrl, preloadImage, getVideoThumbnail } from "@/utils/mediaOptimization";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -12,37 +12,9 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [videoThumbnail, setVideoThumbnail] = useState<string>('');
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [isIntersecting, setIsIntersecting] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          setIsIntersecting(entry.isIntersecting);
-        });
-      },
-      { 
-        threshold: 0.1,
-        rootMargin: '50px 0px' // Preload when within 50px of viewport
-      }
-    );
-
-    const element = document.querySelector(`#post-content-${postId}`);
-    if (element) {
-      observer.observe(element);
-    }
-
-    return () => {
-      if (element) {
-        observer.unobserve(element);
-      }
-    };
-  }, [postId]);
 
   useEffect(() => {
     const loadMedia = async () => {
-      if (!isIntersecting) return;
-
       try {
         if (imageUrl) {
           const optimizedUrl = getOptimizedImageUrl(imageUrl, {
@@ -63,7 +35,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     };
 
     loadMedia();
-  }, [imageUrl, videoUrl, videoThumbnail, isIntersecting]);
+  }, [imageUrl, videoUrl, videoThumbnail]);
 
   const handleVideoIntersection = (entries: IntersectionObserverEntry[]) => {
     entries.forEach(entry => {
@@ -98,49 +70,48 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     return <Skeleton className="w-full h-full" />;
   }
 
-  return (
-    <div id={`post-content-${postId}`} className="w-full h-full">
-      {imageUrl && isIntersecting && (
-        <img
-          src={getOptimizedImageUrl(imageUrl, {
-            width: 1080,
-            quality: 80,
-            format: 'webp'
-          })}
-          alt="Post content"
-          className="w-full h-full object-cover"
-          loading="lazy"
-          decoding="async"
-        />
-      )}
+  if (imageUrl) {
+    return (
+      <img
+        src={getOptimizedImageUrl(imageUrl, {
+          width: 1080,
+          quality: 80,
+          format: 'webp'
+        })}
+        alt="Post content"
+        className="w-full h-full object-cover"
+        loading="lazy"
+      />
+    );
+  }
 
-      {videoUrl && (
-        <div className="relative w-full h-full">
-          <video
-            id={`video-${postId}`}
-            src={isIntersecting ? videoUrl : undefined}
-            className="w-full h-full object-cover"
-            loop
-            muted
-            playsInline
-            poster={videoThumbnail}
-            preload="metadata"
-          />
-          {!isVideoPlaying && videoThumbnail && (
-            <div className="absolute inset-0">
-              <img
-                src={videoThumbnail}
-                alt="Video thumbnail"
-                className="w-full h-full object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  if (videoUrl) {
+    return (
+      <div className="relative w-full h-full">
+        <video
+          id={`video-${postId}`}
+          src={videoUrl}
+          className="w-full h-full object-cover"
+          loop
+          muted
+          playsInline
+          poster={videoThumbnail}
+          preload="metadata"
+        />
+        {!isVideoPlaying && videoThumbnail && (
+          <div className="absolute inset-0">
+            <img
+              src={videoThumbnail}
+              alt="Video thumbnail"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default PostContent;

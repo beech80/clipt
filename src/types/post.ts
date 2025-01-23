@@ -9,7 +9,6 @@ export interface Post {
     username: string | null;
     avatar_url: string | null;
     display_name?: string | null;
-    is_verified?: boolean;
   } | null;
   likes_count?: number;
   clip_votes?: Array<{ count: number }>;
@@ -18,9 +17,6 @@ export interface Post {
   is_premium?: boolean;
   required_tier_id?: string | null;
   scheduled_publish_time?: string | null;
-  category?: string;
-  language?: string;
-  rating?: number;
 }
 
 export interface PostHeaderProps {
@@ -46,11 +42,5 @@ export interface SearchFilters {
   type: 'all' | 'posts' | 'profiles' | 'streams';
   dateRange: 'all' | 'today' | 'week' | 'month';
   hasMedia: boolean;
-  sortBy: 'recent' | 'relevant' | 'popular';
-  category: string;
-  language: string;
-  minRating: number;
-  maxResults: number;
-  includeNSFW: boolean;
-  verifiedOnly: boolean;
+  sortBy: 'recent' | 'relevant';
 }

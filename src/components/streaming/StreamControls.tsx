@@ -10,7 +10,6 @@ import { VODManager } from "./VODManager";
 import { StreamMetaForm } from "./controls/StreamMetaForm";
 import { StreamStartButton } from "./controls/StreamStartButton";
 import { StreamEndButton } from "./controls/StreamEndButton";
-import { InteractiveStreamFeatures } from "./InteractiveStreamFeatures";
 import { startStream, endStream } from "@/utils/streamUtils";
 
 interface StreamControlsProps {
@@ -31,10 +30,8 @@ export const StreamControls = ({
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const [streamData, setStreamData] = useState({
-    title: "",
-    description: "",
-  });
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
@@ -84,7 +81,7 @@ export const StreamControls = ({
       return;
     }
 
-    if (!streamData.title) {
+    if (!title) {
       toast.error("Please set a stream title first");
       return;
     }
@@ -96,7 +93,7 @@ export const StreamControls = ({
 
     setIsLoading(true);
     try {
-      const result = await startStream(userId, streamData.title, streamData.description);
+      const result = await startStream(userId, title, description);
       
       if (selectedCategory) {
         await supabase
@@ -157,23 +154,14 @@ export const StreamControls = ({
   }
 
   return (
-    <div className="w-full max-w-md mx-auto text-center space-y-6">
-      {stream?.id && isLive && (
-        <InteractiveStreamFeatures 
-          streamId={stream.id} 
-          isLive={isLive} 
-        />
-      )}
-
+    <div className="w-full max-w-md mx-auto text-center">
       {!isLive ? (
         <div className="space-y-6">
           <StreamForm
-            title={streamData.title}
-            description={streamData.description}
-            onTitleChange={(title) => setStreamData({ ...streamData, title })}
-            onDescriptionChange={(description) => 
-              setStreamData({ ...streamData, description })
-            }
+            title={title}
+            description={description}
+            onTitleChange={setTitle}
+            onDescriptionChange={setDescription}
           />
           
           <StreamMetaForm

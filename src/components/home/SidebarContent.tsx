@@ -1,67 +1,38 @@
 import { motion } from "framer-motion";
-import { ContentRecommendations } from "@/components/recommendations/ContentRecommendations";
-import { TrendingHashtags } from "@/components/hashtags/TrendingHashtags";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { XPMultipliersList } from "@/components/multipliers/XPMultipliersList";
 import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import { GamingHistory } from "@/components/gaming/GamingHistory";
+import { ContentRecommendations } from "@/components/recommendations/ContentRecommendations";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const SidebarContent = () => {
+  const isMobile = useIsMobile();
+
   return (
-    <motion.div
+    <motion.aside 
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5 }}
-      className="hidden lg:block space-y-6"
+      className="space-y-4 md:space-y-6"
+      role="complementary"
+      aria-label="Additional information"
     >
-      <div className="sticky top-6 space-y-6">
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-gaming-900/40 backdrop-blur-sm border border-gaming-300/10 rounded-xl p-4 shadow-lg hover:shadow-gaming-300/5 transition-all duration-300"
-        >
-          <h2 className="text-lg font-semibold text-gaming-100 mb-4">Recommended</h2>
-          <ErrorBoundary>
-            <ContentRecommendations />
-          </ErrorBoundary>
-        </motion.section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-gaming-900/40 backdrop-blur-sm border border-gaming-300/10 rounded-xl p-4 shadow-lg hover:shadow-gaming-300/5 transition-all duration-300"
-        >
-          <h2 className="text-lg font-semibold text-gaming-100 mb-4">Trending</h2>
-          <ErrorBoundary>
-            <TrendingHashtags />
-          </ErrorBoundary>
-        </motion.section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-gaming-900/40 backdrop-blur-sm border border-gaming-300/10 rounded-xl p-4 shadow-lg hover:shadow-gaming-300/5 transition-all duration-300"
-        >
-          <h2 className="text-lg font-semibold text-gaming-100 mb-4">XP Multipliers</h2>
-          <ErrorBoundary>
+      <ScrollArea className={`${isMobile ? 'h-[400px]' : 'h-[calc(100vh-2rem)]'} pr-4`}>
+        <div className="space-y-4">
+          <section className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 md:p-6">
             <XPMultipliersList />
-          </ErrorBoundary>
-        </motion.section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-gaming-900/40 backdrop-blur-sm border border-gaming-300/10 rounded-xl p-4 shadow-lg hover:shadow-gaming-300/5 transition-all duration-300"
-        >
-          <h2 className="text-lg font-semibold text-gaming-100 mb-4">Active Challenges</h2>
-          <ErrorBoundary>
+          </section>
+          <section className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 md:p-6">
             <ActiveChallenges />
-          </ErrorBoundary>
-        </motion.section>
-      </div>
-    </motion.div>
+          </section>
+          <section className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 md:p-6">
+            <GamingHistory />
+          </section>
+          <section className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 md:p-6">
+            <ContentRecommendations />
+          </section>
+        </div>
+      </ScrollArea>
+    </motion.aside>
   );
 };
