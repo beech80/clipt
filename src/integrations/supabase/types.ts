@@ -594,30 +594,58 @@ export type Database = {
       }
       challenge_leaderboard: {
         Row: {
+          achievement_points: number | null
+          category: string | null
           challenge_id: string | null
           id: string
+          period_end: string | null
+          period_start: string | null
           rank: number | null
           score: number | null
+          time_period: string | null
+          total_wins: number | null
           updated_at: string | null
           user_id: string | null
+          win_streak: number | null
         }
         Insert: {
+          achievement_points?: number | null
+          category?: string | null
           challenge_id?: string | null
           id?: string
+          period_end?: string | null
+          period_start?: string | null
           rank?: number | null
           score?: number | null
+          time_period?: string | null
+          total_wins?: number | null
           updated_at?: string | null
           user_id?: string | null
+          win_streak?: number | null
         }
         Update: {
+          achievement_points?: number | null
+          category?: string | null
           challenge_id?: string | null
           id?: string
+          period_end?: string | null
+          period_start?: string | null
           rank?: number | null
           score?: number | null
+          time_period?: string | null
+          total_wins?: number | null
           updated_at?: string | null
           user_id?: string | null
+          win_streak?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "challenge_leaderboard_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "stream_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "challenge_leaderboard_challenge_id_fkey"
             columns: ["challenge_id"]
