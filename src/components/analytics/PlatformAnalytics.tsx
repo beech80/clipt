@@ -28,7 +28,21 @@ export function PlatformAnalytics() {
         .single();
       
       if (error) throw error;
-      return data as PlatformMetrics;
+      
+      // Transform the data to match the expected type
+      const transformedData = {
+        ...data,
+        daily_stats: Array.isArray(data.daily_stats) 
+          ? data.daily_stats.map((stat: any) => ({
+              date: stat.date,
+              users: Number(stat.users) || 0,
+              streams: Number(stat.streams) || 0,
+              engagement: Number(stat.engagement) || 0
+            }))
+          : []
+      };
+      
+      return transformedData as PlatformMetrics;
     },
   });
 
