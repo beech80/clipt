@@ -4,13 +4,11 @@ import { Hash, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
-interface HashtagData {
-  name: string;
-}
-
 interface TrendingHashtag {
   hashtag_id: string;
-  hashtags: HashtagData;
+  hashtags: {
+    name: string;
+  };
   count: number;
 }
 
@@ -20,6 +18,7 @@ export function TrendingHashtags() {
   const { data: trendingHashtags, isLoading } = useQuery({
     queryKey: ['trending-hashtags'],
     queryFn: async () => {
+      // First get all hashtags with their names
       const { data, error } = await supabase
         .from('post_hashtags')
         .select(`
@@ -33,7 +32,7 @@ export function TrendingHashtags() {
 
       if (error) throw error;
 
-      // Count occurrences of each hashtag
+      // Then count the occurrences of each hashtag
       const countPromises = data.map(async (tag) => {
         const { count, error: countError } = await supabase
           .from('post_hashtags')
@@ -43,13 +42,13 @@ export function TrendingHashtags() {
         if (countError) throw countError;
         
         return {
-          hashtag_id: tag.hashtag_id,
-          hashtags: tag.hashtags[0] as HashtagData, // Fix: Access first element of hashtags array
+          ...tag,
           count: count || 0
-        } satisfies TrendingHashtag;
+        };
       });
 
-      return Promise.all(countPromises);
+      const results = await Promise.all(countPromises);
+      return results as TrendingHashtag[];
     }
   });
 

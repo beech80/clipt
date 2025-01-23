@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
-import StreamChat from "@/components/streaming/StreamChat";
+import { StreamChat } from "@/components/streaming/StreamChat";
 import { StreamForm } from "@/components/streaming/StreamForm";
 import { StreamControls } from "@/components/streaming/StreamControls";
 import { StreamSettings } from "@/components/streaming/StreamSettings";

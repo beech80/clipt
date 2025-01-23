@@ -1,148 +1,190 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { MainNav } from "@/components/MainNav";
-import { StreamSettings } from "@/components/streaming/StreamSettings";
-import { StreamControls } from "@/components/streaming/StreamControls";
-import { TwoFactorSettings } from "@/components/settings/TwoFactorSettings";
-import { DataPrivacySettings } from "@/components/settings/DataPrivacySettings";
+import { toast } from "sonner";
+import { ThemeSelector } from "@/components/profile/ThemeSelector";
+import {
+  Bell,
+  Volume2,
+  Moon,
+  Paintbrush,
+  Shield,
+  UserCog,
+  ArrowLeft,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Profile, CustomTheme, DatabaseProfile } from "@/types/profile";
 
-export default function Settings() {
+const Settings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
 
-  useEffect(() => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
-    getProfile();
-  }, [user, navigate]);
-
-  const getProfile = async () => {
-    try {
-      setIsLoading(true);
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user?.id)
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
         .single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      
+      const dbProfile = data as DatabaseProfile;
+      const customTheme = dbProfile.custom_theme as CustomTheme || {
+        primary: "#1EAEDB",
+        secondary: "#1A1F2C"
+      };
 
-      setProfile(data);
-    } catch (error) {
-      toast.error("Error loading profile");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return {
+        ...dbProfile,
+        custom_theme: customTheme
+      } as Profile;
+    },
+    enabled: !!user?.id
+  });
 
-  const handleUpdateProfile = async (updates: any) => {
-    try {
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (settings: Partial<DatabaseProfile>) => {
       const { error } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("id", user?.id);
+        .from('profiles')
+        .update(settings)
+        .eq('id', user?.id);
 
       if (error) throw error;
-      toast.success("Profile updated successfully!");
-      getProfile();
-    } catch (error) {
-      toast.error("Error updating profile");
+    },
+    onSuccess: () => {
+      toast.success("Settings updated successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to update settings");
+      console.error("Settings update error:", error);
     }
-  };
+  });
 
-  const handleStreamUpdate = (data: { 
-    isLive: boolean; 
-    streamKey: string | null; 
-    streamUrl: string | null 
-  }) => {
-    if (data.isLive) {
-      toast.success("Stream started successfully!");
-    } else {
-      toast.success("Stream ended successfully!");
-    }
+  const handleToggle = (setting: keyof Profile) => {
+    if (!profile) return;
+    
+    updateSettingsMutation.mutate({
+      [setting]: !profile[setting]
+    });
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gaming-900 to-gaming-800">
-        <MainNav />
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center h-[60vh]">
-            <div className="text-gaming-100">Loading...</div>
-          </div>
-        </div>
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gaming-900 to-gaming-800">
-      <MainNav />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gaming-100">Settings</h1>
+    <div className="container mx-auto py-6 space-y-8">
+      {/* Header */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Settings</h1>
+              <p className="text-muted-foreground">
+                Manage your account settings and preferences
+              </p>
+            </div>
           </div>
+        </div>
+        <Separator />
+      </div>
 
-          <div className="grid gap-8">
-            <Card className="p-6 bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gaming-100">Profile Settings</h2>
-              </div>
-              {profile && (
-                <div className="space-y-4">
-                  <div className="grid gap-4">
-                    <Button 
-                      onClick={() => navigate("/edit-profile")}
-                      variant="outline"
-                      className="w-full sm:w-auto"
-                    >
-                      Edit Profile
-                    </Button>
-                  </div>
+      {/* Settings Grid */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Left Column */}
+        <div className="space-y-6">
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <UserCog className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Account Settings</h2>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Notifications</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Receive notifications about activity
+                  </p>
                 </div>
-              )}
-            </Card>
-
-            <Card className="p-6 bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gaming-100">Streaming Settings</h2>
+                <Switch
+                  checked={profile?.enable_notifications}
+                  onCheckedChange={() => handleToggle('enable_notifications')}
+                />
               </div>
-              {user && <StreamSettings userId={user.id} />}
-              {user && <StreamControls 
-                userId={user.id} 
-                onStreamUpdate={handleStreamUpdate}
-              />}
-            </Card>
-
-            <Card className="p-6 bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gaming-100">Security Settings</h2>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Sound Effects</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Play sounds for interactions
+                  </p>
+                </div>
+                <Switch
+                  checked={profile?.enable_sounds}
+                  onCheckedChange={() => handleToggle('enable_sounds')}
+                />
               </div>
-              {user && <TwoFactorSettings />}
-            </Card>
+            </div>
+          </Card>
 
-            <Card className="p-6 bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50">
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gaming-100">Privacy Settings</h2>
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <Shield className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Privacy & Security</h2>
+            </div>
+            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Shield className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-gray-500">Coming soon</p>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          {profile && (
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Paintbrush className="w-5 h-5 text-purple-500" />
+                <h2 className="text-xl font-semibold">Theme Customization</h2>
               </div>
-              {user && <DataPrivacySettings />}
+              <ThemeSelector 
+                userId={profile.id} 
+                currentTheme={profile.custom_theme}
+              />
             </Card>
-          </div>
+          )}
+
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Bell className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Notification Preferences</h2>
+            </div>
+            <p className="text-muted-foreground mb-4">
+              Configure how you receive notifications and updates
+            </p>
+            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <Bell className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-gray-500">Coming soon</p>
+            </div>
+          </Card>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Settings;

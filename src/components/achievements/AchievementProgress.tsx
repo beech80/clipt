@@ -6,14 +6,6 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
-interface AchievementStreak {
-  current_streak: number;
-  max_streak: number;
-  achievements: {
-    name: string;
-  };
-}
-
 export const AchievementProgress = () => {
   const { user } = useAuth();
   const { progress, isLoading } = useAchievementProgress(user?.id || '');
@@ -35,10 +27,7 @@ export const AchievementProgress = () => {
         .limit(3);
 
       if (error) throw error;
-      return (data || []).map(streak => ({
-        ...streak,
-        achievements: streak.achievements || { name: '' }
-      })) as AchievementStreak[];
+      return data;
     },
     enabled: !!user?.id,
   });
@@ -64,7 +53,7 @@ export const AchievementProgress = () => {
               <div className="flex items-center gap-2">
                 <Flame className="w-5 h-5 text-orange-500" />
                 <div>
-                  <p className="text-sm font-medium">{streak.achievements.name}</p>
+                  <p className="text-sm font-medium">{streak.achievements?.name}</p>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <span>{streak.current_streak}x Streak</span>
                     <span>•</span>

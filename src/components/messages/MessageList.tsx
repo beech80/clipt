@@ -14,7 +14,7 @@ export function MessageList({ messages }: MessageListProps) {
   }, [messages]);
 
   return (
-    <div className="flex-1 space-y-4">
+    <div className="flex-1 p-4 overflow-y-auto space-y-4">
       {messages.map((message) => (
         <MessageBubble key={message.id} message={message} />
       ))}

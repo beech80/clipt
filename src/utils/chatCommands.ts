@@ -20,9 +20,7 @@ const timeoutUser = async (userId: string, streamId: string, duration: number, m
 export const chatCommands: Record<string, ChatCommand> = {
   timeout: {
     name: 'timeout',
-    description: 'Timeout a user for a specified duration',
-    moderatorOnly: true,
-    execute: async (args: string[], userId: string, streamId: string) => {
+    execute: async (args, userId, streamId) => {
       if (args.length < 2) throw new Error('Usage: /timeout @username <duration>');
       
       const targetUsername = args[0].replace('@', '');
@@ -40,14 +38,14 @@ export const chatCommands: Record<string, ChatCommand> = {
       
       await timeoutUser(targetUser.id, streamId, duration, userId);
       toast.success(`User ${targetUsername} has been timed out for ${duration} seconds`);
-    }
+    },
+    description: 'Timeout a user for a specified duration',
+    moderatorOnly: true
   },
   
   clear: {
     name: 'clear',
-    description: 'Clear all chat messages',
-    moderatorOnly: true,
-    execute: async (args: string[], userId: string, streamId: string) => {
+    execute: async (args, userId, streamId) => {
       const { error } = await supabase
         .from('stream_chat')
         .update({
@@ -59,20 +57,22 @@ export const chatCommands: Record<string, ChatCommand> = {
         
       if (error) throw error;
       toast.success('Chat has been cleared');
-    }
+    },
+    description: 'Clear all chat messages',
+    moderatorOnly: true
   },
   
   ban: {
     name: 'ban',
-    description: 'Permanently ban a user from chat',
-    moderatorOnly: true,
-    execute: async (args: string[], userId: string, streamId: string) => {
+    execute: async (args, userId, streamId) => {
       if (args.length < 1) throw new Error('Usage: /ban @username');
       
       const targetUsername = args[0].replace('@', '');
       await timeoutUser(targetUsername, streamId, 365 * 24 * 60 * 60, userId); // 1 year timeout
       toast.success(`User ${targetUsername} has been banned`);
-    }
+    },
+    description: 'Permanently ban a user from chat',
+    moderatorOnly: true
   }
 };
 

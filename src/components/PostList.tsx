@@ -70,8 +70,7 @@ const PostList = () => {
           user_id,
           profiles:user_id (
             username,
-            avatar_url,
-            display_name
+            avatar_url
           ),
           likes:likes!post_id (
             count
@@ -90,16 +89,7 @@ const PostList = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      
-      // Transform the data to match the Post type
-      const transformedData = data.map(post => ({
-        ...post,
-        profiles: post.profiles || { username: null, avatar_url: null },
-        likes: post.likes || [],
-        clip_votes: post.clip_votes || []
-      })) as Post[];
-      
-      return transformedData;
+      return data as Post[];
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => {

@@ -13,27 +13,22 @@ export const SidebarContent = () => {
     <motion.aside 
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="space-y-6"
+      className="space-y-4 md:space-y-6"
+      role="complementary"
+      aria-label="Additional information"
     >
       <ScrollArea className={`${isMobile ? 'h-[400px]' : 'h-[calc(100vh-2rem)]'} pr-4`}>
-        <div className="space-y-6">
-          <section className="glass-card p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4 gaming-gradient">XP Multipliers</h2>
+        <div className="space-y-4">
+          <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
             <XPMultipliersList />
           </section>
-
-          <section className="glass-card p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4 gaming-gradient">Active Challenges</h2>
+          <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
             <ActiveChallenges />
           </section>
-
-          <section className="glass-card p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4 gaming-gradient">Gaming History</h2>
+          <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
             <GamingHistory />
           </section>
-
-          <section className="glass-card p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4 gaming-gradient">Recommended</h2>
+          <section className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6">
             <ContentRecommendations />
           </section>
         </div>

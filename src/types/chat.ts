@@ -4,12 +4,16 @@ export interface StreamChatMessage {
   user_id: string;
   message: string;
   created_at: string;
-  is_deleted: boolean;
-  deleted_by: string | null;
-  deleted_at: string | null;
-  is_command: boolean;
-  command_type: string | null;
-  timeout_duration: number | null;
+  is_deleted?: boolean;
+  deleted_by?: string;
+  deleted_at?: string;
+  is_command?: boolean;
+  command_type?: string;
+  timeout_duration?: number;
+  user: {
+    username: string | null;
+    avatar_url: string | null;
+  } | null;
   profiles: {
     username: string;
     avatar_url: string;
@@ -26,25 +30,20 @@ export interface ChatEmote {
 
 export interface ChatCommand {
   name: string;
-  description: string;
   execute: (args: string[], userId: string, streamId: string) => Promise<void>;
+  description: string;
   moderatorOnly?: boolean;
 }
 
-export interface StreamGift {
-  id: string;
-  gift: {
-    name: string;
-    icon_url: string;
-  };
-  sender: {
-    username: string;
-  };
-  message?: string;
+export interface StreamChatHeaderProps {
+  messageCount: number;
 }
 
 export interface ChatTypes {
-  message: StreamChatMessage;
-  emote: ChatEmote;
-  command: ChatCommand;
+  stream_chat: {
+    Row: StreamChatMessage;
+  };
+  chat_emotes: {
+    Row: ChatEmote;
+  };
 }

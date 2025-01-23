@@ -1,8 +1,9 @@
 import { SEO } from "@/components/SEO";
 import { MainNav } from "@/components/MainNav";
+import PostList from "@/components/PostList";
+import { WelcomeSection } from "@/components/home/WelcomeSection";
 import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
-import { WelcomeSection } from "@/components/home/WelcomeSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -28,8 +29,12 @@ export default function Index() {
         route="/"
       />
 
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-6">
+      <main 
+        role="main"
+        aria-label="Home page content"
+        className="min-h-screen bg-gradient-to-b from-gaming-900 to-gaming-800"
+      >
+        <div className="container mx-auto px-4 py-4">
           <MainNav />
           
           <div className={`mt-6 ${isMobile ? 'space-y-4' : 'space-y-8'}`}>
@@ -45,7 +50,7 @@ export default function Index() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 }

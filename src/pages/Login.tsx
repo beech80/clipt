@@ -17,7 +17,8 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await signIn(email, password);
+      const { error } = await signIn(email, password);
+      if (error) throw error;
       toast.success('Successfully logged in!');
       navigate('/');
     } catch (error) {
@@ -32,7 +33,8 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await signUp(email, password);
+      const { error } = await signUp(email, password);
+      if (error) throw error;
       toast.success('Check your email for verification link');
     } catch (error) {
       toast.error('Failed to sign up');

@@ -1,18 +1,9 @@
-import { Post } from './post';
-import { StreamChatMessage, ChatEmote, ChatCommand } from './chat';
+import { AuthTypes } from './auth'
+import { StreamTypes } from './stream'
+import { ChatTypes } from './chat'
+import { NotificationTypes } from './notifications'
+import { SocialTypes } from './social'
 
 export interface Database {
-  public: {
-    Tables: {
-      posts: {
-        Row: Post;
-      };
-      stream_chat: {
-        Row: StreamChatMessage;
-      };
-      chat_emotes: {
-        Row: ChatEmote;
-      };
-    };
-  };
+  public: AuthTypes & StreamTypes & ChatTypes & NotificationTypes & SocialTypes
 }
