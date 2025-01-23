@@ -45,18 +45,18 @@ const Clips = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-[50vh] items-center justify-center bg-[#1A1F2C]">
+      <div className="flex h-[50vh] items-center justify-center bg-gaming-800">
         <Loader2 className="h-8 w-8 animate-spin text-gaming-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#1A1F2C] text-white">
+    <div className="min-h-screen bg-gaming-800 text-white">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center mb-8 space-x-4">
           <BackButton />
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gaming-500 to-gaming-300">
+          <h1 className="text-3xl font-bold gaming-gradient-text">
             Your Liked Clips
           </h1>
         </div>
