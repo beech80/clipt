@@ -11,6 +11,12 @@ import { supabase } from "@/lib/supabase";
 interface StreamAnalytics {
   current_bitrate: number;
   current_fps: number;
+  peak_viewers?: number;
+  average_viewers?: number;
+  chat_messages_count?: number;
+  unique_chatters?: number;
+  stream_duration?: string;
+  engagement_rate?: number;
 }
 
 interface EnhancedStreamDashboardProps {
