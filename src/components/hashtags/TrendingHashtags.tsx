@@ -44,7 +44,7 @@ export function TrendingHashtags() {
         
         return {
           hashtag_id: tag.hashtag_id,
-          hashtags: tag.hashtags,
+          hashtags: tag.hashtags as HashtagData,
           count: count || 0
         } satisfies TrendingHashtag;
       });
