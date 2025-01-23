@@ -77,14 +77,14 @@ const Settings = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#1A1F2C]">
-        <div className="animate-pulse text-gaming-400">Loading settings...</div>
+      <div className="flex h-screen items-center justify-center bg-gaming-800">
+        <div className="animate-pulse text-gaming-300">Loading settings...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#1A1F2C] text-white">
+    <div className="min-h-screen bg-gaming-800 text-white">
       <div className="container mx-auto py-6 space-y-8">
         {/* Header */}
         <div className="space-y-2">
@@ -94,15 +94,15 @@ const Settings = () => {
                 variant="ghost" 
                 size="icon"
                 onClick={() => navigate(-1)}
-                className="hover:bg-gaming-800/50"
+                className="hover:bg-gaming-700/50 text-gaming-300"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gaming-500 to-gaming-300">
+                <h1 className="text-3xl font-bold gaming-gradient-text">
                   Settings
                 </h1>
-                <p className="text-gaming-400">
+                <p className="text-gaming-300">
                   Manage your account settings and preferences
                 </p>
               </div>
@@ -115,15 +115,15 @@ const Settings = () => {
         <div className="grid gap-6 md:grid-cols-2">
           {/* Left Column */}
           <div className="space-y-6">
-            <Card className="p-6 bg-gaming-900/40 border-gaming-700/50 backdrop-blur-sm">
+            <Card className="gaming-card p-6">
               <div className="flex items-center gap-2 mb-6">
-                <UserCog className="w-5 h-5 text-gaming-400" />
-                <h2 className="text-xl font-semibold text-gaming-100">Account Settings</h2>
+                <UserCog className="w-5 h-5 text-gaming-300" />
+                <h2 className="text-xl font-semibold text-gaming-300">Account Settings</h2>
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-gaming-200">Notifications</Label>
+                    <Label className="text-gaming-300">Notifications</Label>
                     <p className="text-sm text-gaming-400">
                       Receive notifications about activity
                     </p>
@@ -136,7 +136,7 @@ const Settings = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-gaming-200">Sound Effects</Label>
+                    <Label className="text-gaming-300">Sound Effects</Label>
                     <p className="text-sm text-gaming-400">
                       Play sounds for interactions
                     </p>
@@ -150,13 +150,13 @@ const Settings = () => {
               </div>
             </Card>
 
-            <Card className="p-6 bg-gaming-900/40 border-gaming-700/50 backdrop-blur-sm">
+            <Card className="gaming-card p-6">
               <div className="flex items-center gap-2 mb-6">
-                <Shield className="w-5 h-5 text-gaming-400" />
-                <h2 className="text-xl font-semibold text-gaming-100">Privacy & Security</h2>
+                <Shield className="w-5 h-5 text-gaming-300" />
+                <h2 className="text-xl font-semibold text-gaming-300">Privacy & Security</h2>
               </div>
-              <div className="text-center p-8 bg-gaming-800/50 rounded-lg">
-                <Shield className="w-8 h-8 mx-auto text-gaming-400 mb-2" />
+              <div className="text-center p-8 bg-gaming-900/50 rounded-lg">
+                <Shield className="w-8 h-8 mx-auto text-gaming-300 mb-2" />
                 <p className="text-gaming-400">Coming soon</p>
               </div>
             </Card>
@@ -165,10 +165,10 @@ const Settings = () => {
           {/* Right Column */}
           <div className="space-y-6">
             {profile && (
-              <Card className="p-6 bg-gaming-900/40 border-gaming-700/50 backdrop-blur-sm">
+              <Card className="gaming-card p-6">
                 <div className="flex items-center gap-2 mb-6">
-                  <Paintbrush className="w-5 h-5 text-gaming-400" />
-                  <h2 className="text-xl font-semibold text-gaming-100">Theme Customization</h2>
+                  <Paintbrush className="w-5 h-5 text-gaming-300" />
+                  <h2 className="text-xl font-semibold text-gaming-300">Theme Customization</h2>
                 </div>
                 <ThemeSelector 
                   userId={profile.id} 
@@ -177,16 +177,16 @@ const Settings = () => {
               </Card>
             )}
 
-            <Card className="p-6 bg-gaming-900/40 border-gaming-700/50 backdrop-blur-sm">
+            <Card className="gaming-card p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Bell className="w-5 h-5 text-gaming-400" />
-                <h2 className="text-xl font-semibold text-gaming-100">Notification Preferences</h2>
+                <Bell className="w-5 h-5 text-gaming-300" />
+                <h2 className="text-xl font-semibold text-gaming-300">Notification Preferences</h2>
               </div>
               <p className="text-gaming-400 mb-4">
                 Configure how you receive notifications and updates
               </p>
-              <div className="text-center p-8 bg-gaming-800/50 rounded-lg">
-                <Bell className="w-8 h-8 mx-auto text-gaming-400 mb-2" />
+              <div className="text-center p-8 bg-gaming-900/50 rounded-lg">
+                <Bell className="w-8 h-8 mx-auto text-gaming-300 mb-2" />
                 <p className="text-gaming-400">Coming soon</p>
               </div>
             </Card>
