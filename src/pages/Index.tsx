@@ -1,9 +1,9 @@
 import { SEO } from "@/components/SEO";
 import { MainNav } from "@/components/MainNav";
-import PostList from "@/components/PostList";
 import { WelcomeSection } from "@/components/home/WelcomeSection";
 import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
+import { OBSSetupGuide } from "@/components/streaming/setup/OBSSetupGuide";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePerformanceMonitoring } from "@/hooks/usePerformanceMonitoring";
@@ -14,15 +14,11 @@ export default function Index() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   
-  // Initialize performance monitoring
   usePerformanceMonitoring('HomePage');
 
-  // Track page specific metrics
   useEffect(() => {
-    // Track initial page load
     const pageLoadStart = performance.now();
     
-    // Track component mount time
     return () => {
       const mountDuration = performance.now() - pageLoadStart;
       LoggingService.trackMetric('home_page_mount_duration', mountDuration, {
@@ -31,7 +27,6 @@ export default function Index() {
     };
   }, []);
 
-  // Track user interactions
   useEffect(() => {
     const trackInteraction = (e: MouseEvent | KeyboardEvent) => {
       LoggingService.trackMetric('home_page_interaction', 1, {
@@ -82,6 +77,9 @@ export default function Index() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
               <div className="lg:col-span-2">
                 <MainContent />
+                <div className="mt-8">
+                  <OBSSetupGuide />
+                </div>
               </div>
               <div className="lg:col-span-1">
                 <SidebarContent />
