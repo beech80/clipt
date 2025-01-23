@@ -29,7 +29,7 @@ export interface AchievementProgress {
 export const useAchievementProgress = (userId: string) => {
   const queryClient = useQueryClient();
 
-  const { data: progress, isLoading, error } = useQuery({
+  const { data: progress, isLoading } = useQuery({
     queryKey: ['achievement-progress', userId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -50,14 +50,9 @@ export const useAchievementProgress = (userId: string) => {
             )
           )
         `)
-        .eq('user_id', userId)
-        .throwOnError();
+        .eq('user_id', userId);
 
-      if (error) {
-        console.error('Error fetching achievement progress:', error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data as AchievementProgress[];
     },
     enabled: !!userId,
@@ -76,13 +71,9 @@ export const useAchievementProgress = (userId: string) => {
         .select('id, current_value')
         .eq('user_id', userId)
         .eq('achievement_id', achievementId)
-        .maybeSingle()
-        .throwOnError();
+        .maybeSingle();
 
-      if (fetchError) {
-        console.error('Error checking existing progress:', fetchError);
-        throw fetchError;
-      }
+      if (fetchError) throw fetchError;
 
       if (existing) {
         const { error } = await supabase
@@ -91,8 +82,7 @@ export const useAchievementProgress = (userId: string) => {
             current_value: value,
             updated_at: new Date().toISOString()
           })
-          .eq('id', existing.id)
-          .throwOnError();
+          .eq('id', existing.id);
 
         if (error) throw error;
       } else {
@@ -102,8 +92,7 @@ export const useAchievementProgress = (userId: string) => {
             user_id: userId,
             achievement_id: achievementId,
             current_value: value,
-          })
-          .throwOnError();
+          });
 
         if (error) throw error;
       }
@@ -112,8 +101,7 @@ export const useAchievementProgress = (userId: string) => {
       queryClient.invalidateQueries({ queryKey: ['achievement-progress'] });
       queryClient.invalidateQueries({ queryKey: ['user-achievements'] });
     },
-    onError: (error) => {
-      console.error('Failed to update achievement progress:', error);
+    onError: () => {
       toast.error('Failed to update achievement progress');
     },
   });
@@ -121,7 +109,6 @@ export const useAchievementProgress = (userId: string) => {
   return {
     progress,
     isLoading,
-    error,
     updateProgress,
   };
 };

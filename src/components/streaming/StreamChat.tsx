@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import ChatMessage from './chat/ChatMessage';
+import { ChatMessage } from './chat/ChatMessage';
 import ChatInput from './chat/ChatInput';
 import { StreamChatHeader } from './chat/StreamChatHeader';
 import { StreamChatError } from './chat/StreamChatError';

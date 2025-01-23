@@ -2,7 +2,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef, useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { StreamChatMessage } from "@/types/chat";
-import ChatMessage from './ChatMessage';
+import { ChatMessage } from './ChatMessage';
 
 interface ChatMessageListProps {
   messages: StreamChatMessage[];

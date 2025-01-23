@@ -3,31 +3,24 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Home, MessageSquare, Video, Trophy, Settings, Gamepad } from "lucide-react";
 import { SearchBar } from "./SearchBar";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export function MainNav({
   className,
   ...props
 }: React.HTMLAttributes<HTMLElement>) {
   const { user } = useAuth();
-  const isMobile = useIsMobile();
 
   return (
     <nav
-      className={cn(
-        "flex items-center space-x-4 lg:space-x-6",
-        isMobile ? "overflow-x-auto pb-2 snap-x snap-mandatory" : "",
-        className
-      )}
+      className={cn("flex items-center space-x-4 lg:space-x-6", className)}
       {...props}
     >
       <NavLink
         to="/"
         className={({ isActive }) =>
           cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2 whitespace-nowrap snap-start",
-            isActive ? "text-primary" : "text-muted-foreground",
-            isMobile ? "px-3" : ""
+            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
+            isActive ? "text-primary" : "text-muted-foreground"
           )
         }
       >
@@ -38,23 +31,21 @@ export function MainNav({
         to="/discover"
         className={({ isActive }) =>
           cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2 whitespace-nowrap snap-start",
-            isActive ? "text-primary" : "text-muted-foreground",
-            isMobile ? "px-3" : ""
+            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
+            isActive ? "text-primary" : "text-muted-foreground"
           )
         }
       >
         <Gamepad className="h-4 w-4" />
         Discover
       </NavLink>
-      {!isMobile && <SearchBar />}
+      <SearchBar />
       <NavLink
         to="/streaming"
         className={({ isActive }) =>
           cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2 whitespace-nowrap snap-start",
-            isActive ? "text-primary" : "text-muted-foreground",
-            isMobile ? "px-3" : ""
+            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
+            isActive ? "text-primary" : "text-muted-foreground"
           )
         }
       >
@@ -65,9 +56,8 @@ export function MainNav({
         to="/top-clips"
         className={({ isActive }) =>
           cn(
-            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2 whitespace-nowrap snap-start",
-            isActive ? "text-primary" : "text-muted-foreground",
-            isMobile ? "px-3" : ""
+            "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
+            isActive ? "text-primary" : "text-muted-foreground"
           )
         }
       >
@@ -80,9 +70,8 @@ export function MainNav({
             to="/clipts"
             className={({ isActive }) =>
               cn(
-                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2 whitespace-nowrap snap-start",
-                isActive ? "text-primary" : "text-muted-foreground",
-                isMobile ? "px-3" : ""
+                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
+                isActive ? "text-primary" : "text-muted-foreground"
               )
             }
           >
@@ -93,9 +82,8 @@ export function MainNav({
             to="/messages"
             className={({ isActive }) =>
               cn(
-                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2 whitespace-nowrap snap-start",
-                isActive ? "text-primary" : "text-muted-foreground",
-                isMobile ? "px-3" : ""
+                "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2",
+                isActive ? "text-primary" : "text-muted-foreground"
               )
             }
           >

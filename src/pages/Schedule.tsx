@@ -38,12 +38,12 @@ const Schedule = () => {
 
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center mb-6">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center mb-4">
           <BackButton />
-          <h1 className="text-2xl font-bold ml-2">Stream Schedule</h1>
+          <h1 className="text-2xl font-bold">Stream Schedule</h1>
         </div>
-        <Card className="p-8 text-center bg-card/50 backdrop-blur-sm">
+        <Card className="p-8 text-center">
           <h2 className="text-2xl font-bold mb-4">Sign in Required</h2>
           <p className="text-muted-foreground">
             Please sign in to manage your stream schedule.
@@ -55,12 +55,12 @@ const Schedule = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center mb-6">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center mb-4">
           <BackButton />
-          <h1 className="text-2xl font-bold ml-2">Stream Schedule</h1>
+          <h1 className="text-2xl font-bold">Stream Schedule</h1>
         </div>
-        <Card className="p-8 bg-card/50 backdrop-blur-sm">
+        <Card className="p-8">
           <Skeleton className="h-8 w-64 mb-4" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-3/4" />
@@ -80,15 +80,15 @@ const Schedule = () => {
         : null;
     
     return (
-      <Card className="p-6 mb-6 bg-card/50 backdrop-blur-sm border border-border/50">
+      <Card className="p-6 mb-6">
         <h3 className="text-lg font-semibold mb-4">Upcoming Stream</h3>
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
             <span>{format(scheduledDate, 'MMMM d, yyyy')}</span>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Clock className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-muted-foreground" />
             <span>{format(scheduledDate, 'h:mm a')}</span>
           </div>
           {duration && (
@@ -102,23 +102,21 @@ const Schedule = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="flex items-center mb-6">
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center mb-4">
         <BackButton />
-        <h1 className="text-2xl font-bold ml-2">Stream Schedule</h1>
+        <h1 className="text-3xl font-bold">Stream Schedule</h1>
       </div>
       
       {renderUpcomingStream()}
       
       {stream?.id && (
-        <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
-          <StreamScheduleForm 
-            streamId={stream.id}
-            onScheduled={() => {
-              window.location.reload();
-            }}
-          />
-        </Card>
+        <StreamScheduleForm 
+          streamId={stream.id}
+          onScheduled={() => {
+            window.location.reload();
+          }}
+        />
       )}
     </div>
   );

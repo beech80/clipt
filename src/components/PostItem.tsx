@@ -1,4 +1,4 @@
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -10,7 +10,7 @@ interface PostItemProps {
   post: Post;
 }
 
-const PostItem = memo(({ post }: PostItemProps) => {
+const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [commentsCount, setCommentsCount] = useState(0);
 
@@ -32,31 +32,31 @@ const PostItem = memo(({ post }: PostItemProps) => {
   const username = post.profiles?.username || 'Anonymous';
 
   return (
-    <div className="relative w-full bg-card/50 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg transition-shadow hover:shadow-xl border border-border/50">
+    <div className="relative w-full bg-[#1A1F2C] rounded-lg overflow-hidden shadow-lg transition-shadow hover:shadow-xl">
       <div className="absolute inset-0 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border/50">
+        <div className="flex items-center justify-between p-4 border-b border-gaming-600/20 backdrop-blur-sm bg-gaming-800/80">
           <div className="flex items-center space-x-3">
-            <span className="text-lg font-semibold text-foreground hover:text-primary transition-colors">
+            <span className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-colors">
               {username}
             </span>
           </div>
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-1">
               <Heart className="h-5 w-5 text-red-500" />
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm font-medium text-gaming-100">
                 {post.likes_count || 0}
               </span>
             </div>
             <div className="flex items-center space-x-1">
-              <MessageSquare className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">
+              <MessageSquare className="h-5 w-5 text-gaming-400" />
+              <span className="text-sm font-medium text-gaming-100">
                 {commentsCount}
               </span>
             </div>
             <div className="flex items-center space-x-1">
               <Trophy className="h-5 w-5 text-yellow-500" />
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm font-medium text-gaming-100">
                 {post.clip_votes?.[0]?.count || 0}
               </span>
             </div>
@@ -81,15 +81,6 @@ const PostItem = memo(({ post }: PostItemProps) => {
       </div>
     </div>
   );
-}, (prevProps, nextProps) => {
-  // Custom comparison function to prevent unnecessary re-renders
-  return (
-    prevProps.post.id === nextProps.post.id &&
-    prevProps.post.likes_count === nextProps.post.likes_count &&
-    prevProps.post.clip_votes?.[0]?.count === nextProps.post.clip_votes?.[0]?.count
-  );
-});
-
-PostItem.displayName = 'PostItem';
+};
 
 export default PostItem;

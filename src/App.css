@@ -5,10 +5,18 @@
   text-align: center;
 }
 
-body {
-  background-color: #1A1F2C;
-  color: white;
-  min-height: 100vh;
+/* ... keep existing code */
+
+/* Mobile Optimization */
+@media (max-width: 640px) {
+  #root {
+    padding: 1rem;
+  }
+  
+  .post-container {
+    margin: -1rem;
+    width: calc(100% + 2rem);
+  }
 }
 
 /* Accessibility Styles */
@@ -22,16 +30,6 @@ body {
 .reduce-motion * {
   animation: none !important;
   transition: none !important;
-}
-
-/* Keyboard Navigation Styles */
-.keyboard-mode :focus {
-  outline: 3px solid var(--focus-ring-color, #1a73e8);
-  outline-offset: 2px;
-}
-
-.keyboard-mode :focus:not(:focus-visible) {
-  outline: none;
 }
 
 /* Caption Sizes */
@@ -60,30 +58,18 @@ body {
   border: 0;
 }
 
-/* Skip Links */
-.skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: var(--primary);
-  color: var(--background);
-  padding: 8px;
-  z-index: 100;
-  transition: top 0.2s;
+/* Image/Video Optimization */
+.media-container img,
+.media-container video {
+  max-height: 90vh;
+  object-fit: contain;
+  width: 100%;
+  background: #000;
 }
 
-.skip-link:focus {
-  top: 0;
-}
-
-/* Mobile Optimization */
 @media (max-width: 640px) {
-  #root {
-    padding: 1rem;
-  }
-  
-  .post-container {
-    margin: -1rem;
-    width: calc(100% + 2rem);
+  .media-container img,
+  .media-container video {
+    max-height: 70vh;
   }
 }
