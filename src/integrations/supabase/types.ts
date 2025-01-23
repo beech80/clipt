@@ -358,6 +358,41 @@ export type Database = {
           },
         ]
       }
+      broadcast_settings: {
+        Row: {
+          created_at: string
+          encoder_settings: Json | null
+          id: string
+          output_settings: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encoder_settings?: Json | null
+          id?: string
+          output_settings?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encoder_settings?: Json | null
+          id?: string
+          output_settings?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_leaderboard: {
         Row: {
           challenge_id: string | null
@@ -2840,6 +2875,88 @@ export type Database = {
           },
           {
             foreignKeyName: "recommended_streams_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scene_sources: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          position: Json
+          scene_id: string
+          settings: Json
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          position?: Json
+          scene_id: string
+          settings?: Json
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          position?: Json
+          scene_id?: string
+          settings?: Json
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scene_sources_scene_id_fkey"
+            columns: ["scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scenes: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          layout: Json
+          name: string
+          sort_order: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          layout?: Json
+          name: string
+          sort_order?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          layout?: Json
+          name?: string
+          sort_order?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
