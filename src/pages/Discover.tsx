@@ -1,20 +1,18 @@
-import { useState } from "react";
 import { GameGrid } from "@/components/discover/GameGrid";
 import { GameSearch } from "@/components/discover/GameSearch";
-import GameBoyControls from "@/components/GameBoyControls";
+import { useState } from "react";
 
-const Discover = () => {
+export default function Discover() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("name");
+  const [sortBy, setSortBy] = useState("popular");
 
   return (
     <div className="min-h-screen bg-gaming-800 text-white">
-      <div className="mx-auto max-w-4xl space-y-8 pb-40 px-4">
-        <div className="space-y-4">
-          <h1 className="text-3xl font-bold gaming-gradient-text">Discover Games</h1>
-          <p className="text-gaming-300">
-            Browse and search through our collection of games and watch the best clips
-          </p>
+      <div className="container mx-auto p-4 space-y-6">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold gaming-gradient-text">
+            Discover Games
+          </h1>
         </div>
 
         <GameSearch
@@ -25,11 +23,7 @@ const Discover = () => {
         />
 
         <GameGrid />
-        
-        <GameBoyControls />
       </div>
     </div>
   );
-};
-
-export default Discover;
+}
