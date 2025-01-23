@@ -6,11 +6,13 @@ import { StreamForm } from "@/components/streaming/StreamForm";
 import { StreamControls } from "@/components/streaming/StreamControls";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
 import { StreamScheduleForm } from "@/components/streaming/StreamScheduleForm";
-import { Calendar, Settings } from "lucide-react";
+import { StreamDashboard } from "@/components/streaming/StreamDashboard";
+import { Calendar, Settings, Layout, Users, Activity } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { BackButton } from "@/components/ui/back-button";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Streaming = () => {
   const [isLive, setIsLive] = useState(false);
@@ -33,8 +35,8 @@ const Streaming = () => {
     );
   }
 
-  const handleStreamUpdate = () => {
-    // Handle stream update logic
+  const handleStreamUpdate = (data: { isLive: boolean }) => {
+    setIsLive(data.isLive);
   };
 
   return (
@@ -71,50 +73,85 @@ const Streaming = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 space-y-6">
-          <Card className="overflow-hidden">
-            <StreamPlayer 
-              isLive={isLive}
-              autoplay={true}
-              controls={true}
-            />
-          </Card>
-          
-          <Card className="p-6">
-            {!isLive ? (
-              <div className="space-y-6">
-                <StreamForm
-                  title={streamData.title}
-                  description={streamData.description}
-                  onTitleChange={(title) => setStreamData({ ...streamData, title })}
-                  onDescriptionChange={(description) => 
-                    setStreamData({ ...streamData, description })
-                  }
-                />
-                <StreamControls 
-                  userId={user.id}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Main Content Area */}
+        <div className="col-span-12 lg:col-span-8 space-y-6">
+          <Tabs defaultValue="stream" className="w-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="stream">
+                <Layout className="h-4 w-4 mr-2" />
+                Stream
+              </TabsTrigger>
+              <TabsTrigger value="dashboard">
+                <Activity className="h-4 w-4 mr-2" />
+                Dashboard
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="stream">
+              <Card className="overflow-hidden">
+                <StreamPlayer 
                   isLive={isLive}
-                  onStreamUpdate={handleStreamUpdate}
+                  autoplay={true}
+                  controls={true}
                 />
-              </div>
-            ) : (
-              <StreamControls 
-                userId={user.id}
-                isLive={isLive}
-                onStreamUpdate={handleStreamUpdate}
-              />
-            )}
-          </Card>
+              </Card>
+              
+              <Card className="p-6">
+                {!isLive ? (
+                  <div className="space-y-6">
+                    <StreamForm
+                      title={streamData.title}
+                      description={streamData.description}
+                      onTitleChange={(title) => setStreamData({ ...streamData, title })}
+                      onDescriptionChange={(description) => 
+                        setStreamData({ ...streamData, description })
+                      }
+                    />
+                    <StreamControls 
+                      userId={user.id}
+                      isLive={isLive}
+                      onStreamUpdate={handleStreamUpdate}
+                    />
+                  </div>
+                ) : (
+                  <StreamControls 
+                    userId={user.id}
+                    isLive={isLive}
+                    onStreamUpdate={handleStreamUpdate}
+                  />
+                )}
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="dashboard">
+              <StreamDashboard userId={user.id} isLive={isLive} />
+            </TabsContent>
+          </Tabs>
         </div>
-        
-        <div className="lg:col-span-1">
-          <Card className="h-full">
-            <StreamChat 
-              streamId={user.id} 
-              isLive={isLive} 
-              chatEnabled={true}
-            />
+
+        {/* Sidebar */}
+        <div className="col-span-12 lg:col-span-4 space-y-6">
+          <Card className="h-[calc(100vh-12rem)]">
+            <div className="flex flex-col h-full">
+              <div className="p-4 border-b flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <h3 className="font-semibold">Stream Chat</h3>
+                </div>
+                {isLive && (
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-red-500 rounded-full animate-pulse" />
+                    <span className="text-sm text-red-500 font-medium">LIVE</span>
+                  </div>
+                )}
+              </div>
+              <StreamChat 
+                streamId={user.id} 
+                isLive={isLive} 
+                chatEnabled={true}
+              />
+            </div>
           </Card>
         </div>
       </div>

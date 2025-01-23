@@ -1,58 +1,46 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StreamPoll } from "./polls/StreamPoll";
 import { StreamQuiz } from "./quizzes/StreamQuiz";
+import { VirtualGiftSelector } from "./gifts/VirtualGiftSelector";
+import { GiftDisplay } from "./gifts/GiftDisplay";
 
 interface StreamInteractivePanelProps {
   streamId: string;
-  isStreamer: boolean;
+  isLive: boolean;
 }
 
-export const StreamInteractivePanel = ({
-  streamId,
-  isStreamer,
-}: StreamInteractivePanelProps) => {
-  const [activePoll, setActivePoll] = useState<string | null>(null);
-  const [activeQuiz, setActiveQuiz] = useState<string | null>(null);
+export function StreamInteractivePanel({ streamId, isLive }: StreamInteractivePanelProps) {
+  const [activeTab, setActiveTab] = useState("polls");
 
   return (
-    <Card className="p-4">
-      <Tabs defaultValue="polls" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold">Interactive Features</h3>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
           <TabsTrigger value="polls">Polls</TabsTrigger>
           <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
+          <TabsTrigger value="gifts">Virtual Gifts</TabsTrigger>
         </TabsList>
-        <TabsContent value="polls" className="space-y-4">
-          {activePoll ? (
-            <StreamPoll streamId={streamId} pollId={activePoll} />
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-muted-foreground">No active polls</p>
-              {isStreamer && (
-                <Button variant="outline" className="mt-2">
-                  Create Poll
-                </Button>
-              )}
-            </div>
-          )}
+
+        <TabsContent value="polls">
+          <StreamPoll streamId={streamId} />
         </TabsContent>
-        <TabsContent value="quizzes" className="space-y-4">
-          {activeQuiz ? (
-            <StreamQuiz streamId={streamId} quizId={activeQuiz} />
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-muted-foreground">No active quizzes</p>
-              {isStreamer && (
-                <Button variant="outline" className="mt-2">
-                  Create Quiz
-                </Button>
-              )}
-            </div>
-          )}
+
+        <TabsContent value="quizzes">
+          <StreamQuiz streamId={streamId} />
+        </TabsContent>
+
+        <TabsContent value="gifts">
+          <div className="grid gap-4">
+            <VirtualGiftSelector streamId={streamId} />
+            <GiftDisplay streamId={streamId} />
+          </div>
         </TabsContent>
       </Tabs>
-    </Card>
+    </div>
   );
-};
+}
