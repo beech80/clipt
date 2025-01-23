@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { UserMenu } from "@/components/UserMenu";
-import { NotificationsPopover } from "@/components/NotificationsPopover";
+import UserMenu from "@/components/UserMenu";
+import NotificationsPopover from "@/components/NotificationsPopover";
 import { SearchBar } from "@/components/SearchBar";
 import { useAuth } from "@/contexts/AuthContext";
 import {
