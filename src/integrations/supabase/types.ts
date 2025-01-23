@@ -3891,6 +3891,9 @@ export type Database = {
           created_at: string | null
           duration: unknown | null
           id: string
+          recording_config: Json | null
+          recording_error: string | null
+          recording_status: string | null
           recording_url: string
           size_bytes: number | null
           status: string | null
@@ -3902,6 +3905,9 @@ export type Database = {
           created_at?: string | null
           duration?: unknown | null
           id?: string
+          recording_config?: Json | null
+          recording_error?: string | null
+          recording_status?: string | null
           recording_url: string
           size_bytes?: number | null
           status?: string | null
@@ -3913,6 +3919,9 @@ export type Database = {
           created_at?: string | null
           duration?: unknown | null
           id?: string
+          recording_config?: Json | null
+          recording_error?: string | null
+          recording_status?: string | null
           recording_url?: string
           size_bytes?: number | null
           status?: string | null
@@ -4222,16 +4231,21 @@ export type Database = {
           description: string | null
           ended_at: string | null
           health_status: string | null
+          hls_playback_url: string | null
           id: string
           ingest_url: string | null
           is_live: boolean | null
+          last_health_check: string | null
           max_bitrate: number | null
           playback_url: string | null
           recurring_schedule: Json | null
+          rtmp_key: string | null
+          rtmp_url: string | null
           schedule_status: string | null
           scheduled_duration: unknown | null
           scheduled_start_time: string | null
           started_at: string | null
+          stream_health_status: string | null
           stream_key: string
           stream_latency_ms: number | null
           stream_resolution: string | null
@@ -4254,16 +4268,21 @@ export type Database = {
           description?: string | null
           ended_at?: string | null
           health_status?: string | null
+          hls_playback_url?: string | null
           id?: string
           ingest_url?: string | null
           is_live?: boolean | null
+          last_health_check?: string | null
           max_bitrate?: number | null
           playback_url?: string | null
           recurring_schedule?: Json | null
+          rtmp_key?: string | null
+          rtmp_url?: string | null
           schedule_status?: string | null
           scheduled_duration?: unknown | null
           scheduled_start_time?: string | null
           started_at?: string | null
+          stream_health_status?: string | null
           stream_key: string
           stream_latency_ms?: number | null
           stream_resolution?: string | null
@@ -4286,16 +4305,21 @@ export type Database = {
           description?: string | null
           ended_at?: string | null
           health_status?: string | null
+          hls_playback_url?: string | null
           id?: string
           ingest_url?: string | null
           is_live?: boolean | null
+          last_health_check?: string | null
           max_bitrate?: number | null
           playback_url?: string | null
           recurring_schedule?: Json | null
+          rtmp_key?: string | null
+          rtmp_url?: string | null
           schedule_status?: string | null
           scheduled_duration?: unknown | null
           scheduled_start_time?: string | null
           started_at?: string | null
+          stream_health_status?: string | null
           stream_key?: string
           stream_latency_ms?: number | null
           stream_resolution?: string | null
