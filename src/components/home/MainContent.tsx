@@ -9,23 +9,25 @@ export const MainContent = () => {
     <motion.div 
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="lg:col-span-2 space-y-4 md:space-y-8"
-      role="region"
-      aria-label="Main content"
+      className="space-y-6"
     >
-      <nav aria-label="Social feed navigation">
+      <section className="glass-card">
+        <h2 className="text-2xl font-bold mb-4 text-gaming-100">Featured Content</h2>
+        <FeaturedCarousel />
+      </section>
+
+      <section className="glass-card">
+        <h2 className="text-2xl font-bold mb-4 text-gaming-100">Your Feed</h2>
         <EnhancedFeed />
-      </nav>
-      <section 
-        className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
-        aria-label="Active tournaments"
-      >
+      </section>
+
+      <section className="glass-card">
+        <h2 className="text-2xl font-bold mb-4 text-gaming-100">Active Tournaments</h2>
         <TournamentList />
       </section>
-      <section 
-        className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
-        aria-label="Your squads"
-      >
+
+      <section className="glass-card">
+        <h2 className="text-2xl font-bold mb-4 text-gaming-100">Your Squads</h2>
         <SquadList />
       </section>
     </motion.div>

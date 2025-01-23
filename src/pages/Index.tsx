@@ -28,12 +28,8 @@ export default function Index() {
         route="/"
       />
 
-      <main 
-        role="main"
-        aria-label="Home page content"
-        className="min-h-screen bg-gradient-to-b from-gaming-900 to-gaming-800"
-      >
-        <div className="container mx-auto px-4 py-4">
+      <div className="app-container">
+        <div className="page-container">
           <MainNav />
           
           <div className={`mt-6 ${isMobile ? 'space-y-4' : 'space-y-8'}`}>
@@ -49,7 +45,7 @@ export default function Index() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </>
   );
 }
