@@ -1,16 +1,10 @@
 import { useState } from "react";
-import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { StreamForm } from "./StreamForm";
-import { StreamScheduleForm } from "./StreamScheduleForm";
-import { VODManager } from "./VODManager";
-import { StreamMetaForm } from "./controls/StreamMetaForm";
-import { StreamStartButton } from "./controls/StreamStartButton";
-import { StreamEndButton } from "./controls/StreamEndButton";
+import { StreamPreStartControls } from "./controls/StreamPreStartControls";
+import { StreamLiveControls } from "./controls/StreamLiveControls";
 import { startStream, endStream } from "@/utils/streamUtils";
+import { toast } from "sonner";
 
 interface StreamControlsProps {
   userId?: string;
@@ -27,8 +21,6 @@ export const StreamControls = ({
   isLive = false, 
   onStreamUpdate 
 }: StreamControlsProps) => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -76,24 +68,9 @@ export const StreamControls = ({
   });
 
   const handleStartStream = async () => {
-    if (!userId) {
-      toast.error("Please log in to start streaming");
-      return;
-    }
-
-    if (!title) {
-      toast.error("Please set a stream title first");
-      return;
-    }
-
-    if (!selectedCategory) {
-      toast.error("Please select a category first");
-      return;
-    }
-
     setIsLoading(true);
     try {
-      const result = await startStream(userId, title, description);
+      const result = await startStream(userId!, title, description);
       
       if (selectedCategory) {
         await supabase
@@ -125,7 +102,7 @@ export const StreamControls = ({
   };
 
   const handleEndStream = async () => {
-    if (!userId) return;
+    if (!userId || !stream?.id) return;
 
     setIsLoading(true);
     try {
@@ -140,65 +117,31 @@ export const StreamControls = ({
     }
   };
 
-  if (!user) {
+  if (!isLive) {
     return (
-      <div className="text-center">
-        <Button 
-          className="bg-gaming-500 hover:bg-gaming-600 text-white px-8 py-6 text-lg"
-          onClick={() => toast.error("Please log in to start streaming")}
-        >
-          Start Stream
-        </Button>
-      </div>
+      <StreamPreStartControls
+        userId={userId}
+        title={title}
+        description={description}
+        selectedCategory={selectedCategory}
+        selectedTags={selectedTags}
+        categories={categories || []}
+        tags={tags || []}
+        onTitleChange={setTitle}
+        onDescriptionChange={setDescription}
+        onCategoryChange={setSelectedCategory}
+        onTagsChange={setSelectedTags}
+        onStreamStart={handleStartStream}
+        isLoading={isLoading}
+      />
     );
   }
 
   return (
-    <div className="w-full max-w-md mx-auto text-center">
-      {!isLive ? (
-        <div className="space-y-6">
-          <StreamForm
-            title={title}
-            description={description}
-            onTitleChange={setTitle}
-            onDescriptionChange={setDescription}
-          />
-          
-          <StreamMetaForm
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            selectedTags={selectedTags}
-            setSelectedTags={setSelectedTags}
-            categories={categories}
-            tags={tags}
-          />
-
-          {stream?.id && (
-            <StreamScheduleForm 
-              streamId={stream.id} 
-              onScheduled={() => {
-                queryClient.invalidateQueries({ 
-                  queryKey: ['stream', userId] 
-                });
-              }} 
-            />
-          )}
-
-          <StreamStartButton 
-            onClick={handleStartStream}
-            isLoading={isLoading}
-          />
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <StreamEndButton 
-            onClick={handleEndStream}
-            isLoading={isLoading}
-          />
-
-          {stream?.id && <VODManager streamId={stream.id} />}
-        </div>
-      )}
-    </div>
+    <StreamLiveControls
+      streamId={stream?.id || ""}
+      onStreamEnd={handleEndStream}
+      isLoading={isLoading}
+    />
   );
 };
