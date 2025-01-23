@@ -1089,6 +1089,33 @@ export type Database = {
           },
         ]
       }
+      content_similarities: {
+        Row: {
+          content_type: string
+          created_at: string | null
+          id: string
+          similarity_score: number
+          source_id: string
+          target_id: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string | null
+          id?: string
+          similarity_score: number
+          source_id: string
+          target_id: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          similarity_score?: number
+          source_id?: string
+          target_id?: string
+        }
+        Relationships: []
+      }
       creator_analytics: {
         Row: {
           created_at: string | null
@@ -1999,6 +2026,50 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_metrics_enhanced: {
+        Row: {
+          browser_info: Json | null
+          component: string | null
+          id: string
+          metadata: Json | null
+          metric_name: string
+          page_url: string | null
+          timestamp: string | null
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          browser_info?: Json | null
+          component?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          page_url?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+          value: number
+        }
+        Update: {
+          browser_info?: Json | null
+          component?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          page_url?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_metrics_enhanced_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       poll_responses: {
         Row: {
           created_at: string | null
@@ -2432,6 +2503,51 @@ export type Database = {
           },
         ]
       }
+      prediction_bets: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_index: number
+          points_wagered: number
+          points_won: number | null
+          prediction_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_index: number
+          points_wagered: number
+          points_won?: number | null
+          prediction_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_index?: number
+          points_wagered?: number
+          points_won?: number | null
+          prediction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prediction_bets_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "stream_predictions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prediction_bets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_badges: {
         Row: {
           achievement_id: string | null
@@ -2608,6 +2724,30 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          endpoint: string
+          id: string
+          ip_address: string
+          request_count: number | null
+          window_start: string | null
+        }
+        Insert: {
+          endpoint: string
+          id?: string
+          ip_address: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Update: {
+          endpoint?: string
+          id?: string
+          ip_address?: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       reactions: {
         Row: {
           created_at: string
@@ -2775,6 +2915,45 @@ export type Database = {
           multiplier?: number | null
           name?: string
           start_date?: string
+        }
+        Relationships: []
+      }
+      security_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -3014,6 +3193,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          recommendation_weight: number | null
           slug: string
           thumbnail_url: string | null
         }
@@ -3022,6 +3202,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          recommendation_weight?: number | null
           slug: string
           thumbnail_url?: string | null
         }
@@ -3030,6 +3211,7 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          recommendation_weight?: number | null
           slug?: string
           thumbnail_url?: string | null
         }
@@ -3440,6 +3622,77 @@ export type Database = {
           },
         ]
       }
+      stream_predictions: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          locked_at: string | null
+          options: Json
+          outcome: string | null
+          points_pool: number | null
+          resolved_at: string | null
+          status: string
+          stream_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          options?: Json
+          outcome?: string | null
+          points_pool?: number | null
+          resolved_at?: string | null
+          status?: string
+          stream_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          locked_at?: string | null
+          options?: Json
+          outcome?: string | null
+          points_pool?: number | null
+          resolved_at?: string | null
+          status?: string
+          stream_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_predictions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_predictions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_predictions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_predictions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_quizzes: {
         Row: {
           created_at: string | null
@@ -3499,6 +3752,73 @@ export type Database = {
           {
             foreignKeyName: "stream_quizzes_stream_id_fkey"
             columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_raids: {
+        Row: {
+          created_at: string | null
+          id: string
+          raider_count: number | null
+          source_stream_id: string
+          target_stream_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          raider_count?: number | null
+          source_stream_id: string
+          target_stream_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          raider_count?: number | null
+          source_stream_id?: string
+          target_stream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_raids_source_stream_id_fkey"
+            columns: ["source_stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_raids_source_stream_id_fkey"
+            columns: ["source_stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_raids_source_stream_id_fkey"
+            columns: ["source_stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_raids_target_stream_id_fkey"
+            columns: ["target_stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_raids_target_stream_id_fkey"
+            columns: ["target_stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_raids_target_stream_id_fkey"
+            columns: ["target_stream_id"]
             isOneToOne: false
             referencedRelation: "trending_streams"
             referencedColumns: ["id"]
@@ -4260,6 +4580,47 @@ export type Database = {
           },
         ]
       }
+      user_behavior_events: {
+        Row: {
+          component: string | null
+          created_at: string | null
+          event_data: Json
+          event_type: string
+          id: string
+          page_url: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          component?: string | null
+          created_at?: string | null
+          event_data: Json
+          event_type: string
+          id?: string
+          page_url?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          component?: string | null
+          created_at?: string | null
+          event_data?: Json
+          event_type?: string
+          id?: string
+          page_url?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_behavior_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_blocks: {
         Row: {
           blocked_id: string
@@ -4869,6 +5230,15 @@ export type Database = {
           context_match: boolean
         }[]
       }
+      check_rate_limit: {
+        Args: {
+          check_ip: string
+          check_endpoint: string
+          max_requests: number
+          window_minutes: number
+        }
+        Returns: boolean
+      }
       clean_expired_stories: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -4886,6 +5256,15 @@ export type Database = {
       generate_stream_key: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_enhanced_stream_recommendations: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: {
+          stream_id: string
+          score: number
+        }[]
       }
       get_personalized_recommendations: {
         Args: {
@@ -4948,6 +5327,17 @@ export type Database = {
           check_ip: string
         }
         Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          event_type: string
+          severity: string
+          user_id: string
+          ip_address: string
+          user_agent: string
+          details?: Json
+        }
+        Returns: string
       }
       process_data_retention: {
         Args: Record<PropertyKey, never>
