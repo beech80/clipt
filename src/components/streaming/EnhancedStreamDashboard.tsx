@@ -4,10 +4,14 @@ import { StreamHealthMonitor } from "./StreamHealthMonitor";
 import { StreamMetrics } from "./StreamMetrics";
 import { StreamInteractivePanel } from "./StreamInteractivePanel";
 import { StreamQualityControls } from "./StreamQualityControls";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { useEffect } from "react";
+
+interface StreamAnalytics {
+  current_bitrate: number;
+  current_fps: number;
+}
 
 interface EnhancedStreamDashboardProps {
   userId: string;
@@ -16,9 +20,9 @@ interface EnhancedStreamDashboardProps {
 
 export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashboardProps) {
   const [viewerCount, setViewerCount] = useState(0);
-  const [streamMetrics, setStreamMetrics] = useState({
-    bitrate: 0,
-    fps: 0
+  const [streamMetrics, setStreamMetrics] = useState<StreamAnalytics>({
+    current_bitrate: 0,
+    current_fps: 0
   });
 
   const { data: analytics } = useQuery({
@@ -31,7 +35,7 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
         .maybeSingle();
       
       if (error) throw error;
-      return data;
+      return data as StreamAnalytics;
     },
     enabled: isLive
   });
@@ -52,8 +56,8 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
         (payload) => {
           if (payload.new) {
             setStreamMetrics({
-              bitrate: payload.new.current_bitrate || 0,
-              fps: payload.new.current_fps || 0
+              current_bitrate: payload.new.current_bitrate || 0,
+              current_fps: payload.new.current_fps || 0
             });
           }
         }
@@ -99,8 +103,8 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
 
       <Card className="p-4">
         <StreamMetrics 
-          bitrate={streamMetrics.bitrate} 
-          fps={streamMetrics.fps} 
+          bitrate={streamMetrics.current_bitrate} 
+          fps={streamMetrics.current_fps} 
         />
       </Card>
 
