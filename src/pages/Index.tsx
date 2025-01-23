@@ -6,10 +6,49 @@ import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePerformanceMonitoring } from "@/hooks/usePerformanceMonitoring";
+import { useEffect } from 'react';
+import LoggingService from '@/services/loggingService';
 
 export default function Index() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  
+  // Initialize performance monitoring
+  usePerformanceMonitoring('HomePage');
+
+  // Track page specific metrics
+  useEffect(() => {
+    // Track initial page load
+    const pageLoadStart = performance.now();
+    
+    // Track component mount time
+    return () => {
+      const mountDuration = performance.now() - pageLoadStart;
+      LoggingService.trackMetric('home_page_mount_duration', mountDuration, {
+        component: 'HomePage'
+      });
+    };
+  }, []);
+
+  // Track user interactions
+  useEffect(() => {
+    const trackInteraction = (e: MouseEvent | KeyboardEvent) => {
+      LoggingService.trackMetric('home_page_interaction', 1, {
+        component: 'HomePage',
+        type: e.type,
+        target: (e.target as HTMLElement)?.tagName?.toLowerCase()
+      });
+    };
+
+    document.addEventListener('click', trackInteraction);
+    document.addEventListener('keypress', trackInteraction);
+
+    return () => {
+      document.removeEventListener('click', trackInteraction);
+      document.removeEventListener('keypress', trackInteraction);
+    };
+  }, []);
 
   const structuredData = {
     "@context": "https://schema.org",
