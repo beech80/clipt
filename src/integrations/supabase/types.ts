@@ -4196,7 +4196,11 @@ export type Database = {
       }
       streaming_config: {
         Row: {
+          cdn_config: Json | null
+          cdn_provider: string | null
           created_at: string
+          dvr_enabled: boolean | null
+          dvr_window_seconds: number | null
           id: string
           ingest_endpoint: string
           playback_endpoint: string
@@ -4204,7 +4208,11 @@ export type Database = {
           settings: Json | null
         }
         Insert: {
+          cdn_config?: Json | null
+          cdn_provider?: string | null
           created_at?: string
+          dvr_enabled?: boolean | null
+          dvr_window_seconds?: number | null
           id?: string
           ingest_endpoint: string
           playback_endpoint: string
@@ -4212,7 +4220,11 @@ export type Database = {
           settings?: Json | null
         }
         Update: {
+          cdn_config?: Json | null
+          cdn_provider?: string | null
           created_at?: string
+          dvr_enabled?: boolean | null
+          dvr_window_seconds?: number | null
           id?: string
           ingest_endpoint?: string
           playback_endpoint?: string
@@ -4224,11 +4236,14 @@ export type Database = {
       streams: {
         Row: {
           available_qualities: Json | null
+          cdn_url: string | null
           chat_enabled: boolean | null
           created_at: string
           current_bitrate: number | null
           current_fps: number | null
           description: string | null
+          dvr_enabled: boolean | null
+          dvr_window_seconds: number | null
           ended_at: string | null
           health_status: string | null
           hls_playback_url: string | null
@@ -4261,11 +4276,14 @@ export type Database = {
         }
         Insert: {
           available_qualities?: Json | null
+          cdn_url?: string | null
           chat_enabled?: boolean | null
           created_at?: string
           current_bitrate?: number | null
           current_fps?: number | null
           description?: string | null
+          dvr_enabled?: boolean | null
+          dvr_window_seconds?: number | null
           ended_at?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
@@ -4298,11 +4316,14 @@ export type Database = {
         }
         Update: {
           available_qualities?: Json | null
+          cdn_url?: string | null
           chat_enabled?: boolean | null
           created_at?: string
           current_bitrate?: number | null
           current_fps?: number | null
           description?: string | null
+          dvr_enabled?: boolean | null
+          dvr_window_seconds?: number | null
           ended_at?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
