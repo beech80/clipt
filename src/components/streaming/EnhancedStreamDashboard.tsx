@@ -46,12 +46,12 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
       const transformedData: StreamAnalytics = {
         current_bitrate: 0,
         current_fps: 0,
-        peak_viewers: data?.peak_viewers,
-        average_viewers: data?.average_viewers,
-        chat_messages_count: data?.chat_messages_count,
-        unique_chatters: data?.unique_chatters,
-        stream_duration: data?.stream_duration,
-        engagement_rate: data?.engagement_rate
+        peak_viewers: data?.peak_viewers || undefined,
+        average_viewers: data?.average_viewers || undefined,
+        chat_messages_count: data?.chat_messages_count || undefined,
+        unique_chatters: data?.unique_chatters || undefined,
+        stream_duration: data?.stream_duration?.toString() || undefined,
+        engagement_rate: data?.engagement_rate || undefined
       };
       
       return transformedData;
@@ -72,13 +72,13 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
           table: 'stream_analytics',
           filter: `stream_id=eq.${userId}`
         },
-        (payload) => {
+        (payload: { new: { current_bitrate?: number; current_fps?: number } }) => {
           if (payload.new) {
-            setStreamMetrics({
-              ...streamMetrics,
+            setStreamMetrics(prevMetrics => ({
+              ...prevMetrics,
               current_bitrate: payload.new.current_bitrate || 0,
               current_fps: payload.new.current_fps || 0
-            });
+            }));
           }
         }
       )
@@ -87,7 +87,7 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, isLive, streamMetrics]);
+  }, [userId, isLive]);
 
   const handleQualityChange = async (quality: string) => {
     if (!isLive) return;
