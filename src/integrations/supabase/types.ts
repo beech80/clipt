@@ -3693,6 +3693,67 @@ export type Database = {
           },
         ]
       }
+      stream_quality_metrics: {
+        Row: {
+          audio_bitrate: number | null
+          audio_codec: string | null
+          bitrate: number | null
+          fps: number | null
+          id: string
+          latency_ms: number | null
+          resolution: string | null
+          stream_id: string | null
+          timestamp: string
+          video_codec: string | null
+        }
+        Insert: {
+          audio_bitrate?: number | null
+          audio_codec?: string | null
+          bitrate?: number | null
+          fps?: number | null
+          id?: string
+          latency_ms?: number | null
+          resolution?: string | null
+          stream_id?: string | null
+          timestamp?: string
+          video_codec?: string | null
+        }
+        Update: {
+          audio_bitrate?: number | null
+          audio_codec?: string | null
+          bitrate?: number | null
+          fps?: number | null
+          id?: string
+          latency_ms?: number | null
+          resolution?: string | null
+          stream_id?: string | null
+          timestamp?: string
+          video_codec?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_quality_metrics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_quality_metrics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_quality_metrics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_quizzes: {
         Row: {
           created_at: string | null
@@ -4124,6 +4185,33 @@ export type Database = {
         }
         Relationships: []
       }
+      streaming_config: {
+        Row: {
+          created_at: string
+          id: string
+          ingest_endpoint: string
+          playback_endpoint: string
+          provider: string
+          settings: Json | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ingest_endpoint: string
+          playback_endpoint: string
+          provider: string
+          settings?: Json | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ingest_endpoint?: string
+          playback_endpoint?: string
+          provider?: string
+          settings?: Json | null
+        }
+        Relationships: []
+      }
       streams: {
         Row: {
           available_qualities: Json | null
@@ -4135,15 +4223,21 @@ export type Database = {
           ended_at: string | null
           health_status: string | null
           id: string
+          ingest_url: string | null
           is_live: boolean | null
+          max_bitrate: number | null
+          playback_url: string | null
           recurring_schedule: Json | null
           schedule_status: string | null
           scheduled_duration: unknown | null
           scheduled_start_time: string | null
           started_at: string | null
           stream_key: string
+          stream_latency_ms: number | null
           stream_resolution: string | null
+          stream_settings: Json | null
           stream_url: string | null
+          supported_codecs: string[] | null
           thumbnail_url: string | null
           title: string
           user_id: string
@@ -4161,15 +4255,21 @@ export type Database = {
           ended_at?: string | null
           health_status?: string | null
           id?: string
+          ingest_url?: string | null
           is_live?: boolean | null
+          max_bitrate?: number | null
+          playback_url?: string | null
           recurring_schedule?: Json | null
           schedule_status?: string | null
           scheduled_duration?: unknown | null
           scheduled_start_time?: string | null
           started_at?: string | null
           stream_key: string
+          stream_latency_ms?: number | null
           stream_resolution?: string | null
+          stream_settings?: Json | null
           stream_url?: string | null
+          supported_codecs?: string[] | null
           thumbnail_url?: string | null
           title: string
           user_id: string
@@ -4187,15 +4287,21 @@ export type Database = {
           ended_at?: string | null
           health_status?: string | null
           id?: string
+          ingest_url?: string | null
           is_live?: boolean | null
+          max_bitrate?: number | null
+          playback_url?: string | null
           recurring_schedule?: Json | null
           schedule_status?: string | null
           scheduled_duration?: unknown | null
           scheduled_start_time?: string | null
           started_at?: string | null
           stream_key?: string
+          stream_latency_ms?: number | null
           stream_resolution?: string | null
+          stream_settings?: Json | null
           stream_url?: string | null
+          supported_codecs?: string[] | null
           thumbnail_url?: string | null
           title?: string
           user_id?: string
