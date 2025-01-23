@@ -93,8 +93,8 @@ export function usePerformanceMonitoring(componentName: string) {
       if (extendedPerf.memory) {
         const tags = {
           component: componentName,
-          total: extendedPerf.memory.totalJSHeapSize,
-          limit: extendedPerf.memory.jsHeapSizeLimit
+          total: String(extendedPerf.memory.totalJSHeapSize),
+          limit: String(extendedPerf.memory.jsHeapSizeLimit)
         };
         LoggingService.trackMetric('heap_used', extendedPerf.memory.usedJSHeapSize, tags);
       }
@@ -112,7 +112,7 @@ export function usePerformanceMonitoring(componentName: string) {
         LoggingService.trackMetric('fetch_duration', duration, {
           component: componentName,
           url: typeof args[0] === 'string' ? args[0] : 'unknown',
-          status: response.status
+          status: String(response.status)
         });
         return response;
       } catch (error: any) {
