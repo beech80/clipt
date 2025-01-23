@@ -17,23 +17,23 @@ export const SidebarContent = () => {
     >
       <ScrollArea className={`${isMobile ? 'h-[400px]' : 'h-[calc(100vh-2rem)]'} pr-4`}>
         <div className="space-y-6">
-          <section className="glass-card">
-            <h2 className="text-xl font-bold mb-4 text-gaming-100">XP Multipliers</h2>
+          <section className="glass-card p-6 rounded-lg">
+            <h2 className="text-xl font-bold mb-4 gaming-gradient">XP Multipliers</h2>
             <XPMultipliersList />
           </section>
 
-          <section className="glass-card">
-            <h2 className="text-xl font-bold mb-4 text-gaming-100">Active Challenges</h2>
+          <section className="glass-card p-6 rounded-lg">
+            <h2 className="text-xl font-bold mb-4 gaming-gradient">Active Challenges</h2>
             <ActiveChallenges />
           </section>
 
-          <section className="glass-card">
-            <h2 className="text-xl font-bold mb-4 text-gaming-100">Gaming History</h2>
+          <section className="glass-card p-6 rounded-lg">
+            <h2 className="text-xl font-bold mb-4 gaming-gradient">Gaming History</h2>
             <GamingHistory />
           </section>
 
-          <section className="glass-card">
-            <h2 className="text-xl font-bold mb-4 text-gaming-100">Recommended</h2>
+          <section className="glass-card p-6 rounded-lg">
+            <h2 className="text-xl font-bold mb-4 gaming-gradient">Recommended</h2>
             <ContentRecommendations />
           </section>
         </div>

@@ -9,7 +9,7 @@ export const WelcomeSection = () => {
 
   return (
     <header 
-      className={`text-center py-8 ${isMobile ? 'py-12' : 'py-16'} relative overflow-hidden`}
+      className={`text-center py-8 ${isMobile ? 'py-12' : 'py-16'} relative overflow-hidden glass-card rounded-lg`}
       role="banner"
     >
       <div className="absolute inset-0 bg-gradient-to-r from-gaming-600/20 to-gaming-400/20 animate-gradient" />
@@ -17,7 +17,7 @@ export const WelcomeSection = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gaming-400 to-gaming-600`}
+        className={`${isMobile ? 'text-3xl' : 'text-5xl'} font-bold mb-6 gaming-gradient`}
         tabIndex={0}
       >
         Share Your Epic Gaming Moments
@@ -38,7 +38,7 @@ export const WelcomeSection = () => {
       >
         <Button
           onClick={() => navigate('/signup')}
-          className="bg-gaming-500 hover:bg-gaming-400 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+          className="gaming-button hover:scale-105 transform transition-all duration-300"
         >
           Get Started
         </Button>

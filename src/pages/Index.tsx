@@ -28,8 +28,8 @@ export default function Index() {
         route="/"
       />
 
-      <div className="app-container">
-        <div className="page-container">
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-6">
           <MainNav />
           
           <div className={`mt-6 ${isMobile ? 'space-y-4' : 'space-y-8'}`}>
