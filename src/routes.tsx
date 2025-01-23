@@ -15,7 +15,6 @@ import Search from "@/pages/Search";
 import Notifications from "@/pages/Notifications";
 import Onboarding from "@/pages/Onboarding";
 import Stream from "@/pages/Stream";
-import Tournament from "@/pages/Tournament";
 import Squad from "@/pages/Squad";
 import Analytics from "@/pages/Analytics";
 import Comments from "@/pages/Comments";
@@ -82,10 +81,6 @@ export const router = createBrowserRouter([
       {
         path: "stream/:streamId",
         element: <Stream />,
-      },
-      {
-        path: "tournament/:tournamentId",
-        element: <Tournament />,
       },
       {
         path: "squad/:squadId",
