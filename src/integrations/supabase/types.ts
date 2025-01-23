@@ -2525,6 +2525,39 @@ export type Database = {
           },
         ]
       }
+      platform_analytics: {
+        Row: {
+          active_streams: number | null
+          created_at: string | null
+          daily_stats: Json | null
+          id: string
+          peak_concurrent: number | null
+          total_engagement: number | null
+          total_users: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active_streams?: number | null
+          created_at?: string | null
+          daily_stats?: Json | null
+          id?: string
+          peak_concurrent?: number | null
+          total_engagement?: number | null
+          total_users?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active_streams?: number | null
+          created_at?: string | null
+          daily_stats?: Json | null
+          id?: string
+          peak_concurrent?: number | null
+          total_engagement?: number | null
+          total_users?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       poll_responses: {
         Row: {
           created_at: string | null
