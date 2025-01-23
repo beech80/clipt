@@ -7,12 +7,13 @@ import { Link } from "react-router-dom";
 import { Settings, MapPin, Link as LinkIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PostList from "@/components/PostList";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Profile = () => {
+  const { user } = useAuth();
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
@@ -24,6 +25,7 @@ const Profile = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !!user
   });
 
   if (isLoading) {
@@ -83,7 +85,7 @@ const Profile = () => {
 
           <div className="mt-8">
             <h2 className="text-xl font-semibold mb-4">Posts</h2>
-            {profile && <PostList key={profile.id} />}
+            <PostList />
           </div>
         </Card>
       </div>
