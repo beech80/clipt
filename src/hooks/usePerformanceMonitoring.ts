@@ -11,17 +11,17 @@ interface ExtendedPerformance extends Performance {
   memory?: MemoryInfo;
 }
 
+interface ExtendedPerformanceEntry extends PerformanceEntry {
+  processingStart?: number;
+  value?: number;
+  hadRecentInput?: boolean;
+}
+
 interface PerformanceMetrics {
   fcp: number;
   lcp: number;
   fid: number;
   cls: number;
-}
-
-interface ExtendedPerformanceEntry extends PerformanceEntry {
-  processingStart?: number;
-  value?: number;
-  hadRecentInput?: boolean;
 }
 
 export function usePerformanceMonitoring(componentName: string) {
@@ -91,11 +91,12 @@ export function usePerformanceMonitoring(componentName: string) {
     const trackMemoryUsage = () => {
       const extendedPerf = performance as ExtendedPerformance;
       if (extendedPerf.memory) {
-        LoggingService.trackMetric('heap_used', extendedPerf.memory.usedJSHeapSize, {
+        const tags = {
           component: componentName,
           total: extendedPerf.memory.totalJSHeapSize,
           limit: extendedPerf.memory.jsHeapSizeLimit
-        });
+        };
+        LoggingService.trackMetric('heap_used', extendedPerf.memory.usedJSHeapSize, tags);
       }
     };
 
