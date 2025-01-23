@@ -41,7 +41,20 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
         .maybeSingle();
       
       if (error) throw error;
-      return data as StreamAnalytics;
+      
+      // Transform the data to match our StreamAnalytics interface
+      const transformedData: StreamAnalytics = {
+        current_bitrate: 0,
+        current_fps: 0,
+        peak_viewers: data?.peak_viewers,
+        average_viewers: data?.average_viewers,
+        chat_messages_count: data?.chat_messages_count,
+        unique_chatters: data?.unique_chatters,
+        stream_duration: data?.stream_duration,
+        engagement_rate: data?.engagement_rate
+      };
+      
+      return transformedData;
     },
     enabled: isLive
   });
@@ -62,6 +75,7 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
         (payload) => {
           if (payload.new) {
             setStreamMetrics({
+              ...streamMetrics,
               current_bitrate: payload.new.current_bitrate || 0,
               current_fps: payload.new.current_fps || 0
             });
@@ -73,7 +87,7 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, isLive]);
+  }, [userId, isLive, streamMetrics]);
 
   const handleQualityChange = async (quality: string) => {
     if (!isLive) return;
