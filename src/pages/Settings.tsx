@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
+import { StreamSettings } from "@/components/streaming/StreamSettings";
+import { StreamControls } from "@/components/streaming/StreamControls";
 import {
   Bell,
   Volume2,
@@ -16,6 +18,7 @@ import {
   Shield,
   UserCog,
   ArrowLeft,
+  Video
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { MainNav } from "@/components/MainNav";
@@ -97,6 +100,15 @@ const Settings = () => {
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-6">
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Video className="w-5 h-5 text-purple-500" />
+                <h2 className="text-xl font-semibold">Streaming Settings</h2>
+              </div>
+              {user && <StreamSettings userId={user.id} />}
+              {user && <StreamControls userId={user.id} />}
+            </Card>
+
             <Card className="p-6">
               <div className="flex items-center gap-2 mb-6">
                 <UserCog className="w-5 h-5 text-purple-500" />
