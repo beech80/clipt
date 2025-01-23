@@ -9,38 +9,25 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { BroadcastSettings as BroadcastSettingsType } from "@/types/broadcast";
 
-interface BroadcastSettings {
-  id: string;
+const defaultSettings: Omit<BroadcastSettingsType, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
   encoder_settings: {
-    fps: number;
-    resolution: string;
-    audio_bitrate: number;
-    video_bitrate: number;
-  };
+    fps: 30,
+    resolution: "1920x1080",
+    audio_bitrate: 160,
+    video_bitrate: 2500
+  },
   output_settings: {
-    platform: string;
-    server_url: string;
-    stream_key: string;
-  };
-}
-
-const resolutions = [
-  "1920x1080",
-  "1280x720",
-  "854x480",
-  "640x360"
-];
-
-const platforms = [
-  { value: "custom", label: "Custom RTMP" },
-  { value: "twitch", label: "Twitch" },
-  { value: "youtube", label: "YouTube" }
-];
+    platform: "custom",
+    server_url: "",
+    stream_key: ""
+  }
+};
 
 export function BroadcastSettings() {
   const { user } = useAuth();
-  const [settings, setSettings] = useState<BroadcastSettings | null>(null);
+  const [settings, setSettings] = useState<BroadcastSettingsType | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['broadcast-settings', user?.id],
@@ -52,18 +39,43 @@ export function BroadcastSettings() {
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data as BroadcastSettings;
+      
+      // Parse the JSONB fields
+      if (data) {
+        return {
+          ...data,
+          encoder_settings: data.encoder_settings as BroadcastSettingsType['encoder_settings'],
+          output_settings: data.output_settings as BroadcastSettingsType['output_settings']
+        } as BroadcastSettingsType;
+      }
+      return null;
     },
     enabled: !!user?.id
   });
 
+  useEffect(() => {
+    if (data) {
+      setSettings(data);
+    } else if (!isLoading && user?.id) {
+      // Initialize with default settings if no data exists
+      setSettings({
+        ...defaultSettings,
+        id: '',
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    }
+  }, [data, isLoading, user?.id]);
+
   const updateSettings = useMutation({
-    mutationFn: async (newSettings: Partial<BroadcastSettings>) => {
+    mutationFn: async (newSettings: BroadcastSettingsType) => {
       const { data, error } = await supabase
         .from('broadcast_settings')
         .upsert({
           user_id: user?.id,
-          ...newSettings
+          encoder_settings: newSettings.encoder_settings,
+          output_settings: newSettings.output_settings
         })
         .select()
         .single();
@@ -78,12 +90,6 @@ export function BroadcastSettings() {
       toast.error("Failed to save settings");
     }
   });
-
-  useEffect(() => {
-    if (data) {
-      setSettings(data);
-    }
-  }, [data]);
 
   if (isLoading || !settings) {
     return <div>Loading settings...</div>;
@@ -117,9 +123,9 @@ export function BroadcastSettings() {
                   <SelectValue placeholder="Select resolution" />
                 </SelectTrigger>
                 <SelectContent>
-                  {resolutions.map((res) => (
-                    <SelectItem key={res} value={res}>{res}</SelectItem>
-                  ))}
+                  <SelectItem value="1920x1080">1920x1080</SelectItem>
+                  <SelectItem value="1280x720">1280x720</SelectItem>
+                  <SelectItem value="854x480">854x480</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -164,66 +170,6 @@ export function BroadcastSettings() {
                   encoder_settings: {
                     ...settings.encoder_settings,
                     audio_bitrate: parseInt(e.target.value)
-                  }
-                })}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="font-semibold">Output Settings</h3>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Platform</Label>
-              <Select
-                value={settings.output_settings.platform}
-                onValueChange={(value) => setSettings({
-                  ...settings,
-                  output_settings: {
-                    ...settings.output_settings,
-                    platform: value
-                  }
-                })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select platform" />
-                </SelectTrigger>
-                <SelectContent>
-                  {platforms.map((platform) => (
-                    <SelectItem key={platform.value} value={platform.value}>
-                      {platform.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Server URL</Label>
-              <Input
-                value={settings.output_settings.server_url}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  output_settings: {
-                    ...settings.output_settings,
-                    server_url: e.target.value
-                  }
-                })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Stream Key</Label>
-              <Input
-                type="password"
-                value={settings.output_settings.stream_key}
-                onChange={(e) => setSettings({
-                  ...settings,
-                  output_settings: {
-                    ...settings.output_settings,
-                    stream_key: e.target.value
                   }
                 })}
               />

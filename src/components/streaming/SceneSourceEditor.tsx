@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,20 +7,7 @@ import { X, Plus, Move } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-
-interface SceneSource {
-  id: string;
-  name: string;
-  type: string;
-  settings: any;
-  position: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    z_index: number;
-  };
-}
+import { SceneSource } from "@/types/broadcast";
 
 interface SceneSourceEditorProps {
   sceneId: string;
@@ -49,7 +36,13 @@ export function SceneSourceEditor({ sceneId, onClose }: SceneSourceEditorProps) 
         .order('position->z_index');
       
       if (error) throw error;
-      return data as SceneSource[];
+      
+      // Parse the JSONB fields
+      return (data || []).map(source => ({
+        ...source,
+        settings: source.settings as Record<string, unknown>,
+        position: source.position as SceneSource['position']
+      })) as SceneSource[];
     }
   });
 
@@ -66,7 +59,7 @@ export function SceneSourceEditor({ sceneId, onClose }: SceneSourceEditorProps) 
             y: 0,
             width: 1920,
             height: 1080,
-            z_index: (sources?.length || 0)
+            z_index: sources?.length || 0
           }
         }])
         .select()
