@@ -36,7 +36,7 @@ export function StreamInteractivePanel({ streamId, isLive }: StreamInteractivePa
 
         <TabsContent value="gifts">
           <div className="grid gap-4">
-            <VirtualGiftSelector streamId={streamId} />
+            <VirtualGiftSelector streamId={streamId} isLive={isLive} />
             <GiftDisplay streamId={streamId} />
           </div>
         </TabsContent>
