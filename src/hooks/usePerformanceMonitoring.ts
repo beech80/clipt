@@ -36,7 +36,7 @@ export function usePerformanceMonitoring(componentName: string) {
         const entries = entryList.getEntries();
         if (entries.length > 0) {
           metrics.fcp = entries[0].startTime;
-          LoggingService.trackMetric('first_contentful_paint', entries[0].startTime.toString(), {
+          LoggingService.trackMetric('first_contentful_paint', entries[0].startTime, {
             component: componentName
           });
         }
@@ -48,7 +48,7 @@ export function usePerformanceMonitoring(componentName: string) {
         const entries = entryList.getEntries();
         const lastEntry = entries[entries.length - 1];
         metrics.lcp = lastEntry.startTime;
-        LoggingService.trackMetric('largest_contentful_paint', lastEntry.startTime.toString(), {
+        LoggingService.trackMetric('largest_contentful_paint', lastEntry.startTime, {
           component: componentName
         });
       });
@@ -60,8 +60,9 @@ export function usePerformanceMonitoring(componentName: string) {
         entries.forEach(entry => {
           const extendedEntry = entry as ExtendedPerformanceEntry;
           if (extendedEntry.processingStart) {
-            metrics.fid = extendedEntry.processingStart - entry.startTime;
-            LoggingService.trackMetric('first_input_delay', (extendedEntry.processingStart - entry.startTime).toString(), {
+            const fidValue = extendedEntry.processingStart - entry.startTime;
+            metrics.fid = fidValue;
+            LoggingService.trackMetric('first_input_delay', fidValue, {
               component: componentName
             });
           }
@@ -79,7 +80,7 @@ export function usePerformanceMonitoring(componentName: string) {
           }
         });
         metrics.cls = clsScore;
-        LoggingService.trackMetric('cumulative_layout_shift', clsScore.toString(), {
+        LoggingService.trackMetric('cumulative_layout_shift', clsScore, {
           component: componentName
         });
       });
@@ -90,10 +91,10 @@ export function usePerformanceMonitoring(componentName: string) {
     const trackMemoryUsage = () => {
       const extendedPerf = performance as ExtendedPerformance;
       if (extendedPerf.memory) {
-        LoggingService.trackMetric('heap_used', extendedPerf.memory.usedJSHeapSize.toString(), {
+        LoggingService.trackMetric('heap_used', extendedPerf.memory.usedJSHeapSize, {
           component: componentName,
-          total: extendedPerf.memory.totalJSHeapSize.toString(),
-          limit: extendedPerf.memory.jsHeapSizeLimit.toString()
+          total: extendedPerf.memory.totalJSHeapSize,
+          limit: extendedPerf.memory.jsHeapSizeLimit
         });
       }
     };
@@ -107,15 +108,15 @@ export function usePerformanceMonitoring(componentName: string) {
       try {
         const response = await originalFetch(...args);
         const duration = performance.now() - startTime;
-        LoggingService.trackMetric('fetch_duration', duration.toString(), {
+        LoggingService.trackMetric('fetch_duration', duration, {
           component: componentName,
           url: typeof args[0] === 'string' ? args[0] : 'unknown',
-          status: response.status.toString()
+          status: response.status
         });
         return response;
       } catch (error: any) {
         const duration = performance.now() - startTime;
-        LoggingService.trackMetric('fetch_error', duration.toString(), {
+        LoggingService.trackMetric('fetch_error', duration, {
           component: componentName,
           url: typeof args[0] === 'string' ? args[0] : 'unknown',
           error: error.message
@@ -131,7 +132,7 @@ export function usePerformanceMonitoring(componentName: string) {
       
       // Track total component lifetime
       const lifetime = performance.now() - startTime;
-      LoggingService.trackMetric('component_lifetime', lifetime.toString(), {
+      LoggingService.trackMetric('component_lifetime', lifetime, {
         component: componentName,
         metrics: JSON.stringify(metrics)
       });
