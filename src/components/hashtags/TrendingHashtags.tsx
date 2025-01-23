@@ -44,7 +44,7 @@ export function TrendingHashtags() {
           hashtag_id: tag.hashtag_id,
           hashtags: tag.hashtags,
           count: count || 0
-        } as TrendingHashtag;
+        } satisfies TrendingHashtag;
       });
 
       return await Promise.all(countPromises);

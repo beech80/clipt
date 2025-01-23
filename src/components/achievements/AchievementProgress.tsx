@@ -6,6 +6,14 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
+interface AchievementStreak {
+  current_streak: number;
+  max_streak: number;
+  achievements: {
+    name: string;
+  };
+}
+
 export const AchievementProgress = () => {
   const { user } = useAuth();
   const { progress, isLoading } = useAchievementProgress(user?.id || '');
@@ -27,10 +35,10 @@ export const AchievementProgress = () => {
         .limit(3);
 
       if (error) throw error;
-      return data?.map(streak => ({
+      return (data || []).map(streak => ({
         ...streak,
         achievements: streak.achievements || { name: '' }
-      }));
+      })) as AchievementStreak[];
     },
     enabled: !!user?.id,
   });
