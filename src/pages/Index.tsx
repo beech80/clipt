@@ -1,9 +1,8 @@
 import { SEO } from "@/components/SEO";
 import { MainNav } from "@/components/MainNav";
-import PostList from "@/components/PostList";
-import { WelcomeSection } from "@/components/home/WelcomeSection";
 import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
+import { WelcomeSection } from "@/components/home/WelcomeSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
