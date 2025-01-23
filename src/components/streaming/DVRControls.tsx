@@ -9,16 +9,24 @@ interface DVRControlsProps {
   videoRef: React.RefObject<HTMLVideoElement>;
 }
 
+interface DVRSegment {
+  id: string;
+  segment_url: string;
+  segment_duration: string;
+  segment_index: number;
+  created_at: string;
+}
+
 export const DVRControls = ({ streamId, videoRef }: DVRControlsProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [segments, setSegments] = useState<any[]>([]);
+  const [segments, setSegments] = useState<DVRSegment[]>([]);
 
   useEffect(() => {
     const loadSegments = async () => {
       const streamSegments = await getDVRSegments(streamId);
-      setSegments(streamSegments || []);
+      setSegments(streamSegments);
       
       if (streamSegments?.length) {
         const totalDuration = streamSegments.reduce(
