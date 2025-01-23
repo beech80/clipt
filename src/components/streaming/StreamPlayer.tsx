@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { StreamPlayerControls } from './player/StreamPlayerControls';
 import { StreamPlayerChat } from './player/StreamPlayerChat';
 import { StreamPlayerGifts } from './player/StreamPlayerGifts';
+import { ViewerCountManager } from './ViewerCountManager';
 
 interface StreamPlayerProps {
   streamUrl?: string | null;
@@ -37,6 +38,7 @@ export const StreamPlayer = ({
   useEffect(() => {
     if (!streamId) return;
 
+    // Subscribe to stream health updates
     const healthChannel = supabase
       .channel('stream-health')
       .on(
@@ -167,6 +169,14 @@ export const StreamPlayer = ({
         streamMetrics={streamMetrics}
         className="absolute bottom-0 right-0"
       />
+
+      {streamId && (
+        <ViewerCountManager
+          streamId={streamId}
+          viewerCount={viewerCount}
+          onViewerCountChange={setViewerCount}
+        />
+      )}
     </div>
   );
 };
