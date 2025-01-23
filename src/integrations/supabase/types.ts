@@ -557,6 +557,50 @@ export type Database = {
           },
         ]
       }
+      broadcast_presets: {
+        Row: {
+          audio_settings: Json
+          created_at: string | null
+          encoder_preset: string
+          id: string
+          name: string
+          output_settings: Json
+          updated_at: string | null
+          user_id: string | null
+          video_settings: Json
+        }
+        Insert: {
+          audio_settings?: Json
+          created_at?: string | null
+          encoder_preset: string
+          id?: string
+          name: string
+          output_settings?: Json
+          updated_at?: string | null
+          user_id?: string | null
+          video_settings?: Json
+        }
+        Update: {
+          audio_settings?: Json
+          created_at?: string | null
+          encoder_preset?: string
+          id?: string
+          name?: string
+          output_settings?: Json
+          updated_at?: string | null
+          user_id?: string | null
+          video_settings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_presets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       broadcast_settings: {
         Row: {
           created_at: string
@@ -1534,6 +1578,80 @@ export type Database = {
           {
             foreignKeyName: "error_reports_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      esports_team_members: {
+        Row: {
+          joined_at: string | null
+          role: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          joined_at?: string | null
+          role: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          joined_at?: string | null
+          role?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esports_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "esports_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "esports_team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      esports_teams: {
+        Row: {
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          owner_id: string | null
+          tag: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          owner_id?: string | null
+          tag: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          owner_id?: string | null
+          tag?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esports_teams_owner_id_fkey"
+            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -5310,6 +5428,44 @@ export type Database = {
           native_name?: string
         }
         Relationships: []
+      }
+      tournament_brackets: {
+        Row: {
+          bracket_data: Json
+          bracket_type: string
+          created_at: string | null
+          id: string
+          stage_number: number
+          tournament_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bracket_data?: Json
+          bracket_type: string
+          created_at?: string | null
+          id?: string
+          stage_number: number
+          tournament_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bracket_data?: Json
+          bracket_type?: string
+          created_at?: string | null
+          id?: string
+          stage_number?: number
+          tournament_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_brackets_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tournament_matches: {
         Row: {

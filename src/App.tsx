@@ -13,6 +13,8 @@ import Profile from "@/pages/Profile";
 import EditProfile from "@/pages/EditProfile";
 import Messages from "@/pages/Messages";
 import Streaming from "@/pages/Streaming";
+import Broadcasting from "@/pages/Broadcasting";
+import Esports from "@/pages/Esports";
 import TopClips from "@/pages/TopClips";
 import Clipts from "@/pages/Clipts";
 import Settings from "@/pages/Settings";
@@ -67,6 +69,8 @@ function App() {
                     <Route path="/messages" element={<Messages />} />
                     <Route path="/group-chat" element={<GroupChat />} />
                     <Route path="/streaming" element={<Streaming />} />
+                    <Route path="/broadcasting" element={<Broadcasting />} />
+                    <Route path="/esports" element={<Esports />} />
                     <Route path="/top-clips" element={<TopClips />} />
                     <Route path="/clipts" element={<Clipts />} />
                     <Route path="/settings" element={<Settings />} />
