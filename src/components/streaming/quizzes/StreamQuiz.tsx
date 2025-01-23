@@ -14,6 +14,12 @@ interface QuizQuestion {
   correct_answer: string;
 }
 
+interface Quiz {
+  id: string;
+  title: string;
+  questions: QuizQuestion[];
+}
+
 interface StreamQuizProps {
   streamId: string;
 }
@@ -24,11 +30,7 @@ export const StreamQuiz = ({ streamId }: StreamQuizProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [quiz, setQuiz] = useState<{
-    id: string;
-    title: string;
-    questions: QuizQuestion[];
-  } | null>(null);
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
 
   React.useEffect(() => {
     loadActiveQuiz();
@@ -48,7 +50,12 @@ export const StreamQuiz = ({ streamId }: StreamQuizProps) => {
     }
 
     if (data) {
-      setQuiz(data);
+      const formattedQuiz: Quiz = {
+        id: data.id,
+        title: data.title,
+        questions: Array.isArray(data.questions) ? data.questions : []
+      };
+      setQuiz(formattedQuiz);
     }
   };
 

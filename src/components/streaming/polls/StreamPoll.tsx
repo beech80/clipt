@@ -12,6 +12,12 @@ interface PollOption {
   votes: number;
 }
 
+interface Poll {
+  id: string;
+  question: string;
+  options: PollOption[];
+}
+
 interface StreamPollProps {
   streamId: string;
 }
@@ -21,11 +27,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [totalVotes, setTotalVotes] = useState(0);
   const [hasVoted, setHasVoted] = useState(false);
-  const [poll, setPoll] = useState<{
-    id: string;
-    question: string;
-    options: PollOption[];
-  } | null>(null);
+  const [poll, setPoll] = useState<Poll | null>(null);
 
   React.useEffect(() => {
     loadActivePoll();
@@ -46,8 +48,13 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
     }
 
     if (data) {
-      setPoll(data);
-      calculateTotalVotes(data.options);
+      const formattedPoll: Poll = {
+        id: data.id,
+        question: data.question,
+        options: Array.isArray(data.options) ? data.options : []
+      };
+      setPoll(formattedPoll);
+      calculateTotalVotes(formattedPoll.options);
     }
   };
 
@@ -64,8 +71,13 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
         },
         (payload) => {
           if (payload.new) {
-            setPoll(payload.new);
-            calculateTotalVotes(payload.new.options);
+            const updatedPoll: Poll = {
+              id: payload.new.id,
+              question: payload.new.question,
+              options: Array.isArray(payload.new.options) ? payload.new.options : []
+            };
+            setPoll(updatedPoll);
+            calculateTotalVotes(updatedPoll.options);
           }
         }
       )
