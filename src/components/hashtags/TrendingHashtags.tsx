@@ -47,7 +47,7 @@ export function TrendingHashtags() {
         } satisfies TrendingHashtag;
       });
 
-      return await Promise.all(countPromises);
+      return Promise.all(countPromises);
     }
   });
 
