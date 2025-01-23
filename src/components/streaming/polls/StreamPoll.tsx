@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -14,71 +14,59 @@ interface PollOption {
 
 interface StreamPollProps {
   streamId: string;
-  pollId?: string;
 }
 
-interface PollData {
-  question: string;
-  options: PollOption[];
-}
-
-interface SupabasePollData {
-  question: string;
-  options: PollOption[];
-}
-
-export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
+export const StreamPoll = ({ streamId }: StreamPollProps) => {
   const { user } = useAuth();
-  const [question, setQuestion] = useState("");
-  const [options, setOptions] = useState<PollOption[]>([]);
+  const [selectedOption, setSelectedOption] = useState<string>("");
   const [totalVotes, setTotalVotes] = useState(0);
   const [hasVoted, setHasVoted] = useState(false);
+  const [poll, setPoll] = useState<{
+    id: string;
+    question: string;
+    options: PollOption[];
+  } | null>(null);
 
-  useEffect(() => {
-    if (pollId) {
-      loadPoll();
-      subscribeToVotes();
-    }
-  }, [pollId]);
+  React.useEffect(() => {
+    loadActivePoll();
+    subscribeToPollUpdates();
+  }, [streamId]);
 
-  const loadPoll = async () => {
-    const { data: poll, error } = await supabase
-      .from("stream_polls")
-      .select("*")
-      .eq("id", pollId)
+  const loadActivePoll = async () => {
+    const { data, error } = await supabase
+      .from('stream_polls')
+      .select('*')
+      .eq('stream_id', streamId)
+      .eq('is_active', true)
       .single();
 
     if (error) {
-      toast.error("Failed to load poll");
+      console.error('Error loading poll:', error);
       return;
     }
 
-    // First cast to unknown, then to our expected type to safely handle the JSON data
-    const pollOptions = (poll.options as unknown) as PollOption[];
-    
-    const pollData: PollData = {
-      question: poll.question,
-      options: pollOptions
-    };
-
-    setQuestion(pollData.question);
-    setOptions(pollData.options);
-    calculateTotalVotes(pollData.options);
+    if (data) {
+      setPoll(data);
+      calculateTotalVotes(data.options);
+    }
   };
 
-  const subscribeToVotes = () => {
+  const subscribeToPollUpdates = () => {
     const channel = supabase
-      .channel("poll_votes")
+      .channel('poll_updates')
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "INSERT",
-          schema: "public",
-          table: "poll_responses",
-          filter: `poll_id=eq.${pollId}`,
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'stream_polls',
+          filter: `stream_id=eq.${streamId}`,
         },
         (payload) => {
-          updateVotes(payload.new);
+          if (payload.new) {
+            setPoll(payload.new);
+            calculateTotalVotes(payload.new.options);
+          }
         }
       )
       .subscribe();
@@ -88,51 +76,52 @@ export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
     };
   };
 
-  const calculateTotalVotes = (pollOptions: PollOption[]) => {
-    const total = pollOptions.reduce((sum, option) => sum + option.votes, 0);
+  const calculateTotalVotes = (options: PollOption[]) => {
+    const total = options.reduce((sum, option) => sum + option.votes, 0);
     setTotalVotes(total);
   };
 
-  const updateVotes = (newVote: any) => {
-    setOptions((currentOptions) =>
-      currentOptions.map((option) => {
-        if (option.id === newVote.selected_options[0]) {
-          return { ...option, votes: option.votes + 1 };
-        }
-        return option;
-      })
-    );
-    setTotalVotes((prev) => prev + 1);
-  };
+  const handleVote = async () => {
+    if (!user || !selectedOption || hasVoted || !poll) return;
 
-  const handleVote = async (optionId: string) => {
-    if (!user || hasVoted) return;
+    try {
+      const { error } = await supabase.from('poll_responses').insert({
+        poll_id: poll.id,
+        user_id: user.id,
+        selected_options: [selectedOption],
+      });
 
-    const { error } = await supabase.from("poll_responses").insert({
-      poll_id: pollId,
-      user_id: user.id,
-      selected_options: [optionId],
-    });
+      if (error) throw error;
 
-    if (error) {
-      toast.error("Failed to submit vote");
-      return;
+      setHasVoted(true);
+      toast.success('Vote submitted successfully!');
+      
+      // Update local state
+      const updatedOptions = poll.options.map(option => 
+        option.id === selectedOption 
+          ? { ...option, votes: option.votes + 1 }
+          : option
+      );
+      setPoll({ ...poll, options: updatedOptions });
+      calculateTotalVotes(updatedOptions);
+    } catch (error) {
+      console.error('Error submitting vote:', error);
+      toast.error('Failed to submit vote');
     }
-
-    setHasVoted(true);
-    toast.success("Vote submitted!");
   };
+
+  if (!poll) return null;
 
   return (
     <Card className="p-4 space-y-4">
-      <h3 className="text-lg font-semibold">{question}</h3>
+      <h3 className="font-semibold">{poll.question}</h3>
       <div className="space-y-2">
-        {options.map((option) => (
+        {poll.options.map((option) => (
           <div key={option.id} className="space-y-1">
             <Button
               variant={hasVoted ? "ghost" : "secondary"}
               className="w-full justify-between"
-              onClick={() => handleVote(option.id)}
+              onClick={() => setSelectedOption(option.id)}
               disabled={hasVoted}
             >
               <span>{option.text}</span>
@@ -154,6 +143,15 @@ export const StreamPoll = ({ streamId, pollId }: StreamPollProps) => {
           </div>
         ))}
       </div>
+      {!hasVoted && (
+        <Button
+          onClick={handleVote}
+          disabled={!selectedOption}
+          className="w-full"
+        >
+          Submit Vote
+        </Button>
+      )}
       <p className="text-sm text-muted-foreground text-right">
         Total votes: {totalVotes}
       </p>

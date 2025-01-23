@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -16,60 +16,46 @@ interface QuizQuestion {
 
 interface StreamQuizProps {
   streamId: string;
-  quizId?: string;
 }
 
-interface QuizData {
-  title: string;
-  questions: QuizQuestion[];
-}
-
-interface SupabaseQuizData {
-  title: string;
-  questions: QuizQuestion[];
-}
-
-export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
+export const StreamQuiz = ({ streamId }: StreamQuizProps) => {
   const { user } = useAuth();
-  const [title, setTitle] = useState("");
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [quiz, setQuiz] = useState<{
+    id: string;
+    title: string;
+    questions: QuizQuestion[];
+  } | null>(null);
 
-  useEffect(() => {
-    if (quizId) {
-      loadQuiz();
-    }
-  }, [quizId]);
+  React.useEffect(() => {
+    loadActiveQuiz();
+  }, [streamId]);
 
-  const loadQuiz = async () => {
-    const { data: quiz, error } = await supabase
-      .from("stream_quizzes")
-      .select("*")
-      .eq("id", quizId)
+  const loadActiveQuiz = async () => {
+    const { data, error } = await supabase
+      .from('stream_quizzes')
+      .select('*')
+      .eq('stream_id', streamId)
+      .eq('is_active', true)
       .single();
 
     if (error) {
-      toast.error("Failed to load quiz");
+      console.error('Error loading quiz:', error);
       return;
     }
 
-    // First cast to unknown, then to our expected type to safely handle the JSON data
-    const quizQuestions = (quiz.questions as unknown) as QuizQuestion[];
-    
-    const quizData: QuizData = {
-      title: quiz.title,
-      questions: quizQuestions
-    };
-
-    setTitle(quizData.title);
-    setQuestions(quizData.questions);
+    if (data) {
+      setQuiz(data);
+    }
   };
 
   const handleAnswer = async () => {
-    const currentQ = questions[currentQuestion];
+    if (!quiz || !user) return;
+
+    const currentQ = quiz.questions[currentQuestion];
     const isCorrect = selectedAnswer === currentQ.correct_answer;
 
     if (isCorrect) {
@@ -79,7 +65,7 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
       toast.error("Wrong answer!");
     }
 
-    if (currentQuestion + 1 < questions.length) {
+    if (currentQuestion + 1 < quiz.questions.length) {
       setCurrentQuestion((prev) => prev + 1);
       setSelectedAnswer("");
     } else {
@@ -89,36 +75,38 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
   };
 
   const submitQuizResults = async () => {
-    if (!user || !quizId) return;
+    if (!quiz || !user) return;
 
-    const { error } = await supabase.from("quiz_responses").insert({
-      quiz_id: quizId,
-      user_id: user.id,
-      score: score,
-      answers: questions.map((_, index) => ({
-        question_id: index,
-        selected_answer: selectedAnswer,
-      })),
-    });
+    try {
+      const { error } = await supabase.from('quiz_responses').insert({
+        quiz_id: quiz.id,
+        user_id: user.id,
+        score: score,
+        answers: quiz.questions.map((_, index) => ({
+          question_id: index,
+          selected_answer: selectedAnswer,
+        })),
+      });
 
-    if (error) {
+      if (error) throw error;
+      toast.success("Quiz completed successfully!");
+    } catch (error) {
+      console.error('Error submitting quiz results:', error);
       toast.error("Failed to submit quiz results");
     }
   };
 
-  if (!questions.length) {
-    return <div>Loading quiz...</div>;
-  }
+  if (!quiz) return null;
 
   if (isCompleted) {
     return (
       <Card className="p-6 text-center">
         <h3 className="text-xl font-semibold mb-4">Quiz Completed!</h3>
         <p className="text-lg mb-2">
-          Your score: {score} out of {questions.length}
+          Your score: {score} out of {quiz.questions.length}
         </p>
         <p className="text-muted-foreground">
-          ({Math.round((score / questions.length) * 100)}%)
+          ({Math.round((score / quiz.questions.length) * 100)}%)
         </p>
       </Card>
     );
@@ -126,19 +114,19 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
 
   return (
     <Card className="p-6">
-      <h3 className="text-xl font-semibold mb-6">{title}</h3>
+      <h3 className="text-xl font-semibold mb-6">{quiz.title}</h3>
       <div className="space-y-6">
         <div>
           <p className="text-sm text-muted-foreground mb-2">
-            Question {currentQuestion + 1} of {questions.length}
+            Question {currentQuestion + 1} of {quiz.questions.length}
           </p>
-          <p className="text-lg mb-4">{questions[currentQuestion]?.question}</p>
+          <p className="text-lg mb-4">{quiz.questions[currentQuestion]?.question}</p>
           <RadioGroup
             value={selectedAnswer}
             onValueChange={setSelectedAnswer}
             className="space-y-2"
           >
-            {questions[currentQuestion]?.options.map((option, index) => (
+            {quiz.questions[currentQuestion]?.options.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
                 <RadioGroupItem value={option} id={`option-${index}`} />
                 <Label htmlFor={`option-${index}`}>{option}</Label>
@@ -151,7 +139,7 @@ export const StreamQuiz = ({ streamId, quizId }: StreamQuizProps) => {
           disabled={!selectedAnswer}
           className="w-full"
         >
-          {currentQuestion + 1 === questions.length
+          {currentQuestion + 1 === quiz.questions.length
             ? "Complete Quiz"
             : "Next Question"}
         </Button>
