@@ -12,10 +12,16 @@ interface ExtendedPerformance extends Performance {
 }
 
 interface PerformanceMetrics {
-  fcp: number; // First Contentful Paint
-  lcp: number; // Largest Contentful Paint
-  fid: number; // First Input Delay
-  cls: number; // Cumulative Layout Shift
+  fcp: number;
+  lcp: number;
+  fid: number;
+  cls: number;
+}
+
+interface ExtendedPerformanceEntry extends PerformanceEntry {
+  processingStart?: number;
+  value?: number;
+  hadRecentInput?: boolean;
 }
 
 export function usePerformanceMonitoring(componentName: string) {
@@ -52,10 +58,13 @@ export function usePerformanceMonitoring(componentName: string) {
       const fidObserver = new PerformanceObserver((entryList) => {
         const entries = entryList.getEntries();
         entries.forEach(entry => {
-          metrics.fid = entry.processingStart - entry.startTime;
-          LoggingService.trackMetric('first_input_delay', metrics.fid, {
-            component: componentName
-          });
+          const extendedEntry = entry as ExtendedPerformanceEntry;
+          if (extendedEntry.processingStart) {
+            metrics.fid = extendedEntry.processingStart - entry.startTime;
+            LoggingService.trackMetric('first_input_delay', metrics.fid, {
+              component: componentName
+            });
+          }
         });
       });
       fidObserver.observe({ entryTypes: ['first-input'] });
@@ -64,8 +73,9 @@ export function usePerformanceMonitoring(componentName: string) {
       const clsObserver = new PerformanceObserver((entryList) => {
         let clsScore = 0;
         entryList.getEntries().forEach(entry => {
-          if (!(entry as any).hadRecentInput) {
-            clsScore += (entry as any).value;
+          const extendedEntry = entry as ExtendedPerformanceEntry;
+          if (!extendedEntry.hadRecentInput && extendedEntry.value) {
+            clsScore += extendedEntry.value;
           }
         });
         metrics.cls = clsScore;
@@ -103,7 +113,7 @@ export function usePerformanceMonitoring(componentName: string) {
           status: response.status
         });
         return response;
-      } catch (error) {
+      } catch (error: any) {
         const duration = performance.now() - startTime;
         LoggingService.trackMetric('fetch_error', duration, {
           component: componentName,
@@ -123,7 +133,7 @@ export function usePerformanceMonitoring(componentName: string) {
       const lifetime = performance.now() - startTime;
       LoggingService.trackMetric('component_lifetime', lifetime, {
         component: componentName,
-        metrics: metrics
+        metrics: JSON.stringify(metrics)
       });
     };
   }, [componentName]);
