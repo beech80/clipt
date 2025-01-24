@@ -16,6 +16,24 @@ interface QualityPresetManagerProps {
   onPresetChange: (preset: QualityPreset) => void;
 }
 
+interface PresetData {
+  id: string;
+  name: string;
+  description: string;
+  settings: {
+    video: {
+      fps: number;
+      bitrate: number;
+      resolution: string;
+    };
+    audio: {
+      bitrate: number;
+      channels: number;
+      sampleRate: number;
+    };
+  };
+}
+
 export function QualityPresetManager({ streamId, onPresetChange }: QualityPresetManagerProps) {
   const [editingPreset, setEditingPreset] = useState<PresetFormData | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -29,7 +47,7 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as PresetData[];
     },
   });
 
@@ -112,11 +130,18 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
         .eq('id', streamId);
 
       if (error) throw error;
-      return preset.settings;
+      
+      const qualityPreset: QualityPreset = {
+        resolution: preset.settings.video.resolution,
+        bitrate: preset.settings.video.bitrate,
+        fps: preset.settings.video.fps
+      };
+      
+      return qualityPreset;
     },
     onSuccess: (settings) => {
       toast.success('Quality preset applied successfully');
-      onPresetChange(settings as QualityPreset);
+      onPresetChange(settings);
     },
     onError: () => {
       toast.error('Failed to apply preset');
@@ -183,7 +208,7 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setEditingPreset(preset)}
+                    onClick={() => setEditingPreset(preset as unknown as PresetFormData)}
                   >
                     Edit
                   </Button>
