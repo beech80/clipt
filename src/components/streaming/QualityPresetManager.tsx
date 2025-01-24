@@ -8,6 +8,8 @@ import { PresetForm, type PresetFormData } from './quality/PresetForm';
 import { PresetList } from './quality/PresetList';
 import { PresetPreview } from './quality/PresetPreview';
 import type { QualityPreset } from '@/types/streaming';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface QualityPresetManagerProps {
   streamId: string;
@@ -16,8 +18,9 @@ interface QualityPresetManagerProps {
 
 export function QualityPresetManager({ streamId, onPresetChange }: QualityPresetManagerProps) {
   const [editingPreset, setEditingPreset] = useState<PresetFormData | null>(null);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
-  const { data: presets, refetch } = useQuery({
+  const { data: presets, refetch, isLoading } = useQuery({
     queryKey: ['quality-presets'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -94,6 +97,32 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
     },
   });
 
+  const applyPreset = useMutation({
+    mutationFn: async (presetId: string) => {
+      const preset = presets?.find(p => p.id === presetId);
+      if (!preset) throw new Error('Preset not found');
+      
+      const { error } = await supabase
+        .from('streams')
+        .update({
+          current_bitrate: preset.settings.video.bitrate,
+          current_fps: preset.settings.video.fps,
+          stream_resolution: preset.settings.video.resolution
+        })
+        .eq('id', streamId);
+
+      if (error) throw error;
+      return preset.settings;
+    },
+    onSuccess: (settings) => {
+      toast.success('Quality preset applied successfully');
+      onPresetChange(settings as QualityPreset);
+    },
+    onError: () => {
+      toast.error('Failed to apply preset');
+    },
+  });
+
   const handleSubmit = (data: PresetFormData) => {
     if (editingPreset) {
       updatePreset.mutate({ ...data, id: (editingPreset as any).id });
@@ -101,6 +130,19 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
       createPreset.mutate(data);
     }
   };
+
+  const handleApplyPreset = (presetId: string) => {
+    setActivePreset(presetId);
+    applyPreset.mutate(presetId);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -129,15 +171,46 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
 
       <div>
         <h2 className="text-lg font-semibold mb-4">Saved Presets</h2>
-        <PresetList
-          presets={presets || []}
-          onEdit={setEditingPreset}
-          onDelete={(id) => {
-            if (window.confirm('Are you sure you want to delete this preset?')) {
-              deletePreset.mutate(id);
-            }
-          }}
-        />
+        <div className="grid gap-4">
+          {presets?.map((preset) => (
+            <Card key={preset.id} className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">{preset.name}</h3>
+                  <p className="text-sm text-muted-foreground">{preset.description}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingPreset(preset)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant={activePreset === preset.id ? "secondary" : "default"}
+                    size="sm"
+                    onClick={() => handleApplyPreset(preset.id)}
+                    disabled={applyPreset.isPending}
+                  >
+                    {activePreset === preset.id ? 'Active' : 'Apply'}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this preset?')) {
+                        deletePreset.mutate(preset.id);
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
