@@ -4,6 +4,7 @@ import { StreamHealthMonitor } from "./StreamHealthMonitor";
 import { StreamMetrics } from "./StreamMetrics";
 import { StreamInteractivePanel } from "./StreamInteractivePanel";
 import { StreamQualityControls } from "./StreamQualityControls";
+import { QualityPresetManager } from "./QualityPresetManager";
 import { EnhancedStreamMetrics } from "./analytics/EnhancedStreamMetrics";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -106,6 +107,14 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
       </div>
 
       <EnhancedStreamMetrics streamId={userId} />
+
+      <QualityPresetManager 
+        userId={userId}
+        onPresetChange={(preset) => {
+          // Handle preset change
+          console.log('Selected preset:', preset);
+        }}
+      />
 
       <StreamQualityControls
         streamId={userId}
