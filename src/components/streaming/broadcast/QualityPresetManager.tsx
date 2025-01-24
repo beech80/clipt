@@ -16,7 +16,6 @@ interface QualityPresetManagerProps {
 }
 
 export function QualityPresetManager({ streamId, onPresetSelect }: QualityPresetManagerProps) {
-  const [selectedPreset, setSelectedPreset] = useState<string>('balanced');
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [customPreset, setCustomPreset] = useState<EncoderPreset>({
     name: 'Custom',
@@ -40,32 +39,43 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
         .eq('user_id', streamId);
       
       if (error) throw error;
-      return data;
+
+      return data.map(preset => ({
+        name: preset.name,
+        settings: {
+          fps: preset.video_settings.fps,
+          bitrate: preset.video_settings.bitrate,
+          resolution: preset.video_settings.resolution,
+          keyframe_interval: preset.video_settings.keyframe_interval,
+          audio_bitrate: preset.audio_settings.bitrate,
+          audio_sample_rate: preset.audio_settings.sample_rate
+        },
+        description: 'Custom preset'
+      }));
     }
   });
 
   const savePresetMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase
+    mutationFn: async (preset: EncoderPreset) => {
+      const { error } = await supabase
         .from('broadcast_presets')
         .insert({
           user_id: streamId,
-          name: customPreset.name,
+          name: preset.name,
           encoder_preset: 'custom',
           video_settings: {
-            fps: customPreset.settings.fps,
-            bitrate: customPreset.settings.bitrate,
-            resolution: customPreset.settings.resolution,
-            keyframe_interval: customPreset.settings.keyframe_interval
+            fps: preset.settings.fps,
+            bitrate: preset.settings.bitrate,
+            resolution: preset.settings.resolution,
+            keyframe_interval: preset.settings.keyframe_interval
           },
           audio_settings: {
-            bitrate: customPreset.settings.audio_bitrate,
-            sample_rate: customPreset.settings.audio_sample_rate
+            bitrate: preset.settings.audio_bitrate,
+            sample_rate: preset.settings.audio_sample_rate
           }
         });
       
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       toast.success('Preset saved successfully');
@@ -76,28 +86,13 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
     }
   });
 
-  const handlePresetSelect = (presetKey: string) => {
-    setSelectedPreset(presetKey);
-    const preset = savedPresets?.find(p => p.id === presetKey);
-    if (preset) {
-      onPresetSelect({
-        name: preset.name,
-        settings: {
-          fps: preset.video_settings.fps,
-          bitrate: preset.video_settings.bitrate,
-          resolution: preset.video_settings.resolution,
-          keyframe_interval: preset.video_settings.keyframe_interval,
-          audio_bitrate: preset.audio_settings.bitrate,
-          audio_sample_rate: preset.audio_settings.sample_rate
-        },
-        description: preset.description
-      });
-    }
+  const handleSaveCustomPreset = () => {
+    savePresetMutation.mutate(customPreset);
   };
 
   return (
-    <Card className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold">Quality Presets</h3>
         <Button
           variant="outline"
@@ -111,22 +106,23 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
 
       {!isCustomizing ? (
         <div className="space-y-4">
-          <Select value={selectedPreset} onValueChange={handlePresetSelect}>
+          <Select onValueChange={(value) => {
+            const preset = savedPresets?.find(p => p.name === value);
+            if (preset) {
+              onPresetSelect(preset);
+            }
+          }}>
             <SelectTrigger>
               <SelectValue placeholder="Select a preset" />
             </SelectTrigger>
             <SelectContent>
               {savedPresets?.map((preset) => (
-                <SelectItem key={preset.id} value={preset.id}>
-                  {preset.name} (Custom)
+                <SelectItem key={preset.name} value={preset.name}>
+                  {preset.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-
-          <div className="text-sm text-muted-foreground">
-            {selectedPreset === 'balanced' ? 'Good balance between quality and performance' : ''}
-          </div>
         </div>
       ) : (
         <div className="space-y-4">
@@ -209,14 +205,6 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
                 }
               />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <Input
-              value={customPreset.description}
-              onChange={(e) => setCustomPreset({ ...customPreset, description: e.target.value })}
-            />
           </div>
 
           <div className="flex justify-end space-x-2">

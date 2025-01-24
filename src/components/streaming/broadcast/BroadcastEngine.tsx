@@ -39,7 +39,7 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         ...data,
         quality_presets: data.quality_presets as Record<string, QualityPreset>,
         encoder_settings: data.encoder_settings as EngineConfig['encoder_settings'],
-        ingest_endpoints: data.ingest_endpoints as any[]
+        ingest_endpoints: data.ingest_endpoints as string[]
       };
       
       return config;
