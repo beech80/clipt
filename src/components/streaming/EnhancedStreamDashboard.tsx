@@ -14,7 +14,13 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
   const [viewerCount, setViewerCount] = useState(0);
   const [streamMetrics, setStreamMetrics] = useState<StreamAnalytics>({
     current_bitrate: 0,
-    current_fps: 0
+    current_fps: 0,
+    peak_viewers: undefined,
+    average_viewers: undefined,
+    chat_messages_count: undefined,
+    unique_chatters: undefined,
+    stream_duration: undefined,
+    engagement_rate: undefined
   });
 
   const { data: analytics } = useQuery({
@@ -28,9 +34,10 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
       
       if (error) throw error;
       
+      // Transform database response to match StreamAnalytics type
       const transformedData: StreamAnalytics = {
-        current_bitrate: data?.current_bitrate || 0,
-        current_fps: data?.current_fps || 0,
+        current_bitrate: data?.audio_quality_score || 0,
+        current_fps: data?.video_quality_score || 0,
         peak_viewers: data?.peak_viewers || undefined,
         average_viewers: data?.average_viewers || undefined,
         chat_messages_count: data?.chat_messages_count || undefined,
@@ -58,12 +65,12 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
           table: 'stream_analytics',
           filter: `stream_id=eq.${userId}`
         },
-        (payload: { new: { current_bitrate?: number; current_fps?: number } }) => {
+        (payload: { new: { audio_quality_score?: number; video_quality_score?: number } }) => {
           if (payload.new) {
             setStreamMetrics(prevMetrics => ({
               ...prevMetrics,
-              current_bitrate: payload.new.current_bitrate || 0,
-              current_fps: payload.new.current_fps || 0
+              current_bitrate: payload.new.audio_quality_score || 0,
+              current_fps: payload.new.video_quality_score || 0
             }));
           }
         }
