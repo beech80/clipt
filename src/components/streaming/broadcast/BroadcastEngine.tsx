@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { StreamKeyManager } from './StreamKeyManager';
 import { BroadcastQualityManager } from './BroadcastQualityManager';
 import { QualityPresetManager } from './QualityPresetManager';
 import { BroadcastHealthMonitor } from './BroadcastHealthMonitor';
-import { EngineConfig } from '@/types/broadcast';
+import { BroadcastEngineControls } from './BroadcastEngineControls';
+import { useEngineConfig } from '@/hooks/use-engine-config';
 
 interface BroadcastEngineProps {
   streamId: string;
@@ -19,35 +19,7 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
   const [engineStatus, setEngineStatus] = useState<'idle' | 'starting' | 'active' | 'error'>('idle');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
-  const { data: engineConfig } = useQuery({
-    queryKey: ['streaming-engine-config', userId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('streaming_engine_config')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) throw error;
-      
-      if (data) {
-        // Explicitly type the quality_presets to match EngineConfig type
-        const qualityPresets = data.quality_presets as {
-          low: { fps: number; bitrate: number; resolution: string };
-          medium: { fps: number; bitrate: number; resolution: string };
-          high: { fps: number; bitrate: number; resolution: string };
-        };
-
-        return {
-          ...data,
-          quality_presets: qualityPresets,
-          encoder_settings: data.encoder_settings as EngineConfig['encoder_settings'],
-          ingest_endpoints: data.ingest_endpoints as any[]
-        } as EngineConfig;
-      }
-      return null;
-    },
-  });
+  const { data: engineConfig } = useEngineConfig(userId);
 
   const initializeEngineMutation = useMutation({
     mutationFn: async () => {
@@ -111,22 +83,17 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Broadcast Engine</h2>
-          <Button
-            onClick={engineStatus === 'active' ? handleEngineStop : handleEngineStart}
-            variant={engineStatus === 'active' ? "destructive" : "default"}
-            disabled={engineStatus === 'starting' || !engineConfig}
-          >
-            {engineStatus === 'active' ? 'Stop Engine' : 'Start Engine'}
-          </Button>
-        </div>
+        <BroadcastEngineControls
+          streamId={streamId}
+          engineStatus={engineStatus}
+          onEngineStart={handleEngineStart}
+          onEngineStop={handleEngineStop}
+          isConfigLoaded={!!engineConfig}
+        />
 
         {engineStatus === 'active' && currentSessionId && (
           <>
-            <StreamKeyManager 
-              streamId={streamId}
-            />
+            <StreamKeyManager streamId={streamId} />
             <QualityPresetManager
               streamId={streamId}
               engineConfig={engineConfig}
