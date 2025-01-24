@@ -1,44 +1,57 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import type { Json } from '@/integrations/supabase/types';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import type { PresetData } from './types';
 
 interface PresetListProps {
-  presets: Array<{
-    id: string;
-    name: string;
-    description: string;
-    settings: Json;
-  }>;
-  onEdit: (preset: any) => void;
-  onDelete: (id: string) => void;
+  presets: PresetData[];
+  activePreset: string | null;
+  onEdit: (preset: PresetData) => void;
+  onApply: (presetId: string) => void;
+  onDelete: (presetId: string) => void;
+  isApplying: boolean;
 }
 
-export function PresetList({ presets, onEdit, onDelete }: PresetListProps) {
+export function PresetList({ 
+  presets, 
+  activePreset, 
+  onEdit, 
+  onApply, 
+  onDelete,
+  isApplying 
+}: PresetListProps) {
   return (
-    <div className="space-y-4">
-      {presets.map((preset) => (
+    <div className="grid gap-4">
+      {presets?.map((preset) => (
         <Card key={preset.id} className="p-4">
-          <div className="flex justify-between items-start">
+          <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium">{preset.name}</h3>
-              {preset.description && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {preset.description}
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground">{preset.description}</p>
             </div>
-            <div className="space-x-2">
-              <Button 
-                variant="outline" 
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => onEdit(preset)}
               >
                 Edit
               </Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant={activePreset === preset.id ? "secondary" : "default"}
                 size="sm"
-                onClick={() => onDelete(preset.id)}
+                onClick={() => onApply(preset.id)}
+                disabled={isApplying}
+              >
+                {activePreset === preset.id ? 'Active' : 'Apply'}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to delete this preset?')) {
+                    onDelete(preset.id);
+                  }
+                }}
               >
                 Delete
               </Button>

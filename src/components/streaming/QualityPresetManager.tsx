@@ -1,48 +1,18 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { Json } from '@/integrations/supabase/types';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { PresetForm, type PresetFormData } from './quality/PresetForm';
 import { PresetList } from './quality/PresetList';
 import { PresetPreview } from './quality/PresetPreview';
 import type { QualityPreset } from '@/types/streaming';
-import { Button } from '@/components/ui/button';
+import type { PresetData, RawPresetData } from './quality/types';
 import { Loader2 } from 'lucide-react';
 
 interface QualityPresetManagerProps {
   streamId: string;
   onPresetChange: (preset: QualityPreset) => void;
-}
-
-interface PresetData {
-  id: string;
-  name: string;
-  description: string;
-  settings: {
-    video: {
-      fps: number;
-      bitrate: number;
-      resolution: string;
-    };
-    audio: {
-      bitrate: number;
-      channels: number;
-      sampleRate: number;
-    };
-  };
-}
-
-interface RawPresetData {
-  id: string;
-  name: string;
-  description: string;
-  settings: Json;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  is_default: boolean;
 }
 
 export function QualityPresetManager({ streamId, onPresetChange }: QualityPresetManagerProps) {
@@ -59,7 +29,6 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
 
       if (error) throw error;
       
-      // Transform the raw data to match our PresetData interface
       return (data as RawPresetData[]).map(preset => ({
         id: preset.id,
         name: preset.name,
@@ -73,13 +42,11 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
     mutationFn: async (data: PresetFormData) => {
       const { error } = await supabase
         .from('quality_presets')
-        .insert([
-          {
-            name: data.name,
-            description: data.description,
-            settings: data.settings as Json,
-          },
-        ]);
+        .insert([{
+          name: data.name,
+          description: data.description,
+          settings: data.settings,
+        }]);
 
       if (error) throw error;
     },
@@ -99,7 +66,7 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
         .update({
           name: data.name,
           description: data.description,
-          settings: data.settings as Json,
+          settings: data.settings,
         })
         .eq('id', data.id);
 
@@ -214,46 +181,14 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
 
       <div>
         <h2 className="text-lg font-semibold mb-4">Saved Presets</h2>
-        <div className="grid gap-4">
-          {presets?.map((preset) => (
-            <Card key={preset.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium">{preset.name}</h3>
-                  <p className="text-sm text-muted-foreground">{preset.description}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditingPreset(preset as unknown as PresetFormData)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant={activePreset === preset.id ? "secondary" : "default"}
-                    size="sm"
-                    onClick={() => handleApplyPreset(preset.id)}
-                    disabled={applyPreset.isPending}
-                  >
-                    {activePreset === preset.id ? 'Active' : 'Apply'}
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to delete this preset?')) {
-                        deletePreset.mutate(preset.id);
-                      }
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <PresetList
+          presets={presets || []}
+          activePreset={activePreset}
+          onEdit={setEditingPreset}
+          onApply={handleApplyPreset}
+          onDelete={(id) => deletePreset.mutate(id)}
+          isApplying={applyPreset.isPending}
+        />
       </div>
     </div>
   );

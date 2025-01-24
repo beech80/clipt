@@ -2,14 +2,6 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import type { Json } from '@/integrations/supabase/types';
-
-interface PresetFormProps {
-  onSubmit: (data: PresetFormData) => void;
-  initialData?: PresetFormData;
-  isLoading?: boolean;
-}
 
 export interface PresetFormData {
   name: string;
@@ -26,6 +18,12 @@ export interface PresetFormData {
       sampleRate: number;
     };
   };
+}
+
+interface PresetFormProps {
+  onSubmit: (data: PresetFormData) => void;
+  initialData?: PresetFormData;
+  isLoading?: boolean;
 }
 
 export function PresetForm({ onSubmit, initialData, isLoading }: PresetFormProps) {
@@ -48,10 +46,6 @@ export function PresetForm({ onSubmit, initialData, isLoading }: PresetFormProps
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name) {
-      toast.error('Please enter a preset name');
-      return;
-    }
     onSubmit(formData);
   };
 
