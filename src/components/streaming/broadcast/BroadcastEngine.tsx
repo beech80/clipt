@@ -8,6 +8,7 @@ import { StreamKeyManager } from './StreamKeyManager';
 import { BroadcastQualityManager } from './BroadcastQualityManager';
 import { QualityPresetManager } from './QualityPresetManager';
 import { BroadcastHealthMonitor } from './BroadcastHealthMonitor';
+import { EngineConfig, QualityPreset } from '@/types/broadcast';
 
 interface BroadcastEngineProps {
   streamId: string;
@@ -28,7 +29,7 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as EngineConfig;
     },
   });
 
