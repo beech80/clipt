@@ -5414,12 +5414,14 @@ export type Database = {
           last_health_check: string | null
           max_bitrate: number | null
           playback_url: string | null
+          recommendation_score: number | null
           recurring_schedule: Json | null
           rtmp_key: string | null
           rtmp_url: string | null
           schedule_status: string | null
           scheduled_duration: unknown | null
           scheduled_start_time: string | null
+          search_vector: unknown | null
           started_at: string | null
           stream_health_status: string | null
           stream_key: string
@@ -5455,12 +5457,14 @@ export type Database = {
           last_health_check?: string | null
           max_bitrate?: number | null
           playback_url?: string | null
+          recommendation_score?: number | null
           recurring_schedule?: Json | null
           rtmp_key?: string | null
           rtmp_url?: string | null
           schedule_status?: string | null
           scheduled_duration?: unknown | null
           scheduled_start_time?: string | null
+          search_vector?: unknown | null
           started_at?: string | null
           stream_health_status?: string | null
           stream_key: string
@@ -5496,12 +5500,14 @@ export type Database = {
           last_health_check?: string | null
           max_bitrate?: number | null
           playback_url?: string | null
+          recommendation_score?: number | null
           recurring_schedule?: Json | null
           rtmp_key?: string | null
           rtmp_url?: string | null
           schedule_status?: string | null
           scheduled_duration?: unknown | null
           scheduled_start_time?: string | null
+          search_vector?: unknown | null
           started_at?: string | null
           stream_health_status?: string | null
           stream_key?: string
@@ -6745,6 +6751,10 @@ export type Database = {
           new_settings: Json
         }
         Returns: Json
+      }
+      update_stream_recommendation_scores: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_stream_recommendations: {
         Args: Record<PropertyKey, never>
