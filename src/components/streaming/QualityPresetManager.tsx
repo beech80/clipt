@@ -3,24 +3,19 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Json } from '@/integrations/supabase/types';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { PresetForm, type PresetFormData } from './quality/PresetForm';
 import { PresetList } from './quality/PresetList';
 import { PresetPreview } from './quality/PresetPreview';
+import type { QualityPreset } from '@/types/streaming';
 
 interface QualityPresetManagerProps {
   streamId: string;
-  onPresetChange: (preset: {
-    resolution: string;
-    bitrate: number;
-    fps: number;
-  }) => void;
+  onPresetChange: (preset: QualityPreset) => void;
 }
 
 export function QualityPresetManager({ streamId, onPresetChange }: QualityPresetManagerProps) {
   const [editingPreset, setEditingPreset] = useState<PresetFormData | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
 
   const { data: presets, refetch } = useQuery({
     queryKey: ['quality-presets'],

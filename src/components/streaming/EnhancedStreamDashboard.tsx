@@ -1,35 +1,13 @@
-import { Card } from "@/components/ui/card";
-import { ViewerCountManager } from "./ViewerCountManager";
-import { StreamHealthMonitor } from "./StreamHealthMonitor";
-import { StreamMetrics } from "./StreamMetrics";
-import { StreamInteractivePanel } from "./StreamInteractivePanel";
-import { StreamQualityControls } from "./StreamQualityControls";
-import { QualityPresetManager } from "./QualityPresetManager";
-import { EnhancedStreamMetrics } from "./analytics/EnhancedStreamMetrics";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-
-interface StreamAnalytics {
-  current_bitrate: number;
-  current_fps: number;
-  peak_viewers?: number;
-  average_viewers?: number;
-  chat_messages_count?: number;
-  unique_chatters?: number;
-  stream_duration?: string;
-  engagement_rate?: number;
-}
+import { StreamMetricsSection } from "./dashboard/StreamMetricsSection";
+import { StreamControlsSection } from "./dashboard/StreamControlsSection";
+import type { StreamAnalytics, QualityPreset } from "@/types/streaming";
 
 interface EnhancedStreamDashboardProps {
   userId: string;
   isLive: boolean;
-}
-
-interface QualityPreset {
-  resolution: string;
-  bitrate: number;
-  fps: number;
 }
 
 export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashboardProps) {
@@ -103,45 +81,20 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
 
   return (
     <div className="grid gap-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-4">
-          <ViewerCountManager 
-            streamId={userId} 
-            viewerCount={viewerCount}
-            onViewerCountChange={setViewerCount}
-          />
-        </Card>
-        <Card className="p-4">
-          <StreamHealthMonitor streamId={userId} />
-        </Card>
-      </div>
-
-      <EnhancedStreamMetrics streamId={userId} />
-
-      <QualityPresetManager 
+      <StreamMetricsSection
+        userId={userId}
         streamId={userId}
+        viewerCount={viewerCount}
+        streamMetrics={streamMetrics}
+        onViewerCountChange={setViewerCount}
+      />
+
+      <StreamControlsSection
+        userId={userId}
+        streamId={userId}
+        isLive={isLive}
         onPresetChange={handlePresetChange}
       />
-
-      <StreamQualityControls
-        streamId={userId}
-        onQualityChange={(quality) => console.log('Quality changed:', quality)}
-        onVolumeChange={(volume) => console.log('Volume changed:', volume)}
-      />
-
-      <Card className="p-4">
-        <StreamMetrics 
-          bitrate={streamMetrics.current_bitrate} 
-          fps={streamMetrics.current_fps} 
-        />
-      </Card>
-
-      <Card className="p-4">
-        <StreamInteractivePanel 
-          streamId={userId}
-          isLive={isLive}
-        />
-      </Card>
     </div>
   );
 }
