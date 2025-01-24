@@ -15,11 +15,25 @@ interface BroadcastEngineProps {
   userId: string;
 }
 
+interface QualityPreset {
+  resolution: string;
+  bitrate: number;
+  fps: number;
+}
+
+interface EngineConfig {
+  quality_presets?: {
+    low?: QualityPreset;
+    medium?: QualityPreset;
+    high?: QualityPreset;
+  };
+}
+
 export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [engineStatus, setEngineStatus] = useState<'idle' | 'starting' | 'active' | 'error'>('idle');
 
-  const { data: engineConfig } = useQuery({
+  const { data: engineConfig } = useQuery<EngineConfig>({
     queryKey: ['streaming-engine-config', userId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -52,15 +66,17 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
 
   const initializeEngineMutation = useMutation({
     mutationFn: async () => {
+      const defaultSettings: QualityPreset = {
+        resolution: "1280x720",
+        bitrate: 3000,
+        fps: 30
+      };
+
       const { error } = await supabase
         .from('stream_encoding_sessions')
         .insert({
           stream_id: streamId,
-          current_settings: engineConfig?.quality_presets?.medium || {
-            resolution: "1280x720",
-            bitrate: 3000,
-            fps: 30
-          },
+          current_settings: engineConfig?.quality_presets?.medium || defaultSettings,
         });
 
       if (error) throw error;
