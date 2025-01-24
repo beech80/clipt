@@ -34,7 +34,6 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
 
       if (error) throw error;
       
-      // Cast the JSONB fields to their correct types after validation
       const config = {
         ...data,
         quality_presets: data.quality_presets as unknown as Record<string, QualityPreset>,
@@ -105,24 +104,6 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
     },
   });
 
-  const handlePresetSelect = (preset: EncoderPreset) => {
-    if (currentSessionId) {
-      supabase
-        .from('stream_encoding_sessions')
-        .update({
-          current_settings: preset.settings
-        })
-        .eq('id', currentSessionId)
-        .then(({ error }) => {
-          if (error) {
-            toast.error('Failed to apply preset');
-          } else {
-            toast.success(`Applied ${preset.name} preset`);
-          }
-        });
-    }
-  };
-
   const handleEngineStart = () => {
     setEngineStatus('starting');
     initializeEngineMutation.mutate();
@@ -160,7 +141,8 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
           />
           <QualityPresetManager
             streamId={streamId}
-            onPresetSelect={handlePresetSelect}
+            engineConfig={engineConfig}
+            encodingSession={encodingSession}
           />
           <BroadcastQualityManager
             streamId={streamId}
