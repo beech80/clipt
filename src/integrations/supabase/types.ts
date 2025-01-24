@@ -4088,6 +4088,64 @@ export type Database = {
           },
         ]
       }
+      stream_encoding_sessions: {
+        Row: {
+          created_at: string
+          current_settings: Json
+          encoder_stats: Json
+          ended_at: string | null
+          error_logs: Json[] | null
+          id: string
+          started_at: string
+          status: string
+          stream_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_settings: Json
+          encoder_stats?: Json
+          ended_at?: string | null
+          error_logs?: Json[] | null
+          id?: string
+          started_at?: string
+          status?: string
+          stream_id: string
+        }
+        Update: {
+          created_at?: string
+          current_settings?: Json
+          encoder_stats?: Json
+          ended_at?: string | null
+          error_logs?: Json[] | null
+          id?: string
+          started_at?: string
+          status?: string
+          stream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_encoding_sessions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_encoding_sessions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_encoding_sessions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_gifts: {
         Row: {
           amount: number
@@ -5194,6 +5252,36 @@ export type Database = {
           playback_endpoint?: string
           provider?: string
           settings?: Json | null
+        }
+        Relationships: []
+      }
+      streaming_engine_config: {
+        Row: {
+          created_at: string
+          encoder_settings: Json
+          id: string
+          ingest_endpoints: Json
+          quality_presets: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encoder_settings?: Json
+          id?: string
+          ingest_endpoints?: Json
+          quality_presets?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encoder_settings?: Json
+          id?: string
+          ingest_endpoints?: Json
+          quality_presets?: Json
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -6527,6 +6615,13 @@ export type Database = {
           increment_value?: number
         }
         Returns: undefined
+      }
+      update_stream_quality: {
+        Args: {
+          stream_id: string
+          new_settings: Json
+        }
+        Returns: Json
       }
       update_stream_recommendations: {
         Args: Record<PropertyKey, never>

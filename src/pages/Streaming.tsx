@@ -9,14 +9,13 @@ import { StreamScheduleForm } from "@/components/streaming/StreamScheduleForm";
 import { EnhancedStreamDashboard } from "@/components/streaming/EnhancedStreamDashboard";
 import { SceneManager } from "@/components/streaming/SceneManager";
 import { BroadcastSettings } from "@/components/streaming/BroadcastSettings";
+import { BroadcastEngine } from "@/components/streaming/broadcast/BroadcastEngine";
 import { Calendar, Settings, Layout, Users, Activity } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { BackButton } from "@/components/ui/back-button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// ... keep existing code (imports)
 
 const Streaming = () => {
   const [isLive, setIsLive] = useState(false);
@@ -135,11 +134,11 @@ const Streaming = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="scenes">
-              <SceneManager />
-            </TabsContent>
-
             <TabsContent value="settings">
+              <BroadcastEngine 
+                streamId={user.id} 
+                userId={user.id} 
+              />
               <BroadcastSettings />
             </TabsContent>
 
