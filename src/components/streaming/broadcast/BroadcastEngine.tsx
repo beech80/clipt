@@ -6,11 +6,12 @@ import { BroadcastQualityManager } from './BroadcastQualityManager';
 import { EncodingManager } from './EncodingManager';
 import { StreamKeyManager } from './StreamKeyManager';
 import { BroadcastHealthMonitor } from './BroadcastHealthMonitor';
+import { QualityPresetManager } from './QualityPresetManager';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { QualityPreset } from '@/types/broadcast';
+import { QualityPreset, EncoderPreset } from '@/types/broadcast';
 
 interface BroadcastEngineProps {
   streamId: string;
@@ -20,11 +21,7 @@ interface BroadcastEngineProps {
 interface EngineConfig {
   id: string;
   user_id: string;
-  quality_presets: {
-    low?: QualityPreset;
-    medium?: QualityPreset;
-    high?: QualityPreset;
-  };
+  quality_presets: Record<string, QualityPreset>;
   encoder_settings: Record<string, any>;
   ingest_endpoints: any[];
   created_at: string;
@@ -109,6 +106,25 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
     },
   });
 
+  const handlePresetSelect = (preset: EncoderPreset) => {
+    // Update encoding session with new preset settings
+    if (currentSessionId) {
+      supabase
+        .from('stream_encoding_sessions')
+        .update({
+          current_settings: preset.settings
+        })
+        .eq('id', currentSessionId)
+        .then(({ error }) => {
+          if (error) {
+            toast.error('Failed to apply preset');
+          } else {
+            toast.success(`Applied ${preset.name} preset`);
+          }
+        });
+    }
+  };
+
   const handleEngineStart = () => {
     setEngineStatus('starting');
     initializeEngineMutation.mutate();
@@ -143,6 +159,10 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
           <BroadcastHealthMonitor 
             streamId={streamId}
             sessionId={currentSessionId || undefined}
+          />
+          <QualityPresetManager
+            streamId={streamId}
+            onPresetSelect={handlePresetSelect}
           />
           <BroadcastQualityManager
             streamId={streamId}

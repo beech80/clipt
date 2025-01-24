@@ -22,19 +22,15 @@ export interface BroadcastSettings {
   updated_at: string;
 }
 
-export interface SceneSource {
-  id: string;
-  scene_id: string;
+export interface EncoderPreset {
   name: string;
-  type: string;
-  settings: Record<string, unknown>;
-  position: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    z_index: number;
+  settings: {
+    fps: number;
+    bitrate: number;
+    resolution: string;
+    keyframe_interval: number;
+    audio_bitrate: number;
+    audio_sample_rate: number;
   };
-  created_at: string;
-  updated_at: string;
+  description: string;
 }
