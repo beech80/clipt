@@ -40,18 +40,31 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
       
       if (error) throw error;
 
-      return data.map(preset => ({
-        name: preset.name,
-        settings: {
-          fps: preset.video_settings.fps as number,
-          bitrate: preset.video_settings.bitrate as number,
-          resolution: preset.video_settings.resolution as string,
-          keyframe_interval: preset.video_settings.keyframe_interval as number,
-          audio_bitrate: preset.audio_settings.bitrate as number,
-          audio_sample_rate: preset.audio_settings.sample_rate as number
-        },
-        description: 'Custom preset'
-      }));
+      return data.map(preset => {
+        const videoSettings = preset.video_settings as {
+          fps: number;
+          bitrate: number;
+          resolution: string;
+          keyframe_interval: number;
+        };
+        const audioSettings = preset.audio_settings as {
+          bitrate: number;
+          sample_rate: number;
+        };
+
+        return {
+          name: preset.name,
+          settings: {
+            fps: videoSettings.fps,
+            bitrate: videoSettings.bitrate,
+            resolution: videoSettings.resolution,
+            keyframe_interval: videoSettings.keyframe_interval,
+            audio_bitrate: audioSettings.bitrate,
+            audio_sample_rate: audioSettings.sample_rate
+          },
+          description: 'Custom preset'
+        };
+      });
     }
   });
 

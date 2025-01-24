@@ -34,13 +34,13 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
 
       if (error) throw error;
       
-      // Explicitly cast the JSONB fields to their correct types
-      const config: EngineConfig = {
+      // Cast the JSONB fields to their correct types after validation
+      const config = {
         ...data,
-        quality_presets: data.quality_presets as Record<string, QualityPreset>,
+        quality_presets: data.quality_presets as unknown as Record<string, QualityPreset>,
         encoder_settings: data.encoder_settings as EngineConfig['encoder_settings'],
         ingest_endpoints: data.ingest_endpoints as string[]
-      };
+      } satisfies EngineConfig;
       
       return config;
     },
