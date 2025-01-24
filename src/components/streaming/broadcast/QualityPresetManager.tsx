@@ -10,45 +10,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { EncoderPreset } from '@/types/broadcast';
 
-const DEFAULT_PRESETS: Record<string, EncoderPreset> = {
-  ultrafast: {
-    name: 'Ultra Fast',
-    settings: {
-      fps: 30,
-      bitrate: 2500,
-      resolution: '1280x720',
-      keyframe_interval: 2,
-      audio_bitrate: 128,
-      audio_sample_rate: 44100
-    },
-    description: 'Lowest CPU usage, good for low-end computers'
-  },
-  balanced: {
-    name: 'Balanced',
-    settings: {
-      fps: 60,
-      bitrate: 4500,
-      resolution: '1920x1080',
-      keyframe_interval: 2,
-      audio_bitrate: 160,
-      audio_sample_rate: 48000
-    },
-    description: 'Good balance between quality and performance'
-  },
-  quality: {
-    name: 'High Quality',
-    settings: {
-      fps: 60,
-      bitrate: 6000,
-      resolution: '1920x1080',
-      keyframe_interval: 2,
-      audio_bitrate: 320,
-      audio_sample_rate: 48000
-    },
-    description: 'Best quality, requires powerful computer'
-  }
-};
-
 interface QualityPresetManagerProps {
   streamId: string;
   onPresetSelect: (preset: EncoderPreset) => void;
@@ -59,7 +20,14 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [customPreset, setCustomPreset] = useState<EncoderPreset>({
     name: 'Custom',
-    settings: DEFAULT_PRESETS.balanced.settings,
+    settings: {
+      fps: 30,
+      bitrate: 3000,
+      resolution: '1280x720',
+      keyframe_interval: 2,
+      audio_bitrate: 160,
+      audio_sample_rate: 48000
+    },
     description: 'Custom preset'
   });
 
@@ -69,7 +37,7 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
       const { data, error } = await supabase
         .from('broadcast_presets')
         .select('*')
-        .eq('stream_id', streamId);
+        .eq('user_id', streamId);
       
       if (error) throw error;
       return data;
@@ -81,10 +49,19 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
       const { data, error } = await supabase
         .from('broadcast_presets')
         .insert({
-          stream_id: streamId,
+          user_id: streamId,
           name: customPreset.name,
-          settings: customPreset.settings,
-          description: customPreset.description
+          encoder_preset: 'custom',
+          video_settings: {
+            fps: customPreset.settings.fps,
+            bitrate: customPreset.settings.bitrate,
+            resolution: customPreset.settings.resolution,
+            keyframe_interval: customPreset.settings.keyframe_interval
+          },
+          audio_settings: {
+            bitrate: customPreset.settings.audio_bitrate,
+            sample_rate: customPreset.settings.audio_sample_rate
+          }
         });
       
       if (error) throw error;
@@ -101,14 +78,21 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
 
   const handlePresetSelect = (presetKey: string) => {
     setSelectedPreset(presetKey);
-    const preset = DEFAULT_PRESETS[presetKey];
+    const preset = savedPresets?.find(p => p.id === presetKey);
     if (preset) {
-      onPresetSelect(preset);
+      onPresetSelect({
+        name: preset.name,
+        settings: {
+          fps: preset.video_settings.fps,
+          bitrate: preset.video_settings.bitrate,
+          resolution: preset.video_settings.resolution,
+          keyframe_interval: preset.video_settings.keyframe_interval,
+          audio_bitrate: preset.audio_settings.bitrate,
+          audio_sample_rate: preset.audio_settings.sample_rate
+        },
+        description: preset.description
+      });
     }
-  };
-
-  const handleSaveCustomPreset = () => {
-    savePresetMutation.mutate(customPreset);
   };
 
   return (
@@ -132,11 +116,6 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
               <SelectValue placeholder="Select a preset" />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(DEFAULT_PRESETS).map(([key, preset]) => (
-                <SelectItem key={key} value={key}>
-                  {preset.name}
-                </SelectItem>
-              ))}
               {savedPresets?.map((preset) => (
                 <SelectItem key={preset.id} value={preset.id}>
                   {preset.name} (Custom)
@@ -146,7 +125,7 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
           </Select>
 
           <div className="text-sm text-muted-foreground">
-            {DEFAULT_PRESETS[selectedPreset]?.description}
+            {selectedPreset === 'balanced' ? 'Good balance between quality and performance' : ''}
           </div>
         </div>
       ) : (

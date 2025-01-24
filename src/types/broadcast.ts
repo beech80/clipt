@@ -7,6 +7,24 @@ export interface QualityPreset {
   audio_sample_rate: number;
 }
 
+export interface BroadcastSettings {
+  id: string;
+  user_id: string;
+  encoder_settings: {
+    fps: number;
+    resolution: string;
+    audio_bitrate: number;
+    video_bitrate: number;
+  };
+  output_settings: {
+    platform: string;
+    server_url: string;
+    stream_key: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
 export interface EncoderPreset {
   name: string;
   settings: {
