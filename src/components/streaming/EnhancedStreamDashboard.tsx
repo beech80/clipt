@@ -29,8 +29,8 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
       if (error) throw error;
       
       const transformedData: StreamAnalytics = {
-        current_bitrate: 0,
-        current_fps: 0,
+        current_bitrate: data?.current_bitrate || 0,
+        current_fps: data?.current_fps || 0,
         peak_viewers: data?.peak_viewers || undefined,
         average_viewers: data?.average_viewers || undefined,
         chat_messages_count: data?.chat_messages_count || undefined,
@@ -85,7 +85,10 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
         userId={userId}
         streamId={userId}
         viewerCount={viewerCount}
-        streamMetrics={streamMetrics}
+        streamMetrics={{
+          bitrate: streamMetrics.current_bitrate,
+          fps: streamMetrics.current_fps
+        }}
         onViewerCountChange={setViewerCount}
       />
 
