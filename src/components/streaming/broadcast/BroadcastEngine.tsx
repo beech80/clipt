@@ -22,11 +22,17 @@ interface QualityPreset {
 }
 
 interface EngineConfig {
-  quality_presets?: {
+  id: string;
+  user_id: string;
+  quality_presets: {
     low?: QualityPreset;
     medium?: QualityPreset;
     high?: QualityPreset;
   };
+  encoder_settings: Record<string, any>;
+  ingest_endpoints: any[];
+  created_at: string;
+  updated_at: string;
 }
 
 export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
@@ -43,7 +49,7 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as EngineConfig;
     },
   });
 
