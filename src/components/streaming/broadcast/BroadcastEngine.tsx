@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { BroadcastQualityManager } from './BroadcastQualityManager';
 import { EncodingManager } from './EncodingManager';
 import { StreamKeyManager } from './StreamKeyManager';
+import { BroadcastHealthMonitor } from './BroadcastHealthMonitor';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
@@ -13,12 +14,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 interface BroadcastEngineProps {
   streamId: string;
   userId: string;
-}
-
-interface QualityPreset {
-  resolution: string;
-  bitrate: number;
-  fps: number;
 }
 
 interface EngineConfig {
@@ -38,8 +33,9 @@ interface EngineConfig {
 export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [engineStatus, setEngineStatus] = useState<'idle' | 'starting' | 'active' | 'error'>('idle');
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
-  const { data: engineConfig } = useQuery<EngineConfig>({
+  const { data: engineConfig } = useQuery({
     queryKey: ['streaming-engine-config', userId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -69,6 +65,12 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
     enabled: isInitialized,
     refetchInterval: 5000,
   });
+
+  useEffect(() => {
+    if (encodingSession?.id) {
+      setCurrentSessionId(encodingSession.id);
+    }
+  }, [encodingSession]);
 
   const initializeEngineMutation = useMutation({
     mutationFn: async () => {
@@ -137,6 +139,10 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         </Card>
       ) : (
         <>
+          <BroadcastHealthMonitor 
+            streamId={streamId}
+            sessionId={currentSessionId || undefined}
+          />
           <BroadcastQualityManager
             streamId={streamId}
             engineConfig={engineConfig}
