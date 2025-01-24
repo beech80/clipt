@@ -36,19 +36,24 @@ export const EncodingManager = ({
 
   const healthStatus = getHealthStatus(stats.cpu_usage, stats.dropped_frames);
 
+  const getBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'good':
+        return 'default';
+      case 'warning':
+        return 'secondary';
+      case 'critical':
+        return 'destructive';
+      default:
+        return 'default';
+    }
+  };
+
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Encoding Status</h3>
-        <Badge
-          variant={
-            healthStatus === 'good'
-              ? 'default'
-              : healthStatus === 'warning'
-              ? 'warning'
-              : 'destructive'
-          }
-        >
+        <Badge variant={getBadgeVariant(healthStatus)}>
           {healthStatus.toUpperCase()}
         </Badge>
       </div>

@@ -56,7 +56,11 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         .from('stream_encoding_sessions')
         .insert({
           stream_id: streamId,
-          current_settings: engineConfig?.quality_presets.medium,
+          current_settings: engineConfig?.quality_presets?.medium || {
+            resolution: "1280x720",
+            bitrate: 3000,
+            fps: 30
+          },
         });
 
       if (error) throw error;
