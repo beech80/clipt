@@ -34,6 +34,17 @@ interface PresetData {
   };
 }
 
+interface RawPresetData {
+  id: string;
+  name: string;
+  description: string;
+  settings: Json;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  is_default: boolean;
+}
+
 export function QualityPresetManager({ streamId, onPresetChange }: QualityPresetManagerProps) {
   const [editingPreset, setEditingPreset] = useState<PresetFormData | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -47,7 +58,14 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as PresetData[];
+      
+      // Transform the raw data to match our PresetData interface
+      return (data as RawPresetData[]).map(preset => ({
+        id: preset.id,
+        name: preset.name,
+        description: preset.description,
+        settings: preset.settings as PresetData['settings']
+      }));
     },
   });
 
