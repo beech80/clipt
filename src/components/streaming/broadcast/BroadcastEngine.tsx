@@ -72,7 +72,7 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
 
   const initializeEngineMutation = useMutation({
     mutationFn: async () => {
-      const defaultSettings: QualityPreset = {
+      const defaultSettings = {
         resolution: "1280x720",
         bitrate: 3000,
         fps: 30
@@ -82,7 +82,14 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         .from('stream_encoding_sessions')
         .insert({
           stream_id: streamId,
-          current_settings: engineConfig?.quality_presets?.medium || defaultSettings,
+          current_settings: defaultSettings,
+          status: 'active',
+          encoder_stats: {
+            cpu_usage: 0,
+            current_fps: 0,
+            dropped_frames: 0,
+            bandwidth_usage: 0
+          }
         });
 
       if (error) throw error;
