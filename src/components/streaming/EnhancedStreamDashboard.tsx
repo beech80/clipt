@@ -4,6 +4,7 @@ import { StreamHealthMonitor } from "./StreamHealthMonitor";
 import { StreamMetrics } from "./StreamMetrics";
 import { StreamInteractivePanel } from "./StreamInteractivePanel";
 import { StreamQualityControls } from "./StreamQualityControls";
+import { EnhancedStreamMetrics } from "./analytics/EnhancedStreamMetrics";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -42,7 +43,6 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
       
       if (error) throw error;
       
-      // Transform the data to match our StreamAnalytics interface
       const transformedData: StreamAnalytics = {
         current_bitrate: 0,
         current_fps: 0,
@@ -56,7 +56,8 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
       
       return transformedData;
     },
-    enabled: isLive
+    enabled: isLive,
+    refetchInterval: 5000
   });
 
   useEffect(() => {
@@ -89,17 +90,6 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
     };
   }, [userId, isLive]);
 
-  const handleQualityChange = async (quality: string) => {
-    if (!isLive) return;
-
-    const { error } = await supabase
-      .from('streams')
-      .update({ stream_resolution: quality })
-      .eq('id', userId);
-
-    if (error) throw error;
-  };
-
   return (
     <div className="grid gap-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -115,9 +105,11 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
         </Card>
       </div>
 
+      <EnhancedStreamMetrics streamId={userId} />
+
       <StreamQualityControls
         streamId={userId}
-        onQualityChange={handleQualityChange}
+        onQualityChange={(quality) => console.log('Quality changed:', quality)}
         onVolumeChange={(volume) => console.log('Volume changed:', volume)}
       />
 

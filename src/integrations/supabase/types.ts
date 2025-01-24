@@ -3288,6 +3288,47 @@ export type Database = {
           },
         ]
       }
+      quality_presets: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          settings: Json
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          settings?: Json
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          settings?: Json
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_presets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_responses: {
         Row: {
           answers: Json
@@ -3810,10 +3851,13 @@ export type Database = {
       }
       stream_analytics: {
         Row: {
+          audio_quality_score: number | null
           average_viewers: number | null
           average_watch_time: unknown | null
+          buffer_ratio: number | null
           chat_messages_count: number | null
           created_at: string | null
+          dropped_frames_ratio: number | null
           engagement_rate: number | null
           id: string
           max_concurrent_viewers: number | null
@@ -3822,12 +3866,16 @@ export type Database = {
           stream_id: string | null
           total_stream_time: unknown | null
           unique_chatters: number | null
+          video_quality_score: number | null
         }
         Insert: {
+          audio_quality_score?: number | null
           average_viewers?: number | null
           average_watch_time?: unknown | null
+          buffer_ratio?: number | null
           chat_messages_count?: number | null
           created_at?: string | null
+          dropped_frames_ratio?: number | null
           engagement_rate?: number | null
           id?: string
           max_concurrent_viewers?: number | null
@@ -3836,12 +3884,16 @@ export type Database = {
           stream_id?: string | null
           total_stream_time?: unknown | null
           unique_chatters?: number | null
+          video_quality_score?: number | null
         }
         Update: {
+          audio_quality_score?: number | null
           average_viewers?: number | null
           average_watch_time?: unknown | null
+          buffer_ratio?: number | null
           chat_messages_count?: number | null
           created_at?: string | null
+          dropped_frames_ratio?: number | null
           engagement_rate?: number | null
           id?: string
           max_concurrent_viewers?: number | null
@@ -3850,6 +3902,7 @@ export type Database = {
           stream_id?: string | null
           total_stream_time?: unknown | null
           unique_chatters?: number | null
+          video_quality_score?: number | null
         }
         Relationships: [
           {
@@ -4490,6 +4543,61 @@ export type Database = {
           },
           {
             foreignKeyName: "stream_predictions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_preview_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          preview_delay_seconds: number | null
+          preview_enabled: boolean | null
+          preview_quality: Json | null
+          preview_url: string | null
+          stream_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          preview_delay_seconds?: number | null
+          preview_enabled?: boolean | null
+          preview_quality?: Json | null
+          preview_url?: string | null
+          stream_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          preview_delay_seconds?: number | null
+          preview_enabled?: boolean | null
+          preview_quality?: Json | null
+          preview_url?: string | null
+          stream_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_preview_settings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_preview_settings_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_preview_settings_stream_id_fkey"
             columns: ["stream_id"]
             isOneToOne: false
             referencedRelation: "trending_streams"
