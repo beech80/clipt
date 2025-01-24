@@ -47,15 +47,24 @@ export function QualityPresetManager({ userId, onPresetChange }: QualityPresetMa
         .eq('user_id', userId);
       
       if (error) throw error;
-      return data as QualityPreset[];
+      return (data as any[]).map(preset => ({
+        ...preset,
+        settings: preset.settings as QualityPreset['settings']
+      })) as QualityPreset[];
     },
   });
 
   const createPreset = useMutation({
-    mutationFn: async (preset: Partial<QualityPreset>) => {
+    mutationFn: async (preset: Omit<QualityPreset, 'id' | 'created_at' | 'updated_at'>) => {
       const { error } = await supabase
         .from('quality_presets')
-        .insert([{ ...preset, user_id: userId }]);
+        .insert([{ 
+          name: preset.name,
+          description: preset.description,
+          settings: preset.settings,
+          is_default: preset.is_default,
+          user_id: userId 
+        }]);
       
       if (error) throw error;
     },
@@ -73,7 +82,12 @@ export function QualityPresetManager({ userId, onPresetChange }: QualityPresetMa
     mutationFn: async (preset: Partial<QualityPreset> & { id: string }) => {
       const { error } = await supabase
         .from('quality_presets')
-        .update(preset)
+        .update({
+          name: preset.name,
+          description: preset.description,
+          settings: preset.settings,
+          is_default: preset.is_default
+        })
         .eq('id', preset.id);
       
       if (error) throw error;
@@ -159,7 +173,8 @@ export function QualityPresetManager({ userId, onPresetChange }: QualityPresetMa
                 sample_rate: 48000,
                 codec: 'aac'
               }
-            }
+            },
+            is_default: false
           };
           createPreset.mutate(preset);
         }} className="space-y-4">
