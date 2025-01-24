@@ -11,21 +11,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { QualityPreset, EncoderPreset } from '@/types/broadcast';
+import { QualityPreset, EncoderPreset, EngineConfig } from '@/types/broadcast';
 
 interface BroadcastEngineProps {
   streamId: string;
   userId: string;
-}
-
-interface EngineConfig {
-  id: string;
-  user_id: string;
-  quality_presets: Record<string, QualityPreset>;
-  encoder_settings: Record<string, any>;
-  ingest_endpoints: any[];
-  created_at: string;
-  updated_at: string;
 }
 
 export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
@@ -43,7 +33,16 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         .single();
 
       if (error) throw error;
-      return data as EngineConfig;
+      
+      // Parse the JSONB fields into the correct types
+      const config: EngineConfig = {
+        ...data,
+        quality_presets: data.quality_presets as Record<string, QualityPreset>,
+        encoder_settings: data.encoder_settings as EngineConfig['encoder_settings'],
+        ingest_endpoints: data.ingest_endpoints as any[]
+      };
+      
+      return config;
     },
   });
 
@@ -107,7 +106,6 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
   });
 
   const handlePresetSelect = (preset: EncoderPreset) => {
-    // Update encoding session with new preset settings
     if (currentSessionId) {
       supabase
         .from('stream_encoding_sessions')

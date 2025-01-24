@@ -77,17 +77,18 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
   });
 
   const savePresetMutation = useMutation({
-    mutationFn: async (preset: EncoderPreset) => {
-      const { error } = await supabase
+    mutationFn: async () => {
+      const { data, error } = await supabase
         .from('broadcast_presets')
         .insert({
           stream_id: streamId,
-          name: preset.name,
-          settings: preset.settings,
-          description: preset.description
+          name: customPreset.name,
+          settings: customPreset.settings,
+          description: customPreset.description
         });
       
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       toast.success('Preset saved successfully');
