@@ -9,7 +9,16 @@ import { PresetForm, type PresetFormData } from './quality/PresetForm';
 import { PresetList } from './quality/PresetList';
 import { PresetPreview } from './quality/PresetPreview';
 
-export function QualityPresetManager() {
+interface QualityPresetManagerProps {
+  streamId: string;
+  onPresetChange: (preset: {
+    resolution: string;
+    bitrate: number;
+    fps: number;
+  }) => void;
+}
+
+export function QualityPresetManager({ streamId, onPresetChange }: QualityPresetManagerProps) {
   const [editingPreset, setEditingPreset] = useState<PresetFormData | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
