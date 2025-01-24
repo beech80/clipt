@@ -43,12 +43,12 @@ export function QualityPresetManager({ streamId, onPresetSelect }: QualityPreset
       return data.map(preset => ({
         name: preset.name,
         settings: {
-          fps: preset.video_settings.fps,
-          bitrate: preset.video_settings.bitrate,
-          resolution: preset.video_settings.resolution,
-          keyframe_interval: preset.video_settings.keyframe_interval,
-          audio_bitrate: preset.audio_settings.bitrate,
-          audio_sample_rate: preset.audio_settings.sample_rate
+          fps: preset.video_settings.fps as number,
+          bitrate: preset.video_settings.bitrate as number,
+          resolution: preset.video_settings.resolution as string,
+          keyframe_interval: preset.video_settings.keyframe_interval as number,
+          audio_bitrate: preset.audio_settings.bitrate as number,
+          audio_sample_rate: preset.audio_settings.sample_rate as number
         },
         description: 'Custom preset'
       }));

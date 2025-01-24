@@ -34,7 +34,7 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
 
       if (error) throw error;
       
-      // Parse the JSONB fields into the correct types
+      // Explicitly cast the JSONB fields to their correct types
       const config: EngineConfig = {
         ...data,
         quality_presets: data.quality_presets as Record<string, QualityPreset>,
