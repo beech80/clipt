@@ -8,7 +8,7 @@ import { StreamKeyManager } from './StreamKeyManager';
 import { BroadcastQualityManager } from './BroadcastQualityManager';
 import { QualityPresetManager } from './QualityPresetManager';
 import { BroadcastHealthMonitor } from './BroadcastHealthMonitor';
-import { EngineConfig, QualityPreset } from '@/types/broadcast';
+import { EngineConfig } from '@/types/broadcast';
 
 interface BroadcastEngineProps {
   streamId: string;
@@ -29,25 +29,18 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         .single();
 
       if (error) throw error;
-      return data as EngineConfig;
+      
+      // Parse the JSONB fields to ensure they match the EngineConfig type
+      if (data) {
+        return {
+          ...data,
+          quality_presets: data.quality_presets as EngineConfig['quality_presets'],
+          encoder_settings: data.encoder_settings as EngineConfig['encoder_settings'],
+          ingest_endpoints: data.ingest_endpoints as any[]
+        } as EngineConfig;
+      }
+      return null;
     },
-  });
-
-  const { data: encodingSession } = useQuery({
-    queryKey: ['encoding-session', currentSessionId],
-    queryFn: async () => {
-      if (!currentSessionId) return null;
-
-      const { data, error } = await supabase
-        .from('stream_encoding_sessions')
-        .select('*')
-        .eq('id', currentSessionId)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!currentSessionId,
   });
 
   const initializeEngineMutation = useMutation({
@@ -131,12 +124,12 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
             <QualityPresetManager
               streamId={streamId}
               engineConfig={engineConfig}
-              encodingSession={encodingSession}
+              encodingSession={currentSessionId}
             />
             <BroadcastQualityManager
               streamId={streamId}
               engineConfig={engineConfig}
-              encodingSession={encodingSession}
+              encodingSession={currentSessionId}
               currentSessionId={currentSessionId}
             />
             <BroadcastHealthMonitor
