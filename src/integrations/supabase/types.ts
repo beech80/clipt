@@ -5296,6 +5296,7 @@ export type Database = {
           description: string | null
           dvr_enabled: boolean | null
           dvr_window_seconds: number | null
+          encrypted_stream_key: string | null
           ended_at: string | null
           health_status: string | null
           hls_playback_url: string | null
@@ -5336,6 +5337,7 @@ export type Database = {
           description?: string | null
           dvr_enabled?: boolean | null
           dvr_window_seconds?: number | null
+          encrypted_stream_key?: string | null
           ended_at?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
@@ -5376,6 +5378,7 @@ export type Database = {
           description?: string | null
           dvr_enabled?: boolean | null
           dvr_window_seconds?: number | null
+          encrypted_stream_key?: string | null
           ended_at?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
@@ -6488,11 +6491,23 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      decrypt_stream_key: {
+        Args: {
+          encrypted_key: string
+        }
+        Returns: string
+      }
       delete_user_account: {
         Args: {
           user_id_param: string
         }
         Returns: boolean
+      }
+      encrypt_stream_key: {
+        Args: {
+          stream_key: string
+        }
+        Returns: string
       }
       generate_stream_key: {
         Args: Record<PropertyKey, never>

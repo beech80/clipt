@@ -1,25 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { BroadcastQualityManager } from './BroadcastQualityManager';
-import { EncodingManager } from './EncodingManager';
-import { StreamKeyManager } from './StreamKeyManager';
-import { BroadcastHealthMonitor } from './BroadcastHealthMonitor';
-import { QualityPresetManager } from './QualityPresetManager';
+import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { QualityPreset, EncoderPreset, EngineConfig } from '@/types/broadcast';
+import { StreamKeyManager } from './StreamKeyManager';
+import { BroadcastQualityManager } from './BroadcastQualityManager';
+import { QualityPresetManager } from './QualityPresetManager';
+import { BroadcastHealthMonitor } from './BroadcastHealthMonitor';
 
 interface BroadcastEngineProps {
   streamId: string;
   userId: string;
 }
 
+interface QualityPreset {
+  fps: number;
+  bitrate: number;
+  resolution: string;
+}
+
+interface EncoderConfig {
+  quality_presets: Record<string, QualityPreset>;
+  encoder_settings: {
+    fps_options: number[];
+    video_codec: string;
+    audio_codec: string;
+    keyframe_interval: number;
+    audio_bitrate_range: { min: number; max: number };
+    video_bitrate_range: { min: number; max: number };
+  };
+}
+
 export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
-  const [isInitialized, setIsInitialized] = useState(false);
   const [engineStatus, setEngineStatus] = useState<'idle' | 'starting' | 'active' | 'error'>('idle');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
@@ -37,65 +50,55 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
       const config = {
         ...data,
         quality_presets: data.quality_presets as unknown as Record<string, QualityPreset>,
-        encoder_settings: data.encoder_settings as EngineConfig['encoder_settings'],
-        ingest_endpoints: data.ingest_endpoints as string[]
-      } satisfies EngineConfig;
-      
+        encoder_settings: data.encoder_settings as unknown as EncoderConfig['encoder_settings']
+      };
+
       return config;
     },
   });
 
   const { data: encodingSession } = useQuery({
-    queryKey: ['encoding-session', streamId],
+    queryKey: ['encoding-session', currentSessionId],
     queryFn: async () => {
+      if (!currentSessionId) return null;
+
       const { data, error } = await supabase
         .from('stream_encoding_sessions')
         .select('*')
-        .eq('stream_id', streamId)
-        .eq('status', 'active')
-        .maybeSingle();
+        .eq('id', currentSessionId)
+        .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: isInitialized,
-    refetchInterval: 5000,
+    enabled: !!currentSessionId,
   });
-
-  useEffect(() => {
-    if (encodingSession?.id) {
-      setCurrentSessionId(encodingSession.id);
-    }
-  }, [encodingSession]);
 
   const initializeEngineMutation = useMutation({
     mutationFn: async () => {
-      const defaultSettings = {
-        resolution: "1280x720",
-        bitrate: 3000,
-        fps: 30
-      };
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('stream_encoding_sessions')
         .insert({
           stream_id: streamId,
-          current_settings: defaultSettings,
           status: 'active',
+          current_settings: engineConfig?.quality_presets?.medium || {},
           encoder_stats: {
             cpu_usage: 0,
             current_fps: 0,
             dropped_frames: 0,
             bandwidth_usage: 0
           }
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
-      setIsInitialized(true);
+    onSuccess: (data) => {
+      setCurrentSessionId(data.id);
       setEngineStatus('active');
-      toast.success('Broadcast engine initialized successfully');
+      toast.success('Broadcast engine initialized');
     },
     onError: (error) => {
       console.error('Failed to initialize broadcast engine:', error);
@@ -109,54 +112,62 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
     initializeEngineMutation.mutate();
   };
 
-  if (engineStatus === 'error') {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>
-          Failed to initialize broadcast engine. Please try again.
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  const handleEngineStop = async () => {
+    if (currentSessionId) {
+      const { error } = await supabase
+        .from('stream_encoding_sessions')
+        .update({
+          status: 'ended',
+          ended_at: new Date().toISOString()
+        })
+        .eq('id', currentSessionId);
+
+      if (error) {
+        console.error('Failed to stop encoding session:', error);
+        toast.error('Failed to stop broadcast engine');
+      } else {
+        setCurrentSessionId(null);
+        setEngineStatus('idle');
+        toast.success('Broadcast engine stopped');
+      }
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {!isInitialized ? (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Broadcast Engine</h3>
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Broadcast Engine</h2>
           <Button
-            onClick={handleEngineStart}
-            disabled={engineStatus === 'starting'}
+            onClick={engineStatus === 'active' ? handleEngineStop : handleEngineStart}
+            variant={engineStatus === 'active' ? "destructive" : "default"}
+            disabled={engineStatus === 'starting' || !engineConfig}
           >
-            {engineStatus === 'starting' ? 'Initializing...' : 'Initialize Engine'}
+            {engineStatus === 'active' ? 'Stop Engine' : 'Start Engine'}
           </Button>
-        </Card>
-      ) : (
-        <>
-          <BroadcastHealthMonitor 
-            streamId={streamId}
-            sessionId={currentSessionId || undefined}
-          />
-          <QualityPresetManager
-            streamId={streamId}
-            engineConfig={engineConfig}
-            encodingSession={encodingSession}
-          />
-          <BroadcastQualityManager
-            streamId={streamId}
-            engineConfig={engineConfig}
-            encodingSession={encodingSession}
-          />
-          <EncodingManager
-            streamId={streamId}
-            engineConfig={engineConfig}
-            encodingSession={encodingSession}
-          />
-          <StreamKeyManager streamId={streamId} />
-        </>
-      )}
+        </div>
+
+        {engineStatus === 'active' && currentSessionId && (
+          <>
+            <StreamKeyManager 
+              streamId={streamId}
+            />
+            <QualityPresetManager
+              streamId={streamId}
+              engineConfig={engineConfig}
+              encodingSession={encodingSession}
+            />
+            <BroadcastQualityManager
+              streamId={streamId}
+              currentSessionId={currentSessionId}
+            />
+            <BroadcastHealthMonitor
+              streamId={streamId}
+              sessionId={currentSessionId}
+            />
+          </>
+        )}
+      </Card>
     </div>
   );
 };

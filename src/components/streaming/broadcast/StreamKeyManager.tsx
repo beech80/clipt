@@ -20,7 +20,7 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('streams')
-        .select('stream_key, rtmp_url')
+        .select('encrypted_stream_key, rtmp_url')
         .eq('id', streamId)
         .single();
 
@@ -35,7 +35,7 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
       
       const { error } = await supabase
         .from('streams')
-        .update({ stream_key: newKey })
+        .update({ stream_key: newKey }) // This will trigger the encryption
         .eq('id', streamId);
 
       if (error) throw error;
@@ -83,7 +83,7 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
           <Label>Stream Key</Label>
           <div className="flex gap-2">
             <Input
-              value={stream?.stream_key || ''}
+              value={stream?.encrypted_stream_key || ''}
               type={showKey ? 'text' : 'password'}
               readOnly
             />
@@ -101,7 +101,7 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => copyToClipboard(stream?.stream_key || '')}
+              onClick={() => copyToClipboard(stream?.encrypted_stream_key || '')}
             >
               <Copy className="h-4 w-4" />
             </Button>
