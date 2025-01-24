@@ -6,18 +6,19 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
 
 interface BroadcastQualityManagerProps {
   streamId: string;
   engineConfig: any;
   encodingSession: any;
+  currentSessionId: string;
 }
 
 export const BroadcastQualityManager = ({
   streamId,
   engineConfig,
   encodingSession,
+  currentSessionId,
 }: BroadcastQualityManagerProps) => {
   const [quality, setQuality] = useState(encodingSession?.current_settings || engineConfig?.quality_presets.medium);
 

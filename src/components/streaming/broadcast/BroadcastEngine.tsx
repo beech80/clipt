@@ -14,24 +14,6 @@ interface BroadcastEngineProps {
   userId: string;
 }
 
-interface QualityPreset {
-  fps: number;
-  bitrate: number;
-  resolution: string;
-}
-
-interface EncoderConfig {
-  quality_presets: Record<string, QualityPreset>;
-  encoder_settings: {
-    fps_options: number[];
-    video_codec: string;
-    audio_codec: string;
-    keyframe_interval: number;
-    audio_bitrate_range: { min: number; max: number };
-    video_bitrate_range: { min: number; max: number };
-  };
-}
-
 export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
   const [engineStatus, setEngineStatus] = useState<'idle' | 'starting' | 'active' | 'error'>('idle');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -46,14 +28,7 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
         .single();
 
       if (error) throw error;
-      
-      const config = {
-        ...data,
-        quality_presets: data.quality_presets as unknown as Record<string, QualityPreset>,
-        encoder_settings: data.encoder_settings as unknown as EncoderConfig['encoder_settings']
-      };
-
-      return config;
+      return data;
     },
   });
 
@@ -159,6 +134,8 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
             />
             <BroadcastQualityManager
               streamId={streamId}
+              engineConfig={engineConfig}
+              encodingSession={encodingSession}
               currentSessionId={currentSessionId}
             />
             <BroadcastHealthMonitor
