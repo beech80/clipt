@@ -30,11 +30,17 @@ export const BroadcastEngine = ({ streamId, userId }: BroadcastEngineProps) => {
 
       if (error) throw error;
       
-      // Parse the JSONB fields to ensure they match the EngineConfig type
       if (data) {
+        // Explicitly type the quality_presets to match EngineConfig type
+        const qualityPresets = data.quality_presets as {
+          low: { fps: number; bitrate: number; resolution: string };
+          medium: { fps: number; bitrate: number; resolution: string };
+          high: { fps: number; bitrate: number; resolution: string };
+        };
+
         return {
           ...data,
-          quality_presets: data.quality_presets as EngineConfig['quality_presets'],
+          quality_presets: qualityPresets,
           encoder_settings: data.encoder_settings as EngineConfig['encoder_settings'],
           ingest_endpoints: data.ingest_endpoints as any[]
         } as EngineConfig;
