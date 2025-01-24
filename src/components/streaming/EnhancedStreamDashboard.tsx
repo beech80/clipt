@@ -26,6 +26,12 @@ interface EnhancedStreamDashboardProps {
   isLive: boolean;
 }
 
+interface QualityPreset {
+  resolution: string;
+  bitrate: number;
+  fps: number;
+}
+
 export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashboardProps) {
   const [viewerCount, setViewerCount] = useState(0);
   const [streamMetrics, setStreamMetrics] = useState<StreamAnalytics>({
@@ -91,6 +97,10 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
     };
   }, [userId, isLive]);
 
+  const handlePresetChange = (preset: QualityPreset) => {
+    console.log('Selected preset:', preset);
+  };
+
   return (
     <div className="grid gap-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,11 +119,8 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
       <EnhancedStreamMetrics streamId={userId} />
 
       <QualityPresetManager 
-        userId={userId}
-        onPresetChange={(preset) => {
-          // Handle preset change
-          console.log('Selected preset:', preset);
-        }}
+        streamId={userId}
+        onPresetChange={handlePresetChange}
       />
 
       <StreamQualityControls
