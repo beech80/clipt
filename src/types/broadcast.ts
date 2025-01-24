@@ -1,3 +1,9 @@
+export interface QualityPreset {
+  fps: number;
+  bitrate: number;
+  resolution: string;
+}
+
 export interface BroadcastSettings {
   id: string;
   user_id: string;
