@@ -20,7 +20,7 @@ interface QualityPreset {
       resolution: string;
       keyframe_interval: number;
       quality_preset: string;
-      x264_options: Record<string, unknown>;
+      x264_options: { [key: string]: string | number | boolean };
     };
     audio: {
       bitrate: number;
@@ -55,16 +55,16 @@ export function QualityPresetManager({ userId, onPresetChange }: QualityPresetMa
   });
 
   const createPreset = useMutation({
-    mutationFn: async (preset: Omit<QualityPreset, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (preset: Omit<QualityPreset, 'id'>) => {
       const { error } = await supabase
         .from('quality_presets')
-        .insert([{ 
+        .insert({
           name: preset.name,
           description: preset.description,
-          settings: preset.settings,
+          settings: preset.settings as unknown as Json,
           is_default: preset.is_default,
-          user_id: userId 
-        }]);
+          user_id: userId
+        });
       
       if (error) throw error;
     },
@@ -85,7 +85,7 @@ export function QualityPresetManager({ userId, onPresetChange }: QualityPresetMa
         .update({
           name: preset.name,
           description: preset.description,
-          settings: preset.settings,
+          settings: preset.settings as unknown as Json,
           is_default: preset.is_default
         })
         .eq('id', preset.id);
