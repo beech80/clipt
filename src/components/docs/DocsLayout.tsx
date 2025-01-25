@@ -1,17 +1,17 @@
-import { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
 import { DocsNavigation } from "./DocsNavigation";
 
-interface DocsLayoutProps {
-  children: ReactNode;
-}
-
-export function DocsLayout({ children }: DocsLayoutProps) {
+export function DocsLayout() {
   return (
-    <div className="flex min-h-screen">
-      <DocsNavigation />
-      <main className="flex-1 px-4 py-8 md:px-8">
-        {children}
-      </main>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row gap-8">
+        <aside className="w-full md:w-64 shrink-0">
+          <DocsNavigation />
+        </aside>
+        <main className="flex-1">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
