@@ -6,6 +6,12 @@ import { Card } from '@/components/ui/card';
 import { Clock, Play, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface StreamHighlight {
+  id: string;
+  title: string;
+  duration: string;
+}
+
 interface StreamHighlightsProps {
   streamId: string;
 }
@@ -21,7 +27,7 @@ export const StreamHighlights = ({ streamId }: StreamHighlightsProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as StreamHighlight[];
     }
   });
 
@@ -57,7 +63,6 @@ export const StreamHighlights = ({ streamId }: StreamHighlightsProps) => {
         <Button
           size="sm"
           onClick={() => {
-            // This would typically be connected to a modal/form
             createHighlight.mutate({
               title: "Quick Highlight",
               startTime: "00:00:00",

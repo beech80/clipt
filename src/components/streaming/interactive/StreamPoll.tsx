@@ -66,10 +66,14 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
   if (!activePoll) return null;
 
   const totalVotes = activePoll.poll_responses?.length || 0;
+  const pollOptions = activePoll.options as PollOption[];
 
   const getOptionPercentage = (optionId: string) => {
     const optionVotes = activePoll.poll_responses?.filter(
-      response => response.selected_options.includes(optionId)
+      response => {
+        const selectedOpts = response.selected_options as string[];
+        return selectedOpts.includes(optionId);
+      }
     ).length || 0;
     return totalVotes === 0 ? 0 : (optionVotes / totalVotes) * 100;
   };
@@ -82,7 +86,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
     <Card className="p-4 space-y-4">
       <h3 className="font-semibold text-lg">{activePoll.question}</h3>
       <div className="space-y-2">
-        {(activePoll.options as PollOption[]).map((option) => (
+        {pollOptions.map((option) => (
           <div key={option.id} className="space-y-1">
             {hasVoted ? (
               <>
