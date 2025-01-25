@@ -3063,6 +3063,7 @@ export type Database = {
           image_url: string | null
           is_premium: boolean | null
           is_published: boolean | null
+          is_subscriber_only: boolean | null
           required_tier_id: string | null
           scheduled_publish_time: string | null
           user_id: string | null
@@ -3075,6 +3076,7 @@ export type Database = {
           image_url?: string | null
           is_premium?: boolean | null
           is_published?: boolean | null
+          is_subscriber_only?: boolean | null
           required_tier_id?: string | null
           scheduled_publish_time?: string | null
           user_id?: string | null
@@ -3087,6 +3089,7 @@ export type Database = {
           image_url?: string | null
           is_premium?: boolean | null
           is_published?: boolean | null
+          is_subscriber_only?: boolean | null
           required_tier_id?: string | null
           scheduled_publish_time?: string | null
           user_id?: string | null
@@ -5608,6 +5611,36 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
       subscription_tiers: {
         Row: {
           created_at: string
@@ -6266,41 +6299,44 @@ export type Database = {
       }
       user_subscriptions: {
         Row: {
-          created_at: string
-          expires_at: string | null
+          cancel_at_period_end: boolean | null
+          created_at: string | null
+          current_period_end: string
+          current_period_start: string
           id: string
-          started_at: string
+          plan_id: string | null
           status: string
-          stripe_subscription_id: string | null
-          tier_id: string | null
+          updated_at: string | null
           user_id: string | null
         }
         Insert: {
-          created_at?: string
-          expires_at?: string | null
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end: string
+          current_period_start?: string
           id?: string
-          started_at?: string
-          status: string
-          stripe_subscription_id?: string | null
-          tier_id?: string | null
+          plan_id?: string | null
+          status?: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
-          created_at?: string
-          expires_at?: string | null
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string
+          current_period_start?: string
           id?: string
-          started_at?: string
+          plan_id?: string | null
           status?: string
-          stripe_subscription_id?: string | null
-          tier_id?: string | null
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "user_subscriptions_tier_id_fkey"
-            columns: ["tier_id"]
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "subscription_tiers"
+            referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
           {
