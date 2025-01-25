@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -96,9 +96,9 @@ function App() {
                     <Route path="/subscription" element={<Subscription />} />
 
                     {/* Documentation Routes */}
-                    <Route element={<DocsLayout />}>
-                      <Route path="/docs/getting-started" element={<GettingStarted />} />
-                      <Route path="/docs/streaming" element={<StreamingGuide />} />
+                    <Route path="/docs" element={<DocsLayout><Outlet /></DocsLayout>}>
+                      <Route path="getting-started" element={<GettingStarted />} />
+                      <Route path="streaming" element={<StreamingGuide />} />
                     </Route>
                   </Routes>
                   <Toaster />
