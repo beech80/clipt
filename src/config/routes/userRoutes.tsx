@@ -4,8 +4,13 @@ import Messages from "@/pages/Messages";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import GroupChat from "@/pages/GroupChat";
+import Onboarding from "@/pages/Onboarding";
 
 export const userRoutes: RouteObject[] = [
+  {
+    path: "/onboarding",
+    element: <Onboarding />,
+  },
   {
     path: "edit-profile",
     element: <EditProfile />,
