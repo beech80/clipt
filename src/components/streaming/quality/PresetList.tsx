@@ -5,8 +5,8 @@ import type { PresetData } from './types';
 interface PresetListProps {
   presets: PresetData[];
   activePreset: string | null;
+  onPresetSelect: (preset: PresetData) => void;
   onEdit: (preset: PresetData) => void;
-  onApply: (presetId: string) => void;
   onDelete: (presetId: string) => void;
   isApplying: boolean;
 }
@@ -14,8 +14,8 @@ interface PresetListProps {
 export function PresetList({ 
   presets, 
   activePreset, 
+  onPresetSelect, 
   onEdit, 
-  onApply, 
   onDelete,
   isApplying 
 }: PresetListProps) {
@@ -39,7 +39,7 @@ export function PresetList({
               <Button
                 variant={activePreset === preset.id ? "secondary" : "default"}
                 size="sm"
-                onClick={() => onApply(preset.id)}
+                onClick={() => onPresetSelect(preset)}
                 disabled={isApplying}
               >
                 {activePreset === preset.id ? 'Active' : 'Apply'}

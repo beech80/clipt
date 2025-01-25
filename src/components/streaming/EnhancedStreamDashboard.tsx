@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { StreamMetricsSection } from "./dashboard/StreamMetricsSection";
 import { StreamControlsSection } from "./dashboard/StreamControlsSection";
-import type { StreamAnalytics, QualityPreset } from "@/types/streaming";
+import type { StreamAnalytics } from "@/types/streaming";
+import type { PresetData } from "./quality/types";
 
 interface EnhancedStreamDashboardProps {
   userId: string;
@@ -82,8 +83,15 @@ export function EnhancedStreamDashboard({ userId, isLive }: EnhancedStreamDashbo
     };
   }, [userId, isLive]);
 
-  const handlePresetChange = (preset: QualityPreset) => {
-    console.log('Selected preset:', preset);
+  const handlePresetChange = (preset: PresetData) => {
+    const { settings } = preset;
+    // Transform PresetData to match the expected format
+    const qualitySettings = {
+      resolution: settings.video.resolution,
+      bitrate: settings.video.bitrate,
+      fps: settings.video.fps
+    };
+    console.log('Selected preset:', qualitySettings);
   };
 
   return (
