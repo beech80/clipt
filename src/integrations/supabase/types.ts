@@ -3955,6 +3955,99 @@ export type Database = {
           },
         ]
       }
+      stream_alert_queue: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          data: Json
+          id: string
+          played: boolean | null
+          played_at: string | null
+          stream_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          data: Json
+          id?: string
+          played?: boolean | null
+          played_at?: string | null
+          stream_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          data?: Json
+          id?: string
+          played?: boolean | null
+          played_at?: string | null
+          stream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_alert_queue_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_alert_queue_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_alert_queue_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          message_template: string
+          styles: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          message_template: string
+          styles?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          message_template?: string
+          styles?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_analytics: {
         Row: {
           audio_quality_score: number | null

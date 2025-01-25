@@ -115,6 +115,10 @@ export const StreamPlayer = ({
             streamMetrics={streamMetrics}
             className="absolute bottom-0 right-0"
           />
+
+          {isLive && streamId && (
+            <StreamAlertOverlay streamId={streamId} />
+          )}
         </div>
       </div>
 
