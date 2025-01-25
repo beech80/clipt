@@ -1,43 +1,22 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Loader2, Video, Scissors } from 'lucide-react';
+import { RecordingListItem } from './RecordingListItem';
+import { RecordingControls } from './RecordingControls';
 
-interface StreamRecording {
-  id: string;
-  recording_url: string;
-  duration: string;
-  created_at: string;
-  status: string;
-  thumbnail_url: string | null;
-  view_count: number;
+interface StreamRecordingManagerProps {
+  streamId: string;
 }
 
-interface StreamHighlight {
-  id: string;
-  title: string;
-  description: string;
-  start_time: string;
-  duration: string;
-  highlight_url: string | null;
-  thumbnail_url: string | null;
-  created_at: string;
-  view_count: number;
-}
+export const StreamRecordingManager = ({ streamId }: StreamRecordingManagerProps) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [autoRecord, setAutoRecord] = useState(false);
+  const queryClient = useQueryClient();
 
-interface RecordingSettings {
-  quality: 'source' | 'high' | 'medium' | 'low';
-  format: 'mp4' | 'mov' | 'ts';
-  autoStart: boolean;
-  maxDuration: number;
-}
-
-export const StreamRecordingManager = ({ streamId }: { streamId: string }) => {
-  const { data: recordings, isLoading: recordingsLoading } = useQuery({
+  const { data: recordings, isLoading } = useQuery({
     queryKey: ['stream-recordings', streamId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -47,52 +26,91 @@ export const StreamRecordingManager = ({ streamId }: { streamId: string }) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as StreamRecording[];
+      return data;
     },
   });
 
-  const { data: highlights, isLoading: highlightsLoading } = useQuery({
-    queryKey: ['stream-highlights', streamId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('stream_highlights')
-        .select('*')
-        .eq('stream_id', streamId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as StreamHighlight[];
-    },
-  });
-
-  const createHighlight = async (recordingId: string) => {
+  const startRecording = async () => {
     try {
-      const title = prompt('Enter highlight title:');
-      if (!title) return;
+      const { data: stream } = await supabase
+        .from('streams')
+        .select('user_id')
+        .eq('id', streamId)
+        .single();
 
-      const description = prompt('Enter highlight description:');
-      const startTime = prompt('Enter start time (in seconds):');
-      const duration = prompt('Enter duration (in seconds):');
+      if (!stream) throw new Error('Stream not found');
 
-      if (!startTime || !duration) return;
+      const storagePath = `${stream.user_id}/${streamId}/${new Date().toISOString()}.mp4`;
 
-      const { error } = await supabase.from('stream_highlights').insert({
-        stream_id: streamId,
-        title,
-        description,
-        start_time: `${parseInt(startTime)} seconds`,
-        duration: `${parseInt(duration)} seconds`,
-      });
+      const { error } = await supabase
+        .from('stream_recordings')
+        .insert({
+          stream_id: streamId,
+          status: 'recording',
+          storage_path: storagePath,
+        });
 
       if (error) throw error;
-      toast.success('Highlight created successfully');
+
+      setIsRecording(true);
+      toast.success('Recording started');
     } catch (error) {
-      console.error('Error creating highlight:', error);
-      toast.error('Failed to create highlight');
+      console.error('Error starting recording:', error);
+      toast.error('Failed to start recording');
     }
   };
 
-  if (recordingsLoading || highlightsLoading) {
+  const stopRecording = async () => {
+    try {
+      const { error } = await supabase
+        .from('stream_recordings')
+        .update({ status: 'processing' })
+        .eq('stream_id', streamId)
+        .eq('status', 'recording');
+
+      if (error) throw error;
+
+      setIsRecording(false);
+      toast.success('Recording stopped');
+      queryClient.invalidateQueries(['stream-recordings', streamId]);
+    } catch (error) {
+      console.error('Error stopping recording:', error);
+      toast.error('Failed to stop recording');
+    }
+  };
+
+  const deleteRecording = useMutation({
+    mutationFn: async (recordingId: string) => {
+      const { data: recording } = await supabase
+        .from('stream_recordings')
+        .select('storage_path')
+        .eq('id', recordingId)
+        .single();
+
+      if (recording?.storage_path) {
+        await supabase.storage
+          .from('recordings')
+          .remove([recording.storage_path]);
+      }
+
+      const { error } = await supabase
+        .from('stream_recordings')
+        .delete()
+        .eq('id', recordingId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['stream-recordings', streamId]);
+      toast.success('Recording deleted');
+    },
+    onError: (error) => {
+      console.error('Error deleting recording:', error);
+      toast.error('Failed to delete recording');
+    },
+  });
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-6 h-6 animate-spin" />
@@ -102,60 +120,29 @@ export const StreamRecordingManager = ({ streamId }: { streamId: string }) => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Stream Recordings</h2>
-        <div className="grid gap-4">
-          {recordings?.map((recording) => (
-            <div
-              key={recording.id}
-              className="flex items-center justify-between p-4 bg-muted rounded-lg"
-            >
-              <div className="flex items-center space-x-4">
-                <Video className="w-6 h-6" />
-                <div>
-                  <p className="font-medium">Recording {recording.id.slice(0, 8)}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Duration: {recording.duration}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => createHighlight(recording.id)}
-              >
-                <Scissors className="w-4 h-4 mr-2" />
-                Create Highlight
-              </Button>
-            </div>
-          ))}
-        </div>
-      </Card>
+      <RecordingControls
+        isRecording={isRecording}
+        onStartRecording={startRecording}
+        onStopRecording={stopRecording}
+        autoRecord={autoRecord}
+        onAutoRecordChange={setAutoRecord}
+      />
 
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Stream Highlights</h2>
-        <div className="grid gap-4">
-          {highlights?.map((highlight) => (
-            <div
-              key={highlight.id}
-              className="p-4 bg-muted rounded-lg"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-medium">{highlight.title}</h3>
-                <span className="text-sm text-muted-foreground">
-                  {new Date(highlight.created_at).toLocaleDateString()}
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-2">
-                {highlight.description}
-              </p>
-              <div className="text-sm text-muted-foreground">
-                <p>Start: {highlight.start_time}</p>
-                <p>Duration: {highlight.duration}</p>
-                <p>Views: {highlight.view_count}</p>
-              </div>
-            </div>
+        <h2 className="text-xl font-semibold mb-4">Stream Recordings</h2>
+        <div className="space-y-4">
+          {recordings?.map((recording) => (
+            <RecordingListItem
+              key={recording.id}
+              recording={recording}
+              onDelete={(id) => deleteRecording.mutate(id)}
+            />
           ))}
+          {recordings?.length === 0 && (
+            <p className="text-center text-muted-foreground py-4">
+              No recordings available
+            </p>
+          )}
         </div>
       </Card>
     </div>
