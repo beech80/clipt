@@ -20,36 +20,34 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <React.StrictMode>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <AuthProvider>
-              <ReportDialogProvider>
-                <Routes>
-                  {routes.map((route) => (
-                    <Route
-                      key={route.path}
-                      path={route.path}
-                      element={route.element}
-                    >
-                      {route.children?.map((childRoute) => (
-                        <Route
-                          key={childRoute.path}
-                          path={childRoute.path}
-                          element={childRoute.element}
-                        />
-                      ))}
-                    </Route>
-                  ))}
-                </Routes>
-                <Toaster position="top-center" />
-              </ReportDialogProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ErrorBoundary>
+          <AuthProvider>
+            <ReportDialogProvider>
+              <Routes>
+                {routes.map((route) => (
+                  <Route
+                    key={route.path}
+                    path={route.path}
+                    element={route.element}
+                  >
+                    {route.children?.map((childRoute) => (
+                      <Route
+                        key={childRoute.path}
+                        path={childRoute.path}
+                        element={childRoute.element}
+                      />
+                    ))}
+                  </Route>
+                ))}
+              </Routes>
+              <Toaster position="top-center" />
+            </ReportDialogProvider>
+          </AuthProvider>
+        </ErrorBoundary>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
