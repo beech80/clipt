@@ -1,6 +1,6 @@
 import React from 'react';
-import { VirtualGiftSelector } from '../gifts/VirtualGiftSelector';
-import { VirtualGiftDisplay } from '../gifts/VirtualGiftDisplay';
+import { VirtualGiftSelector } from '@/components/gifts/VirtualGiftSelector';
+import { VirtualGiftDisplay } from '@/components/gifts/VirtualGiftDisplay';
 
 interface StreamPlayerGiftsProps {
   streamId: string;

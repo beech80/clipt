@@ -1,19 +1,19 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Star, Trophy, Crown, Diamond } from 'lucide-react';
-import { toast } from "sonner";
+import { Heart, Star, Trophy, Crown, Diamond, Gift } from 'lucide-react';
 import { supabase } from "@/lib/supabase";
 
-interface Gift {
+interface StreamGift {
   id: string;
-  name: string;
-  sender_id: string;
-  message?: string | null;
-  quantity: number;
-  created_at: string;
+  gift: {
+    name: string;
+  };
   sender: {
     username: string;
   };
+  message: string | null;
+  quantity: number;
+  created_at: string;
 }
 
 const giftIcons = {
@@ -22,10 +22,11 @@ const giftIcons = {
   Trophy,
   Crown,
   Diamond,
+  Gift,
 };
 
 export function VirtualGiftDisplay({ streamId }: { streamId: string }) {
-  const [gifts, setGifts] = React.useState<Gift[]>([]);
+  const [gifts, setGifts] = React.useState<StreamGift[]>([]);
 
   React.useEffect(() => {
     const channel = supabase
@@ -53,7 +54,7 @@ export function VirtualGiftDisplay({ streamId }: { streamId: string }) {
             .single();
 
           if (giftData) {
-            setGifts((prev) => [...prev, giftData as Gift]);
+            setGifts((prev) => [...prev, giftData as StreamGift]);
             setTimeout(() => {
               setGifts((prev) => prev.filter((g) => g.id !== giftData.id));
             }, 5000);
@@ -71,7 +72,7 @@ export function VirtualGiftDisplay({ streamId }: { streamId: string }) {
     <div className="fixed bottom-24 right-4 space-y-2 pointer-events-none z-50">
       <AnimatePresence>
         {gifts.map((gift) => {
-          const IconComponent = giftIcons[gift.gift.name as keyof typeof giftIcons] || Heart;
+          const IconComponent = giftIcons[gift.gift.name as keyof typeof giftIcons] || Gift;
           return (
             <motion.div
               key={gift.id}
