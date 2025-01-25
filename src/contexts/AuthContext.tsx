@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { User, AuthError } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const value = {
+  const value = React.useMemo(() => ({
     user,
     loading,
     signIn,
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     updatePassword,
     resendVerificationEmail,
-  };
+  }), [user, loading]);
 
   return (
     <AuthContext.Provider value={value}>
