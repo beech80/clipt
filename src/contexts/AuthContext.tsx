@@ -15,13 +15,9 @@ interface AuthContextType {
   resendVerificationEmail: (email: string) => Promise<void>;
 }
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(null);
   const [loading, setLoading] = React.useState(true);
   const navigate = useNavigate();
