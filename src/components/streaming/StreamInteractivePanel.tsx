@@ -1,46 +1,44 @@
-import { useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StreamPoll } from "./polls/StreamPoll";
-import { StreamQuiz } from "./quizzes/StreamQuiz";
-import { VirtualGiftSelector } from "./gifts/VirtualGiftSelector";
-import { GiftDisplay } from "./gifts/GiftDisplay";
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StreamChat } from './interactive/StreamChat';
+import { StreamPoll } from './interactive/StreamPoll';
+import { StreamHighlights } from './interactive/StreamHighlights';
+import { MessageSquare, BarChart2, Bookmark } from 'lucide-react';
 
 interface StreamInteractivePanelProps {
   streamId: string;
   isLive: boolean;
 }
 
-export function StreamInteractivePanel({ streamId, isLive }: StreamInteractivePanelProps) {
-  const [activeTab, setActiveTab] = useState("polls");
-
+export const StreamInteractivePanel = ({ streamId, isLive }: StreamInteractivePanelProps) => {
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Interactive Features</h3>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="polls">Polls</TabsTrigger>
-          <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
-          <TabsTrigger value="gifts">Virtual Gifts</TabsTrigger>
-        </TabsList>
+    <Tabs defaultValue="chat" className="h-full flex flex-col">
+      <TabsList>
+        <TabsTrigger value="chat" className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4" />
+          Chat
+        </TabsTrigger>
+        <TabsTrigger value="polls" className="flex items-center gap-2">
+          <BarChart2 className="h-4 w-4" />
+          Polls
+        </TabsTrigger>
+        <TabsTrigger value="highlights" className="flex items-center gap-2">
+          <Bookmark className="h-4 w-4" />
+          Highlights
+        </TabsTrigger>
+      </TabsList>
 
-        <TabsContent value="polls">
-          <StreamPoll streamId={streamId} />
-        </TabsContent>
+      <TabsContent value="chat" className="flex-1">
+        <StreamChat streamId={streamId} isLive={isLive} />
+      </TabsContent>
 
-        <TabsContent value="quizzes">
-          <StreamQuiz streamId={streamId} />
-        </TabsContent>
+      <TabsContent value="polls" className="flex-1 p-4">
+        <StreamPoll streamId={streamId} />
+      </TabsContent>
 
-        <TabsContent value="gifts">
-          <div className="grid gap-4">
-            <VirtualGiftSelector streamId={streamId} isLive={isLive} />
-            <GiftDisplay streamId={streamId} />
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+      <TabsContent value="highlights" className="flex-1 p-4">
+        <StreamHighlights streamId={streamId} />
+      </TabsContent>
+    </Tabs>
   );
-}
+};

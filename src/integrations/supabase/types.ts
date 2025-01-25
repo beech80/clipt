@@ -4727,6 +4727,41 @@ export type Database = {
           },
         ]
       }
+      stream_quality_presets: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean | null
+          name: string
+          settings: Json
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          settings?: Json
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          settings?: Json
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_quality_presets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_quizzes: {
         Row: {
           created_at: string | null
@@ -5314,6 +5349,8 @@ export type Database = {
       }
       streaming_config: {
         Row: {
+          abr_enabled: boolean | null
+          abr_settings: Json | null
           cdn_config: Json | null
           cdn_edge_rules: Json | null
           cdn_failover_endpoints: Json | null
@@ -5325,11 +5362,14 @@ export type Database = {
           dvr_window_seconds: number | null
           id: string
           ingest_endpoint: string
+          low_latency_mode: boolean | null
           playback_endpoint: string
           provider: string
           settings: Json | null
         }
         Insert: {
+          abr_enabled?: boolean | null
+          abr_settings?: Json | null
           cdn_config?: Json | null
           cdn_edge_rules?: Json | null
           cdn_failover_endpoints?: Json | null
@@ -5341,11 +5381,14 @@ export type Database = {
           dvr_window_seconds?: number | null
           id?: string
           ingest_endpoint: string
+          low_latency_mode?: boolean | null
           playback_endpoint: string
           provider: string
           settings?: Json | null
         }
         Update: {
+          abr_enabled?: boolean | null
+          abr_settings?: Json | null
           cdn_config?: Json | null
           cdn_edge_rules?: Json | null
           cdn_failover_endpoints?: Json | null
@@ -5357,6 +5400,7 @@ export type Database = {
           dvr_window_seconds?: number | null
           id?: string
           ingest_endpoint?: string
+          low_latency_mode?: boolean | null
           playback_endpoint?: string
           provider?: string
           settings?: Json | null
@@ -5395,12 +5439,14 @@ export type Database = {
       }
       streams: {
         Row: {
+          abr_active: boolean | null
           available_qualities: Json | null
           cdn_url: string | null
           chat_enabled: boolean | null
           created_at: string
           current_bitrate: number | null
           current_fps: number | null
+          current_quality_preset: string | null
           description: string | null
           dvr_enabled: boolean | null
           dvr_window_seconds: number | null
@@ -5412,6 +5458,7 @@ export type Database = {
           ingest_url: string | null
           is_live: boolean | null
           last_health_check: string | null
+          low_latency_active: boolean | null
           max_bitrate: number | null
           playback_url: string | null
           recommendation_score: number | null
@@ -5438,12 +5485,14 @@ export type Database = {
           vod_processing_status: string | null
         }
         Insert: {
+          abr_active?: boolean | null
           available_qualities?: Json | null
           cdn_url?: string | null
           chat_enabled?: boolean | null
           created_at?: string
           current_bitrate?: number | null
           current_fps?: number | null
+          current_quality_preset?: string | null
           description?: string | null
           dvr_enabled?: boolean | null
           dvr_window_seconds?: number | null
@@ -5455,6 +5504,7 @@ export type Database = {
           ingest_url?: string | null
           is_live?: boolean | null
           last_health_check?: string | null
+          low_latency_active?: boolean | null
           max_bitrate?: number | null
           playback_url?: string | null
           recommendation_score?: number | null
@@ -5481,12 +5531,14 @@ export type Database = {
           vod_processing_status?: string | null
         }
         Update: {
+          abr_active?: boolean | null
           available_qualities?: Json | null
           cdn_url?: string | null
           chat_enabled?: boolean | null
           created_at?: string
           current_bitrate?: number | null
           current_fps?: number | null
+          current_quality_preset?: string | null
           description?: string | null
           dvr_enabled?: boolean | null
           dvr_window_seconds?: number | null
@@ -5498,6 +5550,7 @@ export type Database = {
           ingest_url?: string | null
           is_live?: boolean | null
           last_health_check?: string | null
+          low_latency_active?: boolean | null
           max_bitrate?: number | null
           playback_url?: string | null
           recommendation_score?: number | null
@@ -5524,6 +5577,13 @@ export type Database = {
           vod_processing_status?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "streams_current_quality_preset_fkey"
+            columns: ["current_quality_preset"]
+            isOneToOne: false
+            referencedRelation: "stream_quality_presets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "streams_user_id_fkey"
             columns: ["user_id"]
