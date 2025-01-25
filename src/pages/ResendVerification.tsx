@@ -4,7 +4,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Gamepad2 } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { toast } from "sonner";
 
 const ResendVerification = () => {
   const [email, setEmail] = useState('');
@@ -20,6 +21,7 @@ const ResendVerification = () => {
 
     try {
       await resendVerificationEmail(email);
+      toast.success('Verification email sent! Please check your inbox.');
       navigate('/login');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
@@ -32,8 +34,8 @@ const ResendVerification = () => {
     <div className="mx-auto max-w-md space-y-6 pt-12">
       <div className="text-center space-y-2">
         <div className="flex justify-center mb-4">
-          <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
-            <Gamepad2 className="h-6 w-6 text-gaming-400" />
+          <div className="h-12 w-12 rounded-lg bg-primary/20 flex items-center justify-center">
+            <Mail className="h-6 w-6 text-primary" />
           </div>
         </div>
         <h1 className="text-2xl font-bold">Resend Verification Email</h1>
