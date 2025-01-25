@@ -27,8 +27,8 @@ export const ViewerEngagementMetrics = ({ streamId }: { streamId: string }) => {
       const transformedData: EngagementMetrics = {
         engagement_rate: 0, // Default value
         max_concurrent_viewers: 0, // Default value
-        total_stream_time: '0:00', // Default value
-        average_watch_time: data[0]?.avg_session_duration || '0:00',
+        total_stream_time: '00:00:00', // Default value with proper format
+        average_watch_time: data[0]?.avg_session_duration?.toString() || '00:00:00',
         bounce_rate: data[0]?.bounce_rate || 0,
         interaction_rate: data[0]?.interaction_rate || 0,
         retention_rate: data[0]?.retention_rate || 0
@@ -58,13 +58,13 @@ export const ViewerEngagementMetrics = ({ streamId }: { streamId: string }) => {
     {
       icon: Clock,
       label: 'Avg Watch Time',
-      value: metrics?.average_watch_time || '0:00',
+      value: metrics?.average_watch_time || '00:00:00',
       subValue: 'per viewer'
     },
     {
       icon: TrendingUp,
       label: 'Stream Duration',
-      value: metrics?.total_stream_time || '0:00',
+      value: metrics?.total_stream_time || '00:00:00',
       subValue: 'total time'
     },
     {
