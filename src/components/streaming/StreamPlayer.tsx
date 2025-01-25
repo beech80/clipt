@@ -27,6 +27,11 @@ export const StreamPlayer = ({
   const hlsRef = useRef<Hls | null>(null);
   const [currentQuality, setCurrentQuality] = useState<string>('auto');
   const [viewerCount, setViewerCount] = useState<number>(0);
+  const [streamMetrics, setStreamMetrics] = useState({
+    bitrate: 0,
+    fps: 0,
+    resolution: ''
+  });
 
   useEffect(() => {
     if (!streamUrl || !videoRef.current) return;
@@ -107,6 +112,7 @@ export const StreamPlayer = ({
             qualities={qualities}
             currentQuality={currentQuality}
             onQualityChange={setCurrentQuality}
+            streamMetrics={streamMetrics}
             className="absolute bottom-0 right-0"
           />
         </div>
@@ -115,7 +121,7 @@ export const StreamPlayer = ({
       <div className="md:col-span-1 h-[600px]">
         <StreamChat 
           streamId={streamId || ''} 
-          isLive={isLive} 
+          isLive={isLive}
         />
       </div>
 

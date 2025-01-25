@@ -166,7 +166,6 @@ const Streaming = () => {
               <StreamChat 
                 streamId={user.id} 
                 isLive={isLive} 
-                chatEnabled={true}
               />
             </div>
           </Card>
