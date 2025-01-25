@@ -1,23 +1,32 @@
-import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { PresetForm, type PresetFormData } from './quality/PresetForm';
-import { PresetList } from './quality/PresetList';
-import { PresetPreview } from './quality/PresetPreview';
-import type { QualityPreset } from '@/types/streaming';
-import type { PresetData, RawPresetData } from './quality/types';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { PresetForm } from "./quality/PresetForm";
+import { PresetList } from "./quality/PresetList";
+import { PresetPreview } from "./quality/PresetPreview";
+import { PresetData, PresetFormData } from "./quality/types";
 
 interface QualityPresetManagerProps {
   streamId: string;
-  onPresetChange: (preset: QualityPreset) => void;
+  onPresetChange?: (preset: PresetData) => void;
 }
+
+const DEFAULT_PRESET: PresetData = {
+  id: 'preview',
+  name: '',
+  description: '',
+  settings: {
+    video: { fps: 30, bitrate: 3000, resolution: '1280x720' },
+    audio: { bitrate: 160, channels: 2, sampleRate: 48000 }
+  }
+};
 
 export function QualityPresetManager({ streamId, onPresetChange }: QualityPresetManagerProps) {
   const [editingPreset, setEditingPreset] = useState<PresetData | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: presets, refetch, isLoading } = useQuery({
     queryKey: ['quality-presets'],
@@ -26,111 +35,74 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
         .from('quality_presets')
         .select('*')
         .order('created_at', { ascending: false });
-
-      if (error) throw error;
       
-      return (data as RawPresetData[]).map(preset => ({
-        id: preset.id,
-        name: preset.name,
-        description: preset.description,
-        settings: preset.settings as PresetData['settings']
-      }));
-    },
+      if (error) throw error;
+      return data as PresetData[];
+    }
   });
 
   const createPreset = useMutation({
-    mutationFn: async (data: PresetFormData) => {
-      const { error } = await supabase
+    mutationFn: async (newPreset: PresetFormData) => {
+      const { data, error } = await supabase
         .from('quality_presets')
-        .insert([{
-          name: data.name,
-          description: data.description,
-          settings: data.settings,
-        }]);
-
+        .insert([newPreset])
+        .select()
+        .single();
+      
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
-      toast.success('Preset created successfully');
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['quality-presets'] });
+      toast.success("Preset created successfully");
+      setEditingPreset(null);
     },
-    onError: () => {
-      toast.error('Failed to create preset');
-    },
+    onError: (error) => {
+      toast.error("Failed to create preset");
+      console.error("Create preset error:", error);
+    }
   });
 
   const updatePreset = useMutation({
-    mutationFn: async (data: PresetFormData & { id: string }) => {
-      const { error } = await supabase
+    mutationFn: async (updatedPreset: PresetData) => {
+      const { data, error } = await supabase
         .from('quality_presets')
-        .update({
-          name: data.name,
-          description: data.description,
-          settings: data.settings,
-        })
-        .eq('id', data.id);
-
+        .update(updatedPreset)
+        .eq('id', updatedPreset.id)
+        .select()
+        .single();
+      
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
-      toast.success('Preset updated successfully');
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['quality-presets'] });
+      toast.success("Preset updated successfully");
       setEditingPreset(null);
     },
-    onError: () => {
-      toast.error('Failed to update preset');
-    },
+    onError: (error) => {
+      toast.error("Failed to update preset");
+      console.error("Update preset error:", error);
+    }
   });
 
   const deletePreset = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (presetId: string) => {
       const { error } = await supabase
         .from('quality_presets')
         .delete()
-        .eq('id', id);
-
+        .eq('id', presetId);
+      
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Preset deleted successfully');
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['quality-presets'] });
+      toast.success("Preset deleted successfully");
     },
-    onError: () => {
-      toast.error('Failed to delete preset');
-    },
-  });
-
-  const applyPreset = useMutation({
-    mutationFn: async (presetId: string) => {
-      const preset = presets?.find(p => p.id === presetId);
-      if (!preset) throw new Error('Preset not found');
-      
-      const { error } = await supabase
-        .from('streams')
-        .update({
-          current_bitrate: preset.settings.video.bitrate,
-          current_fps: preset.settings.video.fps,
-          stream_resolution: preset.settings.video.resolution
-        })
-        .eq('id', streamId);
-
-      if (error) throw error;
-      
-      const qualityPreset: QualityPreset = {
-        resolution: preset.settings.video.resolution,
-        bitrate: preset.settings.video.bitrate,
-        fps: preset.settings.video.fps
-      };
-      
-      return qualityPreset;
-    },
-    onSuccess: (settings) => {
-      toast.success('Quality preset applied successfully');
-      onPresetChange(settings);
-    },
-    onError: () => {
-      toast.error('Failed to apply preset');
-    },
+    onError: (error) => {
+      toast.error("Failed to delete preset");
+      console.error("Delete preset error:", error);
+    }
   });
 
   const handleSubmit = (data: PresetFormData) => {
@@ -141,56 +113,37 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
     }
   };
 
-  const handleApplyPreset = (presetId: string) => {
-    setActivePreset(presetId);
-    applyPreset.mutate(presetId);
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
 
-  const previewPreset: PresetData = editingPreset || {
-    id: 'preview',
-    name: '',
-    description: '',
-    settings: {
-      video: { fps: 30, bitrate: 3000, resolution: '1280x720' },
-      audio: { bitrate: 160, channels: 2, sampleRate: 48000 }
-    }
-  };
-
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">
-          {editingPreset ? 'Edit Preset' : 'Create New Preset'}
-        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <PresetForm
+          <PresetForm 
             onSubmit={handleSubmit}
             initialData={editingPreset || undefined}
             isLoading={createPreset.isPending || updatePreset.isPending}
           />
-          <PresetPreview preset={previewPreset} />
+          <PresetPreview preset={editingPreset || DEFAULT_PRESET} />
         </div>
       </Card>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Saved Presets</h2>
-        <PresetList
-          presets={presets || []}
-          activePreset={activePreset}
-          onEdit={setEditingPreset}
-          onApply={handleApplyPreset}
-          onDelete={(id) => deletePreset.mutate(id)}
-          isApplying={applyPreset.isPending}
-        />
-      </div>
+      <PresetList
+        presets={presets || []}
+        activePresetId={activePreset}
+        onPresetSelect={(preset) => {
+          setActivePreset(preset.id);
+          onPresetChange?.(preset);
+        }}
+        onEdit={setEditingPreset}
+        onDelete={(id) => deletePreset.mutate(id)}
+      />
     </div>
   );
 }
