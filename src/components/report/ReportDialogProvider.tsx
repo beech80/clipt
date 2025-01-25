@@ -6,17 +6,19 @@ interface ReportDialogProviderProps {
   children: ReactNode;
 }
 
-export const ReportDialogProvider: React.FC<ReportDialogProviderProps> = ({ children }) => {
+export const ReportDialogProvider = ({ children }: ReportDialogProviderProps) => {
   const { isOpen, contentId, contentType, closeReportDialog } = useReportDialog();
 
   return (
     <>
-      <ReportDialog
-        isOpen={isOpen}
-        onClose={closeReportDialog}
-        contentId={contentId}
-        contentType={contentType}
-      />
+      {isOpen && (
+        <ReportDialog
+          isOpen={isOpen}
+          onClose={closeReportDialog}
+          contentId={contentId}
+          contentType={contentType}
+        />
+      )}
       {children}
     </>
   );
