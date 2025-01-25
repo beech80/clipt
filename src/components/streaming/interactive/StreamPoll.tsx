@@ -12,6 +12,19 @@ interface PollOption {
   text: string;
 }
 
+interface PollResponse {
+  selected_options: string[];
+  user_id: string;
+}
+
+interface Poll {
+  id: string;
+  question: string;
+  options: PollOption[];
+  poll_responses: PollResponse[];
+  allow_multiple_choices: boolean;
+}
+
 interface StreamPollProps {
   streamId: string;
 }
@@ -20,7 +33,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
   const { user } = useAuth();
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 
-  const { data: activePoll } = useQuery({
+  const { data: activePoll } = useQuery<Poll>({
     queryKey: ['stream-poll', streamId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -37,7 +50,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Poll;
     },
     refetchInterval: 5000
   });
@@ -66,14 +79,10 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
   if (!activePoll) return null;
 
   const totalVotes = activePoll.poll_responses?.length || 0;
-  const pollOptions = activePoll.options as PollOption[];
 
   const getOptionPercentage = (optionId: string) => {
     const optionVotes = activePoll.poll_responses?.filter(
-      response => {
-        const selectedOpts = response.selected_options as string[];
-        return selectedOpts.includes(optionId);
-      }
+      response => response.selected_options.includes(optionId)
     ).length || 0;
     return totalVotes === 0 ? 0 : (optionVotes / totalVotes) * 100;
   };
@@ -86,7 +95,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
     <Card className="p-4 space-y-4">
       <h3 className="font-semibold text-lg">{activePoll.question}</h3>
       <div className="space-y-2">
-        {pollOptions.map((option) => (
+        {activePoll.options.map((option) => (
           <div key={option.id} className="space-y-1">
             {hasVoted ? (
               <>
