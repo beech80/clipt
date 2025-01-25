@@ -16,7 +16,7 @@ interface QualityPresetManagerProps {
 }
 
 export function QualityPresetManager({ streamId, onPresetChange }: QualityPresetManagerProps) {
-  const [editingPreset, setEditingPreset] = useState<PresetFormData | null>(null);
+  const [editingPreset, setEditingPreset] = useState<PresetData | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
 
   const { data: presets, refetch, isLoading } = useQuery({
@@ -135,7 +135,7 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
 
   const handleSubmit = (data: PresetFormData) => {
     if (editingPreset) {
-      updatePreset.mutate({ ...data, id: (editingPreset as any).id });
+      updatePreset.mutate({ ...data, id: editingPreset.id });
     } else {
       createPreset.mutate(data);
     }
@@ -154,6 +154,16 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
     );
   }
 
+  const previewPreset: PresetData = editingPreset || {
+    id: 'preview',
+    name: '',
+    description: '',
+    settings: {
+      video: { fps: 30, bitrate: 3000, resolution: '1280x720' },
+      audio: { bitrate: 160, channels: 2, sampleRate: 48000 }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -166,16 +176,7 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
             initialData={editingPreset || undefined}
             isLoading={createPreset.isPending || updatePreset.isPending}
           />
-          <PresetPreview
-            preset={editingPreset || {
-              name: '',
-              description: '',
-              settings: {
-                video: { fps: 30, bitrate: 3000, resolution: '1280x720' },
-                audio: { bitrate: 160, channels: 2, sampleRate: 48000 }
-              }
-            }}
-          />
+          <PresetPreview preset={previewPreset} />
         </div>
       </Card>
 
