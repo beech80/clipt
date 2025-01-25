@@ -6,43 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ReportDialogProvider } from "@/components/report/ReportDialogProvider";
 import { MessagesProvider } from "@/contexts/MessagesContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { DocsLayout } from "@/components/docs/DocsLayout";
-
-// Pages
-import Home from "@/pages/Home";
-import Profile from "@/pages/Profile";
-import EditProfile from "@/pages/EditProfile";
-import Messages from "@/pages/Messages";
-import Streaming from "@/pages/Streaming";
-import Broadcasting from "@/pages/Broadcasting";
-import Esports from "@/pages/Esports";
-import TopClips from "@/pages/TopClips";
-import Clipts from "@/pages/Clipts";
-import Settings from "@/pages/Settings";
-import Discover from "@/pages/Discover";
-import Login from "@/pages/Login";
-import ResetPassword from "@/pages/ResetPassword";
-import UpdatePassword from "@/pages/UpdatePassword";
-import ResendVerification from "@/pages/ResendVerification";
-import Collections from "@/pages/Collections";
-import Post from "@/pages/Post";
-import GroupChat from "@/pages/GroupChat";
-import Onboarding from "@/pages/Onboarding";
-import Achievements from "@/pages/Achievements";
-import Analytics from "@/pages/Analytics";
-import Support from "@/pages/Support";
-import Verification from "@/pages/Verification";
-import Schedule from "@/pages/Schedule";
-import PaymentSuccess from "@/pages/payment-success";
-import PaymentCancelled from "@/pages/payment-cancelled";
-import ClipEditor from "@/pages/ClipEditor";
-import GamePage from "@/pages/GamePage";
-import Index from "@/pages/Index";
-import Subscription from "@/pages/Subscription";
-
-// Documentation Pages
-import GettingStarted from "@/pages/docs/GettingStarted";
-import StreamingGuide from "@/pages/docs/StreamingGuide";
+import { routes } from "@/config/routes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,42 +28,21 @@ function App() {
               <ErrorBoundary>
                 <ReportDialogProvider>
                   <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/update-password" element={<UpdatePassword />} />
-                    <Route path="/resend-verification" element={<ResendVerification />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/profile/edit" element={<EditProfile />} />
-                    <Route path="/messages" element={<Messages />} />
-                    <Route path="/group-chat" element={<GroupChat />} />
-                    <Route path="/streaming" element={<Streaming />} />
-                    <Route path="/broadcasting" element={<Broadcasting />} />
-                    <Route path="/esports" element={<Esports />} />
-                    <Route path="/top-clips" element={<TopClips />} />
-                    <Route path="/clipts" element={<Clipts />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/discover" element={<Discover />} />
-                    <Route path="/collections" element={<Collections />} />
-                    <Route path="/post/:id" element={<Post />} />
-                    <Route path="/clip-editor/:id" element={<ClipEditor />} />
-                    <Route path="/onboarding" element={<Onboarding />} />
-                    <Route path="/achievements" element={<Achievements />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/support" element={<Support />} />
-                    <Route path="/verification" element={<Verification />} />
-                    <Route path="/schedule" element={<Schedule />} />
-                    <Route path="/payment-success" element={<PaymentSuccess />} />
-                    <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-                    <Route path="/game/:slug" element={<GamePage />} />
-                    <Route path="/subscription" element={<Subscription />} />
-
-                    {/* Documentation Routes */}
-                    <Route path="/docs" element={<DocsLayout><Outlet /></DocsLayout>}>
-                      <Route path="getting-started" element={<GettingStarted />} />
-                      <Route path="streaming" element={<StreamingGuide />} />
-                    </Route>
+                    {routes.map((route) => (
+                      <Route
+                        key={route.path}
+                        path={route.path}
+                        element={route.element}
+                      >
+                        {route.children?.map((childRoute) => (
+                          <Route
+                            key={childRoute.path}
+                            path={childRoute.path}
+                            element={childRoute.element}
+                          />
+                        ))}
+                      </Route>
+                    ))}
                   </Routes>
                   <Toaster />
                 </ReportDialogProvider>
