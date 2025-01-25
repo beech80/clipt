@@ -5018,42 +5018,57 @@ export type Database = {
       stream_recordings: {
         Row: {
           created_at: string | null
+          download_count: number | null
           duration: unknown | null
           id: string
           recording_config: Json | null
           recording_error: string | null
           recording_status: string | null
           recording_url: string
+          retention_days: number | null
           size_bytes: number | null
           status: string | null
+          storage_bucket: string | null
+          storage_path: string | null
+          storage_status: string | null
           stream_id: string | null
           thumbnail_url: string | null
           view_count: number | null
         }
         Insert: {
           created_at?: string | null
+          download_count?: number | null
           duration?: unknown | null
           id?: string
           recording_config?: Json | null
           recording_error?: string | null
           recording_status?: string | null
           recording_url: string
+          retention_days?: number | null
           size_bytes?: number | null
           status?: string | null
+          storage_bucket?: string | null
+          storage_path?: string | null
+          storage_status?: string | null
           stream_id?: string | null
           thumbnail_url?: string | null
           view_count?: number | null
         }
         Update: {
           created_at?: string | null
+          download_count?: number | null
           duration?: unknown | null
           id?: string
           recording_config?: Json | null
           recording_error?: string | null
           recording_status?: string | null
           recording_url?: string
+          retention_days?: number | null
           size_bytes?: number | null
           status?: string | null
+          storage_bucket?: string | null
+          storage_path?: string | null
+          storage_status?: string | null
           stream_id?: string | null
           thumbnail_url?: string | null
           view_count?: number | null

@@ -48,12 +48,15 @@ export const StreamRecordingManager = ({ streamId }: StreamRecordingManagerProps
           stream_id: streamId,
           status: 'recording',
           storage_path: storagePath,
+          recording_url: null,
+          duration: '0 seconds'
         });
 
       if (error) throw error;
 
       setIsRecording(true);
       toast.success('Recording started');
+      await queryClient.invalidateQueries({ queryKey: ['stream-recordings', streamId] });
     } catch (error) {
       console.error('Error starting recording:', error);
       toast.error('Failed to start recording');
@@ -72,7 +75,7 @@ export const StreamRecordingManager = ({ streamId }: StreamRecordingManagerProps
 
       setIsRecording(false);
       toast.success('Recording stopped');
-      queryClient.invalidateQueries(['stream-recordings', streamId]);
+      await queryClient.invalidateQueries({ queryKey: ['stream-recordings', streamId] });
     } catch (error) {
       console.error('Error stopping recording:', error);
       toast.error('Failed to stop recording');
@@ -101,7 +104,7 @@ export const StreamRecordingManager = ({ streamId }: StreamRecordingManagerProps
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['stream-recordings', streamId]);
+      queryClient.invalidateQueries({ queryKey: ['stream-recordings', streamId] });
       toast.success('Recording deleted');
     },
     onError: (error) => {
