@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ReportDialogProvider } from "@/components/report/ReportDialogProvider";
 import { MessagesProvider } from "@/contexts/MessagesContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { DocsLayout } from "@/components/docs/DocsLayout";
 
 // Pages
 import Home from "@/pages/Home";
@@ -38,6 +39,10 @@ import ClipEditor from "@/pages/ClipEditor";
 import GamePage from "@/pages/GamePage";
 import Index from "@/pages/Index";
 import Subscription from "@/pages/Subscription";
+
+// Documentation Pages
+import GettingStarted from "@/pages/docs/GettingStarted";
+import StreamingGuide from "@/pages/docs/StreamingGuide";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,6 +94,12 @@ function App() {
                     <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                     <Route path="/game/:slug" element={<GamePage />} />
                     <Route path="/subscription" element={<Subscription />} />
+
+                    {/* Documentation Routes */}
+                    <Route element={<DocsLayout />}>
+                      <Route path="/docs/getting-started" element={<GettingStarted />} />
+                      <Route path="/docs/streaming" element={<StreamingGuide />} />
+                    </Route>
                   </Routes>
                   <Toaster />
                 </ReportDialogProvider>
