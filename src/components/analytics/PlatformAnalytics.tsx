@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { Users, Activity, TrendingUp, Award } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
+import { Users, Activity, TrendingUp, Award, Clock, MessageSquare } from "lucide-react";
 
 interface PlatformMetrics {
   total_users: number;
@@ -15,6 +15,9 @@ interface PlatformMetrics {
     users: number;
     streams: number;
     engagement: number;
+    retention: number;
+    avg_session: number;
+    chat_activity: number;
   }[];
 }
 
@@ -29,7 +32,6 @@ export function PlatformAnalytics() {
       
       if (error) throw error;
       
-      // Transform the data to match the expected type
       const transformedData = {
         ...data,
         daily_stats: Array.isArray(data.daily_stats) 
@@ -37,7 +39,10 @@ export function PlatformAnalytics() {
               date: stat.date,
               users: Number(stat.users) || 0,
               streams: Number(stat.streams) || 0,
-              engagement: Number(stat.engagement) || 0
+              engagement: Number(stat.engagement) || 0,
+              retention: Number(stat.retention) || 0,
+              avg_session: Number(stat.avg_session) || 0,
+              chat_activity: Number(stat.chat_activity) || 0
             }))
           : []
       };
@@ -52,7 +57,7 @@ export function PlatformAnalytics() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card className="p-4">
           <div className="flex items-center space-x-2">
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -92,51 +97,109 @@ export function PlatformAnalytics() {
             {metrics?.peak_concurrent?.toLocaleString()}
           </p>
         </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium">Avg Session</h3>
+          </div>
+          <p className="text-2xl font-bold mt-2">
+            {metrics?.daily_stats[metrics.daily_stats.length - 1]?.avg_session.toFixed(1)}m
+          </p>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center space-x-2">
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium">Chat Activity</h3>
+          </div>
+          <p className="text-2xl font-bold mt-2">
+            {metrics?.daily_stats[metrics.daily_stats.length - 1]?.chat_activity.toLocaleString()}
+          </p>
+        </Card>
       </div>
 
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">User Growth Trend</h3>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={metrics?.daily_stats}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="users" 
-                stroke="#8884d8" 
-                name="Users"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">User Growth & Retention</h3>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={metrics?.daily_stats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Area 
+                  type="monotone" 
+                  dataKey="users" 
+                  stroke="#8884d8" 
+                  fill="#8884d8" 
+                  fillOpacity={0.3}
+                  name="Total Users"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="retention" 
+                  stroke="#82ca9d" 
+                  fill="#82ca9d" 
+                  fillOpacity={0.3}
+                  name="Retention Rate"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
 
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Stream Activity</h3>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={metrics?.daily_stats}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Bar 
-                dataKey="streams" 
-                fill="#82ca9d" 
-                name="Active Streams"
-              />
-              <Bar 
-                dataKey="engagement" 
-                fill="#ffc658" 
-                name="Engagement"
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Engagement Metrics</h3>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={metrics?.daily_stats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Line 
+                  type="monotone" 
+                  dataKey="engagement" 
+                  stroke="#8884d8" 
+                  name="Engagement"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="chat_activity" 
+                  stroke="#82ca9d" 
+                  name="Chat Activity"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="p-6 lg:col-span-2">
+          <h3 className="text-lg font-semibold mb-4">Stream Activity Overview</h3>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={metrics?.daily_stats}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Bar 
+                  dataKey="streams" 
+                  fill="#82ca9d" 
+                  name="Active Streams"
+                />
+                <Bar 
+                  dataKey="avg_session" 
+                  fill="#ffc658" 
+                  name="Avg Session (min)"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -3852,16 +3852,21 @@ export type Database = {
       stream_analytics: {
         Row: {
           audio_quality_score: number | null
+          average_session_duration: unknown | null
           average_viewers: number | null
           average_watch_time: unknown | null
+          bounce_rate: number | null
           buffer_ratio: number | null
           chat_messages_count: number | null
           created_at: string | null
           dropped_frames_ratio: number | null
           engagement_rate: number | null
           id: string
+          interaction_rate: number | null
           max_concurrent_viewers: number | null
+          peak_concurrent_chatters: number | null
           peak_viewers: number | null
+          retention_rate: number | null
           stream_duration: unknown | null
           stream_id: string | null
           total_stream_time: unknown | null
@@ -3870,16 +3875,21 @@ export type Database = {
         }
         Insert: {
           audio_quality_score?: number | null
+          average_session_duration?: unknown | null
           average_viewers?: number | null
           average_watch_time?: unknown | null
+          bounce_rate?: number | null
           buffer_ratio?: number | null
           chat_messages_count?: number | null
           created_at?: string | null
           dropped_frames_ratio?: number | null
           engagement_rate?: number | null
           id?: string
+          interaction_rate?: number | null
           max_concurrent_viewers?: number | null
+          peak_concurrent_chatters?: number | null
           peak_viewers?: number | null
+          retention_rate?: number | null
           stream_duration?: unknown | null
           stream_id?: string | null
           total_stream_time?: unknown | null
@@ -3888,16 +3898,21 @@ export type Database = {
         }
         Update: {
           audio_quality_score?: number | null
+          average_session_duration?: unknown | null
           average_viewers?: number | null
           average_watch_time?: unknown | null
+          bounce_rate?: number | null
           buffer_ratio?: number | null
           chat_messages_count?: number | null
           created_at?: string | null
           dropped_frames_ratio?: number | null
           engagement_rate?: number | null
           id?: string
+          interaction_rate?: number | null
           max_concurrent_viewers?: number | null
+          peak_concurrent_chatters?: number | null
           peak_viewers?: number | null
+          retention_rate?: number | null
           stream_duration?: unknown | null
           stream_id?: string | null
           total_stream_time?: unknown | null
@@ -6404,6 +6419,68 @@ export type Database = {
           },
         ]
       }
+      viewer_interaction_metrics: {
+        Row: {
+          created_at: string | null
+          id: string
+          interaction_count: number | null
+          interaction_type: string
+          metadata: Json | null
+          session_duration: unknown | null
+          stream_id: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          interaction_count?: number | null
+          interaction_type: string
+          metadata?: Json | null
+          session_duration?: unknown | null
+          stream_id?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          interaction_count?: number | null
+          interaction_type?: string
+          metadata?: Json | null
+          session_duration?: unknown | null
+          stream_id?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewer_interaction_metrics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "viewer_interaction_metrics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viewer_interaction_metrics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viewer_interaction_metrics_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       virtual_gifts: {
         Row: {
           animation_url: string | null
@@ -6628,6 +6705,17 @@ export type Database = {
           hours_age: number
         }
         Returns: number
+      }
+      calculate_viewer_retention: {
+        Args: {
+          stream_id_param: string
+        }
+        Returns: {
+          retention_rate: number
+          avg_session_duration: unknown
+          interaction_rate: number
+          bounce_rate: number
+        }[]
       }
       check_auth_rate_limit: {
         Args: {
