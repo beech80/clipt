@@ -55,11 +55,14 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
       const transformedPoll: Poll = {
         id: data.id,
         question: data.question,
-        options: data.options.map((opt: { id: string; text: string }) => ({
+        options: Array.isArray(data.options) ? data.options.map((opt: { id: string; text: string }) => ({
           id: opt.id,
           text: opt.text
+        })) : [],
+        poll_responses: data.poll_responses.map((response: any) => ({
+          selected_options: Array.isArray(response.selected_options) ? response.selected_options : [],
+          user_id: response.user_id
         })),
-        poll_responses: data.poll_responses,
         allow_multiple_choices: data.allow_multiple_choices
       };
 
