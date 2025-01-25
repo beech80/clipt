@@ -1,6 +1,6 @@
 import React from 'react';
 import { VirtualGiftSelector } from '../gifts/VirtualGiftSelector';
-import { GiftDisplay } from '../gifts/GiftDisplay';
+import { VirtualGiftDisplay } from '../gifts/VirtualGiftDisplay';
 
 interface StreamPlayerGiftsProps {
   streamId: string;
@@ -13,7 +13,7 @@ export function StreamPlayerGifts({ streamId, isLive }: StreamPlayerGiftsProps) 
       <div className="absolute bottom-4 right-4 space-x-2">
         <VirtualGiftSelector streamId={streamId} isLive={isLive} />
       </div>
-      <GiftDisplay streamId={streamId} />
+      <VirtualGiftDisplay streamId={streamId} />
     </>
   );
 }
