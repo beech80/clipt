@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { StreamPlayerControls } from './player/StreamPlayerControls';
 import { StreamChat } from './StreamChat';
 import { ViewerCountManager } from './ViewerCountManager';
+import { StreamAlertOverlay } from './alerts/StreamAlertOverlay';
 
 interface StreamPlayerProps {
   streamUrl?: string | null;

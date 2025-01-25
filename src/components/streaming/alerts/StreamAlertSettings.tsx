@@ -47,7 +47,10 @@ export function StreamAlertSettings({ userId }: StreamAlertSettingsProps) {
       return;
     }
 
-    setSettings(data || []);
+    setSettings(data.map(alert => ({
+      ...alert,
+      styles: typeof alert.styles === 'string' ? JSON.parse(alert.styles) : alert.styles
+    })) || []);
     setLoading(false);
   };
 
