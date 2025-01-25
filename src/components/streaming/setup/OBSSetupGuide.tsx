@@ -17,7 +17,21 @@ export const OBSSetupGuide = () => {
         .single();
       
       if (error) throw error;
-      return data as StreamingConfig;
+      
+      // Transform the data to match StreamingConfig type
+      const transformedData: StreamingConfig = {
+        ingest_endpoint: data.ingest_endpoint,
+        playback_endpoint: data.playback_endpoint,
+        provider: data.provider,
+        settings: data.settings,
+        cdn_provider: data.cdn_provider,
+        cdn_config: data.cdn_config,
+        obs_recommended_settings: data.obs_recommended_settings as StreamingConfig['obs_recommended_settings'],
+        rtmp_server_locations: data.rtmp_server_locations,
+        stream_key_prefix: data.stream_key_prefix
+      };
+      
+      return transformedData;
     }
   });
 
