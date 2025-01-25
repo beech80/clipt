@@ -12,17 +12,17 @@ interface PollOption {
   text: string;
 }
 
-interface PollResponse {
-  selected_options: string[];
-  user_id: string;
-}
-
 interface Poll {
   id: string;
   question: string;
   options: PollOption[];
   poll_responses: PollResponse[];
   allow_multiple_choices: boolean;
+}
+
+interface PollResponse {
+  selected_options: string[];
+  user_id: string;
 }
 
 interface StreamPollProps {
@@ -33,7 +33,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
   const { user } = useAuth();
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
 
-  const { data: activePoll } = useQuery<Poll>({
+  const { data: activePoll } = useQuery({
     queryKey: ['stream-poll', streamId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -51,14 +51,19 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
 
       if (error) throw error;
       
-      // Transform the raw data to match the Poll interface
-      return {
-        ...data,
-        options: (data.options as any[]).map((opt: any) => ({
+      // Transform the poll data with proper typing
+      const transformedPoll: Poll = {
+        id: data.id,
+        question: data.question,
+        options: data.options.map((opt: { id: string; text: string }) => ({
           id: opt.id,
           text: opt.text
-        }))
-      } as Poll;
+        })),
+        poll_responses: data.poll_responses,
+        allow_multiple_choices: data.allow_multiple_choices
+      };
+
+      return transformedPoll;
     },
     refetchInterval: 5000
   });
@@ -101,7 +106,7 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
 
   return (
     <Card className="p-4 space-y-4">
-      <h3 className="font-semibold text-lg">{activePoll.question}</h3>
+      <h3 className="font-semibold">{activePoll.question}</h3>
       <div className="space-y-2">
         {activePoll.options.map((option) => (
           <div key={option.id} className="space-y-1">
@@ -137,16 +142,16 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
       </div>
       {!hasVoted && selectedOptions.length > 0 && (
         <Button 
-          className="w-full"
           onClick={() => submitVote.mutate(selectedOptions)}
           disabled={submitVote.isPending}
+          className="w-full"
         >
           Submit Vote
         </Button>
       )}
-      <div className="text-sm text-muted-foreground text-center">
-        {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
-      </div>
+      <p className="text-sm text-muted-foreground text-right">
+        Total votes: {totalVotes}
+      </p>
     </Card>
   );
 };
