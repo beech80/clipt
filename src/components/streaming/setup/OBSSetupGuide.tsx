@@ -5,6 +5,7 @@ import { Settings, Video, Camera, Mic, Info, Check, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import type { StreamingConfig } from "@/types/streaming";
 
 export const OBSSetupGuide = () => {
   const { data: streamSettings } = useQuery({
@@ -16,7 +17,7 @@ export const OBSSetupGuide = () => {
         .single();
       
       if (error) throw error;
-      return data;
+      return data as StreamingConfig;
     }
   });
 
