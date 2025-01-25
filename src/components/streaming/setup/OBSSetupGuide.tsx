@@ -23,11 +23,11 @@ export const OBSSetupGuide = () => {
         ingest_endpoint: data.ingest_endpoint,
         playback_endpoint: data.playback_endpoint,
         provider: data.provider,
-        settings: data.settings,
+        settings: data.settings as Record<string, any>,
         cdn_provider: data.cdn_provider,
-        cdn_config: data.cdn_config,
+        cdn_config: data.cdn_config as Record<string, any>,
         obs_recommended_settings: data.obs_recommended_settings as StreamingConfig['obs_recommended_settings'],
-        rtmp_server_locations: data.rtmp_server_locations,
+        rtmp_server_locations: data.rtmp_server_locations as any[],
         stream_key_prefix: data.stream_key_prefix
       };
       
