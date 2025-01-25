@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { AlertSettings } from './types';
@@ -37,9 +38,15 @@ export function StreamAlertSettings({ userId }: StreamAlertSettingsProps) {
   };
 
   const updateSettings = async (alertType: string, updates: Partial<AlertSettings>) => {
+    // Convert styles to JSON string if it exists in updates
+    const processedUpdates = {
+      ...updates,
+      styles: updates.styles ? JSON.stringify(updates.styles) : undefined
+    };
+
     const { error } = await supabase
       .from('stream_alerts')
-      .update(updates)
+      .update(processedUpdates)
       .eq('user_id', userId)
       .eq('alert_type', alertType);
 
