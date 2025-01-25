@@ -22,7 +22,19 @@ export const ViewerEngagementMetrics = ({ streamId }: { streamId: string }) => {
         .rpc('calculate_viewer_retention', { stream_id_param: streamId });
       
       if (error) throw error;
-      return data[0] as EngagementMetrics;
+
+      // Transform the data to match EngagementMetrics interface
+      const transformedData: EngagementMetrics = {
+        engagement_rate: 0, // Default value
+        max_concurrent_viewers: 0, // Default value
+        total_stream_time: '0:00', // Default value
+        average_watch_time: data[0]?.avg_session_duration || '0:00',
+        bounce_rate: data[0]?.bounce_rate || 0,
+        interaction_rate: data[0]?.interaction_rate || 0,
+        retention_rate: data[0]?.retention_rate || 0
+      };
+
+      return transformedData;
     },
   });
 
