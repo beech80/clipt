@@ -50,7 +50,15 @@ export const StreamPoll = ({ streamId }: StreamPollProps) => {
         .single();
 
       if (error) throw error;
-      return data as Poll;
+      
+      // Transform the raw data to match the Poll interface
+      return {
+        ...data,
+        options: (data.options as any[]).map((opt: any) => ({
+          id: opt.id,
+          text: opt.text
+        }))
+      } as Poll;
     },
     refetchInterval: 5000
   });
