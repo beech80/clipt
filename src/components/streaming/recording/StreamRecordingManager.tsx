@@ -137,7 +137,14 @@ export const StreamRecordingManager = ({ streamId }: StreamRecordingManagerProps
           {recordings?.map((recording) => (
             <RecordingListItem
               key={recording.id}
-              recording={recording}
+              recording={{
+                id: recording.id,
+                duration: String(recording.duration || '0 seconds'),
+                created_at: recording.created_at,
+                status: recording.status,
+                storage_path: recording.storage_path || '',
+                download_count: recording.download_count || 0
+              }}
               onDelete={(id) => deleteRecording.mutate(id)}
             />
           ))}
