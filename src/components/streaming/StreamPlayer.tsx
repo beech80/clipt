@@ -3,11 +3,8 @@ import Hls from 'hls.js';
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { StreamPlayerControls } from './player/StreamPlayerControls';
-import { StreamPlayerChat } from './player/StreamPlayerChat';
-import { StreamPlayerGifts } from './player/StreamPlayerGifts';
+import { StreamChat } from './StreamChat';
 import { ViewerCountManager } from './ViewerCountManager';
-import { CDNManager } from './CDNManager';
-import { DVRControls } from './DVRControls';
 
 interface StreamPlayerProps {
   streamUrl?: string | null;
@@ -29,24 +26,10 @@ export const StreamPlayer = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [currentQuality, setCurrentQuality] = useState<string>('auto');
-  const [healthStatus, setHealthStatus] = useState<string>('unknown');
   const [viewerCount, setViewerCount] = useState<number>(0);
-  const [currentCDN, setCurrentCDN] = useState(streamUrl);
-  const [streamMetrics, setStreamMetrics] = useState({
-    bitrate: 0,
-    fps: 0,
-    resolution: ''
-  });
-
-  const handleCDNChange = (newUrl: string) => {
-    setCurrentCDN(newUrl);
-    if (hlsRef.current) {
-      hlsRef.current.loadSource(newUrl);
-    }
-  };
 
   useEffect(() => {
-    if (!currentCDN || !videoRef.current) return;
+    if (!streamUrl || !videoRef.current) return;
 
     const initPlayer = () => {
       if (Hls.isSupported()) {
@@ -57,7 +40,7 @@ export const StreamPlayer = ({
         });
 
         hlsRef.current = hls;
-        hls.loadSource(currentCDN);
+        hls.loadSource(streamUrl);
         hls.attachMedia(videoRef.current!);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -84,7 +67,7 @@ export const StreamPlayer = ({
           }
         });
       } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-        videoRef.current.src = currentCDN;
+        videoRef.current.src = streamUrl;
         if (autoplay) {
           videoRef.current.play().catch(() => {
             toast.error("Autoplay blocked. Please click play.");
@@ -100,54 +83,41 @@ export const StreamPlayer = ({
         hlsRef.current.destroy();
       }
     };
-  }, [currentCDN, autoplay]);
+  }, [streamUrl, autoplay]);
 
   return (
-    <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden group">
-      {!isLive && !currentCDN && (
-        <div className="absolute inset-0 flex items-center justify-center text-white">
-          Stream is offline
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="md:col-span-3">
+        <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+          {!isLive && !streamUrl && (
+            <div className="absolute inset-0 flex items-center justify-center text-white">
+              Stream is offline
+            </div>
+          )}
+          
+          <video
+            ref={videoRef}
+            className="w-full h-full"
+            controls={controls}
+            playsInline
+            poster={!isLive ? "/placeholder.svg" : undefined}
+          />
+          
+          <StreamPlayerControls
+            qualities={qualities}
+            currentQuality={currentQuality}
+            onQualityChange={setCurrentQuality}
+            className="absolute bottom-0 right-0"
+          />
         </div>
-      )}
-      
-      <video
-        ref={videoRef}
-        className="w-full h-full"
-        controls={controls}
-        playsInline
-        poster={!isLive ? "/placeholder.svg" : undefined}
-      />
-      
-      {streamId && (
-        <>
-          <StreamPlayerChat
-            streamId={streamId}
-            viewerCount={viewerCount}
-            onViewerCountChange={setViewerCount}
-          />
-          <StreamPlayerGifts
-            streamId={streamId}
-            isLive={isLive}
-          />
-          <DVRControls
-            streamId={streamId}
-            videoRef={videoRef}
-          />
-        </>
-      )}
+      </div>
 
-      <StreamPlayerControls
-        qualities={qualities}
-        currentQuality={currentQuality}
-        onQualityChange={setCurrentQuality}
-        streamMetrics={streamMetrics}
-        className="absolute bottom-0 right-0"
-      />
-
-      <CDNManager
-        streamUrl={streamUrl || ''}
-        onCDNChange={handleCDNChange}
-      />
+      <div className="md:col-span-1 h-[600px]">
+        <StreamChat 
+          streamId={streamId || ''} 
+          isLive={isLive} 
+        />
+      </div>
 
       {streamId && (
         <ViewerCountManager

@@ -1,97 +1,113 @@
-import React, { useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { supabase } from '@/lib/supabase';
-import { ChatMessage } from './chat/ChatMessage';
-import ChatInput from './chat/ChatInput';
-import { StreamChatHeader } from './chat/StreamChatHeader';
-import { StreamChatError } from './chat/StreamChatError';
-import { StreamChatOffline } from './chat/StreamChatOffline';
-import type { StreamChatMessage } from '@/types/chat';
+import { Send } from 'lucide-react';
 
 interface StreamChatProps {
   streamId: string;
   isLive: boolean;
-  chatEnabled: boolean;
 }
 
-export const StreamChat = ({ streamId, isLive, chatEnabled }: StreamChatProps) => {
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  const { data: messages, error } = useQuery<StreamChatMessage[]>({
-    queryKey: ['stream-chat', streamId],
-    queryFn: async () => {
-      // Don't fetch if streamId is empty
-      if (!streamId) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('stream_chat')
-        .select(`
-          id,
-          stream_id,
-          user_id,
-          message,
-          created_at,
-          is_deleted,
-          deleted_by,
-          deleted_at,
-          is_command,
-          command_type,
-          timeout_duration,
-          user:profiles!user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('stream_id', streamId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      
-      return data.map(msg => ({
-        ...msg,
-        profiles: {
-          username: msg.user?.username || 'Anonymous',
-          avatar_url: msg.user?.avatar_url || ''
-        }
-      })) as StreamChatMessage[];
-    },
-    enabled: !!streamId && isLive, // Only run query if streamId exists and stream is live
-    refetchInterval: isLive ? 1000 : false,
-  });
+export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState('');
 
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    // Subscribe to new chat messages
+    const channel = supabase
+      .channel('stream-chat')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'stream_chat',
+          filter: `stream_id=eq.${streamId}`
+        },
+        (payload) => {
+          setMessages((current) => [...current, payload.new]);
+        }
+      )
+      .subscribe();
+
+    // Load existing messages
+    loadMessages();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [streamId]);
+
+  const loadMessages = async () => {
+    const { data, error } = await supabase
+      .from('stream_chat')
+      .select('*, profiles(username)')
+      .eq('stream_id', streamId)
+      .order('created_at', { ascending: true })
+      .limit(50);
+
+    if (error) {
+      console.error('Error loading messages:', error);
+      return;
     }
-  }, [messages]);
 
-  if (!chatEnabled) {
-    return <StreamChatOffline />;
-  }
+    setMessages(data || []);
+  };
 
-  if (error) {
-    return <StreamChatError />;
-  }
+  const sendMessage = async () => {
+    if (!newMessage.trim()) return;
+
+    const { error } = await supabase
+      .from('stream_chat')
+      .insert({
+        stream_id: streamId,
+        message: newMessage,
+      });
+
+    if (error) {
+      console.error('Error sending message:', error);
+      return;
+    }
+
+    setNewMessage('');
+  };
 
   return (
-    <div className="flex h-full flex-col bg-background">
-      <StreamChatHeader messageCount={messages?.length || 0} />
+    <Card className="flex flex-col h-full">
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4">
+          {messages.map((msg) => (
+            <div key={msg.id} className="flex flex-col">
+              <span className="text-sm font-medium">
+                {msg.profiles?.username || 'Anonymous'}
+              </span>
+              <p className="text-sm">{msg.message}</p>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
       
-      <div 
-        ref={chatContainerRef}
-        className="flex-1 space-y-4 overflow-y-auto p-4"
-      >
-        {messages?.map((message) => (
-          <ChatMessage key={message.id} message={message} />
-        ))}
+      <div className="p-4 border-t">
+        <div className="flex gap-2">
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type a message..."
+            disabled={!isLive}
+            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          />
+          <Button 
+            onClick={sendMessage}
+            disabled={!isLive}
+            size="icon"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-
-      <ChatInput 
-        onSendMessage={() => {}} 
-        disabled={!isLive || !chatEnabled || !streamId} 
-      />
-    </div>
+    </Card>
   );
 };
