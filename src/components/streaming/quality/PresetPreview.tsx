@@ -1,8 +1,8 @@
 import { Card } from '@/components/ui/card';
-import type { PresetFormData } from './types';
+import type { PresetData } from './types';
 
 interface PresetPreviewProps {
-  preset: PresetFormData;
+  preset: PresetData;
 }
 
 export function PresetPreview({ preset }: PresetPreviewProps) {
