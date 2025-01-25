@@ -2,13 +2,13 @@ import { QualityPresetManager } from "../QualityPresetManager";
 import { StreamQualityControls } from "../StreamQualityControls";
 import { StreamInteractivePanel } from "../StreamInteractivePanel";
 import { Card } from "@/components/ui/card";
-import type { QualityPreset } from "@/types/streaming";
+import type { PresetData } from "../quality/types";
 
 interface StreamControlsSectionProps {
   userId: string;
   streamId: string;
   isLive: boolean;
-  onPresetChange: (preset: QualityPreset) => void;
+  onPresetChange: (preset: PresetData) => void;
 }
 
 export function StreamControlsSection({

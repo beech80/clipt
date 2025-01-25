@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { PresetForm } from "./quality/PresetForm";
 import { PresetList } from "./quality/PresetList";
 import { PresetPreview } from "./quality/PresetPreview";
-import { PresetData, PresetFormData } from "./quality/types";
+import { PresetData } from "./quality/types";
 
 interface QualityPresetManagerProps {
   streamId: string;
@@ -28,7 +28,7 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { data: presets, refetch, isLoading } = useQuery({
+  const { data: presets, isLoading } = useQuery({
     queryKey: ['quality-presets'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -37,12 +37,19 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as PresetData[];
+      
+      // Transform the data to match PresetData type
+      return data.map(preset => ({
+        id: preset.id,
+        name: preset.name,
+        description: preset.description,
+        settings: preset.settings as PresetData['settings']
+      }));
     }
   });
 
   const createPreset = useMutation({
-    mutationFn: async (newPreset: PresetFormData) => {
+    mutationFn: async (newPreset: Omit<PresetData, 'id'>) => {
       const { data, error } = await supabase
         .from('quality_presets')
         .insert([newPreset])
@@ -105,7 +112,7 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
     }
   });
 
-  const handleSubmit = (data: PresetFormData) => {
+  const handleSubmit = (data: Omit<PresetData, 'id'>) => {
     if (editingPreset) {
       updatePreset.mutate({ ...data, id: editingPreset.id });
     } else {
@@ -136,13 +143,14 @@ export function QualityPresetManager({ streamId, onPresetChange }: QualityPreset
 
       <PresetList
         presets={presets || []}
-        activePresetId={activePreset}
+        activePreset={activePreset}
         onPresetSelect={(preset) => {
           setActivePreset(preset.id);
           onPresetChange?.(preset);
         }}
         onEdit={setEditingPreset}
         onDelete={(id) => deletePreset.mutate(id)}
+        isApplying={false}
       />
     </div>
   );
