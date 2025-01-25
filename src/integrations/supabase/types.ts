@@ -2518,6 +2518,109 @@ export type Database = {
           },
         ]
       }
+      obs_connection_logs: {
+        Row: {
+          connected_at: string | null
+          connection_quality: Json | null
+          disconnected_at: string | null
+          id: string
+          obs_version: string | null
+          settings_used: Json | null
+          stream_id: string | null
+        }
+        Insert: {
+          connected_at?: string | null
+          connection_quality?: Json | null
+          disconnected_at?: string | null
+          id?: string
+          obs_version?: string | null
+          settings_used?: Json | null
+          stream_id?: string | null
+        }
+        Update: {
+          connected_at?: string | null
+          connection_quality?: Json | null
+          disconnected_at?: string | null
+          id?: string
+          obs_version?: string | null
+          settings_used?: Json | null
+          stream_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_stream"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "fk_stream"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_stream"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "obs_connection_logs_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "obs_connection_logs_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "obs_connection_logs_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      obs_server_status: {
+        Row: {
+          current_load: number | null
+          id: string
+          is_primary: boolean | null
+          last_checked: string | null
+          region: string | null
+          server_url: string
+          status: string | null
+        }
+        Insert: {
+          current_load?: number | null
+          id?: string
+          is_primary?: boolean | null
+          last_checked?: string | null
+          region?: string | null
+          server_url: string
+          status?: string | null
+        }
+        Update: {
+          current_load?: number | null
+          id?: string
+          is_primary?: boolean | null
+          last_checked?: string | null
+          region?: string | null
+          server_url?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       onboarding_progress: {
         Row: {
           completed: boolean | null
@@ -5381,9 +5484,12 @@ export type Database = {
           id: string
           ingest_endpoint: string
           low_latency_mode: boolean | null
+          obs_recommended_settings: Json | null
           playback_endpoint: string
           provider: string
+          rtmp_server_locations: Json | null
           settings: Json | null
+          stream_key_prefix: string | null
         }
         Insert: {
           abr_enabled?: boolean | null
@@ -5400,9 +5506,12 @@ export type Database = {
           id?: string
           ingest_endpoint: string
           low_latency_mode?: boolean | null
+          obs_recommended_settings?: Json | null
           playback_endpoint: string
           provider: string
+          rtmp_server_locations?: Json | null
           settings?: Json | null
+          stream_key_prefix?: string | null
         }
         Update: {
           abr_enabled?: boolean | null
@@ -5419,9 +5528,12 @@ export type Database = {
           id?: string
           ingest_endpoint?: string
           low_latency_mode?: boolean | null
+          obs_recommended_settings?: Json | null
           playback_endpoint?: string
           provider?: string
+          rtmp_server_locations?: Json | null
           settings?: Json | null
+          stream_key_prefix?: string | null
         }
         Relationships: []
       }
