@@ -1,11 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AlertData } from './types';
+import { playAlertSound } from './utils/alertSounds';
 
 interface AlertContentProps {
   alert: AlertData;
 }
 
 export const AlertContent = ({ alert }: AlertContentProps) => {
+  useEffect(() => {
+    if (alert.styles.soundEnabled) {
+      playAlertSound(alert.styles.soundVolume);
+    }
+  }, [alert.styles.soundEnabled, alert.styles.soundVolume]);
+
   const getAlertContent = (alert: AlertData) => {
     switch (alert.type) {
       case 'follow':
