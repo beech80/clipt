@@ -3,8 +3,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, CreditCard } from "lucide-react";
+import { Check, CreditCard, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface SubscriptionPlan {
   id: string;
@@ -17,8 +18,9 @@ interface SubscriptionPlan {
 
 const Subscription = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const { data: plans, isLoading } = useQuery({
+  const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ['subscription-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -46,25 +48,57 @@ const Subscription = () => {
     enabled: !!user
   });
 
-  const handleSubscribe = async (planId: string) => {
+  const handleManageSubscription = async (action: 'cancel' | 'upgrade', planId?: string) => {
     if (!user) {
-      toast.error("Please login to subscribe");
+      toast.error("Please login to manage subscriptions");
+      navigate("/login");
       return;
     }
 
     try {
-      // Here we'll integrate Stripe payment later
-      toast.info("Payment integration coming soon!");
+      if (action === 'cancel') {
+        const { error } = await supabase
+          .from('user_subscriptions')
+          .update({ 
+            cancel_at_period_end: true,
+            status: 'canceling'
+          })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        toast.success("Subscription will be cancelled at the end of the billing period");
+      } else if (action === 'upgrade' && planId) {
+        // For now, just update the subscription plan
+        const { error } = await supabase
+          .from('user_subscriptions')
+          .update({ 
+            plan_id: planId,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        toast.success("Subscription updated successfully");
+      }
     } catch (error) {
-      console.error('Subscription error:', error);
-      toast.error("Failed to process subscription");
+      console.error('Subscription management error:', error);
+      toast.error("Failed to manage subscription");
     }
   };
 
-  if (isLoading) {
+  if (plansLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-96 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -76,7 +110,12 @@ const Subscription = () => {
         
         <div className="grid md:grid-cols-3 gap-8">
           {plans?.map((plan) => (
-            <Card key={plan.id} className="p-6 flex flex-col">
+            <Card key={plan.id} className="p-6 flex flex-col relative">
+              {currentSubscription?.plan_id === plan.id && (
+                <div className="absolute -top-3 -right-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm">
+                  Current Plan
+                </div>
+              )}
               <h2 className="text-2xl font-bold mb-2">{plan.name}</h2>
               <p className="text-3xl font-bold mb-4">
                 ${plan.price.toFixed(2)}
@@ -93,23 +132,44 @@ const Subscription = () => {
                 ))}
               </ul>
 
-              <Button 
-                onClick={() => handleSubscribe(plan.id)}
-                className="w-full"
-                disabled={currentSubscription?.plan_id === plan.id}
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                {currentSubscription?.plan_id === plan.id ? 'Current Plan' : 'Subscribe'}
-              </Button>
+              {currentSubscription ? (
+                currentSubscription.plan_id === plan.id ? (
+                  <Button 
+                    onClick={() => handleManageSubscription('cancel')}
+                    variant="destructive"
+                    className="w-full"
+                  >
+                    Cancel Subscription
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={() => handleManageSubscription('upgrade', plan.id)}
+                    className="w-full"
+                    disabled={currentSubscription.cancel_at_period_end}
+                  >
+                    {plan.price > (currentSubscription.subscription_plans?.price || 0) ? 'Upgrade' : 'Downgrade'} to {plan.name}
+                  </Button>
+                )
+              ) : (
+                <Button 
+                  onClick={() => navigate("/login")}
+                  className="w-full"
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Subscribe
+                </Button>
+              )}
             </Card>
           ))}
         </div>
 
-        {currentSubscription && (
-          <div className="mt-8 text-center text-sm text-gray-600">
-            You are currently subscribed to the {currentSubscription.subscription_plans.name} plan.
-            {currentSubscription.cancel_at_period_end && 
-              " Your subscription will end at the end of the current period."}
+        {currentSubscription?.cancel_at_period_end && (
+          <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-yellow-500" />
+            <p className="text-sm text-yellow-700">
+              Your subscription will be cancelled at the end of the current billing period 
+              ({new Date(currentSubscription.current_period_end).toLocaleDateString()})
+            </p>
           </div>
         )}
       </div>
