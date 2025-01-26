@@ -1,32 +1,73 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { AchievementProgress } from '@/components/achievements/AchievementProgress';
+import { Card } from '@/components/ui/card';
+import { Trophy, Star, Award, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Gamepad2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BackButton } from '@/components/ui/back-button';
 
-const Index = () => {
+const Progress = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="p-8 text-center space-y-4">
+          <LogIn className="w-12 h-12 mx-auto text-muted-foreground" />
+          <h2 className="text-2xl font-bold">Sign in to Track Progress</h2>
+          <p className="text-muted-foreground">
+            Sign in to view your achievements and track your progress
+          </p>
+          <Button onClick={() => navigate('/login')}>
+            Sign In
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-      <div className="space-y-6 max-w-2xl">
-        <div className="flex justify-center mb-4">
-          <div className="h-16 w-16 rounded-lg bg-primary/20 flex items-center justify-center">
-            <Gamepad2 className="h-8 w-8 text-primary" />
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center gap-4">
+        <BackButton />
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Trophy className="h-6 w-6 text-primary" />
+          Your Progress
+        </h1>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-[1fr_300px]">
+        <div className="space-y-6">
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="h-5 w-5 text-yellow-500" />
+              <h2 className="text-xl font-semibold">Level Progress</h2>
+            </div>
+            <div className="space-y-4">
+              {/* Level progress will be implemented here */}
+              <p className="text-muted-foreground">Track your gaming journey and level progression</p>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Award className="h-5 w-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Recent Achievements</h2>
+            </div>
+            <div className="space-y-4">
+              {/* Recent achievements will be shown here */}
+              <p className="text-muted-foreground">Your latest gaming accomplishments</p>
+            </div>
+          </Card>
         </div>
-        <h1 className="text-4xl font-bold">Welcome to the Gaming Platform</h1>
-        <p className="text-xl text-muted-foreground">
-          Connect with fellow gamers, share your gaming moments, and join live streams.
-        </p>
-        <div className="flex gap-4 justify-center">
-          <Button asChild>
-            <Link to="/login">Sign In</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/signup">Create Account</Link>
-          </Button>
+
+        <div className="space-y-4">
+          <AchievementProgress />
         </div>
       </div>
     </div>
   );
 };
 
-export default Index;
+export default Progress;
