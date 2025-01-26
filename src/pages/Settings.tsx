@@ -8,6 +8,10 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
+import { AccessibilitySettings } from "@/components/accessibility/AccessibilitySettings";
+import { TwoFactorSettings } from "@/components/settings/TwoFactorSettings";
+import { DataPrivacySettings } from "@/components/settings/DataPrivacySettings";
+import { StreamSettings } from "@/components/streaming/StreamSettings";
 import {
   Bell,
   Volume2,
@@ -76,7 +80,24 @@ const Settings = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="container mx-auto py-6">
+        <div className="flex items-center gap-4 mb-6">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Settings</h1>
+            <p className="text-muted-foreground">Loading your settings...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -141,16 +162,8 @@ const Settings = () => {
             </div>
           </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Shield className="w-5 h-5 text-purple-500" />
-              <h2 className="text-xl font-semibold">Privacy & Security</h2>
-            </div>
-            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <Shield className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-              <p className="text-gray-500">Coming soon</p>
-            </div>
-          </Card>
+          <TwoFactorSettings />
+          <DataPrivacySettings />
         </div>
 
         {/* Right Column */}
@@ -168,19 +181,9 @@ const Settings = () => {
             </Card>
           )}
 
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Bell className="w-5 h-5 text-purple-500" />
-              <h2 className="text-xl font-semibold">Notification Preferences</h2>
-            </div>
-            <p className="text-muted-foreground mb-4">
-              Configure how you receive notifications and updates
-            </p>
-            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <Bell className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-              <p className="text-gray-500">Coming soon</p>
-            </div>
-          </Card>
+          <AccessibilitySettings />
+          
+          {user && <StreamSettings userId={user.id} />}
         </div>
       </div>
     </div>
