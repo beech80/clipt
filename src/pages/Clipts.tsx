@@ -11,9 +11,10 @@ import { Heart, MessageSquare, Trophy } from "lucide-react";
 const Clipts = () => {
   const navigate = useNavigate();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading, error } = useQuery({
     queryKey: ['clipts-feed'],
     queryFn: async () => {
+      console.log('Fetching clipts feed...');
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -34,12 +35,36 @@ const Clipts = () => {
         .limit(10);
 
       if (error) {
+        console.error('Error fetching clipts:', error);
         toast.error("Failed to load clips");
         throw error;
       }
+
+      console.log('Fetched clipts:', data);
       return data;
     }
   });
+
+  if (error) {
+    console.error('Query error:', error);
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center gaming-card p-8">
+          <h3 className="text-xl font-semibold mb-2 gaming-gradient">Error Loading Clipts</h3>
+          <p className="text-muted-foreground mb-4">
+            {error instanceof Error ? error.message : "Failed to load clips"}
+          </p>
+          <Button 
+            onClick={() => window.location.reload()}
+            variant="outline"
+            className="gaming-button"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -64,7 +89,7 @@ const Clipts = () => {
 
       {/* Vertical Scroll Container */}
       <div className="h-full overflow-y-auto snap-y snap-mandatory">
-        {posts?.length === 0 ? (
+        {!posts || posts.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <div className="text-center gaming-card p-8">
               <h3 className="text-xl font-semibold mb-2 gaming-gradient">No Clipts Yet</h3>
