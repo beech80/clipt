@@ -117,6 +117,14 @@ const Profile = () => {
 
           <div className="flex flex-wrap justify-center sm:justify-end gap-3 mt-6">
             <Button 
+              onClick={() => navigate('/progress')}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              size="sm"
+            >
+              <Trophy className="w-4 h-4 mr-2" />
+              View Progress
+            </Button>
+            <Button 
               onClick={handleAddFriend}
               className="bg-purple-600 hover:bg-purple-700 text-white"
               size="sm"

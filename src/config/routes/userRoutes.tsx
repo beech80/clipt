@@ -3,6 +3,7 @@ import EditProfile from "@/pages/EditProfile";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Onboarding from "@/pages/Onboarding";
+import Progress from "@/pages/Progress";
 
 export const userRoutes: RouteObject[] = [
   {
@@ -20,5 +21,9 @@ export const userRoutes: RouteObject[] = [
   {
     path: "onboarding",
     element: <Onboarding />,
+  },
+  {
+    path: "progress",
+    element: <Progress />,
   },
 ];
