@@ -1,5 +1,6 @@
 import { RouteObject } from "react-router-dom";
 import Home from "@/pages/Home";
+import Progress from "@/pages/Progress";
 import { authRoutes } from "./routes/authRoutes";
 import { docsRoutes } from "./routes/docsRoutes";
 import { contentRoutes } from "./routes/contentRoutes";
@@ -12,6 +13,10 @@ export const routes: RouteObject[] = [
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/progress",
+    element: <Progress />,
   },
   ...authRoutes,
   docsRoutes,
