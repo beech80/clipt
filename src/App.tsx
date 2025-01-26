@@ -20,34 +20,36 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
         <ErrorBoundary>
           <AuthProvider>
-            <ReportDialogProvider>
-              <Routes>
-                {routes.map((route) => (
-                  <Route
-                    key={route.path}
-                    path={route.path}
-                    element={route.element}
-                  >
-                    {route.children?.map((childRoute) => (
-                      <Route
-                        key={childRoute.path}
-                        path={childRoute.path}
-                        element={childRoute.element}
-                      />
-                    ))}
-                  </Route>
-                ))}
-              </Routes>
-              <Toaster position="top-center" />
-            </ReportDialogProvider>
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <ReportDialogProvider>
+                <Routes>
+                  {routes.map((route) => (
+                    <Route
+                      key={route.path}
+                      path={route.path}
+                      element={route.element}
+                    >
+                      {route.children?.map((childRoute) => (
+                        <Route
+                          key={childRoute.path}
+                          path={childRoute.path}
+                          element={childRoute.element}
+                        />
+                      ))}
+                    </Route>
+                  ))}
+                </Routes>
+                <Toaster position="top-center" />
+              </ReportDialogProvider>
+            </React.Suspense>
           </AuthProvider>
         </ErrorBoundary>
-      </BrowserRouter>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 }
 
