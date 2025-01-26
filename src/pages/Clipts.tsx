@@ -44,18 +44,18 @@ const Clipts = () => {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-gaming-400" />
       </div>
     );
   }
 
   return (
-    <div className="relative h-screen overflow-hidden">
+    <div className="relative h-screen overflow-hidden bg-[#1A1F2C]">
       {/* Create Button - Fixed at the top right */}
       <div className="absolute top-4 right-4 z-50">
         <Button 
           onClick={() => navigate('/clip-editor/new')}
-          className="gap-2"
+          className="gaming-button gap-2 bg-gaming-400 hover:bg-gaming-500"
         >
           <Plus className="h-4 w-4" />
           Create Clipt
@@ -66,14 +66,15 @@ const Clipts = () => {
       <div className="h-full overflow-y-auto snap-y snap-mandatory">
         {posts?.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-xl font-semibold mb-2">No Clipts Yet</h3>
+            <div className="text-center gaming-card p-8">
+              <h3 className="text-xl font-semibold mb-2 gaming-gradient">No Clipts Yet</h3>
               <p className="text-muted-foreground mb-4">
                 Be the first to share an amazing gaming moment!
               </p>
               <Button 
                 onClick={() => navigate('/clip-editor/new')}
                 variant="outline"
+                className="gaming-button"
               >
                 Create Your First Clipt
               </Button>
@@ -89,9 +90,9 @@ const Clipts = () => {
                 {/* Post Header */}
                 <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border-2 border-blue-500">
+                    <Avatar className="h-10 w-10 border-2 border-gaming-400">
                       <AvatarImage src={post.profiles?.avatar_url} />
-                      <AvatarFallback className="bg-blue-900">
+                      <AvatarFallback className="bg-gaming-900">
                         {post.profiles?.username?.[0]?.toUpperCase() || 'A'}
                       </AvatarFallback>
                     </Avatar>
@@ -124,18 +125,13 @@ const Clipts = () => {
 
                 {/* Post Content */}
                 <div className="absolute inset-0">
-                  {post.image_url && (
-                    <img 
-                      src={post.image_url} 
-                      alt="Post content"
-                      className="w-full h-full object-cover"
-                    />
-                  )}
                   {post.video_url && (
                     <video 
                       src={post.video_url}
                       className="w-full h-full object-cover"
                       controls
+                      loop
+                      playsInline
                     />
                   )}
                 </div>
