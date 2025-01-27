@@ -10,21 +10,51 @@ const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Sample post data for UI layout
-  const samplePost = {
-    id: "sample-1",
-    content: "Sample gaming clip",
-    image_url: null,
-    video_url: null,
-    created_at: new Date().toISOString(),
-    user_id: "sample-user",
-    profiles: {
-      username: "GamerDemo",
-      avatar_url: null
+  // Sample posts with videos for demonstration
+  const samplePosts = [
+    {
+      id: "sample-1",
+      content: "Check out this amazing gaming moment!",
+      image_url: null,
+      video_url: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Sample video
+      created_at: new Date().toISOString(),
+      user_id: "sample-user",
+      profiles: {
+        username: "ProGamer123",
+        avatar_url: null
+      },
+      likes_count: 1234,
+      clip_votes: [{ count: 42 }]
     },
-    likes_count: 42,
-    clip_votes: [{ count: 15 }]
-  };
+    {
+      id: "sample-2",
+      content: "Epic win in the last second!",
+      image_url: null,
+      video_url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", // Sample video
+      created_at: new Date().toISOString(),
+      user_id: "sample-user2",
+      profiles: {
+        username: "GameMaster",
+        avatar_url: null
+      },
+      likes_count: 856,
+      clip_votes: [{ count: 31 }]
+    },
+    {
+      id: "sample-3",
+      content: "Unbelievable gameplay sequence!",
+      image_url: null,
+      video_url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", // Sample video
+      created_at: new Date().toISOString(),
+      user_id: "sample-user3",
+      profiles: {
+        username: "EpicStreamer",
+        avatar_url: null
+      },
+      likes_count: 2431,
+      clip_votes: [{ count: 89 }]
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-[#1A1F2C]">
@@ -53,14 +83,9 @@ const Clipts = () => {
         <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
                       overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none post-container`}>
           <div className="space-y-4 pb-6">
-            {/* Show 3 sample posts for layout visualization */}
-            {[1, 2, 3].map((i) => (
-              <div key={`sample-${i}`} className="snap-start">
-                <PostItem post={{
-                  ...samplePost,
-                  id: `sample-${i}`,
-                  content: `Sample Gaming Clip ${i}`
-                }} />
+            {samplePosts.map((post) => (
+              <div key={post.id} className="snap-start">
+                <PostItem post={post} />
               </div>
             ))}
           </div>
