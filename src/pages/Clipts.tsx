@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import PostItem from "@/components/PostItem";
-import { WelcomeSection } from "@/components/home/WelcomeSection";
-import { SidebarContent } from "@/components/home/SidebarContent";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Post } from "@/types/post";
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -32,10 +31,10 @@ const Clipts = () => {
           ),
           clip_votes (
             count
-          ),
-          comments:comments(count)
+          )
         `)
-        .not('video_url', 'is', null) // Only fetch posts with videos
+        .not('video_url', 'is', null)
+        .is('is_published', true)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -46,12 +45,13 @@ const Clipts = () => {
       }
 
       console.log('Fetched clipts:', data);
-      return data;
-    }
+      return data as Post[];
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   if (error) {
-    console.error('Query error:', error);
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center gaming-card p-8">
@@ -81,55 +81,45 @@ const Clipts = () => {
 
   return (
     <div className="min-h-screen bg-[#1A1F2C]">
-      <WelcomeSection />
-      
-      <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Content Area */}
-        <div className="lg:col-span-3">
-          {/* Create Button - Fixed at the top */}
-          <div className="mb-4">
-            <Button 
-              onClick={() => navigate('/clip-editor/new')}
-              className="gaming-button gap-2 bg-gaming-400 hover:bg-gaming-500"
-            >
-              <Plus className="h-4 w-4" />
-              Create Clipt
-            </Button>
-          </div>
-
-          {/* Posts Feed */}
-          <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
-                          overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none`}>
-            <div className="space-y-6 pb-6">
-              {!posts || posts.length === 0 ? (
-                <div className="text-center gaming-card p-8">
-                  <h3 className="text-xl font-semibold mb-2 gaming-gradient">No Clipts Yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Be the first to share an amazing gaming moment!
-                  </p>
-                  <Button 
-                    onClick={() => navigate('/clip-editor/new')}
-                    variant="outline"
-                    className="gaming-button"
-                  >
-                    Create Your First Clipt
-                  </Button>
-                </div>
-              ) : (
-                posts.map((post) => (
-                  <div key={post.id} className="snap-start">
-                    <PostItem post={post} />
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+      <div className="container mx-auto px-4 py-6">
+        {/* Create Button */}
+        <div className="mb-4">
+          <Button 
+            onClick={() => navigate('/clip-editor/new')}
+            className="gaming-button gap-2 bg-gaming-400 hover:bg-gaming-500"
+          >
+            <Plus className="h-4 w-4" />
+            Create Clipt
+          </Button>
         </div>
 
-        {/* Sidebar */}
-        <aside className="hidden lg:block">
-          <SidebarContent />
-        </aside>
+        {/* Posts Feed */}
+        <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
+                      overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none`}>
+          <div className="space-y-6 pb-6">
+            {!posts || posts.length === 0 ? (
+              <div className="text-center gaming-card p-8">
+                <h3 className="text-xl font-semibold mb-2 gaming-gradient">No Clipts Yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Be the first to share an amazing gaming moment!
+                </p>
+                <Button 
+                  onClick={() => navigate('/clip-editor/new')}
+                  variant="outline"
+                  className="gaming-button"
+                >
+                  Create Your First Clipt
+                </Button>
+              </div>
+            ) : (
+              posts.map((post) => (
+                <div key={post.id} className="snap-start">
+                  <PostItem post={post} />
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Game Boy Controls */}
