@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Users, MessageSquare } from "lucide-react";
 
 export const WelcomeSection = () => {
   const navigate = useNavigate();
@@ -13,6 +14,27 @@ export const WelcomeSection = () => {
       role="banner"
     >
       <div className="absolute inset-0 bg-gradient-to-r from-gaming-600/20 to-gaming-400/20 animate-gradient" />
+      
+      {/* Navigation Buttons */}
+      <div className="flex justify-center gap-4 mb-6">
+        <Button 
+          variant="outline" 
+          className="gaming-button flex items-center gap-2"
+          onClick={() => navigate('/posts/new')}
+        >
+          <MessageSquare className="w-4 h-4" />
+          Post
+        </Button>
+        <Button 
+          variant="outline" 
+          className="gaming-button flex items-center gap-2"
+          onClick={() => navigate('/squads')}
+        >
+          <Users className="w-4 h-4" />
+          Squads
+        </Button>
+      </div>
+
       <motion.h1 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
