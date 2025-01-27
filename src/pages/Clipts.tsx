@@ -10,18 +10,18 @@ const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Sample posts with both videos and thumbnails
+  // Sample posts with videos for demonstration
   const samplePosts = [
     {
       id: "sample-1",
       content: "Check out this amazing gaming moment!",
-      image_url: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1920&q=80",
-      video_url: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      image_url: null,
+      video_url: "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", // Sample video
       created_at: new Date().toISOString(),
       user_id: "sample-user",
       profiles: {
         username: "ProGamer123",
-        avatar_url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100"
+        avatar_url: null
       },
       likes_count: 1234,
       clip_votes: [{ count: 42 }]
@@ -29,13 +29,13 @@ const Clipts = () => {
     {
       id: "sample-2",
       content: "Epic win in the last second!",
-      image_url: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1920&q=80",
-      video_url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      image_url: null,
+      video_url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", // Sample video
       created_at: new Date().toISOString(),
       user_id: "sample-user2",
       profiles: {
         username: "GameMaster",
-        avatar_url: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=100&h=100"
+        avatar_url: null
       },
       likes_count: 856,
       clip_votes: [{ count: 31 }]
@@ -43,13 +43,13 @@ const Clipts = () => {
     {
       id: "sample-3",
       content: "Unbelievable gameplay sequence!",
-      image_url: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1920&q=80",
-      video_url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      image_url: null,
+      video_url: "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", // Sample video
       created_at: new Date().toISOString(),
       user_id: "sample-user3",
       profiles: {
         username: "EpicStreamer",
-        avatar_url: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&h=100"
+        avatar_url: null
       },
       likes_count: 2431,
       clip_votes: [{ count: 89 }]
