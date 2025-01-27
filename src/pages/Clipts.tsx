@@ -54,7 +54,7 @@ const Clipts = () => {
     console.error('Query error:', error);
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-center gaming-card p-8">
+        <div className="text-center gaming-cartridge p-8">
           <h3 className="text-xl font-semibold mb-2 gaming-gradient">Error Loading Clipts</h3>
           <p className="text-muted-foreground mb-4">
             {error instanceof Error ? error.message : "Failed to load clips"}
@@ -85,6 +85,16 @@ const Clipts = () => {
     return (
       <div className="min-h-screen bg-[#1A1F2C]">
         <div className="container mx-auto px-4 py-6">
+          <div className="gaming-cartridge mb-4 p-4">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold gaming-gradient">Gaming Clipts</h1>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                <span className="text-sm text-gaming-400">LIVE</span>
+              </div>
+            </div>
+          </div>
+
           <Button 
             onClick={() => navigate('/clip-editor/new')}
             className="gaming-button gap-2 bg-gaming-400 hover:bg-gaming-500 mb-4"
@@ -93,7 +103,7 @@ const Clipts = () => {
             Create Clipt
           </Button>
 
-          <div className="text-center gaming-card p-8">
+          <div className="text-center gaming-cartridge p-8">
             <h3 className="text-xl font-semibold mb-2 gaming-gradient">No Clipts Yet</h3>
             <p className="text-muted-foreground mb-4">
               Be the first to share an amazing gaming moment!
@@ -116,6 +126,17 @@ const Clipts = () => {
   return (
     <div className="min-h-screen bg-[#1A1F2C]">
       <div className="container mx-auto px-4 py-6">
+        {/* GameBoy Cartridge Header */}
+        <div className="gaming-cartridge mb-4 p-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold gaming-gradient">Gaming Clipts</h1>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+              <span className="text-sm text-gaming-400">LIVE</span>
+            </div>
+          </div>
+        </div>
+
         {/* Create Button */}
         <div className="mb-4">
           <Button 
