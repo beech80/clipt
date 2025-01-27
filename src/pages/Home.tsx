@@ -1,21 +1,10 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import PostList from '@/components/PostList';
 import GameBoyControls from '@/components/GameBoyControls';
 
 const Home = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-
-  React.useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-  }, [user, navigate]);
-
-  if (!user) return null;
 
   return (
     <div className="relative min-h-screen bg-[#1A1F2C] overflow-hidden">
@@ -29,6 +18,11 @@ const Home = () => {
               <span className="text-sm text-gaming-400">LIVE</span>
             </div>
           </div>
+          {!user && (
+            <div className="text-sm text-gaming-400 mt-2">
+              Sign in to like, comment, and share posts!
+            </div>
+          )}
         </div>
 
         {/* Instagram-style Feed */}
