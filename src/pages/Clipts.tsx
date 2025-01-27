@@ -133,7 +133,7 @@ const Clipts = () => {
         </div>
 
         <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
-                      overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none`}>
+                      overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none post-container`}>
           <div className="space-y-6 pb-6">
             {posts.map((post) => (
               <div key={post.id} className="snap-start">
@@ -144,7 +144,7 @@ const Clipts = () => {
         </div>
       </div>
 
-      <GameBoyControls />
+      <GameBoyControls currentPostId={posts[0]?.id} />
     </div>
   );
 };

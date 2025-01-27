@@ -32,10 +32,10 @@ const PostItem = ({ post }: PostItemProps) => {
   const username = post.profiles?.username || 'Anonymous';
 
   return (
-    <div className="relative w-full bg-[#1A1F2C] rounded-lg overflow-hidden shadow-lg transition-shadow hover:shadow-xl">
+    <div className="relative w-full gaming-card">
       <div className="absolute inset-0 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gaming-600/20 backdrop-blur-sm bg-gaming-800/80">
+        <div className="flex items-center justify-between p-4 border-b border-gaming-400/20 backdrop-blur-sm bg-gaming-800/80">
           <div className="flex items-center space-x-3">
             <span className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-colors">
               {username}
