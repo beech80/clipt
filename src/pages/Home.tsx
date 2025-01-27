@@ -3,9 +3,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import PostList from '@/components/PostList';
 import GameBoyControls from '@/components/GameBoyControls';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="relative min-h-screen bg-[#1A1F2C] overflow-hidden">
@@ -15,7 +17,7 @@ const Home = () => {
           <Tabs defaultValue="squads" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="squads" className="text-xl font-bold gaming-gradient">Squads</TabsTrigger>
-              <TabsTrigger value="clipts" className="text-xl font-bold gaming-gradient">Clipts</TabsTrigger>
+              <TabsTrigger value="clipts" className="text-xl font-bold gaming-gradient" onClick={() => navigate('/clipts')}>Clipts</TabsTrigger>
             </TabsList>
             
             <TabsContent value="squads">
