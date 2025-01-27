@@ -17,7 +17,7 @@ const Clipts = () => {
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['clipts-feed'],
     queryFn: async () => {
-      console.log('Fetching clipts feed...');
+      console.log('Starting to fetch clipts feed...');
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -47,11 +47,11 @@ const Clipts = () => {
       console.log('Fetched clipts:', data);
       return data as Post[];
     },
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1
   });
 
   if (error) {
+    console.error('Query error:', error);
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center gaming-card p-8">
@@ -72,6 +72,7 @@ const Clipts = () => {
   }
 
   if (isLoading) {
+    console.log('Clipts is in loading state');
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-gaming-400" />
@@ -79,6 +80,39 @@ const Clipts = () => {
     );
   }
 
+  if (!posts || posts.length === 0) {
+    console.log('No clipts found');
+    return (
+      <div className="min-h-screen bg-[#1A1F2C]">
+        <div className="container mx-auto px-4 py-6">
+          <Button 
+            onClick={() => navigate('/clip-editor/new')}
+            className="gaming-button gap-2 bg-gaming-400 hover:bg-gaming-500 mb-4"
+          >
+            <Plus className="h-4 w-4" />
+            Create Clipt
+          </Button>
+
+          <div className="text-center gaming-card p-8">
+            <h3 className="text-xl font-semibold mb-2 gaming-gradient">No Clipts Yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Be the first to share an amazing gaming moment!
+            </p>
+            <Button 
+              onClick={() => navigate('/clip-editor/new')}
+              variant="outline"
+              className="gaming-button"
+            >
+              Create Your First Clipt
+            </Button>
+          </div>
+        </div>
+        <GameBoyControls />
+      </div>
+    );
+  }
+
+  console.log('Rendering clipts:', posts.length);
   return (
     <div className="min-h-screen bg-[#1A1F2C]">
       <div className="container mx-auto px-4 py-6">
@@ -97,27 +131,11 @@ const Clipts = () => {
         <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
                       overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none`}>
           <div className="space-y-6 pb-6">
-            {!posts || posts.length === 0 ? (
-              <div className="text-center gaming-card p-8">
-                <h3 className="text-xl font-semibold mb-2 gaming-gradient">No Clipts Yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Be the first to share an amazing gaming moment!
-                </p>
-                <Button 
-                  onClick={() => navigate('/clip-editor/new')}
-                  variant="outline"
-                  className="gaming-button"
-                >
-                  Create Your First Clipt
-                </Button>
+            {posts.map((post) => (
+              <div key={post.id} className="snap-start">
+                <PostItem post={post} />
               </div>
-            ) : (
-              posts.map((post) => (
-                <div key={post.id} className="snap-start">
-                  <PostItem post={post} />
-                </div>
-              ))
-            )}
+            ))}
           </div>
         </div>
       </div>
