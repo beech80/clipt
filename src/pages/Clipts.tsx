@@ -58,25 +58,39 @@ const Clipts = () => {
   return (
     <div className="min-h-screen bg-[#1A1F2C]">
       {/* Top Navigation Bar */}
-      <div className="fixed top-0 left-0 right-0 h-12 bg-gaming-900/95 backdrop-blur-sm z-50 border-b-2 border-gaming-400 flex items-center justify-between px-4">
+      <div className="fixed top-0 left-0 right-0 h-14 bg-gaming-800/95 backdrop-blur-sm z-50 border-b-2 border-gaming-400 
+                    shadow-[0_4px_15px_rgba(99,102,241,0.2)] flex items-center justify-between px-4">
         <button 
           onClick={() => navigate('/clip-editor/new')}
-          className="flex items-center gap-2 text-gaming-400 hover:text-gaming-300"
+          className="gaming-button text-gaming-400 hover:text-gaming-300 flex items-center gap-2 
+                    bg-gaming-900/50 border-gaming-400 hover:border-gaming-300 px-4 py-1.5 
+                    transition-all duration-300 animate-glow"
         >
           <Plus className="h-4 w-4" />
-          <span className="text-sm font-medium">POST</span>
+          <span className="text-sm font-bold tracking-wider">POST</span>
         </button>
+
         <button 
-          onClick={() => navigate('/squads')}
-          className="text-gaming-400 hover:text-gaming-300 text-sm font-medium"
+          className="gaming-button text-gaming-400 hover:text-gaming-300 
+                    bg-gaming-900/50 border-gaming-400 hover:border-gaming-300 px-6 py-1.5
+                    transition-all duration-300 animate-glow"
         >
-          SQUADS
+          <span className="text-sm font-bold tracking-wider">CLIPTS</span>
+        </button>
+
+        <button 
+          onClick={() => navigate('/')}
+          className="gaming-button text-gaming-400 hover:text-gaming-300 
+                    bg-gaming-900/50 border-gaming-400 hover:border-gaming-300 px-4 py-1.5
+                    transition-all duration-300 animate-glow"
+        >
+          <span className="text-sm font-bold tracking-wider">SQUADS</span>
         </button>
       </div>
 
       {/* Posts Container */}
       <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
-                    mt-12 overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none post-container`}>
+                    mt-14 overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none post-container`}>
         <div className="space-y-4 pb-6">
           {samplePosts.map((post) => (
             <div key={post.id} className="snap-start">
