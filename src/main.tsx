@@ -5,10 +5,20 @@ import App from './App';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 
-const queryClient = new QueryClient();
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      refetchOnWindowFocus: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
+
 const root = createRoot(rootElement);
 
 root.render(
