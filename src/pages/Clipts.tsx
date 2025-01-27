@@ -51,7 +51,6 @@ const Clipts = () => {
   });
 
   if (error) {
-    console.error('Query error:', error);
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center gaming-cartridge p-8">
@@ -72,7 +71,6 @@ const Clipts = () => {
   }
 
   if (isLoading) {
-    console.log('Clipts is in loading state');
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-gaming-400" />
@@ -81,7 +79,6 @@ const Clipts = () => {
   }
 
   if (!posts || posts.length === 0) {
-    console.log('No clipts found');
     return (
       <div className="min-h-screen bg-[#1A1F2C]">
         <div className="container mx-auto px-4 py-6">
@@ -122,11 +119,9 @@ const Clipts = () => {
     );
   }
 
-  console.log('Rendering clipts:', posts.length);
   return (
     <div className="min-h-screen bg-[#1A1F2C]">
       <div className="container mx-auto px-4 py-6">
-        {/* GameBoy Cartridge Header */}
         <div className="gaming-cartridge mb-4 p-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold gaming-gradient">Gaming Clipts</h1>
@@ -137,18 +132,6 @@ const Clipts = () => {
           </div>
         </div>
 
-        {/* Create Button */}
-        <div className="mb-4">
-          <Button 
-            onClick={() => navigate('/clip-editor/new')}
-            className="gaming-button gap-2 bg-gaming-400 hover:bg-gaming-500"
-          >
-            <Plus className="h-4 w-4" />
-            Create Clipt
-          </Button>
-        </div>
-
-        {/* Posts Feed */}
         <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
                       overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none`}>
           <div className="space-y-6 pb-6">
@@ -161,7 +144,6 @@ const Clipts = () => {
         </div>
       </div>
 
-      {/* Game Boy Controls */}
       <GameBoyControls />
     </div>
   );

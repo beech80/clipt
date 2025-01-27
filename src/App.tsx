@@ -8,8 +8,8 @@ import { Toaster } from 'sonner';
 
 function App() {
   return (
-    <BrowserRouter>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <BrowserRouter>
         <React.Suspense fallback={<div>Loading...</div>}>
           <ReportDialogProvider>
             <Routes>
@@ -32,8 +32,8 @@ function App() {
             <Toaster position="top-center" />
           </ReportDialogProvider>
         </React.Suspense>
-      </ErrorBoundary>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
