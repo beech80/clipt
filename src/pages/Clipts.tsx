@@ -17,7 +17,6 @@ const Clipts = () => {
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['clipts-feed'],
     queryFn: async () => {
-      console.log('Starting to fetch clipts feed...');
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -44,7 +43,6 @@ const Clipts = () => {
         throw error;
       }
 
-      console.log('Fetched clipts:', data);
       return data as Post[];
     },
     retry: 1
