@@ -17,6 +17,7 @@ const Clipts = () => {
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['clipts-feed'],
     queryFn: async () => {
+      console.log("Fetching clipts...");
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -43,12 +44,14 @@ const Clipts = () => {
         throw error;
       }
 
+      console.log("Fetched clipts:", data);
       return data as Post[];
     },
     retry: 1
   });
 
   if (error) {
+    console.error("Query error:", error);
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center gaming-cartridge p-8">
