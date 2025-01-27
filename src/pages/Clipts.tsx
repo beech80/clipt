@@ -8,11 +8,12 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import PostItem from "@/components/PostItem";
 import { WelcomeSection } from "@/components/home/WelcomeSection";
-import { MainContent } from "@/components/home/MainContent";
 import { SidebarContent } from "@/components/home/SidebarContent";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Clipts = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['clipts-feed'],
@@ -84,7 +85,7 @@ const Clipts = () => {
       
       <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Main Content Area */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-3">
           {/* Create Button - Fixed at the top */}
           <div className="mb-4">
             <Button 
@@ -97,26 +98,31 @@ const Clipts = () => {
           </div>
 
           {/* Posts Feed */}
-          <div className="space-y-6 post-container">
-            {!posts || posts.length === 0 ? (
-              <div className="text-center gaming-card p-8">
-                <h3 className="text-xl font-semibold mb-2 gaming-gradient">No Clipts Yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Be the first to share an amazing gaming moment!
-                </p>
-                <Button 
-                  onClick={() => navigate('/clip-editor/new')}
-                  variant="outline"
-                  className="gaming-button"
-                >
-                  Create Your First Clipt
-                </Button>
-              </div>
-            ) : (
-              posts.map((post) => (
-                <PostItem key={post.id} post={post} />
-              ))
-            )}
+          <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
+                          overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none`}>
+            <div className="space-y-6 pb-6">
+              {!posts || posts.length === 0 ? (
+                <div className="text-center gaming-card p-8">
+                  <h3 className="text-xl font-semibold mb-2 gaming-gradient">No Clipts Yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Be the first to share an amazing gaming moment!
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/clip-editor/new')}
+                    variant="outline"
+                    className="gaming-button"
+                  >
+                    Create Your First Clipt
+                  </Button>
+                </div>
+              ) : (
+                posts.map((post) => (
+                  <div key={post.id} className="snap-start">
+                    <PostItem post={post} />
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
