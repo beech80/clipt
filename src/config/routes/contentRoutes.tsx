@@ -1,5 +1,4 @@
 import { RouteObject } from "react-router-dom";
-import Clips from "@/pages/Clips";
 import Clipts from "@/pages/Clipts";
 import ClipEditor from "@/pages/ClipEditor";
 import Collections from "@/pages/Collections";
@@ -8,10 +7,6 @@ import PostList from "@/pages/PostList";
 import TopClips from "@/pages/TopClips";
 
 export const contentRoutes: RouteObject[] = [
-  {
-    path: "clips",
-    element: <Clips />,
-  },
   {
     path: "clipts",
     element: <Clipts />,

@@ -5,8 +5,8 @@ import GameBoyControls from "@/components/GameBoyControls";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageSquare, Trophy } from "lucide-react";
+import PostContent from "@/components/post/PostContent";
+import { PostInteractions } from "@/components/post/interactions/PostInteractions";
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -112,53 +112,27 @@ const Clipts = () => {
               className="h-screen w-full snap-start snap-always"
             >
               <div className="relative h-full w-full bg-[#1A1F2C] touch-none select-none">
-                {/* Post Header */}
-                <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10 border-2 border-gaming-400">
-                      <AvatarImage src={post.profiles?.avatar_url} />
-                      <AvatarFallback className="bg-gaming-900">
-                        {post.profiles?.username?.[0]?.toUpperCase() || 'A'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-white font-medium">
-                      {post.profiles?.username || 'Anonymous'}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1">
-                      <Heart className="h-5 w-5 text-red-500" />
-                      <span className="text-sm font-bold text-white">
-                        {post.likes?.[0]?.count || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <MessageSquare className="h-5 w-5 text-white" />
-                      <span className="text-sm font-bold text-white">
-                        {post.comments?.[0]?.count || 0}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Trophy className="h-5 w-5 text-yellow-500" />
-                      <span className="text-sm font-bold text-white">
-                        {post.clip_votes?.[0]?.count || 0}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Post Content */}
-                <div className="absolute inset-0">
-                  {post.video_url && (
-                    <video 
-                      src={post.video_url}
-                      className="w-full h-full object-cover"
-                      controls
-                      loop
-                      playsInline
+                <PostContent
+                  imageUrl={post.image_url}
+                  videoUrl={post.video_url}
+                  postId={post.id}
+                />
+                
+                {/* Post Interactions */}
+                <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-white font-medium">
+                        {post.profiles?.username || 'Anonymous'}
+                      </span>
+                    </div>
+                    <PostInteractions 
+                      post={post}
+                      commentsCount={post.comments?.[0]?.count || 0}
+                      onCommentClick={() => navigate(`/comments/${post.id}`)}
                     />
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
