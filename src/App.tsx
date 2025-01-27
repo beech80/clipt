@@ -1,8 +1,8 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { ReportDialogProvider } from '@/hooks/use-report-dialog';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
 import { routes } from '@/config/routes';
 
 function App() {
