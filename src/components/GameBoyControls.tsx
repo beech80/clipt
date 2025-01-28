@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Play } from 'lucide-react';
+import { Menu, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -55,7 +55,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet>
           <SheetTrigger asChild>
-            <button className="rounded-full bg-gaming-400/20 p-2.5 sm:p-3 backdrop-blur-sm border border-gaming-400/30 
+            <button className="rounded-full p-2.5 sm:p-3 backdrop-blur-sm border border-gaming-400/30 
               hover:bg-gaming-400/30 transition-all duration-300 touch-none active:scale-95">
               <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gaming-400" />
             </button>
@@ -81,14 +81,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </Sheet>
       </div>
 
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-16 sm:bottom-20">
+      {/* Select Button (Post Button) */}
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
           onClick={() => navigate('/clipts')}
-          className="clip-button active:scale-95 transition-transform"
-          aria-label="Create Clipt"
+          className="select-button relative flex flex-col items-center justify-center gap-1"
         >
-          <Play className="clip-button-icon" />
-          <span className="clip-button-text">Clipt</span>
+          <Camera className="w-5 h-5 text-gaming-400" />
+          <span className="text-xs font-display text-gaming-400">Post</span>
+          <div className="absolute -bottom-3 w-8 h-2 rounded-full bg-gaming-400/20 animate-pulse" />
         </button>
       </div>
 
