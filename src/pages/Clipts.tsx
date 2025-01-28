@@ -64,7 +64,7 @@ const Clipts = () => {
           onClick={() => navigate('/clip-editor/new')}
           className="gaming-button text-gaming-400 hover:text-gaming-300 flex items-center gap-2 
                     bg-gaming-900/50 border-gaming-400 hover:border-gaming-300 px-4 py-1.5 
-                    transition-all duration-300 animate-glow"
+                    transition-all duration-300"
         >
           <Plus className="h-4 w-4" />
           <span className="text-sm font-bold tracking-wider">POST</span>
@@ -73,7 +73,7 @@ const Clipts = () => {
         <button 
           className="gaming-button text-gaming-400 hover:text-gaming-300 
                     bg-gaming-900/50 border-gaming-400 hover:border-gaming-300 px-6 py-1.5
-                    transition-all duration-300 animate-glow"
+                    transition-all duration-300"
         >
           <span className="text-sm font-bold tracking-wider">CLIPTS</span>
         </button>
@@ -82,7 +82,7 @@ const Clipts = () => {
           onClick={() => navigate('/')}
           className="gaming-button text-gaming-400 hover:text-gaming-300 
                     bg-gaming-900/50 border-gaming-400 hover:border-gaming-300 px-4 py-1.5
-                    transition-all duration-300 animate-glow"
+                    transition-all duration-300"
         >
           <span className="text-sm font-bold tracking-wider">SQUADS</span>
         </button>
