@@ -86,17 +86,18 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
           onClick={() => navigate('/clipts')}
           className="clip-button active:scale-95 transition-transform"
           aria-label="Create Clipt"
+          style={{ width: '70px', height: '50px' }}
         >
-          <Play className="clip-button-icon" />
-          <span className="clip-button-text">Clipt</span>
+          <Play className="clip-button-icon w-4 h-4" />
+          <span className="clip-button-text text-[10px]">Clipt</span>
         </button>
       </div>
 
-      <div className="fixed left-4 sm:left-8 bottom-14 sm:bottom-16 w-28 sm:w-32 h-28 sm:h-32">
+      <div className="fixed left-4 sm:left-8 bottom-14 sm:bottom-16 w-24 sm:w-28 h-24 sm:h-28">
         <Joystick onDirectionChange={handleVideoControl} />
       </div>
 
-      <div className="fixed right-4 sm:right-8 bottom-14 sm:bottom-16 w-24 sm:w-28 h-24 sm:h-28">
+      <div className="fixed right-4 sm:right-8 bottom-14 sm:bottom-16 w-20 sm:w-24 h-20 sm:h-24">
         <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
       </div>
     </div>

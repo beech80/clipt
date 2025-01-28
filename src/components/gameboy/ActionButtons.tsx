@@ -127,10 +127,11 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
         className="action-button absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[40%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
         shadow-[0_0_15px_rgba(255,0,0,0.3)] border-red-400/30
-        hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110 active:scale-95"
+        hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110 active:scale-95
+        w-8 h-8 sm:w-10 sm:h-10"
         onClick={handleLike}
       >
-        <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'} 
+        <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'} 
           drop-shadow-[0_0_8px_rgba(255,0,0,0.5)]`} />
       </button>
 
@@ -139,10 +140,11 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
         className="action-button absolute left-0 top-1/2 -translate-x-[40%] -translate-y-1/2
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
         shadow-[0_0_15px_rgba(0,120,255,0.3)] border-blue-400/30
-        hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110 active:scale-95"
+        hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110 active:scale-95
+        w-8 h-8 sm:w-10 sm:h-10"
         onClick={() => setIsCommentOpen(true)}
       >
-        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500
+        <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500
           drop-shadow-[0_0_8px_rgba(0,120,255,0.5)]" />
       </button>
 
@@ -151,10 +153,11 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
         className="action-button absolute right-0 top-1/2 translate-x-[40%] -translate-y-1/2
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
         shadow-[0_0_15px_rgba(0,255,0,0.3)] border-green-400/30
-        hover:shadow-[0_0_20px_rgba(0,255,0,0.4)] transition-all hover:scale-110 active:scale-95"
+        hover:shadow-[0_0_20px_rgba(0,255,0,0.4)] transition-all hover:scale-110 active:scale-95
+        w-8 h-8 sm:w-10 sm:h-10"
         onClick={handleFollow}
       >
-        <UserPlus className={`w-5 h-5 sm:w-6 sm:h-6 ${isFollowing ? 'text-green-500' : 'text-green-500'}
+        <UserPlus className={`w-4 h-4 sm:w-5 sm:h-5 ${isFollowing ? 'text-green-500' : 'text-green-500'}
           drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]`} />
       </button>
 
@@ -163,10 +166,11 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
         className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[40%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
         shadow-[0_0_15px_rgba(255,255,0,0.3)] border-yellow-400/30
-        hover:shadow-[0_0_20px_rgba(255,255,0,0.4)] transition-all hover:scale-110 active:scale-95"
+        hover:shadow-[0_0_20px_rgba(255,255,0,0.4)] transition-all hover:scale-110 active:scale-95
+        w-8 h-8 sm:w-10 sm:h-10"
         onClick={handleRank}
       >
-        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500
+        <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500
           drop-shadow-[0_0_8px_rgba(255,255,0,0.5)]" />
       </button>
 
@@ -176,15 +180,15 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
         shadow-[0_0_15px_rgba(147,51,234,0.3)] border-purple-400/30
         hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all hover:scale-110 active:scale-95
-        flex flex-col items-center gap-1"
+        flex flex-col items-center gap-0.5 w-8 h-8 sm:w-10 sm:h-10"
         onClick={() => {
           toast.success("Opening post creation...");
           onAction('post');
         }}
       >
-        <Send className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500
+        <Send className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500
           drop-shadow-[0_0_8px_rgba(147,51,234,0.5)]" />
-        <span className="text-[10px] sm:text-xs text-purple-500 font-bold">POST</span>
+        <span className="text-[8px] sm:text-[10px] text-purple-500 font-bold">POST</span>
       </button>
 
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
