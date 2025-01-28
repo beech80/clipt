@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Play } from 'lucide-react';
+import { Menu, Camera, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -81,15 +81,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </Sheet>
       </div>
 
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-28 sm:bottom-32">
         <button 
           onClick={() => navigate('/clipts')}
           className="clip-button active:scale-95 transition-transform"
           aria-label="Create Clipt"
-          style={{ width: '70px', height: '50px' }}
+          style={{ width: '60px', height: '40px' }}
         >
-          <Play className="clip-button-icon w-4 h-4" />
-          <span className="clip-button-text text-[10px]">Clipt</span>
+          <Camera className="clip-button-icon w-3.5 h-3.5" />
+          <span className="clip-button-text text-[9px]">Post</span>
         </button>
       </div>
 
