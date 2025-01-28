@@ -81,24 +81,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </Sheet>
       </div>
 
-      {/* Select Button (Post Button) */}
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
-        <button 
-          onClick={() => navigate('/clipts')}
-          className="select-button relative flex flex-col items-center justify-center gap-1"
-        >
-          <Camera className="w-5 h-5 text-gaming-400" />
-          <span className="text-xs font-display text-gaming-400">Post</span>
-          <div className="absolute -bottom-3 w-8 h-2 rounded-full bg-gaming-400/20 animate-pulse" />
-        </button>
-      </div>
-
       <div className="fixed left-4 sm:left-8 bottom-6 sm:bottom-8 w-28 sm:w-32 h-28 sm:h-32">
         <Joystick onDirectionChange={handleVideoControl} />
       </div>
 
       <div className="fixed right-4 sm:right-8 bottom-6 sm:bottom-8 w-24 sm:w-28 h-24 sm:h-28">
         <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
+        {/* Select Button */}
+        <button 
+          onClick={() => navigate('/clipts')}
+          className="absolute -bottom-8 left-1/2 -translate-x-1/2 select-button flex flex-col items-center gap-1"
+        >
+          <Camera className="w-4 h-4 text-gaming-400" />
+          <span className="text-[10px] font-display text-gaming-400">Select</span>
+          <div className="absolute -bottom-2 w-6 h-1 rounded-full bg-gaming-400/20 animate-glow" />
+        </button>
       </div>
     </div>
   );

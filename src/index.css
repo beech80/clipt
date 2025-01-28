@@ -55,8 +55,8 @@
 }
 
 .select-button {
-  padding: 0.5rem;
-  border-radius: 0.5rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
   transition: all 0.3s ease;
   border: 1px solid rgba(99, 102, 241, 0.3);
 }
