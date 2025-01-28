@@ -13,21 +13,32 @@ const Home = () => {
     <div className="relative min-h-screen bg-[#1A1F2C] overflow-hidden">
       {/* Game Boy Frame */}
       <div className="max-w-3xl mx-auto px-4 py-6">
-        <div className="gaming-cartridge mb-4 p-4">
+        <div className="gaming-cartridge mb-4 p-4 animate-fade-in">
           <Tabs defaultValue="squads" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="squads" className="text-xl font-bold gaming-gradient">Squads</TabsTrigger>
-              <TabsTrigger value="clipts" className="text-xl font-bold gaming-gradient" onClick={() => navigate('/clipts')}>Clipts</TabsTrigger>
+              <TabsTrigger 
+                value="squads" 
+                className="text-xl font-bold gaming-gradient transition-all duration-300 hover:opacity-80"
+              >
+                Squads
+              </TabsTrigger>
+              <TabsTrigger 
+                value="clipts" 
+                className="text-xl font-bold gaming-gradient transition-all duration-300 hover:opacity-80"
+                onClick={() => navigate('/clipts')}
+              >
+                Clipts
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="squads">
-              <div className="text-sm text-gaming-400 mt-2">
+              <div className="text-sm text-gaming-400 mt-2 animate-fade-in">
                 {!user ? "Sign in to join squads and share clips!" : "Join squads to team up with other players!"}
               </div>
             </TabsContent>
             
             <TabsContent value="clipts">
-              <div className="text-sm text-gaming-400 mt-2">
+              <div className="text-sm text-gaming-400 mt-2 animate-fade-in">
                 {!user ? "Sign in to share and view clips!" : "Share your best gaming moments!"}
               </div>
             </TabsContent>

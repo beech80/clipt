@@ -158,7 +158,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   };
 
   return (
-    <div className="bg-card rounded-lg p-4 shadow-sm">
+    <div className="bg-card rounded-lg p-4 shadow-sm animate-fade-in">
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <Alert variant="destructive">
@@ -246,7 +246,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
                 <Button 
                   type="button" 
                   variant="outline"
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto animate-fade-in transition-all duration-300 hover:opacity-80"
                 >
                   Add GIF
                 </Button>
@@ -272,7 +272,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
               <Button 
                 type="button" 
                 variant="outline"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto animate-fade-in transition-all duration-300 hover:opacity-80"
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {scheduledDate ? format(scheduledDate, 'PPP') : 'Schedule'}
