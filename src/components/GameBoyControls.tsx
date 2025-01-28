@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Camera, Trophy } from 'lucide-react';
+import { Menu, Camera, Trophy, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -52,17 +52,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
 
   return (
     <div className="gameboy-container h-[180px] sm:h-[200px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none border-t-2 border-gaming-400">
-      <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4">
-        <button 
-          onClick={() => navigate('/clipts')}
-          className="clip-button active:scale-95 transition-transform"
-          aria-label="Create Clipt"
-          style={{ width: '80px', height: '60px' }}
-        >
-          <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Clipt</span>
-        </button>
-
+      <div className="fixed bottom-2 sm:bottom-4 right-4 z-50">
         <Sheet>
           <SheetTrigger asChild>
             <button className="rounded-full bg-gaming-400/20 p-2.5 sm:p-3 backdrop-blur-sm border border-gaming-400/30 
@@ -89,6 +79,18 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
             </nav>
           </SheetContent>
         </Sheet>
+      </div>
+
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-16 sm:bottom-20">
+        <button 
+          onClick={() => navigate('/clipts')}
+          className="clip-button active:scale-95 transition-transform"
+          aria-label="Create Clipt"
+          style={{ width: '80px', height: '60px' }}
+        >
+          <Camera className="clip-button-icon" />
+          <span className="clip-button-text">Clipt</span>
+        </button>
       </div>
 
       <div className="fixed left-8 sm:left-12 bottom-16 sm:bottom-20 w-24 sm:w-28 h-24 sm:h-28">
