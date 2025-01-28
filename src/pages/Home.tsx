@@ -4,7 +4,7 @@ import PostList from '@/components/PostList';
 import GameBoyControls from '@/components/GameBoyControls';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
-import { Camera, Users, Scissors } from 'lucide-react';
+import { Camera, Users, Gamepad } from 'lucide-react';
 
 const Home = () => {
   const { user } = useAuth();
@@ -29,7 +29,7 @@ const Home = () => {
                 className="flex items-center justify-center gap-2 text-sm font-medium transition-all duration-300 data-[state=active]:bg-[#2A2F3C] data-[state=active]:text-white rounded-md px-4 py-2 hover:bg-[#2A2F3C]/50"
                 onClick={() => navigate('/clipts')}
               >
-                <Scissors className="w-4 h-4" />
+                <Gamepad className="w-4 h-4" />
                 Clipts
               </TabsTrigger>
               <TabsTrigger 
