@@ -93,7 +93,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </button>
       </div>
 
-      <div className="fixed left-4 sm:left-8 bottom-20 sm:bottom-24 w-24 sm:w-28 h-24 sm:h-28">
+      <div className="fixed left-4 sm:left-8 bottom-16 sm:bottom-20 w-24 sm:w-28 h-24 sm:h-28">
         <Joystick onDirectionChange={handleVideoControl} />
       </div>
 
