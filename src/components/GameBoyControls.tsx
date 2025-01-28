@@ -81,23 +81,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </Sheet>
       </div>
 
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-28 sm:bottom-32">
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
           onClick={() => navigate('/clipts')}
           className="clip-button active:scale-95 transition-transform"
           aria-label="Create Clipt"
-          style={{ width: '60px', height: '40px' }}
+          style={{ width: '80px', height: '60px' }}
         >
-          <Camera className="clip-button-icon w-3.5 h-3.5" />
-          <span className="clip-button-text text-[9px]">Post</span>
+          <Camera className="clip-button-icon" />
+          <span className="clip-button-text">Clipt</span>
         </button>
       </div>
 
-      <div className="fixed left-4 sm:left-8 bottom-14 sm:bottom-16 w-24 sm:w-28 h-24 sm:h-28">
+      <div className="fixed left-4 sm:left-8 bottom-20 sm:bottom-24 w-24 sm:w-28 h-24 sm:h-28">
         <Joystick onDirectionChange={handleVideoControl} />
       </div>
 
-      <div className="fixed right-4 sm:right-8 bottom-14 sm:bottom-16 w-20 sm:w-24 h-20 sm:h-24">
+      <div className="fixed right-4 sm:right-8 bottom-20 sm:bottom-24 w-20 sm:w-24 h-20 sm:h-24">
         <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
       </div>
     </div>
