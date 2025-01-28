@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, MessageSquare, UserPlus, Trophy } from 'lucide-react';
+import { Heart, MessageSquare, UserPlus, Trophy, Send } from 'lucide-react';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -168,6 +168,23 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
       >
         <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500
           drop-shadow-[0_0_8px_rgba(255,255,0,0.5)]" />
+      </button>
+
+      {/* Select Button - Post (Purple) - Below Action Buttons */}
+      <button 
+        className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[120%]
+        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
+        shadow-[0_0_15px_rgba(147,51,234,0.3)] border-purple-400/30
+        hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all hover:scale-110 active:scale-95
+        flex flex-col items-center gap-1"
+        onClick={() => {
+          toast.success("Opening post creation...");
+          onAction('post');
+        }}
+      >
+        <Send className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500
+          drop-shadow-[0_0_8px_rgba(147,51,234,0.5)]" />
+        <span className="text-[10px] sm:text-xs text-purple-500 font-bold">POST</span>
       </button>
 
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
