@@ -4,7 +4,7 @@ import PostList from '@/components/PostList';
 import GameBoyControls from '@/components/GameBoyControls';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
-import { Users, Camera } from 'lucide-react';
+import { Camera } from 'lucide-react';
 
 const Home = () => {
   const { user } = useAuth();
@@ -18,10 +18,9 @@ const Home = () => {
             <TabsList className="grid w-full grid-cols-2 p-1 gap-1">
               <TabsTrigger 
                 value="squads" 
-                className="flex items-center justify-center gap-2 text-sm font-medium transition-all duration-300 data-[state=active]:text-white rounded-md px-4 py-2"
+                className="flex items-center justify-center text-sm font-medium transition-all duration-300 data-[state=active]:text-white rounded-md px-4 py-2"
                 onClick={() => navigate('/squads')}
               >
-                <Users className="w-4 h-4" />
                 SquadsClipts
               </TabsTrigger>
               <TabsTrigger 
@@ -32,18 +31,6 @@ const Home = () => {
                 <Camera className="w-4 h-4" />
               </TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="squads" className="mt-2 animate-fade-in">
-              <div className="text-sm text-gray-400">
-                {!user ? "Sign in to join squads and share clips!" : "Join squads to team up with other players!"}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="post" className="mt-2 animate-fade-in">
-              <div className="text-sm text-gray-400">
-                {!user ? "Sign in to create posts!" : "Share your gaming experiences!"}
-              </div>
-            </TabsContent>
           </Tabs>
         </div>
 
