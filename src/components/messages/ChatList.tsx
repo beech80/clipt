@@ -5,12 +5,10 @@ import { cn } from "@/lib/utils";
 import { ChatListItem } from "./ChatListItem";
 
 interface ChatListProps {
-  chats: ChatUser[];
-  selectedChat: string | null;
-  onSelectChat: (userId: string) => void;
+  onSelectUser: (userId: string) => void;
 }
 
-export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
+export function ChatList({ onSelectUser }: ChatListProps) {
   return (
     <div className="border-r border-border">
       <div className="relative mb-4">
@@ -19,12 +17,28 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
       </div>
       
       <div className="space-y-2">
-        {chats.map((chat) => (
+        {/* Sample data for preview */}
+        {[
+          {
+            id: "1",
+            username: "User 1",
+            avatar_url: null,
+            last_message: "Hey there!",
+            unread_count: 2
+          },
+          {
+            id: "2",
+            username: "User 2",
+            avatar_url: null,
+            last_message: "How are you?",
+            unread_count: 0
+          }
+        ].map((chat) => (
           <ChatListItem
             key={chat.id}
             chat={chat}
-            isSelected={selectedChat === chat.id}
-            onSelect={onSelectChat}
+            isSelected={false}
+            onSelect={() => onSelectUser(chat.id)}
           />
         ))}
       </div>

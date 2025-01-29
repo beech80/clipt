@@ -3,15 +3,15 @@ import { MessageBubble } from "./MessageBubble";
 import { useEffect, useRef } from "react";
 
 interface MessageListProps {
-  messages: Message[];
+  userId: string;
 }
 
-export function MessageList({ messages }: MessageListProps) {
+export function MessageList({ userId }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [userId]);
 
   // Sample messages for preview
   const sampleMessages = [
@@ -33,7 +33,7 @@ export function MessageList({ messages }: MessageListProps) {
 
   return (
     <div className="flex-1 p-4 overflow-y-auto space-y-4">
-      {(messages.length ? messages : sampleMessages).map((message) => (
+      {sampleMessages.map((message) => (
         <MessageBubble key={message.id} message={message} />
       ))}
       <div ref={bottomRef} />
