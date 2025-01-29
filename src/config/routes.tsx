@@ -1,6 +1,7 @@
 import { RouteObject } from "react-router-dom";
 import Home from "@/pages/Home";
 import Progress from "@/pages/Progress";
+import Messages from "@/pages/Messages";
 import { authRoutes } from "./routes/authRoutes";
 import { docsRoutes } from "./routes/docsRoutes";
 import { contentRoutes } from "./routes/contentRoutes";
@@ -17,6 +18,10 @@ export const routes: RouteObject[] = [
   {
     path: "/progress",
     element: <Progress />,
+  },
+  {
+    path: "/messages",
+    element: <Messages />,
   },
   ...authRoutes,
   docsRoutes,
