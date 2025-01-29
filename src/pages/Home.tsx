@@ -12,7 +12,7 @@ const Home = () => {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="max-w-3xl mx-auto px-4 py-6">
-        <div className="mb-4 p-4 animate-fade-in">
+        <div className="mb-4 animate-fade-in">
           <Tabs defaultValue="squads" className="w-full">
             <TabsList className="grid w-full grid-cols-1 p-1 gap-1">
               <div 
