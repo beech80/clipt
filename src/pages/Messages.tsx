@@ -14,10 +14,6 @@ const Messages = () => {
 
   return (
     <div className="container mx-auto p-4 min-h-screen relative pb-[200px]">
-      <div className="gameboy-header">
-        <h1 className="gameboy-title">MESSAGES</h1>
-      </div>
-
       <div className="mt-20 mb-4">
         <div className="flex gap-2 justify-center mb-4">
           <Button 
