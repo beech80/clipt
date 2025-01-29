@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { MessageSquarePlus, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, MessageSquarePlus } from "lucide-react";
 import { ChatList } from "@/components/messages/ChatList";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
@@ -11,6 +11,24 @@ const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const navigate = useNavigate();
   const { chats, messages, handleSendMessage } = useMessages();
+
+  // Sample chat data for preview
+  const sampleChats = [
+    {
+      id: "1",
+      username: "GamerPro",
+      avatar_url: null,
+      last_message: "Hey, want to join my stream?",
+      unread_count: 2
+    },
+    {
+      id: "2",
+      username: "StreamMaster",
+      avatar_url: null,
+      last_message: "Great game yesterday!",
+      unread_count: 0
+    }
+  ];
 
   return (
     <div className="container mx-auto p-4">
@@ -37,7 +55,7 @@ const Messages = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]">
           <div className="md:col-span-1 gaming-card">
             <ChatList 
-              chats={chats} 
+              chats={sampleChats} 
               selectedChat={selectedChat} 
               onSelectChat={setSelectedChat} 
             />

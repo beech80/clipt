@@ -13,9 +13,27 @@ export function MessageList({ messages }: MessageListProps) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Sample messages for preview
+  const sampleMessages = [
+    {
+      id: "1",
+      content: "Hey, how's it going?",
+      sender_id: "1",
+      created_at: new Date().toISOString(),
+      read: true
+    },
+    {
+      id: "2",
+      content: "Great! Want to join my stream later?",
+      sender_id: "2",
+      created_at: new Date().toISOString(),
+      read: false
+    }
+  ];
+
   return (
     <div className="flex-1 p-4 overflow-y-auto space-y-4">
-      {messages.map((message) => (
+      {(messages.length ? messages : sampleMessages).map((message) => (
         <MessageBubble key={message.id} message={message} />
       ))}
       <div ref={bottomRef} />
