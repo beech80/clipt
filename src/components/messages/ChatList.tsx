@@ -17,7 +17,7 @@ export function ChatList({ onSelectUser }: ChatListProps) {
 
   return (
     <div className="border-r border-border">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex flex-col gap-2 mb-4">
         <CreateGroupChat />
         <Button 
           variant="outline" 
