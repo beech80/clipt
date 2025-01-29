@@ -4,7 +4,7 @@ import PostList from '@/components/PostList';
 import GameBoyControls from '@/components/GameBoyControls';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
-import { Users, Camera } from 'lucide-react';
+import { Users } from 'lucide-react';
 
 const Home = () => {
   const { user } = useAuth();
@@ -26,10 +26,10 @@ const Home = () => {
               </TabsTrigger>
               <TabsTrigger 
                 value="post" 
-                className="flex items-center justify-center w-10 aspect-square text-sm font-medium transition-all duration-300 data-[state=active]:text-white rounded-md"
+                className="flex items-center justify-center text-sm font-medium transition-all duration-300 data-[state=active]:text-white rounded-md"
                 onClick={() => navigate('/posts/new')}
               >
-                <Camera className="w-4 h-4" />
+                Post
               </TabsTrigger>
             </TabsList>
             
