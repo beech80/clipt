@@ -44,19 +44,19 @@
 
 .gameboy-header {
   @apply fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-center;
-  background: #8bac0f;
-  border-bottom: 4px solid #306230;
+  background: #9b87f5;
+  border-bottom: 4px solid #7E69AB;
   box-shadow: 
-    0 2px 0 #0f380f,
+    0 2px 0 #6E59A5,
     inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .gameboy-title {
   @apply text-lg font-bold tracking-widest;
-  color: #0f380f;
+  color: #1A1F2C;
   text-shadow: 
     2px 2px 0 rgba(255, 255, 255, 0.2),
-    -1px -1px 0 rgba(15, 56, 15, 0.3);
+    -1px -1px 0 rgba(110, 89, 165, 0.3);
   font-family: monospace;
   letter-spacing: 0.2em;
 }
