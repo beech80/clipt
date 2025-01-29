@@ -8,27 +8,8 @@ import { MessageInput } from "@/components/messages/MessageInput";
 import { useMessages } from "@/contexts/MessagesContext";
 
 const Messages = () => {
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { handleSendMessage } = useMessages();
-
-  // Sample chat data for preview
-  const sampleChats = [
-    {
-      id: "1",
-      username: "GamerPro",
-      avatar_url: null,
-      last_message: "Hey, want to join my stream?",
-      unread_count: 2
-    },
-    {
-      id: "2",
-      username: "StreamMaster",
-      avatar_url: null,
-      last_message: "Great game yesterday!",
-      unread_count: 0
-    }
-  ];
+  const { chats, selectedChat, setSelectedChat, handleSendMessage } = useMessages();
 
   return (
     <div className="container mx-auto p-4 min-h-screen">
@@ -55,7 +36,7 @@ const Messages = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-12rem)]">
           <div className="md:col-span-1 gaming-card overflow-y-auto">
             <ChatList 
-              chats={sampleChats} 
+              chats={chats} 
               selectedChat={selectedChat} 
               onSelectChat={setSelectedChat} 
             />
