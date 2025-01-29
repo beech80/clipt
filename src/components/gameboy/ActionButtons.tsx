@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, MessageSquare, UserPlus, Trophy, Send } from 'lucide-react';
+import { Heart, MessageSquare, UserPlus, Trophy, Camera } from 'lucide-react';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -186,7 +186,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           onAction('post');
         }}
       >
-        <Send className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500
+        <Camera className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500
           drop-shadow-[0_0_8px_rgba(147,51,234,0.5)]" />
         <span className="text-[8px] sm:text-[10px] text-purple-500 font-bold mt-1">POST</span>
       </button>
