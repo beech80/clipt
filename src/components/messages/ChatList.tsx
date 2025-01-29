@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { ChatUser } from "@/types/message";
 import { cn } from "@/lib/utils";
 import { ChatListItem } from "./ChatListItem";
+import { CreateGroupChat } from "../chat/CreateGroupChat";
 
 interface ChatListProps {
   onSelectUser: (userId: string) => void;
@@ -11,6 +12,7 @@ interface ChatListProps {
 export function ChatList({ onSelectUser }: ChatListProps) {
   return (
     <div className="border-r border-border">
+      <CreateGroupChat />
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input className="pl-9" placeholder="Search messages..." />
