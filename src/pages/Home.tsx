@@ -15,13 +15,12 @@ const Home = () => {
         <div className="mb-4 p-4 animate-fade-in">
           <Tabs defaultValue="squads" className="w-full">
             <TabsList className="grid w-full grid-cols-1 p-1 gap-1">
-              <TabsTrigger 
-                value="squads" 
-                className="flex items-center justify-center gap-2 text-sm font-medium transition-all duration-300 data-[state=active]:text-white rounded-md px-4 py-2"
+              <div 
+                className="gaming-gradient text-2xl font-bold tracking-wider cursor-pointer hover:scale-105 transition-transform"
                 onClick={() => navigate('/squads')}
               >
                 Squads Clipts
-              </TabsTrigger>
+              </div>
             </TabsList>
             
             <TabsContent value="squads" className="mt-2 animate-fade-in">
