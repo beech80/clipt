@@ -16,7 +16,7 @@ const Home = () => {
           <Tabs defaultValue="squads" className="w-full">
             <TabsList className="grid w-full grid-cols-1 p-1 gap-1">
               <div 
-                className="gaming-gradient text-2xl font-bold tracking-wider cursor-pointer hover:scale-105 transition-transform"
+                className="gaming-gradient text-2xl font-bold tracking-wider cursor-pointer hover:scale-105 transition-transform flex justify-center items-center"
                 onClick={() => navigate('/squads')}
               >
                 Squads Clipts
