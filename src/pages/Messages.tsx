@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChatList } from "@/components/messages/ChatList";
 import { MessageList } from "@/components/messages/MessageList";
+import { CreateGroupChat } from "@/components/chat/CreateGroupChat";
 import GameBoyControls from "@/components/GameBoyControls";
 
 const Messages = () => {
@@ -14,6 +15,7 @@ const Messages = () => {
 
       <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
         <div className="md:col-span-1 gaming-card overflow-y-auto">
+          <CreateGroupChat />
           <ChatList onSelectUser={setSelectedUserId} />
         </div>
         <div className="md:col-span-2 gaming-card">
