@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Send } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { EmoteSelector } from "@/components/streaming/EmoteSelector";
+import { Input } from "@/components/ui/input";
+import { Send } from "lucide-react";
 
 interface MessageInputProps {
   onSendMessage: (content: string) => void;
@@ -11,31 +10,25 @@ interface MessageInputProps {
 export function MessageInput({ onSendMessage }: MessageInputProps) {
   const [message, setMessage] = useState("");
 
-  const handleSend = () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (message.trim()) {
-      onSendMessage(message.trim());
+      onSendMessage(message);
       setMessage("");
     }
   };
 
-  const handleEmoteSelect = (emoteName: string) => {
-    setMessage(prev => `${prev} :${emoteName}: `);
-  };
-
   return (
-    <div className="p-4 border-t">
-      <div className="flex gap-2">
-        <EmoteSelector onSelect={handleEmoteSelect} />
-        <Input
-          placeholder="Type a message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-        />
-        <Button onClick={handleSend}>
-          <Send className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
+    <form onSubmit={handleSubmit} className="flex gap-2">
+      <Input
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Type a message..."
+        className="flex-1"
+      />
+      <Button type="submit" size="icon" className="gaming-button">
+        <Send className="h-4 w-4" />
+      </Button>
+    </form>
   );
 }
