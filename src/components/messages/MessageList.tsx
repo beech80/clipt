@@ -19,6 +19,7 @@ export function MessageList({ userId }: MessageListProps) {
       id: "1",
       content: "Hey, how's it going?",
       sender_id: "1",
+      receiver_id: "2",
       created_at: new Date().toISOString(),
       read: true
     },
@@ -26,6 +27,7 @@ export function MessageList({ userId }: MessageListProps) {
       id: "2",
       content: "Great! Want to join my stream later?",
       sender_id: "2",
+      receiver_id: "1",
       created_at: new Date().toISOString(),
       read: false
     }
