@@ -6,13 +6,14 @@ import { ChatList } from "@/components/messages/ChatList";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { useMessages } from "@/contexts/MessagesContext";
+import GameBoyControls from "@/components/GameBoyControls";
 
 const Messages = () => {
   const navigate = useNavigate();
   const { chats, selectedChat, setSelectedChat, handleSendMessage } = useMessages();
 
   return (
-    <div className="container mx-auto p-4 min-h-screen">
+    <div className="container mx-auto p-4 min-h-screen relative pb-[200px]">
       <div className="gameboy-header">
         <h1 className="gameboy-title">MESSAGES</h1>
       </div>
@@ -59,6 +60,8 @@ const Messages = () => {
           </div>
         </div>
       </div>
+
+      <GameBoyControls />
     </div>
   );
 };
