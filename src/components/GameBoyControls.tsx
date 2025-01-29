@@ -83,7 +83,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
 
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
-          onClick={() => navigate('/clipts')}
+          onClick={() => navigate('/')}
           className="clip-button active:scale-95 transition-transform"
           aria-label="Create Clipt"
           style={{ width: '80px', height: '60px' }}
