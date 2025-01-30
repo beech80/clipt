@@ -2,6 +2,7 @@ export interface SocialLinks {
   twitter?: string;
   youtube?: string;
   twitch?: string;
+  [key: string]: string | undefined;
 }
 
 export interface ProfileFormValues {
