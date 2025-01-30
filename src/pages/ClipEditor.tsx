@@ -66,8 +66,8 @@ const ClipEditor = () => {
     mutationFn: async () => {
       const sessionData = {
         clip_id: id,
-        effects: JSON.stringify(appliedEffects),
-        edit_history: JSON.stringify(editHistory),
+        effects: appliedEffects as unknown as Json,
+        edit_history: editHistory as unknown as Json[],
         status: 'draft'
       };
 
