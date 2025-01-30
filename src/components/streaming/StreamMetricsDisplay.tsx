@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { calculateHealthStatus, getHealthColor } from "@/utils/streamHealth";
 import { Signal, SignalHigh, SignalLow, SignalMedium } from "lucide-react";
 
@@ -68,9 +68,16 @@ export const StreamMetricsDisplay = ({
             <span>Bitrate</span>
             <span>{(bitrate / 1000).toFixed(1)} Mbps</span>
           </div>
-          <Tooltip content={`Target: 6 Mbps for high quality streaming`}>
-            <Progress value={getBitrateQuality(bitrate)} className={healthColor} />
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Progress value={getBitrateQuality(bitrate)} className={healthColor} />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Target: 6 Mbps for high quality streaming</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div className="space-y-2">
@@ -78,9 +85,16 @@ export const StreamMetricsDisplay = ({
             <span>FPS</span>
             <span>{fps}</span>
           </div>
-          <Tooltip content={`Target: 60 FPS for smooth streaming`}>
-            <Progress value={getFPSQuality(fps)} className={healthColor} />
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Progress value={getFPSQuality(fps)} className={healthColor} />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Target: 60 FPS for smooth streaming</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div className="space-y-2">
@@ -88,12 +102,19 @@ export const StreamMetricsDisplay = ({
             <span>Bandwidth Usage</span>
             <span>{(bandwidthUsage / 1000).toFixed(1)} Mbps</span>
           </div>
-          <Tooltip content={`Network bandwidth utilization`}>
-            <Progress 
-              value={(bandwidthUsage / 8000) * 100} 
-              className={bandwidthUsage > 7000 ? 'bg-yellow-500' : healthColor} 
-            />
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Progress 
+                  value={(bandwidthUsage / 8000) * 100} 
+                  className={bandwidthUsage > 7000 ? 'bg-yellow-500' : healthColor} 
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Network bandwidth utilization</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div className="space-y-2">
@@ -101,12 +122,19 @@ export const StreamMetricsDisplay = ({
             <span>Buffer Health</span>
             <span>{bufferHealth}%</span>
           </div>
-          <Tooltip content={`Stream buffer health status`}>
-            <Progress 
-              value={bufferHealth} 
-              className={bufferHealth < 50 ? 'bg-red-500' : healthColor} 
-            />
-          </Tooltip>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Progress 
+                  value={bufferHealth} 
+                  className={bufferHealth < 50 ? 'bg-red-500' : healthColor} 
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Stream buffer health status</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div className="flex justify-between text-sm text-muted-foreground">
