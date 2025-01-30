@@ -11,15 +11,16 @@ import { useQuery } from "@tanstack/react-query";
 import { DatabaseProfile } from "./types";
 
 const formSchema = z.object({
-  username: z.string().min(2).max(50),
-  display_name: z.string().min(2).max(50),
-  bio_description: z.string().max(160).optional(),
-  website: z.string().url().optional().or(z.literal("")),
-  favorite_game: z.string().optional().nullable(),
-  gaming_platforms: z.array(z.string()).optional().nullable(),
-  gamer_level: z.string().optional().nullable(),
-  twitch_username: z.string().optional().nullable(),
-  discord_username: z.string().optional().nullable(),
+  username: z.string().min(2).max(50).nullable(),
+  display_name: z.string().min(2).max(50).nullable(),
+  bio_description: z.string().max(160).nullable(),
+  website: z.string().url().nullable().or(z.literal("")),
+  favorite_game: z.string().nullable(),
+  gaming_platforms: z.array(z.string()).nullable(),
+  gamer_level: z.string().nullable(),
+  twitch_username: z.string().nullable(),
+  discord_username: z.string().nullable(),
+  location: z.string().nullable(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -45,15 +46,16 @@ const ProfileEditForm = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: profile?.username || '',
-      display_name: profile?.display_name || '',
-      bio_description: profile?.bio_description || '',
-      website: profile?.website || '',
-      favorite_game: profile?.favorite_game || '',
+      username: profile?.username || "",
+      display_name: profile?.display_name || "",
+      bio_description: profile?.bio_description || "",
+      website: profile?.website || "",
+      favorite_game: profile?.favorite_game || "",
       gaming_platforms: profile?.gaming_platforms || [],
-      gamer_level: profile?.gamer_level || '',
-      twitch_username: profile?.twitch_username || '',
-      discord_username: profile?.discord_username || '',
+      gamer_level: profile?.gamer_level || "",
+      twitch_username: profile?.twitch_username || "",
+      discord_username: profile?.discord_username || "",
+      location: profile?.location || "",
     },
   });
 
@@ -86,7 +88,7 @@ const ProfileEditForm = () => {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -99,7 +101,7 @@ const ProfileEditForm = () => {
             <FormItem>
               <FormLabel>Display Name</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -112,7 +114,7 @@ const ProfileEditForm = () => {
             <FormItem>
               <FormLabel>Bio</FormLabel>
               <FormControl>
-                <Textarea {...field} />
+                <Textarea {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -125,7 +127,20 @@ const ProfileEditForm = () => {
             <FormItem>
               <FormLabel>Website</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Location</FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
