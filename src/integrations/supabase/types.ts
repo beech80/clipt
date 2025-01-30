@@ -775,6 +775,152 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_analytics: {
+        Row: {
+          average_message_length: number | null
+          commands_used: number | null
+          created_at: string | null
+          id: string
+          messages_deleted: number | null
+          peak_messages_per_minute: number | null
+          stream_id: string | null
+          timeouts_issued: number | null
+          total_messages: number | null
+          unique_chatters: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_message_length?: number | null
+          commands_used?: number | null
+          created_at?: string | null
+          id?: string
+          messages_deleted?: number | null
+          peak_messages_per_minute?: number | null
+          stream_id?: string | null
+          timeouts_issued?: number | null
+          total_messages?: number | null
+          unique_chatters?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_message_length?: number | null
+          commands_used?: number | null
+          created_at?: string | null
+          id?: string
+          messages_deleted?: number | null
+          peak_messages_per_minute?: number | null
+          stream_id?: string | null
+          timeouts_issued?: number | null
+          total_messages?: number | null
+          unique_chatters?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_analytics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "chat_analytics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_analytics_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_badges: {
+        Row: {
+          condition: Json
+          created_at: string | null
+          created_by: string | null
+          id: string
+          image_url: string
+          name: string
+          priority: number | null
+        }
+        Insert: {
+          condition?: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          image_url: string
+          name: string
+          priority?: number | null
+        }
+        Update: {
+          condition?: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          image_url?: string
+          name?: string
+          priority?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_badges_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_commands: {
+        Row: {
+          cooldown_seconds: number | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          enabled: boolean | null
+          id: string
+          moderator_only: boolean | null
+          name: string
+          response_template: string | null
+        }
+        Insert: {
+          cooldown_seconds?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          moderator_only?: boolean | null
+          name: string
+          response_template?: string | null
+        }
+        Update: {
+          cooldown_seconds?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          moderator_only?: boolean | null
+          name?: string
+          response_template?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_commands_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_emotes: {
         Row: {
           created_at: string
@@ -801,6 +947,78 @@ export type Database = {
           {
             foreignKeyName: "chat_emotes_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_message_history: {
+        Row: {
+          badges: Json | null
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          is_deleted: boolean | null
+          message: string
+          stream_id: string | null
+          timestamp: string | null
+          user_id: string | null
+        }
+        Insert: {
+          badges?: Json | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          message: string
+          stream_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          badges?: Json | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          message?: string
+          stream_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_history_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_history_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "chat_message_history_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_history_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_history_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -7128,6 +7346,14 @@ export type Database = {
           ip_address: string
           user_agent: string
           details?: Json
+        }
+        Returns: string
+      }
+      process_chat_command: {
+        Args: {
+          p_message: string
+          p_user_id: string
+          p_stream_id: string
         }
         Returns: string
       }
