@@ -8,37 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
-
-interface DatabaseProfile {
-  id: string;
-  username: string | null;
-  avatar_url: string | null;
-  website: string | null;
-  bio: string | null;
-  bio_description: string | null;
-  display_name: string | null;
-  custom_theme: any;
-  social_links: any;
-  theme_preference: string | null;
-  font_size: string | null;
-  enable_notifications: boolean;
-  enable_sounds: boolean;
-  keyboard_shortcuts: boolean;
-  is_verified: boolean;
-  verification_requested_at: string | null;
-  verification_approved_at: string | null;
-  verification_rejected_at: string | null;
-  verification_rejected_reason: string | null;
-  onboarding_completed: boolean;
-  onboarding_step: string | null;
-  preferred_language: string | null;
-  created_at: string;
-  favorite_game: string | null;
-  gaming_platforms: string[] | null;
-  gamer_level: string | null;
-  twitch_username: string | null;
-  discord_username: string | null;
-}
+import { DatabaseProfile } from "./types";
 
 const formSchema = z.object({
   username: z.string().min(2).max(50),
