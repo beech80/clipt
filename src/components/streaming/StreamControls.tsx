@@ -5,6 +5,8 @@ import { StreamPreStartControls } from "./controls/StreamPreStartControls";
 import { StreamLiveControls } from "./controls/StreamLiveControls";
 import { startStream, endStream } from "@/utils/streamUtils";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 interface StreamControlsProps {
   userId?: string;
@@ -26,8 +28,9 @@ export const StreamControls = ({
   const [description, setDescription] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: stream } = useQuery({
+  const { data: stream, isLoading: isStreamLoading } = useQuery({
     queryKey: ['stream', userId],
     queryFn: async () => {
       if (!userId) return null;
@@ -37,7 +40,10 @@ export const StreamControls = ({
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        setError("Failed to load stream data");
+        throw error;
+      }
       return data;
     },
     enabled: !!userId
@@ -68,7 +74,19 @@ export const StreamControls = ({
   });
 
   const handleStartStream = async () => {
+    if (!title.trim()) {
+      toast.error("Please enter a stream title");
+      return;
+    }
+
+    if (!selectedCategory) {
+      toast.error("Please select a category");
+      return;
+    }
+
     setIsLoading(true);
+    setError(null);
+    
     try {
       const result = await startStream(userId!, title, description);
       
@@ -92,9 +110,10 @@ export const StreamControls = ({
       }
 
       onStreamUpdate(result);
-      toast.success("Stream started successfully!");
+      toast.success("Stream started successfully! You can now start streaming from your broadcast software.");
     } catch (error) {
       console.error("Error starting stream:", error);
+      setError("Failed to start stream. Please try again.");
       toast.error("Failed to start stream");
     } finally {
       setIsLoading(false);
@@ -105,17 +124,36 @@ export const StreamControls = ({
     if (!userId || !stream?.id) return;
 
     setIsLoading(true);
+    setError(null);
+
     try {
       const result = await endStream(userId);
       onStreamUpdate(result);
       toast.success("Stream ended successfully!");
     } catch (error) {
       console.error("Error ending stream:", error);
+      setError("Failed to end stream. Please try again.");
       toast.error("Failed to end stream");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isStreamLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
   if (!isLive) {
     return (
