@@ -12,6 +12,7 @@ import { ProfileBasicInfo } from "./ProfileBasicInfo"
 import { ProfileGamingInfo } from "./ProfileGamingInfo"
 import { ProfileSocialLinks } from "./ProfileSocialLinks"
 import { ProfileFormValues, DatabaseProfile } from "./types"
+import { useEffect } from "react"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -70,7 +71,7 @@ export function ProfileEditForm() {
     },
   })
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (profile) {
       const socialLinks = profile.social_links || {
         twitter: "",
@@ -121,7 +122,7 @@ export function ProfileEditForm() {
     }
   }
 
-  const handleAvatarChange = (url: string) => {
+  const handleAvatarChange = () => {
     refetch()
   }
 
