@@ -10,52 +10,25 @@ import { Loader2, Save, Undo, Redo, Download, Scissors } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Json } from "@/integrations/supabase/types";
 
-interface Effect {
-  id: string;
-  type: string;
-  settings: Record<string, any>;
-}
-
 interface ClipEditingSession {
   id?: string;
   user_id?: string;
   clip_id?: string;
-  effects: Effect[];
-  edit_history: Effect[][];
+  effects: any[];
+  edit_history: any[][];
   status?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-interface DbEffect {
-  id: string;
-  type: string;
-  settings: Record<string, any>;
-}
-
 const ClipEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [selectedEffect, setSelectedEffect] = useState<Effect | null>(null);
-  const [appliedEffects, setAppliedEffects] = useState<Effect[]>([]);
-  const [editHistory, setEditHistory] = useState<Effect[][]>([]);
+  const [editHistory, setEditHistory] = useState<any[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(100);
   const [videoDuration, setVideoDuration] = useState(0);
-
-  const { data: effects, isLoading: effectsLoading } = useQuery({
-    queryKey: ['clip-effects'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clip_effects')
-        .select('*')
-        .order('created_at', { ascending: true });
-      
-      if (error) throw error;
-      return data;
-    }
-  });
 
   const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['editing-session', id],
@@ -69,23 +42,14 @@ const ClipEditor = () => {
       if (error && error.code !== 'PGRST116') throw error;
       
       if (dbData) {
-        const parsedEffects = (dbData.effects as unknown as DbEffect[]).map(effect => ({
-          id: effect.id,
-          type: effect.type,
-          settings: effect.settings
-        }));
-        
-        const parsedHistory = (dbData.edit_history as unknown as DbEffect[][]).map(historyEntry =>
+        const parsedHistory = (dbData.edit_history as unknown as any[][]).map(historyEntry =>
           historyEntry.map(effect => ({
-            id: effect.id,
-            type: effect.type,
-            settings: effect.settings
+            ...effect
           }))
         );
 
         return {
           ...dbData,
-          effects: parsedEffects,
           edit_history: parsedHistory
         } as ClipEditingSession;
       }
@@ -98,18 +62,8 @@ const ClipEditor = () => {
     mutationFn: async () => {
       const sessionData = {
         clip_id: id,
-        effects: appliedEffects.map(effect => ({
-          id: effect.id,
-          type: effect.type,
-          settings: effect.settings
-        })),
-        edit_history: editHistory.map(historyEntry =>
-          historyEntry.map(effect => ({
-            id: effect.id,
-            type: effect.type,
-            settings: effect.settings
-          }))
-        ),
+        effects: [],
+        edit_history: editHistory,
         status: 'draft'
       };
 
@@ -128,37 +82,6 @@ const ClipEditor = () => {
     }
   });
 
-  const handleEffectChange = (effectId: string, value: number) => {
-    setAppliedEffects(current => {
-      const newEffects = current.map(effect => 
-        effect.id === effectId 
-          ? { ...effect, settings: { ...effect.settings, value } }
-          : effect
-      );
-      
-      const newHistory = editHistory.slice(0, historyIndex + 1);
-      newHistory.push(newEffects);
-      setEditHistory(newHistory);
-      setHistoryIndex(newHistory.length - 1);
-      
-      return newEffects;
-    });
-  };
-
-  const handleRemoveEffect = (effectId: string) => {
-    setAppliedEffects(current => {
-      const newEffects = current.filter(effect => effect.id !== effectId);
-      
-      const newHistory = editHistory.slice(0, historyIndex + 1);
-      newHistory.push(newEffects);
-      setEditHistory(newHistory);
-      setHistoryIndex(newHistory.length - 1);
-      
-      return newEffects;
-    });
-    toast.success("Effect removed");
-  };
-
   const handleTrim = () => {
     toast.success(`Video trimmed from ${trimStart}% to ${trimEnd}%`);
   };
@@ -166,18 +89,16 @@ const ClipEditor = () => {
   const handleUndo = () => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1);
-      setAppliedEffects(editHistory[historyIndex - 1]);
     }
   };
 
   const handleRedo = () => {
     if (historyIndex < editHistory.length - 1) {
       setHistoryIndex(historyIndex + 1);
-      setAppliedEffects(editHistory[historyIndex + 1]);
     }
   };
 
-  if (effectsLoading || sessionLoading) {
+  if (sessionLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -218,7 +139,7 @@ const ClipEditor = () => {
       </div>
 
       <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-9">
+        <div className="col-span-12">
           <Card className="p-4">
             <div className="aspect-video bg-black rounded-lg" />
             
@@ -245,35 +166,6 @@ const ClipEditor = () => {
                 <span>{trimEnd}%</span>
               </div>
             </div>
-          </Card>
-        </div>
-
-        <div className="col-span-3">
-          <Card>
-            <ScrollArea className="h-[600px]">
-              <div className="p-4 space-y-6">
-                <h3 className="font-semibold mb-4">Effects</h3>
-                {effects?.map((effect) => (
-                  <div key={effect.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{effect.name}</span>
-                      {effect.is_premium && (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                          Premium
-                        </span>
-                      )}
-                    </div>
-                    <Slider
-                      value={[appliedEffects.find(e => e.id === effect.id)?.settings?.value ?? 0]}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onValueChange={([value]) => handleEffectChange(effect.id, value)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
           </Card>
         </div>
       </div>
