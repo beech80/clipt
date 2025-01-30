@@ -1,7 +1,7 @@
 export interface Effect {
   id: string;
-  name?: string;
   type: string;
+  name?: string;
   is_premium: boolean;
   settings: {
     value: number;
