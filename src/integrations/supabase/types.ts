@@ -4884,7 +4884,10 @@ export type Database = {
         Row: {
           audio_bitrate: number | null
           audio_codec: string | null
+          bandwidth_usage: number | null
           bitrate: number | null
+          buffer_health: number | null
+          dropped_frames: number | null
           fps: number | null
           id: string
           latency_ms: number | null
@@ -4896,7 +4899,10 @@ export type Database = {
         Insert: {
           audio_bitrate?: number | null
           audio_codec?: string | null
+          bandwidth_usage?: number | null
           bitrate?: number | null
+          buffer_health?: number | null
+          dropped_frames?: number | null
           fps?: number | null
           id?: string
           latency_ms?: number | null
@@ -4908,7 +4914,10 @@ export type Database = {
         Update: {
           audio_bitrate?: number | null
           audio_codec?: string | null
+          bandwidth_usage?: number | null
           bitrate?: number | null
+          buffer_health?: number | null
+          dropped_frames?: number | null
           fps?: number | null
           id?: string
           latency_ms?: number | null
