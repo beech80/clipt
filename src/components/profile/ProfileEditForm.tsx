@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useQuery } from "@tanstack/react-query";
-import { DatabaseProfile } from "./types";
+import { DatabaseProfile, ProfileFormValues } from "./types";
 
 const formSchema = z.object({
   username: z.string().min(2).max(50).nullable(),

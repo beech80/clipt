@@ -6,17 +6,16 @@ export interface SocialLinks {
 }
 
 export interface ProfileFormValues {
-  username: string;
-  displayName: string;
-  bioDescription?: string;
-  location?: string;
-  website?: string;
-  favoriteGame?: string;
-  gamingPlatforms?: string[];
-  gamerLevel?: string;
-  twitchUsername?: string;
-  discordUsername?: string;
-  socialLinks: SocialLinks;
+  username: string | null;
+  display_name: string | null;
+  bio_description: string | null;
+  location: string | null;
+  website: string | null;
+  favorite_game: string | null;
+  gaming_platforms: string[] | null;
+  gamer_level: string | null;
+  twitch_username: string | null;
+  discord_username: string | null;
 }
 
 export interface DatabaseProfile {
