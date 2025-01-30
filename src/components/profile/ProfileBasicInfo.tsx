@@ -19,7 +19,7 @@ export function ProfileBasicInfo({ form }: ProfileBasicInfoProps) {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="username" {...field} className="bg-gaming-800 border-gaming-700" />
+                <Input placeholder="username" {...field} value={field.value || ''} className="bg-gaming-800 border-gaming-700" />
               </FormControl>
               <FormDescription>
                 This is your public display name.
@@ -31,12 +31,12 @@ export function ProfileBasicInfo({ form }: ProfileBasicInfoProps) {
 
         <FormField
           control={form.control}
-          name="displayName"
+          name="display_name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Display Name</FormLabel>
               <FormControl>
-                <Input placeholder="Display Name" {...field} className="bg-gaming-800 border-gaming-700" />
+                <Input placeholder="Display Name" {...field} value={field.value || ''} className="bg-gaming-800 border-gaming-700" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -46,7 +46,7 @@ export function ProfileBasicInfo({ form }: ProfileBasicInfoProps) {
 
       <FormField
         control={form.control}
-        name="bioDescription"
+        name="bio_description"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Bio</FormLabel>
@@ -55,6 +55,7 @@ export function ProfileBasicInfo({ form }: ProfileBasicInfoProps) {
                 placeholder="Tell us about your gaming journey..."
                 className="resize-none bg-gaming-800 border-gaming-700 min-h-[120px]"
                 {...field}
+                value={field.value || ''}
               />
             </FormControl>
             <FormMessage />

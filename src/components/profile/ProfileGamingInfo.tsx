@@ -23,11 +23,11 @@ export function ProfileGamingInfo({ form }: ProfileGamingInfoProps) {
     <>
       <FormField
         control={form.control}
-        name="gamerLevel"
+        name="gamer_level"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Gamer Level</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || ''}>
               <FormControl>
                 <SelectTrigger className="bg-gaming-800 border-gaming-700">
                   <SelectValue placeholder="Select your gamer level" />
@@ -48,7 +48,7 @@ export function ProfileGamingInfo({ form }: ProfileGamingInfoProps) {
 
       <FormField
         control={form.control}
-        name="favoriteGame"
+        name="favorite_game"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Favorite Game</FormLabel>
@@ -57,6 +57,7 @@ export function ProfileGamingInfo({ form }: ProfileGamingInfoProps) {
                 <Input 
                   placeholder="Enter your favorite game" 
                   {...field} 
+                  value={field.value || ''}
                   className="bg-gaming-800 border-gaming-700 pl-10"
                 />
                 <Gamepad2 className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
@@ -70,7 +71,7 @@ export function ProfileGamingInfo({ form }: ProfileGamingInfoProps) {
       <div className="grid gap-6 md:grid-cols-2">
         <FormField
           control={form.control}
-          name="twitchUsername"
+          name="twitch_username"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Twitch Username</FormLabel>
@@ -79,6 +80,7 @@ export function ProfileGamingInfo({ form }: ProfileGamingInfoProps) {
                   <Input 
                     placeholder="Your Twitch username" 
                     {...field} 
+                    value={field.value || ''}
                     className="bg-gaming-800 border-gaming-700 pl-10"
                   />
                   <Twitch className="absolute left-3 top-2.5 h-5 w-5 text-purple-500" />
@@ -91,7 +93,7 @@ export function ProfileGamingInfo({ form }: ProfileGamingInfoProps) {
 
         <FormField
           control={form.control}
-          name="discordUsername"
+          name="discord_username"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Discord Username</FormLabel>
@@ -99,6 +101,7 @@ export function ProfileGamingInfo({ form }: ProfileGamingInfoProps) {
                 <Input 
                   placeholder="Your Discord username" 
                   {...field} 
+                  value={field.value || ''}
                   className="bg-gaming-800 border-gaming-700"
                 />
               </FormControl>
