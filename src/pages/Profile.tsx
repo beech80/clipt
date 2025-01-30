@@ -25,6 +25,12 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface SocialLinks {
+  twitter?: string;
+  youtube?: string;
+  twitch?: string;
+}
+
 const Profile = () => {
   const navigate = useNavigate();
   const { userId } = useParams();
@@ -107,6 +113,8 @@ const Profile = () => {
     { id: 3, name: "Call of Duty", hours: 234, lastPlayed: "3 days ago" }
   ];
 
+  const socialLinks = profile?.social_links as SocialLinks;
+
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 pb-40">
       <Card className="bg-gradient-to-br from-gaming-900 to-gaming-800 border-none text-white overflow-hidden">
@@ -147,20 +155,20 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {profile?.social_links && (
+                {socialLinks && (
                   <div className="flex gap-4 mt-4 justify-center sm:justify-start">
-                    {profile.social_links.twitter && (
-                      <a href={`https://twitter.com/${profile.social_links.twitter}`} target="_blank" rel="noopener noreferrer">
+                    {socialLinks.twitter && (
+                      <a href={`https://twitter.com/${socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">
                         <Twitter className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors" />
                       </a>
                     )}
-                    {profile.social_links.youtube && (
-                      <a href={`https://youtube.com/${profile.social_links.youtube}`} target="_blank" rel="noopener noreferrer">
+                    {socialLinks.youtube && (
+                      <a href={`https://youtube.com/${socialLinks.youtube}`} target="_blank" rel="noopener noreferrer">
                         <Youtube className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors" />
                       </a>
                     )}
-                    {profile?.social_links.twitch && (
-                      <a href={`https://twitch.tv/${profile.social_links.twitch}`} target="_blank" rel="noopener noreferrer">
+                    {socialLinks.twitch && (
+                      <a href={`https://twitch.tv/${socialLinks.twitch}`} target="_blank" rel="noopener noreferrer">
                         <Twitch className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors" />
                       </a>
                     )}
