@@ -1,20 +1,18 @@
-import { Card } from "@/components/ui/card";
+import { RefObject } from 'react';
 
 interface VideoPreviewProps {
-  videoRef: React.RefObject<HTMLVideoElement>;
-  videoFile: File;
+  videoRef: RefObject<HTMLVideoElement>;
   onLoadedMetadata: () => void;
 }
 
-export const VideoPreview = ({ videoRef, videoFile, onLoadedMetadata }: VideoPreviewProps) => {
+export const VideoPreview = ({ videoRef, onLoadedMetadata }: VideoPreviewProps) => {
   return (
-    <Card className="p-4">
+    <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
       <video
         ref={videoRef}
-        src={URL.createObjectURL(videoFile)}
-        className="w-full rounded-lg"
+        className="w-full h-full"
         onLoadedMetadata={onLoadedMetadata}
       />
-    </Card>
+    </div>
   );
 };

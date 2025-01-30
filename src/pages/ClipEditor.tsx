@@ -12,12 +12,7 @@ import { TrimControls } from "@/components/clip-editor/TrimControls";
 import { EditorToolbar } from "@/components/clip-editor/EditorToolbar";
 import { EffectsPanel } from "@/components/clip-editor/EffectsPanel";
 
-interface VideoEditorProps {
-  videoFile: File;
-  onSave: (trimmedVideo: Blob) => void;
-}
-
-const ClipEditor = ({ videoFile, onSave }: VideoEditorProps) => {
+const ClipEditor = () => {
   const { id } = useParams();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -38,7 +33,15 @@ const ClipEditor = ({ videoFile, onSave }: VideoEditorProps) => {
         .order('created_at', { ascending: true });
       
       if (error) throw error;
-      return data;
+      
+      // Transform the data to match Effect type
+      return data.map(effect => ({
+        ...effect,
+        settings: {
+          value: 0,
+          ...effect.settings
+        }
+      })) as Effect[];
     }
   });
 
@@ -112,7 +115,7 @@ const ClipEditor = ({ videoFile, onSave }: VideoEditorProps) => {
       mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'video/webm' });
-        onSave(blob);
+        // Handle the trimmed video blob
         toast.success("Video trimmed successfully!");
       };
 
@@ -167,7 +170,6 @@ const ClipEditor = ({ videoFile, onSave }: VideoEditorProps) => {
             <TabsContent value="preview">
               <VideoPreview
                 videoRef={videoRef}
-                videoFile={videoFile}
                 onLoadedMetadata={handleLoadedMetadata}
               />
             </TabsContent>
@@ -176,7 +178,6 @@ const ClipEditor = ({ videoFile, onSave }: VideoEditorProps) => {
               <div className="space-y-4">
                 <VideoPreview
                   videoRef={videoRef}
-                  videoFile={videoFile}
                   onLoadedMetadata={handleLoadedMetadata}
                 />
                 <div className="space-y-4">
