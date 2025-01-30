@@ -1,41 +1,60 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { EffectsPanelProps } from "@/types/clip-editor";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Effect } from "@/types/clip-editor";
+import { X } from "lucide-react";
 
-interface EffectsPanelProps {
-  effects?: Effect[];
-  appliedEffects: Effect[];
-  onEffectChange: (effectId: string, value: number) => void;
-}
-
-export const EffectsPanel = ({ effects, appliedEffects, onEffectChange }: EffectsPanelProps) => {
+export const EffectsPanel = ({
+  effects,
+  selectedEffects,
+  onEffectSelect,
+  onEffectRemove,
+  onEffectSettingsChange
+}: EffectsPanelProps) => {
   return (
-    <Card>
-      <ScrollArea className="h-[600px]">
-        <div className="p-4 space-y-6">
-          <h3 className="font-semibold mb-4">Effects</h3>
-          {effects?.map((effect) => (
-            <div key={effect.id} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{effect.name}</span>
-                {effect.is_premium && (
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                    Premium
-                  </span>
-                )}
+    <div className="w-80 border-l border-border bg-card p-4 space-y-4">
+      <h2 className="text-lg font-semibold">Effects</h2>
+      
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-2">
+          {effects.map(effect => (
+            <Button
+              key={effect.id}
+              variant="outline"
+              onClick={() => onEffectSelect(effect)}
+              className="h-auto py-2"
+            >
+              {effect.name || effect.type}
+            </Button>
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          {selectedEffects.map(effect => (
+            <Card key={effect.id} className="p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium">{effect.name || effect.type}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEffectRemove(effect.id)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
               <Slider
-                value={[appliedEffects.find(e => e.id === effect.id)?.settings?.value ?? 0]}
+                value={[effect.settings.value]}
                 min={0}
                 max={100}
                 step={1}
-                onValueChange={([value]) => onEffectChange(effect.id, value)}
+                onValueChange={([value]) => 
+                  onEffectSettingsChange(effect.id, { value })
+                }
               />
-            </div>
+            </Card>
           ))}
         </div>
-      </ScrollArea>
-    </Card>
+      </div>
+    </div>
   );
 };
