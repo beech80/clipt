@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useQuery } from "@tanstack/react-query";
 
 interface DatabaseProfile {
   id: string;
@@ -52,26 +53,49 @@ const formSchema = z.object({
 });
 
 const ProfileEditForm = () => {
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data as DatabaseProfile;
+    },
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: '',
-      display_name: '',
-      bio: '',
-      website: '',
-      favorite_game: '',
-      gaming_platforms: [],
-      gamer_level: '',
-      twitch_username: '',
-      discord_username: '',
+      username: profile?.username || '',
+      display_name: profile?.display_name || '',
+      bio: profile?.bio || '',
+      website: profile?.website || '',
+      favorite_game: profile?.favorite_game || '',
+      gaming_platforms: profile?.gaming_platforms || [],
+      gamer_level: profile?.gamer_level || '',
+      twitch_username: profile?.twitch_username || '',
+      discord_username: profile?.discord_username || '',
     },
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Not authenticated");
+      return;
+    }
+
     const { error } = await supabase
       .from('profiles')
       .update(data)
-      .eq('id', data.id);
+      .eq('id', user.id);
 
     if (error) {
       toast.error("Error updating profile");
@@ -82,7 +106,7 @@ const ProfileEditForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormItem>
           <FormLabel>Username</FormLabel>
           <FormControl>
