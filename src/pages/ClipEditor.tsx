@@ -36,10 +36,13 @@ const ClipEditor = () => {
       
       // Transform the data to match Effect type
       return data.map(effect => ({
-        ...effect,
+        id: effect.id,
+        type: effect.type,
+        name: effect.name || undefined,
+        is_premium: effect.is_premium || false,
         settings: {
           value: 0,
-          ...effect.settings
+          ...(effect.settings as { [key: string]: any })
         }
       })) as Effect[];
     }
@@ -149,7 +152,7 @@ const ClipEditor = () => {
     });
   };
 
-  if (effectsLoading || sessionLoading) {
+  if (effectsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
