@@ -603,26 +603,35 @@ export type Database = {
       }
       broadcast_settings: {
         Row: {
+          advanced_encoder_settings: Json | null
           created_at: string
+          custom_rtmp_settings: Json | null
           encoder_settings: Json | null
           id: string
           output_settings: Json | null
+          stream_delay_seconds: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          advanced_encoder_settings?: Json | null
           created_at?: string
+          custom_rtmp_settings?: Json | null
           encoder_settings?: Json | null
           id?: string
           output_settings?: Json | null
+          stream_delay_seconds?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          advanced_encoder_settings?: Json | null
           created_at?: string
+          custom_rtmp_settings?: Json | null
           encoder_settings?: Json | null
           id?: string
           output_settings?: Json | null
+          stream_delay_seconds?: number | null
           updated_at?: string
           user_id?: string
         }
