@@ -67,6 +67,22 @@ interface SocialLinks {
   twitch?: string;
 }
 
+interface Profile {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  bio_description: string | null;
+  location: string | null;
+  website: string | null;
+  favorite_game: string | null;
+  gaming_platforms: string[] | null;
+  gamer_level: string | null;
+  twitch_username: string | null;
+  discord_username: string | null;
+  social_links: SocialLinks | null;
+}
+
 export function ProfileEditForm() {
   const { user } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -82,7 +98,7 @@ export function ProfileEditForm() {
         .single()
 
       if (error) throw error
-      return data
+      return data as Profile
     },
     enabled: !!user
   })
