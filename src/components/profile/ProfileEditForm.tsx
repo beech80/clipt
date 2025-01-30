@@ -23,8 +23,6 @@ const formSchema = z.object({
   location: z.string().nullable(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
-
 const ProfileEditForm = () => {
   const { data: profile } = useQuery({
     queryKey: ['profile'],
@@ -43,23 +41,23 @@ const ProfileEditForm = () => {
     },
   });
 
-  const form = useForm<FormValues>({
+  const form = useForm<ProfileFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: profile?.username || "",
-      display_name: profile?.display_name || "",
-      bio_description: profile?.bio_description || "",
-      website: profile?.website || "",
-      favorite_game: profile?.favorite_game || "",
-      gaming_platforms: profile?.gaming_platforms || [],
-      gamer_level: profile?.gamer_level || "",
-      twitch_username: profile?.twitch_username || "",
-      discord_username: profile?.discord_username || "",
-      location: profile?.location || "",
+      username: profile?.username || null,
+      display_name: profile?.display_name || null,
+      bio_description: profile?.bio_description || null,
+      website: profile?.website || null,
+      favorite_game: profile?.favorite_game || null,
+      gaming_platforms: profile?.gaming_platforms || null,
+      gamer_level: profile?.gamer_level || null,
+      twitch_username: profile?.twitch_username || null,
+      discord_username: profile?.discord_username || null,
+      location: profile?.location || null,
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: ProfileFormValues) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Not authenticated");
