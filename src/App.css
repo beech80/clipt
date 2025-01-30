@@ -53,34 +53,57 @@
   }
 }
 
-/* GameBoy Controls Styles */
-.gameboy-container {
-  background: linear-gradient(to bottom, rgba(26, 31, 44, 0.95), rgba(26, 31, 44, 0.98));
+/* Accessibility Styles */
+.high-contrast {
+  --background: #000000;
+  --foreground: #ffffff;
+  --primary: #ffff00;
+  --secondary: #00ffff;
 }
 
-.clip-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  color: #fff;
-  padding: 0.5rem;
-  gap: 0.25rem;
+.reduce-motion * {
+  animation: none !important;
+  transition: none !important;
 }
 
-.clip-button-icon {
-  width: 24px;
-  height: 24px;
-  color: rgba(255, 255, 255, 0.9);
+/* Caption Sizes */
+[data-caption-size="small"] {
+  font-size: 0.875rem;
 }
 
-.clip-button-text {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
+[data-caption-size="medium"] {
+  font-size: 1rem;
 }
 
-/* ... keep existing code */
+[data-caption-size="large"] {
+  font-size: 1.25rem;
+}
+
+/* Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Image/Video Optimization */
+.media-container img,
+.media-container video {
+  max-height: 90vh;
+  object-fit: contain;
+  width: 100%;
+  background: #000;
+}
+
+@media (max-width: 640px) {
+  .media-container img,
+  .media-container video {
+    max-height: 70vh;
+  }
+}

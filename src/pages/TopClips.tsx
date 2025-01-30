@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PostList from "@/components/PostList";
 import { Calendar, TrendingUp } from "lucide-react";
-import GameBoyControls from "@/components/GameBoyControls";
 
 const TopClips = () => {
   const [timeRange, setTimeRange] = useState("today");
@@ -42,11 +41,9 @@ const TopClips = () => {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 pb-[200px]">
+      <div className="grid grid-cols-1 gap-4">
         <PostList />
       </div>
-
-      <GameBoyControls />
     </div>
   );
 };

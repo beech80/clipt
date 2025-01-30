@@ -1,4 +1,4 @@
-import ProfileEditForm from "@/components/profile/ProfileEditForm";
+import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
