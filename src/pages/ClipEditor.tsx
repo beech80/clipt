@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Loader2, Save, Undo, Redo, Download, Scissors, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GameBoyControls from "@/components/GameBoyControls";
+import { Json } from "@/integrations/supabase/types";
 
 interface Effect {
   id: string;
@@ -69,13 +70,13 @@ const ClipEditor = () => {
       if (error && error.code !== 'PGRST116') throw error;
       
       if (dbData) {
-        const parsedEffects = (dbData.effects as DbEffect[]).map(effect => ({
+        const parsedEffects = (dbData.effects as unknown as DbEffect[]).map(effect => ({
           id: effect.id,
           type: effect.type,
           settings: effect.settings
         }));
         
-        const parsedHistory = (dbData.edit_history as DbEffect[][]).map(historyEntry =>
+        const parsedHistory = (dbData.edit_history as unknown as DbEffect[][]).map(historyEntry =>
           historyEntry.map(effect => ({
             id: effect.id,
             type: effect.type,
