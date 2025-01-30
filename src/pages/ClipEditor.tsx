@@ -14,7 +14,10 @@ import { fabric } from 'fabric';
 interface Effect {
   id: string;
   type: string;
-  settings: Record<string, any>;
+  settings: {
+    value: number;
+    [key: string]: any;
+  };
 }
 
 const ClipEditor = () => {
@@ -51,7 +54,7 @@ const ClipEditor = () => {
         .from('clip_editing_sessions')
         .select('*')
         .eq('clip_id', id)
-        .single();
+        .maybeSingle();
       
       if (error && error.code !== 'PGRST116') throw error;
       return data;
@@ -63,8 +66,8 @@ const ClipEditor = () => {
     mutationFn: async () => {
       const sessionData = {
         clip_id: id,
-        effects: appliedEffects,
-        edit_history: editHistory,
+        effects: JSON.stringify(appliedEffects),
+        edit_history: JSON.stringify(editHistory),
         status: 'draft'
       };
 
