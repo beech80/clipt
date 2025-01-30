@@ -67,7 +67,7 @@ interface SocialLinks {
   twitch?: string;
 }
 
-interface Profile {
+interface DatabaseProfile {
   id: string;
   username: string | null;
   display_name: string | null;
@@ -81,6 +81,17 @@ interface Profile {
   twitch_username: string | null;
   discord_username: string | null;
   social_links: SocialLinks | null;
+  created_at: string;
+  custom_theme: unknown;
+  enable_notifications: boolean;
+  enable_sounds: boolean;
+  font_size: string;
+  is_moderator: boolean;
+  keyboard_shortcuts: boolean;
+  onboarding_completed: boolean;
+  onboarding_step: string;
+  preferred_language: string;
+  theme_preference: string;
 }
 
 export function ProfileEditForm() {
@@ -98,7 +109,7 @@ export function ProfileEditForm() {
         .single()
 
       if (error) throw error
-      return data as Profile
+      return data as DatabaseProfile
     },
     enabled: !!user
   })
