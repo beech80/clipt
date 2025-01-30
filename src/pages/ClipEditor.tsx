@@ -27,6 +27,12 @@ interface ClipEditingSession {
   updated_at?: string;
 }
 
+interface DbEffect {
+  id: string;
+  type: string;
+  settings: Record<string, any>;
+}
+
 const ClipEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -62,12 +68,25 @@ const ClipEditor = () => {
       
       if (error && error.code !== 'PGRST116') throw error;
       
-      // Convert the database response to our ClipEditingSession type
       if (dbData) {
+        const parsedEffects = (dbData.effects as DbEffect[]).map(effect => ({
+          id: effect.id,
+          type: effect.type,
+          settings: effect.settings
+        }));
+        
+        const parsedHistory = (dbData.edit_history as DbEffect[][]).map(historyEntry =>
+          historyEntry.map(effect => ({
+            id: effect.id,
+            type: effect.type,
+            settings: effect.settings
+          }))
+        );
+
         return {
           ...dbData,
-          effects: dbData.effects as Effect[],
-          edit_history: dbData.edit_history as Effect[][]
+          effects: parsedEffects,
+          edit_history: parsedHistory
         } as ClipEditingSession;
       }
       return null;
@@ -79,8 +98,18 @@ const ClipEditor = () => {
     mutationFn: async () => {
       const sessionData = {
         clip_id: id,
-        effects: appliedEffects as any, // Type assertion to match database expectations
-        edit_history: editHistory as any, // Type assertion to match database expectations
+        effects: appliedEffects.map(effect => ({
+          id: effect.id,
+          type: effect.type,
+          settings: effect.settings
+        })),
+        edit_history: editHistory.map(historyEntry =>
+          historyEntry.map(effect => ({
+            id: effect.id,
+            type: effect.type,
+            settings: effect.settings
+          }))
+        ),
         status: 'draft'
       };
 
