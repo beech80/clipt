@@ -13,7 +13,7 @@ import { DatabaseProfile } from "./types";
 const formSchema = z.object({
   username: z.string().min(2).max(50),
   display_name: z.string().min(2).max(50),
-  bio: z.string().max(160).optional(),
+  bio_description: z.string().max(160).optional(),
   website: z.string().url().optional().or(z.literal("")),
   favorite_game: z.string().optional(),
   gaming_platforms: z.array(z.string()).optional(),
@@ -45,7 +45,7 @@ const ProfileEditForm = () => {
     defaultValues: {
       username: profile?.username || '',
       display_name: profile?.display_name || '',
-      bio: profile?.bio || '',
+      bio_description: profile?.bio_description || '',
       website: profile?.website || '',
       favorite_game: profile?.favorite_game || '',
       gaming_platforms: profile?.gaming_platforms || [],
@@ -77,69 +77,127 @@ const ProfileEditForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormItem>
-          <FormLabel>Username</FormLabel>
-          <FormControl>
-            <Input {...form.register("username")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-        <FormItem>
-          <FormLabel>Display Name</FormLabel>
-          <FormControl>
-            <Input {...form.register("display_name")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-        <FormItem>
-          <FormLabel>Bio</FormLabel>
-          <FormControl>
-            <Textarea {...form.register("bio")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-        <FormItem>
-          <FormLabel>Website</FormLabel>
-          <FormControl>
-            <Input {...form.register("website")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-        <FormItem>
-          <FormLabel>Favorite Game</FormLabel>
-          <FormControl>
-            <Input {...form.register("favorite_game")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-        <FormItem>
-          <FormLabel>Gaming Platforms</FormLabel>
-          <FormControl>
-            <Input {...form.register("gaming_platforms")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-        <FormItem>
-          <FormLabel>Gamer Level</FormLabel>
-          <FormControl>
-            <Input {...form.register("gamer_level")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-        <FormItem>
-          <FormLabel>Twitch Username</FormLabel>
-          <FormControl>
-            <Input {...form.register("twitch_username")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-        <FormItem>
-          <FormLabel>Discord Username</FormLabel>
-          <FormControl>
-            <Input {...form.register("discord_username")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="display_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Display Name</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="bio_description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bio</FormLabel>
+              <FormControl>
+                <Textarea {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="website"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Website</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="favorite_game"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Favorite Game</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="gaming_platforms"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Gaming Platforms</FormLabel>
+              <FormControl>
+                <Input 
+                  {...field} 
+                  value={field.value?.join(', ') || ''}
+                  onChange={(e) => field.onChange(e.target.value.split(',').map(s => s.trim()))}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="gamer_level"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Gamer Level</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="twitch_username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Twitch Username</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="discord_username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Discord Username</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <Button type="submit">Update Profile</Button>
       </form>
     </Form>
