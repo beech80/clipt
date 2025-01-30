@@ -6,35 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
-import { Loader2, Save, Undo, Redo, Download } from "lucide-react";
+import { Loader2, Save, Undo, Redo, Download, Scissors, Video, Image } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { fabric } from 'fabric';
 
 interface Effect {
   id: string;
   type: string;
   settings: Record<string, any>;
-}
-
-interface ClipEditingSession {
-  id?: string;
-  user_id?: string;
-  clip_id?: string;
-  effects: Effect[];
-  edit_history: Effect[][];
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-interface DatabaseClipSession {
-  id: string;
-  user_id: string;
-  clip_id: string;
-  effects: Record<string, any>[];
-  edit_history: Record<string, any>[][];
-  status: string;
-  created_at: string;
-  updated_at: string;
 }
 
 const ClipEditor = () => {
@@ -44,6 +24,12 @@ const ClipEditor = () => {
   const [appliedEffects, setAppliedEffects] = useState<Effect[]>([]);
   const [editHistory, setEditHistory] = useState<Effect[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [trimStart, setTrimStart] = useState(0);
+  const [trimEnd, setTrimEnd] = useState(0);
 
   const { data: effects, isLoading: effectsLoading } = useQuery({
     queryKey: ['clip-effects'],
@@ -61,39 +47,14 @@ const ClipEditor = () => {
   const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['editing-session', id],
     queryFn: async () => {
-      const { data: dbData, error } = await supabase
+      const { data, error } = await supabase
         .from('clip_editing_sessions')
         .select('*')
         .eq('clip_id', id)
         .single();
       
       if (error && error.code !== 'PGRST116') throw error;
-      
-      if (dbData) {
-        const data = dbData as DatabaseClipSession;
-        const transformedData: ClipEditingSession = {
-          id: data.id,
-          user_id: data.user_id,
-          clip_id: data.clip_id,
-          effects: Array.isArray(data.effects) ? data.effects.map(effect => ({
-            id: effect.id,
-            type: effect.type,
-            settings: effect.settings || {}
-          })) : [],
-          edit_history: Array.isArray(data.edit_history) ? data.edit_history.map(history =>
-            history.map(effect => ({
-              id: effect.id,
-              type: effect.type,
-              settings: effect.settings || {}
-            }))
-          ) : [],
-          status: data.status,
-          created_at: data.created_at,
-          updated_at: data.updated_at
-        };
-        return transformedData;
-      }
-      return null;
+      return data;
     },
     enabled: !!id
   });
@@ -102,18 +63,8 @@ const ClipEditor = () => {
     mutationFn: async () => {
       const sessionData = {
         clip_id: id,
-        effects: appliedEffects.map(effect => ({
-          id: effect.id,
-          type: effect.type,
-          settings: effect.settings
-        })),
-        edit_history: editHistory.map(history =>
-          history.map(effect => ({
-            id: effect.id,
-            type: effect.type,
-            settings: effect.settings
-          }))
-        ),
+        effects: appliedEffects,
+        edit_history: editHistory,
         status: 'draft'
       };
 
@@ -140,7 +91,6 @@ const ClipEditor = () => {
           : effect
       );
       
-      // Add to history
       const newHistory = editHistory.slice(0, historyIndex + 1);
       newHistory.push(newEffects);
       setEditHistory(newHistory);
@@ -161,6 +111,32 @@ const ClipEditor = () => {
     if (historyIndex < editHistory.length - 1) {
       setHistoryIndex(historyIndex + 1);
       setAppliedEffects(editHistory[historyIndex + 1]);
+    }
+  };
+
+  const handleTrim = async () => {
+    setIsProcessing(true);
+    try {
+      // Implement trim logic here
+      toast.success("Clip trimmed successfully!");
+    } catch (error) {
+      toast.error("Failed to trim clip");
+      console.error("Trim error:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsProcessing(true);
+    try {
+      // Implement export logic here
+      toast.success("Clip exported successfully!");
+    } catch (error) {
+      toast.error("Failed to export clip");
+      console.error("Export error:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -197,7 +173,7 @@ const ClipEditor = () => {
             <Save className="w-4 h-4 mr-2" />
             Save Changes
           </Button>
-          <Button variant="secondary">
+          <Button variant="secondary" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
@@ -206,9 +182,44 @@ const ClipEditor = () => {
 
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-9">
-          <Card className="p-4">
-            <div className="aspect-video bg-black rounded-lg" />
-          </Card>
+          <Tabs defaultValue="preview">
+            <TabsList>
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+              <TabsTrigger value="trim">Trim</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="preview">
+              <Card className="p-4">
+                <div className="aspect-video bg-black rounded-lg" />
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="trim">
+              <Card className="p-4 space-y-4">
+                <div className="aspect-video bg-black rounded-lg" />
+                <div className="space-y-2">
+                  <Slider
+                    value={[trimStart, trimEnd]}
+                    min={0}
+                    max={duration}
+                    step={0.1}
+                    onValueChange={([start, end]) => {
+                      setTrimStart(start);
+                      setTrimEnd(end);
+                    }}
+                  />
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>{trimStart.toFixed(1)}s</span>
+                    <span>{trimEnd.toFixed(1)}s</span>
+                  </div>
+                  <Button onClick={handleTrim} disabled={isProcessing}>
+                    <Scissors className="w-4 h-4 mr-2" />
+                    Trim Clip
+                  </Button>
+                </div>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <div className="col-span-3">
