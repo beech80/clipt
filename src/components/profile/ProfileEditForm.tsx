@@ -35,8 +35,8 @@ const profileFormSchema = z.object({
   discordUsername: z.string().optional(),
   socialLinks: z.object({
     twitter: z.string().optional(),
-    instagram: z.string().optional(),
     youtube: z.string().optional(),
+    twitch: z.string().optional(),
   }),
 })
 
@@ -60,6 +60,12 @@ const GAMER_LEVELS = [
 ]
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
+
+interface SocialLinks {
+  twitter?: string;
+  youtube?: string;
+  twitch?: string;
+}
 
 export function ProfileEditForm() {
   const { user } = useAuth()
@@ -96,29 +102,18 @@ export function ProfileEditForm() {
       discordUsername: "",
       socialLinks: {
         twitter: "",
-        instagram: "",
         youtube: "",
+        twitch: "",
       },
     },
   })
 
   useEffect(() => {
     if (profile) {
-      let socialLinks = {
+      const socialLinks = profile.social_links as SocialLinks || {
         twitter: "",
-        instagram: "",
         youtube: "",
-      }
-
-      if (profile.social_links && 
-          typeof profile.social_links === 'object' && 
-          !Array.isArray(profile.social_links)) {
-        const links = profile.social_links as Record<string, unknown>
-        socialLinks = {
-          twitter: typeof links.twitter === 'string' ? links.twitter : "",
-          instagram: typeof links.instagram === 'string' ? links.instagram : "",
-          youtube: typeof links.youtube === 'string' ? links.youtube : "",
-        }
+        twitch: "",
       }
       
       form.reset({
@@ -127,6 +122,11 @@ export function ProfileEditForm() {
         bioDescription: profile.bio_description || "",
         location: profile.location || "",
         website: profile.website || "",
+        favoriteGame: profile.favorite_game || "",
+        gamingPlatforms: profile.gaming_platforms || [],
+        gamerLevel: profile.gamer_level || "",
+        twitchUsername: profile.twitch_username || "",
+        discordUsername: profile.discord_username || "",
         socialLinks,
       })
     }
@@ -186,6 +186,11 @@ export function ProfileEditForm() {
           bio_description: data.bioDescription,
           location: data.location,
           website: data.website,
+          favorite_game: data.favoriteGame,
+          gaming_platforms: data.gamingPlatforms,
+          gamer_level: data.gamerLevel,
+          twitch_username: data.twitchUsername,
+          discord_username: data.discordUsername,
           social_links: data.socialLinks,
         })
         .eq('id', user?.id)
@@ -367,7 +372,7 @@ export function ProfileEditForm() {
             <Trophy className="h-5 w-5 text-yellow-500" />
             Social Links
           </h3>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             <FormField
               control={form.control}
               name="socialLinks.twitter"
@@ -390,6 +395,20 @@ export function ProfileEditForm() {
                   <FormLabel>YouTube</FormLabel>
                   <FormControl>
                     <Input placeholder="YouTube channel" {...field} className="bg-gaming-800 border-gaming-700" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="socialLinks.twitch"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Twitch</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Twitch username" {...field} className="bg-gaming-800 border-gaming-700" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
