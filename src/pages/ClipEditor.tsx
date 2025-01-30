@@ -10,6 +10,7 @@ import { Loader2, Save, Undo, Redo, Download, Scissors, Video, Image } from "luc
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fabric } from 'fabric';
+import { Json } from "@/types/auth";
 
 interface Effect {
   id: string;
