@@ -90,45 +90,52 @@ export default function ClipEditor() {
   if (effectsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin text-gaming-500" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen">
-      <div className="flex-1 p-4">
-        <div className="space-y-4">
-          <VideoPreview
-            videoUrl="/path/to/video.mp4"
-            isPlaying={isPlaying}
-            currentTime={currentTime}
-            onTimeUpdate={handleTimeUpdate}
-          />
-          
-          <TrimControls
-            startTime={startTime}
-            endTime={endTime}
-            duration={10}
-            onValueChange={handleTrimChange}
-          />
-          
-          <EditorToolbar
-            isPlaying={isPlaying}
-            onPlayPause={handlePlayPause}
-            onReset={handleReset}
-            onTrim={() => {}}
-          />
+    <div className="flex min-h-screen bg-[#1A1F2C]">
+      <div className="flex-1 p-6 space-y-6">
+        <div className="gaming-card">
+          <h1 className="text-2xl font-bold mb-6 gaming-gradient">Clip Editor</h1>
+          <div className="space-y-6">
+            <VideoPreview
+              videoUrl="/path/to/video.mp4"
+              isPlaying={isPlaying}
+              currentTime={currentTime}
+              onTimeUpdate={handleTimeUpdate}
+            />
+            
+            <div className="gaming-card p-4">
+              <TrimControls
+                startTime={startTime}
+                endTime={endTime}
+                duration={10}
+                onValueChange={handleTrimChange}
+              />
+            </div>
+            
+            <EditorToolbar
+              isPlaying={isPlaying}
+              onPlayPause={handlePlayPause}
+              onReset={handleReset}
+              onTrim={() => {}}
+            />
+          </div>
         </div>
       </div>
 
-      <EffectsPanel
-        effects={effects || []}
-        selectedEffects={selectedEffects}
-        onEffectSelect={handleEffectSelect}
-        onEffectRemove={handleEffectRemove}
-        onEffectSettingsChange={handleEffectSettingsChange}
-      />
+      <div className="w-96 border-l border-gaming-400/20 bg-[#1A1F2C]/50 backdrop-blur-sm p-6">
+        <EffectsPanel
+          effects={effects || []}
+          selectedEffects={selectedEffects}
+          onEffectSelect={handleEffectSelect}
+          onEffectRemove={handleEffectRemove}
+          onEffectSettingsChange={handleEffectSettingsChange}
+        />
+      </div>
     </div>
   );
 }

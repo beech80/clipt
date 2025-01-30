@@ -12,17 +12,17 @@ export const EffectsPanel = ({
   onEffectSettingsChange
 }: EffectsPanelProps) => {
   return (
-    <div className="w-80 border-l border-border bg-card p-4 space-y-4">
-      <h2 className="text-lg font-semibold">Effects</h2>
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold gaming-gradient">Effects</h2>
       
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-2">
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-3">
           {effects.map(effect => (
             <Button
               key={effect.id}
               variant="outline"
               onClick={() => onEffectSelect(effect)}
-              className="h-auto py-2"
+              className="gaming-button h-auto py-3 px-4"
             >
               {effect.name || effect.type}
             </Button>
@@ -31,13 +31,14 @@ export const EffectsPanel = ({
 
         <div className="space-y-4">
           {selectedEffects.map(effect => (
-            <Card key={effect.id} className="p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">{effect.name || effect.type}</span>
+            <Card key={effect.id} className="gaming-card p-4">
+              <div className="flex justify-between items-center mb-4">
+                <span className="font-medium gaming-gradient">{effect.name || effect.type}</span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => onEffectRemove(effect.id)}
+                  className="hover:bg-gaming-400/10"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -50,6 +51,7 @@ export const EffectsPanel = ({
                 onValueChange={([value]) => 
                   onEffectSettingsChange(effect.id, { value })
                 }
+                className="gaming-slider"
               />
             </Card>
           ))}

@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { VideoPreviewProps } from "@/types/clip-editor";
+import type { VideoPreviewProps } from "@/types/clip-editor";
 
 export const VideoPreview = ({ 
   videoUrl, 
@@ -26,11 +26,11 @@ export const VideoPreview = ({
   }, [currentTime]);
 
   return (
-    <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+    <div className="relative aspect-video bg-black rounded-lg overflow-hidden gaming-card">
       <video
         ref={videoRef}
         src={videoUrl}
-        className="w-full h-full"
+        className="w-full h-full object-contain"
         onTimeUpdate={(e) => onTimeUpdate(e.currentTarget.currentTime)}
       />
     </div>
