@@ -49,9 +49,16 @@ export function VirtualGiftStore({ streamId }: { streamId: string }) {
     if (!selectedGift) return;
 
     try {
+      const user = await supabase.auth.getUser();
+      if (!user.data.user) {
+        toast.error("You must be logged in to send gifts");
+        return;
+      }
+
       const { error } = await supabase.from("stream_gifts").insert({
         stream_id: streamId,
         gift_id: selectedGift.id,
+        sender_id: user.data.user.id,
         amount: selectedGift.price * quantity,
         message: message.trim() || null,
         quantity,

@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DollarSign, TrendingUp, Calendar } from "lucide-react";
@@ -45,7 +46,10 @@ export function AdCampaignManager() {
 
   const createCampaign = useMutation({
     mutationFn: async (campaign: typeof newCampaign) => {
-      const { error } = await supabase.from("ad_campaigns").insert([campaign]);
+      const { error } = await supabase.from("ad_campaigns").insert([{
+        ...campaign,
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+      }]);
       if (error) throw error;
     },
     onSuccess: () => {
