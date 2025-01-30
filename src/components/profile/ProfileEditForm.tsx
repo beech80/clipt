@@ -2,25 +2,16 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Form } from "@/components/ui/form"
 import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useRef, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Camera, Gamepad2, Trophy, Twitch } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ProfileAvatarUpload } from "./ProfileAvatarUpload"
+import { ProfileBasicInfo } from "./ProfileBasicInfo"
+import { ProfileGamingInfo } from "./ProfileGamingInfo"
+import { ProfileSocialLinks } from "./ProfileSocialLinks"
+import { ProfileFormValues, DatabaseProfile } from "./types"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -40,64 +31,8 @@ const profileFormSchema = z.object({
   }),
 })
 
-const GAMING_PLATFORMS = [
-  "PC",
-  "PlayStation",
-  "Xbox",
-  "Nintendo Switch",
-  "Mobile",
-  "VR",
-  "Retro",
-]
-
-const GAMER_LEVELS = [
-  "Casual",
-  "Competitive",
-  "Pro",
-  "Streamer",
-  "Content Creator",
-  "Esports Player",
-]
-
-type ProfileFormValues = z.infer<typeof profileFormSchema>
-
-interface SocialLinks {
-  twitter?: string;
-  youtube?: string;
-  twitch?: string;
-}
-
-interface DatabaseProfile {
-  id: string;
-  username: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-  bio_description: string | null;
-  location: string | null;
-  website: string | null;
-  favorite_game: string | null;
-  gaming_platforms: string[] | null;
-  gamer_level: string | null;
-  twitch_username: string | null;
-  discord_username: string | null;
-  social_links: SocialLinks | null;
-  created_at: string;
-  custom_theme: unknown;
-  enable_notifications: boolean;
-  enable_sounds: boolean;
-  font_size: string;
-  is_moderator: boolean;
-  keyboard_shortcuts: boolean;
-  onboarding_completed: boolean;
-  onboarding_step: string;
-  preferred_language: string;
-  theme_preference: string;
-}
-
 export function ProfileEditForm() {
   const { user } = useAuth()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [uploading, setUploading] = useState(false)
 
   const { data: profile, refetch } = useQuery({
     queryKey: ['profile'],
@@ -135,9 +70,9 @@ export function ProfileEditForm() {
     },
   })
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (profile) {
-      const socialLinks = profile.social_links as SocialLinks || {
+      const socialLinks = profile.social_links || {
         twitter: "",
         youtube: "",
         twitch: "",
@@ -158,50 +93,6 @@ export function ProfileEditForm() {
       })
     }
   }, [profile, form])
-
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!event.target.files || event.target.files.length === 0) {
-        return
-      }
-      const file = event.target.files[0]
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user?.id}.${fileExt}`
-
-      setUploading(true)
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true })
-
-      if (uploadError) {
-        throw uploadError
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName)
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user?.id)
-
-      if (updateError) throw updateError
-
-      toast.success("Profile picture updated successfully!")
-      refetch()
-    } catch (error) {
-      toast.error("Error updating profile picture")
-      console.error(error)
-    } finally {
-      setUploading(false)
-    }
-  }
 
   async function onSubmit(data: ProfileFormValues) {
     try {
@@ -230,219 +121,24 @@ export function ProfileEditForm() {
     }
   }
 
+  const handleAvatarChange = (url: string) => {
+    refetch()
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative">
-            <Avatar className="w-24 h-24 cursor-pointer hover:opacity-90 transition-opacity border-4 border-purple-500" onClick={handleAvatarClick}>
-              <AvatarImage src={profile?.avatar_url || ''} />
-              <AvatarFallback className="bg-purple-600">
-                {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || '?'}
-              </AvatarFallback>
-              <div className="absolute bottom-0 right-0 p-1 bg-purple-500 rounded-full">
-                <Camera className="w-4 h-4 text-white" />
-              </div>
-            </Avatar>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleAvatarChange}
-              className="hidden"
-              accept="image/*"
-              disabled={uploading}
-            />
-          </div>
-          {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <Input placeholder="username" {...field} className="bg-gaming-800 border-gaming-700" />
-                </FormControl>
-                <FormDescription>
-                  This is your public display name.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="displayName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Display Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Display Name" {...field} className="bg-gaming-800 border-gaming-700" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="gamerLevel"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Gamer Level</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-gaming-800 border-gaming-700">
-                    <SelectValue placeholder="Select your gamer level" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {GAMER_LEVELS.map((level) => (
-                    <SelectItem key={level} value={level}>
-                      {level}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+        <ProfileAvatarUpload
+          avatarUrl={profile?.avatar_url}
+          displayName={profile?.display_name}
+          username={profile?.username}
+          onAvatarChange={handleAvatarChange}
+          refetch={refetch}
         />
 
-        <FormField
-          control={form.control}
-          name="favoriteGame"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Favorite Game</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input 
-                    placeholder="Enter your favorite game" 
-                    {...field} 
-                    className="bg-gaming-800 border-gaming-700 pl-10"
-                  />
-                  <Gamepad2 className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="bioDescription"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bio</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Tell us about your gaming journey..."
-                  className="resize-none bg-gaming-800 border-gaming-700 min-h-[120px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid gap-6 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="twitchUsername"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Twitch Username</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input 
-                      placeholder="Your Twitch username" 
-                      {...field} 
-                      className="bg-gaming-800 border-gaming-700 pl-10"
-                    />
-                    <Twitch className="absolute left-3 top-2.5 h-5 w-5 text-purple-500" />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="discordUsername"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Discord Username</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Your Discord username" 
-                    {...field} 
-                    className="bg-gaming-800 border-gaming-700"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
-            Social Links
-          </h3>
-          <div className="grid gap-4 md:grid-cols-3">
-            <FormField
-              control={form.control}
-              name="socialLinks.twitter"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Twitter</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Twitter username" {...field} className="bg-gaming-800 border-gaming-700" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="socialLinks.youtube"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>YouTube</FormLabel>
-                  <FormControl>
-                    <Input placeholder="YouTube channel" {...field} className="bg-gaming-800 border-gaming-700" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="socialLinks.twitch"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Twitch</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Twitch username" {...field} className="bg-gaming-800 border-gaming-700" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
+        <ProfileBasicInfo form={form} />
+        <ProfileGamingInfo form={form} />
+        <ProfileSocialLinks form={form} />
 
         <Button 
           type="submit" 
