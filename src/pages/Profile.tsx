@@ -1,23 +1,54 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, ArrowLeft, Bookmark } from "lucide-react";
+import { 
+  Gamepad2, 
+  Trophy, 
+  MessageSquare, 
+  UserPlus, 
+  Pencil, 
+  ArrowLeft, 
+  Bookmark,
+  Users,
+  Twitch,
+  Youtube,
+  Twitter
+} from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AchievementList } from "@/components/achievements/AchievementList";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { userId } = useParams(); // Get userId from URL
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'clips' | 'games' | 'achievements' | 'collections'>('clips');
 
+  const isOwnProfile = !userId || userId === user?.id;
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile', userId || user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId || user?.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: userClips } = useQuery({
-    queryKey: ['user-clips'],
+    queryKey: ['user-clips', userId || user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
@@ -34,6 +65,7 @@ const Profile = () => {
             count
           )
         `)
+        .eq('user_id', userId || user?.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -42,18 +74,25 @@ const Profile = () => {
     }
   });
 
-  const { data: profile } = useQuery({
-    queryKey: ['user-profile'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .single();
-
+  const handleAddFriend = async () => {
+    try {
+      const { error } = await supabase
+        .from('follows')
+        .insert([
+          { follower_id: user?.id, following_id: userId }
+        ]);
+      
       if (error) throw error;
-      return data;
+      toast.success("Friend request sent!");
+    } catch (error) {
+      toast.error("Failed to send friend request");
+      console.error(error);
     }
-  });
+  };
+
+  const handleMessage = () => {
+    navigate('/messages', { state: { recipientId: userId } });
+  };
 
   const userStats = {
     followers: 1234,
@@ -68,86 +107,109 @@ const Profile = () => {
     { id: 3, name: "Call of Duty", hours: 234, lastPlayed: "3 days ago" }
   ];
 
-  const handleAddFriend = () => {
-    toast.success("Friend request sent!");
-  };
-
-  const handleMessage = () => {
-    navigate('/messages');
-  };
-
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 pb-40">
-      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-none text-white">
-        <div className="p-6">
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="relative">
-              <img
-                src={profile?.avatar_url || "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop"}
-                alt="Profile"
-                className="w-32 h-32 rounded-full border-4 border-purple-500 shadow-lg hover:scale-105 transition-transform duration-200"
-              />
-              <div className="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-2 border-white"></div>
-            </div>
-            
-            <div className="flex-1 text-center sm:text-left">
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                {profile?.display_name || "Loading..."}
-              </h1>
-              <p className="text-gray-300 mt-2 max-w-md">
-                {profile?.bio_description || "Pro gamer and content creator. Love streaming and making awesome gaming content!"}
-              </p>
+      <Card className="bg-gradient-to-br from-gaming-900 to-gaming-800 border-none text-white overflow-hidden">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-purple-600/20 to-gaming-900/90" />
+          <div className="p-6 relative z-10">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full opacity-75 group-hover:opacity-100 transition duration-200 animate-tilt blur" />
+                <img
+                  src={profile?.avatar_url || "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop"}
+                  alt="Profile"
+                  className="relative w-32 h-32 rounded-full border-4 border-purple-500 shadow-lg hover:scale-105 transition-transform duration-200"
+                />
+                <div className="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-2 border-white" />
+              </div>
               
-              <div className="flex flex-wrap justify-center sm:justify-start gap-6 mt-4">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-purple-400">{userStats.followers}</div>
-                  <div className="text-sm text-gray-400">Followers</div>
+              <div className="flex-1 text-center sm:text-left">
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+                  {profile?.display_name || "Loading..."}
+                </h1>
+                <p className="text-gray-300 mt-2 max-w-md">
+                  {profile?.bio_description || "Pro gamer and content creator"}
+                </p>
+                
+                <div className="flex flex-wrap justify-center sm:justify-start gap-6 mt-4">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-purple-400">{userStats.followers}</div>
+                    <div className="text-sm text-gray-400">Followers</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-purple-400">{userStats.following}</div>
+                    <div className="text-sm text-gray-400">Following</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-purple-400">{userStats.achievements}</div>
+                    <div className="text-sm text-gray-400">Achievements</div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-purple-400">{userStats.following}</div>
-                  <div className="text-sm text-gray-400">Following</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-purple-400">{userStats.achievements}</div>
-                  <div className="text-sm text-gray-400">Achievements</div>
-                </div>
+
+                {profile?.socialLinks && (
+                  <div className="flex gap-4 mt-4 justify-center sm:justify-start">
+                    {profile.socialLinks.twitter && (
+                      <a href={`https://twitter.com/${profile.socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">
+                        <Twitter className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors" />
+                      </a>
+                    )}
+                    {profile.socialLinks.youtube && (
+                      <a href={`https://youtube.com/${profile.socialLinks.youtube}`} target="_blank" rel="noopener noreferrer">
+                        <Youtube className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors" />
+                      </a>
+                    )}
+                    {profile?.twitchUsername && (
+                      <a href={`https://twitch.tv/${profile.twitchUsername}`} target="_blank" rel="noopener noreferrer">
+                        <Twitch className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors" />
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-wrap justify-center sm:justify-end gap-3 mt-6">
-            <Button 
-              onClick={() => navigate('/progress')}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-              size="sm"
-            >
-              <Trophy className="w-4 h-4 mr-2" />
-              View Progress
-            </Button>
-            <Button 
-              onClick={handleAddFriend}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-              size="sm"
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add Friend
-            </Button>
-            <Button 
-              onClick={handleMessage}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-              size="sm"
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Message
-            </Button>
-            <Button
-              onClick={() => navigate('/profile/edit')}
-              variant="outline"
-              size="sm"
-            >
-              <Pencil className="w-4 h-4 mr-2" />
-              Edit Profile
-            </Button>
+            {!isOwnProfile && (
+              <div className="flex flex-wrap justify-center sm:justify-end gap-3 mt-6">
+                <Button 
+                  onClick={() => navigate('/progress')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  size="sm"
+                >
+                  <Trophy className="w-4 h-4 mr-2" />
+                  View Progress
+                </Button>
+                <Button 
+                  onClick={handleAddFriend}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  size="sm"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Friend
+                </Button>
+                <Button 
+                  onClick={handleMessage}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  size="sm"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Message
+                </Button>
+              </div>
+            )}
+
+            {isOwnProfile && (
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={() => navigate('/profile/edit')}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -190,7 +252,7 @@ const Profile = () => {
         {activeTab === 'clips' && (
           <div className="space-y-4">
             {!userClips?.length ? (
-              <Card className="p-12 text-center">
+              <Card className="p-12 text-center bg-gaming-800/50 border-gaming-700">
                 <Gamepad2 className="w-12 h-12 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-semibold">No clips yet</h3>
                 <p className="text-gray-500">Share your gaming moments!</p>
@@ -215,7 +277,7 @@ const Profile = () => {
         {activeTab === 'games' && (
           <div className="grid gap-4">
             {userGames.map(game => (
-              <Card key={game.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <Card key={game.id} className="p-4 hover:bg-gaming-800/50 transition-colors border-gaming-700">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold text-lg">{game.name}</h3>
@@ -231,11 +293,11 @@ const Profile = () => {
         )}
 
         {activeTab === 'achievements' && (
-          <AchievementList userId="123" />
+          <AchievementList userId={userId || user?.id || ""} />
         )}
 
         {activeTab === 'collections' && (
-          <Card className="p-12 text-center">
+          <Card className="p-12 text-center bg-gaming-800/50 border-gaming-700">
             <Bookmark className="w-12 h-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold">View your collections</h3>
             <p className="text-gray-500">Organize and manage your favorite content!</p>

@@ -19,7 +19,8 @@ import { toast } from "sonner"
 import { useQuery } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Camera } from "lucide-react"
+import { Camera, Gamepad2, Trophy, Twitch } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -27,12 +28,36 @@ const profileFormSchema = z.object({
   bioDescription: z.string().max(500).optional(),
   location: z.string().max(100).optional(),
   website: z.string().url().optional().or(z.literal("")),
+  favoriteGame: z.string().optional(),
+  gamingPlatforms: z.array(z.string()).optional(),
+  gamerLevel: z.string().optional(),
+  twitchUsername: z.string().optional(),
+  discordUsername: z.string().optional(),
   socialLinks: z.object({
     twitter: z.string().optional(),
     instagram: z.string().optional(),
     youtube: z.string().optional(),
   }),
 })
+
+const GAMING_PLATFORMS = [
+  "PC",
+  "PlayStation",
+  "Xbox",
+  "Nintendo Switch",
+  "Mobile",
+  "VR",
+  "Retro",
+]
+
+const GAMER_LEVELS = [
+  "Casual",
+  "Competitive",
+  "Pro",
+  "Streamer",
+  "Content Creator",
+  "Esports Player",
+]
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
 
@@ -64,6 +89,11 @@ export function ProfileEditForm() {
       bioDescription: "",
       location: "",
       website: "",
+      favoriteGame: "",
+      gamingPlatforms: [],
+      gamerLevel: "",
+      twitchUsername: "",
+      discordUsername: "",
       socialLinks: {
         twitter: "",
         instagram: "",
@@ -173,12 +203,12 @@ export function ProfileEditForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="flex flex-col items-center space-y-4">
           <div className="relative">
-            <Avatar className="w-24 h-24 cursor-pointer hover:opacity-90 transition-opacity" onClick={handleAvatarClick}>
+            <Avatar className="w-24 h-24 cursor-pointer hover:opacity-90 transition-opacity border-4 border-purple-500" onClick={handleAvatarClick}>
               <AvatarImage src={profile?.avatar_url || ''} />
-              <AvatarFallback className="bg-primary/10">
+              <AvatarFallback className="bg-purple-600">
                 {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || '?'}
               </AvatarFallback>
-              <div className="absolute bottom-0 right-0 p-1 bg-primary rounded-full">
+              <div className="absolute bottom-0 right-0 p-1 bg-purple-500 rounded-full">
                 <Camera className="w-4 h-4 text-white" />
               </div>
             </Avatar>
@@ -194,18 +224,59 @@ export function ProfileEditForm() {
           {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
         </div>
 
+        <div className="grid gap-6 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="username" {...field} className="bg-gaming-800 border-gaming-700" />
+                </FormControl>
+                <FormDescription>
+                  This is your public display name.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="displayName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Display Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Display Name" {...field} className="bg-gaming-800 border-gaming-700" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <FormField
           control={form.control}
-          name="username"
+          name="gamerLevel"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="username" {...field} />
-              </FormControl>
-              <FormDescription>
-                This is your public display name.
-              </FormDescription>
+              <FormLabel>Gamer Level</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger className="bg-gaming-800 border-gaming-700">
+                    <SelectValue placeholder="Select your gamer level" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {GAMER_LEVELS.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -213,12 +284,19 @@ export function ProfileEditForm() {
 
         <FormField
           control={form.control}
-          name="displayName"
+          name="favoriteGame"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Display Name</FormLabel>
+              <FormLabel>Favorite Game</FormLabel>
               <FormControl>
-                <Input placeholder="Display Name" {...field} />
+                <div className="relative">
+                  <Input 
+                    placeholder="Enter your favorite game" 
+                    {...field} 
+                    className="bg-gaming-800 border-gaming-700 pl-10"
+                  />
+                  <Gamepad2 className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -233,8 +311,8 @@ export function ProfileEditForm() {
               <FormLabel>Bio</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Tell us about yourself"
-                  className="resize-none"
+                  placeholder="Tell us about your gaming journey..."
+                  className="resize-none bg-gaming-800 border-gaming-700 min-h-[120px]"
                   {...field}
                 />
               </FormControl>
@@ -243,44 +321,22 @@ export function ProfileEditForm() {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder="Your location" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="website"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Website</FormLabel>
-              <FormControl>
-                <Input placeholder="https://your-website.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Social Links</h3>
+        <div className="grid gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
-            name="socialLinks.twitter"
+            name="twitchUsername"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Twitter</FormLabel>
+                <FormLabel>Twitch Username</FormLabel>
                 <FormControl>
-                  <Input placeholder="Twitter username" {...field} />
+                  <div className="relative">
+                    <Input 
+                      placeholder="Your Twitch username" 
+                      {...field} 
+                      className="bg-gaming-800 border-gaming-700 pl-10"
+                    />
+                    <Twitch className="absolute left-3 top-2.5 h-5 w-5 text-purple-500" />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -289,26 +345,16 @@ export function ProfileEditForm() {
 
           <FormField
             control={form.control}
-            name="socialLinks.instagram"
+            name="discordUsername"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Instagram</FormLabel>
+                <FormLabel>Discord Username</FormLabel>
                 <FormControl>
-                  <Input placeholder="Instagram username" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="socialLinks.youtube"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>YouTube</FormLabel>
-                <FormControl>
-                  <Input placeholder="YouTube channel" {...field} />
+                  <Input 
+                    placeholder="Your Discord username" 
+                    {...field} 
+                    className="bg-gaming-800 border-gaming-700"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -316,7 +362,48 @@ export function ProfileEditForm() {
           />
         </div>
 
-        <Button type="submit">Update profile</Button>
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            Social Links
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="socialLinks.twitter"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Twitter</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Twitter username" {...field} className="bg-gaming-800 border-gaming-700" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="socialLinks.youtube"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>YouTube</FormLabel>
+                  <FormControl>
+                    <Input placeholder="YouTube channel" {...field} className="bg-gaming-800 border-gaming-700" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <Button 
+          type="submit" 
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+        >
+          Update Profile
+        </Button>
       </form>
     </Form>
   )
