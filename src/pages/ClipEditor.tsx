@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
-import { Loader2, Save, Undo, Redo, Download, Scissors, XCircle } from "lucide-react";
+import { Loader2, Save, Undo, Redo, Download, Scissors } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import GameBoyControls from "@/components/GameBoyControls";
 import { Json } from "@/integrations/supabase/types";
 
 interface Effect {
@@ -161,8 +160,6 @@ const ClipEditor = () => {
   };
 
   const handleTrim = () => {
-    // Here you would implement the actual video trimming logic
-    // For now, we'll just show a toast
     toast.success(`Video trimmed from ${trimStart}% to ${trimEnd}%`);
   };
 
@@ -225,7 +222,6 @@ const ClipEditor = () => {
           <Card className="p-4">
             <div className="aspect-video bg-black rounded-lg" />
             
-            {/* Trim Controls */}
             <div className="mt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Trim Video</h3>
@@ -261,20 +257,11 @@ const ClipEditor = () => {
                   <div key={effect.id} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{effect.name}</span>
-                      <div className="flex gap-2">
-                        {effect.is_premium && (
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                            Premium
-                          </span>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveEffect(effect.id)}
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      {effect.is_premium && (
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                          Premium
+                        </span>
+                      )}
                     </div>
                     <Slider
                       value={[appliedEffects.find(e => e.id === effect.id)?.settings?.value ?? 0]}
@@ -289,10 +276,6 @@ const ClipEditor = () => {
             </ScrollArea>
           </Card>
         </div>
-      </div>
-
-      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2">
-        <GameBoyControls />
       </div>
     </div>
   );
