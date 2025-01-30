@@ -9,14 +9,6 @@ export interface Effect {
   };
 }
 
-export interface ClipEditingSession {
-  id: string;
-  effects: Effect[];
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface VideoPreviewProps {
   videoUrl: string;
   isPlaying: boolean;
@@ -44,4 +36,15 @@ export interface EffectsPanelProps {
   onEffectSelect: (effect: Effect) => void;
   onEffectRemove: (effectId: string) => void;
   onEffectSettingsChange: (effectId: string, settings: any) => void;
+}
+
+export interface ClipEditingSession {
+  id?: string;
+  user_id?: string;
+  clip_id?: string;
+  effects: Effect[];
+  edit_history: any[];
+  status: string;
+  created_at?: string;
+  updated_at?: string;
 }
