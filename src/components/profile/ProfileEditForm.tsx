@@ -15,12 +15,14 @@ const formSchema = z.object({
   display_name: z.string().min(2).max(50),
   bio_description: z.string().max(160).optional(),
   website: z.string().url().optional().or(z.literal("")),
-  favorite_game: z.string().optional(),
-  gaming_platforms: z.array(z.string()).optional(),
-  gamer_level: z.string().optional(),
-  twitch_username: z.string().optional(),
-  discord_username: z.string().optional(),
+  favorite_game: z.string().optional().nullable(),
+  gaming_platforms: z.array(z.string()).optional().nullable(),
+  gamer_level: z.string().optional().nullable(),
+  twitch_username: z.string().optional().nullable(),
+  discord_username: z.string().optional().nullable(),
 });
+
+type FormValues = z.infer<typeof formSchema>;
 
 const ProfileEditForm = () => {
   const { data: profile } = useQuery({
@@ -40,7 +42,7 @@ const ProfileEditForm = () => {
     },
   });
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: profile?.username || '',
@@ -55,7 +57,7 @@ const ProfileEditForm = () => {
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: FormValues) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Not authenticated");
@@ -136,7 +138,7 @@ const ProfileEditForm = () => {
             <FormItem>
               <FormLabel>Favorite Game</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -166,7 +168,7 @@ const ProfileEditForm = () => {
             <FormItem>
               <FormLabel>Gamer Level</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -179,7 +181,7 @@ const ProfileEditForm = () => {
             <FormItem>
               <FormLabel>Twitch Username</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -192,7 +194,7 @@ const ProfileEditForm = () => {
             <FormItem>
               <FormLabel>Discord Username</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
