@@ -27,7 +27,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { userId } = useParams(); // Get userId from URL
+  const { userId } = useParams();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'clips' | 'games' | 'achievements' | 'collections'>('clips');
 
@@ -147,20 +147,20 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {profile?.socialLinks && (
+                {profile?.social_links && (
                   <div className="flex gap-4 mt-4 justify-center sm:justify-start">
-                    {profile.socialLinks.twitter && (
-                      <a href={`https://twitter.com/${profile.socialLinks.twitter}`} target="_blank" rel="noopener noreferrer">
+                    {profile.social_links.twitter && (
+                      <a href={`https://twitter.com/${profile.social_links.twitter}`} target="_blank" rel="noopener noreferrer">
                         <Twitter className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors" />
                       </a>
                     )}
-                    {profile.socialLinks.youtube && (
-                      <a href={`https://youtube.com/${profile.socialLinks.youtube}`} target="_blank" rel="noopener noreferrer">
+                    {profile.social_links.youtube && (
+                      <a href={`https://youtube.com/${profile.social_links.youtube}`} target="_blank" rel="noopener noreferrer">
                         <Youtube className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors" />
                       </a>
                     )}
-                    {profile?.twitchUsername && (
-                      <a href={`https://twitch.tv/${profile.twitchUsername}`} target="_blank" rel="noopener noreferrer">
+                    {profile?.social_links.twitch && (
+                      <a href={`https://twitch.tv/${profile.social_links.twitch}`} target="_blank" rel="noopener noreferrer">
                         <Twitch className="w-5 h-5 text-gray-400 hover:text-purple-400 transition-colors" />
                       </a>
                     )}
