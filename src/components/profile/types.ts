@@ -1,5 +1,3 @@
-import { Json } from '@/types/database';
-
 export interface SocialLinks {
   twitter?: string;
   youtube?: string;
@@ -36,7 +34,7 @@ export interface DatabaseProfile {
   discord_username: string | null;
   social_links: SocialLinks | null;
   created_at: string;
-  custom_theme: Json;
+  custom_theme: Record<string, unknown>;
   enable_notifications: boolean;
   enable_sounds: boolean;
   font_size: string;
