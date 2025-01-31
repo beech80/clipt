@@ -37,26 +37,26 @@ const PostItem = ({ post }: PostItemProps) => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gaming-400/20 backdrop-blur-sm bg-gaming-800/80">
           <div className="flex items-center space-x-3">
-            <span className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-colors">
+            <span className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-colors hover:scale-105 transform duration-200 cursor-pointer">
               {username}
             </span>
           </div>
           <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-1">
-              <Heart className="h-5 w-5 text-red-500" />
-              <span className="text-sm font-medium text-gaming-100">
+            <div className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110">
+              <Heart className="h-5 w-5 text-red-500 group-hover:text-red-400 transition-colors" />
+              <span className="text-sm font-medium text-gaming-100 group-hover:text-red-400 transition-colors">
                 {post.likes_count || 0}
               </span>
             </div>
-            <div className="flex items-center space-x-1">
-              <MessageSquare className="h-5 w-5 text-gaming-400" />
-              <span className="text-sm font-medium text-gaming-100">
+            <div className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110">
+              <MessageSquare className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
+              <span className="text-sm font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
                 {commentsCount}
               </span>
             </div>
-            <div className="flex items-center space-x-1">
-              <Trophy className="h-5 w-5 text-yellow-500" />
-              <span className="text-sm font-medium text-gaming-100">
+            <div className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110">
+              <Trophy className="h-5 w-5 text-yellow-500 group-hover:text-yellow-400 transition-colors" />
+              <span className="text-sm font-medium text-gaming-100 group-hover:text-yellow-400 transition-colors">
                 {post.clip_votes?.[0]?.count || 0}
               </span>
             </div>
