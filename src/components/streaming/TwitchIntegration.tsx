@@ -14,7 +14,8 @@ export function TwitchIntegration() {
     queryKey: ['twitch-stream-info'],
     queryFn: async () => {
       try {
-        return await twitchService.getStreamInfo();
+        // Pass the required username parameter
+        return await twitchService.getStreamInfo("beechhouseprod");
       } catch (error) {
         console.error('Failed to get Twitch stream info:', error);
         return null;
@@ -25,7 +26,8 @@ export function TwitchIntegration() {
   const handleTwitchLink = async () => {
     setIsLinking(true);
     try {
-      await twitchService.linkTwitchAccount();
+      // Pass the required authorization code parameter
+      await twitchService.linkTwitchAccount("dummy-auth-code");
       toast({
         title: "Success",
         description: "Twitch account linked successfully!",
