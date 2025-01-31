@@ -1,16 +1,11 @@
-import { supabase } from '@/lib/supabase';
-
 export interface CloudflareCheckResult {
-  region: string;
-  latency: number;
   status: 'healthy' | 'degraded' | 'unhealthy';
-  timestamp: string;
+  latency: number;
+  region: string;
   details?: {
     pop: string;
-    rayID: string;
-    serverIP: string;
     protocol: string;
-  }
+  };
 }
 
 export const cloudflareService = {
@@ -23,20 +18,8 @@ export const cloudflareService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Cloudflare check failed:', error);
+      console.error('Failed to perform Cloudflare system check:', error);
       throw error;
     }
-  },
-
-  async getLatestChecks(limit: number = 10) {
-    const { data, error } = await supabase
-      .from('performance_metrics')
-      .select('*')
-      .eq('metric_name', 'cloudflare_check')
-      .order('timestamp', { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-    return data;
   }
 };

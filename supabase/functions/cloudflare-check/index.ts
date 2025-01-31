@@ -1,91 +1,68 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface CloudflareCheck {
-  region: string;
-  latency: number;
-  status: 'healthy' | 'degraded' | 'unhealthy';
-  timestamp: string;
-  details?: {
-    pop: string;
-    rayID: string;
-    serverIP: string;
-    protocol: string;
-  }
-}
-
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // Simulate Cloudflare check (in a real implementation, you would make actual checks)
+    const startTime = performance.now();
+    
+    // Perform basic connectivity test
+    const response = await fetch('https://1.1.1.1/cdn-cgi/trace');
+    const data = await response.text();
+    
+    const endTime = performance.now();
+    const latency = endTime - startTime;
 
-    // Get client IP and Cloudflare headers
-    const clientIP = req.headers.get('cf-connecting-ip')
-    const cfRay = req.headers.get('cf-ray')
-    const cfPop = req.headers.get('cf-ipcountry')
-    const protocol = req.headers.get('x-forwarded-proto')
+    // Parse the trace data
+    const parsedData = Object.fromEntries(
+      data.trim().split('\n').map(line => line.split('='))
+    );
 
-    // Measure latency
-    const start = performance.now()
-    const latencyCheck = await fetch('https://1.1.1.1/cdn-cgi/trace')
-    const latency = performance.now() - start
-
-    const checkResult: CloudflareCheck = {
-      region: cfPop || 'unknown',
-      latency,
+    const result = {
       status: latency < 100 ? 'healthy' : latency < 300 ? 'degraded' : 'unhealthy',
-      timestamp: new Date().toISOString(),
+      latency,
+      region: parsedData.loc || 'unknown',
       details: {
-        pop: cfPop || 'unknown',
-        rayID: cfRay || 'unknown',
-        serverIP: clientIP || 'unknown',
-        protocol: protocol || 'unknown'
+        pop: parsedData.colo || 'unknown',
+        protocol: parsedData.http || 'unknown'
       }
-    }
+    };
 
-    // Log the check in Supabase
-    const { error } = await supabase
-      .from('performance_metrics')
-      .insert({
-        metric_name: 'cloudflare_check',
-        value: latency,
-        tags: checkResult
-      })
-
-    if (error) throw error
+    console.log('Cloudflare check completed:', result);
 
     return new Response(
-      JSON.stringify(checkResult),
+      JSON.stringify(result),
       { 
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json'
         } 
       }
-    )
-
+    );
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error performing Cloudflare check:', error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Failed to perform Cloudflare system check',
+        details: error.message 
+      }),
       { 
-        headers: { 
+        status: 500,
+        headers: {
           ...corsHeaders,
           'Content-Type': 'application/json'
-        },
-        status: 500
+        }
       }
-    )
+    );
   }
 })

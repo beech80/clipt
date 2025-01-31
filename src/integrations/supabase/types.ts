@@ -6636,6 +6636,50 @@ export type Database = {
           },
         ]
       }
+      twitch_connections: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string
+          twitch_id: string
+          twitch_login: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token: string
+          twitch_id: string
+          twitch_login: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string
+          twitch_id?: string
+          twitch_login?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "twitch_connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       two_factor_auth: {
         Row: {
           backup_codes: string[] | null
