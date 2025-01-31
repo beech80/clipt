@@ -5,6 +5,10 @@ import { supabase } from "@/lib/supabase";
 import { PostInteractions } from "./post/interactions/PostInteractions";
 import { Post } from "@/types/post";
 import { Heart, MessageSquare, Trophy } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
 
 interface PostItemProps {
   post: Post;
@@ -13,6 +17,9 @@ interface PostItemProps {
 const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [commentsCount, setCommentsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isTrophied, setIsTrophied] = useState(false);
 
   useEffect(() => {
     const fetchCommentsCount = async () => {
@@ -29,6 +36,13 @@ const PostItem = ({ post }: PostItemProps) => {
     navigate(`/comments/${post.id}`);
   };
 
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (post.profiles?.username) {
+      navigate(`/profile/${post.profiles.username}`);
+    }
+  };
+
   const username = post.profiles?.username || 'Anonymous';
 
   return (
@@ -37,13 +51,28 @@ const PostItem = ({ post }: PostItemProps) => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gaming-400/20 backdrop-blur-sm bg-gaming-800/80">
           <div className="flex items-center space-x-3">
-            <span className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-colors">
-              {username}
-            </span>
+            <button 
+              onClick={handleProfileClick}
+              className="flex items-center space-x-2 group"
+            >
+              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gaming-500 group-hover:border-gaming-400 transition-colors">
+                <img
+                  src={post.profiles?.avatar_url || "/placeholder.svg"}
+                  alt={username}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span className="text-lg font-semibold text-gaming-100 group-hover:text-gaming-200 transition-colors">
+                {username}
+              </span>
+            </button>
           </div>
           <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-1">
-              <Heart className="h-5 w-5 text-red-500" />
+              <Heart className={cn(
+                "h-5 w-5",
+                isLiked ? "text-red-500 fill-current" : "text-gaming-400"
+              )} />
               <span className="text-sm font-medium text-gaming-100">
                 {post.likes_count || 0}
               </span>
@@ -55,7 +84,10 @@ const PostItem = ({ post }: PostItemProps) => {
               </span>
             </div>
             <div className="flex items-center space-x-1">
-              <Trophy className="h-5 w-5 text-yellow-500" />
+              <Trophy className={cn(
+                "h-5 w-5",
+                isTrophied ? "text-yellow-500 fill-current" : "text-gaming-400"
+              )} />
               <span className="text-sm font-medium text-gaming-100">
                 {post.clip_votes?.[0]?.count || 0}
               </span>
@@ -77,6 +109,12 @@ const PostItem = ({ post }: PostItemProps) => {
           post={post} 
           commentsCount={commentsCount} 
           onCommentClick={handleCommentClick}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+          isLiked={isLiked}
+          setIsLiked={setIsLiked}
+          isTrophied={isTrophied}
+          setIsTrophied={setIsTrophied}
         />
       </div>
     </div>
