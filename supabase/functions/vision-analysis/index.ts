@@ -17,7 +17,7 @@ interface VisionAnalysisRequest {
 }
 
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -41,6 +41,8 @@ serve(async (req) => {
       })),
     };
 
+    console.log('Sending request to Google Cloud Vision API...');
+
     // Call Google Cloud Vision API
     const response = await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
@@ -62,6 +64,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log('Vision API response:', JSON.stringify(data, null, 2));
     
     return new Response(
       JSON.stringify(data.responses[0]),
