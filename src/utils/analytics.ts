@@ -1,6 +1,14 @@
 import { posthog } from 'posthog-js';
 import * as Sentry from "@sentry/browser";
 
+// Add type declaration for gtag
+declare global {
+  interface Window {
+    gtag: (command: string, ...args: any[]) => void;
+    dataLayer: any[];
+  }
+}
+
 export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
   try {
     // Track event in PostHog
