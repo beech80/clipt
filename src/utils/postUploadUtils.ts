@@ -10,30 +10,23 @@ export const uploadImage = async (
   file: File,
   setProgress: (progress: number) => void
 ): Promise<UploadMediaResult> => {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Math.random()}.${fileExt}`;
-  const filePath = `${fileName}`;
-
-  const imageInterval = setInterval(() => {
-    setProgress(Math.min(90, Math.random() * 90));
-  }, 500);
-
   try {
-    const { error: uploadError, data } = await supabase.storage
-      .from('posts')
-      .upload(filePath, file);
+    setProgress(10);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('resourceType', 'image');
+    formData.append('folder', 'posts');
 
-    clearInterval(imageInterval);
+    const { data: { url }, error } = await supabase.functions.invoke('cloudinary-upload', {
+      body: formData,
+    });
+
+    if (error) throw error;
     setProgress(100);
 
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('posts')
-      .getPublicUrl(filePath);
-
-    return { url: publicUrl, error: null };
+    return { url, error: null };
   } catch (error) {
+    console.error('Error uploading image:', error);
     return { url: null, error: error as Error };
   }
 };
@@ -42,30 +35,23 @@ export const uploadVideo = async (
   file: File,
   setProgress: (progress: number) => void
 ): Promise<UploadMediaResult> => {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Math.random()}.${fileExt}`;
-  const filePath = `${fileName}`;
-
-  const videoInterval = setInterval(() => {
-    setProgress(Math.min(90, Math.random() * 90));
-  }, 500);
-
   try {
-    const { error: uploadError } = await supabase.storage
-      .from('videos')
-      .upload(filePath, file);
+    setProgress(10);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('resourceType', 'video');
+    formData.append('folder', 'videos');
 
-    clearInterval(videoInterval);
+    const { data: { url }, error } = await supabase.functions.invoke('cloudinary-upload', {
+      body: formData,
+    });
+
+    if (error) throw error;
     setProgress(100);
 
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('videos')
-      .getPublicUrl(filePath);
-
-    return { url: publicUrl, error: null };
+    return { url, error: null };
   } catch (error) {
+    console.error('Error uploading video:', error);
     return { url: null, error: error as Error };
   }
 };
