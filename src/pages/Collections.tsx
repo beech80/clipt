@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FolderPlus } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
+import GameBoyControls from '@/components/GameBoyControls';
 
 const Collections = () => {
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -20,7 +21,7 @@ const Collections = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
+    <div className="container mx-auto p-4 space-y-4 pb-40">
       <div className="flex justify-between items-center">
         <div className="flex items-center">
           <BackButton />
@@ -73,6 +74,8 @@ const Collections = () => {
           postCount={0}
         />
       </div>
+      
+      <GameBoyControls />
     </div>
   );
 };

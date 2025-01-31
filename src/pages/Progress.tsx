@@ -5,6 +5,7 @@ import { Trophy, Star, Award, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/ui/back-button';
+import GameBoyControls from '@/components/GameBoyControls';
 
 const Progress = () => {
   const { user } = useAuth();
@@ -28,7 +29,7 @@ const Progress = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 pb-40">
       <div className="flex items-center gap-4">
         <BackButton />
         <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -66,6 +67,8 @@ const Progress = () => {
           <AchievementProgress />
         </div>
       </div>
+      
+      <GameBoyControls />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BroadcastPresetForm } from "@/components/broadcasting/BroadcastPresetForm";
 import { Card } from "@/components/ui/card";
 import { BackButton } from "@/components/ui/back-button";
+import GameBoyControls from "@/components/GameBoyControls";
 
 const Broadcasting = () => {
   const { user } = useAuth();
@@ -21,13 +22,15 @@ const Broadcasting = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto p-4 space-y-6 pb-40">
       <div className="flex items-center gap-4">
         <BackButton />
         <h1 className="text-2xl font-bold">Broadcasting Studio</h1>
       </div>
 
       <BroadcastPresetForm userId={user.id} />
+      
+      <GameBoyControls />
     </div>
   );
 }

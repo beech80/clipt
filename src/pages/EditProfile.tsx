@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { UserCog, Paintbrush, Shield, Bell, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import GameBoyControls from "@/components/GameBoyControls";
 
 interface ThemeColors {
   primary: string;
@@ -47,7 +48,7 @@ const EditProfile = () => {
     : defaultTheme;
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8 pb-40">
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -128,6 +129,8 @@ const EditProfile = () => {
           </Card>
         </div>
       </div>
+
+      <GameBoyControls />
     </div>
   );
 };
