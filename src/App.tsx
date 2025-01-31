@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { StoriesBar } from '@/components/stories/StoriesBar';
 import { MainNav } from '@/components/MainNav';
-import { UserMenu } from '@/components/UserMenu';
+import UserMenu from '@/components/UserMenu';
 
 const queryClient = new QueryClient();
 
