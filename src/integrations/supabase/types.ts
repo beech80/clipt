@@ -2750,6 +2750,100 @@ export type Database = {
           },
         ]
       }
+      mux_assets: {
+        Row: {
+          aspect_ratio: string | null
+          asset_id: string | null
+          created_at: string | null
+          duration: number | null
+          id: string
+          max_stored_frame_rate: number | null
+          max_stored_resolution: string | null
+          playback_id: string | null
+          status: string | null
+          type: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          aspect_ratio?: string | null
+          asset_id?: string | null
+          created_at?: string | null
+          duration?: number | null
+          id?: string
+          max_stored_frame_rate?: number | null
+          max_stored_resolution?: string | null
+          playback_id?: string | null
+          status?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          aspect_ratio?: string | null
+          asset_id?: string | null
+          created_at?: string | null
+          duration?: number | null
+          id?: string
+          max_stored_frame_rate?: number | null
+          max_stored_resolution?: string | null
+          playback_id?: string | null
+          status?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mux_assets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mux_uploads: {
+        Row: {
+          asset_id: string | null
+          created_at: string | null
+          id: string
+          status: string | null
+          updated_at: string | null
+          upload_id: string | null
+          url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          asset_id?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          upload_id?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          asset_id?: string | null
+          created_at?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          upload_id?: string | null
+          url?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mux_uploads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           actor_id: string | null
