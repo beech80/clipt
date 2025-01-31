@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Gamepad2 } from "lucide-react";
 import { toast } from "sonner";
+import GameBoyControls from "@/components/GameBoyControls";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -33,59 +34,62 @@ const Signup = () => {
   };
 
   return (
-    <div className="mx-auto max-w-md space-y-6 pt-12">
-      <div className="text-center space-y-2">
-        <div className="flex justify-center mb-4">
-          <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
-            <Gamepad2 className="h-6 w-6 text-gaming-400" />
+    <div className="pb-[180px] sm:pb-[200px]">
+      <div className="mx-auto max-w-md space-y-6 pt-12">
+        <div className="text-center space-y-2">
+          <div className="flex justify-center mb-4">
+            <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
+              <Gamepad2 className="h-6 w-6 text-gaming-400" />
+            </div>
           </div>
+          <h1 className="text-4xl font-bold">Create Account</h1>
+          <p className="text-muted-foreground">Sign up for a new account</p>
         </div>
-        <h1 className="text-4xl font-bold">Create Account</h1>
-        <p className="text-muted-foreground">Sign up for a new account</p>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <form onSubmit={handleSignup} className="space-y-4">
+          <div>
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <Input
+              type="password"
+              placeholder="Choose a password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
+          </div>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? "Creating account..." : "Create account"}
+          </Button>
+          <div className="mt-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary hover:underline">
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </form>
       </div>
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <form onSubmit={handleSignup} className="space-y-4">
-        <div>
-          <Input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <Input
-            type="password"
-            placeholder="Choose a password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-          />
-        </div>
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={loading}
-        >
-          {loading ? "Creating account..." : "Create account"}
-        </Button>
-        <div className="mt-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link to="/login" className="text-primary hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </form>
+      <GameBoyControls />
     </div>
   );
 };
