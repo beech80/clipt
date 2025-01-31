@@ -1,3 +1,5 @@
+import { supabase } from '@/lib/supabase';
+
 export interface CloudflareCheckResult {
   status: 'healthy' | 'degraded' | 'unhealthy';
   latency: number;
