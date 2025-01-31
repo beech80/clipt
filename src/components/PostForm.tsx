@@ -7,8 +7,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
-import { GiphyFetch } from "@giphy/js-fetch-api";
-import { Grid } from "@giphy/react-components";
 import PostFormContent from "./post/form/PostFormContent";
 import ImageUpload from "./post/ImageUpload";
 import VideoUpload from "./post/VideoUpload";
@@ -22,8 +20,6 @@ import { createPost } from "@/services/postService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const gf = new GiphyFetch('pLURtkhVrUXr3KG25Gy5IvzziV5OrZGa');
-
 interface PostFormProps {
   onPostCreated?: () => void;
 }
@@ -33,11 +29,9 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
-  const [selectedGif, setSelectedGif] = useState<string | null>(null);
   const [imageProgress, setImageProgress] = useState(0);
   const [videoProgress, setVideoProgress] = useState(0);
   const [showEditor, setShowEditor] = useState(false);
-  const [showGifPicker, setShowGifPicker] = useState(false);
   const [scheduledDate, setScheduledDate] = useState<Date>();
   const [scheduledTime, setScheduledTime] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
@@ -53,12 +47,12 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
       return false;
     }
 
-    if (!content.trim() && !selectedImage && !selectedVideo && !selectedGif) {
-      setError("Please add some content, image, GIF, or video to your post");
+    if (!content.trim() && !selectedImage && !selectedVideo) {
+      setError("Please add some content, image, or video to your post");
       return false;
     }
 
-    if ((selectedImage && selectedVideo) || (selectedImage && selectedGif) || (selectedVideo && selectedGif)) {
+    if (selectedImage && selectedVideo) {
       setError("Please choose only one type of media");
       return false;
     }
@@ -100,7 +94,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
       const { data: post, error: postError } = await createPost({
         content,
         userId: user.id,
-        imageUrl: imageUrl || selectedGif,
+        imageUrl,
         videoUrl,
         scheduledPublishTime: scheduledPublishTime?.toISOString(),
         isPublished: !scheduledPublishTime
@@ -137,7 +131,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
     setContent("");
     setSelectedImage(null);
     setSelectedVideo(null);
-    setSelectedGif(null);
     setImageProgress(0);
     setVideoProgress(0);
     setScheduledDate(undefined);
@@ -187,21 +180,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
           </>
         )}
 
-        {selectedGif && (
-          <div className="relative">
-            <img src={selectedGif} alt="Selected GIF" className="rounded-lg max-h-96 w-auto" />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="absolute top-2 right-2"
-              onClick={() => setSelectedGif(null)}
-            >
-              Remove
-            </Button>
-          </div>
-        )}
-
         {selectedVideo && (
           <>
             <MediaPreview 
@@ -222,7 +200,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         )}
 
         <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap'} gap-2`}>
-          {!selectedVideo && !selectedGif && (
+          {!selectedVideo && (
             <ImageUpload
               selectedImage={selectedImage}
               onImageSelect={setSelectedImage}
@@ -230,7 +208,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
             />
           )}
 
-          {!selectedImage && !selectedGif && (
+          {!selectedImage && (
             <VideoUpload
               selectedVideo={selectedVideo}
               onVideoSelect={setSelectedVideo}
@@ -238,33 +216,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
               uploadProgress={videoProgress}
               setUploadProgress={setVideoProgress}
             />
-          )}
-
-          {!selectedImage && !selectedVideo && (
-            <Popover open={showGifPicker} onOpenChange={setShowGifPicker}>
-              <PopoverTrigger asChild>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  className="w-full sm:w-auto animate-fade-in transition-all duration-300 hover:opacity-80"
-                >
-                  Add GIF
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[320px] p-0" align="start">
-                <div className="h-[300px] overflow-auto">
-                  <Grid
-                    width={300}
-                    columns={2}
-                    fetchGifs={(offset: number) => gf.trending({ offset, limit: 10 })}
-                    onGifClick={(gif) => {
-                      setSelectedGif(gif.images.fixed_height.url);
-                      setShowGifPicker(false);
-                    }}
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
           )}
 
           <Popover>
