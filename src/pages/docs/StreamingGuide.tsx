@@ -1,78 +1,168 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import GameBoyControls from '@/components/GameBoyControls';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Heart, MessageSquare, Trophy } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const StreamingGuide = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Fetch weekly top clips
+  const { data: topClips } = useQuery({
+    queryKey: ['weekly-top-clips'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('weekly_top_clips')
+        .select('*')
+        .limit(5);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const handleLike = async (postId: string) => {
+    if (!user) {
+      toast.error("Please login to like posts");
+      return;
+    }
+
+    try {
+      const { data: existingLike } = await supabase
+        .from('likes')
+        .select()
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingLike) {
+        await supabase
+          .from('likes')
+          .delete()
+          .match({ post_id: postId, user_id: user.id });
+        toast.success("Post unliked!");
+      } else {
+        await supabase
+          .from('likes')
+          .insert([{ post_id: postId, user_id: user.id }]);
+        toast.success("Post liked!");
+      }
+    } catch (error) {
+      toast.error("Error updating like status");
+    }
+  };
+
+  const handleTrophy = async (postId: string) => {
+    if (!user) {
+      toast.error("Please login to give trophies");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('clip_votes')
+        .insert([{ post_id: postId, user_id: user.id }]);
+
+      if (error) {
+        if (error.code === '23505') { // Unique violation
+          toast.error("You've already given a trophy to this clip!");
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success("Trophy given!");
+      }
+    } catch (error) {
+      toast.error("Error giving trophy");
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4 pb-[200px]">
-      <Card className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Streaming Guide</h1>
+    <div className="min-h-screen bg-background p-4 pb-40">
+      <Card className="max-w-4xl mx-auto p-6 space-y-6">
+        <h1 className="text-3xl font-bold text-center mb-8">Streaming Guide</h1>
         
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-3">Getting Started</h2>
-          <p className="text-muted-foreground">
-            Learn how to start streaming on our platform with this comprehensive guide.
-          </p>
-        </section>
+        <div className="space-y-8">
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">📈 Top Clips This Week</h2>
+            <div className="space-y-4">
+              {topClips?.map((clip) => (
+                <Card key={clip.post_id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div 
+                      className="flex items-center space-x-3 cursor-pointer"
+                      onClick={() => navigate(`/profile/${clip.username}`)}
+                    >
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={clip.avatar_url} />
+                        <AvatarFallback>{clip.username?.[0]?.toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{clip.username}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <button 
+                        onClick={() => handleLike(clip.post_id)}
+                        className="flex items-center space-x-1 text-red-500 hover:text-red-600"
+                      >
+                        <Heart className="h-5 w-5" />
+                      </button>
+                      
+                      <button 
+                        onClick={() => navigate(`/comments/${clip.post_id}`)}
+                        className="flex items-center space-x-1 text-blue-500 hover:text-blue-600"
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                      </button>
+                      
+                      <button 
+                        onClick={() => handleTrophy(clip.post_id)}
+                        className="flex items-center space-x-1 text-yellow-500 hover:text-yellow-600"
+                      >
+                        <Trophy className="h-5 w-5" />
+                        <span>{clip.trophy_count}</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {clip.video_url && (
+                    <video 
+                      src={clip.video_url}
+                      className="w-full mt-4 rounded-lg"
+                      controls
+                    />
+                  )}
+                </Card>
+              ))}
+            </div>
+          </section>
 
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-3">Stream Setup</h2>
-          <div className="space-y-3">
-            <h3 className="font-medium">1. Stream Key and URL</h3>
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">🎮 Getting Started</h2>
             <p className="text-muted-foreground">
-              Find your unique stream key in the streaming dashboard. Keep this private and never share it.
+              Learn how to start streaming, set up your equipment, and engage with your audience.
+              Follow our comprehensive guide to become a successful streamer.
             </p>
+          </section>
 
-            <h3 className="font-medium">2. Streaming Software</h3>
-            <p className="text-muted-foreground">
-              We recommend using OBS Studio or Streamlabs for broadcasting. Configure your software using your stream key and URL.
-            </p>
-
-            <h3 className="font-medium">3. Quality Settings</h3>
-            <p className="text-muted-foreground">
-              Recommended settings:
-            </p>
-            <ul className="list-disc list-inside text-muted-foreground ml-4">
-              <li>Resolution: 1080p (1920x1080) or 720p (1280x720)</li>
-              <li>Bitrate: 4000-6000 Kbps for 1080p, 2500-4000 Kbps for 720p</li>
-              <li>Framerate: 30 or 60 fps</li>
-              <li>Keyframe Interval: 2 seconds</li>
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">🎯 Best Practices</h2>
+            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+              <li>Maintain a consistent streaming schedule</li>
+              <li>Interact with your chat regularly</li>
+              <li>Use high-quality equipment for better streams</li>
+              <li>Network with other streamers</li>
+              <li>Create engaging content</li>
             </ul>
-          </div>
-        </section>
-
-        <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-3">Stream Features</h2>
-          <div className="space-y-3">
-            <h3 className="font-medium">Chat Integration</h3>
-            <p className="text-muted-foreground">
-              Interact with your viewers through our real-time chat system. Moderate chat with built-in tools.
-            </p>
-
-            <h3 className="font-medium">Stream Alerts</h3>
-            <p className="text-muted-foreground">
-              Customize alerts for follows, subscriptions, and donations to enhance viewer engagement.
-            </p>
-
-            <h3 className="font-medium">Analytics</h3>
-            <p className="text-muted-foreground">
-              Track your stream performance with detailed analytics including viewer count, chat activity, and engagement metrics.
-            </p>
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold mb-3">Best Practices</h2>
-          <ul className="list-disc list-inside text-muted-foreground ml-4">
-            <li>Test your stream setup before going live</li>
-            <li>Ensure stable internet connection</li>
-            <li>Monitor your stream health</li>
-            <li>Engage with your chat regularly</li>
-            <li>Create a consistent streaming schedule</li>
-          </ul>
-        </section>
+          </section>
+        </div>
       </Card>
-
+      
       <GameBoyControls />
     </div>
   );

@@ -549,6 +549,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bookmarks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
+          {
             foreignKeyName: "bookmarks_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -1135,6 +1142,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "clip_editing_sessions_clip_id_fkey"
+            columns: ["clip_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
+          {
             foreignKeyName: "clip_editing_sessions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -1243,6 +1257,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "clip_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
+          {
             foreignKeyName: "clip_votes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -1348,6 +1369,13 @@ export type Database = {
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "collection_posts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
         ]
       }
       collections: {
@@ -1446,6 +1474,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
           },
           {
             foreignKeyName: "comments_user_id_fkey"
@@ -1923,6 +1958,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "external_shares_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
+          {
             foreignKeyName: "external_shares_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -2378,6 +2420,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
+          {
             foreignKeyName: "likes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -2446,6 +2495,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mentions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
           },
         ]
       }
@@ -3109,6 +3165,13 @@ export type Database = {
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "post_analytics_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
         ]
       }
       post_categories: {
@@ -3176,6 +3239,13 @@ export type Database = {
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "post_category_mappings_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
         ]
       }
       post_edits: {
@@ -3214,6 +3284,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_edits_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
           },
           {
             foreignKeyName: "post_edits_user_id_fkey"
@@ -3300,6 +3377,13 @@ export type Database = {
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "post_game_categories_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
         ]
       }
       post_hashtags: {
@@ -3340,6 +3424,13 @@ export type Database = {
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "post_hashtags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
         ]
       }
       post_views: {
@@ -3375,6 +3466,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
           },
           {
             foreignKeyName: "post_views_viewer_id_fkey"
@@ -3764,6 +3862,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "trending_posts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
           },
           {
             foreignKeyName: "reactions_user_id_fkey"
@@ -7192,6 +7297,28 @@ export type Database = {
           },
         ]
       }
+      weekly_top_clips: {
+        Row: {
+          avatar_url: string | null
+          content: string | null
+          created_at: string | null
+          image_url: string | null
+          post_id: string | null
+          trophy_count: number | null
+          user_id: string | null
+          username: string | null
+          video_url: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       award_user_xp: {
@@ -7338,6 +7465,16 @@ export type Database = {
           user_id_param: string
         }
         Returns: Json
+      }
+      get_user_trophy_stats: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: {
+          total_trophies: number
+          weekly_trophies: number
+          monthly_trophies: number
+        }[]
       }
       gtrgm_compress: {
         Args: {
