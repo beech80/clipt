@@ -2100,29 +2100,44 @@ export type Database = {
       }
       game_categories: {
         Row: {
+          age_rating: string | null
           created_at: string
           description: string | null
           id: string
           name: string
+          platform_support: string[] | null
+          popularity_score: number | null
+          release_date: string | null
           slug: string
+          tags: string[] | null
           thumbnail_url: string | null
           updated_at: string
         }
         Insert: {
+          age_rating?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          platform_support?: string[] | null
+          popularity_score?: number | null
+          release_date?: string | null
           slug: string
+          tags?: string[] | null
           thumbnail_url?: string | null
           updated_at?: string
         }
         Update: {
+          age_rating?: string | null
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          platform_support?: string[] | null
+          popularity_score?: number | null
+          release_date?: string | null
           slug?: string
+          tags?: string[] | null
           thumbnail_url?: string | null
           updated_at?: string
         }
@@ -4261,6 +4276,61 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      share_settings: {
+        Row: {
+          created_at: string | null
+          embed_code: string | null
+          embed_enabled: boolean | null
+          id: string
+          post_id: string | null
+          share_url: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          embed_code?: string | null
+          embed_enabled?: boolean | null
+          id?: string
+          post_id?: string | null
+          share_url?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          embed_code?: string | null
+          embed_enabled?: boolean | null
+          id?: string
+          post_id?: string | null
+          share_url?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_settings_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "share_settings_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "trending_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "share_settings_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
+          },
+        ]
       }
       squad_members: {
         Row: {

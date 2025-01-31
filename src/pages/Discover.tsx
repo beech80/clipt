@@ -5,6 +5,12 @@ import { GameSearch } from "@/components/discover/GameSearch";
 const Discover = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
+  const [filters, setFilters] = useState({
+    platform: 'all',
+    ageRating: 'all',
+    releaseYear: 'all',
+    hasClips: false
+  });
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -15,11 +21,14 @@ const Discover = () => {
         onSearchChange={setSearchTerm}
         sortBy={sortBy}
         onSortChange={setSortBy}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
       
       <GameGrid 
         searchTerm={searchTerm}
         sortBy={sortBy}
+        filters={filters}
       />
     </div>
   );
