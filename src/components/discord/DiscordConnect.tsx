@@ -1,38 +1,44 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { DiscordIcon } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
-const REDIRECT_URI = 'http://localhost:5173/auth/discord/callback';
-
-export function DiscordConnect() {
-  const { user } = useAuth();
+const DiscordConnect = () => {
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   const handleConnect = async () => {
-    if (!user) {
-      toast.error("Please login first");
-      return;
-    }
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: `${window.location.origin}/auth/discord/callback`,
+        },
+      });
 
-    const scope = 'identify email guilds';
-    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}`;
-    
-    window.location.href = authUrl;
+      if (error) throw error;
+    } catch (error) {
+      console.error('Discord connection error:', error);
+      toast.error('Failed to connect Discord');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Button 
-      onClick={handleConnect} 
+    <Button
+      onClick={handleConnect}
       disabled={loading}
       className="w-full"
       variant="outline"
     >
-      <DiscordIcon className="w-4 h-4 mr-2" />
+      <MessageSquare className="w-4 h-4 mr-2" />
       {loading ? "Connecting..." : "Connect Discord"}
     </Button>
   );
-}
+};
+
+export default DiscordConnect;
