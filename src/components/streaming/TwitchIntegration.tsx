@@ -4,7 +4,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { twitchService } from "@/services/twitchService";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Twitch } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export function TwitchIntegration() {
   const { toast } = useToast();
@@ -14,7 +15,6 @@ export function TwitchIntegration() {
     queryKey: ['twitch-stream-info'],
     queryFn: async () => {
       try {
-        // Pass the required username parameter
         return await twitchService.getStreamInfo("beechhouseprod");
       } catch (error) {
         console.error('Failed to get Twitch stream info:', error);
@@ -26,23 +26,71 @@ export function TwitchIntegration() {
   const handleTwitchLink = async () => {
     setIsLinking(true);
     try {
-      // Pass the required authorization code parameter
-      await twitchService.linkTwitchAccount("dummy-auth-code");
-      toast({
-        title: "Success",
-        description: "Twitch account linked successfully!",
+      // Generate OAuth URL with required scopes
+      const redirectUri = `${window.location.origin}/twitch-callback`;
+      const scopes = ['user:read:email', 'channel:read:stream_key'];
+      
+      const { data: { clientId }, error } = await supabase.functions.invoke('twitch-auth', {
+        method: 'GET',
+        body: { action: 'get-client-id' }
       });
+
+      if (error) throw error;
+
+      const authUrl = `https://id.twitch.tv/oauth2/authorize?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent(scopes.join(' '))}`;
+
+      // Store current URL to return after auth
+      localStorage.setItem('twitch_auth_return_path', window.location.pathname);
+      
+      // Redirect to Twitch auth
+      window.location.href = authUrl;
     } catch (error) {
-      console.error('Failed to link Twitch account:', error);
+      console.error('Failed to initiate Twitch auth:', error);
       toast({
         title: "Error",
-        description: "Failed to link Twitch account. Please try again.",
+        description: "Failed to connect Twitch account. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsLinking(false);
     }
   };
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      
+      if (code) {
+        try {
+          await twitchService.linkTwitchAccount(code);
+          toast({
+            title: "Success",
+            description: "Twitch account linked successfully!",
+          });
+          
+          // Return to previous page
+          const returnPath = localStorage.getItem('twitch_auth_return_path') || '/';
+          localStorage.removeItem('twitch_auth_return_path');
+          window.location.href = returnPath;
+        } catch (error) {
+          console.error('Failed to complete Twitch auth:', error);
+          toast({
+            title: "Error",
+            description: "Failed to connect Twitch account. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    handleAuthCallback();
+  }, [toast]);
 
   return (
     <Card className="p-6 space-y-4">

@@ -18,6 +18,19 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  // Handle GET request for client ID
+  if (req.method === 'GET') {
+    return new Response(
+      JSON.stringify({ clientId: TWITCH_CLIENT_ID }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        } 
+      }
+    )
+  }
+
   try {
     const { code } = await req.json()
 
