@@ -53,7 +53,7 @@ const PostItem = ({ post }: PostItemProps) => {
           <div className="flex items-center space-x-3">
             <button 
               onClick={handleProfileClick}
-              className="flex items-center space-x-2 group"
+              className="flex items-center space-x-2 group hover:scale-105 transition-transform"
             >
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gaming-500 group-hover:border-gaming-400 transition-colors">
                 <img
@@ -68,25 +68,25 @@ const PostItem = ({ post }: PostItemProps) => {
             </button>
           </div>
           <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1 group cursor-pointer hover:scale-110 transition-transform">
               <Heart className={cn(
-                "h-5 w-5",
-                isLiked ? "text-red-500 fill-current" : "text-gaming-400"
+                "h-5 w-5 transition-colors",
+                isLiked ? "text-red-500 fill-current" : "text-gaming-400 group-hover:text-red-400"
               )} />
               <span className="text-sm font-medium text-gaming-100">
                 {post.likes_count || 0}
               </span>
             </div>
-            <div className="flex items-center space-x-1">
-              <MessageSquare className="h-5 w-5 text-gaming-400" />
+            <div className="flex items-center space-x-1 group cursor-pointer hover:scale-110 transition-transform">
+              <MessageSquare className="h-5 w-5 text-gaming-400 group-hover:text-gaming-300" />
               <span className="text-sm font-medium text-gaming-100">
                 {commentsCount}
               </span>
             </div>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-1 group cursor-pointer hover:scale-110 transition-transform">
               <Trophy className={cn(
-                "h-5 w-5",
-                isTrophied ? "text-yellow-500 fill-current" : "text-gaming-400"
+                "h-5 w-5 transition-colors",
+                isTrophied ? "text-yellow-500 fill-current" : "text-gaming-400 group-hover:text-yellow-400"
               )} />
               <span className="text-sm font-medium text-gaming-100">
                 {post.clip_votes?.[0]?.count || 0}
@@ -101,6 +101,7 @@ const PostItem = ({ post }: PostItemProps) => {
             imageUrl={post.image_url}
             videoUrl={post.video_url}
             postId={post.id}
+            onLike={() => setIsLiked(!isLiked)}
           />
         </div>
 
