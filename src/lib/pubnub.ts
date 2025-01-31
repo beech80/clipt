@@ -12,8 +12,8 @@ export const initializePubNub = async () => {
   }
 
   pubnubInstance = new PubNub({
-    publishKey: 'PUBNUB_PUBLISH_KEY',
-    subscribeKey: 'PUBNUB_SUBSCRIBE_KEY',
+    publishKey: process.env.PUBNUB_PUBLISH_KEY || '',
+    subscribeKey: process.env.PUBNUB_SUBSCRIBE_KEY || '',
     userId: session.user.id,
     heartbeatInterval: 30,
   });
