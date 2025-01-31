@@ -10,7 +10,8 @@ import { EnhancedStreamDashboard } from "@/components/streaming/EnhancedStreamDa
 import { SceneManager } from "@/components/streaming/SceneManager";
 import { BroadcastSettings } from "@/components/streaming/BroadcastSettings";
 import { BroadcastEngine } from "@/components/streaming/broadcast/BroadcastEngine";
-import { Calendar, Settings, Layout, Users, Activity } from "lucide-react";
+import { TwitchIntegration } from "@/components/streaming/TwitchIntegration";
+import { Calendar, Settings, Layout, Users, Activity, Twitch } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { BackButton } from "@/components/ui/back-button";
@@ -58,7 +59,7 @@ const Streaming = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <StreamScheduleForm streamId={user.id} />
+              <StreamScheduleForm streamId={user?.id} />
             </DialogContent>
           </Dialog>
 
@@ -70,7 +71,7 @@ const Streaming = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <StreamSettings userId={user.id} />
+              <StreamSettings userId={user?.id} />
             </DialogContent>
           </Dialog>
         </div>
@@ -95,6 +96,10 @@ const Streaming = () => {
               <TabsTrigger value="dashboard">
                 <Activity className="h-4 w-4 mr-2" />
                 Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="twitch">
+                <Twitch className="h-4 w-4 mr-2" />
+                Twitch
               </TabsTrigger>
             </TabsList>
             
@@ -144,6 +149,10 @@ const Streaming = () => {
 
             <TabsContent value="dashboard">
               <EnhancedStreamDashboard userId={user.id} isLive={isLive} />
+            </TabsContent>
+
+            <TabsContent value="twitch">
+              <TwitchIntegration />
             </TabsContent>
           </Tabs>
         </div>
