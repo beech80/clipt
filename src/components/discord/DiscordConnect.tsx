@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { Discord } from "lucide-react";
+import { DiscordIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -31,7 +31,7 @@ export function DiscordConnect() {
       className="w-full"
       variant="outline"
     >
-      <Discord className="w-4 h-4 mr-2" />
+      <DiscordIcon className="w-4 h-4 mr-2" />
       {loading ? "Connecting..." : "Connect Discord"}
     </Button>
   );

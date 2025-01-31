@@ -1802,6 +1802,50 @@ export type Database = {
         }
         Relationships: []
       }
+      discord_connections: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          discord_id: string
+          discord_username: string
+          expires_at: string
+          id: string
+          refresh_token: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          discord_id: string
+          discord_username: string
+          expires_at: string
+          id?: string
+          refresh_token: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          discord_id?: string
+          discord_username?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_connections_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       error_reports: {
         Row: {
           browser_info: Json | null
