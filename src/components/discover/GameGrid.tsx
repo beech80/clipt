@@ -5,16 +5,43 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 
-export function GameGrid() {
+interface GameGridProps {
+  searchTerm?: string;
+  sortBy?: string;
+}
+
+export function GameGrid({ searchTerm = "", sortBy = "name" }: GameGridProps) {
   const navigate = useNavigate();
   
   const { data: games, isLoading } = useQuery({
-    queryKey: ['game-categories'],
+    queryKey: ['game-categories', searchTerm, sortBy],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('game_categories')
-        .select('*')
-        .order('name');
+        .select('*');
+
+      // Apply search filter
+      if (searchTerm) {
+        query = query.ilike('name', `%${searchTerm}%`);
+      }
+
+      // Apply sorting
+      switch (sortBy) {
+        case 'name':
+          query = query.order('name');
+          break;
+        case 'name-desc':
+          query = query.order('name', { ascending: false });
+          break;
+        case 'popular':
+          query = query.order('recommendation_weight', { ascending: false });
+          break;
+        case 'recent':
+          query = query.order('created_at', { ascending: false });
+          break;
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data;
@@ -31,16 +58,24 @@ export function GameGrid() {
     );
   }
 
+  if (games?.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">No games found</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {games?.map((game) => (
         <div
           key={game.id}
-          className="gaming-card group relative overflow-hidden cursor-pointer"
+          className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg"
           onClick={() => navigate(`/game/${game.slug}`)}
         >
           <img 
-            src={game.thumbnail_url} 
+            src={game.thumbnail_url || '/placeholder.svg'} 
             alt={game.name}
             className="w-full h-32 object-cover transition-transform group-hover:scale-105"
           />
