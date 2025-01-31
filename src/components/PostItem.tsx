@@ -73,13 +73,16 @@ const PostItem = ({ post }: PostItemProps) => {
                 "h-5 w-5 transition-colors",
                 isLiked ? "text-red-500 fill-current" : "text-gaming-400 group-hover:text-red-400"
               )} />
-              <span className="text-sm font-medium text-gaming-100">
+              <span className={cn(
+                "text-sm font-medium",
+                isLiked ? "text-red-500" : "text-gaming-100"
+              )}>
                 {post.likes_count || 0}
               </span>
             </div>
             <div className="flex items-center space-x-1 group cursor-pointer hover:scale-110 transition-transform">
-              <MessageSquare className="h-5 w-5 text-gaming-400 group-hover:text-gaming-300" />
-              <span className="text-sm font-medium text-gaming-100">
+              <MessageSquare className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
+              <span className="text-sm font-medium text-blue-400">
                 {commentsCount}
               </span>
             </div>
@@ -88,7 +91,10 @@ const PostItem = ({ post }: PostItemProps) => {
                 "h-5 w-5 transition-colors",
                 isTrophied ? "text-yellow-500 fill-current" : "text-gaming-400 group-hover:text-yellow-400"
               )} />
-              <span className="text-sm font-medium text-gaming-100">
+              <span className={cn(
+                "text-sm font-medium",
+                isTrophied ? "text-yellow-500" : "text-gaming-100"
+              )}>
                 {post.clip_votes?.[0]?.count || 0}
               </span>
             </div>
