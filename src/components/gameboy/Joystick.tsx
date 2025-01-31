@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
 
 interface JoystickProps {
   onDirectionChange: (direction: string) => void;
@@ -20,6 +21,11 @@ const Joystick: React.FC<JoystickProps> = ({ onDirectionChange }) => {
     const container = document.querySelector('.post-container');
     if (container) {
       isScrollingRef.current = true;
+      
+      // Add visual feedback
+      toast.info(direction === 'up' ? 'Scrolling Up' : 'Scrolling Down', {
+        duration: 1000,
+      });
       
       const targetScroll = direction === 'up' 
         ? container.scrollTop - scrollAmount 
@@ -132,7 +138,9 @@ const Joystick: React.FC<JoystickProps> = ({ onDirectionChange }) => {
     <div className="xbox-joystick">
       <div
         ref={joystickRef}
-        className="xbox-joystick-thumb"
+        className={`xbox-joystick-thumb transition-transform duration-200 ${
+          activeDirection !== 'neutral' ? 'scale-110' : ''
+        }`}
         style={{
           transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
         }}

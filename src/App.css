@@ -5,7 +5,44 @@
   text-align: center;
 }
 
-/* ... keep existing code */
+/* Loading Animation */
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Post Transition Animation */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeSlideIn 0.5s ease-out forwards;
+}
+
+/* Interactive Elements */
+.interactive-scale {
+  transition: transform 0.2s ease-out;
+}
+
+.interactive-scale:hover {
+  transform: scale(1.05);
+}
+
+.interactive-scale:active {
+  transform: scale(0.95);
+}
 
 /* Video Player Styles */
 .media-container video {
