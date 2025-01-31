@@ -18,7 +18,6 @@ export function ChatList({ onSelectUser }: ChatListProps) {
   return (
     <div className="border-r border-border">
       <div className="flex items-center gap-2 mb-4">
-        <CreateGroupChat />
         <Button 
           variant="outline" 
           className="w-full"
@@ -27,6 +26,7 @@ export function ChatList({ onSelectUser }: ChatListProps) {
           <UserSearch className="mr-2 h-4 w-4" />
           Find Someone to Chat With
         </Button>
+        <CreateGroupChat />
       </div>
       
       <div className="relative mb-4">
