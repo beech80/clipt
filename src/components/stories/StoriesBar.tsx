@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StoryCreator } from "./StoryCreator";
 import { StoryViewer } from "./StoryViewer";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Plus } from "lucide-react";
 
 interface Story {
   id: string;
@@ -28,7 +27,7 @@ interface StoryGroup {
   stories: Story[];
 }
 
-export const StoriesBar = () => {
+export function StoriesBar() {
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<StoryGroup | null>(null);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
@@ -145,4 +144,4 @@ export const StoriesBar = () => {
       )}
     </div>
   );
-};
+}
