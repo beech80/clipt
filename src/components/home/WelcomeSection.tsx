@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Users, MessageSquare } from "lucide-react";
+import { Users, MessageSquare, Video } from "lucide-react";
 
 export const WelcomeSection = () => {
   const navigate = useNavigate();
@@ -24,6 +24,14 @@ export const WelcomeSection = () => {
         >
           <MessageSquare className="w-4 h-4" />
           Post
+        </Button>
+        <Button 
+          variant="outline" 
+          className="gaming-button flex items-center gap-2"
+          onClick={() => navigate('/streaming')}
+        >
+          <Video className="w-4 h-4" />
+          Stream
         </Button>
         <Button 
           variant="outline" 
@@ -51,7 +59,7 @@ export const WelcomeSection = () => {
         className="text-lg md:text-xl text-gaming-300 mb-8 max-w-2xl mx-auto px-4"
         tabIndex={0}
       >
-        Join thousands of gamers sharing their best plays, fails, and everything in between
+        Join thousands of gamers sharing their best plays, fails, and everything in between. Stream live or share clips!
       </motion.p>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
