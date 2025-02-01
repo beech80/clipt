@@ -32,7 +32,9 @@ export function EnhancedGamingDashboard({ streamId, userId, isLive }: EnhancedGa
         stream_id_param: streamId
       });
       if (error) throw error;
-      return data as GamingMetrics;
+      // Transform the first row of the result into the expected format
+      const metrics = data[0] as GamingMetrics;
+      return metrics;
     },
     enabled: isLive,
     refetchInterval: 5000
