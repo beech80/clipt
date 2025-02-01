@@ -7,13 +7,14 @@ import { Copy, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { StreamDashboard } from "@/components/streaming/StreamDashboard";
+import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
 
 export default function Streaming() {
   const { user } = useAuth();
   const [streamKey, setStreamKey] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLive, setIsLive] = useState(false);
   const rtmpUrl = "rtmp://stream.lovable.dev/live";
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function Streaming() {
 
       const { data, error } = await supabase
         .from('streams')
-        .select('encrypted_stream_key')
+        .select('encrypted_stream_key, is_live')
         .eq('user_id', user.id)
         .single();
 
@@ -34,11 +35,33 @@ export default function Streaming() {
 
       if (data?.encrypted_stream_key) {
         setStreamKey(data.encrypted_stream_key);
+        setIsLive(data.is_live || false);
       }
       setIsLoading(false);
     };
 
     loadStreamKey();
+
+    // Subscribe to stream status changes
+    const channel = supabase
+      .channel('stream-status')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'streams',
+          filter: `user_id=eq.${user?.id}`
+        },
+        (payload) => {
+          setIsLive(payload.new.is_live);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const copyToClipboard = (text: string, label: string) => {
@@ -111,9 +134,10 @@ export default function Streaming() {
         </div>
       </Card>
 
-      <StreamDashboard 
+      <EnhancedGamingDashboard 
         streamId={streamKey || ''} 
-        userId={user.id} 
+        userId={user.id}
+        isLive={isLive}
       />
     </div>
   );

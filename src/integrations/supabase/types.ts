@@ -4953,6 +4953,67 @@ export type Database = {
           },
         ]
       }
+      stream_game_stats: {
+        Row: {
+          assists: number | null
+          created_at: string | null
+          deaths: number | null
+          game_category: string | null
+          game_name: string | null
+          id: string
+          kills: number | null
+          stream_id: string | null
+          updated_at: string | null
+          win_loss_ratio: number | null
+        }
+        Insert: {
+          assists?: number | null
+          created_at?: string | null
+          deaths?: number | null
+          game_category?: string | null
+          game_name?: string | null
+          id?: string
+          kills?: number | null
+          stream_id?: string | null
+          updated_at?: string | null
+          win_loss_ratio?: number | null
+        }
+        Update: {
+          assists?: number | null
+          created_at?: string | null
+          deaths?: number | null
+          game_category?: string | null
+          game_name?: string | null
+          id?: string
+          kills?: number | null
+          stream_id?: string | null
+          updated_at?: string | null
+          win_loss_ratio?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_game_stats_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_game_stats_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_game_stats_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_gifts: {
         Row: {
           amount: number
@@ -7589,6 +7650,18 @@ export type Database = {
           max_concurrent_viewers: number
           total_stream_time: unknown
           average_watch_time: unknown
+        }[]
+      }
+      calculate_gaming_metrics: {
+        Args: {
+          stream_id_param: string
+        }
+        Returns: {
+          kda_ratio: number
+          win_rate: number
+          avg_game_duration: unknown
+          peak_viewers: number
+          engagement_rate: number
         }[]
       }
       calculate_level_from_xp: {
