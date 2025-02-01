@@ -7,25 +7,26 @@ import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from 'sonner';
 
-// Create a client
+// Create a client with proper configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <App />
-          <Toaster position="top-center" />
+          <Toaster position="top-center" richColors />
         </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );
