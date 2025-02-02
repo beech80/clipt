@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Camera, Trophy } from 'lucide-react';
+import { Menu, Camera, Trophy, Bot, Gamepad } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -48,6 +48,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
     { name: 'Top Clips', path: '/top-clips' },
     { name: 'Clipts', path: '/clipts' },
     { name: 'Settings', path: '/settings' },
+    { name: 'AI Assistant', path: '/ai-assistant' },
+    { name: 'Esports', path: '/esports' }
   ];
 
   return (
