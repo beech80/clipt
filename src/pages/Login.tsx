@@ -34,21 +34,21 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen w-full bg-background flex flex-col">
       <div className="gameboy-header">
         <h1 className="gameboy-title">CLIP</h1>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6 glass-card p-8">
+        <div className="w-full max-w-md space-y-6 glass-card">
           <div className="text-center space-y-2">
             <div className="flex justify-center mb-4">
-              <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
-                <Gamepad2 className="h-6 w-6 text-gaming-400" />
+              <div className="h-12 w-12 rounded-lg bg-[#9b87f5]/20 flex items-center justify-center">
+                <Gamepad2 className="h-6 w-6 text-[#9b87f5]" />
               </div>
             </div>
-            <h1 className="text-4xl font-bold text-foreground">Welcome Back</h1>
-            <p className="text-muted-foreground">Sign in to your account</p>
+            <h1 className="text-4xl font-bold text-white">Welcome Back</h1>
+            <p className="text-[#9b87f5]">Sign in to your account</p>
           </div>
 
           {error && (
@@ -66,7 +66,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="pl-10 bg-background border-gaming-400/30 focus:border-gaming-400"
+                className="pl-10 bg-[#1A1F2C] border-[#9b87f5]/30 focus:border-[#9b87f5] text-white"
               />
             </div>
             <div className="relative">
@@ -77,7 +77,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="pl-10 bg-background border-gaming-400/30 focus:border-gaming-400"
+                className="pl-10 bg-[#1A1F2C] border-[#9b87f5]/30 focus:border-[#9b87f5] text-white"
               />
             </div>
             <Button
@@ -88,15 +88,21 @@ const Login = () => {
               {loading ? "Signing in..." : "Sign in"}
             </Button>
             <div className="mt-4 text-center space-y-2">
-              <Link to="/reset-password" className="text-sm text-primary hover:underline block">
+              <Link 
+                to="/reset-password" 
+                className="text-sm text-[#9b87f5] hover:underline block"
+              >
                 Forgot your password?
               </Link>
-              <Link to="/resend-verification" className="text-sm text-primary hover:underline block">
+              <Link 
+                to="/resend-verification" 
+                className="text-sm text-[#9b87f5] hover:underline block"
+              >
                 Resend verification email
               </Link>
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
-                <Link to="/signup" className="text-primary hover:underline">
+                <Link to="/signup" className="text-[#9b87f5] hover:underline">
                   Sign up
                 </Link>
               </p>
