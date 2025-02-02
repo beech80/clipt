@@ -15,7 +15,24 @@ export default function AiAssistant() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hello! I'm your gaming AI assistant. I have extensive knowledge about all games, gaming strategies, lore, and gaming history. How can I help you today?"
+      content: "Hello! I'm your gaming AI assistant. I have extensive knowledge about all aspects of gaming including:\n\n" +
+        "🎮 Game mechanics, strategies, and meta\n" +
+        "📚 Gaming history and development\n" +
+        "🏆 Esports and competitive gaming\n" +
+        "📖 Game lore and storylines\n" +
+        "💻 Technical aspects and hardware\n" +
+        "📈 Gaming industry trends\n" +
+        "🏃 Speedrunning techniques\n" +
+        "🛠️ Game modifications and custom content\n" +
+        "🌐 Gaming communities and culture\n\n" +
+        "I can also help you grow as a content creator with advice on:\n" +
+        "📹 YouTube gaming channel growth\n" +
+        "🎥 Streaming best practices\n" +
+        "🎬 Video editing and production\n" +
+        "📱 Social media presence\n" +
+        "💡 Content strategy and planning\n" +
+        "🎯 Building your gaming brand\n\n" +
+        "How can I assist you today?"
     }
   ]);
   const [input, setInput] = useState('');
@@ -41,7 +58,6 @@ export default function AiAssistant() {
     setIsLoading(true);
 
     try {
-      // Here we'll call our Supabase Edge Function that will handle the AI response
       const { data, error } = await supabase.functions.invoke('gaming-ai-chat', {
         body: { message: userMessage, history: messages }
       });
@@ -98,7 +114,7 @@ export default function AiAssistant() {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask me anything about games..."
+            placeholder="Ask me anything about games or growing as a content creator..."
             className="flex-1 bg-gaming-800 border-gaming-400 text-white placeholder:text-gaming-400"
             disabled={isLoading}
           />
