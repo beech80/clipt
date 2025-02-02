@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Gamepad2 } from "lucide-react";
+import { Gamepad2, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
 import GameBoyControls from "@/components/GameBoyControls";
 
@@ -58,24 +58,26 @@ const Login = () => {
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
               <Input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-background border-gaming-400/30 focus:border-gaming-400"
+                className="pl-10 bg-background border-gaming-400/30 focus:border-gaming-400"
               />
             </div>
-            <div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
               <Input
                 type="password"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-background border-gaming-400/30 focus:border-gaming-400"
+                className="pl-10 bg-background border-gaming-400/30 focus:border-gaming-400"
               />
             </div>
             <Button
