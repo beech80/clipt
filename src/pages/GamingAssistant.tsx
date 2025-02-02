@@ -1,6 +1,6 @@
 import { SEO } from "@/components/SEO";
 import { GameChatbot } from "@/components/chatbot/GameChatbot";
-import { GameBoyControls } from "@/components/GameBoyControls";
+import GameBoyControls from "@/components/GameBoyControls";
 
 export default function GamingAssistant() {
   return (
