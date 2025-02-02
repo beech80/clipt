@@ -3551,6 +3551,77 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_stream_status: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          last_heartbeat: string | null
+          platform_id: string | null
+          platform_stream_id: string | null
+          platform_stream_url: string | null
+          status: string
+          stream_id: string | null
+          updated_at: string | null
+          viewer_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_heartbeat?: string | null
+          platform_id?: string | null
+          platform_stream_id?: string | null
+          platform_stream_url?: string | null
+          status?: string
+          stream_id?: string | null
+          updated_at?: string | null
+          viewer_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          last_heartbeat?: string | null
+          platform_id?: string | null
+          platform_stream_id?: string | null
+          platform_stream_url?: string | null
+          status?: string
+          stream_id?: string | null
+          updated_at?: string | null
+          viewer_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_stream_status_platform_id_fkey"
+            columns: ["platform_id"]
+            isOneToOne: false
+            referencedRelation: "streaming_platforms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_stream_status_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "platform_stream_status_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_stream_status_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       poll_responses: {
         Row: {
           created_at: string | null
@@ -6953,6 +7024,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      streaming_platforms: {
+        Row: {
+          created_at: string | null
+          credentials: Json | null
+          id: string
+          is_enabled: boolean | null
+          platform_config: Json
+          platform_name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credentials?: Json | null
+          id?: string
+          is_enabled?: boolean | null
+          platform_config?: Json
+          platform_name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credentials?: Json | null
+          id?: string
+          is_enabled?: boolean | null
+          platform_config?: Json
+          platform_name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streaming_platforms_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       streams: {
         Row: {
