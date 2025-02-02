@@ -57,6 +57,7 @@
     "embla-carousel-react": "^8.3.0",
     "framer-motion": "^11.18.1",
     "hls.js": "^1.5.19",
+    "idb": "^8.0.2",
     "input-otp": "^1.2.4",
     "k6": "^0.0.0",
     "lucide-react": "^0.462.0",

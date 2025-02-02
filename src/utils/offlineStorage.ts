@@ -1,8 +1,5 @@
 import { openDB, IDBPDatabase } from 'idb';
 
-const DB_NAME = 'ClipOfflineDB';
-const DB_VERSION = 1;
-
 interface OfflineStore {
   id: string;
   timestamp: number;
@@ -40,8 +37,9 @@ class OfflineStorage {
     await this.db!.put('offlineActions', store);
     
     // Register for background sync if available
-    if ('serviceWorker' in navigator && 'sync' in window.registration) {
-      await window.registration.sync.register('sync-actions');
+    if ('serviceWorker' in navigator && 'sync' in navigator.serviceWorker) {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.sync.register('sync-actions');
     }
   }
 
@@ -79,5 +77,8 @@ class OfflineStorage {
     await Promise.all(synced.map(item => store.delete(item.id)));
   }
 }
+
+const DB_NAME = 'ClipOfflineDB';
+const DB_VERSION = 1;
 
 export const offlineStorage = new OfflineStorage();
