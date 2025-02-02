@@ -35,10 +35,10 @@ export function ChatHighlights({ streamId, isModerator }: ChatHighlightsProps) {
         .from('chat_highlights')
         .select(`
           *,
-          message:stream_chat(
+          message:stream_chat!inner(
             content,
             user_id,
-            profiles:profiles(username)
+            profiles!inner(username)
           )
         `)
         .eq('stream_id', streamId)
