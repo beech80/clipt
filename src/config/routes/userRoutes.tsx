@@ -4,6 +4,7 @@ import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Onboarding from "@/pages/Onboarding";
 import Progress from "@/pages/Progress";
+import AiAssistant from "@/pages/AiAssistant";
 
 export const userRoutes: RouteObject[] = [
   {
@@ -25,5 +26,9 @@ export const userRoutes: RouteObject[] = [
   {
     path: "progress",
     element: <Progress />,
+  },
+  {
+    path: "ai-assistant",
+    element: <AiAssistant />,
   },
 ];
