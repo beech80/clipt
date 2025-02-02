@@ -34,75 +34,77 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-background flex flex-col">
-      <div className="gameboy-header">
-        <h1 className="gameboy-title">CLIP</h1>
+    <div className="fixed inset-0 min-h-screen w-full bg-[#1A1F2C] flex flex-col">
+      <div className="fixed top-0 left-0 right-0 h-16 bg-[#9b87f5] border-b-4 border-[#7E69AB] shadow-lg z-50">
+        <div className="h-full flex items-center justify-center">
+          <h1 className="text-2xl font-bold tracking-widest text-[#1A1F2C]">CLIP</h1>
+        </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6 glass-card">
-          <div className="text-center space-y-2">
-            <div className="flex justify-center mb-4">
-              <div className="h-12 w-12 rounded-lg bg-[#9b87f5]/20 flex items-center justify-center">
-                <Gamepad2 className="h-6 w-6 text-[#9b87f5]" />
+      <div className="flex-1 flex items-center justify-center p-4 mt-16">
+        <div className="w-full max-w-md bg-[#1A1F2C]/90 border-2 border-[#9b87f5] p-8 shadow-xl backdrop-blur-sm">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="h-16 w-16 rounded-lg bg-[#9b87f5]/20 flex items-center justify-center">
+                <Gamepad2 className="h-8 w-8 text-[#9b87f5]" />
               </div>
             </div>
             <h1 className="text-4xl font-bold text-white">Welcome Back</h1>
-            <p className="text-[#9b87f5]">Sign in to your account</p>
+            <p className="text-[#9b87f5] text-lg">Sign in to your account</p>
           </div>
 
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="mt-4">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="mt-8 space-y-6">
             <div className="relative">
-              <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+              <Mail className="absolute left-3 top-3 h-5 w-5 text-[#9b87f5]" />
               <Input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="pl-10 bg-[#1A1F2C] border-[#9b87f5]/30 focus:border-[#9b87f5] text-white"
+                className="pl-10 h-12 bg-[#1A1F2C] border-2 border-[#9b87f5]/30 focus:border-[#9b87f5] text-white text-lg w-full"
               />
             </div>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+              <Lock className="absolute left-3 top-3 h-5 w-5 text-[#9b87f5]" />
               <Input
                 type="password"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="pl-10 bg-[#1A1F2C] border-[#9b87f5]/30 focus:border-[#9b87f5] text-white"
+                className="pl-10 h-12 bg-[#1A1F2C] border-2 border-[#9b87f5]/30 focus:border-[#9b87f5] text-white text-lg w-full"
               />
             </div>
             <Button
               type="submit"
-              className="w-full gaming-button"
+              className="w-full h-12 bg-[#9b87f5] hover:bg-[#8B5CF6] text-white text-lg font-medium"
               disabled={loading}
             >
               {loading ? "Signing in..." : "Sign in"}
             </Button>
-            <div className="mt-4 text-center space-y-2">
+            <div className="mt-6 text-center space-y-3">
               <Link 
                 to="/reset-password" 
-                className="text-sm text-[#9b87f5] hover:underline block"
+                className="text-[#9b87f5] hover:text-[#8B5CF6] text-lg block"
               >
                 Forgot your password?
               </Link>
               <Link 
                 to="/resend-verification" 
-                className="text-sm text-[#9b87f5] hover:underline block"
+                className="text-[#9b87f5] hover:text-[#8B5CF6] text-lg block"
               >
                 Resend verification email
               </Link>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-gray-400 text-lg">
                 Don't have an account?{" "}
-                <Link to="/signup" className="text-[#9b87f5] hover:underline">
+                <Link to="/signup" className="text-[#9b87f5] hover:text-[#8B5CF6]">
                   Sign up
                 </Link>
               </p>
