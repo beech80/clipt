@@ -29,6 +29,7 @@ export function ViewerChallenges() {
 
       return challengesData.map(challenge => ({
         ...challenge,
+        target_value: 100, // Default target value
         rewards: challenge.viewer_challenge_rewards,
         current_progress: progressData.find(p => p.challenge_id === challenge.id)?.current_progress || 0
       }));
