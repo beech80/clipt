@@ -12,7 +12,7 @@ interface ChatHighlight {
   pinned: boolean;
   pinned_at: string;
   message: {
-    content: string;
+    message: string;
     user_id: string;
     profiles: {
       username: string;
@@ -36,7 +36,7 @@ export function ChatHighlights({ streamId, isModerator }: ChatHighlightsProps) {
         .select(`
           *,
           message:stream_chat!inner(
-            content,
+            message,
             user_id,
             profiles!inner(username)
           )
@@ -119,7 +119,7 @@ export function ChatHighlights({ streamId, isModerator }: ChatHighlightsProps) {
                 <span className="font-medium">
                   {highlight.message.profiles.username}
                 </span>
-                <p className="text-sm mt-1">{highlight.message.content}</p>
+                <p className="text-sm mt-1">{highlight.message.message}</p>
               </div>
               {isModerator && (
                 <div className="flex gap-2">
