@@ -7883,6 +7883,86 @@ export type Database = {
           },
         ]
       }
+      viewer_challenge_progress: {
+        Row: {
+          challenge_id: string | null
+          completed_at: string | null
+          created_at: string
+          current_progress: number | null
+          id: string
+          rewards_claimed: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number | null
+          id?: string
+          rewards_claimed?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          current_progress?: number | null
+          id?: string
+          rewards_claimed?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewer_challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "viewer_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viewer_challenge_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      viewer_challenge_rewards: {
+        Row: {
+          challenge_id: string | null
+          created_at: string
+          id: string
+          reward_type: string
+          reward_value: Json
+          tier_level: number
+        }
+        Insert: {
+          challenge_id?: string | null
+          created_at?: string
+          id?: string
+          reward_type: string
+          reward_value?: Json
+          tier_level?: number
+        }
+        Update: {
+          challenge_id?: string | null
+          created_at?: string
+          id?: string
+          reward_type?: string
+          reward_value?: Json
+          tier_level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewer_challenge_rewards_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "viewer_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       viewer_challenges: {
         Row: {
           channel_id: string
