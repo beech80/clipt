@@ -1591,6 +1591,45 @@ export type Database = {
           },
         ]
       }
+      content_performance_predictions: {
+        Row: {
+          confidence_score: number | null
+          content_id: string
+          content_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          predicted_engagement_rate: number | null
+          predicted_peak_concurrent: number | null
+          predicted_views: number | null
+          prediction_model_version: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          content_id: string
+          content_type: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          predicted_engagement_rate?: number | null
+          predicted_peak_concurrent?: number | null
+          predicted_views?: number | null
+          prediction_model_version?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          content_id?: string
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          predicted_engagement_rate?: number | null
+          predicted_peak_concurrent?: number | null
+          predicted_views?: number | null
+          prediction_model_version?: string | null
+        }
+        Relationships: []
+      }
       content_reports: {
         Row: {
           action_taken: string | null
@@ -7338,27 +7377,33 @@ export type Database = {
       viewer_engagement: {
         Row: {
           created_at: string | null
+          demographic_data: Json | null
           id: string
           last_active: string | null
           messages_sent: number | null
+          session_metrics: Json | null
           stream_id: string | null
           viewer_id: string | null
           watch_duration: unknown | null
         }
         Insert: {
           created_at?: string | null
+          demographic_data?: Json | null
           id?: string
           last_active?: string | null
           messages_sent?: number | null
+          session_metrics?: Json | null
           stream_id?: string | null
           viewer_id?: string | null
           watch_duration?: unknown | null
         }
         Update: {
           created_at?: string | null
+          demographic_data?: Json | null
           id?: string
           last_active?: string | null
           messages_sent?: number | null
+          session_metrics?: Json | null
           stream_id?: string | null
           viewer_id?: string | null
           watch_duration?: unknown | null
@@ -7705,6 +7750,13 @@ export type Database = {
           xp_amount: number
         }
         Returns: undefined
+      }
+      calculate_content_predictions: {
+        Args: {
+          content_id_param: string
+          content_type_param: string
+        }
+        Returns: Json
       }
       calculate_enhanced_analytics: {
         Args: {
