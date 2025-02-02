@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MessageSquare, Loader2, Flag, Reply, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, MessageSquare, Loader2, Flag } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { useReportDialog } from "@/hooks/use-report-dialog";
@@ -21,12 +21,10 @@ interface Comment {
   id: string;
   content: string;
   created_at: string;
-  parent_id: string | null;
   profiles: {
     username: string;
     avatar_url: string;
   };
-  replies?: Comment[];
 }
 
 interface CommentListProps {
@@ -36,8 +34,6 @@ interface CommentListProps {
 
 const CommentList = ({ postId, onBack }: CommentListProps) => {
   const [newComment, setNewComment] = useState("");
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { openReportDialog } = useReportDialog();
@@ -58,31 +54,11 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      // Organize comments into threads
-      const commentMap = new Map<string, Comment>();
-      const topLevelComments: Comment[] = [];
-
-      data.forEach((comment: Comment) => {
-        commentMap.set(comment.id, { ...comment, replies: [] });
-      });
-
-      data.forEach((comment: Comment) => {
-        if (comment.parent_id) {
-          const parentComment = commentMap.get(comment.parent_id);
-          if (parentComment && parentComment.replies) {
-            parentComment.replies.push(commentMap.get(comment.id)!);
-          }
-        } else {
-          topLevelComments.push(commentMap.get(comment.id)!);
-        }
-      });
-
-      return topLevelComments;
+      return data as Comment[];
     }
   });
 
-  const handleSubmitComment = async (e: React.FormEvent, parentId: string | null = null) => {
+  const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
       toast.error("Please login to comment");
@@ -100,15 +76,13 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
         .insert({
           content: newComment.trim(),
           post_id: postId,
-          user_id: user.id,
-          parent_id: parentId
+          user_id: user.id
         });
 
       if (error) throw error;
 
       toast.success("Comment added successfully!");
       setNewComment("");
-      setReplyingTo(null);
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
     } catch (error) {
       toast.error("Error adding comment");
@@ -118,121 +92,6 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
   const handleReport = (commentId: string) => {
     openReportDialog(commentId, 'comment');
   };
-
-  const toggleExpanded = (commentId: string) => {
-    const newExpanded = new Set(expandedComments);
-    if (newExpanded.has(commentId)) {
-      newExpanded.delete(commentId);
-    } else {
-      newExpanded.add(commentId);
-    }
-    setExpandedComments(newExpanded);
-  };
-
-  const renderComment = (comment: Comment, depth: number = 0) => (
-    <div 
-      key={comment.id} 
-      className={`p-4 rounded-lg bg-gaming-800/50 hover:bg-gaming-800/70 transition-colors border border-gaming-700/50 animate-glow ${
-        depth > 0 ? 'ml-6' : ''
-      }`}
-    >
-      <div className="flex gap-3">
-        <Avatar className="w-10 h-10 border-2 border-gaming-600">
-          <AvatarImage src={comment.profiles.avatar_url} />
-          <AvatarFallback className="bg-gaming-700 text-gaming-100">
-            {comment.profiles.username[0]?.toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-gaming-100">{comment.profiles.username}</span>
-              <span className="text-sm text-gaming-500">
-                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                className="text-gaming-400 hover:text-gaming-100"
-              >
-                <Reply className="h-4 w-4 mr-1" />
-                Reply
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Flag className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleReport(comment.id)}>
-                    Report Comment
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-          <p className="mt-1 text-gaming-200">{comment.content}</p>
-          
-          {replyingTo === comment.id && (
-            <div className="mt-4">
-              <form onSubmit={(e) => handleSubmitComment(e, comment.id)} className="space-y-2">
-                <Textarea
-                  placeholder="Write a reply..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="min-h-[80px] resize-none bg-gaming-800/50 border-gaming-600 text-gaming-100 placeholder:text-gaming-500"
-                />
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setReplyingTo(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit"
-                    className="bg-gaming-600 hover:bg-gaming-500 text-white"
-                    disabled={!newComment.trim()}
-                  >
-                    Reply
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleExpanded(comment.id)}
-                className="text-gaming-400 hover:text-gaming-100"
-              >
-                {expandedComments.has(comment.id) ? (
-                  <ChevronUp className="h-4 w-4 mr-1" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                )}
-                {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
-              </Button>
-              
-              {expandedComments.has(comment.id) && (
-                <div className="mt-4 space-y-4">
-                  {comment.replies.map(reply => renderComment(reply, depth + 1))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gaming-900/95">
@@ -267,13 +126,50 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
           </div>
         ) : (
           <div className="space-y-4">
-            {comments?.map(comment => renderComment(comment))}
+            {comments?.map((comment) => (
+              <div 
+                key={comment.id} 
+                className="p-4 rounded-lg bg-gaming-800/50 hover:bg-gaming-800/70 transition-colors border border-gaming-700/50 animate-glow"
+              >
+                <div className="flex gap-3">
+                  <Avatar className="w-10 h-10 border-2 border-gaming-600">
+                    <AvatarImage src={comment.profiles.avatar_url} />
+                    <AvatarFallback className="bg-gaming-700 text-gaming-100">
+                      {comment.profiles.username[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gaming-100">{comment.profiles.username}</span>
+                        <span className="text-sm text-gaming-500">
+                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Flag className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleReport(comment.id)}>
+                            Report Comment
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <p className="mt-1 text-gaming-200">{comment.content}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-gaming-800/90 backdrop-blur supports-[backdrop-filter]:bg-gaming-800/60 border-t border-gaming-700">
-        <form onSubmit={(e) => handleSubmitComment(e)} className="max-w-3xl mx-auto p-4">
+        <form onSubmit={handleSubmitComment} className="max-w-3xl mx-auto p-4">
           <div className="flex gap-2">
             <Textarea
               placeholder="Write a comment..."

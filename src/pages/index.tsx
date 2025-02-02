@@ -1,7 +1,6 @@
 import { OverlayDesigner } from "@/components/streaming/overlay/OverlayDesigner";
 import { SceneTransitions } from "@/components/streaming/transitions/SceneTransitions";
 import { AlertCreator } from "@/components/streaming/alerts/AlertCreator";
-import { GameChatbot } from "@/components/chatbot/GameChatbot";
 
 export default function Home() {
   return (
@@ -9,10 +8,7 @@ export default function Home() {
       <h1 className="text-3xl font-bold mb-6">Stream Tools</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <OverlayDesigner />
-          <GameChatbot />
-        </div>
+        <OverlayDesigner />
         <div className="space-y-6">
           <SceneTransitions />
           <AlertCreator />

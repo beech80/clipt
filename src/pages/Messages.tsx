@@ -7,20 +7,20 @@ const Messages = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   return (
-    <div className="container mx-auto p-4 min-h-screen relative pb-[200px] bg-[#1A1F2C]">
+    <div className="container mx-auto p-4 min-h-screen relative pb-[200px]">
       <div className="gameboy-header">
         <h1 className="gameboy-title">MESSAGES</h1>
       </div>
 
       <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
-        <div className="md:col-span-1 gaming-card bg-gaming-900/95 border border-gaming-400/30 backdrop-blur-sm rounded-lg p-4 overflow-y-auto">
+        <div className="md:col-span-1 gaming-card overflow-y-auto">
           <ChatList onSelectUser={setSelectedUserId} />
         </div>
-        <div className="md:col-span-2 gaming-card bg-gaming-900/95 border border-gaming-400/30 backdrop-blur-sm rounded-lg p-4">
+        <div className="md:col-span-2 gaming-card">
           {selectedUserId ? (
             <MessageList userId={selectedUserId} />
           ) : (
-            <div className="flex items-center justify-center h-full text-gaming-400">
+            <div className="flex items-center justify-center h-full text-muted-foreground">
               Select a chat to start messaging
             </div>
           )}

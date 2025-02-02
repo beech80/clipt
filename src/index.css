@@ -31,14 +31,9 @@
   * {
     @apply border-border touch-manipulation;
   }
-  
-  html, body, #root {
-    @apply min-h-screen w-full;
-  }
-  
   body {
-    @apply bg-background text-foreground antialiased overscroll-none;
-    background: #1A1F2C;
+    @apply text-white overscroll-none;
+    background-color: var(--background-override, #1A1F2C);
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
@@ -66,10 +61,30 @@
   letter-spacing: 0.2em;
 }
 
-.glass-card {
-  @apply bg-[#1A1F2C]/80 border-2 border-[#9b87f5] rounded-none p-6;
+.gaming-cartridge {
+  @apply relative border-4 border-gaming-400 rounded-lg overflow-hidden bg-[#222222];
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.1),
+    0 4px 8px rgba(0,0,0,0.3);
+}
+
+.gaming-cartridge::before {
+  content: '';
+  @apply absolute top-0 left-1/2 -translate-x-1/2 w-20 h-2 bg-gaming-400;
+}
+
+.gaming-cartridge::after {
+  content: '';
+  @apply absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-2 bg-gaming-400;
+}
+
+.gaming-card {
+  @apply relative overflow-hidden rounded-none border-2 border-gaming-400 bg-[#1A1F2C] p-4 transition-all hover:border-gaming-500;
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
-  backdrop-filter: blur(10px);
+}
+
+.gaming-gradient {
+  @apply bg-gradient-to-r from-gaming-400 to-gaming-500 bg-clip-text text-transparent;
 }
 
 .gaming-button {
@@ -84,6 +99,11 @@
 
 .gaming-button:hover {
   border-color: var(--button-override, #8B5CF6);
+}
+
+.glass-card {
+  @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
 .hover-glow {
@@ -247,7 +267,4 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
-
-
-
 

@@ -1,29 +1,33 @@
-import React from 'react';
-import Home from '@/pages/Home';
-import Messages from '@/pages/Messages';
-import GroupChat from '@/pages/GroupChat';
-import Integrations from '@/pages/Integrations';
-import GamingAssistant from '@/pages/GamingAssistant';
+import { RouteObject } from "react-router-dom";
+import Home from "@/pages/Home";
+import Progress from "@/pages/Progress";
+import Messages from "@/pages/Messages";
+import { authRoutes } from "./routes/authRoutes";
+import { docsRoutes } from "./routes/docsRoutes";
+import { contentRoutes } from "./routes/contentRoutes";
+import { streamingRoutes } from "./routes/streamingRoutes";
+import { userRoutes } from "./routes/userRoutes";
+import { gameRoutes } from "./routes/gameRoutes";
+import { paymentRoutes } from "./routes/paymentRoutes";
 
-export const routes = [
+export const routes: RouteObject[] = [
   {
-    path: '/',
-    element: <Home />
+    path: "/",
+    element: <Home />,
   },
   {
-    path: '/messages',
-    element: <Messages />
+    path: "/progress",
+    element: <Progress />,
   },
   {
-    path: '/group-chat',
-    element: <GroupChat />
+    path: "/messages",
+    element: <Messages />,
   },
-  {
-    path: '/integrations',
-    element: <Integrations />
-  },
-  {
-    path: '/gaming-assistant',
-    element: <GamingAssistant />
-  }
+  ...authRoutes,
+  docsRoutes,
+  ...contentRoutes,
+  ...streamingRoutes,
+  ...userRoutes,
+  ...gameRoutes,
+  ...paymentRoutes,
 ];

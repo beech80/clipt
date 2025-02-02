@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Video, Bot } from "lucide-react";
+import { MessageSquare, Video } from "lucide-react";
 
 export function MainNav({
   className,
@@ -40,15 +40,6 @@ export function MainNav({
         <Button variant="ghost" size="sm" className="gap-2">
           <MessageSquare className="h-4 w-4" />
           Messages
-        </Button>
-      </Link>
-      <Link
-        to="/gaming-assistant"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Bot className="h-4 w-4" />
-          Gaming Assistant
         </Button>
       </Link>
     </nav>
