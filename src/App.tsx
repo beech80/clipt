@@ -5,6 +5,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
 import { MessagesProvider } from '@/contexts/MessagesContext';
 import { routes } from '@/config/routes';
+import { MainNav } from '@/components/MainNav';
 
 function App() {
   return (
@@ -12,15 +13,24 @@ function App() {
       <React.Suspense fallback={<div>Loading...</div>}>
         <ReportDialogProvider>
           <MessagesProvider>
-            <Routes>
-              {routes.map((route) => (
-                <Route
-                  key={route.path}
-                  path={route.path}
-                  element={route.element}
-                />
-              ))}
-            </Routes>
+            <div className="min-h-screen bg-background">
+              <header className="border-b">
+                <div className="container mx-auto p-4">
+                  <MainNav />
+                </div>
+              </header>
+              <main>
+                <Routes>
+                  {routes.map((route) => (
+                    <Route
+                      key={route.path}
+                      path={route.path}
+                      element={route.element}
+                    />
+                  ))}
+                </Routes>
+              </main>
+            </div>
             <Toaster position="top-center" />
           </MessagesProvider>
         </ReportDialogProvider>

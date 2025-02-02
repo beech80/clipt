@@ -1,7 +1,6 @@
 import { OverlayDesigner } from "@/components/streaming/overlay/OverlayDesigner";
 import { SceneTransitions } from "@/components/streaming/transitions/SceneTransitions";
 import { AlertCreator } from "@/components/streaming/alerts/AlertCreator";
-import { GameChatbot } from "@/components/chatbot/GameChatbot";
 
 export default function Home() {
   return (
@@ -11,7 +10,6 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-6">
           <OverlayDesigner />
-          <GameChatbot />
         </div>
         <div className="space-y-6">
           <SceneTransitions />
