@@ -4600,6 +4600,7 @@ export type Database = {
           created_at: string | null
           dropped_frames_ratio: number | null
           engagement_rate: number | null
+          game_performance_score: number | null
           id: string
           interaction_rate: number | null
           max_concurrent_viewers: number | null
@@ -4608,9 +4609,11 @@ export type Database = {
           retention_rate: number | null
           stream_duration: unknown | null
           stream_id: string | null
+          stream_quality_score: number | null
           total_stream_time: unknown | null
           unique_chatters: number | null
           video_quality_score: number | null
+          viewer_interaction_score: number | null
         }
         Insert: {
           audio_quality_score?: number | null
@@ -4623,6 +4626,7 @@ export type Database = {
           created_at?: string | null
           dropped_frames_ratio?: number | null
           engagement_rate?: number | null
+          game_performance_score?: number | null
           id?: string
           interaction_rate?: number | null
           max_concurrent_viewers?: number | null
@@ -4631,9 +4635,11 @@ export type Database = {
           retention_rate?: number | null
           stream_duration?: unknown | null
           stream_id?: string | null
+          stream_quality_score?: number | null
           total_stream_time?: unknown | null
           unique_chatters?: number | null
           video_quality_score?: number | null
+          viewer_interaction_score?: number | null
         }
         Update: {
           audio_quality_score?: number | null
@@ -4646,6 +4652,7 @@ export type Database = {
           created_at?: string | null
           dropped_frames_ratio?: number | null
           engagement_rate?: number | null
+          game_performance_score?: number | null
           id?: string
           interaction_rate?: number | null
           max_concurrent_viewers?: number | null
@@ -4654,9 +4661,11 @@ export type Database = {
           retention_rate?: number | null
           stream_duration?: unknown | null
           stream_id?: string | null
+          stream_quality_score?: number | null
           total_stream_time?: unknown | null
           unique_chatters?: number | null
           video_quality_score?: number | null
+          viewer_interaction_score?: number | null
         }
         Relationships: [
           {
@@ -5160,6 +5169,62 @@ export type Database = {
           {
             foreignKeyName: "stream_highlights_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_interactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          interaction_data: Json | null
+          interaction_type: string
+          stream_id: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          interaction_data?: Json | null
+          interaction_type: string
+          stream_id?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          interaction_data?: Json | null
+          interaction_type?: string
+          stream_id?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_interactions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_interactions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_interactions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_interactions_viewer_id_fkey"
+            columns: ["viewer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -7663,6 +7728,15 @@ export type Database = {
           peak_viewers: number
           engagement_rate: number
         }[]
+      }
+      calculate_gaming_stream_quality: {
+        Args: {
+          bitrate: number
+          fps: number
+          dropped_frames: number
+          game_type: string
+        }
+        Returns: number
       }
       calculate_level_from_xp: {
         Args: {
