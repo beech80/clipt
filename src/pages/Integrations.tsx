@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Twitter, Webhook, Bot, Plugin } from 'lucide-react';
+import { MessageSquare, Twitter, Webhook, Bot, Plug } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -64,7 +64,7 @@ export default function Integrations() {
             Chatbot
           </TabsTrigger>
           <TabsTrigger value="api" className="flex items-center gap-2">
-            <Plugin className="h-4 w-4" />
+            <Plug className="h-4 w-4" />
             API
           </TabsTrigger>
         </TabsList>
