@@ -40,7 +40,7 @@ const Login = () => {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6">
+        <div className="w-full max-w-md space-y-6 glass-card p-8">
           <div className="text-center space-y-2">
             <div className="flex justify-center mb-4">
               <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
@@ -82,7 +82,7 @@ const Login = () => {
             </div>
             <Button
               type="submit"
-              className="w-full bg-gaming-400 hover:bg-gaming-500 text-white"
+              className="w-full gaming-button"
               disabled={loading}
             >
               {loading ? "Signing in..." : "Sign in"}

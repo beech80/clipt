@@ -90,8 +90,9 @@
 }
 
 .glass-card {
-  @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none;
+  @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none p-6;
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+  backdrop-filter: blur(10px);
 }
 
 .hover-glow {
@@ -255,5 +256,6 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
+
 
 
