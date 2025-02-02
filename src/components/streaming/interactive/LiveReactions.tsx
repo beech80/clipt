@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Heart, ThumbsUp, Star, Party, Flame } from 'lucide-react';
+import { Heart, ThumbsUp, Star, Sparkles, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface LiveReactionsProps {
@@ -12,7 +12,7 @@ interface LiveReactionsProps {
 
 interface Reaction {
   id: string;
-  type: 'heart' | 'like' | 'star' | 'party' | 'fire';
+  type: 'heart' | 'like' | 'star' | 'sparkle' | 'fire';
   x: number;
   createdAt: Date;
 }
@@ -74,7 +74,7 @@ export function LiveReactions({ streamId, userId }: LiveReactionsProps) {
       case 'heart': return <Heart className="h-6 w-6 text-red-500" />;
       case 'like': return <ThumbsUp className="h-6 w-6 text-blue-500" />;
       case 'star': return <Star className="h-6 w-6 text-yellow-500" />;
-      case 'party': return <Party className="h-6 w-6 text-purple-500" />;
+      case 'sparkle': return <Sparkles className="h-6 w-6 text-purple-500" />;
       case 'fire': return <Flame className="h-6 w-6 text-orange-500" />;
     }
   };
@@ -109,10 +109,10 @@ export function LiveReactions({ streamId, userId }: LiveReactionsProps) {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => sendReaction('party')}
+          onClick={() => sendReaction('sparkle')}
           className="hover:bg-purple-500/20"
         >
-          <Party className="h-4 w-4 text-purple-500" />
+          <Sparkles className="h-4 w-4 text-purple-500" />
         </Button>
         <Button
           variant="outline"
