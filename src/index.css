@@ -49,3 +49,66 @@
     @apply min-h-full;
   }
 }
+
+/* GameBoy-inspired UI Elements */
+.gameboy-header {
+  @apply relative mb-8 text-center;
+}
+
+.gameboy-title {
+  @apply text-3xl font-bold tracking-wider text-gaming-100;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.gaming-card {
+  @apply relative overflow-hidden rounded-lg border border-gaming-400/20 bg-gaming-900/95 backdrop-blur-sm;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.gaming-gradient {
+  @apply bg-gradient-to-r from-gaming-400 to-gaming-600 bg-clip-text text-transparent;
+}
+
+.gaming-button {
+  @apply relative overflow-hidden rounded border border-gaming-400/20 bg-gaming-900/95 px-4 py-2 font-medium text-gaming-100 transition-all hover:border-gaming-400/40 hover:bg-gaming-800/90 hover:text-gaming-200 active:scale-95;
+}
+
+.gaming-cartridge {
+  @apply relative overflow-hidden rounded-lg border border-gaming-400/20 bg-gaming-900/95 backdrop-blur-sm;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Interactive Elements */
+.interactive-scale {
+  @apply transition-transform duration-200 ease-out hover:scale-105 active:scale-95;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .gameboy-title {
+    @apply text-2xl;
+  }
+  
+  .gaming-card {
+    @apply mx-4;
+  }
+}
