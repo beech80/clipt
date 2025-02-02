@@ -47,6 +47,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
     { name: 'Streaming', path: '/streaming' },
     { name: 'Top Clips', path: '/top-clips' },
     { name: 'Clipts', path: '/clipts' },
+    { name: 'Gaming Assistant', path: '/gaming-assistant' },
     { name: 'Settings', path: '/settings' },
   ];
 
