@@ -4886,6 +4886,130 @@ export type Database = {
           },
         ]
       }
+      stream_challenge_participants: {
+        Row: {
+          challenge_id: string | null
+          created_at: string | null
+          id: string
+          stream_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id?: string | null
+          created_at?: string | null
+          id?: string
+          stream_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string | null
+          created_at?: string | null
+          id?: string
+          stream_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "stream_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_challenge_participants_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_challenge_participants_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_challenge_participants_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_challenge_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stream_challenges: {
+        Row: {
+          created_at: string | null
+          current_progress: number | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          participants: string[] | null
+          reward_amount: number
+          reward_type: string
+          stream_id: string | null
+          target_value: number
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_progress?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          participants?: string[] | null
+          reward_amount: number
+          reward_type: string
+          stream_id?: string | null
+          target_value: number
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          current_progress?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          participants?: string[] | null
+          reward_amount?: number
+          reward_type?: string
+          stream_id?: string | null
+          target_value?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_challenges_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "stream_challenges_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stream_challenges_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stream_chat: {
         Row: {
           command_type: string | null
