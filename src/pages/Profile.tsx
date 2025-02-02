@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -15,7 +15,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState<'clips' | 'games' | 'achievements' | 'collections'>('clips');
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -28,7 +28,7 @@ const Profile = () => {
     }
   });
 
-  const { data: userClips } = useQuery({
+  const { data: userClips, isLoading: clipsLoading } = useQuery({
     queryKey: ['user-clips'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -68,6 +68,14 @@ const Profile = () => {
   const handleMessage = () => {
     navigate('/messages');
   };
+
+  if (profileLoading || clipsLoading) {
+    return (
+      <div className="min-h-screen bg-[#1A1F2C] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-gaming-400 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#1A1F2C]">
