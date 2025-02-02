@@ -10,9 +10,11 @@ import PostItem from "@/components/PostItem";
 import { AchievementList } from "@/components/achievements/AchievementList";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Card } from "@/components/ui/card";
+import { useAuth } from '@/contexts/AuthContext';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = React.useState<'clips' | 'games' | 'achievements' | 'collections'>('clips');
 
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -21,15 +23,17 @@ const Profile = () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .eq('id', user?.id)
         .single();
 
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!user?.id
   });
 
   const { data: userClips, isLoading: clipsLoading } = useQuery({
-    queryKey: ['user-clips'],
+    queryKey: ['user-clips', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
@@ -46,12 +50,14 @@ const Profile = () => {
             count
           )
         `)
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!user?.id
   });
 
   const userStats = {
@@ -89,7 +95,7 @@ const Profile = () => {
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="relative">
                 <img
-                  src={profile?.avatar_url || "https://via.placeholder.com/200"}
+                  src={profile?.avatar_url || "/placeholder.svg"}
                   alt="Profile"
                   className="w-32 h-32 rounded-full border-4 border-gaming-400 shadow-lg hover:scale-105 transition-transform duration-200"
                 />
@@ -176,10 +182,7 @@ const Profile = () => {
           </Toggle>
           <Toggle
             pressed={activeTab === 'collections'}
-            onPressedChange={() => {
-              setActiveTab('collections');
-              navigate('/collections');
-            }}
+            onPressedChange={() => setActiveTab('collections')}
             className="gaming-button"
           >
             <Bookmark className="w-4 h-4 mr-2" /> Collections
@@ -213,7 +216,7 @@ const Profile = () => {
           )}
 
           {activeTab === 'achievements' && (
-            <AchievementList userId={profile?.id} />
+            <AchievementList userId={user?.id || ''} />
           )}
 
           {activeTab === 'collections' && (
