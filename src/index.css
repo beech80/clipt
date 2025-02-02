@@ -32,13 +32,13 @@
     @apply border-border touch-manipulation;
   }
   
-  html, body {
-    @apply min-h-screen;
+  html, body, #root {
+    @apply min-h-screen w-full;
   }
   
   body {
     @apply bg-background text-foreground antialiased overscroll-none;
-    background-color: hsl(240 27% 8%);
+    background: #1A1F2C;
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
@@ -66,13 +66,10 @@
   letter-spacing: 0.2em;
 }
 
-.gaming-card {
-  @apply relative overflow-hidden rounded-none border-2 border-gaming-400 bg-[#1A1F2C] p-4 transition-all hover:border-gaming-500;
+.glass-card {
+  @apply bg-[#1A1F2C]/80 border-2 border-[#9b87f5] rounded-none p-6;
   box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
-}
-
-.gaming-gradient {
-  @apply bg-gradient-to-r from-gaming-400 to-gaming-500 bg-clip-text text-transparent;
+  backdrop-filter: blur(10px);
 }
 
 .gaming-button {
@@ -87,12 +84,6 @@
 
 .gaming-button:hover {
   border-color: var(--button-override, #8B5CF6);
-}
-
-.glass-card {
-  @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none p-6;
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
-  backdrop-filter: blur(10px);
 }
 
 .hover-glow {
@@ -256,6 +247,7 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
+
 
 
 
