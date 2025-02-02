@@ -49,7 +49,7 @@ export function ChatHighlights({ streamId, isModerator }: ChatHighlightsProps) {
         return;
       }
 
-      setHighlights(data || []);
+      setHighlights(data as ChatHighlight[]);
     };
 
     fetchHighlights();
