@@ -29,86 +29,233 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border touch-manipulation;
   }
   
-  html {
-    @apply h-full;
+  html, body {
+    @apply min-h-screen;
   }
   
   body {
-    @apply min-h-full bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased overscroll-none;
     background-color: hsl(240 27% 8%);
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
     background-attachment: fixed;
-  }
-
-  #root {
-    @apply min-h-full;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* GameBoy-inspired UI Elements */
 .gameboy-header {
-  @apply relative mb-8 text-center;
+  @apply fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-center;
+  background: #9b87f5;
+  border-bottom: 4px solid #7E69AB;
+  box-shadow: 
+    0 2px 0 #6E59A5,
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
 }
 
 .gameboy-title {
-  @apply text-3xl font-bold tracking-wider text-gaming-100;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  @apply text-lg font-bold tracking-widest;
+  color: #1A1F2C;
+  text-shadow: 
+    2px 2px 0 rgba(255, 255, 255, 0.2),
+    -1px -1px 0 rgba(110, 89, 165, 0.3);
+  font-family: monospace;
+  letter-spacing: 0.2em;
 }
 
 .gaming-card {
-  @apply relative overflow-hidden rounded-lg border border-gaming-400/20 bg-gaming-900/95 backdrop-blur-sm;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  @apply relative overflow-hidden rounded-none border-2 border-gaming-400 bg-[#1A1F2C] p-4 transition-all hover:border-gaming-500;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
 .gaming-gradient {
-  @apply bg-gradient-to-r from-gaming-400 to-gaming-600 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-gaming-400 to-gaming-500 bg-clip-text text-transparent;
 }
 
 .gaming-button {
-  @apply relative overflow-hidden rounded border border-gaming-400/20 bg-gaming-900/95 px-4 py-2 font-medium text-gaming-100 transition-all hover:border-gaming-400/40 hover:bg-gaming-800/90 hover:text-gaming-200 active:scale-95;
+  @apply inline-flex items-center justify-center rounded-none border-2 px-4 py-2 text-sm font-medium 
+    transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 
+    disabled:pointer-events-none disabled:opacity-50 touch-manipulation;
+  border-color: var(--button-override, #9b87f5);
+  background-color: var(--background-override, #1A1F2C);
+  color: var(--text-override, #FFFFFF);
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
 }
 
-.gaming-cartridge {
-  @apply relative overflow-hidden rounded-lg border border-gaming-400/20 bg-gaming-900/95 backdrop-blur-sm;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.gaming-button:hover {
+  border-color: var(--button-override, #8B5CF6);
 }
 
-/* Interactive Elements */
-.interactive-scale {
-  @apply transition-transform duration-200 ease-out hover:scale-105 active:scale-95;
+.glass-card {
+  @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none p-6;
+  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+  backdrop-filter: blur(10px);
 }
 
-/* Animations */
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+.hover-glow {
+  @apply transition-all hover:shadow-lg hover:shadow-[#9b87f5]/20;
 }
 
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.retro-screen {
+  @apply relative overflow-hidden;
+  background-color: #1A1F2C;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.gameboy-container {
+  @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-sm;
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+.action-buttons-container {
+  @apply fixed flex flex-col items-center justify-center;
 }
 
-/* Responsive Design */
-@media (max-width: 640px) {
-  .gameboy-title {
-    @apply text-2xl;
+.action-button {
+  @apply w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center
+    backdrop-blur-sm touch-manipulation active:scale-95 border-2;
+  background: linear-gradient(to bottom, rgba(26,31,44,0.8), rgba(26,31,44,1));
+  box-shadow: 
+    inset 0 2px 4px rgba(255,255,255,0.1),
+    0 2px 4px rgba(0,0,0,0.2);
+}
+
+.bg-radial-gradient {
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+.clip-button {
+  @apply relative flex items-center justify-center gap-1;
+  width: 80px;  /* Increased slightly to fit text */
+  height: 60px; /* Kept same height */
+  border-radius: 30px; /* Changed to pill shape */
+  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
+  position: relative;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.clip-button::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(45deg, #00C2FF, #8B5CF6, #FF1CF7);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotate 4s linear infinite;
+}
+
+.clip-button::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.clip-button-icon {
+  position: relative;
+  z-index: 2;
+  width: 20px;  /* Slightly smaller */
+  height: 20px; /* Slightly smaller */
+  color: #fff;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+  opacity: 0.9;
+}
+
+.clip-button-text {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+  opacity: 0.9;
+}
+
+.clip-button-corners {
+  position: absolute;
+  inset: -15px;
+  z-index: 1;
+}
+
+.clip-button-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: linear-gradient(45deg, #00C2FF, #8B5CF6);
+  filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.5));
+}
+
+.clip-button-corner:nth-child(1) {
+  top: 0;
+  right: 0;
+  transform: rotate(45deg);
+}
+
+.clip-button-corner:nth-child(2) {
+  bottom: 0;
+  left: 0;
+  transform: rotate(45deg);
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
   }
-  
-  .gaming-card {
-    @apply mx-4;
+  to {
+    transform: rotate(360deg);
   }
 }
+
+.xbox-joystick {
+  @apply relative w-full h-full rounded-full backdrop-blur-sm transition-all duration-300 touch-manipulation;
+  background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+  box-shadow: 
+    inset 0 2px 15px rgba(255,255,255,0.1),
+    0 5px 15px rgba(0,0,0,0.4),
+    0 15px 30px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.xbox-joystick::before {
+  content: '';
+  @apply absolute inset-0 rounded-full;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.xbox-joystick-thumb {
+  @apply absolute inset-0 m-auto w-16 sm:w-20 h-16 sm:h-20 rounded-full transition-all duration-300 ease-out;
+  background: linear-gradient(145deg, #333333, #222222);
+  box-shadow: 
+    inset 0 2px 15px rgba(255,255,255,0.1),
+    0 5px 15px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.xbox-joystick-thumb::before {
+  content: '';
+  @apply absolute inset-0 rounded-full;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.xbox-joystick-direction {
+  @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
+}
+
+
+
