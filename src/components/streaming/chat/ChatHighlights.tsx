@@ -49,7 +49,9 @@ export function ChatHighlights({ streamId, isModerator }: ChatHighlightsProps) {
         return;
       }
 
-      setHighlights(data as ChatHighlight[]);
+      // Explicitly type the data to match our interface
+      const typedData = data as unknown as ChatHighlight[];
+      setHighlights(typedData);
     };
 
     fetchHighlights();
