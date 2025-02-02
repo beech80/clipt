@@ -1354,6 +1354,130 @@ export type Database = {
           },
         ]
       }
+      chatbot_commands: {
+        Row: {
+          command: string
+          config_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_enabled: boolean | null
+          response_template: string | null
+        }
+        Insert: {
+          command: string
+          config_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          response_template?: string | null
+        }
+        Update: {
+          command?: string
+          config_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          response_template?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_commands_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chatbot_configurations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          model_settings: Json | null
+          name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          model_settings?: Json | null
+          name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          model_settings?: Json | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_configurations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chatbot_conversations: {
+        Row: {
+          config_id: string | null
+          created_at: string | null
+          game_context: string | null
+          id: string
+          message: string
+          response: string
+          user_id: string | null
+        }
+        Insert: {
+          config_id?: string | null
+          created_at?: string | null
+          game_context?: string | null
+          id?: string
+          message: string
+          response: string
+          user_id?: string | null
+        }
+        Update: {
+          config_id?: string | null
+          created_at?: string | null
+          game_context?: string | null
+          id?: string
+          message?: string
+          response?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chatbot_conversations_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "chatbot_configurations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chatbot_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clip_editing_sessions: {
         Row: {
           clip_id: string | null
