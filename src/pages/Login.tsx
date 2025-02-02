@@ -33,18 +33,16 @@ const Login = () => {
     }
   };
 
-  console.log("Login component rendering"); // Debug log
-
   return (
-    <div className="min-h-screen w-full bg-[#1A1F2C] flex flex-col">
-      <div className="gameboy-header">
-        <h1 className="gameboy-title">CLIP</h1>
+    <div className="min-h-screen w-full bg-white flex flex-col">
+      <div className="fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-center bg-white border-b-2 border-[#9b87f5]">
+        <h1 className="text-lg font-bold tracking-widest text-[#1A1F2C]">CLIP</h1>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-4 mt-16">
-        <div className="glass-card w-full max-w-md space-y-8">
+        <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-lg border-2 border-[#9b87f5] shadow-lg">
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold text-white">Welcome Back</h1>
+            <h1 className="text-4xl font-bold text-[#1A1F2C]">Welcome Back</h1>
             <p className="text-[#9b87f5] text-lg">Sign in to your CLIP account</p>
           </div>
 
@@ -64,7 +62,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="pl-10 h-12 bg-[#1A1F2C] border-2 border-[#9b87f5]/30 focus:border-[#9b87f5] text-white text-lg w-full"
+                  className="pl-10 h-12 bg-white border-2 border-[#9b87f5] text-[#1A1F2C] text-lg w-full focus:ring-2 focus:ring-[#9b87f5]"
                 />
               </div>
               <div className="relative">
@@ -75,21 +73,21 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="pl-10 h-12 bg-[#1A1F2C] border-2 border-[#9b87f5]/30 focus:border-[#9b87f5] text-white text-lg w-full"
+                  className="pl-10 h-12 bg-white border-2 border-[#9b87f5] text-[#1A1F2C] text-lg w-full focus:ring-2 focus:ring-[#9b87f5]"
                 />
               </div>
             </div>
 
             <Button
               type="submit"
-              className="gaming-button w-full h-12 text-lg font-medium group"
+              className="w-full h-12 text-lg font-medium bg-[#9b87f5] text-white hover:bg-[#8B5CF6] transition-all duration-200"
               disabled={loading}
             >
               {loading ? (
                 "Signing in..."
               ) : (
                 <>
-                  Sign in <LogIn className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  Sign in <LogIn className="h-5 w-5 ml-2" />
                 </>
               )}
             </Button>
@@ -97,19 +95,19 @@ const Login = () => {
             <div className="mt-6 text-center space-y-3">
               <Link 
                 to="/reset-password" 
-                className="text-[#9b87f5] hover:text-[#8B5CF6] text-lg block hover-glow"
+                className="text-[#9b87f5] hover:text-[#8B5CF6] text-lg block transition-colors duration-200"
               >
                 Forgot your password?
               </Link>
               <Link 
                 to="/resend-verification" 
-                className="text-[#9b87f5] hover:text-[#8B5CF6] text-lg block hover-glow"
+                className="text-[#9b87f5] hover:text-[#8B5CF6] text-lg block transition-colors duration-200"
               >
                 Resend verification email
               </Link>
-              <p className="text-gray-400 text-lg">
+              <p className="text-[#1A1F2C] text-lg">
                 Don't have an account?{" "}
-                <Link to="/signup" className="text-[#9b87f5] hover:text-[#8B5CF6] hover-glow">
+                <Link to="/signup" className="text-[#9b87f5] hover:text-[#8B5CF6] transition-colors duration-200">
                   Sign up
                 </Link>
               </p>
