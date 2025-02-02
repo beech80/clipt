@@ -1,49 +1,21 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PostList from "@/components/PostList";
-import { Calendar, TrendingUp } from "lucide-react";
+import { SEO } from "@/components/SEO";
 import GameBoyControls from "@/components/GameBoyControls";
 
 const TopClips = () => {
-  const [timeRange, setTimeRange] = useState("today");
-  const [category, setCategory] = useState("all");
-
   return (
-    <div className="container mx-auto p-4 space-y-4">
+    <div className="container mx-auto p-6 pb-[200px] min-h-screen bg-[#1A1F2C]">
+      <SEO 
+        title="Top Clips | Gaming Platform"
+        description="View the most popular gaming clips"
+      />
       <div className="gameboy-header">
         <h1 className="gameboy-title">TOP CLIPS</h1>
       </div>
-
-      <div className="mt-20 flex justify-end gap-2">
-        <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-[150px]">
-            <Calendar className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Time Range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="week">This Week</SelectItem>
-            <SelectItem value="month">This Month</SelectItem>
-            <SelectItem value="year">This Year</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="gaming">Gaming</SelectItem>
-            <SelectItem value="irl">IRL</SelectItem>
-            <SelectItem value="esports">Esports</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
-        <PostList />
+      
+      <div className="mt-20 space-y-6">
+        <div className="gaming-cartridge p-6 bg-gaming-900/95 border border-gaming-400/30 backdrop-blur-sm rounded-lg">
+          <p className="text-gaming-400 text-center">Top clips coming soon!</p>
+        </div>
       </div>
 
       <GameBoyControls />
