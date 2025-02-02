@@ -13,7 +13,7 @@ interface ViewerChallengeCardProps {
     description: string;
     current_progress: number;
     target_value: number;
-    viewer_challenge_rewards: {
+    viewer_challenge_rewards: Array<{
       tier_level: number;
       reward_type: string;
       reward_value: {
@@ -21,7 +21,7 @@ interface ViewerChallengeCardProps {
         name?: string;
         percentage?: number;
       };
-    }[];
+    }>;
   };
   onParticipate?: () => void;
 }

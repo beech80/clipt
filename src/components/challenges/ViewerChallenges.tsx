@@ -2,6 +2,23 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ViewerChallengeCard } from './ViewerChallengeCard';
 
+interface ViewerChallenge {
+  id: string;
+  title: string;
+  description: string;
+  current_progress: number;
+  target_value: number;
+  viewer_challenge_rewards: Array<{
+    tier_level: number;
+    reward_type: string;
+    reward_value: {
+      amount?: number;
+      name?: string;
+      percentage?: number;
+    };
+  }>;
+}
+
 export function ViewerChallenges() {
   const { data: challenges, isLoading, refetch } = useQuery({
     queryKey: ['viewer-challenges'],
@@ -28,11 +45,21 @@ export function ViewerChallenges() {
       if (progressError) throw progressError;
 
       return challengesData.map(challenge => ({
-        ...challenge,
-        target_value: challenge.target_value || 100, // Use the actual target_value or default to 100
-        viewer_challenge_rewards: challenge.viewer_challenge_rewards || [],
+        id: challenge.id,
+        title: challenge.title,
+        description: challenge.description,
+        target_value: 100, // Default target value since it's not in the database
+        viewer_challenge_rewards: (challenge.viewer_challenge_rewards || []).map(reward => ({
+          tier_level: reward.tier_level,
+          reward_type: reward.reward_type,
+          reward_value: reward.reward_value as {
+            amount?: number;
+            name?: string;
+            percentage?: number;
+          }
+        })),
         current_progress: progressData?.find(p => p.challenge_id === challenge.id)?.current_progress || 0
-      }));
+      })) as ViewerChallenge[];
     }
   });
 
