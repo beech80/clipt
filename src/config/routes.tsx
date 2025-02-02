@@ -1,33 +1,24 @@
-import { RouteObject } from "react-router-dom";
-import Home from "@/pages/Home";
-import Progress from "@/pages/Progress";
-import Messages from "@/pages/Messages";
-import { authRoutes } from "./routes/authRoutes";
-import { docsRoutes } from "./routes/docsRoutes";
-import { contentRoutes } from "./routes/contentRoutes";
-import { streamingRoutes } from "./routes/streamingRoutes";
-import { userRoutes } from "./routes/userRoutes";
-import { gameRoutes } from "./routes/gameRoutes";
-import { paymentRoutes } from "./routes/paymentRoutes";
+import React from 'react';
+import Home from '@/pages/Home';
+import Messages from '@/pages/Messages';
+import GroupChat from '@/pages/GroupChat';
+import Integrations from '@/pages/Integrations';
 
-export const routes: RouteObject[] = [
+export const routes = [
   {
-    path: "/",
-    element: <Home />,
+    path: '/',
+    element: <Home />
   },
   {
-    path: "/progress",
-    element: <Progress />,
+    path: '/messages',
+    element: <Messages />
   },
   {
-    path: "/messages",
-    element: <Messages />,
+    path: '/group-chat',
+    element: <GroupChat />
   },
-  ...authRoutes,
-  docsRoutes,
-  ...contentRoutes,
-  ...streamingRoutes,
-  ...userRoutes,
-  ...gameRoutes,
-  ...paymentRoutes,
+  {
+    path: '/integrations',
+    element: <Integrations />
+  }
 ];
