@@ -41,11 +41,10 @@ export function InteractionTracker({ streamId }: InteractionTrackerProps) {
         .single();
 
       // Get unique viewers
-      const { data: viewersData, error: viewersError } = await supabase
+      const { count: uniqueViewersCount } = await supabase
         .from('stream_interactions')
-        .select('viewer_id')
-        .eq('stream_id', streamId)
-        .distinct();
+        .select('viewer_id', { count: 'exact', head: true })
+        .eq('stream_id', streamId);
 
       // Get top interactors
       const { data: topData, error: topError } = await supabase
@@ -69,10 +68,10 @@ export function InteractionTracker({ streamId }: InteractionTrackerProps) {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (!totalError && !viewersError && !topError && !recentError) {
+      if (!totalError && !topError && !recentError) {
         setStats({
           totalInteractions: totalData?.count || 0,
-          uniqueViewers: viewersData?.length || 0,
+          uniqueViewers: uniqueViewersCount || 0,
           topInteractors: topData?.map(item => ({
             viewer_id: item.viewer_id,
             interaction_count: 1,

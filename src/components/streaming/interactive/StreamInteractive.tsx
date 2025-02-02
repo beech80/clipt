@@ -4,7 +4,7 @@ import { StreamMiniGame } from './StreamMiniGame';
 import { InteractionTracker } from './InteractionTracker';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GameController, Activity } from 'lucide-react';
+import { Gamepad, Activity } from 'lucide-react';
 
 interface StreamInteractiveProps {
   streamId: string;
@@ -21,7 +21,7 @@ export function StreamInteractive({ streamId, isStreamer = false }: StreamIntera
       <Tabs defaultValue="game" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="game" className="flex items-center gap-2">
-            <GameController className="h-4 w-4" />
+            <Gamepad className="h-4 w-4" />
             Mini-Games
           </TabsTrigger>
           {isStreamer && (

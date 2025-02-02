@@ -18,12 +18,14 @@ interface Question {
   correctAnswer?: string;
 }
 
+interface Quiz {
+  id: string;
+  title: string;
+  questions: Question[];
+}
+
 export function StreamMiniGame({ streamId, userId }: StreamMiniGameProps) {
-  const [activeQuiz, setActiveQuiz] = useState<{
-    id: string;
-    title: string;
-    questions: Question[];
-  } | null>(null);
+  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [score, setScore] = useState(0);
@@ -44,7 +46,15 @@ export function StreamMiniGame({ streamId, userId }: StreamMiniGameProps) {
       }
 
       if (data) {
-        setActiveQuiz(data);
+        const parsedQuestions = typeof data.questions === 'string' 
+          ? JSON.parse(data.questions) 
+          : data.questions;
+
+        setActiveQuiz({
+          id: data.id,
+          title: data.title,
+          questions: parsedQuestions
+        });
       }
     };
 
