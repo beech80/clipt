@@ -34,13 +34,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="flex min-h-screen flex-col bg-background">
       <div className="gameboy-header">
         <h1 className="gameboy-title">CLIP</h1>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6 glass-card p-8">
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-6 glass-card">
           <div className="text-center space-y-2">
             <div className="flex justify-center mb-4">
               <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
@@ -103,7 +103,7 @@ const Login = () => {
             </div>
           </form>
         </div>
-      </div>
+      </main>
       <GameBoyControls />
     </div>
   );
