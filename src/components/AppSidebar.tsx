@@ -9,7 +9,7 @@ import {
 export function AppSidebar() {
   return (
     <Sidebar>
-      <SidebarTrigger asChild>
+      <SidebarTrigger>
         <button className="p-2 hover:bg-accent rounded-md">
           <Menu className="h-6 w-6" />
         </button>
