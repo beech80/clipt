@@ -30,4 +30,4 @@ export const MainContent = () => {
       </section>
     </motion.div>
   );
-};
+}
