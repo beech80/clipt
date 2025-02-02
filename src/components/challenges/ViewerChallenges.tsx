@@ -29,9 +29,9 @@ export function ViewerChallenges() {
 
       return challengesData.map(challenge => ({
         ...challenge,
-        target_value: 100, // Default target value
-        rewards: challenge.viewer_challenge_rewards,
-        current_progress: progressData.find(p => p.challenge_id === challenge.id)?.current_progress || 0
+        target_value: challenge.target_value || 100, // Use the actual target_value or default to 100
+        viewer_challenge_rewards: challenge.viewer_challenge_rewards || [],
+        current_progress: progressData?.find(p => p.challenge_id === challenge.id)?.current_progress || 0
       }));
     }
   });

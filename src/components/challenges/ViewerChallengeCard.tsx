@@ -13,10 +13,14 @@ interface ViewerChallengeCardProps {
     description: string;
     current_progress: number;
     target_value: number;
-    rewards: {
+    viewer_challenge_rewards: {
       tier_level: number;
       reward_type: string;
-      reward_value: any;
+      reward_value: {
+        amount?: number;
+        name?: string;
+        percentage?: number;
+      };
     }[];
   };
   onParticipate?: () => void;
@@ -73,15 +77,15 @@ export function ViewerChallengeCard({ challenge, onParticipate }: ViewerChalleng
           Rewards
         </h4>
         <div className="grid gap-2">
-          {challenge.rewards.map((reward, index) => (
+          {challenge.viewer_challenge_rewards.map((reward, index) => (
             <div key={index} className="flex items-center gap-2 text-sm">
               <Star className="h-4 w-4 text-yellow-500" />
               <span>Tier {reward.tier_level}:</span>
               <span className="text-muted-foreground">
-                {reward.reward_type === 'points' && `${reward.reward_value.amount} points`}
-                {reward.reward_type === 'badge' && `${reward.reward_value.name} badge`}
-                {reward.reward_type === 'subscription_discount' && `${reward.reward_value.percentage}% subscription discount`}
-                {reward.reward_type === 'merchandise_discount' && `${reward.reward_value.percentage}% merchandise discount`}
+                {reward.reward_type === 'points' && reward.reward_value.amount && `${reward.reward_value.amount} points`}
+                {reward.reward_type === 'badge' && reward.reward_value.name && `${reward.reward_value.name} badge`}
+                {reward.reward_type === 'subscription_discount' && reward.reward_value.percentage && `${reward.reward_value.percentage}% subscription discount`}
+                {reward.reward_type === 'merchandise_discount' && reward.reward_value.percentage && `${reward.reward_value.percentage}% merchandise discount`}
               </span>
             </div>
           ))}
