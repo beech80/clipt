@@ -37,9 +37,16 @@ class OfflineStorage {
     await this.db!.put('offlineActions', store);
     
     // Register for background sync if available
-    if ('serviceWorker' in navigator && 'sync' in navigator.serviceWorker) {
+    if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.ready;
-      await registration.sync.register('sync-actions');
+      // Check if sync is supported
+      if ('sync' in registration) {
+        try {
+          await (registration as any).sync.register('sync-actions');
+        } catch (err) {
+          console.error('Background sync registration failed:', err);
+        }
+      }
     }
   }
 
