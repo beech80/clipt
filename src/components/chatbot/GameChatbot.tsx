@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Send, GameController, Bot } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Send, Gamepad2, Bot } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -54,7 +54,7 @@ export function GameChatbot() {
       <ScrollArea className="h-[400px] pr-4">
         {conversation.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gaming-400 space-y-4">
-            <GameController className="w-12 h-12" />
+            <Gamepad2 className="w-12 h-12" />
             <p className="text-center">
               Ask me anything about games! I can help with strategies, lore, achievements, and more.
             </p>
