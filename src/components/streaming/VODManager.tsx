@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { Video, Trash2, Scissors, Clock, BarChart2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BatchProcessingManager } from './batch/BatchProcessingManager';
 
 interface VODManagerProps {
   streamId: string;
@@ -167,11 +168,12 @@ export const VODManager = ({ streamId }: VODManagerProps) => {
         <TabsList>
           <TabsTrigger value="recordings">Recordings</TabsTrigger>
           <TabsTrigger value="chapters">Chapters</TabsTrigger>
+          <TabsTrigger value="batch">Batch Processing</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="recordings" className="space-y-4">
-          {recordings.map((recording) => (
+          {recordings?.map((recording) => (
             <Card key={recording.id} className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -228,7 +230,7 @@ export const VODManager = ({ streamId }: VODManagerProps) => {
             </Card>
           ))}
 
-          {recordings.length === 0 && !isLoading && (
+          {recordings?.length === 0 && (
             <div className="text-center py-8">
               <Video className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">No recordings available</p>
@@ -288,6 +290,10 @@ export const VODManager = ({ streamId }: VODManagerProps) => {
               <p className="text-muted-foreground">Select a recording to manage chapters</p>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="batch" className="space-y-4">
+          <BatchProcessingManager />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">

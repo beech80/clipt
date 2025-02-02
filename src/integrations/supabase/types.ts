@@ -490,6 +490,97 @@ export type Database = {
         }
         Relationships: []
       }
+      batch_processing_items: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          file_path: string
+          id: string
+          job_id: string | null
+          output_path: string | null
+          processing_time: number | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          file_path: string
+          id?: string
+          job_id?: string | null
+          output_path?: string | null
+          processing_time?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          file_path?: string
+          id?: string
+          job_id?: string | null
+          output_path?: string | null
+          processing_time?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_processing_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "batch_processing_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      batch_processing_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          job_type: string
+          processed_items: number
+          settings: Json | null
+          status: string
+          total_items: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          job_type: string
+          processed_items?: number
+          settings?: Json | null
+          status?: string
+          total_items?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          job_type?: string
+          processed_items?: number
+          settings?: Json | null
+          status?: string
+          total_items?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_processing_jobs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocked_ips: {
         Row: {
           blocked_at: string | null
