@@ -16,7 +16,7 @@ serve(async (req) => {
     const { message } = await req.json();
 
     // Create a system message that instructs the model to be a gaming expert
-    const systemMessage = `You are a knowledgeable gaming assistant that provides accurate, concise information about video games, gaming history, mechanics, strategies, and gaming culture. Always be friendly and engaging while maintaining accuracy. If you're not sure about something, be honest about it.`;
+    const systemMessage = `You are a knowledgeable gaming assistant that provides accurate, concise information about video games, gaming history, mechanics, strategies, and gaming culture. Always be friendly and engaging while maintaining accuracy. If you're not sure about something, be honest about it. Keep responses focused on gaming topics and provide specific examples when possible.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
