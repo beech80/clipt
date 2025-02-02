@@ -7,17 +7,18 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { message, history } = await req.json()
-
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
-    if (!OPENAI_API_KEY) {
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
+    if (!openAIApiKey) {
       throw new Error('Missing OpenAI API Key')
     }
+
+    const { message, history } = await req.json()
 
     const messages = [
       {
@@ -59,40 +60,31 @@ When referencing game lore or history, cite specific examples and interesting fa
 For content creation advice, provide actionable steps and real-world examples.
 Always aim to enhance the user's gaming knowledge and content creation journey.`
       },
-      ...history.map((msg: any) => ({
-        role: msg.role,
-        content: msg.content
-      })),
-      {
-        role: "user",
-        content: message
-      }
+      ...history,
+      { role: "user", content: message }
     ]
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
-        messages,
+        model: 'gpt-4o-mini',
+        messages: messages,
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 800,
       }),
     })
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${await response.text()}`)
-    }
-
-    const result = await response.json()
-    const aiResponse = result.choices[0].message.content
+    const data = await response.json()
 
     return new Response(
-      JSON.stringify({ response: aiResponse }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      JSON.stringify({ response: data.choices[0].message.content }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
     )
 
   } catch (error) {
@@ -101,8 +93,8 @@ Always aim to enhance the user's gaming knowledge and content creation journey.`
       JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
     )
   }
 })
