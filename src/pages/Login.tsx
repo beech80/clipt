@@ -34,65 +34,73 @@ const Login = () => {
   };
 
   return (
-    <div className="pb-[180px] sm:pb-[200px]">
-      <div className="mx-auto max-w-md space-y-6 pt-12">
-        <div className="text-center space-y-2">
-          <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
-              <Gamepad2 className="h-6 w-6 text-gaming-400" />
+    <div className="min-h-screen bg-background flex flex-col">
+      <div className="gameboy-header">
+        <h1 className="gameboy-title">CLIP</h1>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-6">
+          <div className="text-center space-y-2">
+            <div className="flex justify-center mb-4">
+              <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
+                <Gamepad2 className="h-6 w-6 text-gaming-400" />
+              </div>
             </div>
+            <h1 className="text-4xl font-bold text-foreground">Welcome Back</h1>
+            <p className="text-muted-foreground">Sign in to your account</p>
           </div>
-          <h1 className="text-4xl font-bold">Welcome Back</h1>
-          <p className="text-muted-foreground">Sign in to your account</p>
-        </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </Button>
-          <div className="mt-4 text-center space-y-2">
-            <Link to="/reset-password" className="text-sm text-primary hover:underline block">
-              Forgot your password?
-            </Link>
-            <Link to="/resend-verification" className="text-sm text-primary hover:underline block">
-              Resend verification email
-            </Link>
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
-                Sign up
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="bg-background border-gaming-400/30 focus:border-gaming-400"
+              />
+            </div>
+            <div>
+              <Input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="bg-background border-gaming-400/30 focus:border-gaming-400"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-gaming-400 hover:bg-gaming-500 text-white"
+              disabled={loading}
+            >
+              {loading ? "Signing in..." : "Sign in"}
+            </Button>
+            <div className="mt-4 text-center space-y-2">
+              <Link to="/reset-password" className="text-sm text-primary hover:underline block">
+                Forgot your password?
               </Link>
-            </p>
-          </div>
-        </form>
+              <Link to="/resend-verification" className="text-sm text-primary hover:underline block">
+                Resend verification email
+              </Link>
+              <p className="text-sm text-muted-foreground">
+                Don't have an account?{" "}
+                <Link to="/signup" className="text-primary hover:underline">
+                  Sign up
+                </Link>
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
       <GameBoyControls />
     </div>

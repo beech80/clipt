@@ -31,9 +31,14 @@
   * {
     @apply border-border touch-manipulation;
   }
+  
+  html, body {
+    @apply min-h-screen;
+  }
+  
   body {
-    @apply text-white overscroll-none;
-    background-color: var(--background-override, #1A1F2C);
+    @apply bg-background text-foreground antialiased overscroll-none;
+    background-color: hsl(240 27% 8%);
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
