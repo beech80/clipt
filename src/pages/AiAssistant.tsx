@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot } from 'lucide-react';
+import { Send, Bot, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -39,6 +40,7 @@ export default function AiAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -78,15 +80,26 @@ export default function AiAssistant() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-black">
-      {/* Header */}
-      <div className="flex items-center gap-2 p-4 border-b border-gaming-400 bg-gaming-900">
-        <Bot className="w-6 h-6 text-gaming-400" />
-        <h1 className="text-xl font-bold text-gaming-100">Gaming AI Assistant</h1>
+    <div className="flex flex-col h-screen bg-[#1A1F2C]">
+      {/* Header with Back Button */}
+      <div className="gameboy-header flex items-center justify-between px-4">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => navigate('/')}
+          className="text-[#1A1F2C] hover:text-[#1A1F2C]/80"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
+        <div className="flex items-center gap-2">
+          <Bot className="w-6 h-6 text-[#1A1F2C]" />
+          <h1 className="gameboy-title">Gaming AI Assistant</h1>
+        </div>
+        <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4 gaming-cartridge mx-4 my-6">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message, index) => (
             <div
@@ -96,8 +109,8 @@ export default function AiAssistant() {
               <div
                 className={`max-w-[80%] p-4 rounded-lg ${
                   message.role === 'assistant'
-                    ? 'bg-gaming-800 text-gaming-100 border border-gaming-700'
-                    : 'bg-gaming-400 text-black'
+                    ? 'gaming-card bg-gaming-800 text-gaming-100'
+                    : 'gaming-card bg-gaming-400 text-black'
                 }`}
               >
                 <p className="whitespace-pre-wrap">{message.content}</p>
@@ -109,19 +122,19 @@ export default function AiAssistant() {
       </ScrollArea>
 
       {/* Input Area */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gaming-400 bg-gaming-900">
+      <form onSubmit={handleSubmit} className="p-4 gameboy-container">
         <div className="max-w-4xl mx-auto flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything about games or growing as a content creator..."
-            className="flex-1 bg-gaming-800 border-gaming-400 text-white placeholder:text-gaming-400"
+            className="flex-1 gaming-card bg-gaming-800 border-gaming-400 text-white placeholder:text-gaming-400"
             disabled={isLoading}
           />
           <Button 
             type="submit" 
             disabled={isLoading}
-            className="bg-gaming-400 hover:bg-gaming-500 text-black"
+            className="gaming-button bg-gaming-400 hover:bg-gaming-500 text-black"
           >
             <Send className="w-4 h-4" />
           </Button>
