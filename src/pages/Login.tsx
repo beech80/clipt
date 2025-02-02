@@ -33,8 +33,10 @@ const Login = () => {
     }
   };
 
+  console.log("Login component rendering"); // Debug log
+
   return (
-    <div className="fixed inset-0 min-h-screen w-full bg-[#1A1F2C] flex flex-col">
+    <div className="min-h-screen w-full bg-[#1A1F2C] flex flex-col">
       <div className="fixed top-0 left-0 right-0 h-16 bg-[#9b87f5] border-b-4 border-[#7E69AB] shadow-lg z-50">
         <div className="h-full flex items-center justify-center">
           <h1 className="text-2xl font-bold tracking-widest text-[#1A1F2C]">CLIP</h1>

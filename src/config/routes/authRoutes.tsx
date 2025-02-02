@@ -8,27 +8,27 @@ import Verification from "@/pages/Verification";
 
 export const authRoutes: RouteObject[] = [
   {
-    path: "login",
+    path: "/login",
     element: <Login />,
   },
   {
-    path: "signup",
+    path: "/signup",
     element: <Signup />,
   },
   {
-    path: "resend-verification",
+    path: "/resend-verification",
     element: <ResendVerification />,
   },
   {
-    path: "reset-password",
+    path: "/reset-password",
     element: <ResetPassword />,
   },
   {
-    path: "update-password",
+    path: "/update-password",
     element: <UpdatePassword />,
   },
   {
-    path: "verification",
+    path: "/verification",
     element: <Verification />,
   },
 ];
