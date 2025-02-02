@@ -1885,6 +1885,44 @@ export type Database = {
           },
         ]
       }
+      engagement_trends: {
+        Row: {
+          created_at: string | null
+          id: string
+          metrics: Json
+          period_end: string
+          period_start: string
+          trend_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metrics: Json
+          period_end: string
+          period_start: string
+          trend_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metrics?: Json
+          period_end?: string
+          period_start?: string
+          trend_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_trends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       error_reports: {
         Row: {
           browser_info: Json | null
@@ -4124,6 +4162,47 @@ export type Database = {
           },
         ]
       }
+      revenue_forecasts: {
+        Row: {
+          confidence_interval: Json | null
+          created_at: string | null
+          forecast_model_version: string | null
+          forecast_period: string
+          id: string
+          metadata: Json | null
+          predicted_amount: number
+          user_id: string | null
+        }
+        Insert: {
+          confidence_interval?: Json | null
+          created_at?: string | null
+          forecast_model_version?: string | null
+          forecast_period: string
+          id?: string
+          metadata?: Json | null
+          predicted_amount: number
+          user_id?: string | null
+        }
+        Update: {
+          confidence_interval?: Json | null
+          created_at?: string | null
+          forecast_model_version?: string | null
+          forecast_period?: string
+          id?: string
+          metadata?: Json | null
+          predicted_amount?: number
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_forecasts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scene_sources: {
         Row: {
           created_at: string
@@ -6290,6 +6369,48 @@ export type Database = {
           },
         ]
       }
+      streamer_comparisons: {
+        Row: {
+          base_streamer_id: string | null
+          compared_streamer_id: string | null
+          comparison_date: string | null
+          id: string
+          metrics: Json
+          similarity_score: number | null
+        }
+        Insert: {
+          base_streamer_id?: string | null
+          compared_streamer_id?: string | null
+          comparison_date?: string | null
+          id?: string
+          metrics: Json
+          similarity_score?: number | null
+        }
+        Update: {
+          base_streamer_id?: string | null
+          compared_streamer_id?: string | null
+          comparison_date?: string | null
+          id?: string
+          metrics?: Json
+          similarity_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "streamer_comparisons_base_streamer_id_fkey"
+            columns: ["base_streamer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "streamer_comparisons_compared_streamer_id_fkey"
+            columns: ["compared_streamer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       streaming_config: {
         Row: {
           abr_enabled: boolean | null
@@ -7795,6 +7916,13 @@ export type Database = {
           xp: number
         }
         Returns: number
+      }
+      calculate_revenue_forecast: {
+        Args: {
+          user_id_param: string
+          period_param: string
+        }
+        Returns: Json
       }
       calculate_stream_revenue_metrics: {
         Args: {
