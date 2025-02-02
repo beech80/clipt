@@ -782,6 +782,98 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_point_rewards: {
+        Row: {
+          channel_id: string
+          cooldown_minutes: number | null
+          cost: number
+          created_at: string | null
+          description: string | null
+          id: string
+          is_enabled: boolean | null
+          max_per_stream: number | null
+          max_per_user_per_stream: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          channel_id: string
+          cooldown_minutes?: number | null
+          cost: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          max_per_stream?: number | null
+          max_per_user_per_stream?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          channel_id?: string
+          cooldown_minutes?: number | null
+          cost?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          max_per_stream?: number | null
+          max_per_user_per_stream?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_point_rewards_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_points: {
+        Row: {
+          channel_id: string
+          created_at: string | null
+          id: string
+          points: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string | null
+          id?: string
+          points?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string | null
+          id?: string
+          points?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_points_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_points_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_analytics: {
         Row: {
           average_message_length: number | null
@@ -956,6 +1048,82 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_highlights: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          message_id: string
+          pinned: boolean | null
+          pinned_at: string | null
+          pinned_by: string | null
+          stream_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          message_id: string
+          pinned?: boolean | null
+          pinned_at?: string | null
+          pinned_by?: string | null
+          stream_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          message_id?: string
+          pinned?: boolean | null
+          pinned_at?: string | null
+          pinned_by?: string | null
+          stream_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_highlights_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_highlights_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "stream_chat"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_highlights_pinned_by_fkey"
+            columns: ["pinned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_highlights_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "chat_highlights_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_highlights_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
             referencedColumns: ["id"]
           },
         ]
@@ -4450,6 +4618,67 @@ export type Database = {
           },
         ]
       }
+      sponsored_streams: {
+        Row: {
+          created_at: string | null
+          end_time: string | null
+          id: string
+          sponsor_link: string | null
+          sponsor_logo_url: string | null
+          sponsor_name: string
+          sponsorship_terms: string | null
+          start_time: string | null
+          stream_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          sponsor_link?: string | null
+          sponsor_logo_url?: string | null
+          sponsor_name: string
+          sponsorship_terms?: string | null
+          start_time?: string | null
+          stream_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string | null
+          id?: string
+          sponsor_link?: string | null
+          sponsor_logo_url?: string | null
+          sponsor_name?: string
+          sponsorship_terms?: string | null
+          start_time?: string | null
+          stream_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_streams_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "sponsored_streams_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_streams_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       squad_members: {
         Row: {
           joined_at: string | null
@@ -6820,6 +7049,41 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_tier_benefits: {
+        Row: {
+          benefit_description: string | null
+          benefit_name: string
+          benefit_type: string
+          created_at: string | null
+          id: string
+          tier_id: string
+        }
+        Insert: {
+          benefit_description?: string | null
+          benefit_name: string
+          benefit_type: string
+          created_at?: string | null
+          id?: string
+          tier_id: string
+        }
+        Update: {
+          benefit_description?: string | null
+          benefit_name?: string
+          benefit_type?: string
+          created_at?: string | null
+          id?: string
+          tier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_tier_benefits_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_tiers: {
         Row: {
           created_at: string
@@ -7613,6 +7877,56 @@ export type Database = {
           {
             foreignKeyName: "verification_requests_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      viewer_challenges: {
+        Row: {
+          channel_id: string
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          reward_amount: number
+          reward_type: string
+          start_date: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          channel_id: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          reward_amount: number
+          reward_type: string
+          start_date: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          channel_id?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          reward_amount?: number
+          reward_type?: string
+          start_date?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewer_challenges_channel_id_fkey"
+            columns: ["channel_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
