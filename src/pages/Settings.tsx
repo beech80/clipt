@@ -20,6 +20,11 @@ import {
   Shield,
   UserCog,
   ArrowLeft,
+  Settings,
+  Layout,
+  MessageSquare,
+  Globe,
+  Video
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Profile, CustomTheme, DatabaseProfile } from "@/types/profile";
@@ -127,8 +132,9 @@ const Settings = () => {
 
       {/* Settings Grid */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Left Column */}
+        {/* Left Column - Account & Security */}
         <div className="space-y-6">
+          {/* Account Settings */}
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-6">
               <UserCog className="w-5 h-5 text-purple-500" />
@@ -137,9 +143,9 @@ const Settings = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Notifications</Label>
+                  <Label>Email Notifications</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive notifications about activity
+                    Receive email notifications about activity
                   </p>
                 </div>
                 <Switch
@@ -162,17 +168,19 @@ const Settings = () => {
             </div>
           </Card>
 
+          {/* Security Settings */}
           <TwoFactorSettings />
           <DataPrivacySettings />
         </div>
 
-        {/* Right Column */}
+        {/* Right Column - Appearance & Accessibility */}
         <div className="space-y-6">
+          {/* Appearance Settings */}
           {profile && (
             <Card className="p-6">
               <div className="flex items-center gap-2 mb-6">
                 <Paintbrush className="w-5 h-5 text-purple-500" />
-                <h2 className="text-xl font-semibold">Theme Customization</h2>
+                <h2 className="text-xl font-semibold">Appearance</h2>
               </div>
               <ThemeSelector 
                 userId={profile.id} 
@@ -181,8 +189,10 @@ const Settings = () => {
             </Card>
           )}
 
+          {/* Accessibility Settings */}
           <AccessibilitySettings />
           
+          {/* Streaming Settings */}
           {user && <StreamSettings userId={user.id} />}
         </div>
       </div>
