@@ -19,6 +19,7 @@ import { extractMentions, createMention } from "@/utils/mentionUtils";
 import { createPost } from "@/services/postService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/lib/supabase";
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -41,7 +42,28 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
 
-  const validateForm = () => {
+  const checkContentSafety = async (text: string): Promise<boolean> => {
+    try {
+      const { data: matches, error } = await supabase.rpc('check_content_against_filters', {
+        content_text: text
+      });
+
+      if (error) throw error;
+
+      if (matches && matches.length > 0) {
+        const violations = matches.map((m: any) => m.category).join(', ');
+        setError(`Content contains inappropriate material (${violations}). Please revise.`);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error checking content:', error);
+      return true; // Allow post if check fails
+    }
+  };
+
+  const validateForm = async () => {
     if (!user) {
       setError("Please login to create a post");
       return false;
@@ -57,6 +79,11 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
       return false;
     }
 
+    // Check content safety
+    if (content.trim() && !(await checkContentSafety(content))) {
+      return false;
+    }
+
     setError(null);
     return true;
   };
@@ -64,7 +91,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!(await validateForm())) {
       return;
     }
 
