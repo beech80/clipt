@@ -7149,6 +7149,36 @@ export type Database = {
         }
         Relationships: []
       }
+      streaming_guides: {
+        Row: {
+          content: string
+          created_at: string | null
+          guide_type: string
+          id: string
+          order_index: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          guide_type: string
+          id?: string
+          order_index: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          guide_type?: string
+          id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       streaming_platforms: {
         Row: {
           created_at: string | null

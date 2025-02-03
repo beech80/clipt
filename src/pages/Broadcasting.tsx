@@ -4,6 +4,7 @@ import { BroadcastPresetForm } from "@/components/broadcasting/BroadcastPresetFo
 import { Card } from "@/components/ui/card";
 import { BackButton } from "@/components/ui/back-button";
 import GameBoyControls from "@/components/GameBoyControls";
+import { OBSSetupGuide } from "@/components/streaming/setup/OBSSetupGuide";
 
 const Broadcasting = () => {
   const { user } = useAuth();
@@ -28,6 +29,8 @@ const Broadcasting = () => {
         <h1 className="text-2xl font-bold">Broadcasting Studio</h1>
       </div>
 
+      <OBSSetupGuide />
+      
       <BroadcastPresetForm userId={user.id} />
       
       <GameBoyControls />
