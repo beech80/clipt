@@ -5,8 +5,11 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
 import { MessagesProvider } from '@/contexts/MessagesContext';
 import { routes } from '@/config/routes';
+import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
 
 function App() {
+  usePerformanceMonitoring('App');
+
   return (
     <ErrorBoundary>
       <React.Suspense fallback={<div>Loading...</div>}>

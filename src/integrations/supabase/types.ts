@@ -2525,6 +2525,39 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_votes: {
+        Row: {
+          created_at: string | null
+          feedback_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_votes_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "user_feedback"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string
@@ -8032,6 +8065,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_feedback: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          id: string
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+          votes: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+          votes?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+          votes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_levels: {
         Row: {

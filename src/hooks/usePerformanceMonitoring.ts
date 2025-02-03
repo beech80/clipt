@@ -127,7 +127,6 @@ export function usePerformanceMonitoring(componentName: string) {
     };
 
     return () => {
-      // Clean up observers and intervals
       clearInterval(memoryInterval);
       window.fetch = originalFetch;
       
