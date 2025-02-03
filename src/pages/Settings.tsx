@@ -20,7 +20,7 @@ import {
   Shield,
   UserCog,
   ArrowLeft,
-  Settings,
+  Settings as SettingsIcon,
   Layout,
   MessageSquare,
   Globe,
