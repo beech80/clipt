@@ -8,24 +8,30 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { routes } from '@/config/routes';
 import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
 
-function App() {
+function AppContent() {
   usePerformanceMonitoring('App');
+  
+  return (
+    <Routes>
+      {routes.map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={route.element}
+        />
+      ))}
+    </Routes>
+  );
+}
 
+function App() {
   return (
     <ErrorBoundary>
       <React.Suspense fallback={<div>Loading...</div>}>
         <AuthProvider>
           <ReportDialogProvider>
             <MessagesProvider>
-              <Routes>
-                {routes.map((route) => (
-                  <Route
-                    key={route.path}
-                    path={route.path}
-                    element={route.element}
-                  />
-                ))}
-              </Routes>
+              <AppContent />
               <Toaster position="top-center" />
             </MessagesProvider>
           </ReportDialogProvider>
