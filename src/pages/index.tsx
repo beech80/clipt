@@ -1,19 +1,28 @@
-import { OverlayDesigner } from "@/components/streaming/overlay/OverlayDesigner";
-import { SceneTransitions } from "@/components/streaming/transitions/SceneTransitions";
-import { AlertCreator } from "@/components/streaming/alerts/AlertCreator";
+import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { StreamContainer } from '@/components/streaming/StreamContainer';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export default function Home() {
-  return (
-    <div className="container mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold mb-6">Stream Tools</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <OverlayDesigner />
-        <div className="space-y-6">
-          <SceneTransitions />
-          <AlertCreator />
-        </div>
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
+        <h1 className="text-2xl font-bold">Welcome to Clipt</h1>
+        <p className="text-muted-foreground">Please sign in to start streaming</p>
+        <Button onClick={() => navigate('/login')}>
+          Sign In
+        </Button>
       </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-6">
+      <StreamContainer />
     </div>
   );
 }

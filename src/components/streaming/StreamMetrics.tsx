@@ -1,20 +1,24 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Users, Clock } from 'lucide-react';
 
 interface StreamMetricsProps {
-  bitrate: number;
-  fps: number;
-  className?: string;
+  viewerCount: number;
+  duration?: string;
 }
 
-export const StreamMetrics = ({ bitrate, fps, className }: StreamMetricsProps) => {
-  if (bitrate === 0) return null;
-  
+export function StreamMetrics({ viewerCount, duration }: StreamMetricsProps) {
   return (
-    <Card className={className}>
-      <CardContent className="p-2 text-sm">
-        {(bitrate / 1000).toFixed(1)} Mbps | {fps} FPS
-      </CardContent>
-    </Card>
+    <div className="flex items-center space-x-4 text-sm">
+      <div className="flex items-center space-x-1">
+        <Users className="h-4 w-4" />
+        <span>{viewerCount}</span>
+      </div>
+      {duration && (
+        <div className="flex items-center space-x-1">
+          <Clock className="h-4 w-4" />
+          <span>{duration}</span>
+        </div>
+      )}
+    </div>
   );
-};
+}
