@@ -16,12 +16,16 @@ interface StreamControlsProps {
     streamKey: string | null; 
     streamUrl: string | null 
   }) => void;
+  stream?: any;
+  streamConfig?: any;
 }
 
 export const StreamControls = ({ 
   userId, 
   isLive = false, 
-  onStreamUpdate 
+  onStreamUpdate,
+  stream,
+  streamConfig 
 }: StreamControlsProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState("");
@@ -29,25 +33,6 @@ export const StreamControls = ({
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  const { data: stream, isLoading: isStreamLoading } = useQuery({
-    queryKey: ['stream', userId],
-    queryFn: async () => {
-      if (!userId) return null;
-      const { data, error } = await supabase
-        .from('streams')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error) {
-        setError("Failed to load stream data");
-        throw error;
-      }
-      return data;
-    },
-    enabled: !!userId
-  });
 
   const { data: categories } = useQuery({
     queryKey: ['streamCategories'],
@@ -139,7 +124,7 @@ export const StreamControls = ({
     }
   };
 
-  if (isStreamLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin" />

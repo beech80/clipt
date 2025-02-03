@@ -39,8 +39,8 @@ export function StreamMetricsSection({
 
       <Card className="p-4">
         <StreamMetrics 
-          bitrate={streamMetrics.bitrate} 
-          fps={streamMetrics.fps} 
+          viewerCount={viewerCount}
+          duration="00:00:00"
         />
       </Card>
     </>

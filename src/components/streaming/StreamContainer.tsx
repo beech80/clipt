@@ -38,6 +38,11 @@ export function StreamContainer() {
     }
   });
 
+  const handleStreamUpdate = (data: { isLive: boolean; streamKey: string | null; streamUrl: string | null }) => {
+    // Handle stream updates
+    console.log('Stream updated:', data);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[600px]">
@@ -59,8 +64,11 @@ export function StreamContainer() {
         
         <Card className="p-4">
           <StreamControls 
-            streamConfig={streamConfig}
+            userId={stream?.user_id}
+            isLive={stream?.is_live}
             stream={stream}
+            streamConfig={streamConfig}
+            onStreamUpdate={handleStreamUpdate}
           />
         </Card>
       </div>
