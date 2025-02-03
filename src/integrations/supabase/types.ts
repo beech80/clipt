@@ -1923,6 +1923,7 @@ export type Database = {
       }
       content_filters: {
         Row: {
+          action_type: string | null
           category: string
           context_rules: Json | null
           created_at: string
@@ -1932,11 +1933,13 @@ export type Database = {
           is_active: boolean | null
           is_regex: boolean | null
           language: string | null
+          priority: number | null
           replacement_text: string | null
           severity_level: string
           word: string
         }
         Insert: {
+          action_type?: string | null
           category: string
           context_rules?: Json | null
           created_at?: string
@@ -1946,11 +1949,13 @@ export type Database = {
           is_active?: boolean | null
           is_regex?: boolean | null
           language?: string | null
+          priority?: number | null
           replacement_text?: string | null
           severity_level: string
           word: string
         }
         Update: {
+          action_type?: string | null
           category?: string
           context_rules?: Json | null
           created_at?: string
@@ -1960,6 +1965,7 @@ export type Database = {
           is_active?: boolean | null
           is_regex?: boolean | null
           language?: string | null
+          priority?: number | null
           replacement_text?: string | null
           severity_level?: string
           word?: string
@@ -2078,6 +2084,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_scores: {
+        Row: {
+          adult_score: number | null
+          content_id: string
+          content_type: string
+          created_at: string | null
+          id: string
+          spam_score: number | null
+          threat_score: number | null
+          toxicity_score: number | null
+        }
+        Insert: {
+          adult_score?: number | null
+          content_id: string
+          content_type: string
+          created_at?: string | null
+          id?: string
+          spam_score?: number | null
+          threat_score?: number | null
+          toxicity_score?: number | null
+        }
+        Update: {
+          adult_score?: number | null
+          content_id?: string
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          spam_score?: number | null
+          threat_score?: number | null
+          toxicity_score?: number | null
+        }
+        Relationships: []
       }
       content_similarities: {
         Row: {
@@ -8929,8 +8968,8 @@ export type Database = {
           matched_word: string
           category: string
           severity_level: string
-          filter_mode: string
-          replacement_text: string
+          action_type: string
+          priority: number
           context_match: boolean
         }[]
       }
