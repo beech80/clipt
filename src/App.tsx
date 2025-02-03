@@ -1,34 +1,20 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import ErrorBoundary from '@/components/ErrorBoundary';
-import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
-import { MessagesProvider } from '@/contexts/MessagesContext';
-import { routes } from '@/config/routes';
-import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/query-client';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { Toaster } from '@/components/ui/toaster';
+import Home from '@/pages/index';
 
 function App() {
-  usePerformanceMonitoring('App');
-
   return (
-    <ErrorBoundary>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <ReportDialogProvider>
-          <MessagesProvider>
-            <Routes>
-              {routes.map((route) => (
-                <Route
-                  key={route.path}
-                  path={route.path}
-                  element={route.element}
-                />
-              ))}
-            </Routes>
-            <Toaster position="top-center" />
-          </MessagesProvider>
-        </ReportDialogProvider>
-      </React.Suspense>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
+          <Home />
+        </Router>
+        <Toaster />
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
