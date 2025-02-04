@@ -5,15 +5,15 @@ import Esports from "@/pages/Esports";
 
 export const gameRoutes: RouteObject[] = [
   {
-    path: "discover",
+    path: "/discover",
     element: <Discover />,
   },
   {
-    path: "game/:id/clips",
+    path: "/game/:id/clips",
     element: <GameClips />,
   },
   {
-    path: "esports",
+    path: "/esports",
     element: <Esports />,
   },
 ];
