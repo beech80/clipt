@@ -3,8 +3,10 @@ import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { IGDBGame } from "@/services/igdbService";
+import { useNavigate } from "react-router-dom";
 
 export function TopGames() {
+  const navigate = useNavigate();
   const { data: topGames, isLoading } = useQuery({
     queryKey: ['top-games'],
     queryFn: async () => {
@@ -25,6 +27,11 @@ export function TopGames() {
     }
   });
 
+  const handleGameClick = (gameId: number) => {
+    console.log("Navigating to game clips:", gameId);
+    navigate(`/game/${gameId}/clips`);
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -42,6 +49,7 @@ export function TopGames() {
           <div
             key={game.id}
             className="relative flex-none w-[250px] cursor-pointer rounded-lg overflow-hidden group"
+            onClick={() => handleGameClick(game.id)}
           >
             <img
               src={game.cover?.url?.replace('t_thumb', 't_cover_big') || '/placeholder.svg'}
@@ -49,7 +57,9 @@ export function TopGames() {
               className="w-full h-32 object-cover transition-transform group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
-              <h3 className="font-semibold text-white">{game.name}</h3>
+              <h3 className="font-semibold text-white group-hover:text-gaming-200 transition-colors">
+                {game.name}
+              </h3>
               <p className="text-sm text-gray-300 line-clamp-1">
                 Rating: {Math.round(game.rating || 0)}%
               </p>

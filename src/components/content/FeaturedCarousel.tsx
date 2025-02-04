@@ -3,10 +3,12 @@ import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export function FeaturedCarousel() {
   const [featured, setFeatured] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadFeatured();
@@ -33,11 +35,22 @@ export function FeaturedCarousel() {
     setCurrentIndex((prev) => (prev - 1 + featured.length) % featured.length);
   };
 
+  const handleGameClick = () => {
+    const gameId = featured[currentIndex]?.game_id;
+    if (gameId) {
+      console.log("Navigating to game clips from carousel:", gameId);
+      navigate(`/game/${gameId}/clips`);
+    }
+  };
+
   if (!featured.length) return null;
 
   return (
     <div className="relative">
-      <Card className="overflow-hidden aspect-video">
+      <Card 
+        className="overflow-hidden aspect-video cursor-pointer"
+        onClick={handleGameClick}
+      >
         {featured[currentIndex]?.image_url && (
           <img
             src={featured[currentIndex].image_url}
@@ -59,7 +72,7 @@ export function FeaturedCarousel() {
       <Button
         variant="ghost"
         size="icon"
-        className="absolute left-2 top-1/2 -translate-y-1/2"
+        className="absolute left-2 top-1/2 -translate-y-1/2 bg-gaming-800/50 hover:bg-gaming-700/50"
         onClick={prevSlide}
       >
         <ChevronLeft className="h-6 w-6" />
@@ -68,7 +81,7 @@ export function FeaturedCarousel() {
       <Button
         variant="ghost"
         size="icon"
-        className="absolute right-2 top-1/2 -translate-y-1/2"
+        className="absolute right-2 top-1/2 -translate-y-1/2 bg-gaming-800/50 hover:bg-gaming-700/50"
         onClick={nextSlide}
       >
         <ChevronRight className="h-6 w-6" />
