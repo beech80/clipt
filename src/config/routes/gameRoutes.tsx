@@ -1,6 +1,6 @@
 import { RouteObject } from "react-router-dom";
 import Discover from "@/pages/Discover";
-import GamePage from "@/pages/GamePage";
+import GameClips from "@/pages/GameClips";
 import Esports from "@/pages/Esports";
 
 export const gameRoutes: RouteObject[] = [
@@ -9,8 +9,8 @@ export const gameRoutes: RouteObject[] = [
     element: <Discover />,
   },
   {
-    path: "game/:id",
-    element: <GamePage />,
+    path: "game/:id/clips",
+    element: <GameClips />,
   },
   {
     path: "esports",

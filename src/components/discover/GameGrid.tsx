@@ -32,7 +32,6 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
   const { data: games, isLoading } = useQuery({
     queryKey: ['games', searchTerm, sortBy, filters],
     queryFn: async () => {
-      // Build IGDB query based on filters
       let query = `fields name,cover.url,summary,rating,first_release_date,genres.name;
                    where version_parent = null`;
       
@@ -46,7 +45,6 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
                   & first_release_date < ${new Date(year + 1, 0).getTime() / 1000}`;
       }
 
-      // Add sorting
       query += ` sort ${sortBy === 'popular' ? 'rating desc' : 'name asc'};
                  limit 50;`;
 
@@ -64,7 +62,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
 
   const handleShare = async (game: IGDBGame) => {
     try {
-      const shareUrl = `${window.location.origin}/game/${game.id}`;
+      const shareUrl = `${window.location.origin}/game/${game.id}/clips`;
       await navigator.clipboard.writeText(shareUrl);
       toast.success("Share link copied to clipboard!");
     } catch (error) {
@@ -119,7 +117,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
               <Button 
                 size="sm" 
                 className="flex-1 gaming-button"
-                onClick={() => navigate(`/game/${game.id}`)}
+                onClick={() => navigate(`/game/${game.id}/clips`)}
               >
                 <Gamepad2 className="w-4 h-4 mr-2" />
                 View Clips
@@ -147,7 +145,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
                       <div className="flex gap-2">
                         <Input 
                           readOnly 
-                          value={`${window.location.origin}/game/${game.id}`}
+                          value={`${window.location.origin}/game/${game.id}/clips`}
                         />
                         <Button 
                           onClick={() => handleShare(game)}
