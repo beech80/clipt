@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Gamepad2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { IGDBGame } from "@/services/igdbService";
@@ -57,8 +58,12 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
       
       if (error) throw error;
       return data as IGDBGame[];
-    }
+    },
   });
+
+  const handleGameClick = (gameId: number) => {
+    navigate(`/game/${gameId}/clips`);
+  };
 
   const handleShare = async (e: React.MouseEvent, game: IGDBGame) => {
     e.stopPropagation();
@@ -69,11 +74,6 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
     } catch (error) {
       toast.error("Failed to copy share link");
     }
-  };
-
-  const handleGameClick = (gameId: number) => {
-    console.log("Navigating to game clips:", gameId);
-    navigate(`/game/${gameId}/clips`);
   };
 
   const getEmbedCode = (game: IGDBGame) => {
@@ -107,15 +107,15 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {games?.map((game) => (
-        <div
+        <Card
           key={game.id}
-          className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg hover:ring-2 hover:ring-gaming-500 transition-all"
+          className="group relative overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
           onClick={() => handleGameClick(game.id)}
         >
           <img 
             src={game.cover?.url?.replace('t_thumb', 't_cover_big') || '/placeholder.svg'} 
             alt={game.name}
-            className="w-full h-32 object-cover transition-transform group-hover:scale-105"
+            className="w-full h-48 object-cover transition-transform group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
             <h3 className="font-semibold text-white">{game.name}</h3>
@@ -124,7 +124,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
               <Button 
                 size="sm" 
                 variant="default"
-                className="flex-1 bg-gaming-700 hover:bg-gaming-600"
+                className="flex-1 bg-primary hover:bg-primary/90"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleGameClick(game.id);
@@ -194,7 +194,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
               </Dialog>
             </div>
           </div>
-        </div>
+        </Card>
       ))}
     </div>
   );
