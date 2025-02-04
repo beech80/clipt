@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Gamepad2, Share2 } from "lucide-react";
@@ -61,7 +60,8 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
     }
   });
 
-  const handleShare = async (game: IGDBGame) => {
+  const handleShare = async (e: React.MouseEvent, game: IGDBGame) => {
+    e.stopPropagation(); // Prevent navigation when clicking share
     try {
       const shareUrl = `${window.location.origin}/game/${game.id}/clips`;
       await navigator.clipboard.writeText(shareUrl);
@@ -138,7 +138,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
                     <Share2 className="w-4 h-4" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent onClick={(e) => e.stopPropagation()}>
                   <DialogHeader>
                     <DialogTitle>Share {game.name}</DialogTitle>
                   </DialogHeader>
@@ -153,7 +153,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
                           value={`${window.location.origin}/game/${game.id}/clips`}
                         />
                         <Button 
-                          onClick={() => handleShare(game)}
+                          onClick={(e) => handleShare(e, game)}
                           variant="secondary"
                         >
                           Copy
@@ -173,7 +173,8 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
                         <Button
                           className="absolute top-2 right-2"
                           variant="secondary"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             navigator.clipboard.writeText(getEmbedCode(game));
                             toast.success("Embed code copied!");
                           }}
