@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Gamepad2, Share2 } from "lucide-react";
@@ -104,6 +105,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
         <div
           key={game.id}
           className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg"
+          onClick={() => navigate(`/game/${game.id}/clips`)}
         >
           <img 
             src={game.cover?.url?.replace('t_thumb', 't_cover_big') || '/placeholder.svg'} 
@@ -117,7 +119,10 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
               <Button 
                 size="sm" 
                 className="flex-1 gaming-button"
-                onClick={() => navigate(`/game/${game.id}/clips`)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/game/${game.id}/clips`);
+                }}
               >
                 <Gamepad2 className="w-4 h-4 mr-2" />
                 View Clips
