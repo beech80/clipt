@@ -1,13 +1,14 @@
 import React from 'react';
 import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
-import { SearchBar } from "@/components/SearchBar";
+import { TopGames } from "@/components/discover/TopGames";
 
 const Discover = () => {
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="space-y-8">
-        <SearchBar />
-        <FeaturedCarousel />
+      <FeaturedCarousel />
+      <div className="mt-8">
+        <h2 className="text-2xl font-semibold mb-4">Featured Games</h2>
+        <TopGames />
       </div>
     </div>
   );
