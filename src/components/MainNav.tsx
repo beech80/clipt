@@ -9,7 +9,7 @@ import {
   Users, 
   Camera,
   Settings,
-  GameController,
+  Gamepad,
   Crown
 } from "lucide-react";
 
@@ -97,7 +97,7 @@ export function MainNav({
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
         <Button variant="ghost" size="sm" className="gap-2">
-          <GameController className="h-4 w-4" />
+          <Gamepad className="h-4 w-4" />
           Discover
         </Button>
       </Link>

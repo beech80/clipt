@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
 import { EnhancedFeed } from "@/components/social/EnhancedFeed";
@@ -10,29 +9,19 @@ export const MainContent = () => {
     <motion.div 
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="lg:col-span-3 space-y-4 md:space-y-8"
+      className="lg:col-span-2 space-y-4 md:space-y-8"
       role="region"
       aria-label="Main content"
     >
-      {/* Featured Content Carousel */}
-      <section 
-        className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
-        aria-label="Featured content"
-      >
-        <FeaturedCarousel />
-      </section>
-
       <nav aria-label="Social feed navigation">
         <EnhancedFeed />
       </nav>
-
       <section 
         className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
         aria-label="Active tournaments"
       >
         <TournamentList />
       </section>
-
       <section 
         className="bg-gaming-800/50 backdrop-blur-sm border border-gaming-700/50 rounded-xl p-4 md:p-6"
         aria-label="Your squads"
