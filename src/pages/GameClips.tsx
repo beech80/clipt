@@ -4,11 +4,13 @@ import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/ui/back-button";
-import { Gamepad2, Video } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Gamepad2 } from "lucide-react";
+import GameBoyControls from "@/components/GameBoyControls";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function GameClips() {
   const { id } = useParams();
+  const isMobile = useIsMobile();
   console.log("GameClips page - Game ID:", id);
 
   const { data: game, isLoading: isLoadingGame } = useQuery({
@@ -62,65 +64,48 @@ export default function GameClips() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-6">
-      {/* Gameboy-style container */}
-      <div className="bg-gaming-800 rounded-lg shadow-xl p-6 border-4 border-gaming-600">
-        {/* Header section */}
-        <div className="flex items-center gap-4 mb-6">
+    <div className="relative min-h-screen overflow-hidden bg-gaming-900">
+      {/* Fixed header */}
+      <div className="fixed top-0 left-0 right-0 h-16 bg-gaming-800/95 backdrop-blur-sm z-50 
+                    border-b border-gaming-400/20 flex items-center justify-between px-6">
+        <div className="flex items-center gap-4">
           <BackButton />
-          <div>
-            <h1 className="text-2xl font-bold text-gaming-100">{game?.name} Hub</h1>
-            {game?.summary && (
-              <p className="text-gaming-300 mt-2">{game.summary}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Content type selector */}
-        <div className="flex gap-4 mb-6">
-          <Button 
-            variant="default"
-            className="flex items-center gap-2 bg-gaming-700 hover:bg-gaming-600"
-          >
-            <Video className="w-4 h-4" />
-            Clips
-          </Button>
-          <Button 
-            variant="default"
-            className="flex items-center gap-2 bg-gaming-700 hover:bg-gaming-600"
-          >
-            <Gamepad2 className="w-4 h-4" />
-            Streams
-          </Button>
-        </div>
-
-        {/* Clips grid */}
-        <div className="space-y-6">
-          {isLoadingPosts ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-96" />
-              ))}
-            </div>
-          ) : posts && posts.length > 0 ? (
-            <div className="space-y-4">
-              {posts.map((post) => (
-                <PostItem key={post.id} post={post} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 bg-gaming-700/50 rounded-lg">
-              <Gamepad2 className="w-12 h-12 mx-auto text-gaming-400 mb-4" />
-              <p className="text-gaming-300">
-                No clips found for this game yet.
-              </p>
-              <p className="text-gaming-400 text-sm mt-2">
-                Be the first to share a clip!
-              </p>
-            </div>
-          )}
+          <h1 className="text-xl font-bold text-gaming-100">{game?.name}</h1>
         </div>
       </div>
+
+      {/* Scrollable content container */}
+      <div className={`relative ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} 
+                    mt-16 overflow-y-auto snap-y snap-mandatory scroll-smooth touch-none overscroll-none post-container`}>
+        {isLoadingPosts ? (
+          <div className="space-y-4 p-4">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-96" />
+            ))}
+          </div>
+        ) : posts && posts.length > 0 ? (
+          <div className="space-y-4 pb-20">
+            {posts.map((post) => (
+              <div key={post.id} className="snap-start">
+                <PostItem post={post} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center p-6 bg-gaming-800/50">
+            <Gamepad2 className="w-16 h-16 text-gaming-400 mb-4" />
+            <p className="text-gaming-200 text-lg font-medium">
+              No clips found for {game?.name}
+            </p>
+            <p className="text-gaming-400 mt-2">
+              Be the first to share an epic gaming moment!
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* GameBoy Controls */}
+      <GameBoyControls />
     </div>
   );
 }
