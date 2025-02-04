@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { IGDBGame } from "@/services/igdbService";
 import {
   Dialog,
   DialogContent,
@@ -29,64 +30,41 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
   const navigate = useNavigate();
   
   const { data: games, isLoading } = useQuery({
-    queryKey: ['game-categories', searchTerm, sortBy, filters],
+    queryKey: ['games', searchTerm, sortBy, filters],
     queryFn: async () => {
-      let query = supabase
-        .from('game_categories')
-        .select('*, share_settings(*)');
-
-      // Apply text search if searchTerm exists
+      // Build IGDB query based on filters
+      let query = `fields name,cover.url,summary,rating,first_release_date,genres.name;
+                   where version_parent = null`;
+      
       if (searchTerm) {
-        query = query.textSearch('name', searchTerm, {
-          type: 'websearch',
-          config: 'english'
-        });
-      }
-
-      // Apply filters
-      if (filters.platform && filters.platform !== 'all') {
-        query = query.contains('platform_support', [filters.platform]);
-      }
-
-      if (filters.ageRating && filters.ageRating !== 'all') {
-        query = query.eq('age_rating', filters.ageRating);
+        query += ` & name ~ "*${searchTerm}*"`;
       }
 
       if (filters.releaseYear && filters.releaseYear !== 'all') {
-        if (filters.releaseYear === 'older') {
-          query = query.lt('release_date', '2022-01-01');
-        } else {
-          query = query.gte('release_date', `${filters.releaseYear}-01-01`)
-            .lt('release_date', `${parseInt(filters.releaseYear) + 1}-01-01`);
-        }
+        const year = parseInt(filters.releaseYear);
+        query += ` & first_release_date >= ${new Date(year, 0).getTime() / 1000}
+                  & first_release_date < ${new Date(year + 1, 0).getTime() / 1000}`;
       }
 
-      // Apply sorting
-      switch (sortBy) {
-        case 'name':
-          query = query.order('name');
-          break;
-        case 'name-desc':
-          query = query.order('name', { ascending: false });
-          break;
-        case 'popular':
-          query = query.order('popularity_score', { ascending: false });
-          break;
-        case 'recent':
-          query = query.order('created_at', { ascending: false });
-          break;
-      }
-      
-      const { data, error } = await query;
+      // Add sorting
+      query += ` sort ${sortBy === 'popular' ? 'rating desc' : 'name asc'};
+                 limit 50;`;
+
+      const { data, error } = await supabase.functions.invoke('igdb', {
+        body: {
+          endpoint: 'games',
+          query
+        }
+      });
       
       if (error) throw error;
-      return data;
+      return data as IGDBGame[];
     }
   });
 
-  const handleShare = async (game: any) => {
+  const handleShare = async (game: IGDBGame) => {
     try {
-      const shareUrl = `${window.location.origin}/game/${game.slug}`;
+      const shareUrl = `${window.location.origin}/game/${game.id}`;
       await navigator.clipboard.writeText(shareUrl);
       toast.success("Share link copied to clipboard!");
     } catch (error) {
@@ -94,9 +72,9 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
     }
   };
 
-  const getEmbedCode = (game: any) => {
+  const getEmbedCode = (game: IGDBGame) => {
     return `<iframe 
-      src="${window.location.origin}/embed/game/${game.slug}" 
+      src="${window.location.origin}/embed/game/${game.id}" 
       width="100%" 
       height="600" 
       frameborder="0" 
@@ -130,18 +108,18 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
           className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg"
         >
           <img 
-            src={game.thumbnail_url || '/placeholder.svg'} 
+            src={game.cover?.url?.replace('t_thumb', 't_cover_big') || '/placeholder.svg'} 
             alt={game.name}
             className="w-full h-32 object-cover transition-transform group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
             <h3 className="font-semibold text-white">{game.name}</h3>
-            <p className="text-sm text-gray-300 line-clamp-1">{game.description}</p>
+            <p className="text-sm text-gray-300 line-clamp-1">{game.summary}</p>
             <div className="flex gap-2 mt-2">
               <Button 
                 size="sm" 
                 className="flex-1 gaming-button"
-                onClick={() => navigate(`/game/${game.slug}`)}
+                onClick={() => navigate(`/game/${game.id}`)}
               >
                 <Gamepad2 className="w-4 h-4 mr-2" />
                 View Clips
@@ -169,7 +147,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
                       <div className="flex gap-2">
                         <Input 
                           readOnly 
-                          value={`${window.location.origin}/game/${game.slug}`}
+                          value={`${window.location.origin}/game/${game.id}`}
                         />
                         <Button 
                           onClick={() => handleShare(game)}
