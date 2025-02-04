@@ -1,0 +1,54 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+export function TopGames() {
+  const { data: topGames, isLoading } = useQuery({
+    queryKey: ['top-games'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('top_games')
+        .select('*')
+        .limit(10);
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-32 rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <ScrollArea className="w-full pb-4">
+      <div className="flex space-x-4 pb-4">
+        {topGames?.map((game) => (
+          <div
+            key={game.id}
+            className="relative flex-none w-[250px] cursor-pointer rounded-lg overflow-hidden group"
+          >
+            <img
+              src={game.thumbnail_url || '/placeholder.svg'}
+              alt={game.name}
+              className="w-full h-32 object-cover transition-transform group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
+              <h3 className="font-semibold text-white">{game.name}</h3>
+              <p className="text-sm text-gray-300 line-clamp-1">
+                {game.total_posts} posts
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  );
+}

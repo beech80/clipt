@@ -35,12 +35,15 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
         .from('game_categories')
         .select('*, share_settings(*)');
 
-      // Apply search filter
+      // Apply text search if searchTerm exists
       if (searchTerm) {
-        query = query.ilike('name', `%${searchTerm}%`);
+        query = query.textSearch('name', searchTerm, {
+          type: 'websearch',
+          config: 'english'
+        });
       }
 
-      // Apply advanced filters
+      // Apply filters
       if (filters.platform && filters.platform !== 'all') {
         query = query.contains('platform_support', [filters.platform]);
       }

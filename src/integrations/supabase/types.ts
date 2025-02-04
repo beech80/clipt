@@ -4120,6 +4120,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "post_game_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "top_games"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "post_game_categories_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
@@ -8775,6 +8782,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      top_games: {
+        Row: {
+          description: string | null
+          id: string | null
+          name: string | null
+          popularity_score: number | null
+          slug: string | null
+          thumbnail_url: string | null
+          total_posts: number | null
+        }
+        Relationships: []
       }
       trending_posts: {
         Row: {
