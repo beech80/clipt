@@ -123,8 +123,8 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
             <div className="flex gap-2 mt-2">
               <Button 
                 size="sm" 
-                variant="gaming"
-                className="flex-1"
+                variant="default"
+                className="flex-1 bg-gaming-700 hover:bg-gaming-600"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleGameClick(game.id);
