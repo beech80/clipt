@@ -32,7 +32,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
   const { data: games, isLoading } = useQuery({
     queryKey: ['games', searchTerm, sortBy, filters],
     queryFn: async () => {
-      let query = `fields name,cover.url,summary,rating,first_release_date,genres.name;
+      let query = `fields name,cover.url,summary,rating,first_release_date,genres.name,id;
                    where version_parent = null`;
       
       if (searchTerm) {
@@ -71,6 +71,11 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
     }
   };
 
+  const handleGameClick = (gameId: number) => {
+    console.log("Navigating to game clips:", gameId);
+    navigate(`/game/${gameId}/clips`);
+  };
+
   const getEmbedCode = (game: IGDBGame) => {
     return `<iframe 
       src="${window.location.origin}/embed/game/${game.id}" 
@@ -105,10 +110,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
         <div
           key={game.id}
           className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg"
-          onClick={() => {
-            console.log("Navigating to:", `/game/${game.id}/clips`);
-            navigate(`/game/${game.id}/clips`);
-          }}
+          onClick={() => handleGameClick(game.id)}
         >
           <img 
             src={game.cover?.url?.replace('t_thumb', 't_cover_big') || '/placeholder.svg'} 
@@ -121,10 +123,11 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
             <div className="flex gap-2 mt-2">
               <Button 
                 size="sm" 
-                className="flex-1 gaming-button"
+                variant="gaming"
+                className="flex-1"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/game/${game.id}/clips`);
+                  handleGameClick(game.id);
                 }}
               >
                 <Gamepad2 className="w-4 h-4 mr-2" />
