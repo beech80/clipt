@@ -58,7 +58,6 @@ export function FeaturedCarousel() {
             className="w-full h-full object-cover"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <h3 className="text-xl font-bold text-white mb-2">
             {featured[currentIndex]?.content}
