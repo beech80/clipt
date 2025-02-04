@@ -31,6 +31,7 @@ interface GameSearchProps {
     hasClips?: boolean;
   };
   onFiltersChange?: (filters: any) => void;
+  isLoading?: boolean;
 }
 
 export function GameSearch({ 
@@ -39,7 +40,8 @@ export function GameSearch({
   sortBy, 
   onSortChange,
   filters = {},
-  onFiltersChange = () => {}
+  onFiltersChange = () => {},
+  isLoading = false
 }: GameSearchProps) {
   return (
     <div className="flex flex-col gap-4 mb-6">
@@ -52,6 +54,7 @@ export function GameSearch({
             className="pl-9"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
+            disabled={isLoading}
           />
         </div>
         
