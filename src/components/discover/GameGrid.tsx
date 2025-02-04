@@ -106,8 +106,8 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
           key={game.id}
           className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg"
           onClick={() => {
-            // Navigate to the game clips page
-            navigate(`/game/${game.id}/clips`);
+            console.log("Navigating to:", `/game/${game.id}/clips`);
+            navigate(`/game/${game.id}/clips`, { replace: true });
           }}
         >
           <img 
@@ -124,7 +124,8 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
                 className="flex-1 gaming-button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/game/${game.id}/clips`);
+                  console.log("View Clips clicked for:", game.name);
+                  navigate(`/game/${game.id}/clips`, { replace: true });
                 }}
               >
                 <Gamepad2 className="w-4 h-4 mr-2" />

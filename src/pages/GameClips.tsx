@@ -7,16 +7,23 @@ import { BackButton } from "@/components/ui/back-button";
 
 export default function GameClips() {
   const { id } = useParams();
+  console.log("GameClips page - Game ID:", id);
 
   const { data: game, isLoading: isLoadingGame } = useQuery({
     queryKey: ['game', id],
     queryFn: async () => {
-      const { data } = await supabase.functions.invoke('igdb', {
+      console.log("Fetching game data for ID:", id);
+      const { data, error } = await supabase.functions.invoke('igdb', {
         body: {
           endpoint: 'games',
           query: `fields name,cover.url,summary; where id = ${id};`
         }
       });
+      if (error) {
+        console.error("Error fetching game:", error);
+        throw error;
+      }
+      console.log("Game data received:", data);
       return data[0];
     }
   });
@@ -24,6 +31,7 @@ export default function GameClips() {
   const { data: posts, isLoading: isLoadingPosts } = useQuery({
     queryKey: ['game-posts', id],
     queryFn: async () => {
+      console.log("Fetching posts for game ID:", id);
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -41,6 +49,7 @@ export default function GameClips() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
+      console.log("Posts data received:", data);
       return data;
     },
     enabled: !!id
