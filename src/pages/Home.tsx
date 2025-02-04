@@ -1,28 +1,40 @@
-
 import React from 'react';
-import { MainContent } from '@/components/home/MainContent';
-import { WelcomeSection } from '@/components/home/WelcomeSection';
-import { SidebarContent } from '@/components/home/SidebarContent';
+import { useAuth } from '@/contexts/AuthContext';
+import PostList from '@/components/PostList';
 import GameBoyControls from '@/components/GameBoyControls';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
-  return (
-    <div className="min-h-screen bg-[#1A1F2C]">
-      {/* Welcome Section */}
-      <WelcomeSection />
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-      {/* Main Grid Layout */}
-      <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Main Content Area */}
-        <MainContent />
-        
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <SidebarContent />
+  return (
+    <div className="relative min-h-screen overflow-hidden">
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <div className="mb-4 animate-fade-in">
+          <Tabs defaultValue="squads" className="w-full">
+            <TabsList className="grid w-full grid-cols-1 p-1 gap-1">
+              <div 
+                className="gaming-gradient text-2xl font-bold tracking-wider cursor-pointer hover:scale-105 transition-transform flex justify-center items-center"
+                onClick={() => navigate('/squads')}
+              >
+                Squads Clipts
+              </div>
+            </TabsList>
+            
+            <TabsContent value="squads" className="mt-2 animate-fade-in">
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Instagram-style Feed */}
+        <div className="post-container relative">
+          <PostList />
         </div>
       </div>
 
-      {/* Game Boy Style Controls */}
+      {/* Game Boy Controls */}
       <GameBoyControls />
     </div>
   );
