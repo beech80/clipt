@@ -46,28 +46,17 @@ export function FeaturedCarousel() {
   if (!featured.length) return null;
 
   return (
-    <div className="relative">
-      <Card 
-        className="overflow-hidden aspect-video cursor-pointer"
-        onClick={handleGameClick}
-      >
-        {featured[currentIndex]?.image_url && (
-          <img
-            src={featured[currentIndex].image_url}
-            alt="Featured content"
-            className="w-full h-full object-cover"
-          />
-        )}
-        <div className="absolute bottom-0 left-0 right-0 p-6">
-          <h3 className="text-xl font-bold text-white mb-2">
-            {featured[currentIndex]?.content}
-          </h3>
-          <p className="text-white/80">
-            By {featured[currentIndex]?.profiles?.username}
-          </p>
-        </div>
-      </Card>
-
+    <Card 
+      className="overflow-hidden aspect-video cursor-pointer"
+      onClick={handleGameClick}
+    >
+      {featured[currentIndex]?.image_url && (
+        <img
+          src={featured[currentIndex].image_url}
+          alt="Featured content"
+          className="w-full h-full object-cover"
+        />
+      )}
       <Button
         variant="ghost"
         size="icon"
@@ -85,6 +74,6 @@ export function FeaturedCarousel() {
       >
         <ChevronRight className="h-6 w-6" />
       </Button>
-    </div>
+    </Card>
   );
 }
