@@ -105,7 +105,10 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
         <div
           key={game.id}
           className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg"
-          onClick={() => navigate(`/game/${game.id}/clips`)}
+          onClick={() => {
+            // Navigate to the game clips page
+            navigate(`/game/${game.id}/clips`);
+          }}
         >
           <img 
             src={game.cover?.url?.replace('t_thumb', 't_cover_big') || '/placeholder.svg'} 
