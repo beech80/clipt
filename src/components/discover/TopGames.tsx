@@ -34,9 +34,9 @@ export function TopGames() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
         {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-32 rounded-lg" />
+          <Skeleton key={i} className="h-48 rounded-lg bg-gaming-700/50" />
         ))}
       </div>
     );
@@ -44,25 +44,35 @@ export function TopGames() {
 
   return (
     <ScrollArea className="w-full pb-4">
-      <div className="flex space-x-4 pb-4">
+      <div className="flex space-x-6 pb-4">
         {topGames?.map((game) => (
           <div
             key={game.id}
-            className="relative flex-none w-[250px] cursor-pointer rounded-lg overflow-hidden group"
+            className="relative flex-none w-[250px] cursor-pointer rounded-lg overflow-hidden 
+                       group hover:transform hover:scale-105 transition-all duration-300"
             onClick={() => handleGameClick(game.id)}
           >
             <img
               src={game.cover?.url?.replace('t_thumb', 't_cover_big') || '/placeholder.svg'}
               alt={game.name}
-              className="w-full h-32 object-cover transition-transform group-hover:scale-105"
+              className="w-full h-48 object-cover transition-transform group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-4 flex flex-col justify-end">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent 
+                          opacity-80 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute bottom-0 left-0 right-0 p-4 transform translate-y-2 
+                          group-hover:translate-y-0 transition-transform">
               <h3 className="font-semibold text-white group-hover:text-gaming-200 transition-colors">
                 {game.name}
               </h3>
-              <p className="text-sm text-gray-300 line-clamp-1">
-                Rating: {Math.round(game.rating || 0)}%
-              </p>
+              <div className="flex items-center mt-2 space-x-2">
+                <div className="text-sm text-gaming-300">
+                  Rating: {Math.round(game.rating || 0)}%
+                </div>
+                <div className="h-1.5 w-1.5 rounded-full bg-gaming-400" />
+                <div className="text-sm text-gaming-300">
+                  {new Date(game.first_release_date * 1000).getFullYear()}
+                </div>
+              </div>
             </div>
           </div>
         ))}
