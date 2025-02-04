@@ -4,6 +4,8 @@ import PostList from '@/components/PostList';
 import GameBoyControls from '@/components/GameBoyControls';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
+import { FeaturedCarousel } from '@/components/content/FeaturedCarousel';
+import { motion } from 'framer-motion';
 
 const Home = () => {
   const { user } = useAuth();
@@ -11,8 +13,17 @@ const Home = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <div className="mb-4 animate-fade-in">
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        {/* Featured Carousel Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <FeaturedCarousel />
+        </motion.div>
+
+        <div className="mb-6 animate-fade-in">
           <Tabs defaultValue="squads" className="w-full">
             <TabsList className="grid w-full grid-cols-1 p-1 gap-1">
               <div 
@@ -23,18 +34,16 @@ const Home = () => {
               </div>
             </TabsList>
             
-            <TabsContent value="squads" className="mt-2 animate-fade-in">
+            <TabsContent value="squads" className="mt-4">
+              {/* Post List with improved grid layout */}
+              <div className="grid gap-6">
+                <PostList />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
-
-        {/* Instagram-style Feed */}
-        <div className="post-container relative">
-          <PostList />
-        </div>
       </div>
 
-      {/* Game Boy Controls */}
       <GameBoyControls />
     </div>
   );
