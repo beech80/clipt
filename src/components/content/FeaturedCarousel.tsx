@@ -1,51 +1,72 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { useState } from "react";
 
 export function FeaturedCarousel() {
-  const [featured, setFeatured] = useState<any[]>([]);
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    loadFeatured();
-  }, []);
+  const { data: featuredPost } = useQuery({
+    queryKey: ['featured-post'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          content,
+          image_url,
+          video_url,
+          profiles:user_id (username, avatar_url)
+        `)
+        .limit(1)
+        .single();
 
-  const loadFeatured = async () => {
-    const { data } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles:user_id(username, avatar_url)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    setFeatured(data || []);
-  };
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleGameClick = () => {
-    const gameId = featured[0]?.game_id;
-    if (gameId) {
-      console.log("Navigating to game clips:", gameId);
-      navigate(`/game/${gameId}/clips`);
+    if (featuredPost?.id) {
+      navigate(`/game/${featuredPost.id}/clips`);
     }
   };
 
-  if (!featured.length) return null;
-
   return (
-    <Card 
-      className="overflow-hidden aspect-video cursor-pointer"
-      onClick={handleGameClick}
-    >
-      {featured[0]?.image_url && (
-        <img
-          src={featured[0].image_url}
-          alt="Featured content"
-          className="w-full h-full object-cover"
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search games..."
+          className="pl-9"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
+      </div>
+
+      {featuredPost && (
+        <div 
+          className="relative aspect-video cursor-pointer"
+          onClick={handleGameClick}
+        >
+          <img
+            src={featuredPost.image_url || '/placeholder.svg'}
+            alt="Featured content"
+            className="w-full h-full object-cover rounded-lg"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-lg" />
+          <div className="absolute bottom-4 left-4 text-white">
+            <h3 className="text-xl font-bold">{featuredPost.content}</h3>
+            <p className="text-sm text-gray-200">
+              by {featuredPost.profiles?.username}
+            </p>
+          </div>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }
