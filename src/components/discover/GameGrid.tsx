@@ -109,7 +109,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
       {games?.map((game) => (
         <div
           key={game.id}
-          className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg"
+          className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg hover:ring-2 hover:ring-gaming-500 transition-all"
           onClick={() => handleGameClick(game.id)}
         >
           <img 
