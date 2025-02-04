@@ -65,24 +65,41 @@ const PostList = () => {
     };
   }, []);
 
+  // Subscribe to post updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('public:post_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'posts',
+        },
+        (payload) => {
+          console.log('Post updated:', payload);
+          setPosts((currentPosts) =>
+            currentPosts.map((post) =>
+              post.id === payload.new.id ? { ...post, ...payload.new } : post
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="h-64 bg-gaming-800/50 rounded-xl"></div>
-          </div>
-        ))}
-      </div>
-    );
+    return <div>Loading posts...</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {posts.map((post) => (
-        <div key={post.id} className="transform hover:-translate-y-1 transition-all duration-300">
-          <PostItem post={post} />
-        </div>
+        <PostItem key={post.id} post={post} />
       ))}
     </div>
   );
