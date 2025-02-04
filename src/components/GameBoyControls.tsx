@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Camera, Trophy, Bot, Gamepad } from 'lucide-react';
+import { Menu, Camera, Trophy, Bot, Gamepad, MessageSquare, Users, Video, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -40,16 +40,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   };
 
   const navigationItems = [
-    { name: 'Home', path: '/' },
-    { name: 'Discover', path: '/discover' },
-    { name: 'Messages', path: '/messages' },
-    { name: 'Profile', path: '/profile' },
-    { name: 'Streaming', path: '/streaming' },
-    { name: 'Top Clips', path: '/top-clips' },
-    { name: 'Clipts', path: '/clipts' },
-    { name: 'Settings', path: '/settings' },
-    { name: 'AI Assistant', path: '/ai-assistant' },
-    { name: 'Esports', path: '/esports' }
+    { name: 'Home', path: '/', icon: <Home className="w-4 h-4" /> },
+    { name: 'Discover', path: '/discover', icon: <Gamepad className="w-4 h-4" /> },
+    { name: 'Messages', path: '/messages', icon: <MessageSquare className="w-4 h-4" /> },
+    { name: 'Profile', path: '/profile', icon: <Users className="w-4 h-4" /> },
+    { name: 'Streaming', path: '/streaming', icon: <Video className="w-4 h-4" /> },
+    { name: 'Top Clips', path: '/top-clips', icon: <Trophy className="w-4 h-4" /> },
+    { name: 'Clipts', path: '/clipts', icon: <Camera className="w-4 h-4" /> },
+    { name: 'Settings', path: '/settings', icon: <Bot className="w-4 h-4" /> }
   ];
 
   return (
@@ -71,11 +69,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
                     navigate(item.path);
                     toast.success(`Navigating to ${item.name}`);
                   }}
-                  className="p-3 sm:p-4 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 
+                  className="flex items-center gap-2 p-3 sm:p-4 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 
                     active:bg-gaming-400/30 transition-all duration-300 text-gaming-400 
                     font-medium text-sm sm:text-base active:scale-95"
                 >
-                  {item.name}
+                  {item.icon}
+                  <span>{item.name}</span>
                 </button>
               ))}
             </nav>
@@ -85,7 +84,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
 
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/clipts/new')}
           className="clip-button active:scale-95 transition-transform"
           aria-label="Create Clipt"
           style={{ width: '80px', height: '60px' }}
