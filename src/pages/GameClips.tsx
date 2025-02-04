@@ -79,14 +79,14 @@ export default function GameClips() {
         {/* Content type selector */}
         <div className="flex gap-4 mb-6">
           <Button 
-            variant="gaming" 
+            variant="default"
             className="flex items-center gap-2 bg-gaming-700 hover:bg-gaming-600"
           >
             <Video className="w-4 h-4" />
             Clips
           </Button>
           <Button 
-            variant="gaming"
+            variant="default"
             className="flex items-center gap-2 bg-gaming-700 hover:bg-gaming-600"
           >
             <Gamepad2 className="w-4 h-4" />

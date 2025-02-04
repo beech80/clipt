@@ -15,6 +15,7 @@ const buttonVariants = cva(
         secondary: "gaming-button border-[#403E43] hover:border-[#9b87f5] bg-[#222222] text-white",
         ghost: "hover:bg-[#2A2F3C] text-white transition-colors",
         link: "text-[#9b87f5] underline-offset-4 hover:text-[#8B5CF6] hover:underline",
+        gaming: "gaming-button border-[#403E43] hover:border-[#9b87f5] bg-[#1A1F2C] text-white hover:bg-gaming-600",
       },
       size: {
         default: "h-10 px-4 py-2",
