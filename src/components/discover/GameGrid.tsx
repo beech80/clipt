@@ -61,7 +61,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
   });
 
   const handleShare = async (e: React.MouseEvent, game: IGDBGame) => {
-    e.stopPropagation(); // Prevent navigation when clicking share
+    e.stopPropagation();
     try {
       const shareUrl = `${window.location.origin}/game/${game.id}/clips`;
       await navigator.clipboard.writeText(shareUrl);
@@ -107,7 +107,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
           className="gaming-card group relative overflow-hidden cursor-pointer rounded-lg"
           onClick={() => {
             console.log("Navigating to:", `/game/${game.id}/clips`);
-            navigate(`/game/${game.id}/clips`, { replace: true });
+            navigate(`/game/${game.id}/clips`);
           }}
         >
           <img 
@@ -124,8 +124,7 @@ export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: Gam
                 className="flex-1 gaming-button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  console.log("View Clips clicked for:", game.name);
-                  navigate(`/game/${game.id}/clips`, { replace: true });
+                  navigate(`/game/${game.id}/clips`);
                 }}
               >
                 <Gamepad2 className="w-4 h-4 mr-2" />
