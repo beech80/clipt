@@ -35,8 +35,8 @@ export function TopGames() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
-        {[...Array(5)].map((_, i) => (
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        {[...Array(8)].map((_, i) => (
           <Skeleton key={i} className="h-48 rounded-lg bg-gaming-700/50" />
         ))}
       </div>
@@ -44,39 +44,35 @@ export function TopGames() {
   }
 
   return (
-    <ScrollArea className="w-full pb-4">
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+    <ScrollArea className="w-full">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {topGames?.map((game) => (
           <div
             key={game.id}
-            className="gaming-card group cursor-pointer"
+            className="gaming-card group cursor-pointer bg-gaming-800/30 hover:bg-gaming-800/50 transition-all"
             onClick={() => handleGameClick(game.id)}
           >
-            <div className="relative aspect-[16/9] overflow-hidden rounded-t-lg">
+            <div className="relative aspect-video overflow-hidden">
               <img
                 src={game.cover?.url?.replace('t_thumb', 't_cover_big') || '/placeholder.svg'}
                 alt={game.name}
                 className="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
             </div>
             
-            <div className="p-4 space-y-3">
-              <h3 className="font-semibold text-white group-hover:text-gaming-200 transition-colors line-clamp-1">
+            <div className="p-3 space-y-2">
+              <h3 className="font-medium text-sm text-white/90 group-hover:text-white transition-colors line-clamp-1">
                 {game.name}
               </h3>
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="text-sm text-gaming-300">
-                    Rating: {Math.round(game.rating || 0)}%
-                  </div>
-                  <div className="h-1.5 w-1.5 rounded-full bg-gaming-400" />
-                  <div className="text-sm text-gaming-300">
-                    {new Date(game.first_release_date * 1000).getFullYear()}
-                  </div>
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center space-x-2 text-white/70">
+                  <span>{Math.round(game.rating || 0)}%</span>
+                  <span className="h-1 w-1 rounded-full bg-gaming-400/50" />
+                  <span>{new Date(game.first_release_date * 1000).getFullYear()}</span>
                 </div>
-                <Gamepad2 className="w-5 h-5 text-gaming-400 group-hover:text-gaming-200 transition-colors" />
+                <Gamepad2 className="w-4 h-4 text-gaming-400/70 group-hover:text-gaming-400 transition-colors" />
               </div>
             </div>
           </div>
