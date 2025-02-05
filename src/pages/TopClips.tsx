@@ -1,13 +1,29 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PostList from "@/components/PostList";
 import { Calendar, TrendingUp } from "lucide-react";
 import GameBoyControls from "@/components/GameBoyControls";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import PostItem from "@/components/PostItem";
 
 const TopClips = () => {
   const [timeRange, setTimeRange] = useState("today");
   const [category, setCategory] = useState("all");
+
+  const { data: topClips, isLoading } = useQuery({
+    queryKey: ['weekly-top-clips'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('weekly_top_clips')
+        .select('*')
+        .order('trophy_count', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   return (
     <div className="container mx-auto p-4 space-y-4">
@@ -43,7 +59,25 @@ const TopClips = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        <PostList />
+        {isLoading ? (
+          <div>Loading top clips...</div>
+        ) : (
+          topClips?.map((clip) => (
+            <PostItem
+              key={clip.post_id}
+              post={{
+                ...clip,
+                id: clip.post_id,
+                profiles: {
+                  username: clip.username,
+                  avatar_url: clip.avatar_url
+                },
+                likes: [],
+                clip_votes: [{ count: clip.trophy_count }]
+              }}
+            />
+          ))
+        )}
       </div>
 
       <GameBoyControls />
