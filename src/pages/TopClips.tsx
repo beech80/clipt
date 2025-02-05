@@ -12,7 +12,7 @@ const TopClips = () => {
   return (
     <div className="container mx-auto p-4 space-y-4">
       <div className="gameboy-header">
-        <h1 className="gameboy-title">TOP CLIPS</h1>
+        <h1 className="gameboy-title">WEEKLY TOP CLIPS</h1>
       </div>
 
       <div className="mt-20 flex justify-end gap-2">
