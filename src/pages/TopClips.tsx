@@ -66,13 +66,16 @@ const TopClips = () => {
             <PostItem
               key={clip.post_id}
               post={{
-                ...clip,
                 id: clip.post_id,
+                content: clip.content,
+                image_url: clip.image_url,
+                video_url: clip.video_url,
+                user_id: clip.user_id,
+                created_at: clip.created_at,
                 profiles: {
                   username: clip.username,
                   avatar_url: clip.avatar_url
                 },
-                likes: [],
                 clip_votes: [{ count: clip.trophy_count }]
               }}
             />
