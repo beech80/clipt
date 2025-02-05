@@ -2675,6 +2675,27 @@ export type Database = {
         }
         Relationships: []
       }
+      games: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       gaming_history: {
         Row: {
           activity_type: string
@@ -4250,6 +4271,7 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
+          game_id: string | null
           id: string
           image_url: string | null
           is_premium: boolean | null
@@ -4263,6 +4285,7 @@ export type Database = {
         Insert: {
           content?: string | null
           created_at?: string
+          game_id?: string | null
           id?: string
           image_url?: string | null
           is_premium?: boolean | null
@@ -4276,6 +4299,7 @@ export type Database = {
         Update: {
           content?: string | null
           created_at?: string
+          game_id?: string | null
           id?: string
           image_url?: string | null
           is_premium?: boolean | null
@@ -4287,6 +4311,13 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "posts_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "posts_required_tier_id_fkey"
             columns: ["required_tier_id"]

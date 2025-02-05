@@ -8,6 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
+interface Game {
+  id: string;
+  name: string;
+  cover_url: string | null;
+  created_at: string;
+}
+
 const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -22,7 +29,7 @@ const Clipts = () => {
         .order('name');
       
       if (error) throw error;
-      return data;
+      return data as Game[];
     },
   });
 
@@ -98,3 +105,4 @@ const Clipts = () => {
 };
 
 export default Clipts;
+
