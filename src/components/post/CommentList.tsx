@@ -12,6 +12,7 @@ interface Comment {
   created_at: string;
   parent_id?: string | null;
   likes_count: number;
+  user_id: string;
   profiles: {
     username: string;
     avatar_url: string;
@@ -27,7 +28,7 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
   const { data: comments, isLoading } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: allComments, error } = await supabase
         .from('comments')
         .select(`
           *,
@@ -37,10 +38,29 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
           )
         `)
         .eq('post_id', postId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as Comment[];
+
+      // Organize comments into a tree structure
+      const commentMap = new Map();
+      const rootComments: Comment[] = [];
+
+      allComments.forEach((comment: Comment) => {
+        comment.replies = [];
+        commentMap.set(comment.id, comment);
+        
+        if (comment.parent_id) {
+          const parent = commentMap.get(comment.parent_id);
+          if (parent) {
+            parent.replies.push(comment);
+          }
+        } else {
+          rootComments.push(comment);
+        }
+      });
+
+      return rootComments;
     }
   });
 
@@ -71,7 +91,7 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
         </div>
 
         {/* Comments list */}
-        <div className="overflow-y-auto max-h-[60vh]">
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
           {isLoading ? (
             <div className="flex justify-center items-center h-40">
               <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -82,16 +102,22 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
               <p className="text-gray-400 text-sm">Be the first to comment</p>
             </div>
           ) : (
-            <div className="py-4 px-4 space-y-4">
+            <div className="py-4 px-4 space-y-6">
               {comments?.map((comment) => (
-                <CommentItem key={comment.id} comment={comment} />
+                <CommentItem 
+                  key={comment.id} 
+                  comment={comment}
+                  postId={postId}
+                />
               ))}
             </div>
           )}
         </div>
 
         {/* Comment input */}
-        <CommentForm postId={postId} onCancel={onBack} />
+        <div className="border-t border-gray-200">
+          <CommentForm postId={postId} />
+        </div>
       </div>
     </div>
   );
