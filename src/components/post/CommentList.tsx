@@ -45,41 +45,41 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="w-full max-w-lg bg-[#1A1F2C] rounded-lg overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+      <div className="w-full max-w-lg bg-white rounded-xl overflow-hidden">
         {/* Header */}
-        <div className="border-b border-white/10 px-4 py-3 flex items-center justify-between">
+        <div className="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={onBack}
-              className="hover:bg-white/5"
+              className="hover:bg-gray-100"
             >
-              <ArrowLeft className="h-5 w-5 text-white" />
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-lg font-semibold text-white">Add Comment</h1>
+            <h1 className="text-lg font-semibold">Comments</h1>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="hover:bg-white/5"
+            className="hover:bg-gray-100"
           >
-            <X className="h-5 w-5 text-white" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
 
         {/* Comments list */}
-        <div className="flex-1 overflow-y-auto max-h-[60vh]">
+        <div className="overflow-y-auto max-h-[60vh]">
           {isLoading ? (
             <div className="flex justify-center items-center h-40">
-              <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
             </div>
           ) : comments?.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-white/70">No comments yet</p>
-              <p className="text-white/50 text-sm">Be the first to comment</p>
+              <p className="text-gray-500">No comments yet</p>
+              <p className="text-gray-400 text-sm">Be the first to comment</p>
             </div>
           ) : (
             <div className="py-4 px-4 space-y-4">
@@ -91,9 +91,7 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
         </div>
 
         {/* Comment input */}
-        <div className="border-t border-white/10 p-4">
-          <CommentForm postId={postId} onCancel={onBack} />
-        </div>
+        <CommentForm postId={postId} onCancel={onBack} />
       </div>
     </div>
   );

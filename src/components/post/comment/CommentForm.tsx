@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
@@ -49,30 +48,22 @@ export const CommentForm = ({ postId, onCancel }: CommentFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmitComment} className="space-y-4">
-      <Textarea
-        placeholder="Write your comment..."
+    <form onSubmit={handleSubmitComment} className="flex items-center gap-2 px-4 py-3 border-t border-gray-200">
+      <input
+        type="text"
+        placeholder="Add a comment..."
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
-        className="min-h-[100px] bg-[#2A2F3C] border-purple-500/50 focus-visible:ring-purple-500/30 text-white placeholder:text-white/50 resize-none rounded-lg"
+        className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-500"
       />
-      <div className="flex justify-end gap-3">
-        <Button 
-          type="button"
-          onClick={onCancel}
-          variant="ghost"
-          className="text-white hover:bg-white/5"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit"
-          className="bg-purple-500 hover:bg-purple-600 text-white"
-          disabled={!newComment.trim()}
-        >
-          Post Comment
-        </Button>
-      </div>
+      <Button 
+        type="submit"
+        variant="ghost"
+        className="text-blue-500 font-semibold text-sm hover:text-blue-600 disabled:text-blue-300 disabled:hover:text-blue-300"
+        disabled={!newComment.trim()}
+      >
+        Post
+      </Button>
     </form>
   );
 };
