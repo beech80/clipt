@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MessageSquare, Loader2, Flag } from "lucide-react";
+import { ArrowLeft, MessageSquare, Loader2, Flag, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { useReportDialog } from "@/hooks/use-report-dialog";
@@ -96,22 +96,32 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="w-full max-w-lg bg-black min-h-screen md:min-h-[80vh] md:rounded-lg overflow-hidden flex flex-col">
+      <div className="w-full max-w-lg bg-[#1a1b1e] min-h-screen md:min-h-[80vh] md:rounded-lg overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-black/90 backdrop-blur supports-[backdrop-filter]:bg-black/60 border-b border-white/10 px-4 py-3 sticky top-0 z-10">
-          <div className="flex items-center gap-3">
+        <div className="bg-[#1a1b1e]/90 backdrop-blur supports-[backdrop-filter]:bg-[#1a1b1e]/60 border-b border-white/10 px-4 py-3 sticky top-0 z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onBack}
+                className="hover:bg-white/10 text-white"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-white/60" />
+                <h1 className="text-lg font-semibold text-white">Comments</h1>
+              </div>
+            </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={onBack}
               className="hover:bg-white/10 text-white"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <X className="w-5 h-5" />
             </Button>
-            <div className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-white/60" />
-              <h1 className="text-lg font-semibold text-white">Comments</h1>
-            </div>
           </div>
         </div>
 
@@ -160,7 +170,7 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
                               <Flag className="h-4 w-4 text-white/60" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-black/90 border-white/10">
+                          <DropdownMenuContent align="end" className="bg-[#1a1b1e]/90 border-white/10">
                             <DropdownMenuItem 
                               onClick={() => handleReport(comment.id)}
                               className="text-white hover:bg-white/10"
@@ -180,10 +190,10 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
         </div>
 
         {/* Comment input */}
-        <div className="bg-black/90 backdrop-blur supports-[backdrop-filter]:bg-black/60 border-t border-white/10 p-4 sticky bottom-0">
+        <div className="bg-[#1a1b1e]/90 backdrop-blur supports-[backdrop-filter]:bg-[#1a1b1e]/60 border-t border-white/10 p-4 sticky bottom-0">
           <form onSubmit={handleSubmitComment} className="flex gap-2">
             <Textarea
-              placeholder="Add a comment..."
+              placeholder="Write your comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               className="flex-1 min-h-[44px] max-h-[120px] resize-none bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-white/20"
@@ -203,3 +213,4 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
 };
 
 export default CommentList;
+
