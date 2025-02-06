@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MessageSquare, Loader2, Flag, X, Heart } from "lucide-react";
+import { ArrowLeft, Heart, MoreHorizontal, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { useReportDialog } from "@/hooks/use-report-dialog";
@@ -23,6 +23,7 @@ interface Comment {
   content: string;
   created_at: string;
   parent_id?: string | null;
+  likes_count: number;
   profiles: {
     username: string;
     avatar_url: string;
@@ -96,122 +97,105 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="w-full max-w-lg bg-white min-h-screen md:min-h-[80vh] md:rounded-lg overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-white z-50 flex flex-col md:flex-row">
+      {/* Left side preview (shown only on md screens and up) */}
+      <div className="hidden md:block md:w-[65%] bg-black">
+        <div className="h-full flex items-center justify-center">
+          <div className="text-white/50 text-lg">Post preview</div>
+        </div>
+      </div>
+
+      {/* Comments section */}
+      <div className="flex-1 flex flex-col h-full md:max-w-[35%] bg-white">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onBack}
-                className="hover:bg-gray-100"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-700" />
-              </Button>
-              <h1 className="text-lg font-semibold text-gray-900">Comments</h1>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onBack}
-              className="hover:bg-gray-100"
-            >
-              <X className="w-5 h-5 text-gray-700" />
-            </Button>
-          </div>
+        <div className="border-b border-gray-200 px-4 py-3 flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="md:hidden mr-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-base font-semibold">Comments</h1>
         </div>
 
         {/* Comments list */}
-        <div className="flex-1 overflow-y-auto bg-white">
-          <div className="p-4 space-y-4">
-            {isLoading ? (
-              <div className="flex justify-center items-center min-h-[200px]">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-              </div>
-            ) : comments?.length === 0 ? (
-              <div className="text-center py-10">
-                <MessageSquare className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                <p className="text-gray-500">No comments yet. Be the first to comment!</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {comments?.map((comment) => (
-                  <div 
-                    key={comment.id} 
-                    className="group flex items-start gap-3"
-                  >
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={comment.profiles.avatar_url} />
-                      <AvatarFallback className="bg-gray-200 text-gray-700">
-                        {comment.profiles.username[0]?.toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="space-y-1">
-                          <div className="flex items-baseline gap-2">
-                            <span className="font-medium text-gray-900">
-                              {comment.profiles.username}
-                            </span>
-                            <p className="text-gray-900">{comment.content}</p>
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-gray-500">
-                            <span>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
-                            <button className="font-medium hover:text-gray-700">Like</button>
-                            <button className="font-medium hover:text-gray-700">Reply</button>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="opacity-0 group-hover:opacity-100 hover:bg-gray-100"
-                          >
-                            <Heart className="h-4 w-4 text-gray-400" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="opacity-0 group-hover:opacity-100 hover:bg-gray-100"
-                              >
-                                <Flag className="h-4 w-4 text-gray-400" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-white">
-                              <DropdownMenuItem 
-                                onClick={() => handleReport(comment.id)}
-                                className="text-red-600 hover:bg-red-50"
-                              >
-                                Report Comment
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            </div>
+          ) : comments?.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-gray-500 text-sm">No comments yet</p>
+              <p className="text-gray-400 text-sm">Be the first to comment</p>
+            </div>
+          ) : (
+            <div className="py-4 px-4 space-y-4">
+              {comments?.map((comment) => (
+                <div key={comment.id} className="flex space-x-3">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage src={comment.profiles.avatar_url} />
+                    <AvatarFallback>
+                      {comment.profiles.username[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className="font-semibold text-sm">
+                          {comment.profiles.username}
+                        </span>
+                        <span className="ml-2 text-sm">{comment.content}</span>
                       </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleReport(comment.id)}
+                            className="text-red-600"
+                          >
+                            Report
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <div className="flex items-center space-x-4 text-xs text-gray-500">
+                      <span>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
+                      {comment.likes_count > 0 && (
+                        <span>{comment.likes_count} likes</span>
+                      )}
+                      <button className="font-semibold hover:text-gray-700">Reply</button>
+                      <button className="font-semibold hover:text-gray-700">Like</button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Comment input */}
-        <div className="border-t border-gray-200 p-4 sticky bottom-0 bg-white">
-          <form onSubmit={handleSubmitComment} className="flex items-center gap-2">
+        <div className="border-t border-gray-200 px-4 py-3">
+          <form onSubmit={handleSubmitComment} className="flex items-center space-x-3">
             <Textarea
               placeholder="Add a comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="flex-1 min-h-[44px] max-h-[120px] resize-none border-gray-200 focus-visible:ring-blue-200 rounded-full py-2 px-4"
+              className="min-h-[44px] max-h-[120px] resize-none border-gray-200 focus-visible:ring-blue-200 rounded-lg py-3"
             />
             <Button 
               type="submit" 
-              className="text-blue-500 hover:text-blue-600 font-semibold bg-transparent hover:bg-transparent"
+              className="text-blue-500 hover:text-blue-600 font-semibold bg-transparent hover:bg-transparent px-0"
               disabled={!newComment.trim()}
             >
               Post
