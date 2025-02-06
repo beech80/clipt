@@ -29,6 +29,7 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
   const { data: comments, isLoading } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
+      // Fetch all comments for the post along with the commenter's profile information
       const { data: allComments, error } = await supabase
         .from('comments')
         .select(`
@@ -39,9 +40,12 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
           )
         `)
         .eq('post_id', postId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching comments:", error);
+        throw error;
+      }
 
       // Type the comments properly before organizing them
       const typedComments = allComments as (Omit<Comment, 'replies'> & { post_id: string })[];
