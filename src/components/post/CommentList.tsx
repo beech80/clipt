@@ -13,7 +13,7 @@ interface Comment {
   parent_id?: string | null;
   likes_count: number;
   user_id: string;
-  replies: Comment[];  // Add this to fix the TypeScript error
+  replies: Comment[];  
   profiles: {
     username: string;
     avatar_url: string;
@@ -43,21 +43,24 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
 
       if (error) throw error;
 
+      // Type the comments properly before organizing them
+      const typedComments = allComments as (Omit<Comment, 'replies'> & { post_id: string })[];
+      
       // Organize comments into a tree structure
-      const commentMap = new Map();
+      const commentMap = new Map<string, Comment>();
       const rootComments: Comment[] = [];
 
-      allComments.forEach((comment: Comment) => {
-        comment.replies = [];
-        commentMap.set(comment.id, comment);
+      typedComments.forEach((comment) => {
+        const commentWithReplies = { ...comment, replies: [] } as Comment;
+        commentMap.set(comment.id, commentWithReplies);
         
         if (comment.parent_id) {
           const parent = commentMap.get(comment.parent_id);
           if (parent) {
-            parent.replies.push(comment);
+            parent.replies.push(commentWithReplies);
           }
         } else {
-          rootComments.push(comment);
+          rootComments.push(commentWithReplies);
         }
       });
 
