@@ -13,6 +13,7 @@ interface Comment {
   parent_id?: string | null;
   likes_count: number;
   user_id: string;
+  replies: Comment[];  // Add this to fix the TypeScript error
   profiles: {
     username: string;
     avatar_url: string;
