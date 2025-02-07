@@ -13,7 +13,7 @@ interface CommentFormProps {
   onReplyComplete?: () => void;
 }
 
-export const CommentForm = ({ postId, parentId, onReplyComplete }: CommentFormProps) => {
+export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: CommentFormProps) => {
   const [newComment, setNewComment] = useState("");
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -54,23 +54,32 @@ export const CommentForm = ({ postId, parentId, onReplyComplete }: CommentFormPr
   };
 
   return (
-    <form onSubmit={handleSubmitComment} className="flex items-center gap-2 p-3">
-      <input
-        type="text"
-        placeholder={parentId ? "Write a reply..." : "Write a comment..."}
+    <form onSubmit={handleSubmitComment} className="p-4 space-y-4">
+      <textarea
+        placeholder="Write your comment..."
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
-        className="flex-1 text-sm bg-gray-100 rounded-full px-4 py-2 outline-none placeholder:text-gray-500 focus:bg-gray-200 transition-colors"
+        className="w-full min-h-[100px] bg-[#1e2230] text-white rounded-lg p-4 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all"
       />
-      <Button 
-        type="submit"
-        variant="ghost"
-        size="sm"
-        className="text-blue-500 font-semibold text-sm hover:text-blue-600 disabled:text-blue-300 disabled:hover:text-blue-300"
-        disabled={!newComment.trim()}
-      >
-        Post
-      </Button>
+      <div className="flex justify-end gap-3">
+        {onCancel && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="border-[#9b87f5]/20 hover:border-[#9b87f5]/50 text-gray-400 hover:text-white"
+          >
+            Cancel
+          </Button>
+        )}
+        <Button 
+          type="submit"
+          className="bg-[#9b87f5] hover:bg-[#8b77e5] text-white transition-colors disabled:opacity-50"
+          disabled={!newComment.trim()}
+        >
+          Post Comment
+        </Button>
+      </div>
     </form>
   );
 };
