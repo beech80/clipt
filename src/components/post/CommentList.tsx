@@ -66,24 +66,24 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
       });
 
       return rootComments;
-    }
+    },
+    refetchInterval: 5000 // Refresh comments every 5 seconds
   });
 
   return (
     <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col">
-      {/* Comments list */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
             <Loader2 className="h-6 w-6 animate-spin text-[#9b87f5]" />
           </div>
         ) : comments?.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-400">No comments yet</p>
-            <p className="text-gray-500 text-sm">Be the first to comment</p>
+          <div className="text-center py-6">
+            <p className="text-gray-400 text-sm">No comments yet</p>
+            <p className="text-gray-500 text-xs">Start the conversation</p>
           </div>
         ) : (
-          <div className="p-4 space-y-4">
+          <div className="space-y-3">
             {comments?.map((comment) => (
               <CommentItem 
                 key={comment.id} 
@@ -95,7 +95,6 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         )}
       </div>
 
-      {/* Comment input */}
       <div className="border-t border-[#9b87f5]/20">
         <CommentForm postId={postId} />
       </div>
