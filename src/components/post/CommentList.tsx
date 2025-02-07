@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { CommentItem } from "./comment/CommentItem";
 import { CommentForm } from "./comment/CommentForm";
 
@@ -71,18 +71,6 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
 
   return (
     <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col">
-      <div className="flex items-center gap-2 p-4 border-b border-[#9b87f5]/20">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="text-white hover:bg-white/10"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="text-lg font-semibold text-white">Comments</h2>
-      </div>
-
       {/* Comments list */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
@@ -90,12 +78,12 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
             <Loader2 className="h-6 w-6 animate-spin text-[#9b87f5]" />
           </div>
         ) : comments?.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-8">
             <p className="text-gray-400">No comments yet</p>
             <p className="text-gray-500 text-sm">Be the first to comment</p>
           </div>
         ) : (
-          <div className="p-4 space-y-6">
+          <div className="p-4 space-y-4">
             {comments?.map((comment) => (
               <CommentItem 
                 key={comment.id} 
