@@ -10,7 +10,6 @@ import { streamingRoutes } from "./routes/streamingRoutes";
 import { userRoutes } from "./routes/userRoutes";
 import { gameRoutes } from "./routes/gameRoutes";
 import { paymentRoutes } from "./routes/paymentRoutes";
-import Comments from "@/pages/Comments";
 import Subscription from "@/pages/Subscription";
 
 export const routes: RouteObject[] = [
@@ -25,10 +24,6 @@ export const routes: RouteObject[] = [
   {
     path: "/messages",
     element: <Messages />,
-  },
-  {
-    path: "/comments/:id",
-    element: <Comments />,
   },
   {
     path: "/subscription",
