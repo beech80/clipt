@@ -82,7 +82,7 @@ const Clipts = () => {
                         </p>
                       </div>
                     </div>
-                    <p className="text-white mt-2">{post.caption}</p>
+                    <p className="text-white mt-2">{post.content}</p>
                   </div>
                 </div>
               )}
@@ -97,3 +97,4 @@ const Clipts = () => {
 };
 
 export default Clipts;
+
