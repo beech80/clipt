@@ -25,6 +25,11 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
+    if (!postId) {
+      toast.error("Invalid post");
+      return;
+    }
+
     if (!newComment.trim()) {
       toast.error("Comment cannot be empty");
       return;
@@ -49,6 +54,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         onReplyComplete();
       }
     } catch (error) {
+      console.error("Error adding comment:", error);
       toast.error("Error adding comment");
     }
   };

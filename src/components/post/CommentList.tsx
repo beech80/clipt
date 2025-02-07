@@ -29,6 +29,11 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
   const { data: comments, isLoading } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
+      // Add validation to ensure postId exists
+      if (!postId) {
+        throw new Error('Post ID is required');
+      }
+
       const { data: allComments, error } = await supabase
         .from('comments')
         .select(`
@@ -67,7 +72,8 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
 
       return rootComments;
     },
-    refetchInterval: 5000 // Refresh comments every 5 seconds
+    refetchInterval: 5000, // Refresh comments every 5 seconds
+    enabled: Boolean(postId) // Only run query if postId exists
   });
 
   return (
