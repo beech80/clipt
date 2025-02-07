@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { Heart, MoreHorizontal } from "lucide-react";
+import { Heart, MoreHorizontal, MessageSquare } from "lucide-react";
 import { useReportDialog } from "@/hooks/use-report-dialog";
 import { useState } from "react";
 import { CommentForm } from "./CommentForm";
@@ -44,6 +44,7 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const maxLevel = 2;
+  const [isLiked, setIsLiked] = useState(false);
 
   const handleReport = (commentId: string) => {
     openReportDialog(commentId, 'comment');
@@ -69,19 +70,23 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
             .from('comment_likes')
             .delete()
             .match({ comment_id: comment.id, user_id: user.id });
+          setIsLiked(false);
         } else {
           throw error;
         }
+      } else {
+        setIsLiked(true);
       }
 
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      toast.success(isLiked ? 'Comment unliked' : 'Comment liked');
     } catch (error) {
       toast.error("Error updating like");
     }
   };
 
   return (
-    <div className="group">
+    <div className="group" style={{ marginLeft: level > 0 ? `${level * 20}px` : '0' }}>
       <div className="flex gap-3">
         <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarImage src={comment.profiles.avatar_url} />
@@ -93,27 +98,28 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="inline-flex items-start gap-2">
-                <div className="bg-gray-100 rounded-2xl px-4 py-2">
-                  <span className="font-semibold text-sm mr-2">{comment.profiles.username}</span>
-                  <span className="text-sm">{comment.content}</span>
+                <div className="bg-gaming-700/50 rounded-2xl px-4 py-2">
+                  <span className="font-semibold text-sm text-gaming-100 mr-2">{comment.profiles.username}</span>
+                  <span className="text-sm text-gaming-200">{comment.content}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+              <div className="flex items-center gap-4 mt-1 text-xs text-gaming-400">
                 <span>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
-                {comment.likes_count > 0 && (
-                  <span>{comment.likes_count} likes</span>
-                )}
-                <button 
-                  onClick={() => setShowReplyForm(!showReplyForm)}
-                  className="font-semibold hover:text-gray-700"
-                >
-                  Reply
-                </button>
                 <button 
                   onClick={handleLike}
-                  className="font-semibold hover:text-gray-700"
+                  className="flex items-center gap-1 font-semibold hover:text-gaming-300"
                 >
-                  Like
+                  <Heart className={`h-3 w-3 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                  {comment.likes_count > 0 && (
+                    <span>{comment.likes_count}</span>
+                  )}
+                </button>
+                <button 
+                  onClick={() => setShowReplyForm(!showReplyForm)}
+                  className="flex items-center gap-1 font-semibold hover:text-gaming-300"
+                >
+                  <MessageSquare className="h-3 w-3" />
+                  Reply
                 </button>
               </div>
               {showReplyForm && (
@@ -131,15 +137,15 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-8 w-8 text-gaming-400 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuContent align="end" className="w-40 bg-gaming-800 border-gaming-600">
                 <DropdownMenuItem
                   onClick={() => handleReport(comment.id)}
-                  className="text-red-600 focus:text-red-600"
+                  className="text-red-400 focus:text-red-400"
                 >
                   Report
                 </DropdownMenuItem>
@@ -166,7 +172,7 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
           ) : null}
           <button
             onClick={() => setShowReplies(!showReplies)}
-            className="text-xs text-gray-500 font-semibold mt-2 hover:text-gray-700"
+            className="text-xs text-gaming-400 font-semibold mt-2 hover:text-gaming-300"
           >
             {showReplies ? 'Hide replies' : `View ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`}
           </button>

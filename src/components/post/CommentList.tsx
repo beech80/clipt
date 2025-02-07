@@ -25,7 +25,7 @@ interface CommentListProps {
   onBack: () => void;
 }
 
-const CommentList = ({ postId, onBack }: CommentListProps) => {
+export const CommentList = ({ postId, onBack }: CommentListProps) => {
   const { data: comments, isLoading } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
@@ -72,17 +72,17 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
   });
 
   return (
-    <div className="bg-black/5 backdrop-blur-sm">
+    <div className="bg-gaming-900/95 backdrop-blur-sm">
       {/* Comments list */}
-      <div className="max-h-[300px] overflow-y-auto">
+      <div className="max-h-[70vh] overflow-y-auto">
         {isLoading ? (
           <div className="flex justify-center items-center h-20">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
           </div>
         ) : comments?.length === 0 ? (
           <div className="text-center py-6">
-            <p className="text-gray-500">No comments yet</p>
-            <p className="text-gray-400 text-sm">Be the first to comment</p>
+            <p className="text-gray-400">No comments yet</p>
+            <p className="text-gray-500 text-sm">Be the first to comment</p>
           </div>
         ) : (
           <div className="py-4 px-4 space-y-4">
@@ -98,7 +98,7 @@ const CommentList = ({ postId, onBack }: CommentListProps) => {
       </div>
 
       {/* Comment input */}
-      <div className="border-t border-gaming-400/20">
+      <div className="border-t border-gaming-400/20 bg-gaming-800/80">
         <CommentForm postId={postId} />
       </div>
     </div>

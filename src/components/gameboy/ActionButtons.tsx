@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Heart, MessageSquare, UserPlus, Trophy, Camera } from 'lucide-react';
+import { Heart, MessageSquare, UserPlus, Trophy, Camera, ArrowLeft } from 'lucide-react';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft } from 'lucide-react';
+import CommentList from '../post/CommentList';
 
 interface ActionButtonsProps {
   onAction: (action: string) => void;
@@ -16,7 +15,6 @@ interface ActionButtonsProps {
 const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
   const { user } = useAuth();
   const [isCommentOpen, setIsCommentOpen] = useState(false);
-  const [comment, setComment] = useState('');
   const [isLiked, setIsLiked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
 
@@ -74,35 +72,6 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
     }
   };
 
-  const handleCommentSubmit = async () => {
-    if (!user) {
-      toast.error("Please login to comment");
-      return;
-    }
-
-    if (!comment.trim()) {
-      toast.error("Comment cannot be empty");
-      return;
-    }
-
-    try {
-      await supabase
-        .from('comments')
-        .insert([{
-          post_id: postId,
-          user_id: user.id,
-          content: comment.trim()
-        }]);
-      
-      toast.success("Comment added successfully!");
-      setComment('');
-      setIsCommentOpen(false);
-      onAction('comment');
-    } catch (error) {
-      toast.error("Error adding comment");
-    }
-  };
-
   const handleRank = async () => {
     if (!user) {
       toast.error("Please login to rank posts");
@@ -122,7 +91,6 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
 
   return (
     <>
-      {/* Y Button - Like (Red) - Top */}
       <button 
         className="action-button absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[40%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
@@ -135,7 +103,6 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(255,0,0,0.5)]`} />
       </button>
 
-      {/* X Button - Comment (Blue) - Left */}
       <button 
         className="action-button absolute left-0 top-1/2 -translate-x-[40%] -translate-y-1/2
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
@@ -148,7 +115,6 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(0,120,255,0.5)]" />
       </button>
 
-      {/* B Button - Follow (Green) - Right */}
       <button 
         className="action-button absolute right-0 top-1/2 translate-x-[40%] -translate-y-1/2
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
@@ -161,7 +127,6 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]`} />
       </button>
 
-      {/* A Button - Rank (Yellow) - Bottom */}
       <button 
         className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[40%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
@@ -174,7 +139,6 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(255,255,0,0.5)]" />
       </button>
 
-      {/* Select Button - Post (Purple) - Below Action Buttons */}
       <button 
         className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[180%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
@@ -192,8 +156,8 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
       </button>
 
       <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-[#1A1F2C] text-white">
-          <div className="flex items-center gap-2 mb-4">
+        <DialogContent className="sm:max-w-[600px] bg-gaming-800/95 backdrop-blur-sm p-0 border-gaming-400/30">
+          <div className="flex items-center gap-2 p-4 border-b border-gaming-400/20">
             <Button
               variant="ghost"
               size="icon"
@@ -202,30 +166,11 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h2 className="text-lg font-semibold">Add Comment</h2>
+            <h2 className="text-lg font-semibold text-white">Comments</h2>
           </div>
           
-          <Textarea
-            placeholder="Write your comment..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="min-h-[100px] bg-[#2A2F3C] border-gaming-400/30 text-white"
-          />
-          
-          <div className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsCommentOpen(false)}
-              className="border-gaming-400/30 text-white hover:bg-white/10"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCommentSubmit}
-              className="bg-gaming-500 hover:bg-gaming-600 text-white"
-            >
-              Post Comment
-            </Button>
+          <div className="max-h-[80vh] overflow-y-auto">
+            <CommentList postId={postId} onBack={() => setIsCommentOpen(false)} />
           </div>
         </DialogContent>
       </Dialog>
