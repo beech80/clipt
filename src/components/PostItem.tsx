@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { useNavigate } from "react-router-dom";
@@ -5,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { PostInteractions } from "./post/interactions/PostInteractions";
 import { Post } from "@/types/post";
 import { Heart, MessageSquare, Trophy } from "lucide-react";
+import { CommentList } from "./post/CommentList";
 
 interface PostItemProps {
   post: Post;
@@ -14,6 +16,7 @@ const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [commentsCount, setCommentsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [showComments, setShowComments] = useState(false);
 
   useEffect(() => {
     const fetchCommentsCount = async () => {
@@ -28,7 +31,7 @@ const PostItem = ({ post }: PostItemProps) => {
   }, [post.id]);
 
   const handleCommentClick = () => {
-    navigate(`/comments/${post.id}`);
+    setShowComments(!showComments);
   };
 
   const username = post.profiles?.username || 'Anonymous';
@@ -53,7 +56,10 @@ const PostItem = ({ post }: PostItemProps) => {
               </span>
             </div>
             <div className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110 active:scale-95">
-              <MessageSquare className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90" />
+              <MessageSquare 
+                className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90" 
+                onClick={handleCommentClick}
+              />
               <span className="text-sm font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
                 {commentsCount}
               </span>
@@ -81,6 +87,12 @@ const PostItem = ({ post }: PostItemProps) => {
           commentsCount={commentsCount} 
           onCommentClick={handleCommentClick}
         />
+
+        {showComments && (
+          <div className="border-t border-gaming-400/20 bg-gaming-800/80">
+            <CommentList postId={post.id} onBack={() => setShowComments(false)} />
+          </div>
+        )}
       </div>
     </div>
   );
