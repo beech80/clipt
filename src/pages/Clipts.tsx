@@ -8,7 +8,16 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 
-// Separate the response type to avoid recursive type definition
+// Separate types to avoid recursive type definitions
+type UserProfile = {
+  username: string | null;
+  avatar_url: string | null;
+};
+
+type GameInfo = {
+  name: string | null;
+};
+
 type PostResponse = {
   id: string;
   content: string | null;
@@ -16,14 +25,9 @@ type PostResponse = {
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles: {
-    username: string | null;
-    avatar_url: string | null;
-  } | null;
-  games: {
-    name: string | null;
-  } | null;
-}
+  profiles: UserProfile | null;
+  games: GameInfo | null;
+};
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -55,7 +59,7 @@ const Clipts = () => {
 
       const postIds = postsData.map(p => p.id);
       
-      const [{ data: commentCounts }, { data: voteCounts }] = await Promise.all([
+      const [commentCountsResult, voteCountsResult] = await Promise.all([
         supabase
           .from('comments')
           .select('post_id')
@@ -67,16 +71,10 @@ const Clipts = () => {
       ]);
 
       return (postsData as PostResponse[]).map(post => ({
-        id: post.id,
-        content: post.content,
-        image_url: post.image_url,
-        video_url: post.video_url,
-        user_id: post.user_id,
-        created_at: post.created_at,
-        profiles: post.profiles,
+        ...post,
         likes_count: 0,
-        comments_count: (commentCounts || []).filter(c => c.post_id === post.id).length,
-        clip_votes: (voteCounts || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
+        comments_count: (commentCountsResult.data || []).filter(c => c.post_id === post.id).length,
+        clip_votes: (voteCountsResult.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
       })) as Post[];
     }
   });
