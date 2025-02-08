@@ -24,21 +24,32 @@ const Clipts = () => {
             avatar_url
           ),
           games:game_id (name),
-          likes_count,
-          clip_votes (id),
-          comments (id)
+          clip_votes (
+            id
+          ),
+          comments (
+            id
+          )
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      return data?.map(post => ({
-        ...post,
-        likes_count: post.likes_count || 0,
+      const transformedData = data?.map(post => ({
+        id: post.id,
+        content: post.content,
+        image_url: post.image_url,
+        video_url: post.video_url,
+        user_id: post.user_id,
+        created_at: post.created_at,
+        profiles: post.profiles,
+        likes_count: 0,
         comments_count: (post.comments || []).length,
         clip_votes: (post.clip_votes || []).map(() => ({ count: 1 }))
       })) as Post[];
+
+      return transformedData;
     }
   });
 
