@@ -6,14 +6,7 @@ import GameBoyControls from "@/components/GameBoyControls";
 import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import MuxPlayer from "@/components/video/MuxPlayer";
-
-interface Game {
-  id: string;
-  name: string;
-  cover_url: string | null;
-  created_at: string;
-}
+import { Post } from '@/types/post';
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -35,7 +28,7 @@ const Clipts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Post[];
     },
   });
 
@@ -74,4 +67,3 @@ const Clipts = () => {
 };
 
 export default Clipts;
-
