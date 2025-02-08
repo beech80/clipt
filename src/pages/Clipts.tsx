@@ -40,6 +40,11 @@ const Clipts = () => {
 
   return (
     <div className="fixed inset-0 bg-black">
+      {/* Title */}
+      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-black/80 to-transparent">
+        <h1 className="text-2xl font-bold text-white text-center">Clipts</h1>
+      </div>
+
       {/* Full Screen Vertical Feed */}
       <div className="h-screen w-full snap-y snap-mandatory overflow-y-scroll">
         {isLoading ? (
@@ -97,4 +102,3 @@ const Clipts = () => {
 };
 
 export default Clipts;
-
