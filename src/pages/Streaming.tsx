@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
 import GameBoyControls from "@/components/GameBoyControls";
+import { BackButton } from "@/components/ui/back-button";
 
 export default function Streaming() {
   const { user } = useAuth();
@@ -81,7 +83,10 @@ export default function Streaming() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <h1 className="text-3xl font-bold">Streaming Dashboard</h1>
+      <div className="flex items-center gap-4">
+        <BackButton />
+        <h1 className="text-3xl font-bold">Streaming Dashboard</h1>
+      </div>
       
       <Card className="p-6 space-y-4">
         <h2 className="text-xl font-semibold mb-4">Stream Settings</h2>

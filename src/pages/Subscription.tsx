@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -7,6 +8,7 @@ import { Check, CreditCard, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
+import { BackButton } from "@/components/ui/back-button";
 
 interface SubscriptionPlan {
   id: string;
@@ -107,7 +109,10 @@ const Subscription = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">Choose Your Plan</h1>
+        <div className="flex items-center gap-4 mb-8">
+          <BackButton />
+          <h1 className="text-3xl font-bold">Choose Your Plan</h1>
+        </div>
         
         <div className="grid md:grid-cols-3 gap-8">
           {plans?.map((plan) => (

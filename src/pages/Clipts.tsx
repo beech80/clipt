@@ -7,6 +7,7 @@ import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
+import { BackButton } from "@/components/ui/back-button";
 
 // Define a flat type for the database response
 type DbPost = {
@@ -53,21 +54,8 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      const postIds = postsData.map(p => p.id);
-      
-      const [commentCountsResult, voteCountsResult] = await Promise.all([
-        supabase
-          .from('comments')
-          .select('post_id')
-          .in('post_id', postIds),
-        supabase
-          .from('clip_votes')
-          .select('post_id')
-          .in('post_id', postIds)
-      ]);
-
       // Transform database posts to Post type
-      return (postsData as DbPost[]).map(post => ({
+      return postsData.map((post: DbPost) => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
@@ -76,8 +64,8 @@ const Clipts = () => {
         created_at: post.created_at,
         profiles: post.profiles,
         likes_count: 0,
-        comments_count: (commentCountsResult.data || []).filter(c => c.post_id === post.id).length,
-        clip_votes: (voteCountsResult.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
+        comments_count: 0,
+        clip_votes: []
       })) as Post[];
     }
   });
@@ -86,9 +74,12 @@ const Clipts = () => {
     <div className="min-h-screen bg-gaming-900/95 backdrop-blur-sm">
       {/* Title */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-gaming-900 to-transparent">
-        <h1 className="text-2xl font-bold text-gaming-100 text-center animate-fade-in">
-          Clipts
-        </h1>
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <h1 className="text-2xl font-bold text-gaming-100 text-center animate-fade-in">
+            Clipts
+          </h1>
+        </div>
       </div>
 
       <div className="container mx-auto max-w-3xl px-4 py-20">

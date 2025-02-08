@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -93,7 +94,7 @@ export default function AiAssistant() {
           <ArrowLeft className="h-6 w-6" />
         </Button>
         <div className="flex items-center gap-2">
-          <Bot className="w-6 h-6 text-[#1A1F2C]" />
+          <Bot className="h-6 w-6 text-[#1A1F2C]" />
           <h1 className="gameboy-title">Gaming AI Assistant</h1>
         </div>
         <div className="w-10" /> {/* Spacer for centering */}
@@ -137,7 +138,7 @@ export default function AiAssistant() {
             disabled={isLoading}
             className="gaming-button bg-gaming-400 hover:bg-gaming-500 text-black"
           >
-            <Send className="w-4 h-4" />
+            <Send className="h-4 w-4" />
           </Button>
         </div>
       </form>
