@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
   const handleSave = async () => {
     try {
       setIsLoading(true);
+      console.log("Saving theme:", theme); // Log the theme being saved
       
       const { error } = await supabase
         .from('profiles')
@@ -38,7 +40,8 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
       // Update CSS variables
       document.documentElement.style.setProperty('--background-override', theme.secondary);
       document.documentElement.style.setProperty('--button-override', theme.primary);
-
+      
+      console.log("Theme updated successfully"); // Log success
       toast.success("Theme updated successfully!");
     } catch (error) {
       console.error('Error updating theme:', error);
@@ -46,6 +49,11 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleColorChange = (color: string, type: 'primary' | 'secondary') => {
+    console.log(`Color changed - ${type}:`, color); // Log color changes
+    setTheme(prev => ({ ...prev, [type]: color }));
   };
 
   return (
@@ -63,13 +71,13 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
               id="primary"
               type="color"
               value={theme.primary}
-              onChange={(e) => setTheme({ ...theme, primary: e.target.value })}
+              onChange={(e) => handleColorChange(e.target.value, 'primary')}
               className="w-16 h-10 p-1"
             />
             <Input
               type="text"
               value={theme.primary}
-              onChange={(e) => setTheme({ ...theme, primary: e.target.value })}
+              onChange={(e) => handleColorChange(e.target.value, 'primary')}
               className="flex-1"
               placeholder="#9b87f5"
             />
@@ -83,13 +91,13 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
               id="secondary"
               type="color"
               value={theme.secondary}
-              onChange={(e) => setTheme({ ...theme, secondary: e.target.value })}
+              onChange={(e) => handleColorChange(e.target.value, 'secondary')}
               className="w-16 h-10 p-1"
             />
             <Input
               type="text"
               value={theme.secondary}
-              onChange={(e) => setTheme({ ...theme, secondary: e.target.value })}
+              onChange={(e) => handleColorChange(e.target.value, 'secondary')}
               className="flex-1"
               placeholder="#1A1F2C"
             />
