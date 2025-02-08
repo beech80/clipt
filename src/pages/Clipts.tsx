@@ -8,8 +8,14 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 
-// Raw type representing just the joined data
-interface JoinedData {
+// Database response type without any transformations
+type DatabasePost = {
+  id: string;
+  content: string | null;
+  image_url: string | null;
+  video_url: string | null;
+  user_id: string;
+  created_at: string;
   profiles: {
     username: string | null;
     avatar_url: string | null;
@@ -18,19 +24,6 @@ interface JoinedData {
     name: string | null;
   } | null;
 }
-
-// Database response type without any transformations
-interface RawPost {
-  id: string;
-  content: string | null;
-  image_url: string | null;
-  video_url: string | null;
-  user_id: string;
-  created_at: string;
-}
-
-// Combined type for database response
-type PostResponse = RawPost & JoinedData;
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -73,23 +66,21 @@ const Clipts = () => {
           .in('post_id', postIds)
       ]);
 
-      const rawPosts = postsData as unknown as PostResponse[];
+      const dbPosts = postsData as DatabasePost[];
 
-      return rawPosts.map(post => {
-        const transformed: Post = {
-          id: post.id,
-          content: post.content,
-          image_url: post.image_url,
-          video_url: post.video_url,
-          user_id: post.user_id,
-          created_at: post.created_at,
-          profiles: post.profiles,
-          likes_count: 0,
-          comments_count: (commentCountsResult.data || []).filter(c => c.post_id === post.id).length,
-          clip_votes: (voteCountsResult.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
-        };
-        return transformed;
-      });
+      // Transform database posts into the Post type
+      return dbPosts.map(post => ({
+        id: post.id,
+        content: post.content,
+        image_url: post.image_url,
+        video_url: post.video_url,
+        user_id: post.user_id,
+        created_at: post.created_at,
+        profiles: post.profiles,
+        likes_count: 0,
+        comments_count: (commentCountsResult.data || []).filter(c => c.post_id === post.id).length,
+        clip_votes: (voteCountsResult.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
+      }));
     }
   });
 
