@@ -24,9 +24,9 @@ const Clipts = () => {
             avatar_url
           ),
           games:game_id (name),
-          likes:likes_count,
-          clip_votes:clip_votes!inner(id),
-          comments:comments!inner(id)
+          likes_count,
+          clip_votes (id),
+          comments (id)
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
@@ -35,9 +35,9 @@ const Clipts = () => {
       
       return data?.map(post => ({
         ...post,
-        likes_count: post.likes || 0,
+        likes_count: post.likes_count || 0,
         comments_count: (post.comments || []).length,
-        clip_votes: (post.clip_votes || []).map(vote => ({ count: 1 }))
+        clip_votes: (post.clip_votes || []).map(() => ({ count: 1 }))
       })) as Post[];
     }
   });
