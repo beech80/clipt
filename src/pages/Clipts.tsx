@@ -15,6 +15,7 @@ const Clipts = () => {
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
+      // Fetch posts first
       const { data: postsData, error } = await supabase
         .from('posts')
         .select(`
@@ -30,21 +31,35 @@ const Clipts = () => {
 
       if (error) throw error;
 
-      // Get comment counts
-      const { data: commentCounts } = await supabase
-        .from('comments')
-        .select('post_id, count', { count: 'exact', head: true })
-        .in('post_id', postsData?.map(p => p.id) || [])
-        .groupBy('post_id');
+      if (!postsData) return [];
 
-      // Get clip votes
-      const { data: clipVotes } = await supabase
-        .from('clip_votes')
-        .select('post_id, count', { count: 'exact', head: true })
-        .in('post_id', postsData?.map(p => p.id) || [])
-        .groupBy('post_id');
+      // Count comments for each post
+      const commentCountsPromise = Promise.all(
+        postsData.map(post =>
+          supabase
+            .from('comments')
+            .select('*', { count: 'exact' })
+            .eq('post_id', post.id)
+        )
+      );
 
-      const transformedPosts = postsData?.map(post => ({
+      // Count votes for each post
+      const voteCountsPromise = Promise.all(
+        postsData.map(post =>
+          supabase
+            .from('clip_votes')
+            .select('*', { count: 'exact' })
+            .eq('post_id', post.id)
+        )
+      );
+
+      const [commentResults, voteResults] = await Promise.all([
+        commentCountsPromise,
+        voteCountsPromise
+      ]);
+
+      // Transform the data into Post objects
+      return postsData.map((post, index) => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
@@ -53,11 +68,9 @@ const Clipts = () => {
         created_at: post.created_at,
         profiles: post.profiles,
         likes_count: 0,
-        comments_count: commentCounts?.find(c => c.post_id === post.id)?.count || 0,
-        clip_votes: clipVotes?.find(v => v.post_id === post.id) ? [{ count: 1 }] : []
+        comments_count: commentResults[index].count || 0,
+        clip_votes: voteResults[index].count ? [{ count: 1 }] : []
       })) as Post[];
-
-      return transformedPosts || [];
     }
   });
 
