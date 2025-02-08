@@ -66,10 +66,10 @@ const Clipts = () => {
           .in('post_id', postIds)
       ]);
 
-      // Type assertion here is safe because we know the shape of our data
+      // Convert raw database posts to typed DatabasePost array
       const dbPosts = postsData as DatabasePost[];
 
-      // Transform database posts into the Post type without type inference
+      // Transform DatabasePost to Post type with explicit typing
       return dbPosts.map(post => {
         const transformed: Post = {
           id: post.id,
