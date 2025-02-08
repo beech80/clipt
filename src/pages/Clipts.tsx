@@ -8,8 +8,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 
-// Flattened database response type
-type DatabasePost = {
+// Define a flat type for the database response
+type PostWithRelations = {
   id: string;
   content: string | null;
   image_url: string | null;
@@ -66,25 +66,19 @@ const Clipts = () => {
           .in('post_id', postIds)
       ]);
 
-      // Convert raw database posts to typed DatabasePost array
-      const dbPosts = postsData as DatabasePost[];
-
-      // Transform DatabasePost to Post type with explicit typing
-      return dbPosts.map(post => {
-        const transformed: Post = {
-          id: post.id,
-          content: post.content,
-          image_url: post.image_url,
-          video_url: post.video_url,
-          user_id: post.user_id,
-          created_at: post.created_at,
-          profiles: post.profiles,
-          likes_count: 0,
-          comments_count: (commentCountsResult.data || []).filter(c => c.post_id === post.id).length,
-          clip_votes: (voteCountsResult.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
-        };
-        return transformed;
-      });
+      // Transform database posts to Post type
+      return (postsData as PostWithRelations[]).map(post => ({
+        id: post.id,
+        content: post.content,
+        image_url: post.image_url,
+        video_url: post.video_url,
+        user_id: post.user_id,
+        created_at: post.created_at,
+        profiles: post.profiles,
+        likes_count: 0,
+        comments_count: (commentCountsResult.data || []).filter(c => c.post_id === post.id).length,
+        clip_votes: (voteCountsResult.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
+      })) as Post[];
     }
   });
 
