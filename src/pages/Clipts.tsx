@@ -8,13 +8,18 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 
-interface PostResponse {
+// Define a base response type
+interface BasePostResponse {
   id: string;
   content: string | null;
   image_url: string | null;
   video_url: string | null;
   user_id: string;
   created_at: string;
+}
+
+// Extend base type to include joined data
+interface PostResponse extends BasePostResponse {
   profiles: {
     username: string | null;
     avatar_url: string | null;
@@ -65,14 +70,14 @@ const Clipts = () => {
           .in('post_id', postIds)
       ]);
 
-      const typedPostsData = postsData as PostResponse[];
+      const typedPostsData = postsData as unknown as PostResponse[];
 
       return typedPostsData.map(post => ({
         ...post,
         likes_count: 0,
         comments_count: (commentCountsResult.data || []).filter(c => c.post_id === post.id).length,
         clip_votes: (voteCountsResult.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
-      }));
+      })) satisfies Post[];
     }
   });
 
