@@ -24,9 +24,9 @@ const Clipts = () => {
             avatar_url
           ),
           games:game_id (name),
-          likes (count),
-          clip_votes (count),
-          comments (count)
+          likes:likes_count,
+          clip_votes:clip_votes(count),
+          comments:comments_count
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
