@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
+import GameBoyControls from "@/components/GameBoyControls";
 
 export default function Streaming() {
   const { user } = useAuth();
@@ -139,6 +140,8 @@ export default function Streaming() {
         userId={user.id}
         isLive={isLive}
       />
+
+      <GameBoyControls />
     </div>
   );
 }

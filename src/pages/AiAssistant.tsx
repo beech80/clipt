@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import GameBoyControls from '@/components/GameBoyControls';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -140,6 +141,8 @@ export default function AiAssistant() {
           </Button>
         </div>
       </form>
+
+      <GameBoyControls />
     </div>
   );
 }
