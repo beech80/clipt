@@ -17,7 +17,17 @@ const Clipts = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
-        .select('*, profiles:user_id (username, avatar_url), games:game_id (name), likes:likes(count), clip_votes:clip_votes(count), comments:comments(count)')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            avatar_url
+          ),
+          games:game_id (name),
+          likes (count),
+          clip_votes (count),
+          comments (count)
+        `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
 
@@ -61,4 +71,3 @@ const Clipts = () => {
 };
 
 export default Clipts;
-
