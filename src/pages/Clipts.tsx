@@ -15,7 +15,7 @@ const Clipts = () => {
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: postsData, error } = await supabase
         .from('posts')
         .select(`
           *,
@@ -23,20 +23,28 @@ const Clipts = () => {
             username,
             avatar_url
           ),
-          games:game_id (name),
-          clip_votes (
-            id
-          ),
-          comments (
-            id
-          )
+          games:game_id (name)
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      const transformedData = data?.map(post => ({
+
+      // Get comment counts
+      const { data: commentCounts } = await supabase
+        .from('comments')
+        .select('post_id, count', { count: 'exact', head: true })
+        .in('post_id', postsData?.map(p => p.id) || [])
+        .groupBy('post_id');
+
+      // Get clip votes
+      const { data: clipVotes } = await supabase
+        .from('clip_votes')
+        .select('post_id, count', { count: 'exact', head: true })
+        .in('post_id', postsData?.map(p => p.id) || [])
+        .groupBy('post_id');
+
+      const transformedPosts = postsData?.map(post => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
@@ -45,11 +53,11 @@ const Clipts = () => {
         created_at: post.created_at,
         profiles: post.profiles,
         likes_count: 0,
-        comments_count: (post.comments || []).length,
-        clip_votes: (post.clip_votes || []).map(() => ({ count: 1 }))
+        comments_count: commentCounts?.find(c => c.post_id === post.id)?.count || 0,
+        clip_votes: clipVotes?.find(v => v.post_id === post.id) ? [{ count: 1 }] : []
       })) as Post[];
 
-      return transformedData;
+      return transformedPosts || [];
     }
   });
 
