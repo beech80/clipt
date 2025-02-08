@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 
-// Database response type without any transformations
+// Flattened database response type
 type DatabasePost = {
   id: string;
   content: string | null;
