@@ -29,7 +29,7 @@ const Clipts = () => {
 
       if (error) throw error;
       return data as Post[];
-    },
+    }
   });
 
   return (
