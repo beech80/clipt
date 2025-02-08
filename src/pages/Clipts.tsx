@@ -24,15 +24,22 @@ const Clipts = () => {
             avatar_url
           ),
           games:game_id (name),
-          likes:likes_count,
-          clip_votes:clip_votes(count),
-          comments:comments_count
+          likes (count),
+          clip_votes:clip_votes (count),
+          comments (count)
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Post[];
+      
+      // Transform the response to match Post type
+      return data?.map(post => ({
+        ...post,
+        likes_count: post.likes?.[0]?.count || 0,
+        comments_count: post.comments?.[0]?.count || 0,
+        clip_votes: post.clip_votes || []
+      })) as Post[];
     }
   });
 
