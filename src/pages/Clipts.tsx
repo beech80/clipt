@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import GameBoyControls from "@/components/GameBoyControls";
@@ -12,7 +12,7 @@ const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -24,7 +24,7 @@ const Clipts = () => {
           likes (count),
           clip_votes (count)
         `)
-        .eq('type', 'video') // Only fetch video posts
+        .eq('type', 'video')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
