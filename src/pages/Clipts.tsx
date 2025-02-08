@@ -22,7 +22,8 @@ const Clipts = () => {
           profiles:user_id (username, avatar_url),
           games:game_id (name),
           likes (count),
-          clip_votes (count)
+          clip_votes (count),
+          comments (count)
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
