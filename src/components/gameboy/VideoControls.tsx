@@ -2,38 +2,35 @@
 import { toast } from 'sonner';
 
 export const handleVideoControl = (direction: string) => {
+  // Check if we're on a page with video first
   const video = document.querySelector('video');
   
   switch (direction) {
     case 'up':
       // Scroll up
-      const container = document.querySelector('.post-container');
-      if (container) {
-        container.scrollBy({
-          top: -(window.innerHeight - 200),
-          behavior: 'smooth'
-        });
-      }
+      window.scrollBy({
+        top: -300,
+        behavior: 'smooth'
+      });
+      toast.info('Scrolling Up');
       break;
     case 'down':
       // Scroll down
-      const containerDown = document.querySelector('.post-container');
-      if (containerDown) {
-        containerDown.scrollBy({
-          top: window.innerHeight - 200,
-          behavior: 'smooth'
-        });
-      }
+      window.scrollBy({
+        top: 300,
+        behavior: 'smooth'
+      });
+      toast.info('Scrolling Down');
       break;
     case 'left':
-      // Rewind 5 seconds
+      // Only control video if it exists
       if (video) {
         video.currentTime = Math.max(0, video.currentTime - 5);
         toast.info('Rewinding 5s');
       }
       break;
     case 'right':
-      // Fast forward 5 seconds
+      // Only control video if it exists
       if (video) {
         video.currentTime = Math.min(video.duration, video.currentTime + 5);
         toast.info('Fast forwarding 5s');
@@ -43,3 +40,4 @@ export const handleVideoControl = (direction: string) => {
       break;
   }
 };
+
