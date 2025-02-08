@@ -40,21 +40,21 @@ const Clipts = () => {
           video_url,
           user_id,
           created_at,
-          profiles:user_id (
+          profiles!posts_user_id_fkey (
             username,
             avatar_url
           ),
-          games:game_id (name)
+          games!posts_game_id_fkey (name)
         `)
         .eq('type', 'video')
-        .order('created_at', { ascending: false }) as { data: PostResponse[] | null, error: any };
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       if (!postsData) return [];
 
       const postIds = postsData.map(p => p.id);
       
-      const [commentCounts, voteCounts] = await Promise.all([
+      const [{ data: commentCounts }, { data: voteCounts }] = await Promise.all([
         supabase
           .from('comments')
           .select('post_id')
@@ -65,7 +65,7 @@ const Clipts = () => {
           .in('post_id', postIds)
       ]);
 
-      return postsData.map(post => ({
+      return (postsData as PostResponse[]).map(post => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
@@ -74,8 +74,8 @@ const Clipts = () => {
         created_at: post.created_at,
         profiles: post.profiles,
         likes_count: 0,
-        comments_count: (commentCounts.data || []).filter(c => c.post_id === post.id).length,
-        clip_votes: (voteCounts.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
+        comments_count: (commentCounts || []).filter(c => c.post_id === post.id).length,
+        clip_votes: (voteCounts || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
       })) as Post[];
     }
   });
