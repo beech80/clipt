@@ -41,11 +41,11 @@ const Clipts = () => {
           video_url,
           user_id,
           created_at,
-          profiles!posts_user_id_fkey (
+          profiles (
             username,
             avatar_url
           ),
-          games!posts_game_id_fkey (name)
+          games (name)
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
@@ -117,3 +117,4 @@ const Clipts = () => {
 };
 
 export default Clipts;
+
