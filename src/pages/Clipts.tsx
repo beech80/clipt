@@ -8,26 +8,21 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 
-// Separate types to avoid recursive type definitions
-type UserProfile = {
-  username: string | null;
-  avatar_url: string | null;
-};
-
-type GameInfo = {
-  name: string | null;
-};
-
-type PostResponse = {
+interface PostResponse {
   id: string;
   content: string | null;
   image_url: string | null;
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles: UserProfile | null;
-  games: GameInfo | null;
-};
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+  } | null;
+  games: {
+    name: string | null;
+  } | null;
+}
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -70,12 +65,14 @@ const Clipts = () => {
           .in('post_id', postIds)
       ]);
 
-      return (postsData as PostResponse[]).map(post => ({
+      const typedPostsData = postsData as PostResponse[];
+
+      return typedPostsData.map(post => ({
         ...post,
         likes_count: 0,
         comments_count: (commentCountsResult.data || []).filter(c => c.post_id === post.id).length,
         clip_votes: (voteCountsResult.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
-      })) as Post[];
+      }));
     }
   });
 
