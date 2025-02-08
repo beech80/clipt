@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 
 // Define a flat type for the database response
-type PostWithRelations = {
+type DbPost = {
   id: string;
   content: string | null;
   image_url: string | null;
@@ -67,7 +67,7 @@ const Clipts = () => {
       ]);
 
       // Transform database posts to Post type
-      return (postsData as PostWithRelations[]).map(post => ({
+      return (postsData as DbPost[]).map(post => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
@@ -117,4 +117,3 @@ const Clipts = () => {
 };
 
 export default Clipts;
-
