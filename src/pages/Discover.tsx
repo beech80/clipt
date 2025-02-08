@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
 import { TopGames } from "@/components/discover/TopGames";
+import GameBoyControls from "@/components/GameBoyControls";
 
 const Discover = () => {
   return (
@@ -27,11 +29,13 @@ const Discover = () => {
               View All
             </button>
           </div>
-          <div className="glass-card p-4 backdrop-blur-sm">
+          <div className="glass-card p-4 backdrop-blur-sm mb-24">
             <TopGames />
           </div>
         </div>
       </div>
+
+      <GameBoyControls />
     </div>
   );
 };
