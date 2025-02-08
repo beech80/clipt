@@ -8,7 +8,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 
-interface PostResponse {
+// Separate the response type to avoid recursive type definition
+type PostResponse = {
   id: string;
   content: string | null;
   image_url: string | null;
