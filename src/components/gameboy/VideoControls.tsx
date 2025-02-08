@@ -7,20 +7,45 @@ export const handleVideoControl = (direction: string) => {
   
   switch (direction) {
     case 'up':
-      // Scroll up
-      window.scrollBy({
-        top: -300,
-        behavior: 'smooth'
-      });
-      toast.info('Scrolling Up');
+      if (video) {
+        // Toggle play/pause if video exists
+        if (video.paused) {
+          video.play();
+          toast.info('Playing video');
+        } else {
+          video.pause();
+          toast.info('Paused video');
+        }
+      } else {
+        // Scroll up if no video
+        window.scrollBy({
+          top: -300,
+          behavior: 'smooth'
+        });
+        toast.info('Scrolling Up');
+      }
       break;
     case 'down':
-      // Scroll down
-      window.scrollBy({
-        top: 300,
-        behavior: 'smooth'
-      });
-      toast.info('Scrolling Down');
+      if (video) {
+        // Try to trigger save if it's clip editor
+        const saveButton = document.querySelector('button:has(.lucide-save)');
+        if (saveButton) {
+          (saveButton as HTMLButtonElement).click();
+        } else {
+          // Default scroll behavior
+          window.scrollBy({
+            top: 300,
+            behavior: 'smooth'
+          });
+          toast.info('Scrolling Down');
+        }
+      } else {
+        window.scrollBy({
+          top: 300,
+          behavior: 'smooth'
+        });
+        toast.info('Scrolling Down');
+      }
       break;
     case 'left':
       // Only control video if it exists
@@ -40,4 +65,3 @@ export const handleVideoControl = (direction: string) => {
       break;
   }
 };
-

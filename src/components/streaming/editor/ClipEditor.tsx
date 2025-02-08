@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -6,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Scissors, Play, Pause, Save } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { handleVideoControl } from '@/components/gameboy/VideoControls';
+import GameBoyControls from "@/components/GameBoyControls";
 
 interface ClipEditorProps {
   videoUrl: string;
@@ -48,57 +51,94 @@ export const ClipEditor = ({ videoUrl, onSave }: ClipEditorProps) => {
     toast.success("Clip saved successfully!");
   };
 
+  // Handle gameboy controls for timeline scrubbing
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!videoRef.current) return;
+
+      const scrubAmount = 5; // 5% scrub amount
+      
+      switch(e.key) {
+        case 'ArrowLeft':
+          setStartTime(Math.max(0, startTime - scrubAmount));
+          setEndTime(Math.max(scrubAmount, endTime - scrubAmount));
+          videoRef.current.currentTime = (startTime / 100) * videoRef.current.duration;
+          toast.info('Scrubbing backwards');
+          break;
+        case 'ArrowRight':
+          setStartTime(Math.min(100 - scrubAmount, startTime + scrubAmount));
+          setEndTime(Math.min(100, endTime + scrubAmount));
+          videoRef.current.currentTime = (startTime / 100) * videoRef.current.duration;
+          toast.info('Scrubbing forwards');
+          break;
+        case 'ArrowUp':
+          handlePlayPause();
+          break;
+        case 'ArrowDown':
+          handleSave();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [startTime, endTime]);
+
   return (
-    <Card className="p-6 space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Clip Editor</h3>
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          className="w-full rounded-lg"
-          onTimeUpdate={handleTimeUpdate}
-        />
-      </div>
-
-      <div className="space-y-4">
-        <Input
-          placeholder="Enter clip title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">Clip Range</p>
-          <Slider
-            value={[startTime, endTime]}
-            min={0}
-            max={100}
-            step={1}
-            onValueChange={([start, end]) => {
-              setStartTime(start);
-              setEndTime(end);
-            }}
+    <>
+      <Card className="p-6 space-y-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Clip Editor</h3>
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            className="w-full rounded-lg"
+            onTimeUpdate={handleTimeUpdate}
           />
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{startTime}%</span>
-            <span>{endTime}%</span>
+        </div>
+
+        <div className="space-y-4">
+          <Input
+            placeholder="Enter clip title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Clip Range</p>
+            <Slider
+              value={[startTime, endTime]}
+              min={0}
+              max={100}
+              step={1}
+              onValueChange={([start, end]) => {
+                setStartTime(start);
+                setEndTime(end);
+              }}
+            />
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>{startTime}%</span>
+              <span>{endTime}%</span>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <Button onClick={handlePlayPause} variant="outline">
+              {isPlaying ? (
+                <><Pause className="h-4 w-4 mr-2" /> Pause</>
+              ) : (
+                <><Play className="h-4 w-4 mr-2" /> Preview</>
+              )}
+            </Button>
+            <Button onClick={handleSave}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Clip
+            </Button>
           </div>
         </div>
+      </Card>
 
-        <div className="flex gap-4">
-          <Button onClick={handlePlayPause} variant="outline">
-            {isPlaying ? (
-              <><Pause className="h-4 w-4 mr-2" /> Pause</>
-            ) : (
-              <><Play className="h-4 w-4 mr-2" /> Preview</>
-            )}
-          </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Clip
-          </Button>
-        </div>
-      </div>
-    </Card>
+      <GameBoyControls />
+    </>
   );
 };
