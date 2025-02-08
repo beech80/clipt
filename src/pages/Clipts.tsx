@@ -15,11 +15,15 @@ const Clipts = () => {
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
-      // Fetch posts first
       const { data: postsData, error } = await supabase
         .from('posts')
         .select(`
-          *,
+          id,
+          content,
+          image_url,
+          video_url,
+          user_id,
+          created_at,
           profiles:user_id (
             username,
             avatar_url
@@ -30,36 +34,32 @@ const Clipts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
       if (!postsData) return [];
 
-      // Count comments for each post
-      const commentCountsPromise = Promise.all(
-        postsData.map(post =>
-          supabase
-            .from('comments')
-            .select('*', { count: 'exact' })
-            .eq('post_id', post.id)
-        )
-      );
+      // Count comments and votes in parallel
+      const getCommentCounts = async (postIds: string[]) => {
+        const { data } = await supabase
+          .from('comments')
+          .select('post_id, count')
+          .in('post_id', postIds);
+        return data || [];
+      };
 
-      // Count votes for each post
-      const voteCountsPromise = Promise.all(
-        postsData.map(post =>
-          supabase
-            .from('clip_votes')
-            .select('*', { count: 'exact' })
-            .eq('post_id', post.id)
-        )
-      );
+      const getVoteCounts = async (postIds: string[]) => {
+        const { data } = await supabase
+          .from('clip_votes')
+          .select('post_id, count')
+          .in('post_id', postIds);
+        return data || [];
+      };
 
-      const [commentResults, voteResults] = await Promise.all([
-        commentCountsPromise,
-        voteCountsPromise
+      const postIds = postsData.map(p => p.id);
+      const [comments, votes] = await Promise.all([
+        getCommentCounts(postIds),
+        getVoteCounts(postIds)
       ]);
 
-      // Transform the data into Post objects
-      return postsData.map((post, index) => ({
+      return postsData.map(post => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
@@ -68,8 +68,8 @@ const Clipts = () => {
         created_at: post.created_at,
         profiles: post.profiles,
         likes_count: 0,
-        comments_count: commentResults[index].count || 0,
-        clip_votes: voteResults[index].count ? [{ count: 1 }] : []
+        comments_count: comments.filter(c => c.post_id === post.id).length,
+        clip_votes: votes.filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
       })) as Post[];
     }
   });
