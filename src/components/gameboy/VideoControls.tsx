@@ -1,3 +1,4 @@
+
 import { toast } from 'sonner';
 
 export const handleVideoControl = (direction: string) => {
@@ -25,17 +26,17 @@ export const handleVideoControl = (direction: string) => {
       }
       break;
     case 'left':
-      // Rewind 10 seconds
+      // Rewind 5 seconds
       if (video) {
-        video.currentTime = Math.max(0, video.currentTime - 10);
-        toast.info('Rewinding 10s');
+        video.currentTime = Math.max(0, video.currentTime - 5);
+        toast.info('Rewinding 5s');
       }
       break;
     case 'right':
-      // Fast forward 10 seconds
+      // Fast forward 5 seconds
       if (video) {
-        video.currentTime = Math.min(video.duration, video.currentTime + 10);
-        toast.info('Fast forwarding 10s');
+        video.currentTime = Math.min(video.duration, video.currentTime + 5);
+        toast.info('Fast forwarding 5s');
       }
       break;
     default:
