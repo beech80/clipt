@@ -8,6 +8,22 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 
+interface PostResponse {
+  id: string;
+  content: string | null;
+  image_url: string | null;
+  video_url: string | null;
+  user_id: string;
+  created_at: string;
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+  } | null;
+  games: {
+    name: string | null;
+  } | null;
+}
+
 const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -31,32 +47,22 @@ const Clipts = () => {
           games:game_id (name)
         `)
         .eq('type', 'video')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { data: PostResponse[] | null, error: any };
 
       if (error) throw error;
       if (!postsData) return [];
 
-      // Count comments and votes in parallel
-      const getCommentCounts = async (postIds: string[]) => {
-        const { data } = await supabase
-          .from('comments')
-          .select('post_id, count')
-          .in('post_id', postIds);
-        return data || [];
-      };
-
-      const getVoteCounts = async (postIds: string[]) => {
-        const { data } = await supabase
-          .from('clip_votes')
-          .select('post_id, count')
-          .in('post_id', postIds);
-        return data || [];
-      };
-
       const postIds = postsData.map(p => p.id);
-      const [comments, votes] = await Promise.all([
-        getCommentCounts(postIds),
-        getVoteCounts(postIds)
+      
+      const [commentCounts, voteCounts] = await Promise.all([
+        supabase
+          .from('comments')
+          .select('post_id')
+          .in('post_id', postIds),
+        supabase
+          .from('clip_votes')
+          .select('post_id')
+          .in('post_id', postIds)
       ]);
 
       return postsData.map(post => ({
@@ -68,8 +74,8 @@ const Clipts = () => {
         created_at: post.created_at,
         profiles: post.profiles,
         likes_count: 0,
-        comments_count: comments.filter(c => c.post_id === post.id).length,
-        clip_votes: votes.filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
+        comments_count: (commentCounts.data || []).filter(c => c.post_id === post.id).length,
+        clip_votes: (voteCounts.data || []).filter(v => v.post_id === post.id).length > 0 ? [{ count: 1 }] : []
       })) as Post[];
     }
   });
