@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -24,7 +25,8 @@ import {
   Layout,
   MessageSquare,
   Globe,
-  Video
+  Video,
+  BookOpen
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Profile, CustomTheme, DatabaseProfile } from "@/types/profile";
@@ -165,6 +167,26 @@ const Settings = () => {
                   onCheckedChange={() => handleToggle('enable_sounds')}
                 />
               </div>
+            </div>
+          </Card>
+
+          {/* Documentation Section */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-6">
+              <BookOpen className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Documentation</h2>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Access our comprehensive documentation, including user guides, API documentation, and community guidelines.
+              </p>
+              <Button 
+                onClick={() => navigate('/docs/user-guide')}
+                className="w-full"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                View Documentation
+              </Button>
             </div>
           </Card>
 
