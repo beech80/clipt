@@ -1,6 +1,7 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { File, Gamepad, MessageSquare, Video, Settings, Info } from "lucide-react";
+import { File, Gamepad, MessageSquare, Video, Settings, Info, Shield, Users, BookOpen, Code } from "lucide-react";
 
 const guides = [
   {
@@ -32,6 +33,31 @@ const guides = [
     title: "Settings & Privacy",
     href: "/docs/settings",
     icon: Settings
+  },
+  {
+    title: "Terms of Service",
+    href: "/docs/terms-of-service",
+    icon: File
+  },
+  {
+    title: "Privacy Policy",
+    href: "/docs/privacy-policy",
+    icon: Shield
+  },
+  {
+    title: "Community Guidelines",
+    href: "/docs/community-guidelines",
+    icon: Users
+  },
+  {
+    title: "User Guide",
+    href: "/docs/user-guide",
+    icon: BookOpen
+  },
+  {
+    title: "API Documentation",
+    href: "/docs/api-documentation",
+    icon: Code
   }
 ];
 
