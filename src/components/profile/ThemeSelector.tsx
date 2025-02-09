@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Paintbrush, RotateCcw, Undo } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { Json } from "@/types/database";
 
 interface ThemeColors {
   primary: string;
@@ -36,10 +37,7 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          custom_theme: {
-            primary: theme.primary,
-            secondary: theme.secondary
-          }
+          custom_theme: theme as Json
         })
         .eq('id', userId);
 
@@ -86,7 +84,7 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          custom_theme: defaultTheme
+          custom_theme: defaultTheme as Json
         })
         .eq('id', userId);
 

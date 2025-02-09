@@ -55,7 +55,7 @@ const Clipts = () => {
       if (!postsData) return [];
 
       // Transform database posts to Post type
-      return postsData.map((post: DbPost) => ({
+      return postsData.map((post: DbPost): Post => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
@@ -66,7 +66,7 @@ const Clipts = () => {
         likes_count: 0,
         comments_count: 0,
         clip_votes: []
-      })) as Post[];
+      }));
     }
   });
 
