@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 import { BackButton } from "@/components/ui/back-button";
 
-interface DbPost {
+type DbPost = {
   id: string;
   content: string | null;
   image_url: string | null;
@@ -53,7 +53,7 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post: DbPost): Post => ({
+      return postsData.map((post: DbPost) => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
