@@ -25,7 +25,7 @@ type DbPost = {
   } | null;
   likes_count?: number;
   comments_count?: number;
-  clip_votes?: any[];
+  clip_votes?: { count: number }[];
 }
 
 const Clipts = () => {
