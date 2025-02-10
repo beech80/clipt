@@ -25,7 +25,7 @@ interface DbPost {
   } | null;
   likes_count?: number;
   comments_count?: number;
-  clip_votes: Array<{ count: number }>;
+  clip_votes: { count: number }[];
 }
 
 const Clipts = () => {
@@ -109,3 +109,4 @@ const Clipts = () => {
 };
 
 export default Clipts;
+
