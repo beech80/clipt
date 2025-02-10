@@ -52,9 +52,9 @@ const Clipts = () => {
 
       if (error) throw error;
       
-      return (postsData || []).map((post: DbPost) => ({
+      const transformedPosts: Post[] = (postsData || []).map((post: DbPost) => ({
         id: post.id,
-        content: post.content,
+        content: post.content || '',
         image_url: post.image_url,
         video_url: post.video_url,
         user_id: post.user_id,
@@ -64,6 +64,8 @@ const Clipts = () => {
         comments_count: 0,
         clip_votes: []
       }));
+
+      return transformedPosts;
     }
   });
 

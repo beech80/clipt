@@ -1,5 +1,5 @@
 
-import { BookOpen, Code, Shield, Users, Gamepad, Video, MessageSquare } from "lucide-react";
+import { BookOpen, Code, Shield, Users, List, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -18,40 +18,41 @@ export default function GettingStarted() {
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Welcome to Clip</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Clip is your ultimate platform for sharing gaming moments, connecting with fellow gamers,
-            and building your gaming community. Whether you're a casual player or a content creator,
-            our platform provides all the tools you need to capture, share, and celebrate your gaming journey.
+            Clip is your ultimate platform for capturing, sharing, and celebrating gaming moments. 
+            Whether you're a casual player, content creator, or esports enthusiast, our platform 
+            provides the tools you need to showcase your gaming journey and connect with a vibrant 
+            community of fellow gamers.
           </p>
         </section>
 
         <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="p-6 space-y-4 hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-2">
-              <Video className="w-5 h-5 text-purple-500" />
-              <h3 className="font-semibold">Share Gaming Moments</h3>
+              <List className="w-5 h-5 text-purple-500" />
+              <h3 className="font-semibold">Record & Share</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Upload and share your favorite gaming clips, highlights, and memorable moments with the community.
+              Easily capture and share your epic gaming moments, from victory royales to speedrun records.
             </p>
           </Card>
           
           <Card className="p-6 space-y-4 hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-2">
-              <Gamepad className="w-5 h-5 text-purple-500" />
-              <h3 className="font-semibold">Game Integration</h3>
+              <Users className="w-5 h-5 text-purple-500" />
+              <h3 className="font-semibold">Build Community</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Connect your gaming accounts and automatically sync your achievements and stats.
+              Connect with fellow gamers, join gaming groups, and participate in community events.
             </p>
           </Card>
           
           <Card className="p-6 space-y-4 hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-purple-500" />
-              <h3 className="font-semibold">Community Features</h3>
+              <Shield className="w-5 h-5 text-purple-500" />
+              <h3 className="font-semibold">Stream Securely</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Engage with other gamers through comments, direct messages, and group discussions.
+              Stream your gameplay with advanced security features and quality controls.
             </p>
           </Card>
         </section>
@@ -59,32 +60,38 @@ export default function GettingStarted() {
         <section className="space-y-6">
           <h2 className="text-2xl font-semibold">Quick Start Guide</h2>
           <div className="grid gap-4">
-            <div className="flex items-start gap-4 p-4 rounded-lg border bg-card">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500 text-white">1</span>
+            <div className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition-colors">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500 text-white">
+                <Check className="w-4 h-4" />
+              </span>
               <div className="space-y-1">
                 <h3 className="font-medium">Create Your Account</h3>
                 <p className="text-sm text-muted-foreground">
-                  Sign up with your email or connect with your gaming accounts to get started.
+                  Sign up with your email or connect with your existing gaming accounts to get started.
                 </p>
               </div>
             </div>
             
-            <div className="flex items-start gap-4 p-4 rounded-lg border bg-card">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500 text-white">2</span>
+            <div className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition-colors">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500 text-white">
+                <Check className="w-4 h-4" />
+              </span>
               <div className="space-y-1">
-                <h3 className="font-medium">Complete Your Profile</h3>
+                <h3 className="font-medium">Set Up Your Profile</h3>
                 <p className="text-sm text-muted-foreground">
-                  Add your gaming interests, preferred platforms, and customize your profile.
+                  Customize your profile with your gaming interests, achievements, and favorite games.
                 </p>
               </div>
             </div>
             
-            <div className="flex items-start gap-4 p-4 rounded-lg border bg-card">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500 text-white">3</span>
+            <div className="flex items-start gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition-colors">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-500 text-white">
+                <Check className="w-4 h-4" />
+              </span>
               <div className="space-y-1">
-                <h3 className="font-medium">Start Sharing</h3>
+                <h3 className="font-medium">Start Creating</h3>
                 <p className="text-sm text-muted-foreground">
-                  Upload your first gaming clip or start exploring content from other gamers.
+                  Record your first gaming clip or start a live stream to share your gameplay with the world.
                 </p>
               </div>
             </div>
