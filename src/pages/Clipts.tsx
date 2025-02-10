@@ -9,20 +9,24 @@ import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 import { BackButton } from "@/components/ui/back-button";
 
-type DbPost = {
+interface PostProfile {
+  username: string | null;
+  avatar_url: string | null;
+}
+
+interface PostGame {
+  name: string | null;
+}
+
+interface DbPost {
   id: string;
   content: string | null;
   image_url: string | null;
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles: {
-    username: string | null;
-    avatar_url: string | null;
-  } | null;
-  games: {
-    name: string | null;
-  } | null;
+  profiles: PostProfile | null;
+  games: PostGame | null;
 }
 
 const Clipts = () => {
