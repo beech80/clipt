@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9,7 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 import { BackButton } from "@/components/ui/back-button";
 
-type DbPost = {
+interface DbPost {
   id: string;
   content: string | null;
   image_url: string | null;
@@ -29,7 +28,7 @@ const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery<Post[]>({
+  const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
@@ -53,7 +52,7 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post: DbPost) => ({
+      return postsData.map((post: DbPost): Post => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
