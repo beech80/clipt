@@ -4,16 +4,18 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Eye, EyeOff } from "lucide-react";
+import { Copy, Eye, EyeOff, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
 import GameBoyControls from "@/components/GameBoyControls";
 import { BackButton } from "@/components/ui/back-button";
+import { useNavigate } from "react-router-dom";
 
 export default function Streaming() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [streamKey, setStreamKey] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,9 +85,19 @@ export default function Streaming() {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <BackButton />
-        <h1 className="text-3xl font-bold">Streaming Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <h1 className="text-3xl font-bold">Streaming Dashboard</h1>
+        </div>
+        <Button
+          onClick={() => navigate('/schedule')}
+          variant="outline"
+          className="gap-2"
+        >
+          <Calendar className="h-4 w-4" />
+          Schedule Stream
+        </Button>
       </div>
       
       <Card className="p-6 space-y-4">
