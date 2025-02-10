@@ -6,7 +6,7 @@ import { FileText, Gamepad, MessageSquare, Video, Settings, Info, Shield, Users,
 const guides = [
   {
     title: "Getting Started",
-    href: "/docs/getting-started",
+    href: "/docs",
     icon: Info
   },
   {

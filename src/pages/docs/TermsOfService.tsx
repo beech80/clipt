@@ -1,5 +1,5 @@
 
-import { FileText, Shield, User, Lock } from "lucide-react";
+import { FileText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import remarkGfm from 'remark-gfm';
 import ReactMarkdown from 'react-markdown';

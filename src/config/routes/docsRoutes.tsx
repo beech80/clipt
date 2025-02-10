@@ -14,6 +14,10 @@ export const docsRoutes: RouteObject = {
   element: <DocsLayout />,
   children: [
     {
+      path: "",
+      element: <GettingStarted />,
+    },
+    {
       path: "getting-started",
       element: <GettingStarted />,
     },
