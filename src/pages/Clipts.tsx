@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -51,10 +50,11 @@ const Clipts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      return (postsData || []).map((post: DbPost) => ({
+      if (!postsData) return [];
+
+      return postsData.map((post: DbPost): Post => ({
         id: post.id,
-        content: post.content || '',
+        content: post.content,
         image_url: post.image_url,
         video_url: post.video_url,
         user_id: post.user_id,
@@ -63,7 +63,7 @@ const Clipts = () => {
         likes_count: 0,
         comments_count: 0,
         clip_votes: []
-      })) as Post[];
+      }));
     }
   });
 

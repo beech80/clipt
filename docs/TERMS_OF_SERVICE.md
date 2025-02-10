@@ -1,91 +1,55 @@
-
 # Terms of Service
 
-Last updated: February 2024
+Last updated: [Current Date]
 
-## 1. Acceptance of Terms
+## Agreement to Terms
 
-By accessing and using our platform, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our services.
+By accessing our application, you agree to these Terms of Service.
 
-## 2. User Accounts
+## Acceptable Use
 
-### 2.1 Account Creation
-- You must provide accurate information when creating an account
-- You must be at least 13 years old to create an account
-- One person may only create one account
-
-### 2.2 Account Security
-- You are responsible for maintaining your account security
-- You must notify us immediately of any unauthorized access
-- We reserve the right to terminate accounts that violate our policies
-
-## 3. Content Guidelines
-
-### 3.1 User-Generated Content
-- You retain ownership of your content
-- You grant us a license to display and distribute your content
-- Content must not violate any laws or third-party rights
-
-### 3.2 Prohibited Content
-- No illegal content
-- No harassment or hate speech
-- No adult or explicit content
-- No spam or deceptive practices
-- No copyright infringement
-
-## 4. Platform Rules
-
-### 4.1 Acceptable Use
+Users must:
 - Follow community guidelines
-- Respect other users
-- Do not manipulate platform features
-- Do not use automated systems without permission
+- Respect intellectual property rights
+- Not engage in harmful behavior
+- Not manipulate platform features
+- Not use automated systems without permission
 
-### 4.2 Streaming Guidelines
-- Maintain appropriate content
-- Follow fair play rules
-- Respect copyright laws
-- Comply with age restrictions
+## Content Guidelines
 
-## 5. Privacy and Data
+- No illegal content
+- No harassment
+- No spam
+- No adult content
+- Credit original creators
 
-- We collect and use data as described in our Privacy Policy
-- We implement reasonable security measures
-- We may share data as required by law
+## User Accounts
 
-## 6. Monetization
+- Users are responsible for account security
+- One person per account
+- Accurate information required
+- Account sharing prohibited
 
-### 6.1 Payment Terms
-- All fees are in USD unless specified otherwise
-- We reserve the right to change our fee structure
-- Payouts are subject to verification
+## Termination
 
-### 6.2 Revenue Sharing
-- Creator revenue share as specified in Monetization Policy
-- Payment processing fees may apply
-- Minimum payout thresholds apply
+We reserve the right to terminate accounts for violations.
 
-## 7. Termination
+## Intellectual Property
 
-We reserve the right to:
-- Suspend or terminate accounts for violations
-- Remove content that violates our policies
-- Modify or discontinue services at any time
+- Users retain rights to their content
+- Platform license to display content
+- DMCA compliance
 
-## 8. Disclaimers
+## Liability
 
-- Services provided "as is"
-- No warranties of any kind
-- Not responsible for user-generated content
+- Service provided "as is"
+- No warranties
+- Limitation of liability
 
-## 9. Limitation of Liability
+## Changes to Terms
 
-Our liability is limited to the maximum extent permitted by law.
+We may update these terms with notice to users.
 
-## 10. Changes to Terms
+## Contact
 
-We may update these Terms with notice to users. Continued use of our services constitutes acceptance of updated Terms.
-
-## 11. Contact Us
-
-For questions about these Terms, contact us at legal@example.com.
+For legal inquiries, contact [Legal Email]
