@@ -2,6 +2,7 @@
 import { Json } from './database';
 
 export interface CustomTheme {
+  [key: string]: string; // Add index signature
   primary: string;
   secondary: string;
 }

@@ -9,7 +9,6 @@ import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 import { BackButton } from "@/components/ui/back-button";
 
-// Define a flat type for the database response
 type DbPost = {
   id: string;
   content: string | null;
@@ -54,7 +53,6 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      // Transform database posts to Post type
       return postsData.map((post: DbPost): Post => ({
         id: post.id,
         content: post.content,
