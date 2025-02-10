@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9,15 +8,6 @@ import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 import { BackButton } from "@/components/ui/back-button";
 
-interface PostProfile {
-  username: string | null;
-  avatar_url: string | null;
-}
-
-interface PostGame {
-  name: string | null;
-}
-
 interface DbPost {
   id: string;
   content: string | null;
@@ -25,8 +15,13 @@ interface DbPost {
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles: PostProfile | null;
-  games: PostGame | null;
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+  } | null;
+  games: {
+    name: string | null;
+  } | null;
 }
 
 const Clipts = () => {
@@ -74,7 +69,6 @@ const Clipts = () => {
 
   return (
     <div className="min-h-screen bg-gaming-900/95 backdrop-blur-sm">
-      {/* Title */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-gradient-to-b from-gaming-900 to-transparent">
         <div className="flex items-center gap-4">
           <BackButton />
