@@ -8,6 +8,19 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 
+type Profile = {
+  username: string | null;
+  avatar_url: string | null;
+};
+
+type Game = {
+  name: string | null;
+};
+
+type ClipVote = {
+  count: number;
+};
+
 interface DbPost {
   id: string;
   content: string | null;
@@ -15,16 +28,11 @@ interface DbPost {
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles: {
-    username: string | null;
-    avatar_url: string | null;
-  } | null;
-  games: {
-    name: string | null;
-  } | null;
+  profiles: Profile | null;
+  games: Game | null;
   likes_count?: number;
   comments_count?: number;
-  clip_votes: { count: number }[];
+  clip_votes: ClipVote[];
 }
 
 const Clipts = () => {
@@ -55,12 +63,12 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post: DbPost) => ({
+      return postsData.map((post) => ({
         ...post,
         likes_count: 0,
         comments_count: 0,
         clip_votes: []
-      }));
+      })) as DbPost[];
     }
   });
 
