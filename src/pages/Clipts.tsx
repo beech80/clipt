@@ -23,13 +23,16 @@ type DbPost = {
   games: {
     name: string | null;
   } | null;
+  likes_count?: number;
+  comments_count?: number;
+  clip_votes?: any[];
 }
 
 const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery<Post[]>({
+  const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
@@ -62,9 +65,9 @@ const Clipts = () => {
         created_at: post.created_at,
         profiles: post.profiles,
         games: post.games,
-        likes_count: 0,
-        comments_count: 0,
-        clip_votes: []
+        likes_count: post.likes_count || 0,
+        comments_count: post.comments_count || 0,
+        clip_votes: post.clip_votes || []
       }));
     }
   });
