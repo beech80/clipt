@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 import { BackButton } from "@/components/ui/back-button";
 
-interface DbPost {
+type DbPost = {
   id: string;
   content: string | null;
   image_url: string | null;
@@ -23,7 +23,7 @@ interface DbPost {
   games: {
     name: string | null;
   } | null;
-}
+};
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ const Clipts = () => {
 
       if (error) throw error;
       
-      const transformedPosts: Post[] = (postsData || []).map((post: DbPost) => ({
+      const transformedPosts: Post[] = (postsData as DbPost[] || []).map((post) => ({
         id: post.id,
         content: post.content || '',
         image_url: post.image_url,
