@@ -6,40 +6,30 @@ import GameBoyControls from "@/components/GameBoyControls";
 import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { Post } from '@/types/post';
 import { BackButton } from "@/components/ui/back-button";
 
-type Profile = {
-  username: string | null;
-  avatar_url: string | null;
-};
-
-type Game = {
-  name: string | null;
-};
-
-type ClipVote = {
-  count: number;
-};
-
-interface DbPost {
+type DbPost = {
   id: string;
   content: string | null;
   image_url: string | null;
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles: Profile | null;
-  games: Game | null;
-  likes_count?: number;
-  comments_count?: number;
-  clip_votes: ClipVote[];
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+  } | null;
+  games: {
+    name: string | null;
+  } | null;
 }
 
 const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
@@ -63,12 +53,18 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post) => ({
-        ...post,
+      return postsData.map((post: DbPost) => ({
+        id: post.id,
+        content: post.content,
+        image_url: post.image_url,
+        video_url: post.video_url,
+        user_id: post.user_id,
+        created_at: post.created_at,
+        profiles: post.profiles,
         likes_count: 0,
         comments_count: 0,
         clip_votes: []
-      })) as DbPost[];
+      }));
     }
   });
 
