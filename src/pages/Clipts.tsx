@@ -53,7 +53,7 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post: DbPost) => ({
+      return (postsData as DbPost[]).map((post) => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
