@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -28,7 +29,7 @@ const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
