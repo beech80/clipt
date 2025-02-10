@@ -6,6 +6,8 @@ import ReactMarkdown from 'react-markdown';
 import userGuideContent from '../../../docs/USER_GUIDE.md?raw';
 
 const UserGuide = () => {
+  console.log('User Guide content:', userGuideContent); // Debug log
+
   return (
     <Card className="p-6">
       <div className="flex items-center gap-2 mb-6">
@@ -18,14 +20,10 @@ const UserGuide = () => {
           remarkPlugins={[remarkGfm]}
           components={{
             h2: ({node, ...props}) => (
-              <h2 className="flex items-center gap-2 text-xl font-semibold mt-8 mb-4" {...props}>
-                {props.children}
-              </h2>
+              <h2 className="flex items-center gap-2 text-xl font-semibold mt-8 mb-4" {...props} />
             ),
             h3: ({node, ...props}) => (
-              <h3 className="text-lg font-semibold mt-6 mb-3" {...props}>
-                {props.children}
-              </h3>
+              <h3 className="text-lg font-semibold mt-6 mb-3" {...props} />
             ),
             ul: ({node, ...props}) => (
               <ul className="list-disc pl-6 space-y-2" {...props} />
