@@ -61,6 +61,7 @@ const Clipts = () => {
         user_id: post.user_id,
         created_at: post.created_at,
         profiles: post.profiles,
+        games: post.games,
         likes_count: 0,
         comments_count: 0,
         clip_votes: []
