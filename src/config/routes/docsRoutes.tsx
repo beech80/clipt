@@ -6,7 +6,11 @@ import StreamingGuide from "@/pages/docs/StreamingGuide";
 import TermsOfService from "@/pages/docs/TermsOfService";
 import PrivacyPolicy from "@/pages/docs/PrivacyPolicy";
 import CommunityGuidelines from "@/pages/docs/CommunityGuidelines";
+import CopyrightPolicy from "@/pages/docs/CopyrightPolicy";
+import ReportProcess from "@/pages/docs/ReportProcess";
+import MonetizationPolicy from "@/pages/docs/MonetizationPolicy";
 import UserGuide from "@/pages/docs/UserGuide";
+import FAQs from "@/pages/docs/FAQs";
 import ApiDocumentation from "@/pages/docs/ApiDocumentation";
 
 export const docsRoutes: RouteObject = {
@@ -32,6 +36,22 @@ export const docsRoutes: RouteObject = {
     {
       path: "community-guidelines",
       element: <CommunityGuidelines />,
+    },
+    {
+      path: "copyright-policy",
+      element: <CopyrightPolicy />,
+    },
+    {
+      path: "report-process",
+      element: <ReportProcess />,
+    },
+    {
+      path: "monetization-policy",
+      element: <MonetizationPolicy />,
+    },
+    {
+      path: "faqs",
+      element: <FAQs />,
     },
     {
       path: "user-guide",

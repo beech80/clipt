@@ -1,7 +1,21 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { File, Gamepad, MessageSquare, Video, Settings, Info, Shield, Users, BookOpen, Code } from "lucide-react";
+import { 
+  File, 
+  Gamepad, 
+  MessageSquare, 
+  Video, 
+  Settings, 
+  Info, 
+  Shield, 
+  Users, 
+  BookOpen, 
+  Code,
+  Flag,
+  DollarSign,
+  HelpCircle
+} from "lucide-react";
 
 const guides = [
   {
@@ -10,29 +24,24 @@ const guides = [
     icon: Info
   },
   {
+    title: "User Guide",
+    href: "/docs/user-guide",
+    icon: BookOpen
+  },
+  {
+    title: "FAQs",
+    href: "/docs/faqs",
+    icon: HelpCircle
+  },
+  {
+    title: "API Documentation",
+    href: "/docs/api-documentation",
+    icon: Code
+  },
+  {
     title: "Streaming Guide",
-    href: "/docs/streaming",
+    href: "/docs/streaming-guide",
     icon: Video
-  },
-  {
-    title: "Content Creation",
-    href: "/docs/content",
-    icon: File
-  },
-  {
-    title: "Gaming Features",
-    href: "/docs/gaming",
-    icon: Gamepad
-  },
-  {
-    title: "Community & Chat",
-    href: "/docs/community",
-    icon: MessageSquare
-  },
-  {
-    title: "Settings & Privacy",
-    href: "/docs/settings",
-    icon: Settings
   },
   {
     title: "Terms of Service",
@@ -50,14 +59,19 @@ const guides = [
     icon: Users
   },
   {
-    title: "User Guide",
-    href: "/docs/user-guide",
-    icon: BookOpen
+    title: "Copyright Policy",
+    href: "/docs/copyright-policy",
+    icon: Shield
   },
   {
-    title: "API Documentation",
-    href: "/docs/api-documentation",
-    icon: Code
+    title: "Report Process",
+    href: "/docs/report-process",
+    icon: Flag
+  },
+  {
+    title: "Monetization Policy",
+    href: "/docs/monetization-policy",
+    icon: DollarSign
   }
 ];
 
