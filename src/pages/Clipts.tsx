@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -50,9 +51,8 @@ const Clipts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (!postsData) return [];
-
-      return postsData.map((post: DbPost): Post => ({
+      
+      return (postsData || []).map((post: DbPost) => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
