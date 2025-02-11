@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,7 +25,7 @@ interface DbPost {
   } | null;
 }
 
-const Clipts = () => {
+const Clipts: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
