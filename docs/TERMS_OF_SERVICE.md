@@ -1,55 +1,101 @@
+
 # Terms of Service
 
-Last updated: [Current Date]
+Last Updated: March 14, 2024
 
-## Agreement to Terms
+## 1. Acceptance of Terms
 
-By accessing our application, you agree to these Terms of Service.
+By accessing and using our platform, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our services.
 
-## Acceptable Use
+## 2. User Accounts
 
+### 2.1 Account Creation
+- You must provide accurate and complete information when creating an account
+- You are responsible for maintaining the security of your account
+- One person may only create and use one account
+- Account sharing is strictly prohibited
+
+### 2.2 Account Security
+- Keep your password secure and confidential
+- Notify us immediately of any unauthorized access
+- You are responsible for all activities under your account
+
+## 3. User Conduct
+
+### 3.1 Acceptable Use
 Users must:
-- Follow community guidelines
+- Follow all community guidelines
 - Respect intellectual property rights
-- Not engage in harmful behavior
-- Not manipulate platform features
+- Use the platform in a lawful manner
+- Not manipulate or abuse platform features
 - Not use automated systems without permission
 
-## Content Guidelines
+### 3.2 Prohibited Content
+Users must not post:
+- Illegal content
+- Harassing or abusive material
+- Spam or misleading content
+- Adult or explicit content
+- Content that violates others' rights
 
-- No illegal content
-- No harassment
-- No spam
-- No adult content
-- Credit original creators
+## 4. Content Guidelines
 
-## User Accounts
+### 4.1 User Content
+- Users retain ownership of their content
+- You grant us license to display and distribute your content
+- You must have rights to content you post
+- Credit original creators when required
 
-- Users are responsible for account security
-- One person per account
-- Accurate information required
-- Account sharing prohibited
+### 4.2 Content Removal
+We reserve the right to:
+- Remove content that violates these terms
+- Suspend or terminate accounts
+- Modify or discontinue services
 
-## Termination
+## 5. Intellectual Property
 
-We reserve the right to terminate accounts for violations.
+### 5.1 Platform Content
+- Our platform and its original content are protected by copyright
+- Users may not copy or distribute platform content without permission
+- We respect DMCA takedown requests
+- Users must respect others' intellectual property rights
 
-## Intellectual Property
+## 6. Privacy & Data
 
-- Users retain rights to their content
-- Platform license to display content
-- DMCA compliance
+### 6.1 Data Collection
+- We collect and process data as described in our Privacy Policy
+- Users agree to our data collection practices
+- We implement reasonable security measures
+- Users can request their data
 
-## Liability
+## 7. Liability
 
+### 7.1 Disclaimer
 - Service provided "as is"
-- No warranties
-- Limitation of liability
+- No warranties of any kind
+- Not responsible for user-generated content
+- Limited liability to maximum extent of law
 
-## Changes to Terms
+## 8. Changes to Terms
 
-We may update these terms with notice to users.
+- We may modify these terms at any time
+- Changes will be effective upon posting
+- Continued use constitutes acceptance
+- Users will be notified of major changes
 
-## Contact
+## 9. Termination
 
-For legal inquiries, contact [Legal Email]
+We reserve the right to:
+- Terminate accounts for violations
+- Remove content without notice
+- Ban users who violate terms
+- Refuse service to anyone
+
+## 10. Contact Information
+
+For questions about these Terms:
+- Email: legal@platform.com
+- Address: [Legal Department Address]
+- Support: support@platform.com
+
+Last Updated: March 14, 2024
