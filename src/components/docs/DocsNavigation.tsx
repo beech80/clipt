@@ -11,8 +11,28 @@ const guides = [
   },
   {
     title: "Streaming Guide",
-    href: "/docs/streaming-guide",
+    href: "/docs/streaming",
     icon: Video
+  },
+  {
+    title: "Content Creation",
+    href: "/docs/content",
+    icon: File
+  },
+  {
+    title: "Gaming Features",
+    href: "/docs/gaming",
+    icon: Gamepad
+  },
+  {
+    title: "Community & Chat",
+    href: "/docs/community",
+    icon: MessageSquare
+  },
+  {
+    title: "Settings & Privacy",
+    href: "/docs/settings",
+    icon: Settings
   },
   {
     title: "Terms of Service",
