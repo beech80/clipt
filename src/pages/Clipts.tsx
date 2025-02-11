@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { Post } from '@/types/post';
 import { BackButton } from "@/components/ui/back-button";
 
-interface DbPost {
+type DbPost = {
   id: string;
   content: string | null;
   image_url: string | null;
@@ -25,11 +25,11 @@ interface DbPost {
   } | null;
 }
 
-const Clipts: React.FC = () => {
+const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
@@ -53,7 +53,7 @@ const Clipts: React.FC = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post: DbPost): Post => ({
+      return (postsData as DbPost[]).map((post) => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
