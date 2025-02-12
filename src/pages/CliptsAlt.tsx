@@ -19,7 +19,7 @@ type Game = {
   name: string | null;
 }
 
-interface DbPost {
+interface Post {
   id: string;
   content: string | null;
   image_url: string | null;
@@ -28,9 +28,6 @@ interface DbPost {
   created_at: string;
   profiles: Profile | null;
   games: Game | null;
-}
-
-interface Post extends DbPost {
   likes_count: number;
   comments_count: number;
   clip_votes: Array<{ count: number }>;
