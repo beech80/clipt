@@ -6,10 +6,9 @@ import GameBoyControls from "@/components/GameBoyControls";
 import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Post } from '@/types/post';
 import { BackButton } from "@/components/ui/back-button";
 
-type DbPost = {
+interface DbPost {
   id: string;
   content: string | null;
   image_url: string | null;
@@ -23,6 +22,12 @@ type DbPost = {
   games: {
     name: string | null;
   } | null;
+}
+
+interface Post extends DbPost {
+  likes_count: number;
+  comments_count: number;
+  clip_votes: any[];
 }
 
 const Clipts = () => {
@@ -53,14 +58,8 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return (postsData as DbPost[]).map((post) => ({
-        id: post.id,
-        content: post.content,
-        image_url: post.image_url,
-        video_url: post.video_url,
-        user_id: post.user_id,
-        created_at: post.created_at,
-        profiles: post.profiles,
+      return postsData.map((post: DbPost) => ({
+        ...post,
         likes_count: 0,
         comments_count: 0,
         clip_votes: []
