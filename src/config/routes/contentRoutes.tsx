@@ -1,7 +1,6 @@
 
 import { RouteObject } from "react-router-dom";
 import Clipts from "@/pages/Clipts";
-import CliptsAlt from "@/pages/CliptsAlt";
 import ClipEditor from "@/pages/ClipEditor";
 import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
@@ -12,10 +11,6 @@ export const contentRoutes: RouteObject[] = [
   {
     path: "clipts",
     element: <Clipts />,
-  },
-  {
-    path: "clipts-alt",
-    element: <CliptsAlt />,
   },
   {
     path: "clip-editor",
