@@ -10,6 +10,15 @@ import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Grid2X2, LayoutList } from "lucide-react";
 
+type Profile = {
+  username: string | null;
+  avatar_url: string | null;
+}
+
+type Game = {
+  name: string | null;
+}
+
 interface DbPost {
   id: string;
   content: string | null;
@@ -17,19 +26,14 @@ interface DbPost {
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles: {
-    username: string | null;
-    avatar_url: string | null;
-  } | null;
-  games: {
-    name: string | null;
-  } | null;
+  profiles: Profile | null;
+  games: Game | null;
 }
 
 interface Post extends DbPost {
   likes_count: number;
   comments_count: number;
-  clip_votes: any[];
+  clip_votes: Array<{ count: number }>;
 }
 
 const CliptsAlt = () => {
@@ -37,7 +41,7 @@ const CliptsAlt = () => {
   const isMobile = useIsMobile();
   const [gridView, setGridView] = React.useState(true);
 
-  const { data: posts, isLoading } = useQuery<Post[]>({
+  const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
@@ -61,12 +65,12 @@ const CliptsAlt = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post: DbPost) => ({
+      return postsData.map((post) => ({
         ...post,
         likes_count: 0,
         comments_count: 0,
-        clip_votes: []
-      }));
+        clip_votes: [{ count: 0 }]
+      })) as Post[];
     }
   });
 
