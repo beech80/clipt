@@ -31,7 +31,7 @@ import {
   LogOut,
   KeyRound,
   Keyboard,
-  Language
+  Languages
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Profile, CustomTheme, DatabaseProfile } from "@/types/profile";
