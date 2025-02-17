@@ -8,7 +8,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
-import { Grid2X2, LayoutList } from "lucide-react";
+import { Grid2X2, LayoutList, Link as LinkIcon } from "lucide-react";
+import { toast } from "sonner";
 
 type Profile = {
   username: string | null;
@@ -82,6 +83,16 @@ const CliptsAlt = () => {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-purple-500/20 text-purple-400"
+              onClick={() => {
+                toast.info("Coming soon! The Clipts website is under development.");
+              }}
+            >
+              <LinkIcon className="h-5 w-5" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
