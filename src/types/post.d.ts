@@ -13,12 +13,12 @@ export interface Post {
   games?: {
     name: string;
   } | null;
-  likes_count: number;
-  comments_count: number;
-  clip_votes: Array<{ count: number }>;
-  is_published: boolean;
-  is_premium: boolean;
-  required_tier_id: string | null;
-  scheduled_publish_time: string | null;
+  likes_count?: number;
+  comments_count?: number;
+  clip_votes?: Array<{ count: number }>;
+  is_published?: boolean;
+  is_premium?: boolean;
+  required_tier_id?: string | null;
+  scheduled_publish_time?: string | null;
   type: 'video' | 'image' | 'text';
 }
