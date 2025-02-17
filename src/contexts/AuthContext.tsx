@@ -1,7 +1,5 @@
 
-'use client';
-
-import { createContext, useContext, useState, useEffect } from 'react';
+import React from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -16,31 +14,45 @@ interface AuthContextType {
   resendVerificationEmail: (email: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+interface AuthState {
+  user: User | null;
+  loading: boolean;
+}
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+const AuthContext = React.createContext<AuthContextType | null>(null);
 
-  useEffect(() => {
+export class AuthProvider extends React.Component<{ children: React.ReactNode }, AuthState> {
+  private subscription: { unsubscribe: () => void } | null = null;
+
+  state = {
+    user: null,
+    loading: true
+  };
+
+  async componentDidMount() {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+    const { data: { session } } = await supabase.auth.getSession();
+    this.setState({ 
+      user: session?.user ?? null,
+      loading: false 
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      this.setState({ 
+        user: session?.user ?? null,
+        loading: false 
+      });
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    this.subscription = subscription;
+  }
 
-  const signIn = async (email: string, password: string) => {
+  componentWillUnmount() {
+    this.subscription?.unsubscribe();
+  }
+
+  signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -54,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  signUp = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -68,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = async () => {
+  signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -79,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const resetPassword = async (email: string) => {
+  resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) throw error;
@@ -90,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const resendVerificationEmail = async (email: string) => {
+  resendVerificationEmail = async (email: string) => {
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
@@ -104,21 +116,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const value = {
-    user,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    resetPassword,
-    resendVerificationEmail,
-  };
+  render() {
+    const value = {
+      user: this.state.user,
+      loading: this.state.loading,
+      signIn: this.signIn,
+      signUp: this.signUp,
+      signOut: this.signOut,
+      resetPassword: this.resetPassword,
+      resendVerificationEmail: this.resendVerificationEmail,
+    };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+    return (
+      <AuthContext.Provider value={value}>
+        {this.props.children}
+      </AuthContext.Provider>
+    );
+  }
+}
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = React.useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
