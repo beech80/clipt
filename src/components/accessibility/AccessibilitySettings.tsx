@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -29,13 +30,15 @@ export function AccessibilitySettings() {
   }, [user]);
 
   const loadSettings = async () => {
+    if (!user?.id) return;
+
     const { data, error } = await supabase
       .from("accessibility_settings")
       .select("*")
-      .eq("user_id", user?.id)
+      .eq("user_id", user.id)
       .single();
 
-    if (error) {
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
       console.error("Error loading accessibility settings:", error);
       return;
     }
@@ -66,13 +69,18 @@ export function AccessibilitySettings() {
   };
 
   const updateSetting = async (key: string, value: any) => {
+    if (!user?.id) {
+      toast.error("You must be logged in to update settings");
+      return;
+    }
+
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
 
     const { error } = await supabase
       .from("accessibility_settings")
       .upsert({
-        user_id: user?.id,
+        user_id: user.id,
         high_contrast: newSettings.highContrast,
         screen_reader_enabled: newSettings.screenReaderEnabled,
         reduced_motion: newSettings.reducedMotion,
