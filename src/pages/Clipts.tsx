@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import GameBoyControls from "@/components/GameBoyControls";
 import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
@@ -8,26 +9,11 @@ import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 import type { Post } from "@/types/post";
 
-interface PostResponse {
-  id: string;
-  content: string | null;
-  image_url: string | null;
-  video_url: string | null;
-  user_id: string;
-  created_at: string;
-  profiles: {
-    username: string | null;
-    avatar_url: string | null;
-  } | null;
-  games: {
-    name: string;
-  } | null;
-}
-
 const Clipts = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
@@ -51,7 +37,7 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return (postsData as PostResponse[]).map((post): Post => ({
+      return postsData.map((post): Post => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,

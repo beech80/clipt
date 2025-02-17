@@ -37,7 +37,7 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const { data: profile, isLoading, refetch } = useQuery({
+  const { data: profile, isLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -46,14 +46,11 @@ const Settings = () => {
         .eq('id', user?.id)
         .single();
 
-      if (error) {
-        console.error("Profile fetch error:", error);
-        throw error;
-      }
+      if (error) throw error;
       
       const dbProfile = data as DatabaseProfile;
       const customTheme = dbProfile.custom_theme as CustomTheme || {
-        primary: "#9b87f5",
+        primary: "#1EAEDB",
         secondary: "#1A1F2C"
       };
 
@@ -67,37 +64,28 @@ const Settings = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (settings: Partial<DatabaseProfile>) => {
-      console.log("Updating settings:", settings); // Debug log
-
       const { error } = await supabase
         .from('profiles')
         .update(settings)
         .eq('id', user?.id);
 
-      if (error) {
-        console.error("Update error:", error);
-        throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Settings updated successfully");
-      refetch(); // Refetch profile data after successful update
     },
     onError: (error) => {
+      toast.error("Failed to update settings");
       console.error("Settings update error:", error);
-      toast.error("Failed to update settings. Please try again.");
     }
   });
 
   const handleToggle = (setting: keyof Profile) => {
-    if (!profile || !user) return;
+    if (!profile) return;
     
-    const updatedSettings: Partial<DatabaseProfile> = {
+    updateSettingsMutation.mutate({
       [setting]: !profile[setting]
-    };
-    
-    console.log("Toggling setting:", setting, updatedSettings); // Debug log
-    updateSettingsMutation.mutate(updatedSettings);
+    });
   };
 
   const handleSignOut = async () => {
@@ -230,21 +218,16 @@ const Settings = () => {
 
           {/* Right Column - Appearance & Accessibility */}
           <div className="space-y-6">
-            {/* Theme Settings */}
+            {/* Appearance Settings */}
             {profile && (
               <Card className="p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Paintbrush className="w-5 h-5 text-purple-500" />
-                  <h2 className="text-xl font-semibold">Theme Settings</h2>
+                  <h2 className="text-xl font-semibold">Appearance</h2>
                 </div>
                 <ThemeSelector 
-                  userId={profile.id}
+                  userId={profile.id} 
                   currentTheme={profile.custom_theme}
-                  onThemeUpdate={(theme) => {
-                    updateSettingsMutation.mutate({
-                      custom_theme: theme
-                    });
-                  }}
                 />
               </Card>
             )}
