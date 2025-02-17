@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Gamepad2, LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import GameBoyControls from "@/components/GameBoyControls";
 
@@ -39,9 +39,11 @@ const Login = () => {
       <div className="mx-auto max-w-md space-y-6 pt-12">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-lg bg-gaming-400/20 flex items-center justify-center">
-              <Gamepad2 className="h-6 w-6 text-gaming-400" />
-            </div>
+            <img 
+              src="/lovable-uploads/2d36b6eb-8ffa-4d34-a6b1-c3beb67e019f.png" 
+              alt="Gaming Camera Logo" 
+              className="h-24 w-24 object-contain"
+            />
           </div>
           <h1 className="text-4xl font-bold">Welcome Back</h1>
           <p className="text-muted-foreground">Sign in to your account</p>
