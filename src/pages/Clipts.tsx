@@ -10,33 +10,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Grid2X2, LayoutList, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
-
-interface Profile {
-  username: string | null;
-  avatar_url: string | null;
-}
-
-interface Game {
-  name: string | null;
-}
-
-interface ClipVote {
-  count: number;
-}
-
-interface Post {
-  id: string;
-  content: string | null;
-  image_url: string | null;
-  video_url: string | null;
-  user_id: string;
-  created_at: string;
-  profiles: Profile | null;
-  games: Game | null;
-  likes_count: number;
-  comments_count: number;
-  clip_votes: ClipVote[];
-}
+import type { Post } from "@/types/post";
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -72,7 +46,7 @@ const Clipts = () => {
         likes_count: 0,
         comments_count: 0,
         clip_votes: [{ count: 0 }]
-      })) as Post[];
+      }));
     }
   });
 
