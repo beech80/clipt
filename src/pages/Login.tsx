@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Gamepad2 } from "lucide-react";
+import { Gamepad2, LogIn, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import GameBoyControls from "@/components/GameBoyControls";
 
@@ -76,8 +77,20 @@ const Login = () => {
             className="w-full"
             disabled={loading}
           >
+            <LogIn className="mr-2 h-4 w-4" />
             {loading ? "Signing in..." : "Sign in"}
           </Button>
+          
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => navigate("/signup")}
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            Create an account
+          </Button>
+
           <div className="mt-4 text-center space-y-2">
             <Link to="/reset-password" className="text-sm text-primary hover:underline block">
               Forgot your password?
@@ -85,12 +98,6 @@ const Login = () => {
             <Link to="/resend-verification" className="text-sm text-primary hover:underline block">
               Resend verification email
             </Link>
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
-                Sign up
-              </Link>
-            </p>
           </div>
         </form>
       </div>
