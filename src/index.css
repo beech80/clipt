@@ -267,4 +267,3 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
-
