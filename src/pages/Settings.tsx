@@ -37,7 +37,7 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, refetch } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -46,7 +46,10 @@ const Settings = () => {
         .eq('id', user?.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Profile fetch error:", error);
+        throw error;
+      }
       
       const dbProfile = data as DatabaseProfile;
       const customTheme = dbProfile.custom_theme as CustomTheme || {
@@ -64,28 +67,37 @@ const Settings = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (settings: Partial<DatabaseProfile>) => {
+      console.log("Updating settings:", settings); // Debug log
+
       const { error } = await supabase
         .from('profiles')
         .update(settings)
         .eq('id', user?.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Update error:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast.success("Settings updated successfully");
+      refetch(); // Refetch profile data after successful update
     },
     onError: (error) => {
-      toast.error("Failed to update settings");
       console.error("Settings update error:", error);
+      toast.error("Failed to update settings. Please try again.");
     }
   });
 
   const handleToggle = (setting: keyof Profile) => {
-    if (!profile) return;
+    if (!profile || !user) return;
     
-    updateSettingsMutation.mutate({
+    const updatedSettings: Partial<DatabaseProfile> = {
       [setting]: !profile[setting]
-    });
+    };
+    
+    console.log("Toggling setting:", setting, updatedSettings); // Debug log
+    updateSettingsMutation.mutate(updatedSettings);
   };
 
   const handleSignOut = async () => {
@@ -228,6 +240,11 @@ const Settings = () => {
                 <ThemeSelector 
                   userId={profile.id}
                   currentTheme={profile.custom_theme}
+                  onThemeUpdate={(theme) => {
+                    updateSettingsMutation.mutate({
+                      custom_theme: theme
+                    });
+                  }}
                 />
               </Card>
             )}
