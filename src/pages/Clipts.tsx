@@ -7,14 +7,11 @@ import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
-import { Button } from "@/components/ui/button";
-import { Grid2X2 } from "lucide-react";
 import type { Post } from "@/types/post";
 
 const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [gridView, setGridView] = React.useState(true);
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
@@ -52,23 +49,11 @@ const Clipts = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/40 backdrop-blur-lg border-b border-white/10">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <BackButton />
-            <h1 className="text-3xl font-bold text-white">
-              Clipts
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setGridView(!gridView)}
-              className={gridView ? "bg-purple-500/20" : ""}
-            >
-              <Grid2X2 className="h-5 w-5" />
-            </Button>
-          </div>
+        <div className="flex items-center justify-center max-w-7xl mx-auto relative">
+          <BackButton className="absolute left-0" />
+          <h1 className="text-3xl font-bold text-white">
+            Clipts
+          </h1>
         </div>
       </div>
 
@@ -85,7 +70,7 @@ const Clipts = () => {
             </div>
           </div>
         ) : (
-          <div className={`grid gap-6 ${gridView ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 max-w-3xl mx-auto'}`}>
+          <div className="grid gap-6 grid-cols-1 max-w-3xl mx-auto">
             {posts?.map((post) => (
               <div 
                 key={post.id} 
