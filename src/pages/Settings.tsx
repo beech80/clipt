@@ -13,6 +13,7 @@ import { AccessibilitySettings } from "@/components/accessibility/AccessibilityS
 import { TwoFactorSettings } from "@/components/settings/TwoFactorSettings";
 import { DataPrivacySettings } from "@/components/settings/DataPrivacySettings";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
+import GameBoyControls from "@/components/GameBoyControls";
 import {
   Bell,
   Volume2,
@@ -108,116 +109,119 @@ const Settings = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-8">
-      {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Settings</h1>
-              <p className="text-muted-foreground">
-                Manage your account settings and preferences
-              </p>
+    <div className="pb-[180px] sm:pb-[200px]">
+      <div className="container mx-auto py-6 space-y-8">
+        {/* Header */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold">Settings</h1>
+                <p className="text-muted-foreground">
+                  Manage your account settings and preferences
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-        <Separator />
-      </div>
-
-      {/* Settings Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Left Column - Account & Security */}
-        <div className="space-y-6">
-          {/* Account Settings */}
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <UserCog className="w-5 h-5 text-purple-500" />
-              <h2 className="text-xl font-semibold">Account Settings</h2>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive email notifications about activity
-                  </p>
-                </div>
-                <Switch
-                  checked={profile?.enable_notifications}
-                  onCheckedChange={() => handleToggle('enable_notifications')}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Sound Effects</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Play sounds for interactions
-                  </p>
-                </div>
-                <Switch
-                  checked={profile?.enable_sounds}
-                  onCheckedChange={() => handleToggle('enable_sounds')}
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Documentation Section */}
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <BookOpen className="w-5 h-5 text-purple-500" />
-              <h2 className="text-xl font-semibold">Documentation</h2>
-            </div>
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Access our comprehensive documentation, including user guides, API documentation, and community guidelines.
-              </p>
-              <Button 
-                onClick={() => navigate('/docs/user-guide')}
-                className="w-full"
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                View Documentation
-              </Button>
-            </div>
-          </Card>
-
-          {/* Security Settings */}
-          <TwoFactorSettings />
-          <DataPrivacySettings />
+          <Separator />
         </div>
 
-        {/* Right Column - Appearance & Accessibility */}
-        <div className="space-y-6">
-          {/* Appearance Settings */}
-          {profile && (
+        {/* Settings Grid */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Left Column - Account & Security */}
+          <div className="space-y-6">
+            {/* Account Settings */}
             <Card className="p-6">
               <div className="flex items-center gap-2 mb-6">
-                <Paintbrush className="w-5 h-5 text-purple-500" />
-                <h2 className="text-xl font-semibold">Appearance</h2>
+                <UserCog className="w-5 h-5 text-purple-500" />
+                <h2 className="text-xl font-semibold">Account Settings</h2>
               </div>
-              <ThemeSelector 
-                userId={profile.id} 
-                currentTheme={profile.custom_theme}
-              />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Email Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive email notifications about activity
+                    </p>
+                  </div>
+                  <Switch
+                    checked={profile?.enable_notifications}
+                    onCheckedChange={() => handleToggle('enable_notifications')}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Sound Effects</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Play sounds for interactions
+                    </p>
+                  </div>
+                  <Switch
+                    checked={profile?.enable_sounds}
+                    onCheckedChange={() => handleToggle('enable_sounds')}
+                  />
+                </div>
+              </div>
             </Card>
-          )}
 
-          {/* Accessibility Settings */}
-          <AccessibilitySettings />
-          
-          {/* Streaming Settings */}
-          {user && <StreamSettings userId={user.id} />}
+            {/* Documentation Section */}
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <BookOpen className="w-5 h-5 text-purple-500" />
+                <h2 className="text-xl font-semibold">Documentation</h2>
+              </div>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Access our comprehensive documentation, including user guides, API documentation, and community guidelines.
+                </p>
+                <Button 
+                  onClick={() => navigate('/docs/user-guide')}
+                  className="w-full"
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  View Documentation
+                </Button>
+              </div>
+            </Card>
+
+            {/* Security Settings */}
+            <TwoFactorSettings />
+            <DataPrivacySettings />
+          </div>
+
+          {/* Right Column - Appearance & Accessibility */}
+          <div className="space-y-6">
+            {/* Appearance Settings */}
+            {profile && (
+              <Card className="p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Paintbrush className="w-5 h-5 text-purple-500" />
+                  <h2 className="text-xl font-semibold">Appearance</h2>
+                </div>
+                <ThemeSelector 
+                  userId={profile.id} 
+                  currentTheme={profile.custom_theme}
+                />
+              </Card>
+            )}
+
+            {/* Accessibility Settings */}
+            <AccessibilitySettings />
+            
+            {/* Streaming Settings */}
+            {user && <StreamSettings userId={user.id} />}
+          </div>
         </div>
       </div>
+      <GameBoyControls />
     </div>
   );
 };
