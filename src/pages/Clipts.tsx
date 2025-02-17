@@ -8,30 +8,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
-import { Grid2X2, LayoutList } from "lucide-react";
-
-type Profile = {
-  username: string | null;
-  avatar_url: string | null;
-}
-
-type Game = {
-  name: string | null;
-}
-
-interface Post {
-  id: string;
-  content: string | null;
-  image_url: string | null;
-  video_url: string | null;
-  user_id: string;
-  created_at: string;
-  profiles: Profile | null;
-  games: Game | null;
-  likes_count: number;
-  comments_count: number;
-  clip_votes: Array<{ count: number }>;
-}
+import { Grid2X2 } from "lucide-react";
+import type { Post } from "@/types/post";
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -78,22 +56,14 @@ const Clipts = () => {
           <div className="flex items-center gap-4">
             <BackButton />
             <h1 className="text-3xl font-bold text-white">
-              Featured Clipts
+              Clipts
             </h1>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setGridView(false)}
-              className={!gridView ? "bg-purple-500/20" : ""}
-            >
-              <LayoutList className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setGridView(true)}
+              onClick={() => setGridView(!gridView)}
               className={gridView ? "bg-purple-500/20" : ""}
             >
               <Grid2X2 className="h-5 w-5" />
