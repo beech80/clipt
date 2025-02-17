@@ -9,31 +9,9 @@ import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { Grid2X2, LayoutList } from "lucide-react";
+import { Post } from "@/types/post";
 
-type Profile = {
-  username: string | null;
-  avatar_url: string | null;
-}
-
-type Game = {
-  name: string | null;
-}
-
-interface Post {
-  id: string;
-  content: string | null;
-  image_url: string | null;
-  video_url: string | null;
-  user_id: string;
-  created_at: string;
-  profiles: Profile | null;
-  games: Game | null;
-  likes_count: number;
-  comments_count: number;
-  clip_votes: Array<{ count: number }>;
-}
-
-const CliptsAlt = () => {
+const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [gridView, setGridView] = React.useState(true);
@@ -62,12 +40,15 @@ const CliptsAlt = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post) => ({
+      // Transform the data to match the Post type
+      return postsData.map((post): Post => ({
         ...post,
         likes_count: 0,
         comments_count: 0,
-        clip_votes: [{ count: 0 }]
-      })) as Post[];
+        clip_votes: [{ count: 0 }],
+        profiles: post.profiles || null,
+        games: post.games || null
+      }));
     }
   });
 
@@ -133,4 +114,4 @@ const CliptsAlt = () => {
   );
 };
 
-export default CliptsAlt;
+export default Clipts;
