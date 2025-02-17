@@ -1,3 +1,4 @@
+
 import { RouteObject } from "react-router-dom";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
@@ -32,3 +33,4 @@ export const authRoutes: RouteObject[] = [
     element: <Verification />,
   },
 ];
+
