@@ -31,8 +31,7 @@ const Clipts = () => {
           profiles (
             username,
             avatar_url
-          ),
-          games (name)
+          )
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
@@ -40,14 +39,17 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      // Transform the data to match the Post type
       return postsData.map((post): Post => ({
-        ...post,
+        id: post.id,
+        content: post.content,
+        image_url: post.image_url,
+        video_url: post.video_url,
+        user_id: post.user_id,
+        created_at: post.created_at,
+        profiles: post.profiles,
         likes_count: 0,
         comments_count: 0,
-        clip_votes: [{ count: 0 }],
-        profiles: post.profiles || null,
-        games: post.games || null
+        clip_votes: [{ count: 0 }]
       }));
     }
   });
