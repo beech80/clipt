@@ -8,11 +8,32 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
-import { Grid2X2, LayoutList, Link as LinkIcon } from "lucide-react";
-import { toast } from "sonner";
-import type { Post } from "@/types/post";
+import { Grid2X2, LayoutList } from "lucide-react";
 
-const Clipts = () => {
+type Profile = {
+  username: string | null;
+  avatar_url: string | null;
+}
+
+type Game = {
+  name: string | null;
+}
+
+interface Post {
+  id: string;
+  content: string | null;
+  image_url: string | null;
+  video_url: string | null;
+  user_id: string;
+  created_at: string;
+  profiles: Profile | null;
+  games: Game | null;
+  likes_count: number;
+  comments_count: number;
+  clip_votes: Array<{ count: number }>;
+}
+
+const CliptsAlt = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [gridView, setGridView] = React.useState(true);
@@ -46,7 +67,7 @@ const Clipts = () => {
         likes_count: 0,
         comments_count: 0,
         clip_votes: [{ count: 0 }]
-      }));
+      })) as Post[];
     }
   });
 
@@ -61,16 +82,6 @@ const Clipts = () => {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-purple-500/20 text-purple-400"
-              onClick={() => {
-                toast.info("Coming soon! The Clipts website is under development.");
-              }}
-            >
-              <LinkIcon className="h-5 w-5" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -122,4 +133,4 @@ const Clipts = () => {
   );
 };
 
-export default Clipts;
+export default CliptsAlt;
