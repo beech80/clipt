@@ -27,13 +27,14 @@ import {
   MessageSquare,
   Globe,
   Video,
-  BookOpen
+  BookOpen,
+  LogOut
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Profile, CustomTheme, DatabaseProfile } from "@/types/profile";
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   const { data: profile, isLoading } = useQuery({
@@ -85,6 +86,15 @@ const Settings = () => {
     updateSettingsMutation.mutate({
       [setting]: !profile[setting]
     });
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      toast.error("Failed to sign out");
+    }
   };
 
   if (isLoading) {
@@ -169,6 +179,15 @@ const Settings = () => {
                     onCheckedChange={() => handleToggle('enable_sounds')}
                   />
                 </div>
+                <Separator className="my-4" />
+                <Button 
+                  variant="destructive" 
+                  onClick={handleSignOut}
+                  className="w-full"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
               </div>
             </Card>
 
