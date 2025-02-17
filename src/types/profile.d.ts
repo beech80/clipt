@@ -19,8 +19,6 @@ export interface Profile {
   theme_preference?: string;
   enable_notifications?: boolean;
   enable_sounds?: boolean;
-  keyboard_shortcuts?: boolean;
-  preferred_language?: string;
 }
 
 export interface DatabaseProfile extends Omit<Profile, 'custom_theme'> {

@@ -37,7 +37,7 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map(post => ({
+      return postsData.map((post): Post => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
@@ -53,7 +53,7 @@ const Clipts = () => {
         is_premium: false,
         required_tier_id: null,
         scheduled_publish_time: null,
-        type: 'video' as const
+        type: 'video'
       }));
     }
   });

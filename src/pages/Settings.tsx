@@ -28,14 +28,10 @@ import {
   Globe,
   Video,
   BookOpen,
-  LogOut,
-  KeyRound,
-  Keyboard,
-  Languages
+  LogOut
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Profile, CustomTheme, DatabaseProfile } from "@/types/profile";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -182,38 +178,6 @@ const Settings = () => {
                     checked={profile?.enable_sounds}
                     onCheckedChange={() => handleToggle('enable_sounds')}
                   />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Keyboard Shortcuts</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Enable keyboard shortcuts for quick navigation
-                    </p>
-                  </div>
-                  <Switch
-                    checked={profile?.keyboard_shortcuts}
-                    onCheckedChange={() => handleToggle('keyboard_shortcuts')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Language</Label>
-                  <Select
-                    value={profile?.preferred_language || "en"}
-                    onValueChange={(value) => 
-                      updateSettingsMutation.mutate({ preferred_language: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                      <SelectItem value="ja">日本語</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <Separator className="my-4" />
                 <Button 
