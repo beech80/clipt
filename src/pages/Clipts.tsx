@@ -37,11 +37,15 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post) => ({
+      return postsData.map((post): Post => ({
         ...post,
         likes_count: 0,
         comments_count: 0,
-        clip_votes: [{ count: 0 }]
+        clip_votes: [{ count: 0 }],
+        is_published: true,
+        is_premium: false,
+        required_tier_id: null,
+        scheduled_publish_time: null
       }));
     }
   });
@@ -50,7 +54,7 @@ const Clipts = () => {
     <div className="min-h-screen bg-background">
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/40 backdrop-blur-lg border-b border-white/10">
         <div className="flex items-center justify-center max-w-7xl mx-auto relative">
-          <BackButton className="absolute left-0" />
+          <BackButton />
           <h1 className="text-3xl font-bold text-white">
             Clipts
           </h1>
