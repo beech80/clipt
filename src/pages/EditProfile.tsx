@@ -38,8 +38,8 @@ const EditProfile = () => {
   const currentTheme = profile?.custom_theme 
     ? (typeof profile.custom_theme === 'object' && profile.custom_theme !== null
         ? {
-            primary: (profile.custom_theme as CustomTheme).primary || defaultTheme.primary,
-            secondary: (profile.custom_theme as CustomTheme).secondary || defaultTheme.secondary
+            primary: (profile.custom_theme as Record<string, string>).primary || defaultTheme.primary,
+            secondary: (profile.custom_theme as Record<string, string>).secondary || defaultTheme.secondary
           }
         : defaultTheme)
     : defaultTheme;

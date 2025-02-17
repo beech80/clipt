@@ -27,10 +27,15 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
     try {
       setIsLoading(true);
       
+      const themeData = {
+        primary: theme.primary,
+        secondary: theme.secondary
+      };
+      
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          custom_theme: theme
+          custom_theme: themeData
         })
         .eq('id', userId);
 

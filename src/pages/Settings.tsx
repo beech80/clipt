@@ -1,6 +1,6 @@
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,8 +40,8 @@ const Settings = () => {
   const currentTheme = profile?.custom_theme 
     ? (typeof profile.custom_theme === 'object' && profile.custom_theme !== null
         ? {
-            primary: (profile.custom_theme as CustomTheme).primary || defaultTheme.primary,
-            secondary: (profile.custom_theme as CustomTheme).secondary || defaultTheme.secondary
+            primary: (profile.custom_theme as Record<string, string>).primary || defaultTheme.primary,
+            secondary: (profile.custom_theme as Record<string, string>).secondary || defaultTheme.secondary
           }
         : defaultTheme)
     : defaultTheme;
