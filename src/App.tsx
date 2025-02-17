@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -26,18 +27,20 @@ function AppContent() {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <AuthProvider>
-          <ReportDialogProvider>
-            <MessagesProvider>
-              <AppContent />
-              <Toaster position="top-center" />
-            </MessagesProvider>
-          </ReportDialogProvider>
-        </AuthProvider>
-      </React.Suspense>
-    </ErrorBoundary>
+    <React.StrictMode>
+      <ErrorBoundary>
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <AuthProvider>
+            <ReportDialogProvider>
+              <MessagesProvider>
+                <AppContent />
+                <Toaster position="top-center" />
+              </MessagesProvider>
+            </ReportDialogProvider>
+          </AuthProvider>
+        </React.Suspense>
+      </ErrorBoundary>
+    </React.StrictMode>
   );
 }
 
