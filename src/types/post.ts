@@ -18,6 +18,9 @@ export interface Post {
   is_premium?: boolean;
   required_tier_id?: string | null;
   scheduled_publish_time?: string | null;
+  games?: {
+    name: string;
+  } | null;
 }
 
 export interface PostHeaderProps {
