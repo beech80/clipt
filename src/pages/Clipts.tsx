@@ -13,7 +13,7 @@ const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
@@ -38,14 +38,22 @@ const Clipts = () => {
       if (!postsData) return [];
 
       return postsData.map((post): Post => ({
-        ...post,
+        id: post.id,
+        content: post.content,
+        image_url: post.image_url,
+        video_url: post.video_url,
+        user_id: post.user_id,
+        created_at: post.created_at,
+        profiles: post.profiles,
+        games: post.games,
         likes_count: 0,
         comments_count: 0,
         clip_votes: [{ count: 0 }],
         is_published: true,
         is_premium: false,
         required_tier_id: null,
-        scheduled_publish_time: null
+        scheduled_publish_time: null,
+        type: 'video'
       }));
     }
   });
