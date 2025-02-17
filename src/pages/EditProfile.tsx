@@ -1,3 +1,4 @@
+
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { useQuery } from "@tanstack/react-query";
@@ -8,11 +9,7 @@ import { UserCog, Paintbrush, Shield, Bell, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
-
-interface ThemeColors {
-  primary: string;
-  secondary: string;
-}
+import type { CustomTheme } from "@/types/profile";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -33,16 +30,16 @@ const EditProfile = () => {
     },
   });
 
-  const defaultTheme: ThemeColors = {
-    primary: "#1EAEDB",
-    secondary: "#000000"
+  const defaultTheme = {
+    primary: "#9b87f5",
+    secondary: "#1A1F2C"
   };
 
-  const currentTheme: ThemeColors = profile?.custom_theme 
+  const currentTheme = profile?.custom_theme 
     ? (typeof profile.custom_theme === 'object' && profile.custom_theme !== null
         ? {
-            primary: (profile.custom_theme as any).primary || defaultTheme.primary,
-            secondary: (profile.custom_theme as any).secondary || defaultTheme.secondary
+            primary: (profile.custom_theme as CustomTheme).primary || defaultTheme.primary,
+            secondary: (profile.custom_theme as CustomTheme).secondary || defaultTheme.secondary
           }
         : defaultTheme)
     : defaultTheme;
