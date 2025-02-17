@@ -11,7 +11,7 @@ const TermsOfService = () => {
       </div>
 
       <div className="prose dark:prose-invert max-w-none">
-        <p className="text-sm text-muted-foreground mb-6">Last Updated: 2/17/2025</p>
+        <p className="text-sm text-muted-foreground mb-6">Last Updated: 2/11/2025</p>
 
         <p className="mb-6">
           Welcome to Clipt! Clipt is a social media and streaming platform that combines video sharing, live streaming, and interactive gaming elements. By using Clipt, you agree to these Terms of Service ("Terms"). Please read them carefully.
