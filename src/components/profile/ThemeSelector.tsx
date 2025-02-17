@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Paintbrush, RotateCcw } from "lucide-react";
+import { Paintbrush, RotateCcw, Undo } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { CustomTheme } from "@/types/profile";
@@ -20,22 +20,24 @@ const defaultTheme: ThemeColors = {
 };
 
 export const ThemeSelector = ({ userId, currentTheme }: { userId: string; currentTheme: ThemeColors }) => {
-  const [theme, setTheme] = useState<ThemeColors>(currentTheme || defaultTheme);
+  const [theme, setTheme] = useState<ThemeColors>({
+    primary: currentTheme?.primary || defaultTheme.primary,
+    secondary: currentTheme?.secondary || defaultTheme.secondary
+  });
+  const [previousTheme, setPreviousTheme] = useState<ThemeColors>(theme);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
     try {
       setIsLoading(true);
+      console.log("Saving theme:", theme);
       
-      const themeData = {
-        primary: theme.primary,
-        secondary: theme.secondary
-      };
+      setPreviousTheme(theme); // Save current theme before updating
       
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          custom_theme: themeData
+          custom_theme: theme as CustomTheme
         })
         .eq('id', userId);
 
@@ -45,6 +47,7 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
       document.documentElement.style.setProperty('--background-override', theme.secondary);
       document.documentElement.style.setProperty('--button-override', theme.primary);
       
+      console.log("Theme updated successfully");
       toast.success("Theme updated successfully!");
     } catch (error) {
       console.error('Error updating theme:', error);
@@ -55,6 +58,7 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
   };
 
   const handleColorChange = (color: string, type: 'primary' | 'secondary') => {
+    console.log(`Color changed - ${type}:`, color);
     setTheme(prev => ({ ...prev, [type]: color }));
     
     // Update CSS variables in real-time for preview
@@ -65,28 +69,65 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
     }
   };
 
-  const handleResetToDefault = () => {
-    setTheme(defaultTheme);
-    document.documentElement.style.setProperty('--background-override', defaultTheme.secondary);
-    document.documentElement.style.setProperty('--button-override', defaultTheme.primary);
-    toast.info("Reset to default theme");
+  const handleUndo = () => {
+    setTheme(previousTheme);
+    document.documentElement.style.setProperty('--background-override', previousTheme.secondary);
+    document.documentElement.style.setProperty('--button-override', previousTheme.primary);
+    toast.info("Reverted to previous theme");
+  };
+
+  const handleResetToDefault = async () => {
+    try {
+      setIsLoading(true);
+      setPreviousTheme(theme); // Save current theme before resetting
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          custom_theme: defaultTheme as CustomTheme
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      setTheme(defaultTheme);
+      document.documentElement.style.setProperty('--background-override', defaultTheme.secondary);
+      document.documentElement.style.setProperty('--button-override', defaultTheme.primary);
+      
+      toast.success("Reset to default theme");
+    } catch (error) {
+      console.error('Error resetting theme:', error);
+      toast.error("Failed to reset theme");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-4">
+    <Card className="p-6 space-y-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Paintbrush className="w-5 h-5 text-muted-foreground" />
           <h3 className="text-lg font-semibold">Custom Theme</h3>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleResetToDefault}
-          title="Reset to default theme"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleUndo}
+            title="Undo changes"
+          >
+            <Undo className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleResetToDefault}
+            title="Reset to default theme"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -154,6 +195,6 @@ export const ThemeSelector = ({ userId, currentTheme }: { userId: string; curren
           />
         </div>
       </div>
-    </div>
+    </Card>
   );
 };

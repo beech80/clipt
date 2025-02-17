@@ -1,5 +1,8 @@
 
+import { Json } from './database';
+
 export interface CustomTheme {
+  [key: string]: string; // Add index signature
   primary: string;
   secondary: string;
 }
@@ -19,5 +22,5 @@ export interface Profile {
 }
 
 export interface DatabaseProfile extends Omit<Profile, 'custom_theme'> {
-  custom_theme?: CustomTheme;
+  custom_theme?: Json;
 }
