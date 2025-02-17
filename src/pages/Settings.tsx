@@ -50,7 +50,7 @@ const Settings = () => {
       
       const dbProfile = data as DatabaseProfile;
       const customTheme = dbProfile.custom_theme as CustomTheme || {
-        primary: "#1EAEDB",
+        primary: "#9b87f5",
         secondary: "#1A1F2C"
       };
 
@@ -218,15 +218,15 @@ const Settings = () => {
 
           {/* Right Column - Appearance & Accessibility */}
           <div className="space-y-6">
-            {/* Appearance Settings */}
+            {/* Theme Settings */}
             {profile && (
               <Card className="p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Paintbrush className="w-5 h-5 text-purple-500" />
-                  <h2 className="text-xl font-semibold">Appearance</h2>
+                  <h2 className="text-xl font-semibold">Theme Settings</h2>
                 </div>
                 <ThemeSelector 
-                  userId={profile.id} 
+                  userId={profile.id}
                   currentTheme={profile.custom_theme}
                 />
               </Card>
