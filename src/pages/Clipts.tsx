@@ -33,7 +33,7 @@ interface Post {
   clip_votes: Array<{ count: number }>;
 }
 
-const CliptsAlt = () => {
+const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [gridView, setGridView] = React.useState(true);
@@ -67,17 +67,17 @@ const CliptsAlt = () => {
         likes_count: 0,
         comments_count: 0,
         clip_votes: [{ count: 0 }]
-      })) as Post[];
+      }));
     }
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-gaming-900">
+    <div className="min-h-screen bg-background">
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/40 backdrop-blur-lg border-b border-white/10">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-4">
             <BackButton />
-            <h1 className="text-3xl font-bold text-white text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-white">
               Featured Clipts
             </h1>
           </div>
@@ -133,4 +133,4 @@ const CliptsAlt = () => {
   );
 };
 
-export default CliptsAlt;
+export default Clipts;
