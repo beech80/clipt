@@ -1,3 +1,4 @@
+
 export interface Post {
   id: string;
   content: string | null;
@@ -17,30 +18,4 @@ export interface Post {
   is_premium?: boolean;
   required_tier_id?: string | null;
   scheduled_publish_time?: string | null;
-}
-
-export interface PostHeaderProps {
-  post: Post;
-  commentsCount: number;
-}
-
-export interface PostMenuProps {
-  postId: string;
-  userId: string;
-  content: string;
-  imageUrl?: string | null;
-  videoUrl?: string | null;
-}
-
-export interface PostActionsProps {
-  post: Post;
-  commentsCount: number;
-  onCommentClick: () => void;
-}
-
-export interface SearchFilters {
-  type: 'all' | 'posts' | 'profiles' | 'streams';
-  dateRange: 'all' | 'today' | 'week' | 'month';
-  hasMedia: boolean;
-  sortBy: 'recent' | 'relevant';
 }

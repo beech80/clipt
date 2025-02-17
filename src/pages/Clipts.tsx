@@ -9,11 +9,17 @@ import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 import type { Post } from "@/types/post";
 
+interface PostWithGame extends Post {
+  games?: {
+    name: string;
+  } | null;
+}
+
 const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery<Post[]>({
+  const { data: posts, isLoading } = useQuery<PostWithGame[]>({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
@@ -37,7 +43,7 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post): Post => ({
+      return postsData.map((post): PostWithGame => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
@@ -52,8 +58,7 @@ const Clipts = () => {
         is_published: true,
         is_premium: false,
         required_tier_id: null,
-        scheduled_publish_time: null,
-        type: 'video'
+        scheduled_publish_time: null
       }));
     }
   });
