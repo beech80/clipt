@@ -83,8 +83,8 @@ export default function AiAssistant() {
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
-      {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4 gaming-cartridge mx-4 mt-6">
+      {/* Messages Area - Reduced bottom padding to make room for input */}
+      <ScrollArea className="flex-1 p-4 gaming-cartridge mx-4 mt-6 mb-[250px] sm:mb-[270px]">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message, index) => (
             <div
@@ -106,8 +106,8 @@ export default function AiAssistant() {
         </div>
       </ScrollArea>
 
-      {/* Input Area - Fixed position above GameBoy controls */}
-      <div className="fixed bottom-[180px] sm:bottom-[200px] left-0 right-0 px-4 py-4 bg-[#1A1F2C] border-t border-purple-500/50">
+      {/* Input Area - Fixed position above GameBoy controls with more space */}
+      <div className="fixed bottom-[220px] sm:bottom-[240px] left-0 right-0 px-4 py-4 bg-[#1A1F2C] border-t border-purple-500/50">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           <div className="flex gap-2 items-center">
             <Input
