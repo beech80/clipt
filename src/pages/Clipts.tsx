@@ -13,24 +13,12 @@ const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery<Post[]>({
+  const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
         .from('posts')
-        .select(`
-          id,
-          content,
-          image_url,
-          video_url,
-          user_id,
-          created_at,
-          profiles (
-            username,
-            avatar_url
-          ),
-          games (name)
-        `)
+        .select('*, profiles!posts_user_id_fkey (username, avatar_url), games (name)')
         .eq('type', 'video')
         .order('created_at', { ascending: false });
 

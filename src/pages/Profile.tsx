@@ -152,38 +152,43 @@ const Profile = () => {
         </div>
       </Card>
 
-      <div className="flex justify-center gap-4 mb-6">
-        <Toggle
-          pressed={activeTab === 'clips'}
-          onPressedChange={() => setActiveTab('clips')}
-          className="data-[state=on]:bg-purple-600 data-[state=on]:text-white"
-        >
-          <Gamepad2 className="w-4 h-4 mr-2" /> Clips
-        </Toggle>
-        <Toggle
-          pressed={activeTab === 'games'}
-          onPressedChange={() => setActiveTab('games')}
-          className="data-[state=on]:bg-purple-600 data-[state=on]:text-white"
-        >
-          <Gamepad2 className="w-4 h-4 mr-2" /> Games
-        </Toggle>
-        <Toggle
-          pressed={activeTab === 'achievements'}
-          onPressedChange={() => setActiveTab('achievements')}
-          className="data-[state=on]:bg-purple-600 data-[state=on]:text-white"
-        >
-          <Trophy className="w-4 h-4 mr-2" /> Achievements
-        </Toggle>
-        <Toggle
-          pressed={activeTab === 'collections'}
-          onPressedChange={() => {
-            setActiveTab('collections');
-            navigate('/collections');
-          }}
-          className="data-[state=on]:bg-purple-600 data-[state=on]:text-white"
-        >
-          <Bookmark className="w-4 h-4 mr-2" /> Collections
-        </Toggle>
+      <div className="flex justify-center">
+        <div className="inline-flex items-center gap-2 p-1 rounded-lg bg-black/20 backdrop-blur-sm border border-white/10">
+          <Toggle
+            pressed={activeTab === 'clips'}
+            onPressedChange={() => {
+              setActiveTab('clips');
+              navigate('/index');
+            }}
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-4 py-2 h-10"
+          >
+            <Gamepad2 className="w-4 h-4 mr-2" /> Clipts
+          </Toggle>
+          <Toggle
+            pressed={activeTab === 'games'}
+            onPressedChange={() => setActiveTab('games')}
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-4 py-2 h-10"
+          >
+            <Gamepad2 className="w-4 h-4 mr-2" /> Games
+          </Toggle>
+          <Toggle
+            pressed={activeTab === 'achievements'}
+            onPressedChange={() => setActiveTab('achievements')}
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-4 py-2 h-10"
+          >
+            <Trophy className="w-4 h-4 mr-2" /> Achievements
+          </Toggle>
+          <Toggle
+            pressed={activeTab === 'collections'}
+            onPressedChange={() => {
+              setActiveTab('collections');
+              navigate('/collections');
+            }}
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-4 py-2 h-10"
+          >
+            <Bookmark className="w-4 h-4 mr-2" /> Collections
+          </Toggle>
+        </div>
       </div>
 
       <div className="mt-6">
