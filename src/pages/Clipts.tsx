@@ -7,20 +7,24 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 
-type Post = {
+interface PostProfile {
+  username: string;
+  avatar_url: string;
+}
+
+interface PostGame {
+  name: string;
+}
+
+interface Post {
   id: string;
   content: string;
   image_url: string | null;
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles: {
-    username: string;
-    avatar_url: string;
-  };
-  games: {
-    name: string;
-  } | null;
+  profiles: PostProfile;
+  games: PostGame | null;
   is_published: boolean;
   is_premium: boolean;
   required_tier_id: string | null;
