@@ -1,5 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,9 +8,9 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
@@ -20,10 +21,18 @@ serve(async (req) => {
 
     const { message, history } = await req.json()
 
-    const messages = [
-      {
-        role: "system",
-        content: `You are an expert AI gaming assistant with comprehensive knowledge of:
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert AI gaming assistant with comprehensive knowledge of:
 
 - Game mechanics and strategies
 - Gaming history and development
@@ -59,32 +68,19 @@ If discussing strategies or techniques, be specific and explain the reasoning be
 When referencing game lore or history, cite specific examples and interesting facts.
 For content creation advice, provide actionable steps and real-world examples.
 Always aim to enhance the user's gaming knowledge and content creation journey.`
-      },
-      ...history,
-      { role: "user", content: message }
-    ]
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: messages,
+          },
+          ...history,
+          { role: "user", content: message }
+        ],
         temperature: 0.7,
         max_tokens: 800,
       }),
     })
 
     const data = await response.json()
-
     return new Response(
       JSON.stringify({ response: data.choices[0].message.content }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
 
   } catch (error) {
