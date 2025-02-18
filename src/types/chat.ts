@@ -1,3 +1,4 @@
+
 export interface StreamChatMessage {
   id: string;
   stream_id: string;

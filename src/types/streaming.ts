@@ -1,3 +1,4 @@
+
 export interface QualityPreset {
   resolution: string;
   bitrate: number;
