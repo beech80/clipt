@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 const TopClips = () => {
   const { data: topClips, isLoading } = useQuery({
@@ -34,7 +35,7 @@ const TopClips = () => {
       </div>
 
       {/* Content area with increased padding to account for fixed header */}
-      <div className="pt-24 space-y-8"> {/* Increased top padding */}
+      <div className="pt-24 space-y-8">
         {/* Clips grid */}
         <div className="grid grid-cols-1 gap-6 max-w-3xl mx-auto px-4">
           {isLoading ? (
@@ -45,8 +46,20 @@ const TopClips = () => {
             topClips?.map((clip, index) => (
               <div key={clip.post_id} className="relative">
                 {/* Ranking Badge */}
-                <div className="absolute -left-4 -top-4 z-10 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                  <span className="text-white font-bold text-lg">#{index + 1}</span>
+                <div className="absolute -left-4 -top-4 z-10">
+                  <Badge 
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                      index === 0 
+                        ? 'bg-yellow-500 text-black' 
+                        : index === 1 
+                        ? 'bg-gray-300 text-black'
+                        : index === 2 
+                        ? 'bg-amber-700 text-white'
+                        : 'bg-purple-500 text-white'
+                    } shadow-lg border-2 border-white/20`}
+                  >
+                    #{index + 1}
+                  </Badge>
                 </div>
                 
                 {/* Date Badge */}
@@ -56,7 +69,16 @@ const TopClips = () => {
                   </span>
                 </div>
 
-                <div className="gaming-card overflow-hidden rounded-xl neo-blur hover:ring-2 hover:ring-purple-500/50 transition-all duration-300 shadow-xl">
+                <div className={`gaming-card overflow-hidden rounded-xl neo-blur transition-all duration-300 shadow-xl
+                  ${index === 0 
+                    ? 'ring-4 ring-yellow-500/50' 
+                    : index === 1 
+                    ? 'ring-4 ring-gray-300/50'
+                    : index === 2 
+                    ? 'ring-4 ring-amber-700/50'
+                    : 'ring-2 ring-purple-500/30'
+                  } hover:ring-opacity-75 hover:ring-purple-500/50`}
+                >
                   {/* Trophy Count Badge */}
                   <div className="absolute left-4 top-4 z-10 bg-yellow-500/90 px-3 py-1 rounded-full backdrop-blur-sm flex items-center gap-1">
                     <Trophy className="h-4 w-4 text-white" />
