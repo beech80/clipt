@@ -1,8 +1,6 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, TrendingUp, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import GameBoyControls from "@/components/GameBoyControls";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -10,9 +8,6 @@ import PostItem from "@/components/PostItem";
 import { format } from "date-fns";
 
 const TopClips = () => {
-  const [timeRange, setTimeRange] = useState("today");
-  const [category, setCategory] = useState("all");
-
   const { data: topClips, isLoading } = useQuery({
     queryKey: ['weekly-top-clips'],
     queryFn: async () => {
@@ -40,36 +35,6 @@ const TopClips = () => {
 
       {/* Content area with increased padding to account for fixed header */}
       <div className="pt-24 space-y-8"> {/* Increased top padding */}
-        {/* Filter buttons with their own space */}
-        <div className="sticky top-20 z-40 bg-[#1A1F2C]/95 backdrop-blur-sm py-4 border-b border-white/10">
-          <div className="flex justify-end gap-2 max-w-3xl mx-auto px-4">
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[150px]">
-                <Calendar className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Time Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="gaming">Gaming</SelectItem>
-                <SelectItem value="irl">IRL</SelectItem>
-                <SelectItem value="esports">Esports</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
         {/* Clips grid */}
         <div className="grid grid-cols-1 gap-6 max-w-3xl mx-auto px-4">
           {isLoading ? (
