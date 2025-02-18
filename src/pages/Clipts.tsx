@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
 import GameBoyControls from "@/components/GameBoyControls";
 import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
@@ -17,7 +16,7 @@ interface Profile {
   avatar_url: string;
 }
 
-interface PostResponse {
+interface Post {
   id: string;
   content: string;
   image_url: string | null;
@@ -26,29 +25,14 @@ interface PostResponse {
   created_at: string;
   profiles: Profile;
   games: Game | null;
-  is_published: boolean;
-  is_premium: boolean;
-  required_tier_id: string | null;
-  scheduled_publish_time: string | null;
-}
-
-interface PostData {
-  id: string;
-  content: string;
-  image_url: string | null;
-  video_url: string | null;
-  user_id: string;
-  created_at: string;
-  profiles: Profile;
-  games: Game | null;
-  likes_count: number;
-  comments_count: number;
-  clip_votes: { count: number }[];
   is_published: boolean;
   is_premium: boolean;
   required_tier_id: string | null;
   scheduled_publish_time: string | null;
   type: 'video';
+  likes_count: number;
+  comments_count: number;
+  clip_votes: { count: number }[];
 }
 
 const Clipts = () => {
@@ -79,12 +63,12 @@ const Clipts = () => {
       if (error) throw error;
       if (!data) return [];
 
-      return data.map((post: PostResponse): PostData => ({
+      return data.map((post): Post => ({
         ...post,
+        type: 'video',
         likes_count: 0,
         comments_count: 0,
-        clip_votes: [{ count: 0 }],
-        type: 'video'
+        clip_votes: [{ count: 0 }]
       }));
     }
   });
