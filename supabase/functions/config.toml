@@ -1,6 +1,9 @@
 
 project_id = "slnjliheyiiummxhrgmk"
 
+[functions.process-donation]
+verify_jwt = true
+
 [functions.create-checkout]
 verify_jwt = true
 
