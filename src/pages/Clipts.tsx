@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -97,6 +98,6 @@ const Clipts = () => {
       <GameBoyControls />
     </div>
   );
-};
+}
 
 export default Clipts;

@@ -84,7 +84,7 @@ export default function AiAssistant() {
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4 gaming-cartridge mx-4 mt-6 mb-2">
+      <ScrollArea className="flex-1 p-4 gaming-cartridge mx-4 mt-6">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message, index) => (
             <div
@@ -106,15 +106,15 @@ export default function AiAssistant() {
         </div>
       </ScrollArea>
 
-      {/* Input Area - Made extra visible */}
-      <div className="px-4 py-6 bg-[#2A2F3C] border-t-2 border-purple-500/50">
+      {/* Input Area - Fixed position above GameBoy controls */}
+      <div className="fixed bottom-[180px] sm:bottom-[200px] left-0 right-0 px-4 py-4 bg-[#1A1F2C] border-t border-purple-500/50">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="flex gap-2 items-center bg-[#1A1F2C] p-4 rounded-xl border-2 border-purple-500 shadow-lg">
+          <div className="flex gap-2 items-center">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type your message here..."
-              className="flex-1 bg-[#1A1F2C] border-none text-white placeholder:text-purple-300 text-lg h-12 focus:ring-2 focus:ring-purple-500"
+              className="flex-1 bg-[#2A2F3C] border-2 border-purple-500 text-white placeholder:text-purple-300 text-lg h-12 focus:ring-2 focus:ring-purple-500"
               disabled={isLoading}
             />
             <Button 
