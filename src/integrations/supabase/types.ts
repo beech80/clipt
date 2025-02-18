@@ -3396,54 +3396,53 @@ export type Database = {
       }
       mux_assets: {
         Row: {
-          aspect_ratio: string | null
-          asset_id: string | null
-          created_at: string | null
-          duration: number | null
+          asset_id: string
+          created_at: string
           id: string
-          max_stored_frame_rate: number | null
-          max_stored_resolution: string | null
-          playback_id: string | null
-          status: string | null
-          type: string | null
-          updated_at: string | null
-          user_id: string | null
+          playback_id: string
+          post_id: string | null
+          status: string
+          updated_at: string
         }
         Insert: {
-          aspect_ratio?: string | null
-          asset_id?: string | null
-          created_at?: string | null
-          duration?: number | null
+          asset_id: string
+          created_at?: string
           id?: string
-          max_stored_frame_rate?: number | null
-          max_stored_resolution?: string | null
-          playback_id?: string | null
-          status?: string | null
-          type?: string | null
-          updated_at?: string | null
-          user_id?: string | null
+          playback_id: string
+          post_id?: string | null
+          status?: string
+          updated_at?: string
         }
         Update: {
-          aspect_ratio?: string | null
-          asset_id?: string | null
-          created_at?: string | null
-          duration?: number | null
+          asset_id?: string
+          created_at?: string
           id?: string
-          max_stored_frame_rate?: number | null
-          max_stored_resolution?: string | null
-          playback_id?: string | null
-          status?: string | null
-          type?: string | null
-          updated_at?: string | null
-          user_id?: string | null
+          playback_id?: string
+          post_id?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "mux_assets_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "mux_assets_post_id_fkey"
+            columns: ["post_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "posts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mux_assets_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "trending_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mux_assets_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_top_clips"
+            referencedColumns: ["post_id"]
           },
         ]
       }
