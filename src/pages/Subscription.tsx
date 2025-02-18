@@ -51,41 +51,31 @@ const Subscription = () => {
     enabled: !!user
   });
 
-  const handleManageSubscription = async (action: 'cancel' | 'upgrade', planId?: string) => {
+  const handleSubscribe = async () => {
     if (!user) {
-      toast.error("Please login to manage subscriptions");
+      toast.error("Please login to subscribe");
       navigate("/login");
       return;
     }
 
     try {
-      if (action === 'cancel') {
-        const { error } = await supabase
-          .from('user_subscriptions')
-          .update({ 
-            cancel_at_period_end: true,
-            status: 'canceling'
-          })
-          .eq('user_id', user.id);
+      const response = await fetch('/functions/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-        if (error) throw error;
-        toast.success("Subscription will be cancelled at the end of the billing period");
-      } else if (action === 'upgrade' && planId) {
-        // For now, just update the subscription plan
-        const { error } = await supabase
-          .from('user_subscriptions')
-          .update({ 
-            plan_id: planId,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        toast.success("Subscription updated successfully");
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL received');
       }
     } catch (error) {
-      console.error('Subscription management error:', error);
-      toast.error("Failed to manage subscription");
+      console.error('Subscription error:', error);
+      toast.error("Failed to start subscription process");
     }
   };
 
@@ -138,33 +128,13 @@ const Subscription = () => {
                 ))}
               </ul>
 
-              {currentSubscription ? (
-                currentSubscription.plan_id === plan.id ? (
-                  <Button 
-                    onClick={() => handleManageSubscription('cancel')}
-                    variant="destructive"
-                    className="w-full"
-                  >
-                    Cancel Subscription
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={() => handleManageSubscription('upgrade', plan.id)}
-                    className="w-full"
-                    disabled={currentSubscription.cancel_at_period_end}
-                  >
-                    {plan.price > (currentSubscription.subscription_plans?.price || 0) ? 'Upgrade' : 'Downgrade'} to {plan.name}
-                  </Button>
-                )
-              ) : (
-                <Button 
-                  onClick={() => navigate("/login")}
-                  className="w-full"
-                >
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Subscribe
-                </Button>
-              )}
+              <Button 
+                onClick={handleSubscribe}
+                className="w-full"
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                Subscribe
+              </Button>
             </Card>
           ))}
         </div>

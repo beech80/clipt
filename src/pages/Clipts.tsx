@@ -28,7 +28,7 @@ type Post = {
   type: 'video';
   likes_count: number;
   comments_count: number;
-  clip_votes: { count: number }[];
+  clip_votes: Array<{ count: number }>;
 }
 
 const Clipts = () => {
