@@ -12,7 +12,7 @@ import Hls from 'hls.js';
 
 interface StreamMessage {
   id: string;
-  content: string;
+  message: string;
   user_id: string;
   created_at: string;
   profiles: {
@@ -71,7 +71,7 @@ export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamP
         .from('stream_chat')
         .select(`
           id,
-          content,
+          message,
           user_id,
           created_at,
           profiles (username, avatar_url)
@@ -153,7 +153,7 @@ export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamP
       .insert({
         stream_id: streamId,
         user_id: user.id,
-        content: message.trim()
+        message: message.trim()
       });
 
     if (error) {
@@ -171,9 +171,11 @@ export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamP
       return;
     }
 
+    const randomGiftId = crypto.randomUUID();
     const { error } = await supabase
       .from('stream_gifts')
       .insert({
+        gift_id: randomGiftId,
         stream_id: streamId,
         sender_id: user.id,
         amount: giftAmount,
@@ -247,7 +249,7 @@ export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamP
             {messages?.map((msg) => (
               <div key={msg.id} className="text-sm">
                 <span className="font-semibold">{msg.profiles.username}: </span>
-                <span>{msg.content}</span>
+                <span>{msg.message}</span>
               </div>
             ))}
           </div>
