@@ -152,31 +152,31 @@ const Profile = () => {
         </div>
       </Card>
 
-      <div className="flex justify-center">
-        <div className="inline-flex items-center gap-2 p-1 rounded-lg bg-black/20 backdrop-blur-sm border border-white/10">
+      <div className="flex justify-center w-full overflow-x-auto scrollbar-none -mx-4 px-4">
+        <div className="inline-flex flex-nowrap items-center gap-1.5 p-1.5 rounded-lg bg-black/20 backdrop-blur-sm border border-white/10">
           <Toggle
             pressed={activeTab === 'clips'}
             onPressedChange={() => {
               setActiveTab('clips');
               navigate('/index');
             }}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-4 py-2 h-10"
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-3 sm:px-4 py-2 h-9 sm:h-10 whitespace-nowrap text-sm sm:text-base transition-all"
           >
-            <Gamepad2 className="w-4 h-4 mr-2" /> Clipts
+            <Gamepad2 className="w-4 h-4 mr-1.5" /> Clipts
           </Toggle>
           <Toggle
             pressed={activeTab === 'games'}
             onPressedChange={() => setActiveTab('games')}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-4 py-2 h-10"
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-3 sm:px-4 py-2 h-9 sm:h-10 whitespace-nowrap text-sm sm:text-base transition-all"
           >
-            <Gamepad2 className="w-4 h-4 mr-2" /> Games
+            <Gamepad2 className="w-4 h-4 mr-1.5" /> Games
           </Toggle>
           <Toggle
             pressed={activeTab === 'achievements'}
             onPressedChange={() => setActiveTab('achievements')}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-4 py-2 h-10"
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-3 sm:px-4 py-2 h-9 sm:h-10 whitespace-nowrap text-sm sm:text-base transition-all"
           >
-            <Trophy className="w-4 h-4 mr-2" /> Achievements
+            <Trophy className="w-4 h-4 mr-1.5" /> Achievements
           </Toggle>
           <Toggle
             pressed={activeTab === 'collections'}
@@ -184,9 +184,9 @@ const Profile = () => {
               setActiveTab('collections');
               navigate('/collections');
             }}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-4 py-2 h-10"
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-3 sm:px-4 py-2 h-9 sm:h-10 whitespace-nowrap text-sm sm:text-base transition-all"
           >
-            <Bookmark className="w-4 h-4 mr-2" /> Collections
+            <Bookmark className="w-4 h-4 mr-1.5" /> Collections
           </Toggle>
         </div>
       </div>
