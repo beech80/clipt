@@ -8219,6 +8219,55 @@ export type Database = {
           },
         ]
       }
+      user_games: {
+        Row: {
+          created_at: string | null
+          game_id: string | null
+          hours_played: number | null
+          id: string
+          last_played: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          game_id?: string | null
+          hours_played?: number | null
+          id?: string
+          last_played?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          game_id?: string | null
+          hours_played?: number | null
+          id?: string
+          last_played?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_games_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "game_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_games_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "top_games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_games_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_levels: {
         Row: {
           created_at: string | null
