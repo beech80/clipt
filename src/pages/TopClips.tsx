@@ -38,36 +38,40 @@ const TopClips = () => {
         </div>
       </div>
 
-      {/* Content area with padding to account for fixed header */}
-      <div className="mt-[100px] space-y-8">
-        <div className="flex justify-end gap-2">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[150px]">
-              <Calendar className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Time Range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-              <SelectItem value="year">This Year</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Content area with increased padding to account for fixed header */}
+      <div className="pt-24 space-y-8"> {/* Increased top padding */}
+        {/* Filter buttons with their own space */}
+        <div className="sticky top-20 z-40 bg-[#1A1F2C]/95 backdrop-blur-sm py-4 border-b border-white/10">
+          <div className="flex justify-end gap-2 max-w-3xl mx-auto px-4">
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-[150px]">
+                <Calendar className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Time Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="gaming">Gaming</SelectItem>
-              <SelectItem value="irl">IRL</SelectItem>
-              <SelectItem value="esports">Esports</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="gaming">Gaming</SelectItem>
+                <SelectItem value="irl">IRL</SelectItem>
+                <SelectItem value="esports">Esports</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 max-w-3xl mx-auto">
+        {/* Clips grid */}
+        <div className="grid grid-cols-1 gap-6 max-w-3xl mx-auto px-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-400"></div>
