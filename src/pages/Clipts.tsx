@@ -17,7 +17,7 @@ interface Profile {
   avatar_url: string;
 }
 
-interface Post {
+interface PostResponse {
   id: string;
   content: string;
   image_url: string | null;
@@ -30,7 +30,6 @@ interface Post {
   is_premium: boolean;
   required_tier_id: string | null;
   scheduled_publish_time: string | null;
-  type: string;
 }
 
 interface PostData {
@@ -54,7 +53,6 @@ interface PostData {
 
 const Clipts = () => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
@@ -73,8 +71,7 @@ const Clipts = () => {
           is_published,
           is_premium,
           required_tier_id,
-          scheduled_publish_time,
-          type
+          scheduled_publish_time
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
@@ -82,22 +79,11 @@ const Clipts = () => {
       if (error) throw error;
       if (!data) return [];
 
-      return data.map((post: Post): PostData => ({
-        id: post.id,
-        content: post.content,
-        image_url: post.image_url,
-        video_url: post.video_url,
-        user_id: post.user_id,
-        created_at: post.created_at,
-        profiles: post.profiles,
-        games: post.games,
+      return data.map((post: PostResponse): PostData => ({
+        ...post,
         likes_count: 0,
         comments_count: 0,
         clip_votes: [{ count: 0 }],
-        is_published: post.is_published,
-        is_premium: post.is_premium,
-        required_tier_id: post.required_tier_id,
-        scheduled_publish_time: post.scheduled_publish_time,
         type: 'video'
       }));
     }
