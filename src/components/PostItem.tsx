@@ -7,6 +7,7 @@ import { PostInteractions } from "./post/interactions/PostInteractions";
 import { Post } from "@/types/post";
 import { Heart, MessageSquare, Trophy } from "lucide-react";
 import { CommentList } from "./post/CommentList";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface PostItemProps {
   post: Post;
@@ -43,6 +44,7 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   const username = post.profiles?.username || 'Anonymous';
+  const avatarUrl = post.profiles?.avatar_url;
 
   return (
     <div className={`relative w-full gaming-card transition-opacity duration-300 ${
@@ -51,6 +53,13 @@ const PostItem = ({ post }: PostItemProps) => {
       <div className="absolute inset-0 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-gaming-400/20 backdrop-blur-sm bg-gaming-800/80">
           <div className="flex items-center space-x-3">
+            <Avatar 
+              className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
+              onClick={() => handleProfileClick(username)}
+            >
+              <AvatarImage src={avatarUrl || ''} alt={username} />
+              <AvatarFallback>{username[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
             <span 
               onClick={() => handleProfileClick(username)}
               className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 hover:scale-105 transform cursor-pointer"

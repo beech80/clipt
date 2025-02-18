@@ -9,6 +9,10 @@ import TopClips from "@/pages/TopClips";
 
 export const contentRoutes: RouteObject[] = [
   {
+    path: "index",
+    element: <Clipts />,
+  },
+  {
     path: "clipts",
     element: <Clipts />,
   },

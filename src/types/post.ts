@@ -1,3 +1,4 @@
+
 export interface Post {
   id: string;
   content: string | null;
@@ -10,6 +11,9 @@ export interface Post {
     avatar_url: string | null;
     display_name?: string | null;
   } | null;
+  games?: {
+    name: string | null;
+  } | null;
   likes_count?: number;
   clip_votes?: Array<{ count: number }>;
   comments_count?: number;
@@ -17,6 +21,7 @@ export interface Post {
   is_premium?: boolean;
   required_tier_id?: string | null;
   scheduled_publish_time?: string | null;
+  type?: 'video' | 'image' | 'text';
 }
 
 export interface PostHeaderProps {
