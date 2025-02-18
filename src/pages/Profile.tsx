@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -160,23 +161,23 @@ const Profile = () => {
               setActiveTab('clips');
               navigate('/index');
             }}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-3 sm:px-4 py-2 h-9 sm:h-10 whitespace-nowrap text-sm sm:text-base transition-all"
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
           >
-            <Gamepad2 className="w-4 h-4 mr-1.5" /> Clipts
+            <Gamepad2 className="w-5 h-5" />
           </Toggle>
           <Toggle
             pressed={activeTab === 'games'}
             onPressedChange={() => setActiveTab('games')}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-3 sm:px-4 py-2 h-9 sm:h-10 whitespace-nowrap text-sm sm:text-base transition-all"
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
           >
-            <Gamepad2 className="w-4 h-4 mr-1.5" /> Games
+            <Gamepad2 className="w-5 h-5" />
           </Toggle>
           <Toggle
             pressed={activeTab === 'achievements'}
             onPressedChange={() => setActiveTab('achievements')}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-3 sm:px-4 py-2 h-9 sm:h-10 whitespace-nowrap text-sm sm:text-base transition-all"
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
           >
-            <Trophy className="w-4 h-4 mr-1.5" /> Achievements
+            <Trophy className="w-5 h-5" />
           </Toggle>
           <Toggle
             pressed={activeTab === 'collections'}
@@ -184,9 +185,9 @@ const Profile = () => {
               setActiveTab('collections');
               navigate('/collections');
             }}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white px-3 sm:px-4 py-2 h-9 sm:h-10 whitespace-nowrap text-sm sm:text-base transition-all"
+            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
           >
-            <Bookmark className="w-4 h-4 mr-1.5" /> Collections
+            <Bookmark className="w-5 h-5" />
           </Toggle>
         </div>
       </div>

@@ -7,7 +7,30 @@ import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
-import type { Post } from "@/types/post";
+
+interface PostData {
+  id: string;
+  content: string;
+  image_url: string | null;
+  video_url: string | null;
+  user_id: string;
+  created_at: string;
+  profiles: {
+    username: string;
+    avatar_url: string;
+  };
+  games: {
+    name: string;
+  } | null;
+  likes_count?: number;
+  comments_count?: number;
+  clip_votes?: { count: number }[];
+  is_published?: boolean;
+  is_premium?: boolean;
+  required_tier_id?: string | null;
+  scheduled_publish_time?: string | null;
+  type: 'video';
+}
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -25,7 +48,7 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post): Post => ({
+      return postsData.map((post): PostData => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
