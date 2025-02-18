@@ -17,6 +17,22 @@ interface Profile {
   avatar_url: string;
 }
 
+interface Post {
+  id: string;
+  content: string;
+  image_url: string | null;
+  video_url: string | null;
+  user_id: string;
+  created_at: string;
+  profiles: Profile;
+  games: Game | null;
+  is_published: boolean;
+  is_premium: boolean;
+  required_tier_id: string | null;
+  scheduled_publish_time: string | null;
+  type: string;
+}
+
 interface PostData {
   id: string;
   content: string;
@@ -43,7 +59,7 @@ const Clipts = () => {
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: async () => {
-      const { data: postsData, error } = await supabase
+      const { data, error } = await supabase
         .from('posts')
         .select(`
           id,
@@ -64,9 +80,9 @@ const Clipts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (!postsData) return [];
+      if (!data) return [];
 
-      return postsData.map((post): PostData => ({
+      return data.map((post: Post): PostData => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,
