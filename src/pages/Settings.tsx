@@ -1,4 +1,3 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -28,10 +27,13 @@ import {
   Globe,
   Video,
   BookOpen,
-  LogOut
+  LogOut,
+  HardDrive,
+  Gauge
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Profile, CustomTheme, DatabaseProfile } from "@/types/profile";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -146,7 +148,7 @@ const Settings = () => {
 
         {/* Settings Grid */}
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Left Column - Account & Security */}
+          {/* Left Column */}
           <div className="space-y-6">
             {/* Account Settings */}
             <Card className="p-6">
@@ -211,12 +213,50 @@ const Settings = () => {
               </div>
             </Card>
 
+            {/* Language & Region Settings */}
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Globe className="w-5 h-5 text-purple-500" />
+                <h2 className="text-xl font-semibold">Language & Region</h2>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Language</Label>
+                  <Select defaultValue="en">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="fr">Français</SelectItem>
+                      <SelectItem value="de">Deutsch</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Time Zone</Label>
+                  <Select defaultValue="utc">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select timezone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="utc">UTC (GMT)</SelectItem>
+                      <SelectItem value="est">Eastern Time (ET)</SelectItem>
+                      <SelectItem value="pst">Pacific Time (PT)</SelectItem>
+                      <SelectItem value="cet">Central European Time (CET)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </Card>
+
             {/* Security Settings */}
             <TwoFactorSettings />
             <DataPrivacySettings />
           </div>
 
-          {/* Right Column - Appearance & Accessibility */}
+          {/* Right Column */}
           <div className="space-y-6">
             {/* Appearance Settings */}
             {profile && (
@@ -231,6 +271,89 @@ const Settings = () => {
                 />
               </Card>
             )}
+
+            {/* Download & Storage Management */}
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <HardDrive className="w-5 h-5 text-purple-500" />
+                <h2 className="text-xl font-semibold">Storage & Downloads</h2>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Auto-Download Media</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Automatically download media in chats
+                    </p>
+                  </div>
+                  <Switch
+                    checked={profile?.auto_download_media}
+                    onCheckedChange={() => handleToggle('auto_download_media')}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Storage Usage</Label>
+                  <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+                    <div className="flex justify-between mb-2">
+                      <span>Used Storage</span>
+                      <span>2.1 GB / 5 GB</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                      <div className="bg-purple-500 h-2.5 rounded-full" style={{ width: '45%' }}></div>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full mt-2">
+                    Clear Cache
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Performance Settings */}
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Gauge className="w-5 h-5 text-purple-500" />
+                <h2 className="text-xl font-semibold">Performance</h2>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Hardware Acceleration</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Use GPU for better performance
+                    </p>
+                  </div>
+                  <Switch
+                    checked={profile?.hardware_acceleration}
+                    onCheckedChange={() => handleToggle('hardware_acceleration')}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Reduce Animations</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Disable animations for better performance
+                    </p>
+                  </div>
+                  <Switch
+                    checked={profile?.reduce_animations}
+                    onCheckedChange={() => handleToggle('reduce_animations')}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Background Processing</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Allow processing when app is in background
+                    </p>
+                  </div>
+                  <Switch
+                    checked={profile?.background_processing}
+                    onCheckedChange={() => handleToggle('background_processing')}
+                  />
+                </div>
+              </div>
+            </Card>
 
             {/* Accessibility Settings */}
             <AccessibilitySettings />
