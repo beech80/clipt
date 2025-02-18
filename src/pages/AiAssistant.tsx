@@ -18,24 +18,7 @@ export default function AiAssistant() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hello! I'm your gaming AI assistant. I have extensive knowledge about all aspects of gaming including:\n\n" +
-        "🎮 Game mechanics, strategies, and meta\n" +
-        "📚 Gaming history and development\n" +
-        "🏆 Esports and competitive gaming\n" +
-        "📖 Game lore and storylines\n" +
-        "💻 Technical aspects and hardware\n" +
-        "📈 Gaming industry trends\n" +
-        "🏃 Speedrunning techniques\n" +
-        "🛠️ Game modifications and custom content\n" +
-        "🌐 Gaming communities and culture\n\n" +
-        "I can also help you grow as a content creator with advice on:\n" +
-        "📹 YouTube gaming channel growth\n" +
-        "🎥 Streaming best practices\n" +
-        "🎬 Video editing and production\n" +
-        "📱 Social media presence\n" +
-        "💡 Content strategy and planning\n" +
-        "🎯 Building your gaming brand\n\n" +
-        "How can I assist you today?"
+      content: "Hello! I'm your gaming AI assistant. How can I help you today?"
     }
   ]);
   const [input, setInput] = useState('');
@@ -83,7 +66,7 @@ export default function AiAssistant() {
 
   return (
     <div className="flex flex-col h-screen bg-[#1A1F2C]">
-      {/* Header with Back Button */}
+      {/* Header */}
       <div className="gameboy-header flex items-center justify-between px-4">
         <Button 
           variant="ghost" 
@@ -123,22 +106,23 @@ export default function AiAssistant() {
         </div>
       </ScrollArea>
 
-      {/* Input Area - More prominent styling */}
-      <div className="px-4 mb-4 mt-2">
+      {/* Input Area - Made extra visible */}
+      <div className="px-4 py-6 bg-[#2A2F3C] border-t-2 border-purple-500/50">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="flex gap-2 items-center bg-[#2A2F3C] p-3 rounded-xl border-2 border-purple-500/50 shadow-lg">
+          <div className="flex gap-2 items-center bg-[#1A1F2C] p-4 rounded-xl border-2 border-purple-500 shadow-lg">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask the Gaming AI Assistant..."
-              className="flex-1 bg-[#2A2F3C] border-none text-white placeholder:text-purple-300 text-lg h-12 focus:ring-2 focus:ring-purple-500"
+              placeholder="Type your message here..."
+              className="flex-1 bg-[#1A1F2C] border-none text-white placeholder:text-purple-300 text-lg h-12 focus:ring-2 focus:ring-purple-500"
               disabled={isLoading}
             />
             <Button 
               type="submit" 
               disabled={isLoading}
-              className="gaming-button bg-purple-500 hover:bg-purple-600 text-white h-12 px-6 rounded-lg"
+              className="bg-purple-500 hover:bg-purple-600 text-white h-12 px-6 rounded-lg flex items-center gap-2"
             >
+              {isLoading ? 'Sending...' : 'Send'}
               <Send className="h-5 w-5" />
             </Button>
           </div>
