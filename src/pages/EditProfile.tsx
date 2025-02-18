@@ -1,4 +1,3 @@
-
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +10,12 @@ import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+
+interface ThemeColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+}
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -183,7 +188,7 @@ const EditProfile = () => {
               </div>
               <ThemeSelector 
                 userId={profile.id} 
-                currentTheme={profile.custom_theme}
+                currentTheme={profile.custom_theme as ThemeColors}
               />
             </Card>
           )}

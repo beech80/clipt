@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -15,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'clips' | 'games' | 'achievements' | 'collections'>('clips');
+  const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collections'>('clips');
 
   const { data: userClips } = useQuery({
     queryKey: ['user-clips'],
@@ -166,13 +165,6 @@ const Profile = () => {
             <Gamepad2 className="w-5 h-5" />
           </Toggle>
           <Toggle
-            pressed={activeTab === 'games'}
-            onPressedChange={() => setActiveTab('games')}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
-          >
-            <Gamepad2 className="w-5 h-5" />
-          </Toggle>
-          <Toggle
             pressed={activeTab === 'achievements'}
             onPressedChange={() => setActiveTab('achievements')}
             className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
@@ -215,24 +207,6 @@ const Profile = () => {
                 ))}
               </div>
             )}
-          </div>
-        )}
-
-        {activeTab === 'games' && (
-          <div className="grid gap-4">
-            {userGames.map(game => (
-              <Card key={game.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-lg">{game.name}</h3>
-                    <p className="text-sm text-gray-500">Last played {game.lastPlayed}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">{game.hours} hours</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
           </div>
         )}
 

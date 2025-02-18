@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -8,6 +7,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 
+interface Game {
+  name: string;
+}
+
+interface Profile {
+  username: string;
+  avatar_url: string;
+}
+
 interface PostData {
   id: string;
   content: string;
@@ -15,20 +23,15 @@ interface PostData {
   video_url: string | null;
   user_id: string;
   created_at: string;
-  profiles: {
-    username: string;
-    avatar_url: string;
-  };
-  games: {
-    name: string;
-  } | null;
-  likes_count?: number;
-  comments_count?: number;
-  clip_votes?: { count: number }[];
-  is_published?: boolean;
-  is_premium?: boolean;
-  required_tier_id?: string | null;
-  scheduled_publish_time?: string | null;
+  profiles: Profile;
+  games: Game | null;
+  likes_count: number;
+  comments_count: number;
+  clip_votes: { count: number }[];
+  is_published: boolean;
+  is_premium: boolean;
+  required_tier_id: string | null;
+  scheduled_publish_time: string | null;
   type: 'video';
 }
 
