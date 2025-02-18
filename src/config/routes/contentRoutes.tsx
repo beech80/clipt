@@ -32,4 +32,8 @@ export const contentRoutes: RouteObject[] = [
     path: "top-clips",
     element: <TopClips />,
   },
+  {
+    path: "/",
+    element: <Clipts />,
+  }
 ];

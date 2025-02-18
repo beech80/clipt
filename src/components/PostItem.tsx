@@ -34,6 +34,14 @@ const PostItem = ({ post }: PostItemProps) => {
     setShowComments(!showComments);
   };
 
+  const handleProfileClick = (username: string) => {
+    navigate(`/profile/${username}`);
+  };
+
+  const handlePostClick = () => {
+    navigate(`/post/${post.id}`);
+  };
+
   const username = post.profiles?.username || 'Anonymous';
 
   return (
@@ -43,7 +51,10 @@ const PostItem = ({ post }: PostItemProps) => {
       <div className="absolute inset-0 flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-gaming-400/20 backdrop-blur-sm bg-gaming-800/80">
           <div className="flex items-center space-x-3">
-            <span className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 hover:scale-105 transform cursor-pointer">
+            <span 
+              onClick={() => handleProfileClick(username)}
+              className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 hover:scale-105 transform cursor-pointer"
+            >
               {username}
             </span>
           </div>
@@ -74,7 +85,7 @@ const PostItem = ({ post }: PostItemProps) => {
           </div>
         </div>
 
-        <div className="flex-1 relative">
+        <div className="flex-1 relative cursor-pointer" onClick={handlePostClick}>
           <PostContent
             imageUrl={post.image_url}
             videoUrl={post.video_url}
