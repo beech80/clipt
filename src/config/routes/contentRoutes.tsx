@@ -6,7 +6,6 @@ import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
 import PostList from "@/pages/PostList";
 import TopClips from "@/pages/TopClips";
-import Moderation from "@/pages/Moderation";
 
 export const contentRoutes: RouteObject[] = [
   {
@@ -32,9 +31,5 @@ export const contentRoutes: RouteObject[] = [
   {
     path: "top-clips",
     element: <TopClips />,
-  },
-  {
-    path: "moderation",
-    element: <Moderation />,
   },
 ];
