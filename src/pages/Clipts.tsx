@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -44,7 +45,21 @@ const Clipts = () => {
     queryFn: async () => {
       const { data: postsData, error } = await supabase
         .from('posts')
-        .select('*, profiles!posts_user_id_fkey (username, avatar_url), games (name)')
+        .select(`
+          id,
+          content,
+          image_url,
+          video_url,
+          user_id,
+          created_at,
+          profiles:user_id (username, avatar_url),
+          games (name),
+          is_published,
+          is_premium,
+          required_tier_id,
+          scheduled_publish_time,
+          type
+        `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
 
@@ -63,10 +78,10 @@ const Clipts = () => {
         likes_count: 0,
         comments_count: 0,
         clip_votes: [{ count: 0 }],
-        is_published: true,
-        is_premium: false,
-        required_tier_id: null,
-        scheduled_publish_time: null,
+        is_published: post.is_published,
+        is_premium: post.is_premium,
+        required_tier_id: post.required_tier_id,
+        scheduled_publish_time: post.scheduled_publish_time,
         type: 'video'
       }));
     }
@@ -107,6 +122,17 @@ const Clipts = () => {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
+        <button 
+          onClick={() => navigate('/')}
+          className="clip-button active:scale-95 transition-transform"
+          aria-label="Go to Home"
+          style={{ width: '80px', height: '60px' }}
+        >
+          <span className="clip-button-text">Home</span>
+        </button>
       </div>
 
       <GameBoyControls />

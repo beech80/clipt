@@ -242,7 +242,7 @@ const EditProfile = () => {
               </div>
               <ThemeSelector 
                 userId={profile.id} 
-                currentTheme={profile.custom_theme as ThemeColors}
+                currentTheme={(profile.custom_theme as unknown) as ThemeColors}
               />
             </Card>
           )}
