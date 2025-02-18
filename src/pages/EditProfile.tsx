@@ -1,21 +1,20 @@
+
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { UserCog, Paintbrush, Shield, Bell, ArrowLeft } from "lucide-react";
+import { UserCog, Paintbrush, Shield, Bell, ArrowLeft, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
-
-interface ThemeColors {
-  primary: string;
-  secondary: string;
-}
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  
   const { data: profile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
@@ -33,19 +32,67 @@ const EditProfile = () => {
     },
   });
 
-  const defaultTheme: ThemeColors = {
-    primary: "#1EAEDB",
-    secondary: "#000000"
+  const { data: userGames } = useQuery({
+    queryKey: ['user-games'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_games')
+        .select(`
+          *,
+          game_categories (name, id)
+        `)
+        .order('last_played', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: availableGames } = useQuery({
+    queryKey: ['available-games'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('game_categories')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const handleAddGame = async (gameId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_games')
+        .insert({
+          game_id: gameId,
+          user_id: profile?.id
+        });
+
+      if (error) throw error;
+      toast.success("Game added to your profile!");
+    } catch (error) {
+      toast.error("Failed to add game");
+      console.error(error);
+    }
   };
 
-  const currentTheme: ThemeColors = profile?.custom_theme 
-    ? (typeof profile.custom_theme === 'object' && profile.custom_theme !== null
-        ? {
-            primary: (profile.custom_theme as any).primary || defaultTheme.primary,
-            secondary: (profile.custom_theme as any).secondary || defaultTheme.secondary
-          }
-        : defaultTheme)
-    : defaultTheme;
+  const handleRemoveGame = async (gameId: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_games')
+        .delete()
+        .eq('game_id', gameId)
+        .eq('user_id', profile?.id);
+
+      if (error) throw error;
+      toast.success("Game removed from your profile");
+    } catch (error) {
+      toast.error("Failed to remove game");
+      console.error(error);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8 pb-40">
@@ -85,16 +132,43 @@ const EditProfile = () => {
           </Card>
 
           <Card className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Bell className="w-5 h-5 text-purple-500" />
-              <h2 className="text-xl font-semibold">Notification Preferences</h2>
+            <div className="flex items-center gap-2 mb-6">
+              <Gamepad2 className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Games You Play</h2>
             </div>
-            <p className="text-muted-foreground mb-4">
-              Configure how you receive notifications and updates
-            </p>
-            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <Bell className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-              <p className="text-gray-500">Coming soon</p>
+            
+            <div className="space-y-4">
+              <Select onValueChange={handleAddGame}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Add a game..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Available Games</SelectLabel>
+                    {availableGames?.map((game) => (
+                      <SelectItem key={game.id} value={game.id}>
+                        {game.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+
+              <div className="space-y-2">
+                {userGames?.map((userGame) => (
+                  <div key={userGame.id} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <span>{userGame.game_categories.name}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleRemoveGame(userGame.game_id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
           </Card>
         </div>
@@ -109,21 +183,21 @@ const EditProfile = () => {
               </div>
               <ThemeSelector 
                 userId={profile.id} 
-                currentTheme={currentTheme}
+                currentTheme={profile.custom_theme}
               />
             </Card>
           )}
 
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-5 h-5 text-purple-500" />
-              <h2 className="text-xl font-semibold">Privacy & Security</h2>
+              <Bell className="w-5 h-5 text-purple-500" />
+              <h2 className="text-xl font-semibold">Notification Preferences</h2>
             </div>
             <p className="text-muted-foreground mb-4">
-              Manage your account security and privacy settings
+              Configure how you receive notifications and updates
             </p>
             <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <Shield className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <Bell className="w-8 h-8 mx-auto text-gray-400 mb-2" />
               <p className="text-gray-500">Coming soon</p>
             </div>
           </Card>
