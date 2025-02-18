@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -25,7 +26,6 @@ const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
   displayName: z.string().min(2).max(50),
   bioDescription: z.string().max(500).optional(),
-  location: z.string().max(100).optional(),
   website: z.string().url().optional().or(z.literal("")),
   socialLinks: z.object({
     twitter: z.string().optional(),
@@ -40,6 +40,8 @@ export function ProfileEditForm() {
   const { user } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [canChangeUsername, setCanChangeUsername] = useState(true)
+  const [lastUsernameChange, setLastUsernameChange] = useState<string | null>(null)
 
   const { data: profile, refetch } = useQuery({
     queryKey: ['profile'],
@@ -56,13 +58,41 @@ export function ProfileEditForm() {
     enabled: !!user
   })
 
+  // Query to check username change eligibility
+  useQuery({
+    queryKey: ['username-change-eligibility'],
+    queryFn: async () => {
+      const { data: lastChange, error: lastChangeError } = await supabase
+        .from('username_changes')
+        .select('changed_at')
+        .eq('user_id', user?.id)
+        .order('changed_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (lastChangeError && lastChangeError.code !== 'PGRST116') {
+        throw lastChangeError
+      }
+
+      if (lastChange) {
+        const lastChangeDate = new Date(lastChange.changed_at)
+        const nextEligibleDate = new Date(lastChangeDate.getTime() + (12 * 24 * 60 * 60 * 1000))
+        const canChange = new Date() > nextEligibleDate
+        setCanChangeUsername(canChange)
+        setLastUsernameChange(nextEligibleDate.toLocaleDateString())
+      }
+
+      return true
+    },
+    enabled: !!user
+  })
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       username: "",
       displayName: "",
       bioDescription: "",
-      location: "",
       website: "",
       socialLinks: {
         twitter: "",
@@ -95,7 +125,6 @@ export function ProfileEditForm() {
         username: profile.username || "",
         displayName: profile.display_name || "",
         bioDescription: profile.bio_description || "",
-        location: profile.location || "",
         website: profile.website || "",
         socialLinks,
       })
@@ -148,13 +177,31 @@ export function ProfileEditForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
+      // Check if username is being changed
+      if (data.username !== profile?.username) {
+        if (!canChangeUsername) {
+          toast.error(`You can change your username again on ${lastUsernameChange}`)
+          return
+        }
+
+        // Record username change
+        const { error: changeError } = await supabase
+          .from('username_changes')
+          .insert({
+            user_id: user?.id,
+            old_username: profile?.username,
+            new_username: data.username
+          })
+
+        if (changeError) throw changeError
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
           username: data.username,
           display_name: data.displayName,
           bio_description: data.bioDescription,
-          location: data.location,
           website: data.website,
           social_links: data.socialLinks,
         })
@@ -201,10 +248,13 @@ export function ProfileEditForm() {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="username" {...field} />
+                <Input placeholder="username" {...field} disabled={!canChangeUsername} />
               </FormControl>
               <FormDescription>
-                This is your public display name.
+                {canChangeUsername 
+                  ? "This is your public display name."
+                  : `You can change your username again on ${lastUsernameChange}`
+                }
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -237,20 +287,6 @@ export function ProfileEditForm() {
                   className="resize-none"
                   {...field}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder="Your location" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

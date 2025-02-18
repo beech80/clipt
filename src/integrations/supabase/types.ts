@@ -8468,6 +8468,38 @@ export type Database = {
           },
         ]
       }
+      username_changes: {
+        Row: {
+          changed_at: string | null
+          id: string
+          new_username: string | null
+          old_username: string | null
+          user_id: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          id?: string
+          new_username?: string | null
+          old_username?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          id?: string
+          new_username?: string | null
+          old_username?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "username_changes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verification_requests: {
         Row: {
           evidence_urls: string[] | null
@@ -9125,6 +9157,12 @@ export type Database = {
           interaction_rate: number
           bounce_rate: number
         }[]
+      }
+      can_change_username: {
+        Args: {
+          user_id: string
+        }
+        Returns: boolean
       }
       check_auth_rate_limit: {
         Args: {
