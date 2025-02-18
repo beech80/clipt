@@ -101,7 +101,7 @@ export default function AiAssistant() {
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4 gaming-cartridge mx-4 my-6">
+      <ScrollArea className="flex-1 p-4 gaming-cartridge mx-4 mt-6 mb-2">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message, index) => (
             <div
@@ -123,21 +123,21 @@ export default function AiAssistant() {
         </div>
       </ScrollArea>
 
-      {/* Input Area - Moved above GameBoy Controls */}
-      <div className="px-4 mb-4">
+      {/* Input Area - More prominent styling */}
+      <div className="px-4 mb-4 mt-2">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="flex gap-2 items-center bg-gaming-800 p-2 rounded-lg border-2 border-gaming-400">
+          <div className="flex gap-2 items-center bg-[#2A2F3C] p-3 rounded-xl border-2 border-purple-500/50 shadow-lg">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message here..."
-              className="flex-1 gaming-card bg-gaming-800 border-none text-white placeholder:text-gaming-400 text-lg h-12"
+              placeholder="Ask the Gaming AI Assistant..."
+              className="flex-1 bg-[#2A2F3C] border-none text-white placeholder:text-purple-300 text-lg h-12 focus:ring-2 focus:ring-purple-500"
               disabled={isLoading}
             />
             <Button 
               type="submit" 
               disabled={isLoading}
-              className="gaming-button bg-gaming-400 hover:bg-gaming-500 text-black h-12 px-6"
+              className="gaming-button bg-purple-500 hover:bg-purple-600 text-white h-12 px-6 rounded-lg"
             >
               <Send className="h-5 w-5" />
             </Button>
