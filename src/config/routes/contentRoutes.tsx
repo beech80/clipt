@@ -6,6 +6,8 @@ import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
 import PostList from "@/pages/PostList";
 import TopClips from "@/pages/TopClips";
+import { AuthGuard } from "@/components/AuthGuard";
+import { PostForm } from "@/components/post/PostForm";
 
 export const contentRoutes: RouteObject[] = [
   {
@@ -18,11 +20,11 @@ export const contentRoutes: RouteObject[] = [
   },
   {
     path: "clip-editor",
-    element: <ClipEditor />,
+    element: <AuthGuard><ClipEditor /></AuthGuard>,
   },
   {
     path: "collections",
-    element: <Collections />,
+    element: <AuthGuard><Collections /></AuthGuard>,
   },
   {
     path: "post/:id",
@@ -31,6 +33,10 @@ export const contentRoutes: RouteObject[] = [
   {
     path: "posts",
     element: <PostList />,
+  },
+  {
+    path: "posts/new",
+    element: <AuthGuard><PostForm /></AuthGuard>,
   },
   {
     path: "top-clips",
