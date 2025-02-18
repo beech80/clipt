@@ -123,25 +123,27 @@ export default function AiAssistant() {
         </div>
       </ScrollArea>
 
-      {/* Input Area - Made more prominent */}
-      <form onSubmit={handleSubmit} className="p-4 gameboy-container shadow-lg">
-        <div className="max-w-4xl mx-auto flex gap-2 items-center bg-gaming-800 p-2 rounded-lg border-2 border-gaming-400">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message here..."
-            className="flex-1 gaming-card bg-gaming-800 border-none text-white placeholder:text-gaming-400 text-lg h-12"
-            disabled={isLoading}
-          />
-          <Button 
-            type="submit" 
-            disabled={isLoading}
-            className="gaming-button bg-gaming-400 hover:bg-gaming-500 text-black h-12 px-6"
-          >
-            <Send className="h-5 w-5" />
-          </Button>
-        </div>
-      </form>
+      {/* Input Area - Moved above GameBoy Controls */}
+      <div className="px-4 mb-4">
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+          <div className="flex gap-2 items-center bg-gaming-800 p-2 rounded-lg border-2 border-gaming-400">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message here..."
+              className="flex-1 gaming-card bg-gaming-800 border-none text-white placeholder:text-gaming-400 text-lg h-12"
+              disabled={isLoading}
+            />
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="gaming-button bg-gaming-400 hover:bg-gaming-500 text-black h-12 px-6"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          </div>
+        </form>
+      </div>
 
       <GameBoyControls />
     </div>
