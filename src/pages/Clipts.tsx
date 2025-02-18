@@ -9,11 +9,19 @@ import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 import type { Post } from "@/types/post";
 
+interface GameInfo {
+  name: string;
+}
+
+interface PostWithGame extends Post {
+  games: GameInfo;
+}
+
 const Clipts = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const { data: posts, isLoading } = useQuery<Post[]>({
+  const { data: posts, isLoading } = useQuery<PostWithGame[]>({
     queryKey: ['posts'],
     queryFn: async () => {
       const { data: postsData, error } = await supabase
@@ -37,7 +45,7 @@ const Clipts = () => {
       if (error) throw error;
       if (!postsData) return [];
 
-      return postsData.map((post): Post => ({
+      return postsData.map((post): PostWithGame => ({
         id: post.id,
         content: post.content,
         image_url: post.image_url,

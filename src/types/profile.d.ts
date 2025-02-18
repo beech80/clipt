@@ -19,6 +19,10 @@ export interface Profile {
   theme_preference?: string;
   enable_notifications?: boolean;
   enable_sounds?: boolean;
+  auto_download_media?: boolean;
+  hardware_acceleration?: boolean;
+  reduce_animations?: boolean;
+  background_processing?: boolean;
 }
 
 export interface DatabaseProfile extends Omit<Profile, 'custom_theme'> {
