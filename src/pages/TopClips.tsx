@@ -25,7 +25,6 @@ const TopClips = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-8">
-      {/* Fixed header with proper spacing */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/40 backdrop-blur-lg border-b border-white/10">
         <div className="flex items-center justify-center max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-white">
@@ -34,9 +33,7 @@ const TopClips = () => {
         </div>
       </div>
 
-      {/* Content area with increased padding to account for fixed header */}
       <div className="pt-24 space-y-8">
-        {/* Clips grid */}
         <div className="grid grid-cols-1 gap-6 max-w-3xl mx-auto px-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -45,21 +42,52 @@ const TopClips = () => {
           ) : (
             topClips?.map((clip, index) => (
               <div key={clip.post_id} className="relative">
-                {/* Ranking Badge */}
-                <div className="absolute -left-4 -top-4 z-10">
-                  <Badge 
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${
+                {/* Decorative Ranking Badge */}
+                <div className="absolute -left-6 -top-6 z-10">
+                  <div className={`relative w-16 h-16 ${
+                    index === 0 
+                      ? 'bg-gradient-to-b from-yellow-400 to-yellow-600' 
+                      : index === 1 
+                      ? 'bg-gradient-to-b from-gray-300 to-gray-400'
+                      : index === 2 
+                      ? 'bg-gradient-to-b from-amber-600 to-amber-800'
+                      : 'bg-gradient-to-b from-purple-500 to-purple-700'
+                  } rounded-full flex items-center justify-center shadow-lg`}>
+                    <div className={`absolute inset-1 rounded-full ${
                       index === 0 
-                        ? 'bg-yellow-500 text-black' 
+                        ? 'bg-yellow-500' 
                         : index === 1 
-                        ? 'bg-gray-300 text-black'
+                        ? 'bg-gray-300'
                         : index === 2 
-                        ? 'bg-amber-700 text-white'
-                        : 'bg-purple-500 text-white'
-                    } shadow-lg border-2 border-white/20`}
-                  >
-                    #{index + 1}
-                  </Badge>
+                        ? 'bg-amber-700'
+                        : 'bg-purple-600'
+                    } flex items-center justify-center`}>
+                      <span className={`text-xl font-bold ${
+                        index <= 1 ? 'text-black' : 'text-white'
+                      }`}>#{index + 1}</span>
+                    </div>
+                    {/* Decorative Ribbons */}
+                    <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 flex -space-x-1">
+                      <div className={`w-4 h-8 ${
+                        index === 0 
+                          ? 'bg-yellow-600' 
+                          : index === 1 
+                          ? 'bg-gray-400'
+                          : index === 2 
+                          ? 'bg-amber-800'
+                          : 'bg-purple-700'
+                      } skew-x-[20deg]`}></div>
+                      <div className={`w-4 h-8 ${
+                        index === 0 
+                          ? 'bg-yellow-600' 
+                          : index === 1 
+                          ? 'bg-gray-400'
+                          : index === 2 
+                          ? 'bg-amber-800'
+                          : 'bg-purple-700'
+                      } -skew-x-[20deg]`}></div>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Date Badge */}
