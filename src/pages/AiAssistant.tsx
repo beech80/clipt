@@ -123,22 +123,22 @@ export default function AiAssistant() {
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
-      <form onSubmit={handleSubmit} className="p-4 gameboy-container">
-        <div className="max-w-4xl mx-auto flex gap-2">
+      {/* Input Area - Made more prominent */}
+      <form onSubmit={handleSubmit} className="p-4 gameboy-container shadow-lg">
+        <div className="max-w-4xl mx-auto flex gap-2 items-center bg-gaming-800 p-2 rounded-lg border-2 border-gaming-400">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask me anything about games or growing as a content creator..."
-            className="flex-1 gaming-card bg-gaming-800 border-gaming-400 text-white placeholder:text-gaming-400"
+            placeholder="Type your message here..."
+            className="flex-1 gaming-card bg-gaming-800 border-none text-white placeholder:text-gaming-400 text-lg h-12"
             disabled={isLoading}
           />
           <Button 
             type="submit" 
             disabled={isLoading}
-            className="gaming-button bg-gaming-400 hover:bg-gaming-500 text-black"
+            className="gaming-button bg-gaming-400 hover:bg-gaming-500 text-black h-12 px-6"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-5 w-5" />
           </Button>
         </div>
       </form>
