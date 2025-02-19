@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -7,35 +6,18 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AchievementList } from "@/components/achievements/AchievementList";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/contexts/AuthContext";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collections'>('clips');
 
-  const { data: profile } = useQuery({
-    queryKey: ['user-profile', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', id || user?.id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    }
-  });
-
   const { data: userClips } = useQuery({
-    queryKey: ['user-clips', id],
+    queryKey: ['user-clips'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
@@ -52,7 +34,6 @@ const Profile = () => {
             count
           )
         `)
-        .eq('user_id', id || user?.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -61,7 +42,18 @@ const Profile = () => {
     }
   });
 
-  const isOwnProfile = !id || id === user?.id;
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const userStats = {
     followers: 1234,
@@ -69,6 +61,12 @@ const Profile = () => {
     gamesPlayed: 89,
     achievements: 45
   };
+
+  const userGames = [
+    { id: 1, name: "Fortnite", hours: 156, lastPlayed: "2 days ago" },
+    { id: 2, name: "Minecraft", hours: 89, lastPlayed: "1 week ago" },
+    { id: 3, name: "Call of Duty", hours: 234, lastPlayed: "3 days ago" }
+  ];
 
   const handleAddFriend = () => {
     toast.success("Friend request sent!");
@@ -97,7 +95,7 @@ const Profile = () => {
                 {profile?.display_name || "Loading..."}
               </h1>
               <p className="text-gray-300 mt-2 max-w-md">
-                {profile?.bio || "Pro gamer and content creator. Love streaming and making awesome gaming content!"}
+                {profile?.bio_description || "Pro gamer and content creator. Love streaming and making awesome gaming content!"}
               </p>
               
               <div className="flex flex-wrap justify-center sm:justify-start gap-6 mt-4">
@@ -118,36 +116,38 @@ const Profile = () => {
           </div>
 
           <div className="flex flex-wrap justify-center sm:justify-end gap-3 mt-6">
-            {!isOwnProfile && (
-              <>
-                <Button 
-                  onClick={handleAddFriend}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                  size="sm"
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Add Friend
-                </Button>
-                <Button 
-                  onClick={handleMessage}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                  size="sm"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Message
-                </Button>
-              </>
-            )}
-            {isOwnProfile && (
-              <Button
-                onClick={() => navigate('/profile/edit')}
-                variant="outline"
-                size="sm"
-              >
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
-            )}
+            <Button 
+              onClick={() => navigate('/progress')}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              size="sm"
+            >
+              <Trophy className="w-4 h-4 mr-2" />
+              View Progress
+            </Button>
+            <Button 
+              onClick={handleAddFriend}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              size="sm"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add Friend
+            </Button>
+            <Button 
+              onClick={handleMessage}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+              size="sm"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Message
+            </Button>
+            <Button
+              onClick={() => navigate('/profile/edit')}
+              variant="outline"
+              size="sm"
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Button>
           </div>
         </div>
       </Card>
@@ -156,7 +156,10 @@ const Profile = () => {
         <div className="inline-flex flex-nowrap items-center gap-1.5 p-1.5 rounded-lg bg-black/20 backdrop-blur-sm border border-white/10">
           <Toggle
             pressed={activeTab === 'clips'}
-            onPressedChange={() => setActiveTab('clips')}
+            onPressedChange={() => {
+              setActiveTab('clips');
+              navigate('/index');
+            }}
             className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
           >
             <Gamepad2 className="w-5 h-5" />
@@ -170,7 +173,10 @@ const Profile = () => {
           </Toggle>
           <Toggle
             pressed={activeTab === 'collections'}
-            onPressedChange={() => setActiveTab('collections')}
+            onPressedChange={() => {
+              setActiveTab('collections');
+              navigate('/collections');
+            }}
             className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
           >
             <Bookmark className="w-5 h-5" />
@@ -205,7 +211,7 @@ const Profile = () => {
         )}
 
         {activeTab === 'achievements' && (
-          <AchievementList userId={id || user?.id || ''} />
+          <AchievementList userId="123" />
         )}
 
         {activeTab === 'collections' && (

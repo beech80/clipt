@@ -1,4 +1,3 @@
-
 import { RouteObject } from "react-router-dom";
 import EditProfile from "@/pages/EditProfile";
 import Profile from "@/pages/Profile";
@@ -10,10 +9,6 @@ import AiAssistant from "@/pages/AiAssistant";
 export const userRoutes: RouteObject[] = [
   {
     path: "profile",
-    element: <Profile />,
-  },
-  {
-    path: "profile/:id",
     element: <Profile />,
   },
   {

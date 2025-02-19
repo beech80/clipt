@@ -87,16 +87,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
 
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
-          onClick={() => {
-            navigate('/posts/new');
-            toast.success('Create a new post');
-          }}
+          onClick={() => navigate('/')}
           className="clip-button active:scale-95 transition-transform"
-          aria-label="Create Post"
+          aria-label="Create Clipt"
           style={{ width: '80px', height: '60px' }}
         >
           <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Post</span>
+          <span className="clip-button-text">Clipt</span>
         </button>
       </div>
 
@@ -112,3 +109,4 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
 };
 
 export default GameBoyControls;
+
