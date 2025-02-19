@@ -7,12 +7,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
+interface BlockedIP {
+  id: string;
+  ip_address: string;
+  reason: string;
+  blocked_at: string;
+  expires_at: string | null;
+}
+
 export const BlockedIPs = () => {
   const queryClient = useQueryClient();
   const [newIP, setNewIP] = useState('');
   const [reason, setReason] = useState('');
 
-  const { data: blockedIPs, isLoading } = useQuery({
+  const { data: blockedIPs, isLoading } = useQuery<BlockedIP[]>({
     queryKey: ['blocked-ips'],
     queryFn: async () => {
       const { data, error } = await supabase

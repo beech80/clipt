@@ -1,106 +1,67 @@
-import { Link } from "react-router-dom";
+
+import React from 'react';
+import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { 
-  MessageSquare, 
-  Video, 
-  Home, 
-  Trophy, 
-  Users, 
-  Camera,
-  Settings,
-  Gamepad,
-  Crown
-} from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 
-export function MainNav({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLElement>) {
+export default function MainNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { data: userRole } = useQuery({
+    queryKey: ['user-role'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      return data?.role;
+    }
+  });
+
+  const isModerator = userRole === 'moderator' || userRole === 'admin';
+
   return (
-    <nav
-      className={cn("flex items-center space-x-4 lg:space-x-6", className)}
-      {...props}
-    >
-      <Link
-        to="/"
-        className="text-sm font-medium transition-colors hover:text-primary"
+    <nav className="flex items-center space-x-4">
+      <Button
+        variant="ghost"
+        className={cn(
+          "text-muted-foreground",
+          location.pathname === "/" && "text-foreground"
+        )}
+        onClick={() => navigate("/")}
       >
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Home className="h-4 w-4" />
-          Home
-        </Button>
-      </Link>
-      
-      <Link
-        to="/streaming"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        Feed
+      </Button>
+      <Button
+        variant="ghost"
+        className={cn(
+          "text-muted-foreground",
+          location.pathname === "/clipts" && "text-foreground"
+        )}
+        onClick={() => navigate("/clipts")}
       >
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Video className="h-4 w-4" />
-          Streaming
+        Clipts
+      </Button>
+      {isModerator && (
+        <Button
+          variant="ghost"
+          className={cn(
+            "text-muted-foreground",
+            location.pathname === "/moderation" && "text-foreground"
+          )}
+          onClick={() => navigate("/moderation")}
+        >
+          Moderation
         </Button>
-      </Link>
-
-      <Link
-        to="/clipts"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Camera className="h-4 w-4" />
-          Clipts
-        </Button>
-      </Link>
-
-      <Link
-        to="/messages"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        <Button variant="ghost" size="sm" className="gap-2">
-          <MessageSquare className="h-4 w-4" />
-          Messages
-        </Button>
-      </Link>
-
-      <Link
-        to="/squads"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Users className="h-4 w-4" />
-          Squads
-        </Button>
-      </Link>
-
-      <Link
-        to="/top-clips"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Trophy className="h-4 w-4" />
-          Top Clips
-        </Button>
-      </Link>
-
-      <Link
-        to="/esports"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Crown className="h-4 w-4" />
-          Esports
-        </Button>
-      </Link>
-
-      <Link
-        to="/discover"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-      >
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Gamepad className="h-4 w-4" />
-          Discover
-        </Button>
-      </Link>
+      )}
     </nav>
   );
 }
