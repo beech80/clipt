@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -8,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Copy, Eye, Play, Settings, Stop } from 'lucide-react';
+import { Copy, Eye, Play, Settings, Square } from 'lucide-react';
 import { StreamSettings } from './StreamSettings';
+import { generateStreamKey } from '@/utils/streamUtils';
 
 export const StreamDashboard = () => {
   const { user } = useAuth();
@@ -42,6 +42,9 @@ export const StreamDashboard = () => {
   const startStream = async () => {
     if (!user) return;
 
+    const streamKey = generateStreamKey();
+    const streamUrl = `rtmp://stream.lovable.dev/live/${streamKey}`;
+
     const { error } = await supabase
       .from('streams')
       .upsert({
@@ -49,7 +52,9 @@ export const StreamDashboard = () => {
         title: title || 'Untitled Stream',
         description,
         is_live: true,
-        started_at: new Date().toISOString()
+        started_at: new Date().toISOString(),
+        stream_key: streamKey,
+        stream_url: streamUrl
       })
       .select()
       .single();
@@ -188,7 +193,7 @@ export const StreamDashboard = () => {
 
             {stream?.is_live ? (
               <Button onClick={endStream} variant="destructive" className="gap-2">
-                <Stop className="w-4 h-4" />
+                <Square className="w-4 h-4" />
                 End Stream
               </Button>
             ) : (

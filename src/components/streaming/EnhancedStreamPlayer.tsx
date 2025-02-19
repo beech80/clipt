@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -16,7 +15,7 @@ interface StreamMessage {
   user_id: string;
   created_at: string;
   profiles: {
-    username: string;
+    username: string | null;
     avatar_url: string | null;
   };
 }
@@ -74,7 +73,7 @@ export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamP
           message,
           user_id,
           created_at,
-          profiles (username, avatar_url)
+          profiles:user_id (username, avatar_url)
         `)
         .eq('stream_id', streamId)
         .order('created_at', { ascending: true });
