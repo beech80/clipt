@@ -29,15 +29,7 @@ export const BlockedIPs = () => {
         .order('blocked_at', { ascending: false });
 
       if (error) throw error;
-      if (!data) return [];
-      
-      return data.map(ip => ({
-        id: ip.id,
-        ip_address: ip.ip_address,
-        reason: ip.reason,
-        blocked_at: ip.blocked_at,
-        expires_at: ip.expires_at
-      }));
+      return data;
     }
   });
 

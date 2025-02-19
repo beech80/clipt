@@ -7,28 +7,10 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
-interface ReportedContent {
-  id: string;
-  reporter: { username: string } | null;
-  content: {
-    id: string;
-    content: string;
-    user_id: string;
-    profiles: { username: string } | null;
-  } | null;
-  created_at: string;
-  resolved_at: string | null;
-  severity_level: string;
-  reason: string;
-  status: string;
-  action_taken: string | null;
-  notes: string | null;
-}
-
 export const ReportedContent = () => {
   const queryClient = useQueryClient();
 
-  const { data: reports, isLoading } = useQuery<ReportedContent[]>({
+  const { data: reports, isLoading } = useQuery({
     queryKey: ['content-reports'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -46,20 +28,7 @@ export const ReportedContent = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (!data) return [];
-
-      return data.map(report => ({
-        id: report.id,
-        reporter: report.reporter,
-        content: report.content,
-        created_at: report.created_at,
-        resolved_at: report.resolved_at,
-        severity_level: report.severity_level,
-        reason: report.reason,
-        status: report.status,
-        action_taken: report.action_taken,
-        notes: report.notes
-      }));
+      return data;
     }
   });
 
@@ -128,14 +97,12 @@ export const ReportedContent = () => {
                 <p className="text-muted-foreground">{report.reason}</p>
               </div>
 
-              {report.content && (
-                <div className="bg-card-secondary p-4 rounded-lg">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Content by {report.content.profiles?.username}:
-                  </p>
-                  <p>{report.content.content}</p>
-                </div>
-              )}
+              <div className="bg-card-secondary p-4 rounded-lg">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Content by {report.content?.profiles?.username}:
+                </p>
+                <p>{report.content?.content}</p>
+              </div>
 
               {report.status === 'pending' ? (
                 <div className="flex gap-2">

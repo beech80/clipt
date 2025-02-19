@@ -5,19 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Badge } from '@/components/ui/badge';
 
-interface SecurityEvent {
-  id: string;
-  event_type: string;
-  severity: string;
-  created_at: string;
-  ip_address: string;
-  user_agent: string;
-  details: Record<string, unknown>;
-  user: { username: string } | null;
-}
-
 export const SecurityEvents = () => {
-  const { data: events, isLoading } = useQuery<SecurityEvent[]>({
+  const { data: events, isLoading } = useQuery({
     queryKey: ['security-events'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,18 +18,7 @@ export const SecurityEvents = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      if (!data) return [];
-
-      return data.map(event => ({
-        id: event.id,
-        event_type: event.event_type,
-        severity: event.severity,
-        created_at: event.created_at,
-        ip_address: event.ip_address,
-        user_agent: event.user_agent,
-        details: event.details as Record<string, unknown>,
-        user: event.user
-      }));
+      return data;
     }
   });
 
