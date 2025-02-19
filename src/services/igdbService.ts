@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 export interface IGDBGame {
@@ -14,6 +15,7 @@ export interface IGDBGame {
 
 export const igdbService = {
   async searchGames(searchTerm: string): Promise<IGDBGame[]> {
+    console.log("Searching for games with term:", searchTerm);
     const query = `
       search "${searchTerm}";
       fields name,cover.url,summary,rating,first_release_date,genres.name;
@@ -21,22 +23,29 @@ export const igdbService = {
       limit 10;
     `;
 
-    const { data, error } = await supabase.functions.invoke('igdb', {
-      body: {
-        endpoint: 'games',
-        query,
-      },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('igdb', {
+        body: {
+          endpoint: 'games',
+          query,
+        },
+      });
 
-    if (error) {
-      console.error('Error searching games:', error);
-      throw error;
+      if (error) {
+        console.error('Error searching games:', error);
+        throw error;
+      }
+
+      console.log("IGDB search results:", data);
+      return data;
+    } catch (err) {
+      console.error('Failed to search games:', err);
+      throw err;
     }
-
-    return data;
   },
 
   async getPopularGames(): Promise<IGDBGame[]> {
+    console.log("Fetching popular games");
     const query = `
       fields name,cover.url,summary,rating,first_release_date,genres.name;
       where rating != null & version_parent = null;
@@ -44,39 +53,52 @@ export const igdbService = {
       limit 10;
     `;
 
-    const { data, error } = await supabase.functions.invoke('igdb', {
-      body: {
-        endpoint: 'games',
-        query,
-      },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('igdb', {
+        body: {
+          endpoint: 'games',
+          query,
+        },
+      });
 
-    if (error) {
-      console.error('Error fetching popular games:', error);
-      throw error;
+      if (error) {
+        console.error('Error fetching popular games:', error);
+        throw error;
+      }
+
+      console.log("Popular games results:", data);
+      return data;
+    } catch (err) {
+      console.error('Failed to fetch popular games:', err);
+      throw err;
     }
-
-    return data;
   },
 
   async getGameDetails(gameId: number): Promise<IGDBGame> {
+    console.log("Fetching game details for ID:", gameId);
     const query = `
       fields name,cover.url,summary,rating,first_release_date,genres.name;
       where id = ${gameId};
     `;
 
-    const { data, error } = await supabase.functions.invoke('igdb', {
-      body: {
-        endpoint: 'games',
-        query,
-      },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('igdb', {
+        body: {
+          endpoint: 'games',
+          query,
+        },
+      });
 
-    if (error) {
-      console.error('Error fetching game details:', error);
-      throw error;
+      if (error) {
+        console.error('Error fetching game details:', error);
+        throw error;
+      }
+
+      console.log("Game details result:", data[0]);
+      return data[0];
+    } catch (err) {
+      console.error('Failed to fetch game details:', err);
+      throw err;
     }
-
-    return data[0];
   },
 };
