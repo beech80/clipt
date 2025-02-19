@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -94,6 +93,10 @@ const Profile = () => {
     navigate('/messages');
   };
 
+  const handleNewPost = () => {
+    navigate('/post/new');
+  };
+
   if (profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -176,14 +179,24 @@ const Profile = () => {
               </>
             )}
             {isOwnProfile && (
-              <Button
-                onClick={() => navigate('/profile/edit')}
-                variant="outline"
-                size="sm"
-              >
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
+              <>
+                <Button
+                  onClick={() => navigate('/profile/edit')}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+                <Button
+                  onClick={handleNewPost}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  size="sm"
+                >
+                  <Gamepad2 className="w-4 h-4 mr-2" />
+                  New Post
+                </Button>
+              </>
             )}
           </div>
         </div>
