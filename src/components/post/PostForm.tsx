@@ -15,6 +15,8 @@ export const PostForm = () => {
   const [loading, setLoading] = useState(false);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -28,7 +30,27 @@ export const PostForm = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+        
+        // Set up media recorder
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            chunksRef.current.push(event.data);
+          }
+        };
+        
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+          const file = new File([blob], 'recorded-video.webm', { type: 'video/webm' });
+          setFile(file);
+          const previewUrl = URL.createObjectURL(blob);
+          setFilePreview(previewUrl);
+          chunksRef.current = [];
+        };
       }
+      toast.success('Camera started successfully');
     } catch (error) {
       toast.error('Unable to access camera');
       console.error('Camera error:', error);
@@ -42,22 +64,51 @@ export const PostForm = () => {
         videoRef.current.srcObject = null;
       }
       streamRef.current = null;
+      mediaRecorderRef.current = null;
+    }
+  };
+
+  const startRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive') {
+      mediaRecorderRef.current.start();
+      toast.success('Recording started');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      stopCamera();
+      toast.success('Recording completed');
     }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
+      if (selectedFile.size > 100 * 1024 * 1024) { // 100MB limit
+        toast.error('File size must be less than 100MB');
+        return;
+      }
       setFile(selectedFile);
       const previewUrl = URL.createObjectURL(selectedFile);
       setFilePreview(previewUrl);
       stopCamera(); // Stop camera if it's running
+      toast.success('File selected successfully');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast.error('Please sign in to create a post');
+      return;
+    }
+    
+    if (!content.trim()) {
+      toast.error('Please add some content to your post');
+      return;
+    }
     
     setLoading(true);
     try {
@@ -121,15 +172,38 @@ export const PostForm = () => {
 
         <div className="grid gap-4">
           <div className="flex flex-col gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={startCamera}
-              className="flex items-center justify-center gap-2 h-12"
-            >
-              <Camera className="w-5 h-5" />
-              Open Camera
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={startCamera}
+                className="flex items-center justify-center gap-2 h-12"
+              >
+                <Camera className="w-5 h-5" />
+                Open Camera
+              </Button>
+              
+              {streamRef.current && (
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={startRecording}
+                    className="flex-1"
+                  >
+                    Start Recording
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={stopRecording}
+                    className="flex-1"
+                  >
+                    Stop Recording
+                  </Button>
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center justify-center w-full">
               <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
@@ -138,7 +212,7 @@ export const PostForm = () => {
                   <p className="mb-2 text-sm text-gray-400">
                     <span className="font-semibold">Upload from device</span>
                   </p>
-                  <p className="text-xs text-gray-400">Supports video and images</p>
+                  <p className="text-xs text-gray-400">Supports video and images (max 100MB)</p>
                 </div>
                 <Input
                   type="file"
@@ -185,7 +259,7 @@ export const PostForm = () => {
       <Button
         type="submit"
         className="w-full"
-        disabled={loading || !content}
+        disabled={loading || !content.trim()}
       >
         {loading ? (
           <>
