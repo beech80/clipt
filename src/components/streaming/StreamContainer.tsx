@@ -1,86 +1,80 @@
-import React from 'react';
-import { Card } from "@/components/ui/card";
-import { StreamPlayer } from './StreamPlayer';
+
+import React, { useEffect, useState } from 'react';
+import { Card } from '@/components/ui/card';
 import { StreamControls } from './StreamControls';
-import { StreamChat } from './StreamChat';
+import { StreamSettings } from './StreamSettings';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { StreamHealthIndicator } from './StreamHealthIndicator';
+import { StreamOverlay } from './overlay/StreamOverlay';
+import { StreamAlerts } from './alerts/StreamAlerts';
+import { StreamWidgets } from './widgets/StreamWidgets';
+import { MultiPlatformManager } from './platforms/MultiPlatformManager';
+import { AdvancedChatSettings } from './chat/AdvancedChatSettings';
 
-export function StreamContainer() {
-  const { data: streamConfig, isLoading } = useQuery({
-    queryKey: ['streamConfig'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('streaming_config')
-        .select('*')
-        .single();
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+interface StreamContainerProps {
+  userId: string;
+  isLive: boolean;
+  streamConfig: any;
+  onStreamUpdate: (data: any) => void;
+}
+
+export const StreamContainer = ({ 
+  userId, 
+  isLive, 
+  streamConfig,
+  onStreamUpdate 
+}: StreamContainerProps) => {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
 
   const { data: stream } = useQuery({
-    queryKey: ['currentStream'],
+    queryKey: ['stream', userId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
       const { data, error } = await supabase
         .from('streams')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
-      
+
       if (error && error.code !== 'PGRST116') throw error;
       return data;
     }
   });
 
-  const handleStreamUpdate = (data: { isLive: boolean; streamKey: string | null; streamUrl: string | null }) => {
-    // Handle stream updates
-    console.log('Stream updated:', data);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[600px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-      <div className="lg:col-span-3 space-y-4">
-        <Card className="p-4">
-          <StreamPlayer 
-            streamUrl={stream?.stream_url}
-            isLive={stream?.is_live}
+    <div className="space-y-6">
+      <Card className="p-6">
+        <div className="space-y-4">
+          <Input
+            placeholder="Stream Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <Input
+            placeholder="Stream Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <StreamControls
+            userId={userId}
             streamId={stream?.id}
+            isLive={isLive}
+            title={title}
+            description={description}
+            onStreamStateChange={() => onStreamUpdate({ title, description })}
           />
-        </Card>
-        
-        <Card className="p-4">
-          <StreamControls 
-            userId={stream?.user_id}
-            isLive={stream?.is_live}
-            stream={stream}
-            streamConfig={streamConfig}
-            onStreamUpdate={handleStreamUpdate}
-          />
-        </Card>
-      </div>
+          <StreamHealthIndicator streamId={stream?.id} />
+        </div>
+      </Card>
 
-      <div className="lg:col-span-1">
-        <Card className="h-[600px]">
-          <StreamChat 
-            streamId={stream?.id}
-            isLive={stream?.is_live}
-          />
-        </Card>
-      </div>
+      <StreamSettings userId={userId} />
+      <StreamOverlay userId={userId} />
+      <StreamAlerts userId={userId} />
+      <StreamWidgets userId={userId} />
+      <MultiPlatformManager userId={userId} />
+      <AdvancedChatSettings userId={userId} />
     </div>
   );
-}
+};
