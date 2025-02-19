@@ -6,11 +6,12 @@ import Settings from "@/pages/Settings";
 import Onboarding from "@/pages/Onboarding";
 import Progress from "@/pages/Progress";
 import AiAssistant from "@/pages/AiAssistant";
+import { AuthGuard } from "@/components/AuthGuard";
 
 export const userRoutes: RouteObject[] = [
   {
     path: "profile",
-    element: <Profile />,
+    element: <AuthGuard><Profile /></AuthGuard>,
   },
   {
     path: "profile/:id",
@@ -18,22 +19,22 @@ export const userRoutes: RouteObject[] = [
   },
   {
     path: "profile/edit",
-    element: <EditProfile />,
+    element: <AuthGuard><EditProfile /></AuthGuard>,
   },
   {
     path: "settings",
-    element: <Settings />,
+    element: <AuthGuard><Settings /></AuthGuard>,
   },
   {
     path: "onboarding",
-    element: <Onboarding />,
+    element: <AuthGuard><Onboarding /></AuthGuard>,
   },
   {
     path: "progress",
-    element: <Progress />,
+    element: <AuthGuard><Progress /></AuthGuard>,
   },
   {
     path: "ai-assistant",
-    element: <AiAssistant />,
+    element: <AuthGuard><AiAssistant /></AuthGuard>,
   },
 ];

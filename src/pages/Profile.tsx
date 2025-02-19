@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, ArrowLeft, Bookmark } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -11,7 +11,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AchievementList } from "@/components/achievements/AchievementList";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Profile = () => {
@@ -61,7 +60,7 @@ const Profile = () => {
     }
   });
 
-  const isOwnProfile = !id || id === user?.id;
+  const isOwnProfile = user && (!id || id === user?.id);
 
   const userStats = {
     followers: 1234,
@@ -71,10 +70,20 @@ const Profile = () => {
   };
 
   const handleAddFriend = () => {
+    if (!user) {
+      toast.error("Please sign in to add friends");
+      navigate('/login');
+      return;
+    }
     toast.success("Friend request sent!");
   };
 
   const handleMessage = () => {
+    if (!user) {
+      toast.error("Please sign in to send messages");
+      navigate('/login');
+      return;
+    }
     navigate('/messages');
   };
 
