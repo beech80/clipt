@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -7,23 +7,80 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, Camera } from 'lucide-react';
 
 export const PostForm = () => {
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: true,
+        audio: true 
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+      }
+    } catch (error) {
+      toast.error('Unable to access camera');
+      console.error('Camera error:', error);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      streamRef.current = null;
+    }
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       // Create preview URL
       const previewUrl = URL.createObjectURL(selectedFile);
       setFilePreview(previewUrl);
+
+      // If it's an image, scan it for inappropriate content
+      if (selectedFile.type.startsWith('image/')) {
+        try {
+          const formData = new FormData();
+          formData.append('file', selectedFile);
+          
+          const response = await fetch('/functions/scan-media-content', {
+            method: 'POST',
+            body: JSON.stringify({ imageUrl: previewUrl }),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          const result = await response.json();
+          
+          if (!result.safe) {
+            setFile(null);
+            setFilePreview(null);
+            toast.error('This content violates our community guidelines');
+            return;
+          }
+        } catch (error) {
+          console.error('Content moderation error:', error);
+          toast.error('Unable to verify content safety');
+        }
+      }
     }
   };
 
@@ -77,6 +134,7 @@ export const PostForm = () => {
       console.error('Error:', error);
     } finally {
       setLoading(false);
+      stopCamera();
     }
   };
 
@@ -105,9 +163,32 @@ export const PostForm = () => {
                 className="hidden"
                 accept="video/*,image/*"
                 onChange={handleFileChange}
+                capture="environment"
               />
             </label>
           </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={startCamera}
+            className="flex items-center gap-2"
+          >
+            <Camera className="w-4 h-4" />
+            Use Camera
+          </Button>
+
+          {videoRef.current && (
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+              <video
+                ref={videoRef}
+                className="w-full h-full object-contain"
+                autoPlay
+                playsInline
+                muted
+              />
+            </div>
+          )}
 
           {filePreview && (
             <div className="relative aspect-video rounded-lg overflow-hidden bg-black">

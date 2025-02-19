@@ -1,80 +1,60 @@
-import { serve } from "https://deno.fresh.run/std@v9.6.1/http/server.ts";
-import { corsHeaders } from '../_shared/cors.ts';
 
-const VISION_API_KEY = Deno.env.get('GOOGLE_CLOUD_VISION_API_KEY');
+import { createClient } from 'https://esm.sh/@google-cloud/vision@4.0.2'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { mediaUrl, mediaType } = await req.json();
+    const { imageUrl } = await req.json()
 
-    // Call Google Cloud Vision API
-    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        requests: [{
-          image: {
-            source: {
-              imageUri: mediaUrl
-            }
-          },
-          features: [
-            { type: 'SAFE_SEARCH_DETECTION' },
-            { type: 'LABEL_DETECTION', maxResults: 10 }
-          ]
-        }]
-      })
-    });
+    if (!imageUrl) {
+      return new Response(
+        JSON.stringify({ error: 'No image URL provided' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
 
-    const data = await response.json();
-    
-    // Process the results
-    const safeSearch = data.responses[0].safeSearchAnnotation;
-    const labels = data.responses[0].labelAnnotations;
+    // Initialize Vision client
+    const vision = new createClient({
+      credentials: JSON.parse(Deno.env.get('GOOGLE_CLOUD_VISION_API_KEY') || '{}'),
+    })
 
-    // Determine if content is safe
-    const isSafe = ['VERY_UNLIKELY', 'UNLIKELY'].includes(safeSearch.adult) &&
-                  ['VERY_UNLIKELY', 'UNLIKELY'].includes(safeSearch.violence) &&
-                  ['VERY_UNLIKELY', 'UNLIKELY'].includes(safeSearch.racy);
+    // Perform content moderation
+    const [result] = await vision.safeSearchDetection(imageUrl)
+    const detections = result.safeSearchAnnotation || {}
 
-    const result = {
-      safe_for_work: isSafe,
-      contains_nudity: !['VERY_UNLIKELY', 'UNLIKELY'].includes(safeSearch.adult),
-      contains_violence: !['VERY_UNLIKELY', 'UNLIKELY'].includes(safeSearch.violence),
-      contains_hate: !['VERY_UNLIKELY', 'UNLIKELY'].includes(safeSearch.spoof),
-      labels: labels.map(label => ({
-        description: label.description,
-        confidence: label.score
-      })),
-      raw_safe_search: safeSearch
-    };
+    // Check if content is safe
+    const isSafe = !['LIKELY', 'VERY_LIKELY'].includes(detections.adult) &&
+                  !['LIKELY', 'VERY_LIKELY'].includes(detections.violence) &&
+                  !['LIKELY', 'VERY_LIKELY'].includes(detections.racy)
 
-    // Log the scan results
-    console.log('Content scan results:', result);
+    if (!isSafe) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Content violates community guidelines',
+          details: detections
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
 
     return new Response(
-      JSON.stringify(result),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    );
+      JSON.stringify({ safe: true, detections }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
 
   } catch (error) {
-    console.error('Error scanning content:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
-      }
-    );
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
   }
-});
+})
