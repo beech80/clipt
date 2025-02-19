@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
@@ -32,7 +31,7 @@ interface Post {
   type: 'video';
   likes_count: number;
   comments_count: number;
-  clip_votes: Array<{ count: number }>;
+  clip_votes: { count: number }[];
 }
 
 const Clipts = () => {

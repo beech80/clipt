@@ -73,13 +73,16 @@ export const EnhancedStreamPlayer = ({ streamId, onClipCreate }: EnhancedStreamP
           message,
           user_id,
           created_at,
-          profiles:user_id (username, avatar_url)
+          profiles:user_id (
+            username,
+            avatar_url
+          )
         `)
         .eq('stream_id', streamId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as StreamMessage[];
+      return data as unknown as StreamMessage[];
     },
     refetchInterval: 1000
   });
