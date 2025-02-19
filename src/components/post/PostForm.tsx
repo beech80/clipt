@@ -16,7 +16,6 @@ export const PostForm = () => {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -46,41 +45,13 @@ export const PostForm = () => {
     }
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      // Create preview URL
       const previewUrl = URL.createObjectURL(selectedFile);
       setFilePreview(previewUrl);
-
-      // If it's an image, scan it for inappropriate content
-      if (selectedFile.type.startsWith('image/')) {
-        try {
-          const formData = new FormData();
-          formData.append('file', selectedFile);
-          
-          const response = await fetch('/functions/scan-media-content', {
-            method: 'POST',
-            body: JSON.stringify({ imageUrl: previewUrl }),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          const result = await response.json();
-          
-          if (!result.safe) {
-            setFile(null);
-            setFilePreview(null);
-            toast.error('This content violates our community guidelines');
-            return;
-          }
-        } catch (error) {
-          console.error('Content moderation error:', error);
-          toast.error('Unable to verify content safety');
-        }
-      }
+      stopCamera(); // Stop camera if it's running
     }
   };
 
@@ -98,7 +69,7 @@ export const PostForm = () => {
         const filePath = `${user.id}/${fileName}`;
 
         // Upload file
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('posts')
           .upload(filePath, file);
 
@@ -149,34 +120,35 @@ export const PostForm = () => {
         />
 
         <div className="grid gap-4">
-          <div className="flex items-center justify-center w-full">
-            <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <Upload className="w-8 h-8 mb-4 text-gray-400" />
-                <p className="mb-2 text-sm text-gray-400">
-                  <span className="font-semibold">Click to upload</span> or drag and drop
-                </p>
-                <p className="text-xs text-gray-400">Video or Image (max. 100MB)</p>
-              </div>
-              <Input
-                type="file"
-                className="hidden"
-                accept="video/*,image/*"
-                onChange={handleFileChange}
-                capture="environment"
-              />
-            </label>
-          </div>
+          <div className="flex flex-col gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={startCamera}
+              className="flex items-center justify-center gap-2 h-12"
+            >
+              <Camera className="w-5 h-5" />
+              Open Camera
+            </Button>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={startCamera}
-            className="flex items-center gap-2"
-          >
-            <Camera className="w-4 h-4" />
-            Use Camera
-          </Button>
+            <div className="flex items-center justify-center w-full">
+              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-8 h-8 mb-4 text-gray-400" />
+                  <p className="mb-2 text-sm text-gray-400">
+                    <span className="font-semibold">Upload from device</span>
+                  </p>
+                  <p className="text-xs text-gray-400">Supports video and images</p>
+                </div>
+                <Input
+                  type="file"
+                  className="hidden"
+                  accept="video/*,image/*"
+                  onChange={handleFileChange}
+                />
+              </label>
+            </div>
+          </div>
 
           {videoRef.current && (
             <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
