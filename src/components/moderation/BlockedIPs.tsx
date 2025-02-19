@@ -25,11 +25,11 @@ export const BlockedIPs = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('blocked_ips')
-        .select('*')
+        .select('id, ip_address, reason, blocked_at, expires_at')
         .order('blocked_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as BlockedIP[];
     }
   });
 
