@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,20 @@ export const ReportedContent = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as ReportedContent[];
+      if (!data) return [];
+
+      return data.map(report => ({
+        id: report.id,
+        reporter: report.reporter,
+        content: report.content,
+        created_at: report.created_at,
+        resolved_at: report.resolved_at,
+        severity_level: report.severity_level,
+        reason: report.reason,
+        status: report.status,
+        action_taken: report.action_taken,
+        notes: report.notes
+      }));
     }
   });
 

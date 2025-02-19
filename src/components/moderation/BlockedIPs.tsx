@@ -25,11 +25,19 @@ export const BlockedIPs = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('blocked_ips')
-        .select('id, ip_address, reason, blocked_at, expires_at')
+        .select('*')
         .order('blocked_at', { ascending: false });
 
       if (error) throw error;
-      return data as BlockedIP[];
+      if (!data) return [];
+      
+      return data.map(ip => ({
+        id: ip.id,
+        ip_address: ip.ip_address,
+        reason: ip.reason,
+        blocked_at: ip.blocked_at,
+        expires_at: ip.expires_at
+      }));
     }
   });
 
