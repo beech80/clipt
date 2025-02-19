@@ -1,5 +1,4 @@
-
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload, Camera } from 'lucide-react';
+import { Loader2, Upload, Camera, Hash, AtSign } from 'lucide-react';
+import GameBoyControls from '@/components/GameBoyControls';
 
 export const PostForm = () => {
   const [content, setContent] = useState('');
@@ -20,6 +20,12 @@ export const PostForm = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [hashtags, setHashtags] = useState<string[]>([]);
+  const [mentions, setMentions] = useState<string[]>([]);
+  const [showHashtagInput, setShowHashtagInput] = useState(false);
+  const [showMentionInput, setShowMentionInput] = useState(false);
+  const [currentHashtag, setCurrentHashtag] = useState('');
+  const [currentMention, setCurrentMention] = useState('');
 
   const startCamera = async () => {
     try {
@@ -31,7 +37,6 @@ export const PostForm = () => {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
         
-        // Set up media recorder
         const mediaRecorder = new MediaRecorder(stream);
         mediaRecorderRef.current = mediaRecorder;
         
@@ -93,8 +98,26 @@ export const PostForm = () => {
       setFile(selectedFile);
       const previewUrl = URL.createObjectURL(selectedFile);
       setFilePreview(previewUrl);
-      stopCamera(); // Stop camera if it's running
+      stopCamera();
       toast.success('File selected successfully');
+    }
+  };
+
+  const addHashtag = () => {
+    if (currentHashtag.trim()) {
+      setHashtags([...hashtags, currentHashtag.trim()]);
+      setCurrentHashtag('');
+      setShowHashtagInput(false);
+      toast.success('Hashtag added');
+    }
+  };
+
+  const addMention = () => {
+    if (currentMention.trim()) {
+      setMentions([...mentions, currentMention.trim()]);
+      setCurrentMention('');
+      setShowMentionInput(false);
+      toast.success('Mention added');
     }
   };
 
@@ -119,14 +142,12 @@ export const PostForm = () => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
-        // Upload file
         const { error: uploadError } = await supabase.storage
           .from('posts')
           .upload(filePath, file);
 
         if (uploadError) throw uploadError;
 
-        // Get public URL
         const { data: { publicUrl } } = supabase.storage
           .from('posts')
           .getPublicUrl(filePath);
@@ -134,7 +155,6 @@ export const PostForm = () => {
         fileUrl = publicUrl;
       }
 
-      // Create post
       const { error: postError } = await supabase
         .from('posts')
         .insert({
@@ -144,7 +164,9 @@ export const PostForm = () => {
             ? { video_url: fileUrl }
             : { image_url: fileUrl }
           ),
-          is_published: true
+          is_published: true,
+          hashtags,
+          mentions
         });
 
       if (postError) throw postError;
@@ -161,115 +183,182 @@ export const PostForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6">
-      <div className="space-y-4">
-        <Textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="What's on your mind?"
-          className="min-h-[100px]"
-        />
-
-        <div className="grid gap-4">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
+    <div className="relative min-h-screen bg-gaming-900">
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6 pb-48">
+        <div className="space-y-4">
+          <div className="flex flex-col gap-2">
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="What's on your mind?"
+              className="min-h-[100px]"
+            />
+            
+            <div className="flex gap-2">
               <Button
                 type="button"
                 variant="outline"
-                onClick={startCamera}
-                className="flex items-center justify-center gap-2 h-12"
+                onClick={() => setShowHashtagInput(true)}
+                className="flex items-center gap-2"
               >
-                <Camera className="w-5 h-5" />
-                Open Camera
+                <Hash className="w-4 h-4" />
+                Add Hashtag
               </Button>
               
-              {streamRef.current && (
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={startRecording}
-                    className="flex-1"
-                  >
-                    Start Recording
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={stopRecording}
-                    className="flex-1"
-                  >
-                    Stop Recording
-                  </Button>
-                </div>
-              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowMentionInput(true)}
+                className="flex items-center gap-2"
+              >
+                <AtSign className="w-4 h-4" />
+                Mention Someone
+              </Button>
             </div>
 
-            <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Upload className="w-8 h-8 mb-4 text-gray-400" />
-                  <p className="mb-2 text-sm text-gray-400">
-                    <span className="font-semibold">Upload from device</span>
-                  </p>
-                  <p className="text-xs text-gray-400">Supports video and images (max 100MB)</p>
-                </div>
+            {showHashtagInput && (
+              <div className="flex gap-2">
                 <Input
-                  type="file"
-                  className="hidden"
-                  accept="video/*,image/*"
-                  onChange={handleFileChange}
+                  value={currentHashtag}
+                  onChange={(e) => setCurrentHashtag(e.target.value)}
+                  placeholder="Enter hashtag"
+                  className="flex-1"
                 />
-              </label>
-            </div>
+                <Button onClick={addHashtag}>Add</Button>
+              </div>
+            )}
+
+            {showMentionInput && (
+              <div className="flex gap-2">
+                <Input
+                  value={currentMention}
+                  onChange={(e) => setCurrentMention(e.target.value)}
+                  placeholder="@username"
+                  className="flex-1"
+                />
+                <Button onClick={addMention}>Add</Button>
+              </div>
+            )}
+
+            {(hashtags.length > 0 || mentions.length > 0) && (
+              <div className="flex flex-wrap gap-2">
+                {hashtags.map((tag, index) => (
+                  <span key={index} className="px-2 py-1 rounded bg-gaming-800 text-gaming-400">
+                    #{tag}
+                  </span>
+                ))}
+                {mentions.map((mention, index) => (
+                  <span key={index} className="px-2 py-1 rounded bg-gaming-800 text-gaming-400">
+                    @{mention}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {videoRef.current && (
-            <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-              <video
-                ref={videoRef}
-                className="w-full h-full object-contain"
-                autoPlay
-                playsInline
-                muted
-              />
-            </div>
-          )}
+          <div className="grid gap-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={startCamera}
+                  className="flex items-center justify-center gap-2 h-12"
+                >
+                  <Camera className="w-5 h-5" />
+                  Open Camera
+                </Button>
+                
+                {streamRef.current && (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="default"
+                      onClick={startRecording}
+                      className="flex-1"
+                    >
+                      Start Recording
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={stopRecording}
+                      className="flex-1"
+                    >
+                      Stop Recording
+                    </Button>
+                  </div>
+                )}
+              </div>
 
-          {filePreview && (
-            <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-              {file?.type.startsWith('video/') ? (
+              <div className="flex items-center justify-center w-full">
+                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="w-8 h-8 mb-4 text-gray-400" />
+                    <p className="mb-2 text-sm text-gray-400">
+                      <span className="font-semibold">Upload from device</span>
+                    </p>
+                    <p className="text-xs text-gray-400">Supports video and images (max 100MB)</p>
+                  </div>
+                  <Input
+                    type="file"
+                    className="hidden"
+                    accept="video/*,image/*"
+                    onChange={handleFileChange}
+                  />
+                </label>
+              </div>
+            </div>
+
+            {videoRef.current && (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
                 <video
-                  src={filePreview}
+                  ref={videoRef}
                   className="w-full h-full object-contain"
-                  controls
+                  autoPlay
+                  playsInline
+                  muted
                 />
-              ) : (
-                <img
-                  src={filePreview}
-                  alt="Preview"
-                  className="w-full h-full object-contain"
-                />
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+              </div>
+            )}
 
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={loading || !content.trim()}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating Post...
-          </>
-        ) : (
-          'Create Post'
-        )}
-      </Button>
-    </form>
+            {filePreview && (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+                {file?.type.startsWith('video/') ? (
+                  <video
+                    src={filePreview}
+                    className="w-full h-full object-contain"
+                    controls
+                  />
+                ) : (
+                  <img
+                    src={filePreview}
+                    alt="Preview"
+                    className="w-full h-full object-contain"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={loading || !content.trim()}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating Post...
+            </>
+          ) : (
+            'Create Post'
+          )}
+        </Button>
+      </form>
+
+      <GameBoyControls />
+    </div>
   );
 };
