@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -19,7 +19,7 @@ const Profile = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collections'>('clips');
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['user-profile', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -63,7 +63,8 @@ const Profile = () => {
         return [];
       }
       return data;
-    }
+    },
+    enabled: !!profile // Only fetch clips if we have a valid profile
   });
 
   const isOwnProfile = user && (!id || id === user?.id);
@@ -93,6 +94,27 @@ const Profile = () => {
     navigate('/messages');
   };
 
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <UserX className="w-16 h-16 text-gray-400" />
+        <h1 className="text-2xl font-bold text-gray-700">Profile Not Found</h1>
+        <p className="text-gray-500">This user profile doesn't exist or has been removed.</p>
+        <Button onClick={() => navigate('/')} variant="outline">
+          Go Home
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="relative max-w-4xl mx-auto p-4 sm:p-6 space-y-6 pb-40">
       <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-none text-white">
@@ -109,10 +131,10 @@ const Profile = () => {
             
             <div className="flex-1 text-center sm:text-left">
               <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                {profile?.display_name || "Loading..."}
+                {profile?.display_name || "Unknown User"}
               </h1>
               <p className="text-gray-300 mt-2 max-w-md">
-                {profile?.bio || "Pro gamer and content creator. Love streaming and making awesome gaming content!"}
+                {profile?.bio || "This user hasn't added a bio yet."}
               </p>
               
               <div className="flex flex-wrap justify-center sm:justify-start gap-6 mt-4">
