@@ -10,12 +10,12 @@ import { AuthGuard } from "@/components/AuthGuard";
 
 export const userRoutes: RouteObject[] = [
   {
-    path: "profile",
-    element: <AuthGuard><Profile /></AuthGuard>,
-  },
-  {
     path: "profile/:id",
     element: <Profile />,
+  },
+  {
+    path: "profile",
+    element: <AuthGuard><Profile /></AuthGuard>,
   },
   {
     path: "profile/edit",

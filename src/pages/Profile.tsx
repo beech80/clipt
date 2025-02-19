@@ -26,9 +26,12 @@ const Profile = () => {
         .from('profiles')
         .select('*')
         .eq('id', id || user?.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
       return data;
     }
   });
@@ -55,7 +58,10 @@ const Profile = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching clips:', error);
+        return [];
+      }
       return data;
     }
   });
