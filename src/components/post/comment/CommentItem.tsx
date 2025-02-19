@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { Heart, MoreHorizontal, MessageSquare } from "lucide-react";
 import { useReportDialog } from "@/hooks/use-report-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CommentForm } from "./CommentForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -26,7 +26,7 @@ interface Comment {
   user_id: string;
   profiles: {
     username: string;
-    avatar_url: string;
+    avatar_url: string | null;
   };
   replies?: Comment[];
 }
@@ -46,6 +46,23 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
   const maxLevel = 2;
   const [isLiked, setIsLiked] = useState(false);
 
+  // Check if the comment is liked by the current user on component mount
+  useEffect(() => {
+    const checkLikeStatus = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('comment_likes')
+        .select('id')
+        .match({ comment_id: comment.id, user_id: user.id })
+        .single();
+      
+      setIsLiked(!!data);
+    };
+
+    checkLikeStatus();
+  }, [comment.id, user]);
+
   const handleReport = (commentId: string) => {
     openReportDialog(commentId, 'comment');
   };
@@ -64,6 +81,14 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
 
         if (error) throw error;
         setIsLiked(true);
+        // Optimistically update likes count
+        queryClient.setQueryData(['comments', postId], (oldData: any) => {
+          return oldData.map((c: Comment) => 
+            c.id === comment.id 
+              ? { ...c, likes_count: (c.likes_count || 0) + 1 }
+              : c
+          );
+        });
       } else {
         const { error } = await supabase
           .from('comment_likes')
@@ -72,12 +97,21 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
 
         if (error) throw error;
         setIsLiked(false);
+        // Optimistically update likes count
+        queryClient.setQueryData(['comments', postId], (oldData: any) => {
+          return oldData.map((c: Comment) => 
+            c.id === comment.id 
+              ? { ...c, likes_count: Math.max(0, (c.likes_count || 0) - 1) }
+              : c
+          );
+        });
       }
 
-      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       toast.success(isLiked ? 'Comment unliked' : 'Comment liked');
     } catch (error) {
       toast.error("Error updating like");
+      // Revert optimistic update on error
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
     }
   };
 
@@ -85,9 +119,9 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
     <div className="group" style={{ marginLeft: level > 0 ? `${level * 24}px` : '0' }}>
       <div className="flex gap-3">
         <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-[#9b87f5]/20">
-          <AvatarImage src={comment.profiles.avatar_url} />
+          <AvatarImage src={comment.profiles?.avatar_url || ''} />
           <AvatarFallback className="bg-[#1e2230] text-white">
-            {comment.profiles.username[0]?.toUpperCase()}
+            {comment.profiles?.username?.[0]?.toUpperCase() || '?'}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-1">
@@ -96,7 +130,7 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
               <div className="inline-flex items-start gap-2">
                 <div className="bg-[#1e2230] rounded-2xl px-4 py-2">
                   <span className="font-semibold text-sm text-[#9b87f5] mr-2">
-                    {comment.profiles.username}
+                    {comment.profiles?.username || 'Unknown User'}
                   </span>
                   <span className="text-sm text-gray-300">{comment.content}</span>
                 </div>
