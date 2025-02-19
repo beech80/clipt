@@ -35,8 +35,8 @@ const PostItem = ({ post }: PostItemProps) => {
     setShowComments(!showComments);
   };
 
-  const handleProfileClick = (username: string) => {
-    navigate(`/profile/${username}`);
+  const handleProfileClick = (userId: string) => {
+    navigate(`/profile/${userId}`);
   };
 
   const handlePostClick = () => {
@@ -55,13 +55,13 @@ const PostItem = ({ post }: PostItemProps) => {
           <div className="flex items-center space-x-3">
             <Avatar 
               className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
-              onClick={() => handleProfileClick(username)}
+              onClick={() => handleProfileClick(post.user_id)}
             >
               <AvatarImage src={avatarUrl || ''} alt={username} />
               <AvatarFallback>{username[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             <span 
-              onClick={() => handleProfileClick(username)}
+              onClick={() => handleProfileClick(post.user_id)}
               className="text-lg font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 hover:scale-105 transform cursor-pointer"
             >
               {username}
