@@ -22,16 +22,16 @@ export const contentRoutes: RouteObject[] = [
     element: <AuthGuard><Collections /></AuthGuard>,
   },
   {
+    path: "post/new",
+    element: <AuthGuard><PostForm /></AuthGuard>,
+  },
+  {
     path: "post/:id",
     element: <Post />,
   },
   {
     path: "posts",
     element: <PostList />,
-  },
-  {
-    path: "posts/new",
-    element: <AuthGuard><PostForm /></AuthGuard>,
   },
   {
     path: "top-clips",
