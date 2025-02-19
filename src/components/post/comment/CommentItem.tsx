@@ -23,12 +23,12 @@ interface Comment {
   created_at: string;
   parent_id?: string | null;
   likes_count: number;
+  user_id: string;
   profiles: {
     username: string;
     avatar_url: string;
   };
   replies?: Comment[];
-  user_id: string;
 }
 
 interface CommentItemProps {
@@ -57,25 +57,21 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
     }
 
     try {
-      const { error } = await supabase
-        .from('comment_likes')
-        .insert({
-          comment_id: comment.id,
-          user_id: user.id
-        });
+      if (!isLiked) {
+        const { error } = await supabase
+          .from('comment_likes')
+          .insert([{ comment_id: comment.id, user_id: user.id }]);
 
-      if (error) {
-        if (error.code === '23505') {
-          await supabase
-            .from('comment_likes')
-            .delete()
-            .match({ comment_id: comment.id, user_id: user.id });
-          setIsLiked(false);
-        } else {
-          throw error;
-        }
-      } else {
+        if (error) throw error;
         setIsLiked(true);
+      } else {
+        const { error } = await supabase
+          .from('comment_likes')
+          .delete()
+          .match({ comment_id: comment.id, user_id: user.id });
+
+        if (error) throw error;
+        setIsLiked(false);
       }
 
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
@@ -158,7 +154,6 @@ export const CommentItem = ({ comment, postId, level = 0 }: CommentItemProps) =>
         </div>
       </div>
 
-      {/* Nested replies */}
       {comment.replies && comment.replies.length > 0 && level < maxLevel && (
         <div className="ml-11 mt-3">
           {showReplies ? (

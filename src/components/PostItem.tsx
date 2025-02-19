@@ -8,6 +8,7 @@ import { Post } from "@/types/post";
 import { Heart, MessageSquare, Trophy } from "lucide-react";
 import { CommentList } from "./post/CommentList";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
 
 interface PostItemProps {
   post: Post;
@@ -15,21 +16,23 @@ interface PostItemProps {
 
 const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
-  const [commentsCount, setCommentsCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [showComments, setShowComments] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchCommentsCount = async () => {
+  const { data: commentsCount = 0 } = useQuery({
+    queryKey: ['comments-count', post.id],
+    queryFn: async () => {
       const { count } = await supabase
         .from('comments')
-        .select('*', { count: 'exact' })
+        .select('*', { count: 'exact', head: true })
         .eq('post_id', post.id);
-      setCommentsCount(count || 0);
-      setIsLoading(false);
-    };
-    fetchCommentsCount();
-  }, [post.id]);
+      return count || 0;
+    }
+  });
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
 
   const handleCommentClick = () => {
     setShowComments(!showComments);

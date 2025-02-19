@@ -50,6 +50,8 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       toast.success("Comment added!");
       setNewComment("");
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
+      
       if (onReplyComplete) {
         onReplyComplete();
       }
