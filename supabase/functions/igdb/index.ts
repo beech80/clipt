@@ -1,29 +1,9 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-async function getIGDBAccessToken() {
-  const clientId = Deno.env.get('TWITCH_CLIENT_ID')
-  const clientSecret = Deno.env.get('TWITCH_CLIENT_SECRET')
-
-  if (!clientId || !clientSecret) {
-    throw new Error('Missing Twitch credentials')
-  }
-
-  const response = await fetch(
-    `https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`,
-    { method: 'POST' }
-  )
-
-  if (!response.ok) {
-    throw new Error('Failed to get IGDB access token')
-  }
-
-  const data = await response.json()
-  return data.access_token
 }
 
 serve(async (req) => {
@@ -34,16 +14,27 @@ serve(async (req) => {
 
   try {
     const { endpoint, query } = await req.json()
-    const accessToken = await getIGDBAccessToken()
     const clientId = Deno.env.get('TWITCH_CLIENT_ID')
+    const clientSecret = Deno.env.get('TWITCH_CLIENT_SECRET')
 
-    console.log(`Making IGDB request to ${endpoint} with query:`, query)
+    // Get access token from Twitch
+    const tokenResponse = await fetch(
+      `https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`,
+      { method: 'POST' }
+    )
 
+    if (!tokenResponse.ok) {
+      throw new Error('Failed to get IGDB access token')
+    }
+
+    const { access_token } = await tokenResponse.json()
+
+    // Make request to IGDB API
     const igdbResponse = await fetch(`https://api.igdb.com/v4/${endpoint}`, {
       method: 'POST',
       headers: {
         'Client-ID': clientId!,
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${access_token}`,
         'Content-Type': 'text/plain',
       },
       body: query,
