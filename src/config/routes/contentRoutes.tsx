@@ -18,12 +18,12 @@ export const contentRoutes: RouteObject[] = [
     element: <Clipts />,
   },
   {
-    path: "collections",
-    element: <AuthGuard><Collections /></AuthGuard>,
+    path: "clipt/new",
+    element: <AuthGuard><PostForm /></AuthGuard>,
   },
   {
-    path: "post/new",
-    element: <AuthGuard><PostForm /></AuthGuard>,
+    path: "collections",
+    element: <AuthGuard><Collections /></AuthGuard>,
   },
   {
     path: "post/:id",

@@ -96,7 +96,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
           style={{ width: '80px', height: '60px' }}
         >
           <Camera className="clip-button-icon w-6 h-6" />
-          <span className="clip-button-text text-sm uppercase tracking-wider">CLIPT</span>
+          <span className="clip-button-text text-sm uppercase tracking-wider bg-gaming-400/20 backdrop-blur-sm border border-gaming-400/30 px-3 py-1 rounded-full text-gaming-400">CLIPTS</span>
         </button>
       </div>
 
