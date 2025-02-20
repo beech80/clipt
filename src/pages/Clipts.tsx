@@ -75,7 +75,7 @@ const Clipts = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#1a237e]">
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/40 backdrop-blur-lg border-b border-white/10">
         <div className="flex items-center justify-center max-w-7xl mx-auto relative">
           <BackButton />
@@ -102,9 +102,9 @@ const Clipts = () => {
             {posts?.map((post) => (
               <div 
                 key={post.id} 
-                className="gaming-card overflow-hidden rounded-xl neo-blur hover:ring-2 hover:ring-purple-500/50 transition-all duration-300"
+                className="bg-[#283593]/80 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg border border-indigo-400/20"
               >
-                <PostItem post={post} />
+                <PostItem post={post} showComments={true} />
               </div>
             ))}
           </div>
@@ -115,11 +115,11 @@ const Clipts = () => {
         <button 
           onClick={() => navigate('/post/new')}
           className="clip-button active:scale-95 transition-transform"
-          aria-label="Create Post"
+          aria-label="Create Clipt"
           style={{ width: '80px', height: '60px' }}
         >
           <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Clipts</span>
+          <span className="clip-button-text">Clipt</span>
         </button>
       </div>
 
