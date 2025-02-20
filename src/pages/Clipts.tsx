@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
@@ -111,12 +112,12 @@ const Clipts = () => {
 
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/clipt/new')}
           className="clip-button active:scale-95 transition-transform"
           aria-label="Go to Home"
           style={{ width: '80px', height: '60px' }}
         >
-          <span className="clip-button-text">Home</span>
+          <span className="clip-button-text text-sm uppercase tracking-wider bg-gaming-400/20 backdrop-blur-sm border border-gaming-400/30 px-3 py-1 rounded-full text-gaming-400">CLIPTS</span>
         </button>
       </div>
 
