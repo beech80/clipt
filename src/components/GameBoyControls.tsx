@@ -96,7 +96,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
           style={{ width: '80px', height: '60px' }}
         >
           <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Post</span>
+          <span className="clip-button-text">Clipt</span>
         </button>
       </div>
 
