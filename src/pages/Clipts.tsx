@@ -5,7 +5,6 @@ import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
-import { Camera } from "lucide-react";
 
 interface PostProfile {
   username: string;
