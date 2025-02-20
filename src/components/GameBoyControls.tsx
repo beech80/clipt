@@ -89,10 +89,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         <button 
           onClick={() => {
             navigate('/post/new');
-            toast.success('Create a new post');
+            toast.success('Create a new clipt');
           }}
           className="clip-button active:scale-95 transition-transform flex flex-col items-center justify-center"
-          aria-label="Create Post"
+          aria-label="Create Clipt"
           style={{ width: '80px', height: '60px' }}
         >
           <Camera className="clip-button-icon w-6 h-6 mb-1" />
