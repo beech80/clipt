@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import { Camera } from "lucide-react";
 import GameBoyControls from "@/components/GameBoyControls";
 import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
@@ -117,7 +116,11 @@ const Clipts = () => {
           className="clip-button active:scale-95 transition-transform flex flex-col items-center justify-center w-[100px] h-[70px] group"
           aria-label="Create Clipt"
         >
-          <Camera className="clip-button-icon w-6 h-6 mb-1" />
+          <img 
+            src="/lovable-uploads/71820e95-a83c-4d70-b2eb-6aa712b26460.png"
+            alt="Clipts Camera"
+            className="clip-button-icon w-8 h-8 mb-1 object-contain"
+          />
           <span className="clip-button-text text-sm uppercase tracking-wider">CLIPTS</span>
         </button>
       </div>

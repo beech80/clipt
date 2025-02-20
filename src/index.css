@@ -152,7 +152,7 @@
   inset: -2px;
   border-radius: 16px;
   padding: 2px;
-  background: linear-gradient(45deg, #9b87f5, #6366f1, #818cf8);
+  background: linear-gradient(45deg, #F6B352, #47A7D7);
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -176,21 +176,20 @@
 .clip-button-icon {
   position: relative;
   z-index: 2;
-  color: #818cf8;
-  filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.5));
   transition: all 0.3s ease;
+  filter: drop-shadow(0 0 8px rgba(246, 179, 82, 0.5));
 }
 
 .clip-button-text {
   position: relative;
   z-index: 2;
-  background: linear-gradient(45deg, #9b87f5, #6366f1);
+  background: linear-gradient(45deg, #F6B352, #47A7D7);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   font-weight: 600;
   letter-spacing: 1px;
-  filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.3));
+  filter: drop-shadow(0 0 8px rgba(71, 167, 215, 0.3));
 }
 
 .clip-button:hover {
@@ -199,7 +198,7 @@
 
 .clip-button:hover .clip-button-icon {
   transform: scale(1.1);
-  color: #9b87f5;
+  color: #F6B352;
 }
 
 .clip-button-corners {
