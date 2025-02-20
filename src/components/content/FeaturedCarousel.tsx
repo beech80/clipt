@@ -18,12 +18,9 @@ export function FeaturedCarousel() {
     queryFn: () => igdbService.searchGames(searchTerm),
     enabled: searchTerm.length > 2,
     retry: 1,
-    gcTime: 1000 * 60 * 5, // Keep cached for 5 minutes
-    meta: {
-      onError: (error: Error) => {
-        console.error('Search error:', error);
-        toast.error("Failed to search games. Please try again.");
-      }
+    onError: (error) => {
+      console.error('Search error:', error);
+      toast.error("Failed to search games. Please try again.");
     }
   });
 

@@ -137,22 +137,22 @@
 }
 
 .clip-button {
-  @apply relative flex items-center justify-center gap-2;
+  @apply relative flex items-center justify-center gap-1;
+  width: 80px;  /* Increased slightly to fit text */
+  height: 60px; /* Kept same height */
+  border-radius: 30px; /* Changed to pill shape */
   background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
-  border-radius: 16px;
   position: relative;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  transition: all 0.3s ease;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .clip-button::before {
   content: '';
   position: absolute;
   inset: -2px;
-  border-radius: 16px;
+  border-radius: 50%;
   padding: 2px;
-  background: linear-gradient(45deg, #9b87f5, #8B5CF6);
+  background: linear-gradient(45deg, #00C2FF, #8B5CF6, #FF1CF7);
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);
@@ -167,8 +167,8 @@
 .clip-button::after {
   content: '';
   position: absolute;
-  inset: 1px;
-  border-radius: 15px;
+  inset: 6px;
+  border-radius: 50%;
   background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
   box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
 }
@@ -176,28 +176,23 @@
 .clip-button-icon {
   position: relative;
   z-index: 2;
-  transition: all 0.3s ease;
-  filter: drop-shadow(0 0 8px rgba(155, 135, 245, 0.5));
+  width: 20px;  /* Slightly smaller */
+  height: 20px; /* Slightly smaller */
+  color: #fff;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+  opacity: 0.9;
 }
 
 .clip-button-text {
   position: relative;
   z-index: 2;
-  background: linear-gradient(45deg, #9b87f5, #8B5CF6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-weight: 600;
-  letter-spacing: 1px;
-  filter: drop-shadow(0 0 8px rgba(155, 135, 245, 0.3));
-}
-
-.clip-button:hover {
-  transform: translateY(-2px);
-}
-
-.clip-button:hover .clip-button-icon {
-  transform: scale(1.1);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+  opacity: 0.9;
 }
 
 .clip-button-corners {
@@ -211,7 +206,7 @@
   width: 20px;
   height: 20px;
   border-radius: 4px;
-  background: linear-gradient(45deg, #F6B352, #47A7D7);
+  background: linear-gradient(45deg, #00C2FF, #8B5CF6);
   filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.5));
 }
 
@@ -272,3 +267,4 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
+
