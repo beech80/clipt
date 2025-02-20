@@ -88,7 +88,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
           onClick={() => {
-            navigate('/post/new');
+            navigate('/clipt/new');
             toast.success('Create a new clipt');
           }}
           className="clip-button active:scale-95 transition-transform flex flex-col items-center justify-center"
