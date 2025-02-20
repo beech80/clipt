@@ -95,8 +95,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
           aria-label="Create Clipt"
           style={{ width: '80px', height: '60px' }}
         >
-          <Camera className="clip-button-icon w-6 h-6 mb-1" />
-          <span className="clip-button-text text-sm">Clipt</span>
+          <Camera className="clip-button-icon w-6 h-6" />
+          <span className="clip-button-text text-sm uppercase tracking-wider">CLIPT</span>
         </button>
       </div>
 
