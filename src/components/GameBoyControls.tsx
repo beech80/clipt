@@ -91,12 +91,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
             navigate('/post/new');
             toast.success('Create a new post');
           }}
-          className="clip-button active:scale-95 transition-transform"
+          className="clip-button active:scale-95 transition-transform flex flex-col items-center justify-center"
           aria-label="Create Post"
           style={{ width: '80px', height: '60px' }}
         >
-          <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Clipt</span>
+          <Camera className="clip-button-icon w-6 h-6 mb-1" />
+          <span className="clip-button-text text-sm">Clipt</span>
         </button>
       </div>
 
