@@ -7,15 +7,21 @@ import { useState } from "react";
 import { IGDBGame, igdbService } from "@/services/igdbService";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 export function FeaturedCarousel() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: searchResults, isLoading } = useQuery({
+  const { data: searchResults, isLoading, error } = useQuery({
     queryKey: ['game-search', searchTerm],
     queryFn: () => igdbService.searchGames(searchTerm),
     enabled: searchTerm.length > 2,
+    retry: 1,
+    onError: (error) => {
+      console.error('Search error:', error);
+      toast.error("Failed to search games. Please try again.");
+    }
   });
 
   const handleGameClick = (gameId: number) => {
@@ -28,7 +34,7 @@ export function FeaturedCarousel() {
         <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gaming-400 transition-colors group-focus-within:text-gaming-200" />
         <Input
           type="search"
-          placeholder="Search any game..."
+          placeholder="Search games across all platforms..."
           className="w-full pl-10 py-6 text-lg bg-gaming-800/50 border-gaming-600 rounded-xl 
                      placeholder:text-gaming-500 focus:ring-2 focus:ring-gaming-400 
                      transition-all duration-300 hover:bg-gaming-800/70"
@@ -42,6 +48,10 @@ export function FeaturedCarousel() {
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-400">
+              Unable to search games at the moment. Please try again later.
             </div>
           ) : searchResults && searchResults.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -71,6 +81,11 @@ export function FeaturedCarousel() {
                       {game.genres && game.genres.length > 0 && (
                         <div className="text-xs text-gaming-500 mt-1">
                           {game.genres[0].name}
+                        </div>
+                      )}
+                      {game.first_release_date && (
+                        <div className="text-xs text-gaming-500">
+                          Released: {new Date(game.first_release_date * 1000).getFullYear()}
                         </div>
                       )}
                     </div>
