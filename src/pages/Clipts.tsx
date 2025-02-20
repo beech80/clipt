@@ -114,12 +114,11 @@ const Clipts = () => {
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
           onClick={() => navigate('/clipt/new')}
-          className="clip-button active:scale-95 transition-transform flex flex-col items-center justify-center"
+          className="clip-button active:scale-95 transition-transform flex flex-col items-center justify-center w-[100px] h-[70px] group"
           aria-label="Create Clipt"
-          style={{ width: '80px', height: '60px' }}
         >
-          <Camera className="w-6 h-6 mb-1 text-gaming-400" />
-          <span className="clip-button-text text-sm uppercase tracking-wider bg-gaming-400/20 backdrop-blur-sm border border-gaming-400/30 px-3 py-1 rounded-full text-gaming-400">CLIPTS</span>
+          <Camera className="clip-button-icon w-6 h-6 mb-1" />
+          <span className="clip-button-text text-sm uppercase tracking-wider">CLIPTS</span>
         </button>
       </div>
 
