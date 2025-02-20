@@ -116,10 +116,6 @@ const Clipts = () => {
           className="clip-button active:scale-95 transition-transform flex flex-col items-center justify-center w-[100px] h-[70px] group"
           aria-label="Create Clipt"
         >
-          <div className="clip-button-corners">
-            <div className="clip-button-corner"></div>
-            <div className="clip-button-corner"></div>
-          </div>
           <img 
             src="/lovable-uploads/71820e95-a83c-4d70-b2eb-6aa712b26460.png"
             alt="Clipts Camera"
