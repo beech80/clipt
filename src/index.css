@@ -68,14 +68,72 @@
     0 4px 8px rgba(0,0,0,0.3);
 }
 
-.gaming-cartridge::before {
-  content: '';
-  @apply absolute top-0 left-1/2 -translate-x-1/2 w-20 h-2 bg-gaming-400;
+.clip-button {
+  @apply relative flex items-center justify-center gap-1;
+  width: 80px;
+  height: 60px;
+  border-radius: 30px;
+  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
+  position: relative;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
-.gaming-cartridge::after {
+.clip-button::before {
   content: '';
-  @apply absolute bottom-0 left-1/2 -translate-x-1/2 w-20 h-2 bg-gaming-400;
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(45deg, #00C2FF, #8B5CF6, #FF1CF7);
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: rotate 4s linear infinite;
+}
+
+.clip-button::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.clip-button-icon {
+  position: relative;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  color: #fff;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+  opacity: 0.9;
+}
+
+.clip-button-text {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+  opacity: 0.9;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .gaming-card {
@@ -136,65 +194,6 @@
   background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.6) 100%);
 }
 
-.clip-button {
-  @apply relative flex items-center justify-center gap-1;
-  width: 80px;  /* Increased slightly to fit text */
-  height: 60px; /* Kept same height */
-  border-radius: 30px; /* Changed to pill shape */
-  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
-  position: relative;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
-}
-
-.clip-button::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  padding: 2px;
-  background: linear-gradient(45deg, #00C2FF, #8B5CF6, #FF1CF7);
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: rotate 4s linear infinite;
-}
-
-.clip-button::after {
-  content: '';
-  position: absolute;
-  inset: 6px;
-  border-radius: 50%;
-  background: linear-gradient(145deg, #1c1f2e, #1a1d2c);
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
-}
-
-.clip-button-icon {
-  position: relative;
-  z-index: 2;
-  width: 20px;  /* Slightly smaller */
-  height: 20px; /* Slightly smaller */
-  color: #fff;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
-  opacity: 0.9;
-}
-
-.clip-button-text {
-  position: relative;
-  z-index: 2;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
-  opacity: 0.9;
-}
-
 .clip-button-corners {
   position: absolute;
   inset: -15px;
@@ -220,15 +219,6 @@
   bottom: 0;
   left: 0;
   transform: rotate(45deg);
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .xbox-joystick {
@@ -267,4 +257,3 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
-

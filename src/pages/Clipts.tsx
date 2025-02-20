@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
@@ -5,6 +6,7 @@ import PostItem from "@/components/PostItem";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
+import { Camera } from "lucide-react";
 
 interface PostProfile {
   username: string;
@@ -111,12 +113,13 @@ const Clipts = () => {
 
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/post/new')}
           className="clip-button active:scale-95 transition-transform"
-          aria-label="Go to Home"
+          aria-label="Create Post"
           style={{ width: '80px', height: '60px' }}
         >
-          <span className="clip-button-text">Home</span>
+          <Camera className="clip-button-icon" />
+          <span className="clip-button-text">Clipts</span>
         </button>
       </div>
 
