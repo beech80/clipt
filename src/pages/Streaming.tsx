@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Eye, EyeOff, Calendar } from "lucide-react";
+import { Copy, Eye, EyeOff, Calendar, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -90,14 +90,23 @@ export default function Streaming() {
           <BackButton />
           <h1 className="text-3xl font-bold">Streaming Dashboard</h1>
         </div>
-        <Button
-          onClick={() => navigate('/schedule')}
-          variant="outline"
-          className="gap-2"
-        >
-          <Calendar className="h-4 w-4" />
-          Schedule Stream
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate('/schedule')}
+            title="Schedule Stream"
+          >
+            <Calendar className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => navigate('/broadcasting')}
+            className="gap-2"
+          >
+            <Radio className="h-4 w-4" />
+            Broadcasting Setup
+          </Button>
+        </div>
       </div>
       
       <Card className="p-6 space-y-4">
