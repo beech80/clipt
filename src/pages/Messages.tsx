@@ -1,6 +1,5 @@
 
-import { useState } from "react";
-import { ChatList } from "@/components/messages/ChatList";
+import React from "react";
 import GameBoyControls from "@/components/GameBoyControls";
 
 const Messages = () => {
@@ -12,7 +11,7 @@ const Messages = () => {
 
       <div className="mt-20 grid grid-cols-1 h-[calc(100vh-8rem)]">
         <div className="gaming-card overflow-y-auto">
-          <ChatList onSelectUser={() => {}} />
+          {/* Empty state - ready for testing */}
         </div>
       </div>
 
