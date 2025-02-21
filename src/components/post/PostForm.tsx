@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -19,10 +20,10 @@ export const PostForm = () => {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
   const [gameSearch, setGameSearch] = useState('');
+  const [streamRef, setStreamRef] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [hashtags, setHashtags] = useState<string[]>([]);
@@ -35,9 +36,7 @@ export const PostForm = () => {
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games', gameSearch],
     queryFn: async () => {
-      if (!gameSearch) {
-        return [];
-      }
+      if (!gameSearch) return [];
 
       const { data, error } = await supabase.functions.invoke('igdb', {
         body: {
@@ -47,7 +46,6 @@ export const PostForm = () => {
       });
 
       if (error) throw error;
-
       return data.map((game: any) => ({
         id: game.id.toString(),
         name: game.name
@@ -68,7 +66,7 @@ export const PostForm = () => {
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        streamRef.current = stream;
+        setStreamRef(stream);
         
         const mediaRecorder = new MediaRecorder(stream);
         mediaRecorderRef.current = mediaRecorder;
@@ -96,35 +94,19 @@ export const PostForm = () => {
   };
 
   const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+    if (streamRef) {
+      streamRef.getTracks().forEach(track => track.stop());
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
-      streamRef.current = null;
+      setStreamRef(null);
       mediaRecorderRef.current = null;
-    }
-  };
-
-  const startRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'inactive') {
-      mediaRecorderRef.current.start();
-      toast.success('Recording started');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-      stopCamera();
-      toast.success('Recording completed');
     }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      // Only allow videos for Clipts
       const isVideo = selectedFile.type.startsWith('video/');
       const isImage = selectedFile.type.startsWith('image/');
 
@@ -143,24 +125,6 @@ export const PostForm = () => {
       setFilePreview(previewUrl);
       stopCamera();
       toast.success('File selected successfully');
-    }
-  };
-
-  const addHashtag = () => {
-    if (currentHashtag.trim()) {
-      setHashtags([...hashtags, currentHashtag.trim()]);
-      setCurrentHashtag('');
-      setShowHashtagInput(false);
-      toast.success('Hashtag added');
-    }
-  };
-
-  const addMention = () => {
-    if (currentMention.trim()) {
-      setMentions([...mentions, currentMention.trim()]);
-      setCurrentMention('');
-      setShowMentionInput(false);
-      toast.success('Mention added');
     }
   };
 
@@ -185,7 +149,6 @@ export const PostForm = () => {
       return;
     }
 
-    // Validate file type based on destination
     const isVideo = file.type.startsWith('video/');
     if (destination === 'clipts' && !isVideo) {
       toast.error('Only video clips are allowed in Clipts');
@@ -194,8 +157,6 @@ export const PostForm = () => {
 
     setLoading(true);
     try {
-      let fileUrl = null;
-
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
@@ -205,7 +166,6 @@ export const PostForm = () => {
         .upload(filePath, file);
 
       if (uploadError) {
-        console.error('Upload Error:', uploadError);
         throw uploadError;
       }
 
@@ -213,17 +173,15 @@ export const PostForm = () => {
         .from('posts')
         .getPublicUrl(filePath);
 
-      fileUrl = publicUrl;
-
       const { error: postError } = await supabase
         .from('posts')
         .insert({
           content,
           user_id: user.id,
           game_id: selectedGame.id,
-          video_url: file.type.startsWith('video/') ? fileUrl : null,
-          image_url: file.type.startsWith('image/') ? fileUrl : null,
-          type: file.type.startsWith('video/') ? 'video' : 'image',
+          video_url: isVideo ? publicUrl : null,
+          image_url: !isVideo ? publicUrl : null,
+          type: isVideo ? 'video' : 'image',
           is_published: true,
           hashtags,
           mentions,
@@ -231,7 +189,6 @@ export const PostForm = () => {
         });
 
       if (postError) {
-        console.error('Post Error:', postError);
         throw postError;
       }
 
@@ -250,55 +207,51 @@ export const PostForm = () => {
     <div className="relative min-h-screen bg-gaming-900">
       <div className="space-y-6 max-w-2xl mx-auto p-6 pb-48">
         <div className="space-y-4">
-          <div className="flex flex-col gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-              <Input
-                type="text"
-                placeholder="Search for a game..."
-                value={gameSearch}
-                onChange={(e) => setGameSearch(e.target.value)}
-                className="pl-10"
-              />
-              
-              {gameSearch && !gamesLoading && (
-                <div className="absolute z-10 w-full mt-1 bg-gaming-800 rounded-md shadow-lg border border-gaming-700">
-                  {!games || games.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-400">
-                      No games found
-                    </div>
-                  ) : (
-                    <div className="max-h-60 overflow-auto">
-                      {games.map((game) => (
-                        <button
-                          key={game.id}
-                          type="button"
-                          onClick={() => handleGameSelect(game)}
-                          className="w-full px-4 py-2 text-left hover:bg-gaming-700 text-white text-sm"
-                        >
-                          {game.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {selectedGame && (
-                <div className="mt-2 p-2 bg-gaming-800 rounded-md flex items-center justify-between">
-                  <span className="text-white">{selectedGame.name}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedGame(null)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    ×
-                  </Button>
-                </div>
-              )}
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Input
+              type="text"
+              placeholder="Search for a game..."
+              value={gameSearch}
+              onChange={(e) => setGameSearch(e.target.value)}
+              className="pl-10"
+            />
+            
+            {gameSearch && !gamesLoading && (
+              <div className="absolute z-10 w-full mt-1 bg-gaming-800 rounded-md shadow-lg border border-gaming-700">
+                {!games || games.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-gray-400">
+                    No games found
+                  </div>
+                ) : (
+                  <div className="max-h-60 overflow-auto">
+                    {games.map((game) => (
+                      <button
+                        key={game.id}
+                        onClick={() => handleGameSelect(game)}
+                        className="w-full px-4 py-2 text-left hover:bg-gaming-700 text-white text-sm"
+                      >
+                        {game.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {selectedGame && (
+              <div className="mt-2 p-2 bg-gaming-800 rounded-md flex items-center justify-between">
+                <span className="text-white">{selectedGame.name}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedGame(null)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ×
+                </Button>
+              </div>
+            )}
           </div>
 
           <Textarea
@@ -307,67 +260,6 @@ export const PostForm = () => {
             placeholder="What's on your mind?"
             className="min-h-[100px]"
           />
-          
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowHashtagInput(true)}
-              className="flex items-center gap-2"
-            >
-              <Hash className="w-4 h-4" />
-              Add Hashtag
-            </Button>
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowMentionInput(true)}
-              className="flex items-center gap-2"
-            >
-              <AtSign className="w-4 h-4" />
-              Mention Someone
-            </Button>
-          </div>
-
-          {showHashtagInput && (
-            <div className="flex gap-2">
-              <Input
-                value={currentHashtag}
-                onChange={(e) => setCurrentHashtag(e.target.value)}
-                placeholder="Enter hashtag"
-                className="flex-1"
-              />
-              <Button onClick={addHashtag}>Add</Button>
-            </div>
-          )}
-
-          {showMentionInput && (
-            <div className="flex gap-2">
-              <Input
-                value={currentMention}
-                onChange={(e) => setCurrentMention(e.target.value)}
-                placeholder="@username"
-                className="flex-1"
-              />
-              <Button onClick={addMention}>Add</Button>
-            </div>
-          )}
-
-          {(hashtags.length > 0 || mentions.length > 0) && (
-            <div className="flex flex-wrap gap-2">
-              {hashtags.map((tag, index) => (
-                <span key={index} className="px-2 py-1 rounded bg-gaming-800 text-gaming-400">
-                  #{tag}
-                </span>
-              ))}
-              {mentions.map((mention, index) => (
-                <span key={index} className="px-2 py-1 rounded bg-gaming-800 text-gaming-400">
-                  @{mention}
-                </span>
-              ))}
-            </div>
-          </div>
 
           <div className="grid gap-4">
             <div className="flex flex-col gap-4">
@@ -381,27 +273,6 @@ export const PostForm = () => {
                   <Camera className="w-5 h-5" />
                   Open Camera
                 </Button>
-                
-                {streamRef.current && (
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="default"
-                      onClick={startRecording}
-                      className="flex-1"
-                    >
-                      Start Recording
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={stopRecording}
-                      className="flex-1"
-                    >
-                      Stop Recording
-                    </Button>
-                  </div>
-                )}
               </div>
 
               <div className="flex items-center justify-center w-full">
@@ -453,10 +324,7 @@ export const PostForm = () => {
               </div>
             )}
           </div>
-        </div>
 
-        <div className="mb-6">
-          <h3 className="text-sm font-medium mb-2">Post Destination</h3>
           <div className="flex gap-4">
             <Button
               type="button"
@@ -493,7 +361,6 @@ export const PostForm = () => {
           </div>
         </div>
       </div>
-
       <GameBoyControls />
     </div>
   );
