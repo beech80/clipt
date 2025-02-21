@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload, Camera, Hash, AtSign, Search } from 'lucide-react';
+import { Loader2, Upload, Camera, Search } from 'lucide-react';
 import GameBoyControls from '@/components/GameBoyControls';
 import { useQuery } from '@tanstack/react-query';
 
@@ -150,6 +150,8 @@ export const PostForm = () => {
     }
 
     const isVideo = file.type.startsWith('video/');
+
+    // Validate file type based on destination
     if (destination === 'clipts' && !isVideo) {
       toast.error('Only video clips are allowed in Clipts');
       return;
@@ -173,27 +175,36 @@ export const PostForm = () => {
         .from('posts')
         .getPublicUrl(filePath);
 
+      const postData = {
+        content,
+        user_id: user.id,
+        game_id: selectedGame.id,
+        video_url: isVideo ? publicUrl : null,
+        image_url: !isVideo ? publicUrl : null,
+        type: isVideo ? 'video' : 'image',
+        is_published: true,
+        hashtags,
+        mentions,
+        post_type: destination
+      };
+
       const { error: postError } = await supabase
         .from('posts')
-        .insert({
-          content,
-          user_id: user.id,
-          game_id: selectedGame.id,
-          video_url: isVideo ? publicUrl : null,
-          image_url: !isVideo ? publicUrl : null,
-          type: isVideo ? 'video' : 'image',
-          is_published: true,
-          hashtags,
-          mentions,
-          post_type: destination
-        });
+        .insert(postData);
 
       if (postError) {
         throw postError;
       }
 
-      toast.success('Post created successfully!');
-      navigate(destination === 'clipts' ? '/clipts' : '/');
+      toast.success(destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!');
+      
+      // Redirect based on destination
+      if (destination === 'clipts') {
+        navigate('/clipts');
+      } else {
+        navigate('/'); // Home page
+      }
+      
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error creating post. Please try again.');
@@ -330,7 +341,7 @@ export const PostForm = () => {
               type="button"
               variant="default"
               onClick={() => handleCreatePost('clipts')}
-              disabled={loading || !content.trim() || !selectedGame || !file}
+              disabled={loading || !content.trim() || !selectedGame || !file || (file && !file.type.startsWith('video/'))}
               className="flex-1"
             >
               {loading ? (
