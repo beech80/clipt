@@ -19,14 +19,22 @@ const Signup = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
       await signUp(email, password);
-      toast.success("Please check your email to verify your account!");
+      toast.success("Account created successfully! Please sign in.");
       navigate("/login");
     } catch (error) {
+      console.error("Signup error:", error);
       setError(error instanceof Error ? error.message : "Failed to sign up");
       toast.error(error instanceof Error ? error.message : "Failed to sign up");
     } finally {
@@ -61,6 +69,8 @@ const Signup = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
+              className="bg-background"
             />
           </div>
           <div>
@@ -71,6 +81,8 @@ const Signup = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
+              disabled={loading}
+              className="bg-background"
             />
           </div>
           <Button
