@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
 import { TopGames } from "@/components/discover/TopGames";
 import GameBoyControls from "@/components/GameBoyControls";
@@ -10,6 +10,8 @@ import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { igdbService } from '@/services/igdbService';
 
 interface StreamInfo {
   is_live: boolean;
@@ -26,6 +28,7 @@ interface Streamer {
 
 const Discover = () => {
   const navigate = useNavigate();
+  const [gameFilter, setGameFilter] = useState<'top_rated' | 'most_played' | 'most_watched'>('top_rated');
 
   const { data: streamers } = useQuery({
     queryKey: ['streamers'],
@@ -47,12 +50,35 @@ const Discover = () => {
 
       if (error) throw error;
       
-      // Transform the data to match the Streamer interface
       return (data || []).map((profile: Streamer) => ({
         ...profile,
         is_live: profile.streams?.[0]?.is_live || false,
         viewer_count: profile.streams?.[0]?.viewer_count || 0
       }));
+    }
+  });
+
+  const { data: filteredGames } = useQuery({
+    queryKey: ['games', gameFilter],
+    queryFn: async () => {
+      switch (gameFilter) {
+        case 'top_rated':
+          return igdbService.getPopularGames();
+        case 'most_played':
+          // Custom query for most played games
+          return igdbService.searchGames('', {
+            sort: 'follows desc',
+            limit: 10
+          });
+        case 'most_watched':
+          // Custom query for most watched games
+          return igdbService.searchGames('', {
+            sort: 'total_rating desc',
+            limit: 10
+          });
+        default:
+          return igdbService.getPopularGames();
+      }
     }
   });
 
@@ -81,12 +107,22 @@ const Discover = () => {
                 <h2 className="text-xl font-medium gaming-gradient">
                   Featured Games
                 </h2>
-                <button className="gaming-button text-sm px-3 py-1.5">
-                  View All
-                </button>
+                <Select
+                  value={gameFilter}
+                  onValueChange={(value: 'top_rated' | 'most_played' | 'most_watched') => setGameFilter(value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter games" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top_rated">Top Rated</SelectItem>
+                    <SelectItem value="most_played">Most Played</SelectItem>
+                    <SelectItem value="most_watched">Most Watched</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="glass-card p-4 backdrop-blur-sm mb-24">
-                <TopGames />
+                <TopGames games={filteredGames} />
               </div>
             </div>
           </TabsContent>

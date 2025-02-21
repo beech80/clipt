@@ -13,14 +13,20 @@ export interface IGDBGame {
   genres?: Array<{ name: string }>;
 }
 
+interface SearchOptions {
+  sort?: string;
+  limit?: number;
+}
+
 export const igdbService = {
-  async searchGames(searchTerm: string): Promise<IGDBGame[]> {
+  async searchGames(searchTerm: string, options: SearchOptions = {}): Promise<IGDBGame[]> {
     console.log("Searching for games with term:", searchTerm);
     const query = `
-      search "${searchTerm}";
+      ${searchTerm ? `search "${searchTerm}";` : ''}
       fields name,cover.url,summary,rating,first_release_date,genres.name;
       where version_parent = null;
-      limit 10;
+      ${options.sort ? `sort ${options.sort};` : ''}
+      limit ${options.limit || 10};
     `;
 
     try {
