@@ -1,29 +1,21 @@
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { UserCog, Paintbrush, Shield, Bell, ArrowLeft, Gamepad2 } from "lucide-react";
+import { UserCog, Paintbrush, ArrowLeft, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-
-interface ThemeColors {
-  primary: string;
-  secondary: string;
-  accent: string;
-}
+import { Profile } from "@/types/profile";
 
 const EditProfile = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  const { data: profile } = useQuery({
+  const { data: profile } = useQuery<Profile>({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -36,7 +28,7 @@ const EditProfile = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as Profile;
     },
   });
 

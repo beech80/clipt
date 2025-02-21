@@ -1,30 +1,29 @@
 
-import { Json } from './database';
-
 export interface CustomTheme {
-  [key: string]: string; // Add index signature
   primary: string;
   secondary: string;
+  accent?: string;
 }
 
-export interface Profile {
+export interface DatabaseProfile {
   id: string;
-  username?: string | null;
-  avatar_url?: string | null;
-  created_at: string;
-  bio?: string | null;
-  website?: string | null;
-  display_name?: string | null;
+  username?: string;
+  avatar_url?: string;
   custom_theme?: CustomTheme;
-  theme_preference?: string;
   enable_notifications?: boolean;
   enable_sounds?: boolean;
-  auto_download_media?: boolean;
+  bio?: string;
+  display_name?: string;
+  created_at?: string;
+}
+
+export interface Profile extends DatabaseProfile {
+  custom_theme: CustomTheme;
+  enable_notifications: boolean;
+  enable_sounds: boolean;
+  keyboard_shortcuts?: boolean;
   hardware_acceleration?: boolean;
   reduce_animations?: boolean;
   background_processing?: boolean;
-}
-
-export interface DatabaseProfile extends Omit<Profile, 'custom_theme'> {
-  custom_theme?: Json;
+  auto_download_media?: boolean;
 }

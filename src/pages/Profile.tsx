@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -11,6 +10,7 @@ import { AchievementList } from "@/components/achievements/AchievementList";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { Profile as ProfileType } from "@/types/profile";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Profile = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collections'>('clips');
 
-  const { data: profile, isLoading: profileLoading } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery<ProfileType | null>({
     queryKey: ['user-profile', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -31,7 +31,7 @@ const Profile = () => {
         console.error('Error fetching profile:', error);
         return null;
       }
-      return data;
+      return data as ProfileType;
     }
   });
 
