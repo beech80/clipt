@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -7,20 +8,24 @@ import { MessagesProvider } from '@/contexts/MessagesContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { routes } from '@/config/routes';
 import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
+import { MainNav } from '@/components/MainNav';
 
 function AppContent() {
   usePerformanceMonitoring('App');
   
   return (
-    <Routes>
-      {routes.map((route) => (
-        <Route
-          key={route.path}
-          path={route.path}
-          element={route.element}
-        />
-      ))}
-    </Routes>
+    <div className="min-h-screen pb-20">
+      <Routes>
+        {routes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={route.element}
+          />
+        ))}
+      </Routes>
+      <MainNav />
+    </div>
   );
 }
 
