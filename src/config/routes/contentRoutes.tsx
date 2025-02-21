@@ -10,10 +10,6 @@ import { PostForm } from "@/components/post/PostForm";
 
 export const contentRoutes: RouteObject[] = [
   {
-    path: "index",
-    element: <Clipts />,
-  },
-  {
     path: "clipts",
     element: <Clipts />,
   },

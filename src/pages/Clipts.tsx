@@ -53,7 +53,7 @@ const Clipts = () => {
         <div className="flex items-center justify-center max-w-7xl mx-auto relative">
           <BackButton />
           <h1 className="text-3xl font-bold text-white">
-            Featured Clips
+            Clipts
           </h1>
         </div>
       </div>
