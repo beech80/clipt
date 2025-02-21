@@ -1,45 +1,67 @@
 
-import { Link } from "react-router-dom";
-import { Home, MessageSquare, LineChart, Video, User } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import React from 'react';
+import { useNavigate, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 
-export function MainNav() {
-  const { user } = useAuth();
+export default function MainNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { data: userRole } = useQuery({
+    queryKey: ['user-role'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      return data?.role;
+    }
+  });
+
+  const isModerator = userRole === 'moderator' || userRole === 'admin';
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-around py-2">
-          <Link to="/" className="flex flex-col items-center p-2 hover:text-primary">
-            <Home className="w-6 h-6" />
-            <span className="text-xs">Home</span>
-          </Link>
-
-          {user && (
-            <>
-              <Link to="/messages" className="flex flex-col items-center p-2 hover:text-primary">
-                <MessageSquare className="w-6 h-6" />
-                <span className="text-xs">Messages</span>
-              </Link>
-
-              <Link to="/progress" className="flex flex-col items-center p-2 hover:text-primary">
-                <LineChart className="w-6 h-6" />
-                <span className="text-xs">Progress</span>
-              </Link>
-
-              <Link to="/posts" className="flex flex-col items-center p-2 hover:text-primary">
-                <Video className="w-6 h-6" />
-                <span className="text-xs">Posts</span>
-              </Link>
-
-              <Link to="/profile" className="flex flex-col items-center p-2 hover:text-primary">
-                <User className="w-6 h-6" />
-                <span className="text-xs">Profile</span>
-              </Link>
-            </>
+    <nav className="flex items-center space-x-4">
+      <Button
+        variant="ghost"
+        className={cn(
+          "text-muted-foreground",
+          location.pathname === "/" && "text-foreground"
+        )}
+        onClick={() => navigate("/")}
+      >
+        Feed
+      </Button>
+      <Button
+        variant="ghost"
+        className={cn(
+          "text-muted-foreground",
+          location.pathname === "/clipts" && "text-foreground"
+        )}
+        onClick={() => navigate("/clipts")}
+      >
+        Clipts
+      </Button>
+      {isModerator && (
+        <Button
+          variant="ghost"
+          className={cn(
+            "text-muted-foreground",
+            location.pathname === "/moderation" && "text-foreground"
           )}
-        </div>
-      </div>
+          onClick={() => navigate("/moderation")}
+        >
+          Moderation
+        </Button>
+      )}
     </nav>
   );
 }
