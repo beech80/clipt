@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
       if (error) throw error;
-      toast.success('Account created successfully! Please sign in.');
+      toast.success('Verification email sent! Please check your inbox.');
     } catch (error: any) {
       toast.error(error.message);
       throw error;
