@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload, Camera, Search } from 'lucide-react';
+import { Loader2, Upload, Camera, Search, Hash, AtSign } from 'lucide-react';
 import GameBoyControls from '@/components/GameBoyControls';
 import { useQuery } from '@tanstack/react-query';
 
@@ -20,17 +20,17 @@ export const PostForm = () => {
   const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
   const [gameSearch, setGameSearch] = useState('');
   const [streamRef, setStreamRef] = useState<MediaStream | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [mentions, setMentions] = useState<string[]>([]);
   const [showHashtagInput, setShowHashtagInput] = useState(false);
   const [showMentionInput, setShowMentionInput] = useState(false);
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [currentMention, setCurrentMention] = useState('');
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games', gameSearch],
@@ -51,6 +51,30 @@ export const PostForm = () => {
       }));
     }
   });
+
+  const addHashtag = () => {
+    if (currentHashtag.trim() && !hashtags.includes(currentHashtag.trim())) {
+      setHashtags([...hashtags, currentHashtag.trim()]);
+      setCurrentHashtag('');
+    }
+    setShowHashtagInput(false);
+  };
+
+  const addMention = () => {
+    if (currentMention.trim() && !mentions.includes(currentMention.trim())) {
+      setMentions([...mentions, currentMention.trim()]);
+      setCurrentMention('');
+    }
+    setShowMentionInput(false);
+  };
+
+  const removeHashtag = (tag: string) => {
+    setHashtags(hashtags.filter(t => t !== tag));
+  };
+
+  const removeMention = (mention: string) => {
+    setMentions(mentions.filter(m => m !== mention));
+  };
 
   const handleGameSelect = (game: { id: string; name: string }) => {
     setSelectedGame(game);
@@ -150,7 +174,6 @@ export const PostForm = () => {
 
     const isVideo = file.type.startsWith('video/');
 
-    // Validate file type based on destination
     if (destination === 'clipts' && !isVideo) {
       toast.error('Only video clips are allowed in Clipts');
       return;
@@ -166,43 +189,31 @@ export const PostForm = () => {
         .from('posts')
         .upload(filePath, file);
 
-      if (uploadError) {
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
         .from('posts')
         .getPublicUrl(filePath);
 
-      const postData = {
-        content,
-        user_id: user.id,
-        game_id: selectedGame.id,
-        video_url: isVideo ? publicUrl : null,
-        image_url: !isVideo ? publicUrl : null,
-        type: isVideo ? 'video' : 'image',
-        is_published: true,
-        hashtags,
-        mentions,
-        post_type: destination
-      };
-
       const { error: postError } = await supabase
         .from('posts')
-        .insert(postData);
+        .insert({
+          content,
+          user_id: user.id,
+          game_id: selectedGame.id,
+          video_url: isVideo ? publicUrl : null,
+          image_url: !isVideo ? publicUrl : null,
+          type: isVideo ? 'video' : 'image',
+          is_published: true,
+          hashtags,
+          mentions,
+          post_type: destination
+        });
 
-      if (postError) {
-        throw postError;
-      }
+      if (postError) throw postError;
 
       toast.success(destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!');
-      
-      // Redirect based on destination
-      if (destination === 'clipts') {
-        navigate('/clipts');
-      } else {
-        navigate('/'); // Home page
-      }
+      navigate(destination === 'clipts' ? '/clipts' : '/');
       
     } catch (error) {
       console.error('Error:', error);
@@ -212,8 +223,6 @@ export const PostForm = () => {
       stopCamera();
     }
   };
-
-  const isVideoFile = file?.type.startsWith('video/');
 
   return (
     <div className="relative min-h-screen bg-gaming-900">
@@ -266,12 +275,87 @@ export const PostForm = () => {
             )}
           </div>
 
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="What's on your mind?"
-            className="min-h-[100px]"
-          />
+          <div className="space-y-2">
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="What's on your mind?"
+              className="min-h-[100px]"
+            />
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHashtagInput(true)}
+                className="flex items-center gap-2"
+              >
+                <Hash className="w-4 h-4" />
+                Add Hashtag
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowMentionInput(true)}
+                className="flex items-center gap-2"
+              >
+                <AtSign className="w-4 h-4" />
+                Mention User
+              </Button>
+            </div>
+
+            {showHashtagInput && (
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  value={currentHashtag}
+                  onChange={(e) => setCurrentHashtag(e.target.value)}
+                  placeholder="Enter hashtag"
+                  className="flex-1"
+                />
+                <Button onClick={addHashtag}>Add</Button>
+                <Button variant="ghost" onClick={() => setShowHashtagInput(false)}>Cancel</Button>
+              </div>
+            )}
+
+            {showMentionInput && (
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  value={currentMention}
+                  onChange={(e) => setCurrentMention(e.target.value)}
+                  placeholder="Enter username"
+                  className="flex-1"
+                />
+                <Button onClick={addMention}>Add</Button>
+                <Button variant="ghost" onClick={() => setShowMentionInput(false)}>Cancel</Button>
+              </div>
+            )}
+
+            {hashtags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {hashtags.map(tag => (
+                  <div key={tag} className="bg-gaming-800 px-2 py-1 rounded-full flex items-center gap-2">
+                    <span>#{tag}</span>
+                    <button onClick={() => removeHashtag(tag)} className="text-gray-400 hover:text-white">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {mentions.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {mentions.map(mention => (
+                  <div key={mention} className="bg-gaming-800 px-2 py-1 rounded-full flex items-center gap-2">
+                    <span>@{mention}</span>
+                    <button onClick={() => removeMention(mention)} className="text-gray-400 hover:text-white">×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="grid gap-4">
             <div className="flex flex-col gap-4">
@@ -335,41 +419,41 @@ export const PostForm = () => {
                 )}
               </div>
             )}
-          </div>
 
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant="default"
-              onClick={() => handleCreatePost('clipts')}
-              disabled={!content.trim() || !selectedGame || !file || !isVideoFile}
-              className="flex-1"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Clipt...
-                </>
-              ) : (
-                'Post to Clipts'
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="default"
-              onClick={() => handleCreatePost('home')}
-              disabled={!content.trim() || !selectedGame || !file}
-              className="flex-1"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Post...
-                </>
-              ) : (
-                'Post to Home'
-              )}
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => handleCreatePost('clipts')}
+                disabled={loading}
+                className="flex-1"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Clipt...
+                  </>
+                ) : (
+                  'Post to Clipts'
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => handleCreatePost('home')}
+                disabled={loading}
+                className="flex-1"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Post...
+                  </>
+                ) : (
+                  'Post to Home'
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
