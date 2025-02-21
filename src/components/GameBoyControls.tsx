@@ -88,11 +88,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
         <button 
           onClick={() => {
-            navigate('/post/new');
-            toast.success('Create a new clipt');
+            navigate('/');
+            toast.success('Welcome to Home!');
           }}
           className="clip-button active:scale-95 transition-transform"
-          aria-label="Create Clipt"
+          aria-label="Go to Home"
           style={{ width: '80px', height: '60px' }}
         >
           <Camera className="clip-button-icon" />
@@ -100,12 +100,25 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </button>
       </div>
 
+      <div className="fixed right-4 sm:right-8 bottom-20 sm:bottom-24 w-20 sm:w-24 h-20 sm:h-24">
+        <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
+      </div>
+
       <div className="fixed left-4 sm:left-8 bottom-16 sm:bottom-20 w-24 sm:w-28 h-24 sm:h-28">
         <Joystick onDirectionChange={handleVideoControl} />
       </div>
 
-      <div className="fixed right-4 sm:right-8 bottom-20 sm:bottom-24 w-20 sm:w-24 h-20 sm:h-24">
-        <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
+      <div className="fixed right-4 sm:right-8 bottom-[150px] sm:bottom-[170px]">
+        <button
+          onClick={() => {
+            navigate('/post/new');
+            toast.success('Create a new post');
+          }}
+          className="rounded-full bg-gaming-400/20 p-2.5 sm:p-3 backdrop-blur-sm border border-gaming-400/30 
+            hover:bg-gaming-400/30 transition-all duration-300 touch-none active:scale-95"
+        >
+          <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-gaming-400" />
+        </button>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React from "react";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Messages = () => {
   const { user } = useAuth();
