@@ -1,6 +1,6 @@
+
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import PostList from '@/components/PostList';
 import GameBoyControls from '@/components/GameBoyControls';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from 'react-router-dom';
@@ -26,11 +26,6 @@ const Home = () => {
             <TabsContent value="squads" className="mt-2 animate-fade-in">
             </TabsContent>
           </Tabs>
-        </div>
-
-        {/* Instagram-style Feed */}
-        <div className="post-container relative">
-          <PostList />
         </div>
       </div>
 
