@@ -103,12 +103,12 @@ const Discover = () => {
           
           <TabsContent value="games">
             <div>
-              <div className="flex items-center justify-end mb-6">
+              <div className="flex items-center justify-center mb-6">
                 <Select
                   value={gameFilter}
                   onValueChange={(value: 'top_rated' | 'most_played' | 'most_watched') => setGameFilter(value)}
                 >
-                  <SelectTrigger className="w-[180px] gaming-button border-[#9b87f5] hover:border-[#8B5CF6] bg-[#1A1F2C] text-white">
+                  <SelectTrigger className="w-[300px] h-12 text-lg gaming-button border-[#9b87f5] hover:border-[#8B5CF6] bg-[#1A1F2C] text-white">
                     <SelectValue placeholder="Filter games" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#1A1F2C] border-[#403E43]">
