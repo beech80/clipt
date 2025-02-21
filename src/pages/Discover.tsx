@@ -103,10 +103,7 @@ const Discover = () => {
           
           <TabsContent value="games">
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-medium gaming-gradient">
-                  Featured Games
-                </h2>
+              <div className="flex items-center justify-end mb-6">
                 <Select
                   value={gameFilter}
                   onValueChange={(value: 'top_rated' | 'most_played' | 'most_watched') => setGameFilter(value)}
