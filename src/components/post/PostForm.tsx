@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -214,6 +213,8 @@ export const PostForm = () => {
     }
   };
 
+  const isVideoFile = file?.type.startsWith('video/');
+
   return (
     <div className="relative min-h-screen bg-gaming-900">
       <div className="space-y-6 max-w-2xl mx-auto p-6 pb-48">
@@ -341,7 +342,7 @@ export const PostForm = () => {
               type="button"
               variant="default"
               onClick={() => handleCreatePost('clipts')}
-              disabled={loading || !content.trim() || !selectedGame || !file || (file && !file.type.startsWith('video/'))}
+              disabled={!content.trim() || !selectedGame || !file || !isVideoFile}
               className="flex-1"
             >
               {loading ? (
@@ -357,7 +358,7 @@ export const PostForm = () => {
               type="button"
               variant="default"
               onClick={() => handleCreatePost('home')}
-              disabled={loading || !content.trim() || !selectedGame || !file}
+              disabled={!content.trim() || !selectedGame || !file}
               className="flex-1"
             >
               {loading ? (
