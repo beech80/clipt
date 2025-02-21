@@ -229,16 +229,14 @@ export const PostForm = () => {
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <div className="relative">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                <Input
-                  type="text"
-                  placeholder="Search for a game..."
-                  value={gameSearch}
-                  onChange={(e) => setGameSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Input
+                type="text"
+                placeholder="Search for a game..."
+                value={gameSearch}
+                onChange={(e) => setGameSearch(e.target.value)}
+                className="pl-10"
+              />
               
               {gameSearch && !gamesLoading && (
                 <div className="absolute z-10 w-full mt-1 bg-gaming-800 rounded-md shadow-lg border border-gaming-700">
@@ -277,7 +275,8 @@ export const PostForm = () => {
                   </Button>
                 </div>
               )}
-            
+            </div>
+
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -316,14 +315,7 @@ export const PostForm = () => {
                   placeholder="Enter hashtag"
                   className="flex-1"
                 />
-                <Button onClick={() => {
-                  if (currentHashtag.trim()) {
-                    setHashtags([...hashtags, currentHashtag.trim()]);
-                    setCurrentHashtag('');
-                    setShowHashtagInput(false);
-                    toast.success('Hashtag added');
-                  }
-                }}>Add</Button>
+                <Button onClick={addHashtag}>Add</Button>
               </div>
             )}
 
@@ -335,14 +327,7 @@ export const PostForm = () => {
                   placeholder="@username"
                   className="flex-1"
                 />
-                <Button onClick={() => {
-                  if (currentMention.trim()) {
-                    setMentions([...mentions, currentMention.trim()]);
-                    setCurrentMention('');
-                    setShowMentionInput(false);
-                    toast.success('Mention added');
-                  }
-                }}>Add</Button>
+                <Button onClick={addMention}>Add</Button>
               </div>
             )}
 
@@ -360,91 +345,91 @@ export const PostForm = () => {
                 ))}
               </div>
             )}
-          </div>
 
-          <div className="grid gap-4">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={startCamera}
-                  className="flex items-center justify-center gap-2 h-12"
-                >
-                  <Camera className="w-5 h-5" />
-                  Open Camera
-                </Button>
-                
-                {streamRef.current && (
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="default"
-                      onClick={startRecording}
-                      className="flex-1"
-                    >
-                      Start Recording
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={stopRecording}
-                      className="flex-1"
-                    >
-                      Stop Recording
-                    </Button>
-                  </div>
-                )}
+            <div className="grid gap-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={startCamera}
+                    className="flex items-center justify-center gap-2 h-12"
+                  >
+                    <Camera className="w-5 h-5" />
+                    Open Camera
+                  </Button>
+                  
+                  {streamRef.current && (
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="default"
+                        onClick={startRecording}
+                        className="flex-1"
+                      >
+                        Start Recording
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={stopRecording}
+                        className="flex-1"
+                      >
+                        Stop Recording
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 mb-4 text-gray-400" />
+                      <p className="mb-2 text-sm text-gray-400">
+                        <span className="font-semibold">Upload from device</span>
+                      </p>
+                      <p className="text-xs text-gray-400">Supports video and images (max 100MB)</p>
+                    </div>
+                    <Input
+                      type="file"
+                      className="hidden"
+                      accept="video/*,image/*"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
               </div>
 
-              <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-4 text-gray-400" />
-                    <p className="mb-2 text-sm text-gray-400">
-                      <span className="font-semibold">Upload from device</span>
-                    </p>
-                    <p className="text-xs text-gray-400">Supports video and images (max 100MB)</p>
-                  </div>
-                  <Input
-                    type="file"
-                    className="hidden"
-                    accept="video/*,image/*"
-                    onChange={handleFileChange}
-                  />
-                </label>
-              </div>
-            </div>
-
-            {videoRef.current && (
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-contain"
-                  autoPlay
-                  playsInline
-                  muted
-                />
-              </div>
-            )}
-
-            {filePreview && (
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-                {file?.type.startsWith('video/') ? (
+              {videoRef.current && (
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
                   <video
-                    src={filePreview}
+                    ref={videoRef}
                     className="w-full h-full object-contain"
-                    controls
+                    autoPlay
+                    playsInline
+                    muted
                   />
-                ) : (
-                  <img
-                    src={filePreview}
-                    alt="Preview"
-                    className="w-full h-full object-contain"
-                  />
-                )}
-              </div>
-            )}
+                </div>
+              )}
+
+              {filePreview && (
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+                  {file?.type.startsWith('video/') ? (
+                    <video
+                      src={filePreview}
+                      className="w-full h-full object-contain"
+                      controls
+                    />
+                  ) : (
+                    <img
+                      src={filePreview}
+                      alt="Preview"
+                      className="w-full h-full object-contain"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
