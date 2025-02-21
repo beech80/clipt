@@ -4,16 +4,19 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Upload, Camera, Hash, AtSign } from 'lucide-react';
 import GameBoyControls from '@/components/GameBoyControls';
+import { useQuery } from '@tanstack/react-query';
 
 export const PostForm = () => {
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [selectedGame, setSelectedGame] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -26,6 +29,20 @@ export const PostForm = () => {
   const [showMentionInput, setShowMentionInput] = useState(false);
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [currentMention, setCurrentMention] = useState('');
+
+  // Fetch available games
+  const { data: games } = useQuery({
+    queryKey: ['games'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('game_categories')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const startCamera = async () => {
     try {
@@ -123,6 +140,7 @@ export const PostForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!user) {
       toast.error('Please sign in to create a post');
       return;
@@ -132,7 +150,17 @@ export const PostForm = () => {
       toast.error('Please add some content to your post');
       return;
     }
+
+    if (!selectedGame) {
+      toast.error('Please select a game for your clip');
+      return;
+    }
     
+    if (!file) {
+      toast.error('Please upload a video clip');
+      return;
+    }
+
     setLoading(true);
     try {
       let fileUrl = null;
@@ -160,10 +188,9 @@ export const PostForm = () => {
         .insert({
           content,
           user_id: user.id,
-          ...(file?.type.startsWith('video/') 
-            ? { video_url: fileUrl }
-            : { image_url: fileUrl }
-          ),
+          game_id: selectedGame,
+          video_url: fileUrl,
+          type: 'video',
           is_published: true,
           hashtags,
           mentions
@@ -174,8 +201,8 @@ export const PostForm = () => {
       toast.success('Post created successfully!');
       navigate('/');
     } catch (error) {
-      toast.error('Error creating post');
       console.error('Error:', error);
+      toast.error('Error creating post');
     } finally {
       setLoading(false);
       stopCamera();
@@ -187,11 +214,29 @@ export const PostForm = () => {
       <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6 pb-48">
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
+            <Select 
+              value={selectedGame} 
+              onValueChange={setSelectedGame}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a game" />
+              </SelectTrigger>
+              <SelectContent>
+                {games?.map((game) => (
+                  <SelectItem key={game.id} value={game.id}>
+                    {game.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="What's on your mind?"
               className="min-h-[100px]"
+              required
             />
             
             <div className="flex gap-2">
@@ -345,7 +390,7 @@ export const PostForm = () => {
         <Button
           type="submit"
           className="w-full"
-          disabled={loading || !content.trim()}
+          disabled={loading || !content.trim() || !selectedGame || !file}
         >
           {loading ? (
             <>

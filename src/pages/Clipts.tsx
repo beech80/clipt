@@ -7,34 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { BackButton } from "@/components/ui/back-button";
 import { Camera } from "lucide-react";
-
-interface PostProfile {
-  username: string;
-  avatar_url: string;
-}
-
-interface PostGame {
-  name: string;
-}
-
-interface Post {
-  id: string;
-  content: string;
-  image_url: string | null;
-  video_url: string | null;
-  user_id: string;
-  created_at: string;
-  profiles: PostProfile;
-  games: PostGame | null;
-  is_published: boolean;
-  is_premium: boolean;
-  required_tier_id: string | null;
-  scheduled_publish_time: string | null;
-  type: 'video';
-  likes_count: number;
-  comments_count: number;
-  clip_votes: { count: number }[];
-}
+import { Post } from "@/types/post";
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -52,7 +25,7 @@ const Clipts = () => {
           user_id,
           created_at,
           profiles:user_id (username, avatar_url),
-          games (name),
+          games:game_id (name),
           is_published,
           is_premium,
           required_tier_id,
@@ -80,7 +53,7 @@ const Clipts = () => {
         <div className="flex items-center justify-center max-w-7xl mx-auto relative">
           <BackButton />
           <h1 className="text-3xl font-bold text-white">
-            Clipts
+            Featured Clips
           </h1>
         </div>
       </div>
@@ -93,7 +66,7 @@ const Clipts = () => {
         ) : posts?.length === 0 ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-center space-y-4">
-              <p className="text-2xl font-semibold text-white/60">No clipts found</p>
+              <p className="text-2xl font-semibold text-white/60">No clips found</p>
               <p className="text-purple-400">Be the first to share a gaming moment!</p>
             </div>
           </div>
@@ -104,7 +77,7 @@ const Clipts = () => {
                 key={post.id} 
                 className="bg-[#283593]/80 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg border border-indigo-400/20"
               >
-                <PostItem post={post} showComments={true} />
+                <PostItem post={post} />
               </div>
             ))}
           </div>
