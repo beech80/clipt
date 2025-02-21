@@ -111,13 +111,13 @@ const Discover = () => {
                   value={gameFilter}
                   onValueChange={(value: 'top_rated' | 'most_played' | 'most_watched') => setGameFilter(value)}
                 >
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-[180px] gaming-button border-[#9b87f5] hover:border-[#8B5CF6] bg-[#1A1F2C] text-white">
                     <SelectValue placeholder="Filter games" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="top_rated">Top Rated</SelectItem>
-                    <SelectItem value="most_played">Most Played</SelectItem>
-                    <SelectItem value="most_watched">Most Watched</SelectItem>
+                  <SelectContent className="bg-[#1A1F2C] border-[#403E43]">
+                    <SelectItem value="top_rated" className="text-white hover:bg-[#2A2F3C]">Top Rated</SelectItem>
+                    <SelectItem value="most_played" className="text-white hover:bg-[#2A2F3C]">Most Played</SelectItem>
+                    <SelectItem value="most_watched" className="text-white hover:bg-[#2A2F3C]">Most Watched</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
