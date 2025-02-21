@@ -28,9 +28,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setLoading(false);
+
+      // If we have a new user, create their profile
+      if (_event === 'SIGNED_IN' && currentUser) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: currentUser.id,
+            username: currentUser.email?.split('@')[0],
+            display_name: currentUser.email?.split('@')[0],
+            custom_theme: { primary: "#1EAEDB", secondary: "#000000" },
+            enable_notifications: true,
+            enable_sounds: true,
+            created_at: new Date().toISOString(),
+          });
+
+        if (profileError) {
+          console.error('Error creating user profile:', profileError);
+        }
+      }
     });
 
     return () => {
