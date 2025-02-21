@@ -29,6 +29,7 @@ export const PostForm = () => {
   const [showMentionInput, setShowMentionInput] = useState(false);
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [currentMention, setCurrentMention] = useState('');
+  const [postDestination, setPostDestination] = useState<'clipts' | 'home'>('clipts');
 
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games', gameSearch],
@@ -184,7 +185,7 @@ export const PostForm = () => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError, data: uploadData } = await supabase.storage
           .from('posts')
           .upload(filePath, file);
 
@@ -207,16 +208,20 @@ export const PostForm = () => {
           type: 'video',
           is_published: true,
           hashtags,
-          mentions
+          mentions,
+          post_type: postDestination
         });
 
-      if (postError) throw postError;
+      if (postError) {
+        console.error('Post Error:', postError);
+        throw postError;
+      }
 
       toast.success('Post created successfully!');
-      navigate('/');
+      navigate(postDestination === 'clipts' ? '/clipts' : '/');
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error creating post');
+      toast.error('Error creating post. Please try again.');
     } finally {
       setLoading(false);
       stopCamera();
@@ -430,6 +435,28 @@ export const PostForm = () => {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="text-sm font-medium mb-2">Post Destination</h3>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant={postDestination === 'clipts' ? 'default' : 'outline'}
+              onClick={() => setPostDestination('clipts')}
+              className="flex-1"
+            >
+              Post to Clipts
+            </Button>
+            <Button
+              type="button"
+              variant={postDestination === 'home' ? 'default' : 'outline'}
+              onClick={() => setPostDestination('home')}
+              className="flex-1"
+            >
+              Post to Home
+            </Button>
           </div>
         </div>
 
