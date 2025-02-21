@@ -21,10 +21,13 @@ interface SearchOptions {
 export const igdbService = {
   async searchGames(searchTerm: string, options: SearchOptions = {}): Promise<IGDBGame[]> {
     console.log("Searching for games with term:", searchTerm);
+    const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
+    
     const query = `
       ${searchTerm ? `search "${searchTerm}";` : ''}
       fields name,cover.url,summary,rating,first_release_date,genres.name;
-      where version_parent = null;
+      where version_parent = null
+      & first_release_date >= ${oneYearAgo};
       ${options.sort ? `sort ${options.sort};` : ''}
       limit ${options.limit || 10};
     `;
@@ -52,9 +55,13 @@ export const igdbService = {
 
   async getPopularGames(): Promise<IGDBGame[]> {
     console.log("Fetching popular games");
+    const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
+    
     const query = `
       fields name,cover.url,summary,rating,first_release_date,genres.name;
-      where rating != null & version_parent = null;
+      where rating != null 
+      & version_parent = null
+      & first_release_date >= ${oneYearAgo};
       sort rating desc;
       limit 10;
     `;
