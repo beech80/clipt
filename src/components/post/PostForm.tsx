@@ -223,7 +223,11 @@ export const PostForm = () => {
       }
 
       toast.success('Post created successfully!');
-      navigate(postDestination === 'clipts' ? '/clipts' : '/');
+      if (postDestination === 'clipts') {
+        navigate('/clipts');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error creating post. Please try again.');
@@ -447,20 +451,42 @@ export const PostForm = () => {
           <h3 className="text-sm font-medium mb-2">Post Destination</h3>
           <div className="flex gap-4">
             <Button
-              type="button"
+              type="submit"
               variant={postDestination === 'clipts' ? 'default' : 'outline'}
-              onClick={() => setPostDestination('clipts')}
+              onClick={() => {
+                setPostDestination('clipts');
+                handleSubmit;
+              }}
+              disabled={loading || !content.trim() || !selectedGame || !file}
               className="flex-1"
             >
-              Post to Clipts
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Clipt...
+                </>
+              ) : (
+                'Post to Clipts'
+              )}
             </Button>
             <Button
-              type="button"
+              type="submit"
               variant={postDestination === 'home' ? 'default' : 'outline'}
-              onClick={() => setPostDestination('home')}
+              onClick={() => {
+                setPostDestination('home');
+                handleSubmit;
+              }}
+              disabled={loading || !content.trim() || !selectedGame || !file}
               className="flex-1"
             >
-              Post to Home
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Post...
+                </>
+              ) : (
+                'Post to Home'
+              )}
             </Button>
           </div>
         </div>
