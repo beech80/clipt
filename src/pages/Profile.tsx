@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -5,7 +6,6 @@ import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark, UserX } fr
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import PostItem from "@/components/PostItem";
 import { useNavigate, useParams } from "react-router-dom";
 import { AchievementList } from "@/components/achievements/AchievementList";
 import GameBoyControls from "@/components/GameBoyControls";
@@ -33,37 +33,6 @@ const Profile = () => {
       }
       return data;
     }
-  });
-
-  const { data: userClips } = useQuery({
-    queryKey: ['user-clips', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            avatar_url
-          ),
-          likes:likes (
-            count
-          ),
-          clip_votes:clip_votes (
-            count
-          )
-        `)
-        .eq('user_id', id || user?.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        console.error('Error fetching clips:', error);
-        return [];
-      }
-      return data;
-    },
-    enabled: !!profile // Only fetch clips if we have a valid profile
   });
 
   const isOwnProfile = user && (!id || id === user?.id);
@@ -231,26 +200,11 @@ const Profile = () => {
       <div className="mt-6">
         {activeTab === 'clips' && (
           <div className="space-y-4">
-            {!userClips?.length ? (
-              <Card className="p-12 text-center">
-                <Gamepad2 className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold">No clips yet</h3>
-                <p className="text-gray-500">Share your gaming moments!</p>
-              </Card>
-            ) : (
-              <div className="grid gap-4">
-                {userClips?.map((clip) => (
-                  <PostItem 
-                    key={clip.id} 
-                    post={{
-                      ...clip,
-                      likes_count: clip.likes?.[0]?.count || 0,
-                      clip_votes: clip.clip_votes || []
-                    }} 
-                  />
-                ))}
-              </div>
-            )}
+            <Card className="p-12 text-center">
+              <Gamepad2 className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-semibold">No clips yet</h3>
+              <p className="text-gray-500">Share your gaming moments!</p>
+            </Card>
           </div>
         )}
 
