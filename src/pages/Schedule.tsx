@@ -120,9 +120,17 @@ const Schedule = () => {
 
       {/* Schedule Form Dialog */}
       {showScheduleForm && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
-          <div className="container flex items-center justify-center min-h-screen">
-            <div className="w-full max-w-2xl">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 overflow-y-auto">
+          <div className="min-h-screen px-4 flex items-center justify-center py-12">
+            <div className="w-full max-w-2xl relative">
+              <Button
+                onClick={() => setShowScheduleForm(false)}
+                className="absolute right-4 top-4 z-10"
+                variant="ghost"
+                size="sm"
+              >
+                ×
+              </Button>
               <StreamScheduleForm 
                 streamId={crypto.randomUUID()} 
                 onScheduled={() => setShowScheduleForm(false)}

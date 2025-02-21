@@ -16,7 +16,7 @@ export const PostForm = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [selectedGame, setSelectedGame] = useState<string>('');
+  const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
   const [gameSearch, setGameSearch] = useState('');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -31,7 +31,6 @@ export const PostForm = () => {
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [currentMention, setCurrentMention] = useState('');
 
-  // Fetch games based on search
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games', gameSearch],
     queryFn: async () => {
@@ -55,16 +54,10 @@ export const PostForm = () => {
 
       if (error) throw error;
 
-      // Convert IGDB results to match our format
       return data.map((game: any) => ({
         id: game.id.toString(),
         name: game.name
       }));
-    },
-    meta: {
-      onError: (error: Error) => {
-        toast.error('Failed to search games: ' + error.message);
-      }
     }
   });
 
@@ -162,6 +155,11 @@ export const PostForm = () => {
     }
   };
 
+  const handleGameSelect = (game: { id: string; name: string }) => {
+    setSelectedGame(game);
+    setGameSearch('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -212,7 +210,7 @@ export const PostForm = () => {
         .insert({
           content,
           user_id: user.id,
-          game_id: selectedGame,
+          game_id: selectedGame.id,
           video_url: fileUrl,
           type: 'video',
           is_published: true,
@@ -250,34 +248,44 @@ export const PostForm = () => {
                 />
               </div>
               
-              <Select 
-                value={selectedGame} 
-                onValueChange={setSelectedGame}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a game" />
-                </SelectTrigger>
-                <SelectContent>
-                  {gamesLoading ? (
-                    <div className="flex items-center justify-center p-4">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  ) : games?.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-gray-500">
+              {gameSearch && !gamesLoading && (
+                <div className="absolute z-10 w-full mt-1 bg-gaming-800 rounded-md shadow-lg border border-gaming-700">
+                  {games?.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-gray-400">
                       No games found
                     </div>
                   ) : (
-                    games?.map((game) => (
-                      <SelectItem key={game.id} value={game.id}>
-                        {game.name}
-                      </SelectItem>
-                    ))
+                    <div className="max-h-60 overflow-auto">
+                      {games?.map((game) => (
+                        <button
+                          key={game.id}
+                          type="button"
+                          onClick={() => handleGameSelect(game)}
+                          className="w-full px-4 py-2 text-left hover:bg-gaming-700 text-white text-sm"
+                        >
+                          {game.name}
+                        </button>
+                      ))}
+                    </div>
                   )}
-                </SelectContent>
-              </Select>
-            </div>
-
+                </div>
+              )}
+              
+              {selectedGame && (
+                <div className="mt-2 p-2 bg-gaming-800 rounded-md flex items-center justify-between">
+                  <span className="text-white">{selectedGame.name}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedGame(null)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    ×
+                  </Button>
+                </div>
+              )}
+            
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
