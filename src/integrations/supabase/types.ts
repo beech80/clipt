@@ -4349,6 +4349,7 @@ export type Database = {
           is_premium: boolean | null
           is_published: boolean | null
           is_subscriber_only: boolean | null
+          post_type: string | null
           required_tier_id: string | null
           scheduled_publish_time: string | null
           user_id: string | null
@@ -4363,6 +4364,7 @@ export type Database = {
           is_premium?: boolean | null
           is_published?: boolean | null
           is_subscriber_only?: boolean | null
+          post_type?: string | null
           required_tier_id?: string | null
           scheduled_publish_time?: string | null
           user_id?: string | null
@@ -4377,6 +4379,7 @@ export type Database = {
           is_premium?: boolean | null
           is_published?: boolean | null
           is_subscriber_only?: boolean | null
+          post_type?: string | null
           required_tier_id?: string | null
           scheduled_publish_time?: string | null
           user_id?: string | null

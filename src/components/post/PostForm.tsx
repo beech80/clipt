@@ -10,6 +10,8 @@ import { Loader2, Upload, Camera, Hash, AtSign, Search } from 'lucide-react';
 import GameBoyControls from '@/components/GameBoyControls';
 import { useQuery } from '@tanstack/react-query';
 
+type PostDestination = 'clipts' | 'home';
+
 export const PostForm = () => {
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -29,7 +31,7 @@ export const PostForm = () => {
   const [showMentionInput, setShowMentionInput] = useState(false);
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [currentMention, setCurrentMention] = useState('');
-  const [postDestination, setPostDestination] = useState<'clipts' | 'home'>('clipts');
+  const [postDestination, setPostDestination] = useState<PostDestination>('clipts');
 
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games', gameSearch],
@@ -185,11 +187,14 @@ export const PostForm = () => {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `${user.id}/${fileName}`;
 
-        const { error: uploadError, data: uploadData } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('posts')
           .upload(filePath, file);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Upload Error:', uploadError);
+          throw uploadError;
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('posts')
