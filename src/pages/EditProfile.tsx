@@ -40,57 +40,6 @@ const EditProfile = () => {
     },
   });
 
-  const { data: notificationPreferences } = useQuery({
-    queryKey: ['notification-preferences'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      
-      // If no preferences exist yet, return defaults
-      if (!data) {
-        return {
-          email_notifications: true,
-          push_notifications: true,
-          stream_notifications: true,
-          mention_notifications: true,
-          follower_notifications: true
-        };
-      }
-      
-      return data;
-    },
-    enabled: !!profile
-  });
-
-  const updateNotificationsMutation = useMutation({
-    mutationFn: async (preferences: Partial<typeof notificationPreferences>) => {
-      const { error } = await supabase
-        .from('notification_preferences')
-        .upsert({
-          user_id: profile?.id,
-          ...preferences,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
-      toast.success('Notification preferences updated');
-    },
-    onError: () => {
-      toast.error('Failed to update notification preferences');
-    }
-  });
-
-  const handleNotificationToggle = (key: string, value: boolean) => {
-    updateNotificationsMutation.mutate({ [key]: value });
-  };
-
   const { data: userGames } = useQuery({
     queryKey: ['user-games'],
     queryFn: async () => {
@@ -246,62 +195,9 @@ const EditProfile = () => {
               />
             </Card>
           )}
-
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Bell className="w-5 h-5 text-purple-500" />
-              <h2 className="text-xl font-semibold">Notification Preferences</h2>
-            </div>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="email-notifications">Email Notifications</Label>
-                <Switch
-                  id="email-notifications"
-                  checked={notificationPreferences?.email_notifications}
-                  onCheckedChange={(checked) => handleNotificationToggle('email_notifications', checked)}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="push-notifications">Push Notifications</Label>
-                <Switch
-                  id="push-notifications"
-                  checked={notificationPreferences?.push_notifications}
-                  onCheckedChange={(checked) => handleNotificationToggle('push_notifications', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="stream-notifications">Stream Notifications</Label>
-                <Switch
-                  id="stream-notifications"
-                  checked={notificationPreferences?.stream_notifications}
-                  onCheckedChange={(checked) => handleNotificationToggle('stream_notifications', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="mention-notifications">Mention Notifications</Label>
-                <Switch
-                  id="mention-notifications"
-                  checked={notificationPreferences?.mention_notifications}
-                  onCheckedChange={(checked) => handleNotificationToggle('mention_notifications', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="follower-notifications">Follower Notifications</Label>
-                <Switch
-                  id="follower-notifications"
-                  checked={notificationPreferences?.follower_notifications}
-                  onCheckedChange={(checked) => handleNotificationToggle('follower_notifications', checked)}
-                />
-              </div>
-            </div>
-          </Card>
         </div>
       </div>
-
+      
       <GameBoyControls />
     </div>
   );
