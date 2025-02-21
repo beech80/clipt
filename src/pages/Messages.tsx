@@ -1,4 +1,3 @@
-
 import React from "react";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Button } from "@/components/ui/button";
@@ -50,7 +49,6 @@ const Messages = () => {
       return;
     }
 
-    // Create group chat
     const { data: groupData, error: groupError } = await supabase
       .from('group_chats')
       .insert({
@@ -65,7 +63,6 @@ const Messages = () => {
       return;
     }
 
-    // Add creator as admin
     const { error: memberError } = await supabase
       .from('group_chat_members')
       .insert({
@@ -79,7 +76,6 @@ const Messages = () => {
       return;
     }
 
-    // Create invites for selected users
     const invites = selectedUsers.map(userId => ({
       group_id: groupData.id,
       invited_user_id: userId,
@@ -109,35 +105,34 @@ const Messages = () => {
 
       <div className="mt-20 grid grid-cols-1 h-[calc(100vh-8rem)]">
         <div className="gaming-card overflow-y-auto relative">
-          {/* Empty state - ready for testing */}
           <div className="absolute top-4 right-4 flex gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={handleSearchClick}
-              className="flex items-center gap-2"
+              className="h-9 w-9"
             >
-              <Search className="w-4 h-4" />
-              Search Users
+              <Search className="h-4 w-4" />
+              <span className="sr-only">Search Users</span>
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={() => navigate('/post/new')}
-              className="flex items-center gap-2"
+              className="h-9 w-9"
             >
-              <Plus className="w-4 h-4" />
-              New Message
+              <Plus className="h-4 w-4" />
+              <span className="sr-only">New Message</span>
             </Button>
             <Dialog>
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
+                  size="icon"
+                  className="h-9 w-9"
                 >
-                  <Users className="w-4 h-4" />
-                  Create Group
+                  <Users className="h-4 w-4" />
+                  <span className="sr-only">Create Group</span>
                 </Button>
               </DialogTrigger>
               <DialogContent>
