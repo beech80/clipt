@@ -47,7 +47,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
     { name: 'Profile', path: '/profile', icon: <Users className="w-4 h-4" /> },
     { name: 'Streaming', path: '/streaming', icon: <Video className="w-4 h-4" /> },
     { name: 'Top Clips', path: '/top-clips', icon: <Trophy className="w-4 h-4" /> },
-    { name: 'Clipts', path: '/clipts', icon: <Camera className="w-4 h-4" /> },
+    { name: 'Clipts', path: '/', icon: <Camera className="w-4 h-4" /> },
     { name: 'AI Assistant', path: '/ai-assistant', icon: <Bot className="w-4 h-4" /> },
     { name: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" /> },
     { name: 'Esports', path: '/esports', icon: <Crown className="w-4 h-4" /> }
