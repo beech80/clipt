@@ -100,11 +100,12 @@ export default function Streaming() {
             <Calendar className="h-4 w-4" />
           </Button>
           <Button
+            variant="outline"
+            size="icon"
             onClick={() => navigate('/broadcasting')}
-            className="gap-2"
+            title="Broadcasting Setup"
           >
             <Radio className="h-4 w-4" />
-            Broadcasting Setup
           </Button>
         </div>
       </div>
