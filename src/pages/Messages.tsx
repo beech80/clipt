@@ -1,9 +1,8 @@
+
 import React from "react";
 import GameBoyControls from "@/components/GameBoyControls";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Users } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { Search, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -11,15 +10,35 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Messages = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [groupName, setGroupName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearchClick = () => {
-    toast.info("Search functionality coming soon!");
+  const handleSearch = async () => {
+    setIsSearching(true);
+    if (searchTerm.length < 1) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .ilike('username', `%${searchTerm}%`)
+      .limit(10);
+
+    if (error) {
+      toast.error("Error searching users");
+      setIsSearching(false);
+      return;
+    }
+
+    setSearchResults(data || []);
+    setIsSearching(false);
   };
 
   const handleSearchUsers = async (term: string) => {
@@ -76,22 +95,23 @@ const Messages = () => {
       return;
     }
 
+    // Create invites for selected users
     const invites = selectedUsers.map(userId => ({
       group_id: groupData.id,
-      invited_user_id: userId,
-      invited_by: user?.id
+      user_id: userId,
+      role: 'member'
     }));
 
-    const { error: inviteError } = await supabase
-      .from('group_chat_invites')
+    const { error: membersError } = await supabase
+      .from('group_chat_members')
       .insert(invites);
 
-    if (inviteError) {
-      toast.error("Error sending invites");
+    if (membersError) {
+      toast.error("Error adding members");
       return;
     }
 
-    toast.success("Group chat created and invites sent!");
+    toast.success("Group chat created!");
     setGroupName("");
     setSelectedUsers([]);
     setSearchResults([]);
@@ -106,24 +126,18 @@ const Messages = () => {
       <div className="mt-20 grid grid-cols-1 h-[calc(100vh-8rem)]">
         <div className="gaming-card overflow-y-auto relative">
           <div className="absolute top-4 right-4 flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleSearchClick}
-              className="h-9 w-9"
-            >
-              <Search className="h-4 w-4" />
-              <span className="sr-only">Search Users</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigate('/post/new')}
-              className="h-9 w-9"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="sr-only">New Message</span>
-            </Button>
+            <div className="relative flex-1 mr-2">
+              <Input
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  handleSearch();
+                }}
+                className="pr-8"
+              />
+              <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
             <Dialog>
               <DialogTrigger asChild>
                 <Button
@@ -212,6 +226,35 @@ const Messages = () => {
               </DialogContent>
             </Dialog>
           </div>
+          
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <div className="mt-16 p-4">
+              <div className="space-y-2">
+                {searchResults.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-3 rounded bg-gaming-800 hover:bg-gaming-700 cursor-pointer transition-colors"
+                    onClick={() => {
+                      // Here you can implement the logic to open a chat with this user
+                      toast.info(`Chat with ${user.username} coming soon!`);
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      {user.avatar_url && (
+                        <img
+                          src={user.avatar_url}
+                          alt={user.username}
+                          className="w-8 h-8 rounded-full"
+                        />
+                      )}
+                      <span>{user.username}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
