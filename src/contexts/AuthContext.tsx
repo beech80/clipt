@@ -29,7 +29,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state changed:", _event, session?.user);
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -41,55 +40,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      
-      if (error) {
-        console.error("Sign in error:", error.message);
-        throw error;
-      }
-
-      if (!data.user) {
-        throw new Error("No user returned from sign in");
-      }
-
-      console.log("Successfully signed in:", data.user);
+      if (error) throw error;
       toast.success('Successfully signed in!');
     } catch (error: any) {
-      console.error("Sign in error:", error);
-      const message = error.message || "Failed to sign in";
-      toast.error(message);
+      toast.error(error.message);
       throw error;
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/login`,
-        }
       });
-      
-      if (error) {
-        console.error("Sign up error:", error.message);
-        throw error;
-      }
-
-      if (!data.user) {
-        throw new Error("No user returned from sign up");
-      }
-
-      console.log("Successfully signed up:", data.user);
-      toast.success('Account created! You can now sign in.');
+      if (error) throw error;
+      toast.success('Verification email sent! Please check your inbox.');
     } catch (error: any) {
-      console.error("Sign up error:", error);
-      const message = error.message || "Failed to sign up";
-      toast.error(message);
+      toast.error(error.message);
       throw error;
     }
   };
@@ -100,7 +72,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       toast.success('Successfully signed out!');
     } catch (error: any) {
-      console.error("Sign out error:", error);
       toast.error(error.message);
       throw error;
     }
@@ -112,7 +83,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       toast.success('Password reset instructions sent to your email!');
     } catch (error: any) {
-      console.error("Reset password error:", error);
       toast.error(error.message);
       throw error;
     }
@@ -127,7 +97,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       toast.success('Verification email resent!');
     } catch (error: any) {
-      console.error("Resend verification error:", error);
       toast.error(error.message);
       throw error;
     }
