@@ -1,6 +1,7 @@
+
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -10,10 +11,18 @@ import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
 import { toast } from "sonner";
 import { Profile } from "@/types/profile";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const EditProfile = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   
   const { data: profile } = useQuery<Profile>({
     queryKey: ['profile'],
@@ -28,7 +37,10 @@ const EditProfile = () => {
         .single();
 
       if (error) throw error;
-      return data as Profile;
+      return {
+        ...data,
+        custom_theme: data.custom_theme || { primary: "#1EAEDB", secondary: "#000000" }
+      } as Profile;
     },
   });
 
@@ -183,7 +195,7 @@ const EditProfile = () => {
               </div>
               <ThemeSelector 
                 userId={profile.id} 
-                currentTheme={(profile.custom_theme as unknown) as ThemeColors}
+                currentTheme={profile.custom_theme}
               />
             </Card>
           )}

@@ -17,21 +17,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/contexts/AuthContext"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
-import { useQuery } from "@tanstack/react-query"
-import { useEffect, useRef, useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Profile } from "@/types/profile"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
   displayName: z.string().min(2).max(50),
   bioDescription: z.string().max(500).optional(),
   website: z.string().url().optional().or(z.literal("")),
-  socialLinks: z.object({
-    twitter: z.string().optional(),
-    instagram: z.string().optional(),
-    youtube: z.string().optional(),
-  }),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
@@ -40,8 +36,7 @@ export function ProfileEditForm() {
   const { user } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
-  const [canChangeUsername, setCanChangeUsername] = useState(true)
-  const [lastUsernameChange, setLastUsernameChange] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: profile, refetch } = useQuery({
     queryKey: ['profile'],
@@ -53,36 +48,7 @@ export function ProfileEditForm() {
         .single()
 
       if (error) throw error
-      return data
-    },
-    enabled: !!user
-  })
-
-  // Query to check username change eligibility
-  useQuery({
-    queryKey: ['username-change-eligibility'],
-    queryFn: async () => {
-      const { data: lastChange, error: lastChangeError } = await supabase
-        .from('username_changes')
-        .select('changed_at')
-        .eq('user_id', user?.id)
-        .order('changed_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (lastChangeError && lastChangeError.code !== 'PGRST116') {
-        throw lastChangeError
-      }
-
-      if (lastChange) {
-        const lastChangeDate = new Date(lastChange.changed_at)
-        const nextEligibleDate = new Date(lastChangeDate.getTime() + (12 * 24 * 60 * 60 * 1000))
-        const canChange = new Date() > nextEligibleDate
-        setCanChangeUsername(canChange)
-        setLastUsernameChange(nextEligibleDate.toLocaleDateString())
-      }
-
-      return true
+      return data as Profile
     },
     enabled: !!user
   })
@@ -94,39 +60,16 @@ export function ProfileEditForm() {
       displayName: "",
       bioDescription: "",
       website: "",
-      socialLinks: {
-        twitter: "",
-        instagram: "",
-        youtube: "",
-      },
     },
   })
 
   useEffect(() => {
     if (profile) {
-      let socialLinks = {
-        twitter: "",
-        instagram: "",
-        youtube: "",
-      }
-
-      if (profile.social_links && 
-          typeof profile.social_links === 'object' && 
-          !Array.isArray(profile.social_links)) {
-        const links = profile.social_links as Record<string, unknown>
-        socialLinks = {
-          twitter: typeof links.twitter === 'string' ? links.twitter : "",
-          instagram: typeof links.instagram === 'string' ? links.instagram : "",
-          youtube: typeof links.youtube === 'string' ? links.youtube : "",
-        }
-      }
-      
       form.reset({
         username: profile.username || "",
         displayName: profile.display_name || "",
-        bioDescription: profile.bio_description || "",
+        bioDescription: profile.bio || "",
         website: profile.website || "",
-        socialLinks,
       })
     }
   }, [profile, form])
@@ -177,37 +120,20 @@ export function ProfileEditForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      // Check if username is being changed
-      if (data.username !== profile?.username) {
-        if (!canChangeUsername) {
-          toast.error(`You can change your username again on ${lastUsernameChange}`)
-          return
-        }
-
-        // Record username change
-        const { error: changeError } = await supabase
-          .from('username_changes')
-          .insert({
-            user_id: user?.id,
-            old_username: profile?.username,
-            new_username: data.username
-          })
-
-        if (changeError) throw changeError
-      }
-
       const { error } = await supabase
         .from('profiles')
         .update({
           username: data.username,
           display_name: data.displayName,
-          bio_description: data.bioDescription,
+          bio: data.bioDescription,
           website: data.website,
-          social_links: data.socialLinks,
         })
         .eq('id', user?.id)
 
       if (error) throw error
+      
+      // Invalidate the profile query to trigger a refetch
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
       toast.success("Profile updated successfully!")
     } catch (error) {
       toast.error("Failed to update profile")
@@ -248,13 +174,10 @@ export function ProfileEditForm() {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="username" {...field} disabled={!canChangeUsername} />
+                <Input placeholder="username" {...field} />
               </FormControl>
               <FormDescription>
-                {canChangeUsername 
-                  ? "This is your public display name."
-                  : `You can change your username again on ${lastUsernameChange}`
-                }
+                This is your public display name.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -307,52 +230,7 @@ export function ProfileEditForm() {
           )}
         />
 
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Social Links</h3>
-          <FormField
-            control={form.control}
-            name="socialLinks.twitter"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Twitter</FormLabel>
-                <FormControl>
-                  <Input placeholder="Twitter username" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="socialLinks.instagram"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Instagram</FormLabel>
-                <FormControl>
-                  <Input placeholder="Instagram username" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="socialLinks.youtube"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>YouTube</FormLabel>
-                <FormControl>
-                  <Input placeholder="YouTube channel" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <Button type="submit">Update profile</Button>
+        <Button type="submit" disabled={uploading}>Update profile</Button>
       </form>
     </Form>
   )
