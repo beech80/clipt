@@ -1,10 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Upload, Camera, Hash, AtSign, Search } from 'lucide-react';
@@ -35,14 +34,7 @@ export const PostForm = () => {
     queryKey: ['games', gameSearch],
     queryFn: async () => {
       if (!gameSearch) {
-        const { data, error } = await supabase
-          .from('game_categories')
-          .select('id, name')
-          .order('name')
-          .limit(10);
-
-        if (error) throw error;
-        return data || [];
+        return [];
       }
 
       const { data, error } = await supabase.functions.invoke('igdb', {
@@ -60,6 +52,11 @@ export const PostForm = () => {
       }));
     }
   });
+
+  const handleGameSelect = (game: { id: string; name: string }) => {
+    setSelectedGame(game);
+    setGameSearch('');
+  };
 
   const startCamera = async () => {
     try {
@@ -155,11 +152,6 @@ export const PostForm = () => {
     }
   };
 
-  const handleGameSelect = (game: { id: string; name: string }) => {
-    setSelectedGame(game);
-    setGameSearch('');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -250,13 +242,13 @@ export const PostForm = () => {
               
               {gameSearch && !gamesLoading && (
                 <div className="absolute z-10 w-full mt-1 bg-gaming-800 rounded-md shadow-lg border border-gaming-700">
-                  {games?.length === 0 ? (
+                  {!games || games.length === 0 ? (
                     <div className="p-4 text-center text-sm text-gray-400">
                       No games found
                     </div>
                   ) : (
                     <div className="max-h-60 overflow-auto">
-                      {games?.map((game) => (
+                      {games.map((game) => (
                         <button
                           key={game.id}
                           type="button"
