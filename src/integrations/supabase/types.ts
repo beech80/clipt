@@ -6170,6 +6170,30 @@ export type Database = {
           },
         ]
       }
+      stream_keys: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          last_used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          last_used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          last_used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       stream_moderators: {
         Row: {
           assigned_by: string | null
@@ -9238,10 +9262,17 @@ export type Database = {
         }
         Returns: string
       }
-      generate_stream_key: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_stream_key:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: string
+          }
+        | {
+            Args: {
+              user_id: string
+            }
+            Returns: string
+          }
       get_enhanced_stream_recommendations: {
         Args: {
           user_id_param: string

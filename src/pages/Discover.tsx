@@ -11,13 +11,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 
+interface StreamInfo {
+  is_live: boolean;
+  viewer_count: number;
+}
+
 interface Streamer {
   id: string;
   username: string;
-  avatar_url: string;
-  is_live: boolean;
-  viewer_count: number;
-  display_name: string;
+  avatar_url: string | null;
+  display_name: string | null;
+  streams: StreamInfo[];
 }
 
 const Discover = () => {
@@ -33,7 +37,7 @@ const Discover = () => {
           username,
           avatar_url,
           display_name,
-          streams!inner (
+          streams (
             is_live,
             viewer_count
           )
@@ -42,7 +46,13 @@ const Discover = () => {
         .limit(50);
 
       if (error) throw error;
-      return data as Streamer[];
+      
+      // Transform the data to match the Streamer interface
+      return (data || []).map((profile: Streamer) => ({
+        ...profile,
+        is_live: profile.streams?.[0]?.is_live || false,
+        viewer_count: profile.streams?.[0]?.viewer_count || 0
+      }));
     }
   });
 
@@ -89,7 +99,7 @@ const Discover = () => {
                   className="p-4 flex items-center gap-4 bg-gaming-800/50 backdrop-blur-sm border-gaming-700"
                 >
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={streamer.avatar_url} alt={streamer.username} />
+                    <AvatarImage src={streamer.avatar_url || ''} alt={streamer.username} />
                     <AvatarFallback>{streamer.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
