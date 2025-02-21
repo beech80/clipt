@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Heart, MessageSquare, UserPlus, Trophy, Camera, ArrowLeft } from 'lucide-react';
 import { toast } from "sonner";
@@ -6,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import CommentList from '../post/CommentList';
+import { useNavigate } from 'react-router-dom';
 
 interface ActionButtonsProps {
   onAction: (action: string) => void;
@@ -17,6 +19,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const navigate = useNavigate();
 
   const handleLike = async () => {
     if (!user) {
@@ -146,8 +149,8 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
         hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all hover:scale-110 active:scale-95
         flex flex-col items-center gap-1 w-8 h-8 sm:w-10 sm:h-10"
         onClick={() => {
-          toast.success("Opening post creation...");
-          onAction('post');
+          navigate('/post/new');
+          toast.success('Opening post creation...');
         }}
       >
         <Camera className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500
