@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload, Camera, Hash, AtSign } from 'lucide-react';
+import { Loader2, Upload, Camera, Hash, AtSign, Search } from 'lucide-react';
 import GameBoyControls from '@/components/GameBoyControls';
 import { useQuery } from '@tanstack/react-query';
 
@@ -17,6 +17,7 @@ export const PostForm = () => {
   const [loading, setLoading] = useState(false);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [selectedGame, setSelectedGame] = useState<string>('');
+  const [gameSearch, setGameSearch] = useState('');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -30,17 +31,40 @@ export const PostForm = () => {
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [currentMention, setCurrentMention] = useState('');
 
-  // Fetch available games
-  const { data: games } = useQuery({
-    queryKey: ['games'],
+  // Fetch games based on search
+  const { data: games, isLoading: gamesLoading } = useQuery({
+    queryKey: ['games', gameSearch],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('game_categories')
-        .select('id, name')
-        .order('name');
+      if (!gameSearch) {
+        const { data, error } = await supabase
+          .from('game_categories')
+          .select('id, name')
+          .order('name')
+          .limit(10);
+
+        if (error) throw error;
+        return data || [];
+      }
+
+      const { data, error } = await supabase.functions.invoke('igdb', {
+        body: {
+          endpoint: 'games',
+          query: `search "${gameSearch}"; fields name; limit 10;`
+        }
+      });
 
       if (error) throw error;
-      return data || [];
+
+      // Convert IGDB results to match our format
+      return data.map((game: any) => ({
+        id: game.id.toString(),
+        name: game.name
+      }));
+    },
+    meta: {
+      onError: (error: Error) => {
+        toast.error('Failed to search games: ' + error.message);
+      }
     }
   });
 
@@ -214,22 +238,45 @@ export const PostForm = () => {
       <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6 pb-48">
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
-            <Select 
-              value={selectedGame} 
-              onValueChange={setSelectedGame}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a game" />
-              </SelectTrigger>
-              <SelectContent>
-                {games?.map((game) => (
-                  <SelectItem key={game.id} value={game.id}>
-                    {game.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Input
+                  type="text"
+                  placeholder="Search for a game..."
+                  value={gameSearch}
+                  onChange={(e) => setGameSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <Select 
+                value={selectedGame} 
+                onValueChange={setSelectedGame}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a game" />
+                </SelectTrigger>
+                <SelectContent>
+                  {gamesLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : games?.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-gray-500">
+                      No games found
+                    </div>
+                  ) : (
+                    games?.map((game) => (
+                      <SelectItem key={game.id} value={game.id}>
+                        {game.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
 
             <Textarea
               value={content}
@@ -269,7 +316,14 @@ export const PostForm = () => {
                   placeholder="Enter hashtag"
                   className="flex-1"
                 />
-                <Button onClick={addHashtag}>Add</Button>
+                <Button onClick={() => {
+                  if (currentHashtag.trim()) {
+                    setHashtags([...hashtags, currentHashtag.trim()]);
+                    setCurrentHashtag('');
+                    setShowHashtagInput(false);
+                    toast.success('Hashtag added');
+                  }
+                }}>Add</Button>
               </div>
             )}
 
@@ -281,7 +335,14 @@ export const PostForm = () => {
                   placeholder="@username"
                   className="flex-1"
                 />
-                <Button onClick={addMention}>Add</Button>
+                <Button onClick={() => {
+                  if (currentMention.trim()) {
+                    setMentions([...mentions, currentMention.trim()]);
+                    setCurrentMention('');
+                    setShowMentionInput(false);
+                    toast.success('Mention added');
+                  }
+                }}>Add</Button>
               </div>
             )}
 
