@@ -155,9 +155,7 @@ export const PostForm = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleCreatePost = async (destination: PostDestination) => {
     if (!user) {
       toast.error('Please sign in to create a post');
       return;
@@ -214,7 +212,7 @@ export const PostForm = () => {
           is_published: true,
           hashtags,
           mentions,
-          post_type: postDestination
+          post_type: destination
         });
 
       if (postError) {
@@ -223,11 +221,7 @@ export const PostForm = () => {
       }
 
       toast.success('Post created successfully!');
-      if (postDestination === 'clipts') {
-        navigate('/clipts');
-      } else {
-        navigate('/');
-      }
+      navigate(destination === 'clipts' ? '/clipts' : '/');
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error creating post. Please try again.');
@@ -239,7 +233,7 @@ export const PostForm = () => {
 
   return (
     <div className="relative min-h-screen bg-gaming-900">
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6 pb-48">
+      <div className="space-y-6 max-w-2xl mx-auto p-6 pb-48">
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <div className="relative">
@@ -451,12 +445,9 @@ export const PostForm = () => {
           <h3 className="text-sm font-medium mb-2">Post Destination</h3>
           <div className="flex gap-4">
             <Button
-              type="submit"
-              variant={postDestination === 'clipts' ? 'default' : 'outline'}
-              onClick={() => {
-                setPostDestination('clipts');
-                handleSubmit;
-              }}
+              type="button"
+              variant="default"
+              onClick={() => handleCreatePost('clipts')}
               disabled={loading || !content.trim() || !selectedGame || !file}
               className="flex-1"
             >
@@ -470,12 +461,9 @@ export const PostForm = () => {
               )}
             </Button>
             <Button
-              type="submit"
-              variant={postDestination === 'home' ? 'default' : 'outline'}
-              onClick={() => {
-                setPostDestination('home');
-                handleSubmit;
-              }}
+              type="button"
+              variant="default"
+              onClick={() => handleCreatePost('home')}
               disabled={loading || !content.trim() || !selectedGame || !file}
               className="flex-1"
             >
@@ -505,7 +493,7 @@ export const PostForm = () => {
             'Create Post'
           )}
         </Button>
-      </form>
+      </div>
 
       <GameBoyControls />
     </div>
