@@ -28,7 +28,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -40,28 +41,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
         password,
       });
-      if (error) throw error;
+
+      if (error) {
+        console.error('Sign in error:', error);
+        if (error.message.includes('Email not confirmed')) {
+          toast.error('Please verify your email before signing in');
+        } else {
+          toast.error('Invalid email or password');
+        }
+        throw error;
+      }
+
+      if (!data.user) {
+        throw new Error('No user returned from sign in');
+      }
+
       toast.success('Successfully signed in!');
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Sign in error:', error);
       throw error;
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
       });
-      if (error) throw error;
-      toast.success('Verification email sent! Please check your inbox.');
+
+      if (error) {
+        console.error('Sign up error:', error);
+        toast.error(error.message);
+        throw error;
+      }
+
+      if (data.user?.identities?.length === 0) {
+        toast.error('An account with this email already exists');
+        throw new Error('Account already exists');
+      }
+
+      toast.success('Account created successfully! You can now sign in.');
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Sign up error:', error);
       throw error;
     }
   };
@@ -79,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase());
       if (error) throw error;
       toast.success('Password reset instructions sent to your email!');
     } catch (error: any) {
@@ -92,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
-        email: email,
+        email: email.trim().toLowerCase(),
       });
       if (error) throw error;
       toast.success('Verification email resent!');

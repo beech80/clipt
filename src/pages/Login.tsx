@@ -24,11 +24,10 @@ const Login = () => {
 
     try {
       await signIn(email, password);
-      toast.success("Successfully logged in!");
       navigate("/");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Failed to sign in");
-      toast.error(error instanceof Error ? error.message : "Failed to sign in");
+      console.error('Login error:', error);
     } finally {
       setLoading(false);
     }
@@ -63,6 +62,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
           <div>
@@ -72,6 +72,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
             />
           </div>
           <Button
@@ -88,6 +89,7 @@ const Login = () => {
             variant="outline"
             className="w-full"
             onClick={() => navigate("/signup")}
+            disabled={loading}
           >
             <UserPlus className="mr-2 h-4 w-4" />
             Create an account
