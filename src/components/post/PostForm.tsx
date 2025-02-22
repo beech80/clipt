@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -215,14 +214,13 @@ export const PostForm = () => {
 
       console.log('Creating post with URL:', publicUrl);
 
-      // Create the post record
+      // Create the post record - note we're not setting 'type' field anymore
       const postData = {
         content,
         user_id: user.id,
         game_id: selectedGame.id,
         video_url: isVideo ? publicUrl : null,
         image_url: !isVideo ? publicUrl : null,
-        type: isVideo ? 'video' : 'image',
         post_type: destination,
         is_published: true
       };
