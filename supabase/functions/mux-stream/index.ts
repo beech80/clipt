@@ -43,14 +43,19 @@ serve(async (req) => {
     console.log('Action:', action)
 
     if (action === 'create') {
-      // Create new stream record - the trigger will handle key generation
+      // Generate a new stream key for the user
+      const streamKey = crypto.randomUUID().replace(/-/g, '')
+      
+      // Create new stream record
       const { data: stream, error: streamError } = await supabaseClient
         .from('streams')
-        .insert({
+        .insert([{
           user_id: user.id,
           is_live: false,
-          viewer_count: 0
-        })
+          viewer_count: 0,
+          stream_key: streamKey,
+          rtmp_url: 'rtmp://stream.lovable.dev/live',
+        }])
         .select('*')
         .single();
 
