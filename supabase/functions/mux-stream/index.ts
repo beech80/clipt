@@ -7,92 +7,110 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-
 serve(async (req) => {
-  // Handle CORS
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    // Get auth user
     const supabase = createClient(
-      SUPABASE_URL!,
-      SUPABASE_SERVICE_ROLE_KEY!
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get the JWT from the Authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
-      throw new Error('Missing Authorization header')
+      throw new Error('No auth header')
     }
 
-    // Verify the JWT and get the user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
-
-    if (authError || !user) {
-      throw new Error('Invalid token')
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+    if (userError || !user) {
+      throw userError || new Error('User not found')
     }
 
-    // Parse the request body
     const { action } = await req.json()
+    console.log(`Processing ${action} request for user ${user.id}`)
 
-    switch (action) {
-      case 'create':
-        // Create a new stream
-        const { data: stream, error: createError } = await supabase
-          .from('streams')
-          .insert([
-            {
-              user_id: user.id,
-              is_live: false,
-              title: 'New Stream',
-              stream_key: crypto.randomUUID(), // Temporary stream key
-              stream_url: `rtmp://stream.lovable.dev/live`, // Your RTMP server URL
+    if (action === 'create') {
+      // Generate a unique stream key
+      const streamKey = crypto.randomUUID()
+      
+      // Create or update stream record
+      const { data: stream, error: streamError } = await supabase
+        .from('streams')
+        .upsert({
+          user_id: user.id,
+          stream_key: streamKey,
+          is_live: false,
+          viewer_count: 0,
+          title: 'New Stream',
+          chat_settings: {
+            slow_mode: false,
+            slow_mode_interval: 0,
+            subscriber_only: false,
+            follower_only: false,
+            follower_time_required: 0,
+            emote_only: false,
+            auto_mod_settings: {
+              enabled: true,
+              spam_detection: true,
+              link_protection: true,
+              caps_limit_percent: 80,
+              max_emotes: 10,
+              blocked_terms: []
             }
-          ])
-          .select()
-          .single()
+          }
+        }, {
+          onConflict: 'user_id'
+        })
+        .select()
+        .single()
 
-        if (createError) throw createError
-        return new Response(
-          JSON.stringify(stream),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
+      if (streamError) {
+        throw streamError
+      }
 
-      case 'end':
-        // End the stream
-        const { data: endedStream, error: endError } = await supabase
-          .from('streams')
-          .update({
-            is_live: false,
-            ended_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id)
-          .eq('is_live', true)
-          .select()
-          .single()
+      console.log('Stream created successfully:', stream)
 
-        if (endError) throw endError
-        return new Response(
-          JSON.stringify(endedStream),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-
-      default:
-        throw new Error('Invalid action')
+      return new Response(
+        JSON.stringify(stream),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
     }
+
+    if (action === 'end') {
+      const { data: stream, error: streamError } = await supabase
+        .from('streams')
+        .update({
+          is_live: false,
+          ended_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single()
+
+      if (streamError) {
+        throw streamError
+      }
+
+      return new Response(
+        JSON.stringify(stream),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    throw new Error(`Invalid action: ${action}`)
+
   } catch (error) {
-    console.error('Error:', error.message)
+    console.error('Error processing request:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      },
     )
   }
 })

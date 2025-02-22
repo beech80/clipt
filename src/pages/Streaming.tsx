@@ -50,7 +50,7 @@ export default function Streaming() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['stream'] });
+      queryClient.invalidateQueries({ queryKey: ['stream', user?.id] });
       toast.success('Stream created successfully! You can now start streaming using your streaming software.');
       toast.info('Remember to copy your Stream Key and RTMP URL to your streaming software.');
     },
@@ -70,7 +70,7 @@ export default function Streaming() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['stream'] });
+      queryClient.invalidateQueries({ queryKey: ['stream', user?.id] });
       toast.success('Stream ended successfully');
     },
     onError: (error) => {
