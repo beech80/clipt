@@ -9276,6 +9276,12 @@ export type Database = {
             }
             Returns: string
           }
+      generate_user_stream_key: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: string
+      }
       get_enhanced_stream_recommendations: {
         Args: {
           user_id_param: string

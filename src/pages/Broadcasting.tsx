@@ -21,24 +21,27 @@ const Broadcasting = () => {
   const { data: streamKey, isLoading: isLoadingKey } = useQuery({
     queryKey: ['stream-key', user?.id],
     queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      
       const { data, error } = await supabase
         .from('stream_keys')
         .select('key')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
       
       if (error) throw error;
       return data?.key;
     },
-    enabled: !!user
+    enabled: !!user?.id
   });
 
   const regenerateKeyMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase
-        .rpc('generate_user_stream_key', {
-          user_id_param: user?.id
-        });
+      if (!user?.id) throw new Error('User not authenticated');
+      
+      const { data, error } = await supabase.rpc('generate_user_stream_key', {
+        user_id_param: user.id
+      });
       
       if (error) throw error;
       return data;
