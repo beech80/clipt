@@ -39,7 +39,7 @@ export interface Stream {
   current_fps: number | null;
   available_qualities: any | null;
   scheduled_start_time: string | null;
-  scheduled_duration: string | null;
+  scheduled_duration: any | null; // Changed from string to any to match DB
   recurring_schedule: any | null;
   vod_enabled: boolean | null;
   stream_settings: any | null;

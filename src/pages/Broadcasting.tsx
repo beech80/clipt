@@ -20,20 +20,26 @@ const Broadcasting = () => {
   const [showKey, setShowKey] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: stream, isLoading: isLoadingStream } = useQuery<Stream | null>({
+  const { data: stream } = useQuery<Stream | null>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       
-      const { data, error } = await supabase
+      console.log('Fetching stream data...');
+      const { data: streamData, error } = await supabase
         .from('streams')
         .select('*')
         .eq('user_id', user.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching stream:', error);
+        throw error;
+      }
+
+      console.log('Stream data:', streamData);
       
-      if (data) {
+      if (streamData) {
         const defaultChatSettings: StreamChatSettings = {
           slow_mode: false,
           slow_mode_interval: 0,
@@ -51,50 +57,52 @@ const Broadcasting = () => {
           }
         };
 
-        return {
-          id: data.id,
-          user_id: data.user_id,
-          title: data.title,
-          description: data.description,
-          thumbnail_url: data.thumbnail_url,
-          stream_key: data.stream_key,
-          rtmp_url: data.rtmp_url || 'rtmp://stream.lovable.dev/live',
-          stream_url: data.stream_url,
-          playback_url: data.playback_url,
-          is_live: !!data.is_live,
-          viewer_count: data.viewer_count || 0,
-          started_at: data.started_at,
-          ended_at: data.ended_at,
-          created_at: data.created_at,
-          updated_at: data.updated_at || data.created_at,
-          chat_enabled: data.chat_enabled,
-          current_bitrate: data.current_bitrate,
-          current_fps: data.current_fps,
-          available_qualities: data.available_qualities,
-          scheduled_start_time: data.scheduled_start_time,
-          scheduled_duration: data.scheduled_duration,
-          recurring_schedule: data.recurring_schedule,
-          vod_enabled: data.vod_enabled,
-          stream_settings: data.stream_settings,
-          max_bitrate: data.max_bitrate,
-          stream_latency_ms: data.stream_latency_ms,
-          last_health_check: data.last_health_check,
-          dvr_enabled: data.dvr_enabled,
-          dvr_window_seconds: data.dvr_window_seconds,
-          search_vector: data.search_vector,
-          recommendation_score: data.recommendation_score,
-          abr_active: data.abr_active,
-          low_latency_active: data.low_latency_active,
-          current_quality_preset: data.current_quality_preset,
-          chat_settings: data.chat_settings as StreamChatSettings || defaultChatSettings,
-          health_status: data.health_status,
-          stream_resolution: data.stream_resolution,
-          schedule_status: data.schedule_status,
-          vod_processing_status: data.vod_processing_status,
-          ingest_url: data.ingest_url,
-          cdn_url: data.cdn_url,
-          encrypted_stream_key: data.encrypted_stream_key
+        const formattedStream: Stream = {
+          id: streamData.id,
+          user_id: streamData.user_id,
+          title: streamData.title,
+          description: streamData.description,
+          thumbnail_url: streamData.thumbnail_url,
+          stream_key: streamData.stream_key,
+          rtmp_url: streamData.rtmp_url || 'rtmp://stream.lovable.dev/live',
+          stream_url: streamData.stream_url,
+          playback_url: streamData.playback_url,
+          is_live: Boolean(streamData.is_live),
+          viewer_count: streamData.viewer_count || 0,
+          started_at: streamData.started_at,
+          ended_at: streamData.ended_at,
+          created_at: streamData.created_at,
+          updated_at: streamData.updated_at || streamData.created_at,
+          chat_enabled: streamData.chat_enabled,
+          current_bitrate: streamData.current_bitrate,
+          current_fps: streamData.current_fps,
+          available_qualities: streamData.available_qualities,
+          scheduled_start_time: streamData.scheduled_start_time,
+          scheduled_duration: streamData.scheduled_duration,
+          recurring_schedule: streamData.recurring_schedule,
+          vod_enabled: streamData.vod_enabled,
+          stream_settings: streamData.stream_settings,
+          max_bitrate: streamData.max_bitrate,
+          stream_latency_ms: streamData.stream_latency_ms,
+          last_health_check: streamData.last_health_check,
+          dvr_enabled: streamData.dvr_enabled,
+          dvr_window_seconds: streamData.dvr_window_seconds,
+          search_vector: streamData.search_vector,
+          recommendation_score: streamData.recommendation_score,
+          abr_active: streamData.abr_active,
+          low_latency_active: streamData.low_latency_active,
+          current_quality_preset: streamData.current_quality_preset,
+          chat_settings: (streamData.chat_settings as StreamChatSettings) || defaultChatSettings,
+          health_status: streamData.health_status,
+          stream_resolution: streamData.stream_resolution,
+          schedule_status: streamData.schedule_status,
+          vod_processing_status: streamData.vod_processing_status,
+          ingest_url: streamData.ingest_url,
+          cdn_url: streamData.cdn_url,
+          encrypted_stream_key: streamData.encrypted_stream_key
         };
+        
+        return formattedStream;
       }
       return null;
     },
@@ -105,14 +113,14 @@ const Broadcasting = () => {
     mutationFn: async () => {
       console.log('Creating new stream...');
       const { data, error } = await supabase.functions.invoke('mux-stream', {
-        body: { action: 'create' }
+        body: { action: 'create', userId: user?.id }
       });
       
       if (error) {
         console.error('Error creating stream:', error);
         throw error;
       }
-      console.log('Stream created:', data);
+      console.log('Stream created successfully:', data);
       return data;
     },
     onSuccess: () => {
@@ -129,14 +137,14 @@ const Broadcasting = () => {
     mutationFn: async () => {
       console.log('Ending stream...');
       const { data, error } = await supabase.functions.invoke('mux-stream', {
-        body: { action: 'end' }
+        body: { action: 'end', userId: user?.id }
       });
       
       if (error) {
         console.error('Error ending stream:', error);
         throw error;
       }
-      console.log('Stream ended:', data);
+      console.log('Stream ended successfully:', data);
       return data;
     },
     onSuccess: () => {
