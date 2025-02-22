@@ -42,47 +42,11 @@ serve(async (req) => {
     console.log('Action:', action)
 
     if (action === 'create') {
-      // Generate stream key
-      const streamKey = crypto.randomUUID()
-      console.log('Generated stream key:', streamKey)
-
-      const now = new Date().toISOString();
-      const rtmpUrl = "rtmp://stream.lovable.dev/live";
-
-      // Create or update stream
+      // Call our database function to create/update stream
       const { data: stream, error: streamError } = await supabaseClient
-        .from('streams')
-        .upsert({
-          user_id: user.id,
-          stream_key: streamKey,
-          rtmp_url: rtmpUrl,
-          rtmp_key: streamKey,
-          is_live: false,
-          viewer_count: 0,
-          title: 'New Stream',
-          created_at: now,
-          updated_at: now,
-          chat_settings: {
-            slow_mode: false,
-            slow_mode_interval: 0,
-            subscriber_only: false,
-            follower_only: false,
-            follower_time_required: 0,
-            emote_only: false,
-            auto_mod_settings: {
-              enabled: true,
-              spam_detection: true,
-              link_protection: true,
-              caps_limit_percent: 80,
-              max_emotes: 10,
-              blocked_terms: []
-            }
-          }
-        }, {
-          onConflict: 'user_id'
+        .rpc('create_or_update_stream', {
+          user_id_input: user.id
         })
-        .select('*, updated_at') // Explicitly select updated_at
-        .single();
 
       if (streamError) {
         console.error('Error creating/updating stream:', streamError)
@@ -107,7 +71,7 @@ serve(async (req) => {
           updated_at: now
         })
         .eq('user_id', user.id)
-        .select('*, updated_at') // Explicitly select updated_at
+        .select('*')
         .single();
 
       if (streamError) {
