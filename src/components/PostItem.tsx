@@ -4,9 +4,17 @@ import PostContent from "./post/PostContent";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
-import { Heart, MessageSquare, Trophy } from "lucide-react";
+import { Heart, MessageSquare, Trophy, Trash2, MoreVertical } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PostItemProps {
   post: Post;
@@ -15,6 +23,8 @@ interface PostItemProps {
 const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const isOwner = user?.id === post.user_id;
 
   const { data: commentsCount = 0 } = useQuery({
     queryKey: ['comments-count', post.id],
@@ -30,6 +40,25 @@ const PostItem = ({ post }: PostItemProps) => {
   useEffect(() => {
     setIsLoading(false);
   }, []);
+
+  const handleDeletePost = async () => {
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id)
+        .eq('user_id', user?.id); // Extra safety check
+
+      if (error) throw error;
+      
+      toast.success('Post deleted successfully');
+      // Optionally force a page refresh to update the feed
+      window.location.reload();
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast.error('Failed to delete post');
+    }
+  };
 
   const handleCommentClick = () => {
     navigate(`/comments/${post.id}`);
@@ -71,6 +100,22 @@ const PostItem = ({ post }: PostItemProps) => {
             )}
           </div>
         </div>
+        {isOwner && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="p-2 hover:bg-gaming-800 rounded-full transition-colors">
+              <MoreVertical className="h-5 w-5 text-gaming-300" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem
+                className="text-red-500 focus:text-red-400 cursor-pointer"
+                onClick={handleDeletePost}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Post Content */}
