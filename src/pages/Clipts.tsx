@@ -13,26 +13,24 @@ const Clipts = () => {
   const navigate = useNavigate();
 
   const { data: posts, isLoading } = useQuery({
-    queryKey: ['posts'],
+    queryKey: ['clipts-posts'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          id,
-          content,
-          image_url,
-          video_url,
-          user_id,
-          created_at,
-          game_id,
-          profiles:user_id (username, avatar_url),
-          games:game_id (name),
-          is_published,
-          is_premium,
-          required_tier_id,
-          scheduled_publish_time
+          *,
+          profiles:user_id (
+            username,
+            avatar_url
+          ),
+          games:game_id (
+            name
+          ),
+          likes:likes(count),
+          clip_votes:clip_votes(count)
         `)
         .eq('post_type', 'clipts')
+        .is('is_published', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

@@ -3,7 +3,7 @@ import { RouteObject } from "react-router-dom";
 import Clipts from "@/pages/Clipts";
 import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
-import PostList from "@/pages/PostList";
+import Home from "@/pages/Home";
 import TopClips from "@/pages/TopClips";
 import { AuthGuard } from "@/components/AuthGuard";
 import { PostForm } from "@/components/post/PostForm";
@@ -26,15 +26,11 @@ export const contentRoutes: RouteObject[] = [
     element: <Post />,
   },
   {
-    path: "posts",
-    element: <PostList />,
-  },
-  {
     path: "top-clips",
     element: <TopClips />,
   },
   {
     path: "/",
-    element: <Clipts />,
+    element: <Home />,
   }
 ];

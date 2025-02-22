@@ -26,14 +26,11 @@ const Home = () => {
           games:game_id (
             name
           ),
-          likes (
-            count
-          ),
-          clip_votes (
-            count
-          )
+          likes:likes(count),
+          clip_votes:clip_votes(count)
         `)
         .eq('post_type', 'home')
+        .is('is_published', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
