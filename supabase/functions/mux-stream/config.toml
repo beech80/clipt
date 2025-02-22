@@ -1,2 +1,4 @@
 
+[functions.mux-stream]
+verify_jwt = true
 project_id = "slnjliheyiiummxhrgmk"
