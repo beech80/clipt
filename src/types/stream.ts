@@ -21,7 +21,7 @@ export interface StreamChatSettings {
 export interface Stream {
   id: string;
   user_id: string;
-  title: string;
+  title: string | null;
   stream_key: string | null;
   rtmp_url: string | null;
   rtmp_key: string | null;

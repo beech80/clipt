@@ -42,11 +42,41 @@ serve(async (req) => {
     console.log('Action:', action)
 
     if (action === 'create') {
-      // Call our database function to create/update stream
+      // Generate a new stream key
+      const streamKey = crypto.randomUUID().replace(/-/g, '');
+      
+      // Create or update stream record
       const { data: stream, error: streamError } = await supabaseClient
-        .rpc('create_or_update_stream', {
-          user_id_input: user.id
+        .from('streams')
+        .upsert({
+          user_id: user.id,
+          stream_key: streamKey,
+          rtmp_url: 'rtmp://stream.lovable.dev/live',
+          is_live: false,
+          viewer_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          chat_settings: {
+            slow_mode: false,
+            slow_mode_interval: 0,
+            subscriber_only: false,
+            follower_only: false,
+            follower_time_required: 0,
+            emote_only: false,
+            auto_mod_settings: {
+              enabled: true,
+              spam_detection: true,
+              link_protection: true,
+              caps_limit_percent: 80,
+              max_emotes: 10,
+              blocked_terms: []
+            }
+          }
+        }, {
+          onConflict: 'user_id'
         })
+        .select('*')
+        .single();
 
       if (streamError) {
         console.error('Error creating/updating stream:', streamError)
