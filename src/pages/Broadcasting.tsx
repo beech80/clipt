@@ -35,14 +35,30 @@ const Broadcasting = () => {
       
       // Ensure we have all required fields with proper types
       if (data) {
-        return {
+        const streamData: Stream = {
           ...data,
           updated_at: data.updated_at || new Date().toISOString(),
           created_at: data.created_at || new Date().toISOString(),
           viewer_count: data.viewer_count || 0,
           is_live: !!data.is_live,
-          chat_settings: data.chat_settings || null
-        } as Stream;
+          chat_settings: data.chat_settings || {
+            slow_mode: false,
+            slow_mode_interval: 0,
+            subscriber_only: false,
+            follower_only: false,
+            follower_time_required: 0,
+            emote_only: false,
+            auto_mod_settings: {
+              enabled: true,
+              spam_detection: true,
+              link_protection: true,
+              caps_limit_percent: 80,
+              max_emotes: 10,
+              blocked_terms: []
+            }
+          }
+        };
+        return streamData;
       }
       return null;
     },

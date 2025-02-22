@@ -22,9 +22,10 @@ export interface Stream {
   id: string;
   user_id: string;
   title: string | null;
+  description: string | null;
+  thumbnail_url: string | null;
   stream_key: string | null;
   rtmp_url: string | null;
-  rtmp_key: string | null;
   stream_url: string | null;
   playback_url: string | null;
   is_live: boolean;
@@ -60,6 +61,4 @@ export interface Stream {
   ingest_url: string | null;
   cdn_url: string | null;
   encrypted_stream_key: string | null;
-  description: string | null;
-  thumbnail_url: string | null;
 }
