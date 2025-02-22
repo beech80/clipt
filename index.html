@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -43,9 +44,11 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
+      function gtag() { dataLayer.push(arguments); }
       gtag('js', new Date());
-      gtag('config', import.meta.env.VITE_GOOGLE_ANALYTICS_ID);
+      if (import.meta.env.VITE_GOOGLE_ANALYTICS_ID) {
+        gtag('config', import.meta.env.VITE_GOOGLE_ANALYTICS_ID);
+      }
     </script>
 
     <!-- Structured Data for Organization -->
@@ -99,7 +102,6 @@
         });
       }
     </script>
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
