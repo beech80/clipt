@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { StreamEmotes } from './StreamEmotes';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import type { StreamChatMessage } from '@/types/chat';
+import type { StreamChatMessage, FilteredMessage } from '@/types/chat';
 import { MoreHorizontal, Ban, Clock } from 'lucide-react';
 import {
   DropdownMenu,
@@ -69,7 +69,7 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
         return;
       }
 
-      setMessages(data || []);
+      setMessages(data as StreamChatMessage[]);
     };
 
     loadMessages();
@@ -93,7 +93,12 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
               .eq('id', payload.new.user_id)
               .single();
 
-            setMessages(prev => [...prev, { ...payload.new, profiles: profile }]);
+            const newMessage: StreamChatMessage = {
+              ...payload.new,
+              profiles: profile
+            };
+
+            setMessages(prev => [...prev, newMessage]);
           } else if (payload.eventType === 'DELETE') {
             setMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
           }
@@ -116,58 +121,72 @@ export const StreamChat = ({ streamId, isLive }: StreamChatProps) => {
     e.preventDefault();
     if (!message.trim() || !user || isRateLimited) return;
 
-    // Check rate limit
-    const { data: rateLimited } = await supabase
-      .rpc('check_chat_rate_limit', {
-        p_user_id: user.id,
-        p_stream_id: streamId
-      });
+    try {
+      // Check rate limit
+      const { data: rateLimited, error: rateLimitError } = await supabase.rpc<boolean>(
+        'check_chat_rate_limit',
+        {
+          p_user_id: user.id,
+          p_stream_id: streamId
+        }
+      );
 
-    if (rateLimited) {
-      setIsRateLimited(true);
-      messageTimeoutRef.current = setTimeout(() => setIsRateLimited(false), 60000);
-      toast.error('You are sending messages too quickly. Please wait a moment.');
-      return;
-    }
+      if (rateLimitError) throw rateLimitError;
 
-    // Check if user is timed out
-    const { data: isTimedOut } = await supabase
-      .rpc('is_user_timed_out', {
-        p_user_id: user.id,
-        p_stream_id: streamId
-      });
+      if (rateLimited) {
+        setIsRateLimited(true);
+        messageTimeoutRef.current = setTimeout(() => setIsRateLimited(false), 60000);
+        toast.error('You are sending messages too quickly. Please wait a moment.');
+        return;
+      }
 
-    if (isTimedOut) {
-      toast.error('You are currently timed out from chat');
-      return;
-    }
+      // Check if user is timed out
+      const { data: isTimedOut, error: timeoutError } = await supabase.rpc<boolean>(
+        'is_user_timed_out',
+        {
+          p_user_id: user.id,
+          p_stream_id: streamId
+        }
+      );
 
-    // Filter message
-    const { data: filteredMessage } = await supabase
-      .rpc('filter_chat_message', {
-        p_message: message.trim(),
-        p_stream_id: streamId
-      });
+      if (timeoutError) throw timeoutError;
 
-    if (filteredMessage?.is_blocked) {
-      toast.error('Your message was blocked by chat filters');
-      return;
-    }
+      if (isTimedOut) {
+        toast.error('You are currently timed out from chat');
+        return;
+      }
 
-    const { error } = await supabase
-      .from('stream_chat')
-      .insert({
-        stream_id: streamId,
-        user_id: user.id,
-        message: filteredMessage?.filtered_message || message.trim()
-      });
+      // Filter message
+      const { data: filteredMessage, error: filterError } = await supabase.rpc<FilteredMessage>(
+        'filter_chat_message',
+        {
+          p_message: message.trim(),
+          p_stream_id: streamId
+        }
+      );
 
-    if (error) {
+      if (filterError) throw filterError;
+
+      if (filteredMessage && filteredMessage.is_blocked) {
+        toast.error('Your message was blocked by chat filters');
+        return;
+      }
+
+      const { error: sendError } = await supabase
+        .from('stream_chat')
+        .insert({
+          stream_id: streamId,
+          user_id: user.id,
+          message: filteredMessage?.filtered_message || message.trim()
+        });
+
+      if (sendError) throw sendError;
+
+      setMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
       toast.error('Failed to send message');
-      return;
     }
-
-    setMessage('');
   };
 
   const handleTimeout = async (userId: string, duration: number) => {

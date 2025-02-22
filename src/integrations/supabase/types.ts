@@ -1113,24 +1113,33 @@ export type Database = {
       }
       chat_emotes: {
         Row: {
+          animated: boolean | null
+          category: string | null
           created_at: string
           created_by: string | null
           id: string
           name: string
+          permissions: Json | null
           url: string
         }
         Insert: {
+          animated?: boolean | null
+          category?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name: string
+          permissions?: Json | null
           url: string
         }
         Update: {
+          animated?: boolean | null
+          category?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
           name?: string
+          permissions?: Json | null
           url?: string
         }
         Relationships: [
@@ -1139,6 +1148,61 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_filters: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          filter_type: string
+          id: string
+          is_regex: boolean | null
+          pattern: string
+          replacement: string | null
+          stream_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          filter_type: string
+          id?: string
+          is_regex?: boolean | null
+          pattern: string
+          replacement?: string | null
+          stream_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          filter_type?: string
+          id?: string
+          is_regex?: boolean | null
+          pattern?: string
+          replacement?: string | null
+          stream_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_filters_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "chat_filters_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_filters_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
             referencedColumns: ["id"]
           },
         ]
@@ -1287,6 +1351,52 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_rate_limits: {
+        Row: {
+          id: string
+          message_count: number | null
+          stream_id: string
+          user_id: string
+          window_start: string | null
+        }
+        Insert: {
+          id?: string
+          message_count?: number | null
+          stream_id: string
+          user_id: string
+          window_start?: string | null
+        }
+        Update: {
+          id?: string
+          message_count?: number | null
+          stream_id?: string
+          user_id?: string
+          window_start?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_rate_limits_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "stream_recommendations"
+            referencedColumns: ["stream_id"]
+          },
+          {
+            foreignKeyName: "chat_rate_limits_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_rate_limits_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "trending_streams"
             referencedColumns: ["id"]
           },
         ]
@@ -9217,6 +9327,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_chat_rate_limit: {
+        Args: {
+          p_user_id: string
+          p_stream_id: string
+          p_limit?: number
+          p_window_seconds?: number
+        }
+        Returns: boolean
+      }
       check_content_against_filters: {
         Args: {
           content_text: string
@@ -9264,6 +9383,17 @@ export type Database = {
           stream_key: string
         }
         Returns: string
+      }
+      filter_chat_message: {
+        Args: {
+          p_message: string
+          p_stream_id: string
+        }
+        Returns: {
+          filtered_message: string
+          is_blocked: boolean
+          filter_matched: string
+        }[]
       }
       generate_stream_key:
         | {
@@ -9360,6 +9490,13 @@ export type Database = {
       is_ip_blocked: {
         Args: {
           check_ip: string
+        }
+        Returns: boolean
+      }
+      is_user_timed_out: {
+        Args: {
+          p_user_id: string
+          p_stream_id: string
         }
         Returns: boolean
       }
