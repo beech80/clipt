@@ -23,12 +23,13 @@ export default function Streaming() {
   const queryClient = useQueryClient();
   const rtmpUrl = "rtmp://stream.lovable.dev/live";
 
-  // Query for existing stream
-  const { data: stream, isLoading } = useQuery<Stream | null>({
+  // Query for existing stream with better error handling
+  const { data: stream, isLoading, error: streamError } = useQuery<Stream | null>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       
+      console.log('Fetching existing stream for user:', user.id);
       const { data: existingStream, error } = await supabase
         .from('streams')
         .select('*')
@@ -40,9 +41,8 @@ export default function Streaming() {
         throw error;
       }
 
-      // If no stream exists, create one
       if (!existingStream) {
-        console.log('No existing stream found, creating new one...');
+        console.log('No existing stream found, attempting to create one...');
         const { data: newStream, error: createError } = await supabase.functions.invoke('mux-stream', {
           body: { action: 'create' }
         });
@@ -52,17 +52,24 @@ export default function Streaming() {
           throw createError;
         }
 
+        if (!newStream) {
+          throw new Error('Failed to create new stream');
+        }
+
         console.log('New stream created:', newStream);
         return newStream;
       }
       
+      console.log('Found existing stream:', existingStream);
       return existingStream;
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    retry: 1
   });
 
   const startStream = useMutation({
     mutationFn: async () => {
+      console.log('Starting stream...');
       const { data, error } = await supabase.functions.invoke('mux-stream', {
         body: { action: 'create' }
       });
@@ -83,6 +90,7 @@ export default function Streaming() {
 
   const endStream = useMutation({
     mutationFn: async () => {
+      console.log('Ending stream...');
       const { data, error } = await supabase.functions.invoke('mux-stream', {
         body: { action: 'end' }
       });
@@ -119,7 +127,14 @@ export default function Streaming() {
     return <div>Loading...</div>;
   }
 
-  console.log('Current stream data:', stream); // Debug log
+  if (streamError) {
+    console.error('Stream error:', streamError);
+    return (
+      <Alert>
+        <AlertDescription>Failed to load streaming data. Please try again.</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
