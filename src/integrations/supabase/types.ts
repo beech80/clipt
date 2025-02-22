@@ -7574,14 +7574,14 @@ export type Database = {
           search_vector: unknown | null
           started_at: string | null
           stream_health_status: string | null
-          stream_key: string
+          stream_key: string | null
           stream_latency_ms: number | null
           stream_resolution: string | null
           stream_settings: Json | null
           stream_url: string | null
           supported_codecs: string[] | null
           thumbnail_url: string | null
-          title: string
+          title: string | null
           user_id: string
           viewer_count: number | null
           vod_enabled: boolean | null
@@ -7621,14 +7621,14 @@ export type Database = {
           search_vector?: unknown | null
           started_at?: string | null
           stream_health_status?: string | null
-          stream_key: string
+          stream_key?: string | null
           stream_latency_ms?: number | null
           stream_resolution?: string | null
           stream_settings?: Json | null
           stream_url?: string | null
           supported_codecs?: string[] | null
           thumbnail_url?: string | null
-          title: string
+          title?: string | null
           user_id: string
           viewer_count?: number | null
           vod_enabled?: boolean | null
@@ -7668,14 +7668,14 @@ export type Database = {
           search_vector?: unknown | null
           started_at?: string | null
           stream_health_status?: string | null
-          stream_key?: string
+          stream_key?: string | null
           stream_latency_ms?: number | null
           stream_resolution?: string | null
           stream_settings?: Json | null
           stream_url?: string | null
           supported_codecs?: string[] | null
           thumbnail_url?: string | null
-          title?: string
+          title?: string | null
           user_id?: string
           viewer_count?: number | null
           vod_enabled?: boolean | null
