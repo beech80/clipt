@@ -37,12 +37,12 @@ export interface Stream {
   chat_enabled: boolean | null;
   current_bitrate: number | null;
   current_fps: number | null;
-  available_qualities: Record<string, any> | null;
+  available_qualities: any | null;
   scheduled_start_time: string | null;
   scheduled_duration: string | null;
-  recurring_schedule: Record<string, any> | null;
+  recurring_schedule: any | null;
   vod_enabled: boolean | null;
-  stream_settings: Record<string, any> | null;
+  stream_settings: any | null;
   max_bitrate: number | null;
   stream_latency_ms: number | null;
   last_health_check: string | null;

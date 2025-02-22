@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { BroadcastPresetForm } from "@/components/broadcasting/BroadcastPresetForm";
@@ -32,7 +33,6 @@ const Broadcasting = () => {
       
       if (error) throw error;
       
-      // Ensure we have all required fields with proper types
       if (data) {
         const defaultChatSettings: StreamChatSettings = {
           slow_mode: false,
@@ -51,25 +51,22 @@ const Broadcasting = () => {
           }
         };
 
-        const streamData: Stream = {
-          ...data,
-          updated_at: data.updated_at || new Date().toISOString(),
-          created_at: data.created_at || new Date().toISOString(),
-          viewer_count: data.viewer_count || 0,
-          is_live: !!data.is_live,
-          chat_settings: data.chat_settings as StreamChatSettings || defaultChatSettings,
-          // Ensure all required fields are present
+        return {
           id: data.id,
           user_id: data.user_id,
-          stream_key: data.stream_key,
-          rtmp_url: data.rtmp_url,
           title: data.title,
           description: data.description,
           thumbnail_url: data.thumbnail_url,
+          stream_key: data.stream_key,
+          rtmp_url: data.rtmp_url || 'rtmp://stream.lovable.dev/live',
           stream_url: data.stream_url,
           playback_url: data.playback_url,
+          is_live: !!data.is_live,
+          viewer_count: data.viewer_count || 0,
           started_at: data.started_at,
           ended_at: data.ended_at,
+          created_at: data.created_at,
+          updated_at: data.updated_at || data.created_at,
           chat_enabled: data.chat_enabled,
           current_bitrate: data.current_bitrate,
           current_fps: data.current_fps,
@@ -89,6 +86,7 @@ const Broadcasting = () => {
           abr_active: data.abr_active,
           low_latency_active: data.low_latency_active,
           current_quality_preset: data.current_quality_preset,
+          chat_settings: data.chat_settings as StreamChatSettings || defaultChatSettings,
           health_status: data.health_status,
           stream_resolution: data.stream_resolution,
           schedule_status: data.schedule_status,
@@ -97,7 +95,6 @@ const Broadcasting = () => {
           cdn_url: data.cdn_url,
           encrypted_stream_key: data.encrypted_stream_key
         };
-        return streamData;
       }
       return null;
     },
@@ -106,11 +103,16 @@ const Broadcasting = () => {
 
   const createStreamMutation = useMutation({
     mutationFn: async () => {
+      console.log('Creating new stream...');
       const { data, error } = await supabase.functions.invoke('mux-stream', {
         body: { action: 'create' }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating stream:', error);
+        throw error;
+      }
+      console.log('Stream created:', data);
       return data;
     },
     onSuccess: () => {
@@ -125,11 +127,16 @@ const Broadcasting = () => {
 
   const endStreamMutation = useMutation({
     mutationFn: async () => {
+      console.log('Ending stream...');
       const { data, error } = await supabase.functions.invoke('mux-stream', {
         body: { action: 'end' }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error ending stream:', error);
+        throw error;
+      }
+      console.log('Stream ended:', data);
       return data;
     },
     onSuccess: () => {
