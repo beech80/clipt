@@ -36,7 +36,7 @@ serve(async (req) => {
       throw new Error('Invalid user token')
     }
 
-    console.log('Authenticated user:', user.id)
+    console.log('Processing request for user:', user.id)
 
     // Get request body
     const { action } = await req.json()
@@ -44,21 +44,28 @@ serve(async (req) => {
 
     if (action === 'create') {
       // Check if stream already exists
-      const { data: existingStream } = await supabaseClient
+      const { data: existingStream, error: checkError } = await supabaseClient
         .from('streams')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing stream:', checkError)
+        throw checkError
+      }
 
       console.log('Existing stream:', existingStream)
 
-      // Create or update stream record - the trigger will handle stream key generation
+      // Create or update stream record
       const { data: stream, error: streamError } = await supabaseClient
         .from('streams')
         .upsert({
           user_id: user.id,
           is_live: false,
           viewer_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
           chat_settings: {
             slow_mode: false,
             slow_mode_interval: 0,
@@ -88,7 +95,7 @@ serve(async (req) => {
 
       console.log('Stream created/updated successfully:', stream)
 
-      // Double check that we have a stream key
+      // Verify stream key was generated
       if (!stream.stream_key) {
         console.error('No stream key generated!')
         throw new Error('Failed to generate stream key')
