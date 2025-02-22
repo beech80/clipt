@@ -37,7 +37,7 @@ export default function AiAssistant() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
     setInput('');
@@ -45,20 +45,40 @@ export default function AiAssistant() {
     setIsLoading(true);
 
     try {
+      console.log('Sending message to AI:', userMessage);
+      
       const { data, error } = await supabase.functions.invoke('gaming-ai-chat', {
-        body: { message: userMessage, history: messages }
+        body: { 
+          message: userMessage,
+          history: messages.slice(-5) // Send last 5 messages for context
+        }
       });
 
-      if (error) throw error;
+      console.log('AI Response:', data);
+      console.log('Error if any:', error);
+
+      if (error) {
+        throw new Error(error.message || 'Failed to get response from AI');
+      }
+
+      if (!data?.response) {
+        throw new Error('No response received from AI');
+      }
 
       setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
     } catch (error) {
       console.error('Error:', error);
       toast({
         title: "Error",
-        description: "Failed to get response from AI assistant",
+        description: error.message || "Failed to get response from AI assistant",
         variant: "destructive"
       });
+      
+      // Add error message to chat
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "I apologize, but I encountered an error. Please try again or contact support if the issue persists." 
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +103,7 @@ export default function AiAssistant() {
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
-      {/* Messages Area - Reduced bottom padding to make room for input */}
+      {/* Messages Area */}
       <ScrollArea className="flex-1 p-4 gaming-cartridge mx-4 mt-6 mb-[250px] sm:mb-[270px]">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message, index) => (
@@ -106,14 +126,14 @@ export default function AiAssistant() {
         </div>
       </ScrollArea>
 
-      {/* Input Area - Fixed position above GameBoy controls with more space */}
+      {/* Input Area */}
       <div className="fixed bottom-[220px] sm:bottom-[240px] left-0 right-0 px-4 py-4 bg-[#1A1F2C] border-t border-purple-500/50">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
           <div className="flex gap-2 items-center">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message here..."
+              placeholder={isLoading ? "AI is thinking..." : "Type your message here..."}
               className="flex-1 bg-[#2A2F3C] border-2 border-purple-500 text-white placeholder:text-purple-300 text-lg h-12 focus:ring-2 focus:ring-purple-500"
               disabled={isLoading}
             />
@@ -122,7 +142,7 @@ export default function AiAssistant() {
               disabled={isLoading}
               className="bg-purple-500 hover:bg-purple-600 text-white h-12 px-6 rounded-lg flex items-center gap-2"
             >
-              {isLoading ? 'Sending...' : 'Send'}
+              {isLoading ? 'Thinking...' : 'Send'}
               <Send className="h-5 w-5" />
             </Button>
           </div>
