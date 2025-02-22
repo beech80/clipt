@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -182,6 +183,23 @@ export const PostForm = () => {
     setLoading(true);
 
     try {
+      // First, ensure we have the game in our database
+      const { data: gameData, error: gameError } = await supabase
+        .from('games')
+        .upsert([
+          {
+            id: selectedGame.id,
+            name: selectedGame.name
+          }
+        ])
+        .select()
+        .single();
+
+      if (gameError) {
+        console.error('Game error:', gameError);
+        throw new Error('Failed to process game data');
+      }
+
       // Upload file with timestamp to ensure unique names
       const timestamp = Date.now();
       const fileExt = file.name.split('.').pop();
@@ -214,11 +232,11 @@ export const PostForm = () => {
 
       console.log('Creating post with URL:', publicUrl);
 
-      // Create the post record - note we're not setting 'type' field anymore
+      // Create the post record
       const postData = {
         content,
         user_id: user.id,
-        game_id: selectedGame.id,
+        game_id: gameData.id, // Use the UUID from our games table
         video_url: isVideo ? publicUrl : null,
         image_url: !isVideo ? publicUrl : null,
         post_type: destination,
