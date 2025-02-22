@@ -21,7 +21,7 @@ const Broadcasting = () => {
   const queryClient = useQueryClient();
 
   // Query for stream data
-  const { data: stream } = useQuery<Stream | null>({
+  const { data: stream, isLoading } = useQuery<Stream | null>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -38,7 +38,7 @@ const Broadcasting = () => {
         throw error;
       }
 
-      return streamData as Stream | null;
+      return streamData;
     },
     enabled: !!user?.id
   });
@@ -55,7 +55,6 @@ const Broadcasting = () => {
           user_id: user.id,
           is_live: false,
           viewer_count: 0,
-          updated_at: new Date().toISOString()
         }])
         .select()
         .single();
@@ -65,7 +64,7 @@ const Broadcasting = () => {
         throw error;
       }
       
-      return data as Stream;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
@@ -84,14 +83,13 @@ const Broadcasting = () => {
         .update({ 
           is_live: false,
           ended_at: now,
-          updated_at: now
         })
         .eq('user_id', user.id)
         .select()
         .single();
         
       if (error) throw error;
-      return data as Stream;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
@@ -114,6 +112,16 @@ const Broadcasting = () => {
           <p className="text-muted-foreground">
             You need to be logged in to access broadcasting features.
           </p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-4">
+        <Card className="p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Loading...</h2>
         </Card>
       </div>
     );

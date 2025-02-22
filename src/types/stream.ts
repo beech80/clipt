@@ -18,6 +18,8 @@ export interface StreamChatSettings {
   auto_mod_settings: StreamChatAutoModSettings;
 }
 
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
 export interface Stream {
   id: string;
   user_id: string;
@@ -33,17 +35,16 @@ export interface Stream {
   started_at: string | null;
   ended_at: string | null;
   created_at: string;
-  updated_at: string;
   chat_enabled: boolean | null;
-  chat_settings: StreamChatSettings | null;
+  chat_settings: Json | null;
   current_bitrate: number | null;
   current_fps: number | null;
-  available_qualities: any | null;
+  available_qualities: Json | null;
   scheduled_start_time: string | null;
-  scheduled_duration: any | null;
-  recurring_schedule: any | null;
+  scheduled_duration: Json | null;
+  recurring_schedule: Json | null;
   vod_enabled: boolean | null;
-  stream_settings: any | null;
+  stream_settings: Json | null;
   max_bitrate: number | null;
   stream_latency_ms: number | null;
   last_health_check: string | null;
@@ -61,4 +62,5 @@ export interface Stream {
   ingest_url: string | null;
   cdn_url: string | null;
   encrypted_stream_key: string | null;
+  updated_at?: string;
 }
