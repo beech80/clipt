@@ -195,32 +195,46 @@ export const PostForm = () => {
         .from('posts')
         .getPublicUrl(filePath);
 
+      const postData = {
+        content,
+        user_id: user.id,
+        game_id: selectedGame.id,
+        video_url: isVideo ? publicUrl : null,
+        image_url: !isVideo ? publicUrl : null,
+        type: isVideo ? 'video' : 'image',
+        is_published: true,
+        hashtags,
+        mentions,
+        post_type: destination
+      };
+
       const { error: postError } = await supabase
         .from('posts')
-        .insert({
-          content,
-          user_id: user.id,
-          game_id: selectedGame.id,
-          video_url: isVideo ? publicUrl : null,
-          image_url: !isVideo ? publicUrl : null,
-          type: isVideo ? 'video' : 'image',
-          is_published: true,
-          hashtags,
-          mentions,
-          post_type: destination
-        });
+        .insert(postData);
 
       if (postError) throw postError;
 
       toast.success(destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!');
-      navigate(destination === 'clipts' ? '/clipts' : '/');
+      
+      stopCamera();
+      setContent('');
+      setFile(null);
+      setFilePreview(null);
+      setSelectedGame(null);
+      setHashtags([]);
+      setMentions([]);
+      
+      if (destination === 'clipts') {
+        navigate('/clipts', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
       
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error creating post. Please try again.');
     } finally {
       setLoading(false);
-      stopCamera();
     }
   };
 
