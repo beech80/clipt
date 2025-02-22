@@ -43,19 +43,6 @@ serve(async (req) => {
     console.log('Action:', action)
 
     if (action === 'create') {
-      // Call generate_stream_key function to create a properly encrypted key
-      const { data: keyData, error: keyError } = await supabaseClient.rpc(
-        'generate_stream_key',
-        { user_id_param: user.id }
-      )
-      
-      if (keyError) {
-        console.error('Error generating stream key:', keyError)
-        throw keyError
-      }
-
-      console.log('Stream key generated successfully')
-      
       // Create new stream record
       const { data: stream, error: streamError } = await supabaseClient
         .from('streams')
