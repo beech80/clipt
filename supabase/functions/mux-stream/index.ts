@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -44,13 +44,37 @@ serve(async (req) => {
 
     if (action === 'create') {
       // Create new stream record
+      const streamKey = Array.from(crypto.getRandomValues(new Uint8Array(24)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
       const { data: stream, error: streamError } = await supabaseClient
         .from('streams')
         .insert([{
           user_id: user.id,
           is_live: false,
           viewer_count: 0,
+          stream_key: streamKey,
           rtmp_url: 'rtmp://stream.lovable.dev/live',
+          title: `${user.email}'s Stream`,
+          chat_enabled: true,
+          stream_settings: {},
+          chat_settings: {
+            slow_mode: false,
+            slow_mode_interval: 0,
+            subscriber_only: false,
+            follower_only: false,
+            follower_time_required: 0,
+            emote_only: false,
+            auto_mod_settings: {
+              enabled: true,
+              spam_detection: true,
+              link_protection: true,
+              caps_limit_percent: 80,
+              max_emotes: 10,
+              blocked_terms: []
+            }
+          }
         }])
         .select('*')
         .single();
