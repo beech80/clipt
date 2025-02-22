@@ -13,14 +13,15 @@ import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
-import type { Stream, StreamChatSettings } from "@/types/stream";
+import type { Stream } from "@/types/stream";
 
 const Broadcasting = () => {
   const { user } = useAuth();
   const [showKey, setShowKey] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: stream } = useQuery<Stream | null>({
+  // Query for stream data
+  const { data: stream } = useQuery<Stream>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -30,128 +31,68 @@ const Broadcasting = () => {
         .from('streams')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (error) {
-        console.error('Error loading stream key:', error);
+        console.error('Error loading stream:', error);
         throw error;
       }
 
-      console.log('Stream data:', streamData);
-      
-      if (streamData) {
-        const defaultChatSettings: StreamChatSettings = {
-          slow_mode: false,
-          slow_mode_interval: 0,
-          subscriber_only: false,
-          follower_only: false,
-          follower_time_required: 0,
-          emote_only: false,
-          auto_mod_settings: {
-            enabled: true,
-            spam_detection: true,
-            link_protection: true,
-            caps_limit_percent: 80,
-            max_emotes: 10,
-            blocked_terms: []
-          }
-        };
-
-        return {
-          id: streamData.id,
-          user_id: streamData.user_id,
-          title: streamData.title,
-          description: streamData.description,
-          thumbnail_url: streamData.thumbnail_url,
-          stream_key: streamData.stream_key,
-          rtmp_url: streamData.rtmp_url || 'rtmp://stream.lovable.dev/live',
-          stream_url: streamData.stream_url,
-          playback_url: streamData.playback_url,
-          is_live: Boolean(streamData.is_live),
-          viewer_count: streamData.viewer_count || 0,
-          started_at: streamData.started_at,
-          ended_at: streamData.ended_at,
-          created_at: streamData.created_at,
-          updated_at: streamData.updated_at || streamData.created_at,
-          chat_enabled: streamData.chat_enabled,
-          current_bitrate: streamData.current_bitrate,
-          current_fps: streamData.current_fps,
-          available_qualities: streamData.available_qualities,
-          scheduled_start_time: streamData.scheduled_start_time,
-          scheduled_duration: streamData.scheduled_duration,
-          recurring_schedule: streamData.recurring_schedule,
-          vod_enabled: streamData.vod_enabled,
-          stream_settings: streamData.stream_settings,
-          max_bitrate: streamData.max_bitrate,
-          stream_latency_ms: streamData.stream_latency_ms,
-          last_health_check: streamData.last_health_check,
-          dvr_enabled: streamData.dvr_enabled,
-          dvr_window_seconds: streamData.dvr_window_seconds,
-          search_vector: streamData.search_vector,
-          recommendation_score: streamData.recommendation_score,
-          abr_active: streamData.abr_active,
-          low_latency_active: streamData.low_latency_active,
-          current_quality_preset: streamData.current_quality_preset,
-          chat_settings: streamData.chat_settings as StreamChatSettings || defaultChatSettings,
-          health_status: streamData.health_status,
-          stream_resolution: streamData.stream_resolution,
-          schedule_status: streamData.schedule_status,
-          vod_processing_status: streamData.vod_processing_status,
-          ingest_url: streamData.ingest_url,
-          cdn_url: streamData.cdn_url,
-          encrypted_stream_key: streamData.encrypted_stream_key
-        };
-      }
-      return null;
+      return streamData;
     },
     enabled: !!user?.id
   });
 
+  // Create stream mutation
   const createStreamMutation = useMutation({
     mutationFn: async () => {
-      console.log('Creating new stream...');
-      const { data, error } = await supabase.functions.invoke('mux-stream', {
-        body: { action: 'create', userId: user?.id }
-      });
+      if (!user?.id) throw new Error('User not authenticated');
       
+      console.log('Creating new stream record...');
+      const { data, error } = await supabase
+        .from('streams')
+        .insert([{ 
+          user_id: user.id,
+          is_live: false,
+          viewer_count: 0,
+        }])
+        .select()
+        .single();
+        
       if (error) {
         console.error('Error creating stream:', error);
         throw error;
       }
-      console.log('Stream created successfully:', data);
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
-      toast.success('Stream created successfully! You can now copy your stream key.');
-    },
-    onError: (error) => {
-      console.error('Error creating stream:', error);
-      toast.error('Failed to create stream');
+      toast.success('Stream created! You can now copy your stream key.');
     }
   });
 
+  // End stream mutation
   const endStreamMutation = useMutation({
     mutationFn: async () => {
-      console.log('Ending stream...');
-      const { data, error } = await supabase.functions.invoke('mux-stream', {
-        body: { action: 'end', userId: user?.id }
-      });
+      if (!user?.id) throw new Error('User not authenticated');
       
-      if (error) {
-        console.error('Error ending stream:', error);
-        throw error;
-      }
-      console.log('Stream ended successfully:', data);
+      const { data, error } = await supabase
+        .from('streams')
+        .update({ 
+          is_live: false,
+          ended_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .select()
+        .single();
+        
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
       toast.success('Stream ended successfully');
-    },
-    onError: (error) => {
-      console.error('Error ending stream:', error);
-      toast.error('Failed to end stream');
     }
   });
 
@@ -185,7 +126,7 @@ const Broadcasting = () => {
       {stream && (
         <StreamPlayer
           streamId={stream.id}
-          title={stream.title}
+          title={stream.title || ''}
           isLive={stream.is_live}
           viewerCount={stream.viewer_count}
           playbackUrl={stream.playback_url}
@@ -276,11 +217,11 @@ const Broadcasting = () => {
 
       <OBSSetupGuide />
       
-      <BroadcastPresetForm userId={user.id} />
+      {user?.id && <BroadcastPresetForm userId={user.id} />}
       
       <GameBoyControls />
     </div>
   );
-}
+};
 
 export default Broadcasting;
