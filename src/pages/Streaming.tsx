@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -23,13 +22,13 @@ export default function Streaming() {
   const queryClient = useQueryClient();
   const rtmpUrl = "rtmp://stream.lovable.dev/live";
 
-  // Query for existing stream with better error handling
-  const { data: stream, isLoading, error: streamError } = useQuery<Stream | null>({
+  // Query for existing stream
+  const { data: stream, isLoading, error: streamError } = useQuery({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
-      if (!user?.id) return null;
+      if (!user?.id) throw new Error('User not authenticated');
       
-      console.log('Fetching existing stream for user:', user.id);
+      console.log('Fetching stream data for user:', user.id);
       const { data: existingStream, error } = await supabase
         .from('streams')
         .select('*')
@@ -41,21 +40,18 @@ export default function Streaming() {
         throw error;
       }
 
+      // If no stream exists, create one
       if (!existingStream) {
-        console.log('No existing stream found, attempting to create one...');
+        console.log('No stream found, creating new stream...');
         const { data: newStream, error: createError } = await supabase.functions.invoke('mux-stream', {
-          body: { action: 'create' }
+          body: { action: 'create', userId: user.id }
         });
         
         if (createError) {
-          console.error('Error creating new stream:', createError);
+          console.error('Error creating stream:', createError);
           throw createError;
         }
-
-        if (!newStream) {
-          throw new Error('Failed to create new stream');
-        }
-
+        
         console.log('New stream created:', newStream);
         return newStream;
       }
@@ -64,7 +60,8 @@ export default function Streaming() {
       return existingStream;
     },
     enabled: !!user?.id,
-    retry: 1
+    retry: 1,
+    staleTime: 30000 // Consider data fresh for 30 seconds
   });
 
   const startStream = useMutation({

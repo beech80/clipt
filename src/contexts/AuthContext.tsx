@@ -14,10 +14,17 @@ interface AuthContextType {
   resendVerificationEmail: (email: string) => Promise<void>;
 }
 
-// Create context with a default value
-const AuthContext = React.createContext<AuthContextType | null>(null);
+// Create context with an initial value to prevent null errors
+const AuthContext = React.createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  signIn: async () => {},
+  signUp: async () => {},
+  signOut: async () => {},
+  resetPassword: async () => {},
+  resendVerificationEmail: async () => {},
+});
 
-// Define provider component
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<User | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -44,15 +51,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     getInitialSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (mounted) {
-        console.log('Auth state changed:', event, session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
     });
 
-    // Cleanup function
     return () => {
       mounted = false;
       subscription.unsubscribe();
@@ -66,23 +71,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password,
       });
 
-      if (error) {
-        console.error('Sign in error:', error);
-        if (error.message.includes('Email not confirmed')) {
-          toast.error('Please verify your email before signing in');
-        } else {
-          toast.error('Invalid email or password');
-        }
-        throw error;
-      }
-
-      if (!data.user) {
-        throw new Error('No user returned from sign in');
-      }
+      if (error) throw error;
+      if (!data.user) throw new Error('No user returned from sign in');
 
       toast.success('Successfully signed in!');
     } catch (error: any) {
       console.error('Sign in error:', error);
+      toast.error(error.message);
       throw error;
     }
   };
@@ -97,20 +92,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         },
       });
 
-      if (error) {
-        console.error('Sign up error:', error);
-        toast.error(error.message);
-        throw error;
-      }
-
+      if (error) throw error;
       if (data.user?.identities?.length === 0) {
-        toast.error('An account with this email already exists');
         throw new Error('Account already exists');
       }
 
-      toast.success('Account created successfully! You can now sign in.');
+      toast.success('Account created successfully! Please check your email to verify your account.');
     } catch (error: any) {
       console.error('Sign up error:', error);
+      toast.error(error.message);
       throw error;
     }
   };
@@ -121,6 +111,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       toast.success('Successfully signed out!');
     } catch (error: any) {
+      console.error('Sign out error:', error);
       toast.error(error.message);
       throw error;
     }
@@ -132,6 +123,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       toast.success('Password reset instructions sent to your email!');
     } catch (error: any) {
+      console.error('Reset password error:', error);
       toast.error(error.message);
       throw error;
     }
@@ -146,33 +138,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (error) throw error;
       toast.success('Verification email resent!');
     } catch (error: any) {
+      console.error('Resend verification error:', error);
       toast.error(error.message);
       throw error;
     }
   };
 
-  const contextValue = React.useMemo(() => ({
-    user,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    resetPassword,
-    resendVerificationEmail,
-  }), [user, loading]);
-
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+  const value = React.useMemo(
+    () => ({
+      user,
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      resetPassword,
+      resendVerificationEmail,
+    }),
+    [user, loading]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Custom hook to use the auth context
 export const useAuth = () => {
-  const context = React.useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return React.useContext(AuthContext);
 };
