@@ -16,15 +16,32 @@ serve(async (req) => {
   try {
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openAIApiKey) {
-      throw new Error('Missing OpenAI API Key')
+      console.error('OpenAI API key is missing')
+      throw new Error('OpenAI API key is not configured')
     }
 
     const { message, history } = await req.json()
-
-    console.log('Processing request with message:', message)
+    console.log('Received request with message:', message)
     console.log('Chat history:', history)
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Validate input
+    if (!message) {
+      throw new Error('Message is required')
+    }
+
+    // Format messages for OpenAI
+    const messages = [
+      {
+        role: "system",
+        content: `You are an expert AI gaming assistant with comprehensive knowledge of gaming and content creation. You help users with game strategies, industry trends, and growing their online presence through YouTube, streaming, and social media. Provide detailed, actionable advice while maintaining a friendly tone.`
+      },
+      ...(Array.isArray(history) ? history : []),
+      { role: "user", content: message }
+    ]
+
+    console.log('Sending request to OpenAI with messages:', messages)
+
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -32,74 +49,53 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: "system",
-            content: `You are an expert AI gaming assistant with comprehensive knowledge of:
-
-- Game mechanics and strategies
-- Gaming history and development
-- Esports and competitive gaming
-- Game lore and storylines
-- Technical aspects of games
-- Gaming platforms and hardware
-- Gaming industry trends
-- Speedrunning techniques
-- Game modifications and custom content
-- Gaming communities and culture
-
-You also specialize in helping gamers grow their online presence with expertise in:
-
-- YouTube gaming channel growth strategies
-- Streaming best practices and setup
-- Video editing and production techniques
-- Thumbnail creation and SEO optimization
-- Social media management for gamers
-- Content planning and scheduling
-- Building a personal gaming brand
-- Networking in the gaming community
-- Monetization strategies
-- Analytics and channel growth metrics
-- Audience engagement techniques
-- Collaboration opportunities
-- Equipment recommendations for content creation
-- Time management for content creators
-- Mental health and work-life balance for creators
-
-Provide detailed, accurate responses while maintaining an engaging and friendly tone.
-If discussing strategies or techniques, be specific and explain the reasoning behind them.
-When referencing game lore or history, cite specific examples and interesting facts.
-For content creation advice, provide actionable steps and real-world examples.
-Always aim to enhance the user's gaming knowledge and content creation journey.`
-          },
-          ...history,
-          { role: "user", content: message }
-        ],
+        messages: messages,
         temperature: 0.7,
         max_tokens: 800,
       }),
     })
 
-    const data = await response.json()
-    console.log('OpenAI response:', data)
+    const openAIData = await openAIResponse.json()
+    console.log('OpenAI response:', openAIData)
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${data.error?.message || 'Unknown error'}`)
+    if (!openAIResponse.ok) {
+      console.error('OpenAI API error:', openAIData)
+      throw new Error(openAIData.error?.message || 'OpenAI API error')
     }
 
+    if (!openAIData.choices?.[0]?.message?.content) {
+      console.error('Invalid response format from OpenAI:', openAIData)
+      throw new Error('Invalid response from OpenAI')
+    }
+
+    // Return successful response
     return new Response(
-      JSON.stringify({ response: data.choices[0].message.content }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      JSON.stringify({ response: openAIData.choices[0].message.content }),
+      { 
+        status: 200,
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      }
     )
 
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in gaming-ai-chat function:', error)
+    
+    // Return error response
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        details: error.toString()
+      }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      },
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      }
     )
   }
 })
