@@ -27,7 +27,7 @@ const Broadcasting = () => {
       if (!user?.id) return null;
       
       console.log('Fetching stream data...');
-      const { data: streamData, error } = await supabase
+      const { data, error } = await supabase
         .from('streams')
         .select('*')
         .eq('user_id', user.id)
@@ -38,33 +38,31 @@ const Broadcasting = () => {
         throw error;
       }
 
-      return streamData;
+      return data;
     },
     enabled: !!user?.id
   });
 
-  // Create stream mutation
+  // Create stream mutation using Mux Edge Function
   const createStreamMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
       
-      console.log('Creating new stream record...');
-      const { data, error } = await supabase
-        .from('streams')
-        .insert([{ 
-          user_id: user.id,
-          is_live: false,
-          viewer_count: 0,
-        }])
-        .select()
-        .single();
-        
+      console.log('Creating new stream via Mux...');
+      const { data, error } = await supabase.functions.invoke('mux-stream', {
+        body: { action: 'create' }
+      });
+      
       if (error) {
         console.error('Error creating stream:', error);
         throw error;
       }
       
       return data;
+    },
+    onError: (error) => {
+      console.error('Failed to create stream:', error);
+      toast.error('Failed to create stream. Please try again.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
@@ -77,19 +75,17 @@ const Broadcasting = () => {
     mutationFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
       
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from('streams')
-        .update({ 
-          is_live: false,
-          ended_at: now,
-        })
-        .eq('user_id', user.id)
-        .select()
-        .single();
-        
+      console.log('Ending stream via Mux...');
+      const { data, error } = await supabase.functions.invoke('mux-stream', {
+        body: { action: 'end' }
+      });
+      
       if (error) throw error;
       return data;
+    },
+    onError: (error) => {
+      console.error('Failed to end stream:', error);
+      toast.error('Failed to end stream. Please try again.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
