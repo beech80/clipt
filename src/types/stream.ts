@@ -59,3 +59,5 @@ export interface Stream {
   description: string | null;
   thumbnail_url: string | null;
 }
+
+export type StreamChatSettings = NonNullable<Stream['chat_settings']>;

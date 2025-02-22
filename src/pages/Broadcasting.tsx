@@ -13,19 +13,7 @@ import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
-
-interface Stream {
-  id: string;
-  user_id: string;
-  title: string;
-  stream_key: string;
-  stream_url: string;
-  playback_url: string;
-  is_live: boolean;
-  viewer_count: number;
-  created_at: string;
-  updated_at: string;
-}
+import type { Stream } from "@/types/stream";
 
 const Broadcasting = () => {
   const { user } = useAuth();
@@ -35,7 +23,7 @@ const Broadcasting = () => {
   const { data: stream, isLoading: isLoadingStream } = useQuery<Stream | null>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
-      if (!user?.id) throw new Error('User not authenticated');
+      if (!user?.id) return null;
       
       const { data, error } = await supabase
         .from('streams')
@@ -45,7 +33,18 @@ const Broadcasting = () => {
         .maybeSingle();
       
       if (error) throw error;
-      return data;
+      
+      // Ensure we have all required fields with proper types
+      if (data) {
+        return {
+          ...data,
+          updated_at: data.updated_at || new Date().toISOString(),
+          created_at: data.created_at || new Date().toISOString(),
+          viewer_count: data.viewer_count || 0,
+          is_live: !!data.is_live
+        } as Stream;
+      }
+      return null;
     },
     enabled: !!user?.id
   });
