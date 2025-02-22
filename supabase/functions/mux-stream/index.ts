@@ -43,8 +43,18 @@ serve(async (req) => {
     console.log('Action:', action)
 
     if (action === 'create') {
-      // Generate a new stream key for the user
-      const streamKey = crypto.randomUUID().replace(/-/g, '')
+      // Call generate_stream_key function to create a properly encrypted key
+      const { data: keyData, error: keyError } = await supabaseClient.rpc(
+        'generate_stream_key',
+        { user_id_param: user.id }
+      )
+      
+      if (keyError) {
+        console.error('Error generating stream key:', keyError)
+        throw keyError
+      }
+
+      console.log('Stream key generated successfully')
       
       // Create new stream record
       const { data: stream, error: streamError } = await supabaseClient
@@ -53,7 +63,6 @@ serve(async (req) => {
           user_id: user.id,
           is_live: false,
           viewer_count: 0,
-          stream_key: streamKey,
           rtmp_url: 'rtmp://stream.lovable.dev/live',
         }])
         .select('*')
@@ -64,7 +73,7 @@ serve(async (req) => {
         throw streamError
       }
 
-      console.log('Stream created successfully:', stream)
+      console.log('Stream created successfully')
 
       return new Response(
         JSON.stringify(stream),
@@ -90,7 +99,7 @@ serve(async (req) => {
         throw streamError
       }
 
-      console.log('Stream ended successfully:', stream)
+      console.log('Stream ended successfully')
 
       return new Response(
         JSON.stringify(stream),
