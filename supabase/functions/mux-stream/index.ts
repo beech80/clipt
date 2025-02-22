@@ -46,49 +46,13 @@ serve(async (req) => {
       const streamKey = crypto.randomUUID()
       console.log('Generated stream key:', streamKey)
 
-      // First, check if user already has a stream
-      const { data: existingStream } = await supabaseClient
-        .from('streams')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      const rtmpUrl = "rtmp://stream.lovable.dev/live";
       const now = new Date().toISOString();
+      const rtmpUrl = "rtmp://stream.lovable.dev/live";
 
-      if (existingStream) {
-        // Update existing stream
-        const { data: stream, error: streamError } = await supabaseClient
-          .from('streams')
-          .update({
-            stream_key: streamKey,
-            rtmp_url: rtmpUrl,
-            rtmp_key: streamKey,
-            is_live: false,
-            viewer_count: 0,
-            started_at: null,
-            ended_at: null,
-            updated_at: now
-          })
-          .eq('user_id', user.id)
-          .select()
-          .single();
-
-        if (streamError) {
-          console.error('Error updating stream:', streamError)
-          throw streamError
-        }
-
-        return new Response(
-          JSON.stringify(stream),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-      // Create new stream if none exists
+      // Create or update stream
       const { data: stream, error: streamError } = await supabaseClient
         .from('streams')
-        .insert({
+        .upsert({
           user_id: user.id,
           stream_key: streamKey,
           rtmp_url: rtmpUrl,
@@ -114,16 +78,18 @@ serve(async (req) => {
               blocked_terms: []
             }
           }
+        }, {
+          onConflict: 'user_id'
         })
         .select()
         .single();
 
       if (streamError) {
-        console.error('Error creating stream:', streamError)
+        console.error('Error creating/updating stream:', streamError)
         throw streamError
       }
 
-      console.log('Stream created successfully:', stream)
+      console.log('Stream created/updated successfully:', stream)
 
       return new Response(
         JSON.stringify(stream),
