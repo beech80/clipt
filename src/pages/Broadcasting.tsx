@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { BroadcastPresetForm } from "@/components/broadcasting/BroadcastPresetForm";
@@ -13,7 +12,7 @@ import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
-import type { Stream } from "@/types/stream";
+import type { Stream, StreamChatSettings } from "@/types/stream";
 
 const Broadcasting = () => {
   const { user } = useAuth();
@@ -35,28 +34,68 @@ const Broadcasting = () => {
       
       // Ensure we have all required fields with proper types
       if (data) {
+        const defaultChatSettings: StreamChatSettings = {
+          slow_mode: false,
+          slow_mode_interval: 0,
+          subscriber_only: false,
+          follower_only: false,
+          follower_time_required: 0,
+          emote_only: false,
+          auto_mod_settings: {
+            enabled: true,
+            spam_detection: true,
+            link_protection: true,
+            caps_limit_percent: 80,
+            max_emotes: 10,
+            blocked_terms: []
+          }
+        };
+
         const streamData: Stream = {
           ...data,
           updated_at: data.updated_at || new Date().toISOString(),
           created_at: data.created_at || new Date().toISOString(),
           viewer_count: data.viewer_count || 0,
           is_live: !!data.is_live,
-          chat_settings: data.chat_settings || {
-            slow_mode: false,
-            slow_mode_interval: 0,
-            subscriber_only: false,
-            follower_only: false,
-            follower_time_required: 0,
-            emote_only: false,
-            auto_mod_settings: {
-              enabled: true,
-              spam_detection: true,
-              link_protection: true,
-              caps_limit_percent: 80,
-              max_emotes: 10,
-              blocked_terms: []
-            }
-          }
+          chat_settings: data.chat_settings as StreamChatSettings || defaultChatSettings,
+          // Ensure all required fields are present
+          id: data.id,
+          user_id: data.user_id,
+          stream_key: data.stream_key,
+          rtmp_url: data.rtmp_url,
+          title: data.title,
+          description: data.description,
+          thumbnail_url: data.thumbnail_url,
+          stream_url: data.stream_url,
+          playback_url: data.playback_url,
+          started_at: data.started_at,
+          ended_at: data.ended_at,
+          chat_enabled: data.chat_enabled,
+          current_bitrate: data.current_bitrate,
+          current_fps: data.current_fps,
+          available_qualities: data.available_qualities,
+          scheduled_start_time: data.scheduled_start_time,
+          scheduled_duration: data.scheduled_duration,
+          recurring_schedule: data.recurring_schedule,
+          vod_enabled: data.vod_enabled,
+          stream_settings: data.stream_settings,
+          max_bitrate: data.max_bitrate,
+          stream_latency_ms: data.stream_latency_ms,
+          last_health_check: data.last_health_check,
+          dvr_enabled: data.dvr_enabled,
+          dvr_window_seconds: data.dvr_window_seconds,
+          search_vector: data.search_vector,
+          recommendation_score: data.recommendation_score,
+          abr_active: data.abr_active,
+          low_latency_active: data.low_latency_active,
+          current_quality_preset: data.current_quality_preset,
+          health_status: data.health_status,
+          stream_resolution: data.stream_resolution,
+          schedule_status: data.schedule_status,
+          vod_processing_status: data.vod_processing_status,
+          ingest_url: data.ingest_url,
+          cdn_url: data.cdn_url,
+          encrypted_stream_key: data.encrypted_stream_key
         };
         return streamData;
       }
