@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -182,6 +183,7 @@ export const PostForm = () => {
     setLoading(true);
 
     try {
+      // Upload file with timestamp to ensure unique names
       const timestamp = Date.now();
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/${timestamp}.${fileExt}`;
@@ -198,10 +200,12 @@ export const PostForm = () => {
         throw new Error('Failed to upload file. Please try again.');
       }
 
+      // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
         .from('posts')
         .getPublicUrl(filePath);
 
+      // Create the post record
       const { error: postError } = await supabase
         .from('posts')
         .insert([{
@@ -222,6 +226,7 @@ export const PostForm = () => {
 
       toast.success(destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!');
       
+      // Clean up form and camera
       stopCamera();
       setContent('');
       setFile(null);
@@ -230,6 +235,7 @@ export const PostForm = () => {
       setHashtags([]);
       setMentions([]);
       
+      // Navigate to the appropriate page without replace
       if (destination === 'clipts') {
         navigate('/clipts');
       } else {
