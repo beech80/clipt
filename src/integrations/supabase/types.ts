@@ -7545,6 +7545,7 @@ export type Database = {
           available_qualities: Json | null
           cdn_url: string | null
           chat_enabled: boolean | null
+          chat_settings: Json | null
           created_at: string
           current_bitrate: number | null
           current_fps: number | null
@@ -7591,6 +7592,7 @@ export type Database = {
           available_qualities?: Json | null
           cdn_url?: string | null
           chat_enabled?: boolean | null
+          chat_settings?: Json | null
           created_at?: string
           current_bitrate?: number | null
           current_fps?: number | null
@@ -7637,6 +7639,7 @@ export type Database = {
           available_qualities?: Json | null
           cdn_url?: string | null
           chat_enabled?: boolean | null
+          chat_settings?: Json | null
           created_at?: string
           current_bitrate?: number | null
           current_fps?: number | null

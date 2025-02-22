@@ -1,5 +1,6 @@
 
-import { useEffect, useState } from 'react';
+import React, { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -7,69 +8,90 @@ import { Input } from "@/components/ui/input";
 import { Copy, Eye, EyeOff, Calendar, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
 import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
 import GameBoyControls from "@/components/GameBoyControls";
 import { BackButton } from "@/components/ui/back-button";
 import { useNavigate } from "react-router-dom";
+import { ChatModerationDashboard } from "@/components/streaming/moderation/ChatModerationDashboard";
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
+
+interface Stream {
+  id: string;
+  user_id: string;
+  title: string;
+  stream_key: string;
+  stream_url: string;
+  playback_url: string;
+  is_live: boolean;
+  viewer_count: number;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function Streaming() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [streamKey, setStreamKey] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLive, setIsLive] = useState(false);
+  const queryClient = useQueryClient();
   const rtmpUrl = "rtmp://stream.lovable.dev/live";
 
-  useEffect(() => {
-    const loadStreamKey = async () => {
-      if (!user) return;
-
+  const { data: stream, isLoading } = useQuery<Stream | null>({
+    queryKey: ['stream', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
       const { data, error } = await supabase
         .from('streams')
-        .select('encrypted_stream_key, is_live')
+        .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
 
-      if (error) {
-        console.error('Error loading stream key:', error);
-        toast.error('Failed to load stream key');
-        return;
-      }
+  const startStream = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('mux-stream', {
+        body: { action: 'create' }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stream'] });
+      toast.success('Stream created successfully');
+    },
+    onError: (error) => {
+      console.error('Error creating stream:', error);
+      toast.error('Failed to create stream');
+    }
+  });
 
-      if (data?.encrypted_stream_key) {
-        setStreamKey(data.encrypted_stream_key);
-        setIsLive(data.is_live || false);
-      }
-      setIsLoading(false);
-    };
+  const endStream = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('mux-stream', {
+        body: { action: 'end' }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stream'] });
+      toast.success('Stream ended successfully');
+    },
+    onError: (error) => {
+      console.error('Error ending stream:', error);
+      toast.error('Failed to end stream');
+    }
+  });
 
-    loadStreamKey();
-
-    // Subscribe to stream status changes
-    const channel = supabase
-      .channel('stream-status')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'streams',
-          filter: `user_id=eq.${user?.id}`
-        },
-        (payload) => {
-          setIsLive(payload.new.is_live);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
-
-  const copyToClipboard = (text: string, label: string) => {
+  const copyToClipboard = (text: string | null, label: string) => {
+    if (!text) return;
     navigator.clipboard.writeText(text)
       .then(() => toast.success(`${label} copied to clipboard`))
       .catch(() => toast.error(`Failed to copy ${label}`));
@@ -109,63 +131,75 @@ export default function Streaming() {
           </Button>
         </div>
       </div>
-      
-      <Card className="p-6 space-y-4">
-        <h2 className="text-xl font-semibold mb-4">Stream Settings</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">RTMP URL</label>
-            <div className="flex gap-2">
-              <Input value={rtmpUrl} readOnly />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => copyToClipboard(rtmpUrl, 'RTMP URL')}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Stream Key</label>
-            <div className="flex gap-2">
-              <Input
-                type={showKey ? 'text' : 'password'}
-                value={streamKey || ''}
-                readOnly
-                placeholder={isLoading ? 'Loading...' : 'No stream key found'}
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setShowKey(!showKey)}
-              >
-                {showKey ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-              {streamKey && (
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Stream Controls</h2>
+          {!isLoading && (
+            <Button
+              variant={stream?.is_live ? "destructive" : "default"}
+              onClick={() => stream?.is_live ? endStream.mutate() : startStream.mutate()}
+              disabled={startStream.isPending || endStream.isPending}
+            >
+              <Radio className="mr-2 h-4 w-4" />
+              {stream?.is_live ? 'End Stream' : 'Start Stream'}
+            </Button>
+          )}
+        </div>
+        
+        {stream && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-2">Stream Key</label>
+              <div className="flex gap-2">
+                <Input
+                  type={showKey ? 'text' : 'password'}
+                  value={stream.stream_key || ''}
+                  readOnly
+                  className="font-mono"
+                />
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => copyToClipboard(streamKey, 'Stream key')}
+                  onClick={() => setShowKey(!showKey)}
+                >
+                  {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyToClipboard(stream.stream_key, 'Stream key')}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">RTMP URL</label>
+              <div className="flex gap-2">
+                <Input value={rtmpUrl} readOnly className="font-mono" />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyToClipboard(rtmpUrl, 'RTMP URL')}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </Card>
 
+      {stream?.id && (
+        <ChatModerationDashboard streamId={stream.id} />
+      )}
+
       <EnhancedGamingDashboard 
-        streamId={streamKey || ''} 
+        streamId={stream?.id || ''} 
         userId={user.id}
-        isLive={isLive}
+        isLive={stream?.is_live || false}
       />
 
       <GameBoyControls />
