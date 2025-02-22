@@ -232,7 +232,7 @@ export const PostForm = () => {
       console.log('File URL:', publicUrl);
 
       // Create the post
-      const { error: postError } = await supabase
+      const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert([{
           content,
@@ -242,7 +242,9 @@ export const PostForm = () => {
           is_published: true,
           video_url: isVideo ? publicUrl : null,
           image_url: !isVideo ? publicUrl : null,
-        }]);
+        }])
+        .select()
+        .single();
 
       if (postError) {
         console.error('Post error:', postError);
@@ -263,7 +265,7 @@ export const PostForm = () => {
       setMentions([]);
       setUploadProgress(0);
       
-      navigate(destination === 'clipts' ? '/clipts' : '/');
+      navigate(`/post/${postData.id}`);
       
     } catch (error) {
       console.error('Error creating post:', error);
@@ -523,3 +525,5 @@ export const PostForm = () => {
     </div>
   );
 };
+
+export default PostForm;
