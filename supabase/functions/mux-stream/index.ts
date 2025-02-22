@@ -1,8 +1,4 @@
 
-// Follow this setup guide to integrate the Deno runtime into your application:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -57,17 +53,22 @@ serve(async (req) => {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      const rtmpUrl = "rtmp://stream.lovable.dev/live";
+      const now = new Date().toISOString();
+
       if (existingStream) {
         // Update existing stream
         const { data: stream, error: streamError } = await supabaseClient
           .from('streams')
           .update({
             stream_key: streamKey,
+            rtmp_url: rtmpUrl,
+            rtmp_key: streamKey,
             is_live: false,
             viewer_count: 0,
             started_at: null,
             ended_at: null,
-            updated_at: new Date().toISOString()
+            updated_at: now
           })
           .eq('user_id', user.id)
           .select()
@@ -90,11 +91,13 @@ serve(async (req) => {
         .insert({
           user_id: user.id,
           stream_key: streamKey,
+          rtmp_url: rtmpUrl,
+          rtmp_key: streamKey,
           is_live: false,
           viewer_count: 0,
           title: 'New Stream',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          created_at: now,
+          updated_at: now,
           chat_settings: {
             slow_mode: false,
             slow_mode_interval: 0,

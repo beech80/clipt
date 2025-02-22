@@ -4,6 +4,10 @@ export interface Stream {
   user_id: string;
   title: string;
   stream_key: string | null;
+  rtmp_url?: string | null;
+  rtmp_key?: string | null;
+  stream_url?: string | null;
+  playback_url?: string | null;
   is_live: boolean;
   viewer_count: number;
   started_at: string | null;
