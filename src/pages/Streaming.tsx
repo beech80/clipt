@@ -6,18 +6,19 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from "@/lib/supabase";
 import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
-import { GameBoyControls } from "@/components/GameBoyControls";
+import GameBoyControls from "@/components/GameBoyControls";
 import { ChatModerationDashboard } from "@/components/streaming/moderation/ChatModerationDashboard";
 import { StreamHeader } from "@/components/streaming/StreamHeader";
 import { StreamKeyDisplay } from "@/components/streaming/StreamKeyDisplay";
 import { StreamControlPanel } from "@/components/streaming/StreamControlPanel";
+import type { Stream } from "@/types/stream";
 
 export default function Streaming() {
   const { user } = useAuth();
   const rtmpUrl = "rtmp://stream.lovable.dev/live";
 
   // Query for existing stream
-  const { data: stream, isLoading, error: streamError } = useQuery({
+  const { data: stream, isLoading, error: streamError } = useQuery<Stream | null>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');

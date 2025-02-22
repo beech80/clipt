@@ -1,6 +1,4 @@
 
-import { Json } from "./database";
-
 export interface Stream {
   id: string;
   user_id: string;
@@ -12,12 +10,12 @@ export interface Stream {
   chat_enabled: boolean;
   current_bitrate: number | null;
   current_fps: number | null;
-  available_qualities: Json | null;
+  available_qualities: any | null;
   scheduled_start_time: string | null;
-  scheduled_duration: Json | null;
-  recurring_schedule: Json | null;
+  scheduled_duration: any | null;
+  recurring_schedule: any | null;
   vod_enabled: boolean;
-  stream_settings: Json;
+  stream_settings: any;
   max_bitrate: number;
   stream_latency_ms: number | null;
   last_health_check: string | null;
@@ -28,7 +26,7 @@ export interface Stream {
   abr_active: boolean;
   low_latency_active: boolean;
   current_quality_preset: string | null;
-  chat_settings: Json;
+  chat_settings: any;
   title: string | null;
   description: string | null;
   thumbnail_url: string | null;
