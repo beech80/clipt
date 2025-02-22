@@ -24,6 +24,7 @@ const Clipts = () => {
           video_url,
           user_id,
           created_at,
+          game_id,
           profiles:user_id (username, avatar_url),
           games:game_id (name),
           is_published,
@@ -31,7 +32,7 @@ const Clipts = () => {
           required_tier_id,
           scheduled_publish_time
         `)
-        .eq('type', 'video')
+        .eq('post_type', 'clipts')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -75,7 +76,7 @@ const Clipts = () => {
             {posts?.map((post) => (
               <div 
                 key={post.id} 
-                className="bg-[#283593]/80 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg border border-indigo-400/20"
+                className="bg-[#283593]/80 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg border border-indigo-400/20 hover:border-indigo-400/40 transition-all duration-300"
               >
                 <PostItem post={post} />
               </div>

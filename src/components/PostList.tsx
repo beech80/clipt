@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -20,6 +21,9 @@ const PostList = () => {
             username,
             avatar_url
           ),
+          games:game_id (
+            name
+          ),
           likes (
             count
           ),
@@ -41,7 +45,6 @@ const PostList = () => {
     }
   }, [data]);
 
-  // Subscribe to new posts
   useEffect(() => {
     const channel = supabase
       .channel('public:posts')
@@ -65,7 +68,6 @@ const PostList = () => {
     };
   }, []);
 
-  // Subscribe to post updates
   useEffect(() => {
     const channel = supabase
       .channel('public:post_updates')
@@ -93,14 +95,28 @@ const PostList = () => {
   }, []);
 
   if (isLoading) {
-    return <div>Loading posts...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {posts.map((post) => (
-        <PostItem key={post.id} post={post} />
+        <div 
+          key={post.id} 
+          className="bg-gaming-800/80 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg border border-gaming-700/50 hover:border-gaming-600/50 transition-colors"
+        >
+          <PostItem post={post} />
+        </div>
       ))}
+      {posts.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-400">No posts yet. Be the first to share something!</p>
+        </div>
+      )}
     </div>
   );
 };
