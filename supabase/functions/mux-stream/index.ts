@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { nanoid } from 'https://esm.sh/nanoid@4.0.2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,69 +43,23 @@ serve(async (req) => {
     console.log('Action:', action)
 
     if (action === 'create') {
-      // Check if stream already exists
-      const { data: existingStream, error: checkError } = await supabaseClient
-        .from('streams')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error('Error checking existing stream:', checkError)
-        throw checkError
-      }
-
-      console.log('Existing stream:', existingStream)
-
-      // Generate a new stream key
-      const streamKey = nanoid(16)
-      console.log('Generated stream key:', streamKey)
-
-      // Create or update stream record
+      // Create new stream record - the trigger will handle key generation
       const { data: stream, error: streamError } = await supabaseClient
         .from('streams')
-        .upsert({
+        .insert({
           user_id: user.id,
-          stream_key: streamKey,
-          rtmp_url: 'rtmp://stream.lovable.dev/live',
           is_live: false,
-          viewer_count: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          chat_settings: {
-            slow_mode: false,
-            slow_mode_interval: 0,
-            subscriber_only: false,
-            follower_only: false,
-            follower_time_required: 0,
-            emote_only: false,
-            auto_mod_settings: {
-              enabled: true,
-              spam_detection: true,
-              link_protection: true,
-              caps_limit_percent: 80,
-              max_emotes: 10,
-              blocked_terms: []
-            }
-          }
-        }, {
-          onConflict: 'user_id'
+          viewer_count: 0
         })
         .select('*')
         .single();
 
       if (streamError) {
-        console.error('Error creating/updating stream:', streamError)
+        console.error('Error creating stream:', streamError)
         throw streamError
       }
 
-      console.log('Stream created/updated successfully:', stream)
-
-      // Verify stream key was generated
-      if (!stream.stream_key) {
-        console.error('No stream key generated!')
-        throw new Error('Failed to generate stream key')
-      }
+      console.log('Stream created successfully:', stream)
 
       return new Response(
         JSON.stringify(stream),
