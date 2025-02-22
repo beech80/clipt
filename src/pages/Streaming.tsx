@@ -23,7 +23,8 @@ export default function Streaming() {
   const queryClient = useQueryClient();
   const rtmpUrl = "rtmp://stream.lovable.dev/live";
 
-  const { data: stream, isLoading } = useQuery<Stream | null>({
+  // Query for existing stream
+  const { data: stream, isLoading } = useQuery<Stream>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -34,8 +35,22 @@ export default function Streaming() {
         .eq('user_id', user.id)
         .maybeSingle();
       
-      if (error) throw error;
-      return data as Stream;
+      if (error) {
+        console.error('Error fetching stream:', error);
+        throw error;
+      }
+
+      // If no stream exists yet, create one
+      if (!data) {
+        const { data: newStream, error: createError } = await supabase.functions.invoke('mux-stream', {
+          body: { action: 'create' }
+        });
+        
+        if (createError) throw createError;
+        return newStream;
+      }
+      
+      return data;
     },
     enabled: !!user?.id
   });
@@ -92,6 +107,10 @@ export default function Streaming() {
         <AlertDescription>Please log in to access streaming features.</AlertDescription>
       </Alert>
     );
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
   return (
