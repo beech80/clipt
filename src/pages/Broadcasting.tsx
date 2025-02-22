@@ -8,7 +8,7 @@ import GameBoyControls from "@/components/GameBoyControls";
 import { OBSSetupGuide } from "@/components/streaming/setup/OBSSetupGuide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Copy, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, Copy, RefreshCw, Radio, PlayCircle, StopCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -18,41 +18,59 @@ const Broadcasting = () => {
   const [showKey, setShowKey] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: streamKey, isLoading: isLoadingKey } = useQuery({
-    queryKey: ['stream-key', user?.id],
+  const { data: stream, isLoading: isLoadingStream } = useQuery({
+    queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
       
       const { data, error } = await supabase
-        .from('stream_keys')
-        .select('key')
+        .from('streams')
+        .select('*')
         .eq('user_id', user.id)
-        .single();
+        .eq('is_live', true)
+        .maybeSingle();
       
       if (error) throw error;
-      return data?.key;
+      return data;
     },
     enabled: !!user?.id
   });
 
-  const regenerateKeyMutation = useMutation({
+  const createStreamMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.id) throw new Error('User not authenticated');
-      
-      const { data, error } = await supabase.rpc('generate_user_stream_key', {
-        user_id_param: user.id
+      const { data, error } = await supabase.functions.invoke('mux-stream', {
+        body: { action: 'create' }
       });
       
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['stream-key'] });
-      toast.success('Stream key regenerated successfully');
+      queryClient.invalidateQueries({ queryKey: ['stream'] });
+      toast.success('Stream created successfully');
     },
     onError: (error) => {
-      console.error('Error regenerating stream key:', error);
-      toast.error('Failed to regenerate stream key');
+      console.error('Error creating stream:', error);
+      toast.error('Failed to create stream');
+    }
+  });
+
+  const endStreamMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('mux-stream', {
+        body: { action: 'end' }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stream'] });
+      toast.success('Stream ended successfully');
+    },
+    onError: (error) => {
+      console.error('Error ending stream:', error);
+      toast.error('Failed to end stream');
     }
   });
 
@@ -83,52 +101,86 @@ const Broadcasting = () => {
         <h1 className="text-2xl font-bold">Broadcasting Studio</h1>
       </div>
 
-      {/* Stream Key Management */}
+      {/* Stream Control */}
       <Card className="p-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Stream Key</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => regenerateKeyMutation.mutate()}
-              disabled={regenerateKeyMutation.isPending}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Regenerate Key
-            </Button>
+            <h3 className="text-lg font-semibold">Stream Control</h3>
+            <div className="flex gap-2">
+              {!stream ? (
+                <Button
+                  onClick={() => createStreamMutation.mutate()}
+                  disabled={createStreamMutation.isPending}
+                >
+                  <Radio className="h-4 w-4 mr-2" />
+                  Start New Stream
+                </Button>
+              ) : (
+                <Button
+                  variant="destructive"
+                  onClick={() => endStreamMutation.mutate()}
+                  disabled={endStreamMutation.isPending}
+                >
+                  <StopCircle className="h-4 w-4 mr-2" />
+                  End Stream
+                </Button>
+              )}
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            <Input
-              type={showKey ? 'text' : 'password'}
-              value={isLoadingKey ? 'Loading...' : (streamKey || 'No stream key found')}
-              readOnly
-              className="font-mono"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setShowKey(!showKey)}
-            >
-              {showKey ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => copyToClipboard(streamKey, 'Stream key')}
-              disabled={!streamKey}
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
+          {stream && (
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  type={showKey ? 'text' : 'password'}
+                  value={stream.stream_key || 'No stream key found'}
+                  readOnly
+                  className="font-mono"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowKey(!showKey)}
+                >
+                  {showKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyToClipboard(stream.stream_key, 'Stream key')}
+                  disabled={!stream.stream_key}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Stream URL</h4>
+                <div className="flex gap-2">
+                  <Input
+                    value={stream.stream_url || 'No stream URL found'}
+                    readOnly
+                    className="font-mono"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyToClipboard(stream.stream_url, 'Stream URL')}
+                    disabled={!stream.stream_url}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <p className="text-sm text-muted-foreground">
-            Keep your stream key private. If compromised, click "Regenerate Key".
+            Keep your stream key private. If compromised, end the stream and create a new one.
           </p>
         </div>
       </Card>
