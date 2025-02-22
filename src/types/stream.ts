@@ -3,11 +3,11 @@ export interface Stream {
   id: string;
   user_id: string;
   title: string;
-  stream_key: string;
-  stream_url: string;
-  playback_url: string;
+  stream_key: string | null;
   is_live: boolean;
   viewer_count: number;
+  started_at: string | null;
+  ended_at: string | null;
   created_at: string;
   updated_at: string;
   chat_settings?: {

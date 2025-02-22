@@ -11,8 +11,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-console.log('Hello from mux-stream edge function!')
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -52,10 +50,44 @@ serve(async (req) => {
       const streamKey = crypto.randomUUID()
       console.log('Generated stream key:', streamKey)
 
-      // Create or update stream record
+      // First, check if user already has a stream
+      const { data: existingStream } = await supabaseClient
+        .from('streams')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existingStream) {
+        // Update existing stream
+        const { data: stream, error: streamError } = await supabaseClient
+          .from('streams')
+          .update({
+            stream_key: streamKey,
+            is_live: false,
+            viewer_count: 0,
+            started_at: null,
+            ended_at: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .select()
+          .single();
+
+        if (streamError) {
+          console.error('Error updating stream:', streamError)
+          throw streamError
+        }
+
+        return new Response(
+          JSON.stringify(stream),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Create new stream if none exists
       const { data: stream, error: streamError } = await supabaseClient
         .from('streams')
-        .upsert({
+        .insert({
           user_id: user.id,
           stream_key: streamKey,
           is_live: false,
@@ -81,7 +113,7 @@ serve(async (req) => {
           }
         })
         .select()
-        .single()
+        .single();
 
       if (streamError) {
         console.error('Error creating stream:', streamError)
@@ -106,7 +138,7 @@ serve(async (req) => {
         })
         .eq('user_id', user.id)
         .select()
-        .single()
+        .single();
 
       if (streamError) {
         console.error('Error ending stream:', streamError)
