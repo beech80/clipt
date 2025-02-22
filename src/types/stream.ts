@@ -1,4 +1,23 @@
 
+export interface StreamChatAutoModSettings {
+  enabled: boolean;
+  spam_detection: boolean;
+  link_protection: boolean;
+  caps_limit_percent: number;
+  max_emotes: number;
+  blocked_terms: string[];
+}
+
+export interface StreamChatSettings {
+  slow_mode: boolean;
+  slow_mode_interval: number;
+  subscriber_only: boolean;
+  follower_only: boolean;
+  follower_time_required: number;
+  emote_only: boolean;
+  auto_mod_settings: StreamChatAutoModSettings;
+}
+
 export interface Stream {
   id: string;
   user_id: string;
@@ -17,12 +36,12 @@ export interface Stream {
   chat_enabled: boolean | null;
   current_bitrate: number | null;
   current_fps: number | null;
-  available_qualities: any | null;
+  available_qualities: Record<string, any> | null;
   scheduled_start_time: string | null;
   scheduled_duration: string | null;
-  recurring_schedule: any | null;
+  recurring_schedule: Record<string, any> | null;
   vod_enabled: boolean | null;
-  stream_settings: any | null;
+  stream_settings: Record<string, any> | null;
   max_bitrate: number | null;
   stream_latency_ms: number | null;
   last_health_check: string | null;
@@ -33,22 +52,7 @@ export interface Stream {
   abr_active: boolean | null;
   low_latency_active: boolean | null;
   current_quality_preset: string | null;
-  chat_settings: {
-    slow_mode: boolean;
-    slow_mode_interval: number;
-    subscriber_only: boolean;
-    follower_only: boolean;
-    follower_time_required: number;
-    emote_only: boolean;
-    auto_mod_settings: {
-      enabled: boolean;
-      spam_detection: boolean;
-      link_protection: boolean;
-      caps_limit_percent: number;
-      max_emotes: number;
-      blocked_terms: string[];
-    };
-  } | null;
+  chat_settings: StreamChatSettings | null;
   health_status: string | null;
   stream_resolution: string | null;
   schedule_status: string | null;
@@ -59,5 +63,3 @@ export interface Stream {
   description: string | null;
   thumbnail_url: string | null;
 }
-
-export type StreamChatSettings = NonNullable<Stream['chat_settings']>;

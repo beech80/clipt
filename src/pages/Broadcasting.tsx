@@ -29,8 +29,7 @@ const Broadcasting = () => {
         .from('streams')
         .select('*')
         .eq('user_id', user.id)
-        .eq('is_live', true)
-        .maybeSingle();
+        .single();
       
       if (error) throw error;
       
@@ -41,7 +40,8 @@ const Broadcasting = () => {
           updated_at: data.updated_at || new Date().toISOString(),
           created_at: data.created_at || new Date().toISOString(),
           viewer_count: data.viewer_count || 0,
-          is_live: !!data.is_live
+          is_live: !!data.is_live,
+          chat_settings: data.chat_settings || null
         } as Stream;
       }
       return null;
@@ -185,15 +185,14 @@ const Broadcasting = () => {
                 <h4 className="text-sm font-medium mb-2">Stream URL</h4>
                 <div className="flex gap-2">
                   <Input
-                    value={stream.stream_url || 'No stream URL found'}
+                    value={stream.rtmp_url || 'rtmp://stream.lovable.dev/live'}
                     readOnly
                     className="font-mono"
                   />
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => copyToClipboard(stream.stream_url, 'Stream URL')}
-                    disabled={!stream.stream_url}
+                    onClick={() => copyToClipboard(stream.rtmp_url || 'rtmp://stream.lovable.dev/live', 'Stream URL')}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
