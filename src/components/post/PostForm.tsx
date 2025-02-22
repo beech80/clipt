@@ -192,8 +192,6 @@ export const PostForm = () => {
         .from('games')
         .upsert({
           name: selectedGame.name,
-          // Store the IGDB ID as a string in cover_url temporarily, 
-          // we'll update with actual cover later
           cover_url: selectedGame.id.toString()
         })
         .select()
@@ -201,26 +199,6 @@ export const PostForm = () => {
 
       if (gameError) {
         throw new Error(`Failed to process game: ${gameError.message}`);
-      }
-
-      // Now create the post with the game's UUID
-      const postData = {
-        content,
-        user_id: user.id,
-        game_id: gameData.id, // Use the UUID from our games table
-        post_type: destination,
-        is_published: true
-      };
-
-      const { data: newPost, error: postError } = await supabase
-        .from('posts')
-        .insert([postData])
-        .select()
-        .single();
-
-      if (postError) {
-        console.error('Post error:', postError);
-        throw new Error(`Failed to create post: ${postError.message}`);
       }
 
       const timestamp = Date.now();
@@ -238,18 +216,9 @@ export const PostForm = () => {
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
-          onUploadProgress: (progress) => {
-            const percentage = (progress.loaded / progress.total) * 100;
-            setUploadProgress(percentage);
-            toast.loading(
-              `Uploading... ${Math.round(percentage)}%`, 
-              { id: uploadToast }
-            );
-          }
         });
 
       if (uploadError) {
-        await supabase.from('posts').delete().eq('id', newPost.id);
         console.error('Upload error:', uploadError);
         throw new Error(`Failed to upload file: ${uploadError.message}`);
       }
@@ -262,17 +231,22 @@ export const PostForm = () => {
 
       console.log('File URL:', publicUrl);
 
-      const { error: updateError } = await supabase
+      // Create the post
+      const { error: postError } = await supabase
         .from('posts')
-        .update({
+        .insert([{
+          content,
+          user_id: user.id,
+          game_id: gameData.id,
+          post_type: destination,
+          is_published: true,
           video_url: isVideo ? publicUrl : null,
           image_url: !isVideo ? publicUrl : null,
-        })
-        .eq('id', newPost.id);
+        }]);
 
-      if (updateError) {
-        console.error('Update error:', updateError);
-        throw new Error(`Failed to update post with media: ${updateError.message}`);
+      if (postError) {
+        console.error('Post error:', postError);
+        throw new Error(`Failed to create post: ${postError.message}`);
       }
 
       toast.success(
