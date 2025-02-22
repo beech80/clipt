@@ -265,7 +265,11 @@ export const PostForm = () => {
       setMentions([]);
       setUploadProgress(0);
       
-      navigate(`/post/${postData.id}`);
+      if (destination === 'clipts') {
+        navigate('/clipts');
+      } else {
+        navigate('/');
+      }
       
     } catch (error) {
       console.error('Error creating post:', error);

@@ -4,10 +4,37 @@ import { useAuth } from '@/contexts/AuthContext';
 import GameBoyControls from '@/components/GameBoyControls';
 import { useNavigate } from 'react-router-dom';
 import { Camera } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import PostItem from '@/components/PostItem';
+import { Post } from '@/types/post';
 
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const { data: posts } = useQuery({
+    queryKey: ['posts', 'home'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            avatar_url
+          ),
+          games:game_id (name),
+          likes_count:likes(count),
+          clip_votes:clip_votes(count)
+        `)
+        .eq('post_type', 'home')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as Post[];
+    },
+  });
 
   return (
     <div className="relative min-h-screen bg-gaming-900">
@@ -16,6 +43,13 @@ const Home = () => {
         <h1 className="text-center text-3xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
           Squads Clipts
         </h1>
+      </div>
+
+      {/* Posts Feed */}
+      <div className="container mx-auto px-4 py-6 space-y-6 max-w-2xl">
+        {posts?.map((post) => (
+          <PostItem key={post.id} post={post} />
+        ))}
       </div>
 
       {/* Center Camera Button */}

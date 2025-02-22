@@ -4,9 +4,36 @@ import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
 import { BackButton } from "@/components/ui/back-button";
 import { Camera } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import PostItem from '@/components/PostItem';
+import { Post } from '@/types/post';
 
 const Clipts = () => {
   const navigate = useNavigate();
+
+  const { data: posts } = useQuery({
+    queryKey: ['posts', 'clipts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            avatar_url
+          ),
+          games:game_id (name),
+          likes_count:likes(count),
+          clip_votes:clip_votes(count)
+        `)
+        .eq('post_type', 'clipts')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as Post[];
+    },
+  });
 
   return (
     <div className="min-h-screen bg-[#1a237e]">
@@ -19,13 +46,21 @@ const Clipts = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-24">
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center space-y-4">
-            <p className="text-2xl font-semibold text-white/60">Ready to share a gaming moment?</p>
-            <p className="text-purple-400">Click the button below to create your first clip!</p>
+      <div className="container mx-auto px-4 py-24 max-w-2xl">
+        {posts?.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center space-y-4">
+              <p className="text-2xl font-semibold text-white/60">Ready to share a gaming moment?</p>
+              <p className="text-purple-400">Click the button below to create your first clip!</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-6">
+            {posts?.map((post) => (
+              <PostItem key={post.id} post={post} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
