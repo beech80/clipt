@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -181,41 +182,60 @@ export const PostForm = () => {
 
     setLoading(true);
     try {
+      // First upload the file
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
+
+      // Create the posts bucket if it doesn't exist
+      const { data: bucketData, error: bucketError } = await supabase
+        .storage
+        .getBucket('posts');
+
+      if (!bucketData) {
+        await supabase
+          .storage
+          .createBucket('posts', {
+            public: true,
+            fileSizeLimit: 100000000 // 100MB
+          });
+      }
 
       const { error: uploadError } = await supabase.storage
         .from('posts')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error('Failed to upload file');
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('posts')
         .getPublicUrl(filePath);
 
-      const postData = {
-        content,
-        user_id: user.id,
-        game_id: selectedGame.id,
-        video_url: isVideo ? publicUrl : null,
-        image_url: !isVideo ? publicUrl : null,
-        type: isVideo ? 'video' : 'image',
-        is_published: true,
-        hashtags,
-        mentions,
-        post_type: destination
-      };
-
+      // Then create the post
       const { error: postError } = await supabase
         .from('posts')
-        .insert(postData);
+        .insert({
+          content,
+          user_id: user.id,
+          game_id: selectedGame.id,
+          video_url: isVideo ? publicUrl : null,
+          image_url: !isVideo ? publicUrl : null,
+          type: isVideo ? 'video' : 'image',
+          is_published: true,
+          post_type: destination
+        });
 
-      if (postError) throw postError;
+      if (postError) {
+        console.error('Post error:', postError);
+        throw new Error('Failed to create post');
+      }
 
       toast.success(destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!');
       
+      // Clean up form and camera
       stopCamera();
       setContent('');
       setFile(null);
@@ -224,6 +244,7 @@ export const PostForm = () => {
       setHashtags([]);
       setMentions([]);
       
+      // Navigate to the correct page
       if (destination === 'clipts') {
         navigate('/clipts', { replace: true });
       } else {
@@ -231,7 +252,7 @@ export const PostForm = () => {
       }
       
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error creating post:', error);
       toast.error('Error creating post. Please try again.');
     } finally {
       setLoading(false);
