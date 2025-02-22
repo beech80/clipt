@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -182,10 +183,27 @@ export const PostForm = () => {
     setLoading(true);
 
     try {
+      // First, create or get the game entry
+      const { data: gameData, error: gameError } = await supabase
+        .from('games')
+        .upsert({
+          name: selectedGame.name,
+          // Store the IGDB ID as a string in cover_url temporarily, 
+          // we'll update with actual cover later
+          cover_url: selectedGame.id.toString()
+        })
+        .select()
+        .single();
+
+      if (gameError) {
+        throw new Error(`Failed to process game: ${gameError.message}`);
+      }
+
+      // Now create the post with the game's UUID
       const postData = {
         content,
         user_id: user.id,
-        game_id: selectedGame.id,
+        game_id: gameData.id, // Use the UUID from our games table
         post_type: destination,
         is_published: true
       };
