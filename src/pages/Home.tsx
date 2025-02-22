@@ -11,9 +11,9 @@ const Home = () => {
 
   return (
     <div className="relative min-h-screen bg-gaming-900">
-      {/* Simple Header */}
-      <div className="w-full py-4 px-4">
-        <h1 className="text-center text-2xl font-medium text-indigo-400">
+      {/* Modern Header with Gradient and Blur */}
+      <div className="w-full py-6 px-4 bg-gradient-to-b from-gaming-800/80 to-transparent backdrop-blur-sm">
+        <h1 className="text-center text-3xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
           Squads Clipts
         </h1>
       </div>
