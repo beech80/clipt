@@ -188,7 +188,13 @@ export const PostForm = () => {
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/${timestamp}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('Starting file upload...', {
+        filePath,
+        fileType: file.type,
+        fileSize: file.size
+      });
+
+      const { error: uploadError, data: uploadData } = await supabase.storage
         .from('posts')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -197,31 +203,43 @@ export const PostForm = () => {
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        throw new Error('Failed to upload file. Please try again.');
+        throw new Error(`Failed to upload file: ${uploadError.message}`);
       }
+
+      console.log('File uploaded successfully', uploadData);
 
       // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
         .from('posts')
         .getPublicUrl(filePath);
 
+      console.log('Creating post with URL:', publicUrl);
+
       // Create the post record
+      const postData = {
+        content,
+        user_id: user.id,
+        game_id: selectedGame.id,
+        video_url: isVideo ? publicUrl : null,
+        image_url: !isVideo ? publicUrl : null,
+        type: isVideo ? 'video' : 'image',
+        post_type: destination,
+        is_published: true
+      };
+
+      console.log('Creating post with data:', postData);
+
       const { error: postError } = await supabase
         .from('posts')
-        .insert([{
-          content,
-          user_id: user.id,
-          game_id: selectedGame.id,
-          video_url: isVideo ? publicUrl : null,
-          image_url: !isVideo ? publicUrl : null,
-          type: isVideo ? 'video' : 'image',
-          post_type: destination,
-          is_published: true
-        }]);
+        .insert([postData]);
 
       if (postError) {
         console.error('Post error:', postError);
-        throw new Error('Failed to create post. Please try again.');
+        // Delete uploaded file if post creation fails
+        await supabase.storage
+          .from('posts')
+          .remove([filePath]);
+        throw new Error(`Failed to create post: ${postError.message}`);
       }
 
       toast.success(destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!');
@@ -235,12 +253,8 @@ export const PostForm = () => {
       setHashtags([]);
       setMentions([]);
       
-      // Navigate to the appropriate page without replace
-      if (destination === 'clipts') {
-        navigate('/clipts');
-      } else {
-        navigate('/');
-      }
+      // Navigate to the appropriate page
+      navigate(destination === 'clipts' ? '/clipts' : '/');
       
     } catch (error) {
       console.error('Error creating post:', error);
