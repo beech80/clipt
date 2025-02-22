@@ -1,67 +1,29 @@
 
-import { Json } from './auth'
-
-export interface StreamTypes {
-  streams: {
-    Row: {
-      id: string
-      user_id: string
-      title: string
-      description: string | null
-      thumbnail_url: string | null
-      stream_key: string
-      is_live: boolean | null
-      viewer_count: number | null
-      started_at: string | null
-      ended_at: string | null
-      created_at: string
-      stream_url: string | null
-      chat_enabled: boolean | null
-      health_status: string | null
-      current_bitrate: number | null
-      current_fps: number | null
-      available_qualities: Json | null
-      stream_resolution: string | null
-    }
-    Insert: {
-      id?: string
-      user_id: string
-      title: string
-      description?: string | null
-      thumbnail_url?: string | null
-      stream_key: string
-      is_live?: boolean | null
-      viewer_count?: number | null
-      started_at?: string | null
-      ended_at?: string | null
-      created_at?: string
-      stream_url?: string | null
-      chat_enabled?: boolean | null
-      health_status?: string | null
-      current_bitrate?: number | null
-      current_fps?: number | null
-      available_qualities?: Json | null
-      stream_resolution?: string | null
-    }
-    Update: {
-      id?: string
-      user_id?: string
-      title?: string
-      description?: string | null
-      thumbnail_url?: string | null
-      stream_key?: string
-      is_live?: boolean | null
-      viewer_count?: number | null
-      started_at?: string | null
-      ended_at?: string | null
-      created_at?: string
-      stream_url?: string | null
-      chat_enabled?: boolean | null
-      health_status?: string | null
-      current_bitrate?: number | null
-      current_fps?: number | null
-      available_qualities?: Json | null
-      stream_resolution?: string | null
-    }
-  }
+export interface Stream {
+  id: string;
+  user_id: string;
+  title: string;
+  stream_key: string;
+  stream_url: string;
+  playback_url: string;
+  is_live: boolean;
+  viewer_count: number;
+  created_at: string;
+  updated_at: string;
+  chat_settings?: {
+    slow_mode: boolean;
+    slow_mode_interval: number;
+    subscriber_only: boolean;
+    follower_only: boolean;
+    follower_time_required: number;
+    emote_only: boolean;
+    auto_mod_settings: {
+      enabled: boolean;
+      spam_detection: boolean;
+      link_protection: boolean;
+      caps_limit_percent: number;
+      max_emotes: number;
+      blocked_terms: string[];
+    };
+  };
 }

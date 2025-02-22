@@ -14,19 +14,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { useNavigate } from "react-router-dom";
 import { ChatModerationDashboard } from "@/components/streaming/moderation/ChatModerationDashboard";
 import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
-
-interface Stream {
-  id: string;
-  user_id: string;
-  title: string;
-  stream_key: string;
-  stream_url: string;
-  playback_url: string;
-  is_live: boolean;
-  viewer_count: number;
-  created_at: string;
-  updated_at: string;
-}
+import type { Stream } from "@/types/stream";
 
 export default function Streaming() {
   const { user } = useAuth();
@@ -47,7 +35,7 @@ export default function Streaming() {
         .maybeSingle();
       
       if (error) throw error;
-      return data;
+      return data as Stream;
     },
     enabled: !!user?.id
   });
@@ -63,7 +51,8 @@ export default function Streaming() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
-      toast.success('Stream created successfully');
+      toast.success('Stream created successfully! You can now start streaming using your streaming software.');
+      toast.info('Remember to copy your Stream Key and RTMP URL to your streaming software.');
     },
     onError: (error) => {
       console.error('Error creating stream:', error);
@@ -140,6 +129,7 @@ export default function Streaming() {
               variant={stream?.is_live ? "destructive" : "default"}
               onClick={() => stream?.is_live ? endStream.mutate() : startStream.mutate()}
               disabled={startStream.isPending || endStream.isPending}
+              size="lg"
             >
               <Radio className="mr-2 h-4 w-4" />
               {stream?.is_live ? 'End Stream' : 'Start Stream'}
@@ -162,6 +152,7 @@ export default function Streaming() {
                   variant="outline"
                   size="icon"
                   onClick={() => setShowKey(!showKey)}
+                  title={showKey ? 'Hide Stream Key' : 'Show Stream Key'}
                 >
                   {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
@@ -169,10 +160,14 @@ export default function Streaming() {
                   variant="outline"
                   size="icon"
                   onClick={() => copyToClipboard(stream.stream_key, 'Stream key')}
+                  title="Copy Stream Key"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Keep your stream key private. Never share it with anyone.
+              </p>
             </div>
 
             <div>
@@ -183,18 +178,36 @@ export default function Streaming() {
                   variant="outline"
                   size="icon"
                   onClick={() => copyToClipboard(rtmpUrl, 'RTMP URL')}
+                  title="Copy RTMP URL"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Use this URL in your streaming software (OBS, Streamlabs, etc.)
+              </p>
             </div>
+
+            <Alert>
+              <AlertDescription>
+                To start streaming:
+                <ol className="list-decimal ml-4 mt-2">
+                  <li>Copy the RTMP URL and Stream Key</li>
+                  <li>Open your streaming software (e.g., OBS Studio)</li>
+                  <li>Go to Settings → Stream</li>
+                  <li>Set Service to "Custom"</li>
+                  <li>Paste the RTMP URL into "Server"</li>
+                  <li>Paste your Stream Key into "Stream Key"</li>
+                  <li>Click "Apply" and "OK"</li>
+                  <li>Click "Start Stream" in your software</li>
+                </ol>
+              </AlertDescription>
+            </Alert>
           </>
         )}
       </Card>
 
-      {stream?.id && (
-        <ChatModerationDashboard streamId={stream.id} />
-      )}
+      {stream?.id && <ChatModerationDashboard streamId={stream.id} />}
 
       <EnhancedGamingDashboard 
         streamId={stream?.id || ''} 
