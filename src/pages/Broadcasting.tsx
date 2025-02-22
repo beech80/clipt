@@ -33,7 +33,7 @@ const Broadcasting = () => {
         .single();
       
       if (error) {
-        console.error('Error fetching stream:', error);
+        console.error('Error loading stream key:', error);
         throw error;
       }
 
@@ -57,7 +57,7 @@ const Broadcasting = () => {
           }
         };
 
-        const formattedStream: Stream = {
+        return {
           id: streamData.id,
           user_id: streamData.user_id,
           title: streamData.title,
@@ -92,7 +92,7 @@ const Broadcasting = () => {
           abr_active: streamData.abr_active,
           low_latency_active: streamData.low_latency_active,
           current_quality_preset: streamData.current_quality_preset,
-          chat_settings: (streamData.chat_settings as StreamChatSettings) || defaultChatSettings,
+          chat_settings: streamData.chat_settings as StreamChatSettings || defaultChatSettings,
           health_status: streamData.health_status,
           stream_resolution: streamData.stream_resolution,
           schedule_status: streamData.schedule_status,
@@ -101,8 +101,6 @@ const Broadcasting = () => {
           cdn_url: streamData.cdn_url,
           encrypted_stream_key: streamData.encrypted_stream_key
         };
-        
-        return formattedStream;
       }
       return null;
     },
@@ -125,7 +123,7 @@ const Broadcasting = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
-      toast.success('Stream created successfully');
+      toast.success('Stream created successfully! You can now copy your stream key.');
     },
     onError: (error) => {
       console.error('Error creating stream:', error);
@@ -221,12 +219,12 @@ const Broadcasting = () => {
             </div>
           </div>
 
-          {stream && (
+          {stream && stream.stream_key && (
             <div className="space-y-4">
               <div className="flex gap-2">
                 <Input
                   type={showKey ? 'text' : 'password'}
-                  value={stream.stream_key || 'No stream key found'}
+                  value={stream.stream_key}
                   readOnly
                   className="font-mono"
                 />
@@ -245,7 +243,6 @@ const Broadcasting = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => copyToClipboard(stream.stream_key, 'Stream key')}
-                  disabled={!stream.stream_key}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>

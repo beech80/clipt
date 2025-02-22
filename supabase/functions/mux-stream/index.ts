@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { nanoid } from 'https://esm.sh/nanoid@4.0.2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,11 +58,17 @@ serve(async (req) => {
 
       console.log('Existing stream:', existingStream)
 
+      // Generate a new stream key
+      const streamKey = nanoid(16)
+      console.log('Generated stream key:', streamKey)
+
       // Create or update stream record
       const { data: stream, error: streamError } = await supabaseClient
         .from('streams')
         .upsert({
           user_id: user.id,
+          stream_key: streamKey,
+          rtmp_url: 'rtmp://stream.lovable.dev/live',
           is_live: false,
           viewer_count: 0,
           created_at: new Date().toISOString(),
