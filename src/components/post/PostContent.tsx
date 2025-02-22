@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -75,7 +76,7 @@ const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike })
   return (
     <div 
       ref={containerRef} 
-      className="relative w-full h-full group"
+      className="relative w-full bg-black"
       onDoubleClick={handleDoubleTap}
     >
       {videoUrl ? (
@@ -84,7 +85,7 @@ const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike })
             ref={videoRef}
             src={videoUrl}
             className={cn(
-              "w-full h-full object-cover",
+              "w-full h-auto max-h-[80vh] object-contain mx-auto",
               !isVideoLoaded && "invisible"
             )}
             playsInline
@@ -134,7 +135,7 @@ const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike })
             src={imageUrl}
             alt="Post content"
             className={cn(
-              "w-full h-full object-cover",
+              "w-full h-auto max-h-[80vh] object-contain mx-auto",
               !isImageLoaded && "invisible"
             )}
             onLoad={() => setIsImageLoaded(true)}

@@ -13,7 +13,7 @@ const Home = () => {
   const navigate = useNavigate();
 
   const { data: posts, isLoading } = useQuery({
-    queryKey: ['posts'],
+    queryKey: ['home-posts'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('posts')
@@ -43,7 +43,7 @@ const Home = () => {
 
   return (
     <div className="relative min-h-screen bg-gaming-900">
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6">
         {isLoading ? (
           <div className="flex items-center justify-center min-h-[200px]">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
