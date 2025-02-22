@@ -16,33 +16,41 @@ interface StreamControlPanelProps {
 export function StreamControlPanel({ stream, isLoading, userId }: StreamControlPanelProps) {
   const queryClient = useQueryClient();
 
-  const startStream = useMutation({
+  const initializeStream = useMutation({
     mutationFn: async () => {
-      console.log('Starting stream...');
-      const { data, error } = await supabase.functions.invoke('mux-stream', {
-        body: { action: 'create' }
-      });
+      console.log('Initializing stream...');
+      const { data, error } = await supabase
+        .rpc('initialize_stream', { user_id_param: userId });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error initializing stream:', error);
+        throw error;
+      }
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream', userId] });
-      toast.success('Stream created successfully! You can now start streaming using your streaming software.');
-      toast.info('Remember to copy your Stream Key and RTMP URL to your streaming software.');
+      toast.success('Stream initialized successfully! You can now start streaming.');
     },
     onError: (error) => {
-      console.error('Error creating stream:', error);
-      toast.error('Failed to create stream');
+      console.error('Error initializing stream:', error);
+      toast.error('Failed to initialize stream');
     }
   });
 
   const endStream = useMutation({
     mutationFn: async () => {
       console.log('Ending stream...');
-      const { data, error } = await supabase.functions.invoke('mux-stream', {
-        body: { action: 'end' }
-      });
+      const { data, error } = await supabase
+        .from('streams')
+        .update({ 
+          is_live: false,
+          ended_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+        .select()
+        .single();
       
       if (error) throw error;
       return data;
@@ -63,12 +71,12 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
       {!isLoading && (
         <Button
           variant={stream?.is_live ? "destructive" : "default"}
-          onClick={() => stream?.is_live ? endStream.mutate() : startStream.mutate()}
-          disabled={startStream.isPending || endStream.isPending}
+          onClick={() => stream?.is_live ? endStream.mutate() : initializeStream.mutate()}
+          disabled={initializeStream.isPending || endStream.isPending}
           size="lg"
         >
           <Radio className="mr-2 h-4 w-4" />
-          {stream?.is_live ? 'End Stream' : 'Start Stream'}
+          {stream?.is_live ? 'End Stream' : 'Initialize Stream'}
         </Button>
       )}
     </div>

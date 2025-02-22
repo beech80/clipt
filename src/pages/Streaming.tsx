@@ -34,24 +34,8 @@ export default function Streaming() {
         console.error('Error fetching stream:', error);
         throw error;
       }
-
-      // If no stream exists, create one
-      if (!existingStream) {
-        console.log('No stream found, creating new stream...');
-        const { data: newStream, error: createError } = await supabase.functions.invoke('mux-stream', {
-          body: { action: 'create', userId: user.id }
-        });
-        
-        if (createError) {
-          console.error('Error creating stream:', createError);
-          throw createError;
-        }
-        
-        console.log('New stream created:', newStream);
-        return newStream;
-      }
       
-      console.log('Found existing stream:', existingStream);
+      console.log('Stream data:', existingStream);
       return existingStream;
     },
     enabled: !!user?.id,
@@ -97,6 +81,7 @@ export default function Streaming() {
           <AlertDescription>
             To start streaming:
             <ol className="list-decimal ml-4 mt-2">
+              <li>Click "Initialize Stream" to get your stream key</li>
               <li>Copy the RTMP URL and Stream Key</li>
               <li>Open your streaming software (e.g., OBS Studio)</li>
               <li>Go to Settings → Stream</li>
