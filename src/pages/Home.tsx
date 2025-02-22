@@ -25,14 +25,19 @@ const Home = () => {
             avatar_url
           ),
           games:game_id (name),
-          likes_count:likes(count),
+          likes:likes(count),
           clip_votes:clip_votes(count)
         `)
         .eq('post_type', 'home')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Post[];
+
+      return data?.map(post => ({
+        ...post,
+        likes_count: post.likes?.[0]?.count || 0,
+        clip_votes: post.clip_votes || []
+      })) as Post[];
     },
   });
 
