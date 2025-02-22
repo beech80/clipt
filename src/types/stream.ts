@@ -35,11 +35,12 @@ export interface Stream {
   created_at: string;
   updated_at: string;
   chat_enabled: boolean | null;
+  chat_settings: StreamChatSettings | null;
   current_bitrate: number | null;
   current_fps: number | null;
   available_qualities: any | null;
   scheduled_start_time: string | null;
-  scheduled_duration: any | null; // Changed from string to any to match DB
+  scheduled_duration: any | null;
   recurring_schedule: any | null;
   vod_enabled: boolean | null;
   stream_settings: any | null;
@@ -53,7 +54,6 @@ export interface Stream {
   abr_active: boolean | null;
   low_latency_active: boolean | null;
   current_quality_preset: string | null;
-  chat_settings: StreamChatSettings | null;
   health_status: string | null;
   stream_resolution: string | null;
   schedule_status: string | null;

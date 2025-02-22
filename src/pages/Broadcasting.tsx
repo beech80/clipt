@@ -21,7 +21,7 @@ const Broadcasting = () => {
   const queryClient = useQueryClient();
 
   // Query for stream data
-  const { data: stream } = useQuery<Stream>({
+  const { data: stream } = useQuery<Stream | null>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -38,7 +38,7 @@ const Broadcasting = () => {
         throw error;
       }
 
-      return streamData;
+      return streamData as Stream | null;
     },
     enabled: !!user?.id
   });
@@ -55,6 +55,7 @@ const Broadcasting = () => {
           user_id: user.id,
           is_live: false,
           viewer_count: 0,
+          updated_at: new Date().toISOString()
         }])
         .select()
         .single();
@@ -64,7 +65,7 @@ const Broadcasting = () => {
         throw error;
       }
       
-      return data;
+      return data as Stream;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
@@ -77,18 +78,20 @@ const Broadcasting = () => {
     mutationFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
       
+      const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('streams')
         .update({ 
           is_live: false,
-          ended_at: new Date().toISOString()
+          ended_at: now,
+          updated_at: now
         })
         .eq('user_id', user.id)
         .select()
         .single();
         
       if (error) throw error;
-      return data;
+      return data as Stream;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
