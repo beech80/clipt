@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Play, Pause, Volume2, VolumeX, Heart } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export interface PostContentProps {
   videoUrl?: string | null;
@@ -21,6 +22,25 @@ const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike })
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
+  const location = useLocation();
+
+  // Determine if we're on a route that should use widescreen format
+  const isWidescreenRoute = location.pathname.includes('/clipts') || 
+    location.pathname.includes('/discover') || 
+    location.pathname.includes('/game/');
+
+  // Set aspect ratio based on route
+  const aspectRatio = isWidescreenRoute ? 'aspect-video' : 'aspect-[4/5]';
+  
+  const containerClasses = cn(
+    "relative w-full bg-black overflow-hidden",
+    aspectRatio
+  );
+
+  const mediaClasses = cn(
+    "w-full h-full object-contain",
+    !isVideoLoaded && !isImageLoaded && "invisible"
+  );
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -76,7 +96,7 @@ const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike })
   return (
     <div 
       ref={containerRef} 
-      className="relative w-full bg-black"
+      className={containerClasses}
       onDoubleClick={handleDoubleTap}
     >
       {videoUrl ? (
@@ -84,10 +104,7 @@ const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike })
           <video
             ref={videoRef}
             src={videoUrl}
-            className={cn(
-              "w-full h-auto max-h-[80vh] object-contain mx-auto",
-              !isVideoLoaded && "invisible"
-            )}
+            className={mediaClasses}
             playsInline
             loop
             muted={isMuted}
@@ -134,10 +151,7 @@ const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike })
           <img
             src={imageUrl}
             alt="Post content"
-            className={cn(
-              "w-full h-auto max-h-[80vh] object-contain mx-auto",
-              !isImageLoaded && "invisible"
-            )}
+            className={mediaClasses}
             onLoad={() => setIsImageLoaded(true)}
             loading="lazy"
           />
