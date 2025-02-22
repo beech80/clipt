@@ -81,7 +81,7 @@ serve(async (req) => {
         }, {
           onConflict: 'user_id'
         })
-        .select()
+        .select('*, updated_at') // Explicitly select updated_at
         .single();
 
       if (streamError) {
@@ -98,15 +98,16 @@ serve(async (req) => {
     }
 
     if (action === 'end') {
+      const now = new Date().toISOString();
       const { data: stream, error: streamError } = await supabaseClient
         .from('streams')
         .update({
           is_live: false,
-          ended_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          ended_at: now,
+          updated_at: now
         })
         .eq('user_id', user.id)
-        .select()
+        .select('*, updated_at') // Explicitly select updated_at
         .single();
 
       if (streamError) {
