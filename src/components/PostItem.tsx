@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
 import { Heart, MessageSquare, Trophy, Trash2, MoreVertical } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
@@ -15,6 +15,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import CommentList from "./post/CommentList";
+import { Button } from "./ui/button";
 
 interface PostItemProps {
   post: Post;
@@ -25,6 +27,7 @@ const PostItem = ({ post }: PostItemProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
+  const [showComments, setShowComments] = useState(false);
 
   const { data: commentsCount = 0 } = useQuery({
     queryKey: ['comments-count', post.id],
@@ -61,7 +64,7 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   const handleCommentClick = () => {
-    navigate(`/comments/${post.id}`);
+    setShowComments(!showComments);
   };
 
   const handleProfileClick = (userId: string) => {
@@ -138,15 +141,18 @@ const PostItem = ({ post }: PostItemProps) => {
             {post.likes_count || 0}
           </span>
         </div>
-        <div className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95">
+        <Button
+          variant="ghost"
+          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 p-0"
+          onClick={handleCommentClick}
+        >
           <MessageSquare 
             className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90"
-            onClick={handleCommentClick}
           />
           <span className="text-base font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
             {commentsCount}
           </span>
-        </div>
+        </Button>
         <div className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95">
           <Trophy 
             className="h-6 w-6 text-yellow-500 group-hover:text-yellow-400 transition-colors group-active:scale-90"
@@ -168,6 +174,13 @@ const PostItem = ({ post }: PostItemProps) => {
             {' '}
             <span className="text-gaming-200">{post.content}</span>
           </p>
+        </div>
+      )}
+
+      {/* Comments Section */}
+      {showComments && (
+        <div className="border-t border-gaming-400/20">
+          <CommentList postId={post.id} onBack={() => setShowComments(false)} />
         </div>
       )}
     </article>
