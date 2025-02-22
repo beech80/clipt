@@ -24,12 +24,12 @@ export default function Streaming() {
   const rtmpUrl = "rtmp://stream.lovable.dev/live";
 
   // Query for existing stream
-  const { data: stream, isLoading } = useQuery<Stream>({
+  const { data: stream, isLoading } = useQuery<Stream | null>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       
-      const { data, error } = await supabase
+      const { data: existingStream, error } = await supabase
         .from('streams')
         .select('*')
         .eq('user_id', user.id)
@@ -40,17 +40,23 @@ export default function Streaming() {
         throw error;
       }
 
-      // If no stream exists yet, create one
-      if (!data) {
+      // If no stream exists, create one
+      if (!existingStream) {
+        console.log('No existing stream found, creating new one...');
         const { data: newStream, error: createError } = await supabase.functions.invoke('mux-stream', {
           body: { action: 'create' }
         });
         
-        if (createError) throw createError;
+        if (createError) {
+          console.error('Error creating new stream:', createError);
+          throw createError;
+        }
+
+        console.log('New stream created:', newStream);
         return newStream;
       }
       
-      return data;
+      return existingStream;
     },
     enabled: !!user?.id
   });
@@ -64,7 +70,7 @@ export default function Streaming() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['stream', user?.id] });
       toast.success('Stream created successfully! You can now start streaming using your streaming software.');
       toast.info('Remember to copy your Stream Key and RTMP URL to your streaming software.');
@@ -112,6 +118,8 @@ export default function Streaming() {
   if (isLoading) {
     return <div>Loading...</div>;
   }
+
+  console.log('Current stream data:', stream); // Debug log
 
   return (
     <div className="container mx-auto py-6 space-y-6">
