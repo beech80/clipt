@@ -1,174 +1,93 @@
+
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Settings, Video, Camera, Mic, Info, Check, Copy } from "lucide-react";
-import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import type { StreamingConfig } from "@/types/streaming";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Steps } from "@/components/ui/steps";
 
 export const OBSSetupGuide = () => {
-  const { data: streamSettings } = useQuery({
-    queryKey: ['stream-settings'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('streaming_config')
-        .select('*')
-        .single();
-      
-      if (error) throw error;
-      
-      // Transform the data to match StreamingConfig type
-      const transformedData: StreamingConfig = {
-        ingest_endpoint: data.ingest_endpoint,
-        playback_endpoint: data.playback_endpoint,
-        provider: data.provider,
-        settings: data.settings as Record<string, any>,
-        cdn_provider: data.cdn_provider,
-        cdn_config: data.cdn_config as Record<string, any>,
-        obs_recommended_settings: data.obs_recommended_settings as StreamingConfig['obs_recommended_settings'],
-        rtmp_server_locations: data.rtmp_server_locations as any[],
-        stream_key_prefix: data.stream_key_prefix
-      };
-      
-      return transformedData;
-    }
-  });
+  const steps = [
+    {
+      title: "Download and Install OBS",
+      description: "Download OBS Studio from obsproject.com and install it on your computer."
+    },
+    {
+      title: "Configure Stream Settings",
+      description: "In OBS, go to Settings > Stream. Select 'Custom' as the service and copy the Stream URL and Stream Key from above."
+    },
+    {
+      title: "Set Up Video Settings",
+      description: "Go to Settings > Video. Set your Base Resolution to your monitor's resolution and Output Resolution to 1080p or 720p depending on your internet speed."
+    },
+    {
+      title: "Configure Output Settings",
+      description: "In Settings > Output, select Hardware (NVENC) if you have an NVIDIA GPU, or x264 otherwise. Set the bitrate between 2500-6000 Kbps depending on your resolution and internet speed."
+    },
+    {
+      title: "Set Up Audio",
+      description: "In Settings > Audio, ensure your microphone and desktop audio devices are properly configured."
+    },
+    {
+      title: "Create Scenes",
+      description: "Add your scenes and sources (game capture, webcam, overlays) in the main OBS window."
+    },
+  ];
 
-  const { data: serverStatus } = useQuery({
-    queryKey: ['obs-server-status'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('obs_server_status')
-        .select('*')
-        .eq('status', 'operational')
-        .order('current_load', { ascending: true })
-        .limit(1)
-        .single();
-      
-      if (error) throw error;
-      return data;
+  const recommendedSettings = {
+    resolution: "1920x1080 or 1280x720",
+    fps: "60 or 30 fps",
+    bitrate: {
+      hd: "4000-6000 Kbps for 1080p",
+      sd: "2500-4000 Kbps for 720p"
+    },
+    audio: {
+      bitrate: "160 Kbps",
+      sampleRate: "48 kHz"
     }
-  });
-
-  const copyToClipboard = (text: string | null, label: string) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text)
-      .then(() => toast.success(`${label} copied to clipboard`))
-      .catch(() => toast.error(`Failed to copy ${label}`));
   };
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">OBS Setup Guide</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">Basic Settings</h3>
-          </div>
-          <div className="space-y-2">
-            <p>1. Open OBS Studio</p>
-            <p>2. Go to Settings → Stream</p>
-            <p>3. Select "Custom" as Service</p>
-            {streamSettings && serverStatus && (
-              <>
-                <div className="flex items-center gap-2 mt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => copyToClipboard(serverStatus.server_url, 'Server URL')}
-                    className="w-full"
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Server URL
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Using optimal server in {serverStatus.region || 'your region'}
-                </p>
-              </>
-            )}
-          </div>
-        </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>OBS Setup Guide</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Steps steps={steps} />
+        </CardContent>
+      </Card>
 
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Video className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">Video Settings</h3>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recommended Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium mb-2">Video Settings</h4>
+              <ul className="list-disc list-inside space-y-2 text-sm">
+                <li>Resolution: {recommendedSettings.resolution}</li>
+                <li>Frame Rate: {recommendedSettings.fps}</li>
+                <li>Keyframe Interval: 2 seconds</li>
+                <li>B-frames: 2</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Bitrate Settings</h4>
+              <ul className="list-disc list-inside space-y-2 text-sm">
+                <li>{recommendedSettings.bitrate.hd}</li>
+                <li>{recommendedSettings.bitrate.sd}</li>
+                <li>Audio: {recommendedSettings.audio.bitrate}</li>
+                <li>Sample Rate: {recommendedSettings.audio.sampleRate}</li>
+              </ul>
+            </div>
           </div>
-          <div className="space-y-2">
-            {streamSettings?.obs_recommended_settings?.video && (
-              <>
-                <p>Base Resolution: {streamSettings.obs_recommended_settings.video.resolution}</p>
-                <p>Output Resolution: {streamSettings.obs_recommended_settings.video.resolution}</p>
-                <p>Downscale Filter: Lanczos</p>
-                <p>FPS: {streamSettings.obs_recommended_settings.video.fps}</p>
-              </>
-            )}
-          </div>
-        </Card>
 
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Camera className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">Output Settings</h3>
-          </div>
-          <div className="space-y-2">
-            {streamSettings?.obs_recommended_settings?.video && (
-              <>
-                <p>Encoder: {streamSettings.obs_recommended_settings.video.encoder}</p>
-                <p>Rate Control: {streamSettings.obs_recommended_settings.video.rate_control}</p>
-                <p>Bitrate: {streamSettings.obs_recommended_settings.video.bitrate.recommended} Kbps</p>
-                <p>Keyframe Interval: {streamSettings.obs_recommended_settings.video.keyframe_interval}</p>
-                <p>CPU Usage Preset: {streamSettings.obs_recommended_settings.video.preset}</p>
-                <p>Profile: high</p>
-              </>
-            )}
-          </div>
-        </Card>
-
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Mic className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">Audio Settings</h3>
-          </div>
-          <div className="space-y-2">
-            {streamSettings?.obs_recommended_settings?.audio && (
-              <>
-                <p>Sample Rate: {streamSettings.obs_recommended_settings.audio.sample_rate}khz</p>
-                <p>Channels: {streamSettings.obs_recommended_settings.audio.channels}</p>
-                <p>Desktop Audio: Enable</p>
-                <p>Mic/Auxiliary: Enable</p>
-              </>
-            )}
-          </div>
-        </Card>
-      </div>
-
-      <Card className="p-6 mt-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Info className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">Quick Tips</h3>
-        </div>
-        <ul className="space-y-2">
-          <li className="flex items-center gap-2">
-            <Check className="h-4 w-4 text-green-500" />
-            Test your stream before going live
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="h-4 w-4 text-green-500" />
-            Monitor your CPU usage while streaming
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="h-4 w-4 text-green-500" />
-            Use Game Capture for better performance
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="h-4 w-4 text-green-500" />
-            Set up hotkeys for quick scene switching
-          </li>
-        </ul>
+          <Alert className="mt-4">
+            <AlertDescription>
+              For the best streaming experience, make sure your upload speed is at least 1.5x your chosen bitrate.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
       </Card>
     </div>
   );

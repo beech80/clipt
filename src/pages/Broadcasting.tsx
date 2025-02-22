@@ -8,17 +8,31 @@ import GameBoyControls from "@/components/GameBoyControls";
 import { OBSSetupGuide } from "@/components/streaming/setup/OBSSetupGuide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Copy, RefreshCw, Radio, PlayCircle, StopCircle } from "lucide-react";
+import { Eye, EyeOff, Copy, Radio, StopCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { StreamPlayer } from "@/components/streaming/StreamPlayer";
+
+interface Stream {
+  id: string;
+  user_id: string;
+  title: string;
+  stream_key: string;
+  stream_url: string;
+  playback_url: string;
+  is_live: boolean;
+  viewer_count: number;
+  created_at: string;
+  updated_at: string;
+}
 
 const Broadcasting = () => {
   const { user } = useAuth();
   const [showKey, setShowKey] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: stream, isLoading: isLoadingStream } = useQuery({
+  const { data: stream, isLoading: isLoadingStream } = useQuery<Stream | null>({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
@@ -100,6 +114,16 @@ const Broadcasting = () => {
         <BackButton />
         <h1 className="text-2xl font-bold">Broadcasting Studio</h1>
       </div>
+
+      {stream && (
+        <StreamPlayer
+          streamId={stream.id}
+          title={stream.title}
+          isLive={stream.is_live}
+          viewerCount={stream.viewer_count}
+          playbackUrl={stream.playback_url}
+        />
+      )}
 
       {/* Stream Control */}
       <Card className="p-6">
