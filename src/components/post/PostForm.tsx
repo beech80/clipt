@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Upload, Camera, Search, Hash, AtSign } from 'lucide-react';
 import GameBoyControls from '@/components/GameBoyControls';
 import { useQuery } from '@tanstack/react-query';
+import { Progress } from '@/components/ui/progress';
 
 type PostDestination = 'clipts' | 'home';
 
@@ -32,6 +32,7 @@ export const PostForm = () => {
   const chunksRef = useRef<Blob[]>([]);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games', gameSearch],
@@ -181,6 +182,9 @@ export const PostForm = () => {
     }
 
     setLoading(true);
+    const uploadToast = toast.loading(
+      destination === 'clipts' ? 'Creating your clip...' : 'Creating your post...'
+    );
 
     try {
       // First, create or get the game entry
@@ -233,7 +237,15 @@ export const PostForm = () => {
         .from('media')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          onUploadProgress: (progress) => {
+            const percentage = (progress.loaded / progress.total) * 100;
+            setUploadProgress(percentage);
+            toast.loading(
+              `Uploading... ${Math.round(percentage)}%`, 
+              { id: uploadToast }
+            );
+          }
         });
 
       if (uploadError) {
@@ -263,7 +275,10 @@ export const PostForm = () => {
         throw new Error(`Failed to update post with media: ${updateError.message}`);
       }
 
-      toast.success(destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!');
+      toast.success(
+        destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!',
+        { id: uploadToast }
+      );
       
       stopCamera();
       setContent('');
@@ -272,14 +287,19 @@ export const PostForm = () => {
       setSelectedGame(null);
       setHashtags([]);
       setMentions([]);
+      setUploadProgress(0);
       
       navigate(destination === 'clipts' ? '/clipts' : '/');
       
     } catch (error) {
       console.error('Error creating post:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create post. Please try again.');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to create post. Please try again.',
+        { id: uploadToast }
+      );
     } finally {
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -476,6 +496,15 @@ export const PostForm = () => {
                     className="w-full h-full object-contain"
                   />
                 )}
+              </div>
+            )}
+
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="space-y-2">
+                <Progress value={uploadProgress} className="w-full" />
+                <p className="text-sm text-center text-gray-400">
+                  Uploading... {Math.round(uploadProgress)}%
+                </p>
               </div>
             )}
 
