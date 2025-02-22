@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -183,24 +182,25 @@ export const PostForm = () => {
     setLoading(true);
 
     try {
-      // First, ensure we have the game in our database
-      const { data: gameData, error: gameError } = await supabase
-        .from('games')
-        .upsert([
-          {
-            id: selectedGame.id,
-            name: selectedGame.name
-          }
-        ])
+      const postData = {
+        content,
+        user_id: user.id,
+        game_id: selectedGame.id,
+        post_type: destination,
+        is_published: true
+      };
+
+      const { data: newPost, error: postError } = await supabase
+        .from('posts')
+        .insert([postData])
         .select()
         .single();
 
-      if (gameError) {
-        console.error('Game error:', gameError);
-        throw new Error('Failed to process game data');
+      if (postError) {
+        console.error('Post error:', postError);
+        throw new Error(`Failed to create post: ${postError.message}`);
       }
 
-      // Upload file with timestamp to ensure unique names
       const timestamp = Date.now();
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/${timestamp}.${fileExt}`;
@@ -212,55 +212,41 @@ export const PostForm = () => {
       });
 
       const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('posts')
+        .from('media')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         });
 
       if (uploadError) {
+        await supabase.from('posts').delete().eq('id', newPost.id);
         console.error('Upload error:', uploadError);
         throw new Error(`Failed to upload file: ${uploadError.message}`);
       }
 
       console.log('File uploaded successfully', uploadData);
 
-      // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
-        .from('posts')
+        .from('media')
         .getPublicUrl(filePath);
 
-      console.log('Creating post with URL:', publicUrl);
+      console.log('File URL:', publicUrl);
 
-      // Create the post record
-      const postData = {
-        content,
-        user_id: user.id,
-        game_id: gameData.id, // Use the UUID from our games table
-        video_url: isVideo ? publicUrl : null,
-        image_url: !isVideo ? publicUrl : null,
-        post_type: destination,
-        is_published: true
-      };
-
-      console.log('Creating post with data:', postData);
-
-      const { error: postError } = await supabase
+      const { error: updateError } = await supabase
         .from('posts')
-        .insert([postData]);
+        .update({
+          video_url: isVideo ? publicUrl : null,
+          image_url: !isVideo ? publicUrl : null,
+        })
+        .eq('id', newPost.id);
 
-      if (postError) {
-        console.error('Post error:', postError);
-        // Delete uploaded file if post creation fails
-        await supabase.storage
-          .from('posts')
-          .remove([filePath]);
-        throw new Error(`Failed to create post: ${postError.message}`);
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw new Error(`Failed to update post with media: ${updateError.message}`);
       }
 
       toast.success(destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!');
       
-      // Clean up form and camera
       stopCamera();
       setContent('');
       setFile(null);
@@ -269,7 +255,6 @@ export const PostForm = () => {
       setHashtags([]);
       setMentions([]);
       
-      // Navigate to the appropriate page
       navigate(destination === 'clipts' ? '/clipts' : '/');
       
     } catch (error) {
