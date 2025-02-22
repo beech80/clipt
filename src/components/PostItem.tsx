@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -51,7 +51,7 @@ const PostItem = ({ post }: PostItemProps) => {
       <div className="flex items-center justify-between p-4 border-b border-gaming-400/20">
         <div className="flex items-center space-x-3">
           <Avatar 
-            className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
+            className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
             onClick={() => handleProfileClick(post.user_id)}
           >
             <AvatarImage src={avatarUrl || ''} alt={username} />
@@ -60,12 +60,12 @@ const PostItem = ({ post }: PostItemProps) => {
           <div className="flex flex-col">
             <span 
               onClick={() => handleProfileClick(post.user_id)}
-              className="text-sm font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 cursor-pointer"
+              className="text-base font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 cursor-pointer"
             >
               {username}
             </span>
             {gameName && (
-              <span className="text-xs text-gaming-300">
+              <span className="text-sm text-gaming-300">
                 {gameName}
               </span>
             )}
@@ -84,30 +84,30 @@ const PostItem = ({ post }: PostItemProps) => {
 
       {/* Interaction Counts */}
       <div className="px-4 py-3 flex items-center space-x-6 border-t border-gaming-400/20">
-        <div className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110 active:scale-95">
+        <div className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95">
           <Heart 
-            className="h-5 w-5 text-red-500 group-hover:text-red-400 transition-colors group-active:scale-90" 
+            className="h-6 w-6 text-red-500 group-hover:text-red-400 transition-colors group-active:scale-90" 
             fill={post.likes_count ? "currentColor" : "none"}
           />
-          <span className="text-sm font-medium text-gaming-100 group-hover:text-red-400 transition-colors">
+          <span className="text-base font-medium text-gaming-100 group-hover:text-red-400 transition-colors">
             {post.likes_count || 0}
           </span>
         </div>
-        <div className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110 active:scale-95">
+        <div className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95">
           <MessageSquare 
-            className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90"
+            className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90"
             onClick={handleCommentClick}
           />
-          <span className="text-sm font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
+          <span className="text-base font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
             {commentsCount}
           </span>
         </div>
-        <div className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110 active:scale-95">
+        <div className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95">
           <Trophy 
-            className="h-5 w-5 text-yellow-500 group-hover:text-yellow-400 transition-colors group-active:scale-90"
+            className="h-6 w-6 text-yellow-500 group-hover:text-yellow-400 transition-colors group-active:scale-90"
             fill={post.clip_votes?.[0]?.count ? "currentColor" : "none"}
           />
-          <span className="text-sm font-medium text-gaming-100 group-hover:text-yellow-400 transition-colors">
+          <span className="text-base font-medium text-gaming-100 group-hover:text-yellow-400 transition-colors">
             {post.clip_votes?.[0]?.count || 0}
           </span>
         </div>
@@ -116,7 +116,7 @@ const PostItem = ({ post }: PostItemProps) => {
       {/* Caption */}
       {post.content && (
         <div className="px-4 py-3 border-t border-gaming-400/20">
-          <p className="text-sm text-gaming-100">
+          <p className="text-base text-gaming-100">
             <span className="font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
               {username}
             </span>

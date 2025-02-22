@@ -187,7 +187,6 @@ export const PostForm = () => {
     );
 
     try {
-      // First, create or get the game entry
       const { data: gameData, error: gameError } = await supabase
         .from('games')
         .upsert({
@@ -231,7 +230,6 @@ export const PostForm = () => {
 
       console.log('File URL:', publicUrl);
 
-      // Create the post
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .insert([{
