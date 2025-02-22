@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -181,61 +180,48 @@ export const PostForm = () => {
     }
 
     setLoading(true);
+
     try {
-      // First upload the file
+      const timestamp = Date.now();
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
-
-      // Create the posts bucket if it doesn't exist
-      const { data: bucketData, error: bucketError } = await supabase
-        .storage
-        .getBucket('posts');
-
-      if (!bucketData) {
-        await supabase
-          .storage
-          .createBucket('posts', {
-            public: true,
-            fileSizeLimit: 100000000 // 100MB
-          });
-      }
+      const filePath = `${user.id}/${timestamp}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('posts')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         console.error('Upload error:', uploadError);
-        throw new Error('Failed to upload file');
+        throw new Error('Failed to upload file. Please try again.');
       }
 
       const { data: { publicUrl } } = supabase.storage
         .from('posts')
         .getPublicUrl(filePath);
 
-      // Then create the post
       const { error: postError } = await supabase
         .from('posts')
-        .insert({
+        .insert([{
           content,
           user_id: user.id,
           game_id: selectedGame.id,
           video_url: isVideo ? publicUrl : null,
           image_url: !isVideo ? publicUrl : null,
           type: isVideo ? 'video' : 'image',
-          is_published: true,
-          post_type: destination
-        });
+          post_type: destination,
+          is_published: true
+        }]);
 
       if (postError) {
         console.error('Post error:', postError);
-        throw new Error('Failed to create post');
+        throw new Error('Failed to create post. Please try again.');
       }
 
       toast.success(destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!');
       
-      // Clean up form and camera
       stopCamera();
       setContent('');
       setFile(null);
@@ -244,16 +230,15 @@ export const PostForm = () => {
       setHashtags([]);
       setMentions([]);
       
-      // Navigate to the correct page
       if (destination === 'clipts') {
-        navigate('/clipts', { replace: true });
+        navigate('/clipts');
       } else {
-        navigate('/', { replace: true });
+        navigate('/');
       }
       
     } catch (error) {
       console.error('Error creating post:', error);
-      toast.error('Error creating post. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to create post. Please try again.');
     } finally {
       setLoading(false);
     }
