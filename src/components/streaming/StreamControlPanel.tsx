@@ -5,7 +5,7 @@ import { Radio } from "lucide-react";
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import type { Stream } from "@/types/stream";
+import type { Stream, OAuthToken } from "@/types/stream";
 
 interface StreamControlPanelProps {
   stream: Stream | null;
@@ -18,33 +18,37 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
 
   const initializeStream = useMutation({
     mutationFn: async () => {
-      console.log('Initializing stream...', userId);
-      const streamKey = crypto.randomUUID().replace(/-/g, '');
-      const { data, error } = await supabase
-        .from('streams')
-        .insert([
-          { 
-            user_id: userId,
-            rtmp_url: 'rtmp://stream.lovable.dev/live',
-            stream_key: streamKey,
-            health_status: 'offline',
-            stream_health_status: 'offline',
-            is_live: false,
-            viewer_count: 0,
-            title: 'New Stream',
-            created_at: new Date().toISOString()
-          }
-        ])
-        .select()
-        .single();
+      console.log('Initializing stream with OAuth...', userId);
       
-      if (error) {
-        console.error('Error initializing stream:', error);
-        throw error;
+      // First, get OAuth tokens
+      const { data: oauthData, error: oauthError } = await supabase.functions.invoke<OAuthToken>('oauth', {
+        body: {
+          action: 'token',
+          grant_type: 'client_credentials',
+          client_id: 'obs-client'
+        }
+      });
+
+      if (oauthError || !oauthData) {
+        console.error('Error getting OAuth token:', oauthError);
+        throw oauthError;
       }
-      
-      console.log('Stream initialized:', data);
-      return data;
+
+      // Then initialize stream with the token
+      const { data: streamData, error: streamError } = await supabase.functions.invoke<{ stream: Stream }>('oauth', {
+        body: {
+          action: 'start_stream',
+          access_token: oauthData.access_token
+        }
+      });
+
+      if (streamError || !streamData) {
+        console.error('Error initializing stream:', streamError);
+        throw streamError;
+      }
+
+      console.log('Stream initialized:', streamData);
+      return streamData.stream;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream', userId] });

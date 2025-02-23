@@ -21,16 +21,23 @@ export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
       .catch(() => toast.error(`Failed to copy ${label}`));
   };
 
-  if (!stream?.stream_key) return null;
+  if (!stream?.streaming_url && !stream?.stream_key) return null;
+
+  const displayUrl = stream.streaming_url || rtmpUrl;
+  const displayKey = stream.streaming_url ? 
+    new URL(stream.streaming_url).searchParams.get('access_token') : 
+    stream.stream_key;
 
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-2">Stream Key</label>
+        <label className="block text-sm font-medium mb-2">
+          {stream.streaming_url ? 'Access Token' : 'Stream Key'}
+        </label>
         <div className="flex gap-2">
           <Input
             type={showKey ? 'text' : 'password'}
-            value={stream.stream_key}
+            value={displayKey || ''}
             readOnly
             className="font-mono"
           />
@@ -38,33 +45,37 @@ export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
             variant="outline"
             size="icon"
             onClick={() => setShowKey(!showKey)}
-            title={showKey ? 'Hide Stream Key' : 'Show Stream Key'}
+            title={showKey ? 'Hide Key' : 'Show Key'}
           >
             {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
           <Button
             variant="outline"
             size="icon"
-            onClick={() => copyToClipboard(stream.stream_key, 'Stream key')}
-            title="Copy Stream Key"
+            onClick={() => copyToClipboard(displayKey, stream.streaming_url ? 'Access Token' : 'Stream Key')}
+            title={`Copy ${stream.streaming_url ? 'Access Token' : 'Stream Key'}`}
           >
             <Copy className="h-4 w-4" />
           </Button>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Keep your stream key private. Never share it with anyone.
+          Keep your {stream.streaming_url ? 'access token' : 'stream key'} private. Never share it with anyone.
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-2">RTMP URL</label>
+        <label className="block text-sm font-medium mb-2">Stream URL</label>
         <div className="flex gap-2">
-          <Input value={rtmpUrl} readOnly className="font-mono" />
+          <Input 
+            value={displayUrl} 
+            readOnly 
+            className="font-mono" 
+          />
           <Button
             variant="outline"
             size="icon"
-            onClick={() => copyToClipboard(rtmpUrl, 'RTMP URL')}
-            title="Copy RTMP URL"
+            onClick={() => copyToClipboard(displayUrl, 'Stream URL')}
+            title="Copy Stream URL"
           >
             <Copy className="h-4 w-4" />
           </Button>
