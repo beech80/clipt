@@ -18,16 +18,21 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
 
   const initializeStream = useMutation({
     mutationFn: async () => {
-      console.log('Initializing stream...');
+      console.log('Initializing stream...', userId);
+      const streamKey = crypto.randomUUID().replace(/-/g, '');
       const { data, error } = await supabase
         .from('streams')
         .insert([
           { 
             user_id: userId,
             rtmp_url: 'rtmp://stream.lovable.dev/live',
-            stream_key: crypto.randomUUID().replace(/-/g, ''),
+            stream_key: streamKey,
             health_status: 'offline',
-            stream_health_status: 'offline'
+            stream_health_status: 'offline',
+            is_live: false,
+            viewer_count: 0,
+            title: 'New Stream',
+            created_at: new Date().toISOString()
           }
         ])
         .select()
@@ -38,6 +43,7 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
         throw error;
       }
       
+      console.log('Stream initialized:', data);
       return data;
     },
     onSuccess: () => {
@@ -46,7 +52,7 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
     },
     onError: (error) => {
       console.error('Error initializing stream:', error);
-      toast.error('Failed to initialize stream');
+      toast.error('Failed to initialize stream. Please try again.');
     }
   });
 
@@ -63,7 +69,10 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error ending stream:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
