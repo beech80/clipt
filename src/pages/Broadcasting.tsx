@@ -43,30 +43,33 @@ const Broadcasting = () => {
     enabled: !!user?.id
   });
 
-  // Create stream mutation using Mux Edge Function
+  // Create stream mutation using OAuth
   const createStreamMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
       
-      console.log('Creating new stream via Mux...');
-      const { data, error } = await supabase.functions.invoke('mux-stream', {
-        body: { action: 'create' }
+      console.log('Initializing stream with OAuth...');
+      const { data, error } = await supabase.functions.invoke('oauth', {
+        body: { 
+          action: 'initialize_stream',
+          userId: user.id
+        }
       });
       
       if (error) {
-        console.error('Error creating stream:', error);
+        console.error('Error initializing stream:', error);
         throw error;
       }
       
       return data;
     },
     onError: (error) => {
-      console.error('Failed to create stream:', error);
-      toast.error('Failed to create stream. Please try again.');
+      console.error('Failed to initialize stream:', error);
+      toast.error('Failed to initialize stream. Please try again.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
-      toast.success('Stream created! You can now copy your stream key.');
+      toast.success('Stream initialized! You can now start streaming.');
     }
   });
 
@@ -75,9 +78,12 @@ const Broadcasting = () => {
     mutationFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
       
-      console.log('Ending stream via Mux...');
-      const { data, error } = await supabase.functions.invoke('mux-stream', {
-        body: { action: 'end' }
+      console.log('Ending stream via OAuth...');
+      const { data, error } = await supabase.functions.invoke('oauth', {
+        body: { 
+          action: 'end_stream',
+          userId: user.id
+        }
       });
       
       if (error) throw error;
@@ -152,7 +158,7 @@ const Broadcasting = () => {
                   disabled={createStreamMutation.isPending}
                 >
                   <Radio className="h-4 w-4 mr-2" />
-                  Start New Stream
+                  Initialize Stream
                 </Button>
               ) : (
                 <Button
@@ -167,57 +173,66 @@ const Broadcasting = () => {
             </div>
           </div>
 
-          {stream && stream.stream_key && (
+          {stream?.streaming_url && (
             <div className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  type={showKey ? 'text' : 'password'}
-                  value={stream.stream_key}
-                  readOnly
-                  className="font-mono"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowKey(!showKey)}
-                >
-                  {showKey ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => copyToClipboard(stream.stream_key, 'Stream key')}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-
               <div>
-                <h4 className="text-sm font-medium mb-2">Stream URL</h4>
+                <h4 className="text-sm font-medium mb-2">Access Token</h4>
                 <div className="flex gap-2">
                   <Input
-                    value={stream.rtmp_url || 'rtmp://stream.lovable.dev/live'}
+                    type={showKey ? 'text' : 'password'}
+                    value={new URL(stream.streaming_url).searchParams.get('access_token') || ''}
                     readOnly
                     className="font-mono"
                   />
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => copyToClipboard(stream.rtmp_url || 'rtmp://stream.lovable.dev/live', 'Stream URL')}
+                    onClick={() => setShowKey(!showKey)}
+                  >
+                    {showKey ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyToClipboard(
+                      new URL(stream.streaming_url).searchParams.get('access_token'),
+                      'Access token'
+                    )}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Stream URL</h4>
+                <div className="flex gap-2">
+                  <Input
+                    value={stream.streaming_url}
+                    readOnly
+                    className="font-mono"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => copyToClipboard(stream.streaming_url, 'Stream URL')}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Use this URL in your streaming software (OBS, Streamlabs, etc.)
+                </p>
+              </div>
             </div>
           )}
 
           <p className="text-sm text-muted-foreground">
-            Keep your stream key private. If compromised, end the stream and create a new one.
+            Keep your access token private. If compromised, end the stream and create a new one.
           </p>
         </div>
       </Card>
