@@ -20,7 +20,7 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
     mutationFn: async () => {
       console.log('Initializing stream with OAuth...', userId);
       
-      // First, get OAuth tokens
+      // Get OAuth tokens
       const { data: oauthData, error: oauthError } = await supabase.functions.invoke<OAuthToken>('oauth', {
         body: {
           action: 'token',
@@ -34,7 +34,7 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
         throw oauthError;
       }
 
-      // Then initialize stream with the token
+      // Initialize stream with the token
       const { data: streamData, error: streamError } = await supabase.functions.invoke<{ stream: Stream }>('oauth', {
         body: {
           action: 'start_stream',
@@ -67,7 +67,9 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
         .from('streams')
         .update({ 
           is_live: false,
-          ended_at: new Date().toISOString()
+          ended_at: new Date().toISOString(),
+          streaming_url: null,
+          oauth_token_id: null
         })
         .eq('user_id', userId)
         .select()

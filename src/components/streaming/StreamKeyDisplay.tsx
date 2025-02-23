@@ -12,7 +12,7 @@ interface StreamKeyDisplayProps {
 }
 
 export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
-  const [showKey, setShowKey] = useState(false);
+  const [showToken, setShowToken] = useState(false);
 
   const copyToClipboard = (text: string | null, label: string) => {
     if (!text) return;
@@ -21,45 +21,42 @@ export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
       .catch(() => toast.error(`Failed to copy ${label}`));
   };
 
-  if (!stream?.streaming_url && !stream?.stream_key) return null;
+  if (!stream?.streaming_url) return null;
 
-  const displayUrl = stream.streaming_url || rtmpUrl;
-  const displayKey = stream.streaming_url ? 
-    new URL(stream.streaming_url).searchParams.get('access_token') : 
-    stream.stream_key;
+  const accessToken = new URL(stream.streaming_url).searchParams.get('access_token');
 
   return (
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-2">
-          {stream.streaming_url ? 'Access Token' : 'Stream Key'}
+          Access Token
         </label>
         <div className="flex gap-2">
           <Input
-            type={showKey ? 'text' : 'password'}
-            value={displayKey || ''}
+            type={showToken ? 'text' : 'password'}
+            value={accessToken || ''}
             readOnly
             className="font-mono"
           />
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setShowKey(!showKey)}
-            title={showKey ? 'Hide Key' : 'Show Key'}
+            onClick={() => setShowToken(!showToken)}
+            title={showToken ? 'Hide Token' : 'Show Token'}
           >
-            {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
           <Button
             variant="outline"
             size="icon"
-            onClick={() => copyToClipboard(displayKey, stream.streaming_url ? 'Access Token' : 'Stream Key')}
-            title={`Copy ${stream.streaming_url ? 'Access Token' : 'Stream Key'}`}
+            onClick={() => copyToClipboard(accessToken, 'Access Token')}
+            title="Copy Access Token"
           >
             <Copy className="h-4 w-4" />
           </Button>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Keep your {stream.streaming_url ? 'access token' : 'stream key'} private. Never share it with anyone.
+          Keep your access token private. Never share it with anyone.
         </p>
       </div>
 
@@ -67,14 +64,14 @@ export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
         <label className="block text-sm font-medium mb-2">Stream URL</label>
         <div className="flex gap-2">
           <Input 
-            value={displayUrl} 
+            value={stream.streaming_url} 
             readOnly 
             className="font-mono" 
           />
           <Button
             variant="outline"
             size="icon"
-            onClick={() => copyToClipboard(displayUrl, 'Stream URL')}
+            onClick={() => copyToClipboard(stream.streaming_url, 'Stream URL')}
             title="Copy Stream URL"
           >
             <Copy className="h-4 w-4" />

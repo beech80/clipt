@@ -10,14 +10,12 @@ export interface Stream {
   title: string | null;
   description: string | null;
   thumbnail_url: string | null;
-  stream_key: string | null;
-  rtmp_url: string | null;
+  streaming_url: string | null;
   health_status: string;
   stream_resolution: string | null;
   stream_health_status: string;
   playback_url: string | null;
   oauth_token_id: string | null;
-  streaming_url: string | null;
 }
 
 export interface OAuthToken {
@@ -29,6 +27,5 @@ export interface OAuthToken {
 
 export interface StreamSettings {
   rtmpUrl: string;
-  streamKey?: string;
   accessToken?: string;
 }
