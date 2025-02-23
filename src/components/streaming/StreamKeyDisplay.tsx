@@ -21,7 +21,7 @@ export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
       .catch(() => toast.error(`Failed to copy ${label}`));
   };
 
-  if (!stream) return null;
+  if (!stream?.stream_key) return null;
 
   return (
     <div className="space-y-4">
@@ -30,7 +30,7 @@ export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
         <div className="flex gap-2">
           <Input
             type={showKey ? 'text' : 'password'}
-            value={stream.stream_key || ''}
+            value={stream.stream_key}
             readOnly
             className="font-mono"
           />

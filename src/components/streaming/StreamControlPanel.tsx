@@ -20,7 +20,18 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
     mutationFn: async () => {
       console.log('Initializing stream...');
       const { data, error } = await supabase
-        .rpc('initialize_stream', { user_id_param: userId });
+        .from('streams')
+        .insert([
+          { 
+            user_id: userId,
+            rtmp_url: 'rtmp://stream.lovable.dev/live',
+            stream_key: crypto.randomUUID().replace(/-/g, ''),
+            health_status: 'offline',
+            stream_health_status: 'offline'
+          }
+        ])
+        .select()
+        .single();
       
       if (error) {
         console.error('Error initializing stream:', error);
