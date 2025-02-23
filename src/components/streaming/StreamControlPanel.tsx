@@ -5,7 +5,7 @@ import { Radio } from "lucide-react";
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import type { Stream, OAuthToken } from "@/types/stream";
+import type { Stream } from "@/types/stream";
 
 interface StreamControlPanelProps {
   stream: Stream | null;
@@ -21,34 +21,20 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
       console.log('Initializing stream with OAuth...', userId);
       
       // Get OAuth tokens
-      const { data: oauthData, error: oauthError } = await supabase.functions.invoke<OAuthToken>('oauth', {
+      const { data: oauthData, error: oauthError } = await supabase.functions.invoke<{ stream: Stream }>('oauth', {
         body: {
-          action: 'token',
-          grant_type: 'client_credentials',
-          client_id: 'obs-client'
+          action: 'initialize_stream',
+          userId
         }
       });
 
       if (oauthError || !oauthData) {
-        console.error('Error getting OAuth token:', oauthError);
+        console.error('Error initializing stream:', oauthError);
         throw oauthError;
       }
 
-      // Initialize stream with the token
-      const { data: streamData, error: streamError } = await supabase.functions.invoke<{ stream: Stream }>('oauth', {
-        body: {
-          action: 'start_stream',
-          access_token: oauthData.access_token
-        }
-      });
-
-      if (streamError || !streamData) {
-        console.error('Error initializing stream:', streamError);
-        throw streamError;
-      }
-
-      console.log('Stream initialized:', streamData);
-      return streamData.stream;
+      console.log('Stream initialized:', oauthData);
+      return oauthData.stream;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream', userId] });
@@ -63,17 +49,12 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
   const endStream = useMutation({
     mutationFn: async () => {
       console.log('Ending stream...');
-      const { data, error } = await supabase
-        .from('streams')
-        .update({ 
-          is_live: false,
-          ended_at: new Date().toISOString(),
-          streaming_url: null,
-          oauth_token_id: null
-        })
-        .eq('user_id', userId)
-        .select()
-        .single();
+      const { data, error } = await supabase.functions.invoke('oauth', {
+        body: {
+          action: 'end_stream',
+          userId
+        }
+      });
       
       if (error) {
         console.error('Error ending stream:', error);

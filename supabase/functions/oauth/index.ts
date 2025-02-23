@@ -7,127 +7,102 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface AuthorizationRequest {
-  client_id: string;
-  redirect_uri: string;
-  response_type: string;
-  scope: string;
-  state: string;
-}
-
-interface TokenRequest {
-  grant_type: string;
-  code?: string;
-  refresh_token?: string;
-  client_id: string;
-  redirect_uri?: string;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const url = new URL(req.url);
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  );
-
   try {
-    // Authorization endpoint
-    if (url.pathname === '/oauth/authorize') {
-      const params = Object.fromEntries(url.searchParams) as AuthorizationRequest;
-      
-      // Validate required parameters
-      if (!params.client_id || !params.redirect_uri || params.response_type !== 'code') {
-        throw new Error('Invalid authorization request');
-      }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-      // Store authorization request parameters in session
-      const authCode = crypto.randomUUID();
-      
-      // Generate authorization code and redirect
-      const redirectUrl = new URL(params.redirect_uri);
-      redirectUrl.searchParams.set('code', authCode);
-      redirectUrl.searchParams.set('state', params.state);
+    const { action, userId, access_token } = await req.json();
 
-      return new Response(null, {
-        status: 302,
-        headers: {
-          ...corsHeaders,
-          'Location': redirectUrl.toString()
-        }
-      });
-    }
-
-    // Token endpoint
-    if (url.pathname === '/oauth/token' && req.method === 'POST') {
-      const request: TokenRequest = await req.json();
-      
-      if (request.grant_type === 'authorization_code' && request.code) {
-        // Exchange authorization code for tokens
-        const { data: { user }, error } = await supabase.auth.getUser(
-          request.code
-        );
-
-        if (error || !user) {
-          throw new Error('Invalid authorization code');
-        }
-
-        // Generate streaming tokens using our database function
-        const { data, error: tokenError } = await supabase.rpc(
+    switch (action) {
+      case 'initialize_stream': {
+        // Generate new streaming token using our database function
+        const { data: tokenData, error: tokenError } = await supabase.rpc(
           'generate_streaming_token',
-          { user_id_param: user.id }
+          { user_id_param: userId }
         );
 
         if (tokenError) throw tokenError;
 
-        return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        // Create or update stream with the new token
+        const streamingUrl = `rtmp://stream.clipt.com/live?access_token=${tokenData.access_token}`;
+        
+        const { data: stream, error: streamError } = await supabase
+          .from('streams')
+          .upsert({
+            user_id: userId,
+            is_live: false,
+            streaming_url: streamingUrl,
+            oauth_token_id: tokenData.token_id,
+            started_at: null,
+            ended_at: null
+          })
+          .select()
+          .single();
+
+        if (streamError) throw streamError;
+
+        return new Response(
+          JSON.stringify({ stream }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
-      if (request.grant_type === 'refresh_token' && request.refresh_token) {
-        // Refresh the token using our database function
-        const { data, error } = await supabase.rpc(
-          'refresh_streaming_token',
-          { refresh_token_param: request.refresh_token }
+      case 'validate_token': {
+        if (!access_token) {
+          throw new Error('Access token is required');
+        }
+
+        const { data: validation, error: validationError } = await supabase.rpc(
+          'validate_streaming_token',
+          { token_param: access_token }
         );
 
-        if (error) throw error;
+        if (validationError) throw validationError;
 
-        return new Response(JSON.stringify(data), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return new Response(
+          JSON.stringify(validation),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
-      throw new Error('Invalid token request');
-    }
+      case 'end_stream': {
+        const { error: updateError } = await supabase
+          .from('streams')
+          .update({
+            is_live: false,
+            ended_at: new Date().toISOString(),
+            streaming_url: null,
+            oauth_token_id: null
+          })
+          .eq('user_id', userId);
 
-    // Token validation endpoint
-    if (url.pathname === '/oauth/validate' && req.method === 'POST') {
-      const { token } = await req.json();
-      
-      if (!token) {
-        throw new Error('Token is required');
+        if (updateError) throw updateError;
+
+        // Revoke the access token
+        const { error: revokeError } = await supabase
+          .from('stream_oauth_tokens')
+          .update({ is_revoked: true })
+          .eq('user_id', userId)
+          .eq('is_revoked', false);
+
+        if (revokeError) throw revokeError;
+
+        return new Response(
+          JSON.stringify({ success: true }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
-      // Validate token using our database function
-      const { data, error } = await supabase.rpc(
-        'validate_streaming_token',
-        { token_param: token }
-      );
-
-      if (error) throw error;
-
-      return new Response(JSON.stringify(data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      default:
+        throw new Error('Invalid action');
     }
-
-    return new Response('Not found', { status: 404 });
-
   } catch (error) {
     console.error('OAuth error:', error);
     

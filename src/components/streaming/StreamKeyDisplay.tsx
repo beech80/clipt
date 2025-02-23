@@ -11,7 +11,7 @@ interface StreamKeyDisplayProps {
   rtmpUrl: string;
 }
 
-export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
+export function StreamKeyDisplay({ stream }: StreamKeyDisplayProps) {
   const [showToken, setShowToken] = useState(false);
 
   const copyToClipboard = (text: string | null, label: string) => {
@@ -27,6 +27,21 @@ export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
 
   return (
     <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium mb-2">
+          OBS Connection Guide
+        </label>
+        <ol className="list-decimal ml-4 space-y-2 text-sm text-muted-foreground">
+          <li>Open OBS Studio</li>
+          <li>Go to Settings → Stream</li>
+          <li>Select "Custom..." as the service</li>
+          <li>Copy and paste the URL below into the "Server" field</li>
+          <li>No stream key is needed - the URL contains your access token</li>
+          <li>Click "Apply" and then "OK"</li>
+          <li>Click "Start Streaming" in OBS when ready</li>
+        </ol>
+      </div>
+
       <div>
         <label className="block text-sm font-medium mb-2">
           Access Token
@@ -56,7 +71,7 @@ export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
           </Button>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Keep your access token private. Never share it with anyone.
+          This access token is temporary and will expire when your stream ends.
         </p>
       </div>
 
@@ -78,7 +93,7 @@ export function StreamKeyDisplay({ stream, rtmpUrl }: StreamKeyDisplayProps) {
           </Button>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          Use this URL in your streaming software (OBS, Streamlabs, etc.)
+          Copy this complete URL into OBS. No separate stream key is needed.
         </p>
       </div>
     </div>
