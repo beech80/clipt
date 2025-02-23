@@ -6370,6 +6370,45 @@ export type Database = {
           },
         ]
       }
+      stream_oauth_tokens: {
+        Row: {
+          access_token: string
+          client_id: string | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_revoked: boolean | null
+          refresh_token: string
+          scope: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          client_id?: string | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_revoked?: boolean | null
+          refresh_token: string
+          scope?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          client_id?: string | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_revoked?: boolean | null
+          refresh_token?: string
+          scope?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       stream_polls: {
         Row: {
           allow_multiple_choices: boolean | null
@@ -7563,6 +7602,7 @@ export type Database = {
           last_health_check: string | null
           low_latency_active: boolean | null
           max_bitrate: number | null
+          oauth_token_id: string | null
           playback_url: string | null
           recommendation_score: number | null
           recurring_schedule: Json | null
@@ -7579,6 +7619,7 @@ export type Database = {
           stream_resolution: string | null
           stream_settings: Json | null
           stream_url: string | null
+          streaming_url: string | null
           supported_codecs: string[] | null
           thumbnail_url: string | null
           title: string | null
@@ -7610,6 +7651,7 @@ export type Database = {
           last_health_check?: string | null
           low_latency_active?: boolean | null
           max_bitrate?: number | null
+          oauth_token_id?: string | null
           playback_url?: string | null
           recommendation_score?: number | null
           recurring_schedule?: Json | null
@@ -7626,6 +7668,7 @@ export type Database = {
           stream_resolution?: string | null
           stream_settings?: Json | null
           stream_url?: string | null
+          streaming_url?: string | null
           supported_codecs?: string[] | null
           thumbnail_url?: string | null
           title?: string | null
@@ -7657,6 +7700,7 @@ export type Database = {
           last_health_check?: string | null
           low_latency_active?: boolean | null
           max_bitrate?: number | null
+          oauth_token_id?: string | null
           playback_url?: string | null
           recommendation_score?: number | null
           recurring_schedule?: Json | null
@@ -7673,6 +7717,7 @@ export type Database = {
           stream_resolution?: string | null
           stream_settings?: Json | null
           stream_url?: string | null
+          streaming_url?: string | null
           supported_codecs?: string[] | null
           thumbnail_url?: string | null
           title?: string | null
@@ -7687,6 +7732,13 @@ export type Database = {
             columns: ["current_quality_preset"]
             isOneToOne: false
             referencedRelation: "stream_quality_presets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "streams_oauth_token_id_fkey"
+            columns: ["oauth_token_id"]
+            isOneToOne: false
+            referencedRelation: "stream_oauth_tokens"
             referencedColumns: ["id"]
           },
           {
@@ -9409,6 +9461,12 @@ export type Database = {
             }
             Returns: string
           }
+      generate_streaming_token: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: Json
+      }
       generate_user_stream_key: {
         Args: {
           user_id_param: string
@@ -9530,6 +9588,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      refresh_streaming_token: {
+        Args: {
+          refresh_token_param: string
+        }
+        Returns: Json
+      }
       refresh_trending_posts: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -9554,6 +9618,12 @@ export type Database = {
         }
         Returns: string[]
       }
+      start_stream_with_token: {
+        Args: {
+          token_param: string
+        }
+        Returns: Json
+      }
       track_post_analytics: {
         Args: {
           post_id_param: string
@@ -9576,6 +9646,12 @@ export type Database = {
       update_stream_recommendations: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      validate_streaming_token: {
+        Args: {
+          token_param: string
+        }
+        Returns: Json
       }
     }
     Enums: {
