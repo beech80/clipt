@@ -8,7 +8,7 @@ import { OBSSetupGuide } from "@/components/streaming/setup/OBSSetupGuide";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
-import { StreamKeyManager } from "@/components/streaming/keys/StreamKeyManager";
+import { StreamControlPanel } from "@/components/streaming/StreamControlPanel";
 import type { Stream } from "@/types/stream";
 
 const Broadcasting = () => {
@@ -76,7 +76,42 @@ const Broadcasting = () => {
         />
       )}
 
-      {user?.id && <StreamKeyManager userId={user.id} />}
+      {/* Stream Control Panel */}
+      <Card className="p-6">
+        <StreamControlPanel 
+          stream={stream} 
+          isLoading={isLoading}
+          userId={user.id}
+        />
+
+        {stream?.streaming_url && (
+          <div className="mt-6 space-y-4">
+            <div>
+              <h3 className="text-sm font-medium mb-2">Stream URL</h3>
+              <p className="font-mono text-sm bg-muted p-2 rounded break-all">
+                {stream.streaming_url}
+              </p>
+            </div>
+
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>To stream using OBS Studio:</p>
+              <ol className="list-decimal list-inside space-y-1 ml-2">
+                <li>Open OBS Studio</li>
+                <li>Go to Settings → Stream</li>
+                <li>Select "Custom..." as the service</li>
+                <li>Copy and paste the entire Stream URL above into the "Server" field</li>
+                <li>Leave the "Stream Key" field empty</li>
+                <li>Click "Apply" and then "OK"</li>
+                <li>Click "Start Streaming" when ready</li>
+              </ol>
+              <p className="mt-4 text-sm">
+                Your stream URL contains a secure token and will expire when you end your stream.
+                Click "Initialize Stream" to get a new URL when you want to start streaming.
+              </p>
+            </div>
+          </div>
+        )}
+      </Card>
       
       <OBSSetupGuide />
       
