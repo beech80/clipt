@@ -8,31 +8,40 @@ const corsHeaders = {
 }
 
 serve(async (req: Request) => {
-  // Handle CORS
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders })
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase environment variables')
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseKey)
 
     // Get auth user
-    const authHeader = req.headers.get('Authorization')!
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(authHeader.split(' ')[1])
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('No authorization header')
+    }
+
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
+      authHeader.split(' ')[1]
+    )
     
     if (userError || !user) {
       throw new Error('Unauthorized')
     }
 
     const { action } = await req.json()
+    console.log(`Processing ${action} for user ${user.id}`)
 
     switch (action) {
       case 'initialize_stream': {
-        console.log('Initializing stream for user:', user.id)
-        
         // Generate streaming tokens
         const { data: tokenData, error: tokenError } = await supabaseClient.rpc(
           'generate_streaming_token',
@@ -61,6 +70,7 @@ serve(async (req: Request) => {
           throw streamError
         }
 
+        console.log('Stream initialized successfully:', stream)
         return new Response(
           JSON.stringify({ stream }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -68,9 +78,8 @@ serve(async (req: Request) => {
       }
 
       case 'end_stream': {
-        console.log('Ending stream for user:', user.id)
-        
-        const { data, error } = await supabaseClient
+        // End stream and revoke token
+        const { data: stream, error: streamError } = await supabaseClient
           .from('streams')
           .update({
             is_live: false,
@@ -82,7 +91,10 @@ serve(async (req: Request) => {
           .select()
           .single()
 
-        if (error) throw error
+        if (streamError) {
+          console.error('Stream update error:', streamError)
+          throw streamError
+        }
 
         // Revoke the OAuth token
         const { error: revokeError } = await supabaseClient
@@ -90,19 +102,23 @@ serve(async (req: Request) => {
           .update({ is_revoked: true })
           .eq('user_id', user.id)
 
-        if (revokeError) throw revokeError
+        if (revokeError) {
+          console.error('Token revocation error:', revokeError)
+          throw revokeError
+        }
 
+        console.log('Stream ended successfully')
         return new Response(
-          JSON.stringify({ success: true, stream: data }),
+          JSON.stringify({ success: true, stream }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
       default:
-        throw new Error('Invalid action')
+        throw new Error(`Invalid action: ${action}`)
     }
   } catch (error) {
-    console.error('Error:', error.message)
+    console.error('Error in oauth function:', error.message)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
