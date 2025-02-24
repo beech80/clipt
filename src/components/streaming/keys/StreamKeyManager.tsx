@@ -16,42 +16,55 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
   const [showKey, setShowKey] = useState(false);
   const queryClient = useQueryClient();
 
+  // Query to fetch the stream key
   const { data: streamKey, isLoading } = useQuery({
-    queryKey: ['streamKey', userId],
+    queryKey: ['stream-key', userId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke<{ streamKey: string }>('stream-key', {
-        body: { action: 'get' }
-      });
+      const { data, error } = await supabase
+        .from('stream_keys')
+        .select('key')
+        .eq('user_id', userId)
+        .single();
       
-      if (error) throw error;
-      return data.streamKey;
+      if (error) {
+        console.error('Error fetching stream key:', error);
+        throw error;
+      }
+      
+      return data?.key;
     },
     enabled: !!userId
   });
 
+  // Mutation to generate a new stream key
   const generateKey = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke<{ streamKey: string }>('stream-key', {
-        body: { action: 'generate' }
+      const { data, error } = await supabase.rpc('generate_user_stream_key', {
+        user_id_param: userId
       });
       
-      if (error) throw error;
-      return data.streamKey;
+      if (error) {
+        console.error('Error generating stream key:', error);
+        throw error;
+      }
+      
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['streamKey'] });
+      queryClient.invalidateQueries({ queryKey: ['stream-key', userId] });
       toast.success('Stream key regenerated successfully');
+      setShowKey(true); // Show the new key automatically
     },
-    onError: () => {
-      console.error('Failed to regenerate stream key');
+    onError: (error) => {
+      console.error('Failed to regenerate stream key:', error);
       toast.error('Failed to regenerate stream key');
     }
   });
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-      .then(() => toast.success('Stream key copied to clipboard'))
-      .catch(() => toast.error('Failed to copy stream key'));
+      .then(() => toast.success('Copied to clipboard'))
+      .catch(() => toast.error('Failed to copy to clipboard'));
   };
 
   if (isLoading) {
@@ -61,6 +74,8 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
       </Card>
     );
   }
+
+  const rtmpUrl = 'rtmp://stream.lovable.dev/live';
 
   return (
     <Card className="p-6">
@@ -73,7 +88,7 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
             onClick={() => generateKey.mutate()}
             disabled={generateKey.isPending}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className={`h-4 w-4 mr-2 ${generateKey.isPending ? 'animate-spin' : ''}`} />
             Regenerate Key
           </Button>
         </div>
@@ -83,14 +98,14 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
             <h4 className="text-sm font-medium mb-2">RTMP URL</h4>
             <div className="flex gap-2">
               <Input
-                value="rtmp://stream.lovable.dev/live"
+                value={rtmpUrl}
                 readOnly
                 className="font-mono"
               />
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => copyToClipboard("rtmp://stream.lovable.dev/live")}
+                onClick={() => copyToClipboard(rtmpUrl)}
               >
                 <Copy className="h-4 w-4" />
               </Button>
