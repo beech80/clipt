@@ -42,8 +42,8 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
       queryClient.invalidateQueries({ queryKey: ['streamKey'] });
       toast.success('Stream key regenerated successfully');
     },
-    onError: (error) => {
-      console.error('Failed to regenerate stream key:', error);
+    onError: () => {
+      console.error('Failed to regenerate stream key');
       toast.error('Failed to regenerate stream key');
     }
   });
