@@ -1,44 +1,49 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import ErrorBoundary from '@/components/ErrorBoundary';
-import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
-import { MessagesProvider } from '@/contexts/MessagesContext';
 import { AuthProvider } from '@/contexts/AuthContext';
-import { routes } from '@/config/routes';
-import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
+import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
+import './App.css';
 
-function AppContent() {
-  usePerformanceMonitoring('App');
-  
-  return (
-    <Routes>
-      {routes.map((route) => (
-        <Route
-          key={route.path}
-          path={route.path}
-          element={route.element}
-        />
-      ))}
-    </Routes>
-  );
-}
+// Import your routes
+import Home from '@/pages/Home';
+import Broadcasting from '@/pages/Broadcasting';
+import Discover from '@/pages/Discover';
+import Messages from '@/pages/Messages';
+import Profile from '@/pages/Profile';
+import Streaming from '@/pages/Streaming';
+import TopClips from '@/pages/TopClips';
+import Clipts from '@/pages/Clipts';
+import AISupport from '@/pages/AISupport';
+import Settings from '@/pages/Settings';
+import Esports from '@/pages/Esports';
+import Post from '@/pages/Post';
+import NewPost from '@/pages/NewPost';
+import GamePage from '@/pages/GamePage';
+import Moderation from '@/pages/Moderation';
 
 function App() {
   return (
-    <ErrorBoundary>
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <AuthProvider>
-          <MessagesProvider>
-            <ReportDialogProvider>
-              <AppContent />
-              <Toaster position="top-center" />
-            </ReportDialogProvider>
-          </MessagesProvider>
-        </AuthProvider>
-      </React.Suspense>
-    </ErrorBoundary>
+    <AuthProvider>
+      <ReportDialogProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/broadcasting" element={<Broadcasting />} />
+          <Route path="/discover" element={<Discover />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/streaming" element={<Streaming />} />
+          <Route path="/top-clips" element={<TopClips />} />
+          <Route path="/clipts" element={<Clipts />} />
+          <Route path="/ai-assistant" element={<AISupport />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/esports" element={<Esports />} />
+          <Route path="/post/:postId" element={<Post />} />
+          <Route path="/post/new" element={<NewPost />} />
+          <Route path="/game/:gameId" element={<GamePage />} />
+          <Route path="/moderation" element={<Moderation />} />
+        </Routes>
+      </ReportDialogProvider>
+    </AuthProvider>
   );
 }
 
