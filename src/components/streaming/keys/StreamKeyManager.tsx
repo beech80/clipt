@@ -20,17 +20,20 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
   const { data: streamKey, isLoading } = useQuery({
     queryKey: ['stream-key', userId],
     queryFn: async () => {
+      console.log('Fetching stream key for user:', userId);
+      
       const { data, error } = await supabase
         .from('stream_keys')
         .select('key')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching stream key:', error);
         throw error;
       }
       
+      console.log('Stream key data:', data);
       return data?.key;
     },
     enabled: !!userId
@@ -39,6 +42,8 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
   // Mutation to generate a new stream key
   const generateKey = useMutation({
     mutationFn: async () => {
+      console.log('Generating new stream key for user:', userId);
+      
       const { data, error } = await supabase.rpc('generate_user_stream_key', {
         user_id_param: userId
       });
@@ -48,6 +53,7 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
         throw error;
       }
       
+      console.log('Generated new stream key successfully');
       return data;
     },
     onSuccess: () => {
@@ -89,7 +95,7 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
             disabled={generateKey.isPending}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${generateKey.isPending ? 'animate-spin' : ''}`} />
-            Regenerate Key
+            {!streamKey ? 'Generate Key' : 'Regenerate Key'}
           </Button>
         </div>
 
@@ -114,32 +120,38 @@ export const StreamKeyManager = ({ userId }: StreamKeyManagerProps) => {
 
           <div>
             <h4 className="text-sm font-medium mb-2">Stream Key</h4>
-            <div className="flex gap-2">
-              <Input
-                type={showKey ? 'text' : 'password'}
-                value={streamKey || ''}
-                readOnly
-                className="font-mono"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setShowKey(!showKey)}
-              >
-                {showKey ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => streamKey && copyToClipboard(streamKey)}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
+            {!streamKey ? (
+              <p className="text-sm text-muted-foreground mb-2">
+                No stream key found. Click "Generate Key" to create one.
+              </p>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  type={showKey ? 'text' : 'password'}
+                  value={streamKey}
+                  readOnly
+                  className="font-mono"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowKey(!showKey)}
+                >
+                  {showKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => streamKey && copyToClipboard(streamKey)}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
