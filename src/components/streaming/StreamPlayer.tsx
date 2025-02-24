@@ -9,7 +9,7 @@ interface StreamPlayerProps {
   title?: string;
   isLive?: boolean;
   viewerCount?: number;
-  playbackUrl?: string;
+  playbackUrl?: string | null;
 }
 
 export const StreamPlayer = ({ 
@@ -19,6 +19,11 @@ export const StreamPlayer = ({
   viewerCount = 0,
   playbackUrl
 }: StreamPlayerProps) => {
+  const getStreamHealth = () => {
+    if (!isLive) return 'offline';
+    return 'excellent';
+  };
+
   if (!playbackUrl) {
     return (
       <Card className="aspect-video w-full bg-gray-900 flex items-center justify-center">
@@ -48,7 +53,8 @@ export const StreamPlayer = ({
               </p>
             </div>
             <StreamHealthIndicator 
-              status={isLive ? 'excellent' : 'offline'} 
+              streamId={streamId}
+              status={getStreamHealth()}
               className="ml-auto"
             />
           </div>
@@ -59,4 +65,4 @@ export const StreamPlayer = ({
       </div>
     </div>
   );
-};
+}

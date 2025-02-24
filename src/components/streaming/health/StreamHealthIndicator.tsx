@@ -1,102 +1,50 @@
-import { useEffect, useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { Shield, AlertCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { supabase } from '@/lib/supabase';
 
-interface StreamHealthIndicatorProps {
-  streamId: string;
+import React from 'react';
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+
+export interface StreamHealthStatus {
+  status: 'excellent' | 'good' | 'poor' | 'offline';
+  message?: string;
 }
 
-export const StreamHealthIndicator = ({ streamId }: StreamHealthIndicatorProps) => {
-  const [healthStatus, setHealthStatus] = useState<'offline' | 'excellent' | 'good' | 'poor' | 'critical'>('offline');
-  const [lastCheck, setLastCheck] = useState<Date | null>(null);
+export interface StreamHealthIndicatorProps {
+  streamId: string;
+  status?: StreamHealthStatus['status'];
+  className?: string;
+}
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('stream-health')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'streams',
-          filter: `id=eq.${streamId}`
-        },
-        (payload: any) => {
-          if (payload.new) {
-            setHealthStatus(payload.new.stream_health_status);
-            setLastCheck(payload.new.last_health_check);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [streamId]);
-
+export function StreamHealthIndicator({ status = 'offline', className }: StreamHealthIndicatorProps) {
   const getStatusColor = () => {
-    switch (healthStatus) {
+    switch (status) {
       case 'excellent':
-        return 'text-green-500';
+        return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
       case 'good':
-        return 'text-green-400';
+        return 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20';
       case 'poor':
-        return 'text-yellow-500';
-      case 'critical':
-        return 'text-red-500';
+        return 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20';
       default:
-        return 'text-gray-400';
+        return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
     }
   };
 
   const getStatusIcon = () => {
-    switch (healthStatus) {
+    switch (status) {
       case 'excellent':
+        return <CheckCircle className="w-4 h-4" />;
       case 'good':
-        return <CheckCircle2 className={`h-5 w-5 ${getStatusColor()}`} />;
+        return <CheckCircle className="w-4 h-4" />;
       case 'poor':
-        return <AlertTriangle className={`h-5 w-5 ${getStatusColor()}`} />;
-      case 'critical':
-        return <AlertCircle className={`h-5 w-5 ${getStatusColor()}`} />;
+        return <AlertCircle className="w-4 h-4" />;
       default:
-        return <Shield className="h-5 w-5 text-gray-400" />;
-    }
-  };
-
-  const getStatusDescription = () => {
-    switch (healthStatus) {
-      case 'excellent':
-        return 'Stream health is excellent';
-      case 'good':
-        return 'Stream health is good';
-      case 'poor':
-        return 'Stream experiencing some issues';
-      case 'critical':
-        return 'Critical stream issues detected';
-      default:
-        return 'Stream is offline';
+        return <XCircle className="w-4 h-4" />;
     }
   };
 
   return (
-    <Card className="p-4">
-      <Alert>
-        <div className="flex items-center gap-2">
-          {getStatusIcon()}
-          <AlertTitle className="capitalize">{healthStatus}</AlertTitle>
-        </div>
-        <AlertDescription>
-          {getStatusDescription()}
-          {lastCheck && (
-            <div className="text-sm text-muted-foreground mt-1">
-              Last checked: {new Date(lastCheck).toLocaleTimeString()}
-            </div>
-          )}
-        </AlertDescription>
-      </Alert>
-    </Card>
+    <Badge variant="outline" className={`${getStatusColor()} ${className}`}>
+      {getStatusIcon()}
+      <span className="ml-2 capitalize">{status}</span>
+    </Badge>
   );
-};
+}
