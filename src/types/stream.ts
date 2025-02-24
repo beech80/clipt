@@ -18,14 +18,12 @@ export interface Stream {
   oauth_token_id: string | null;
 }
 
-export interface OAuthToken {
-  access_token: string;
-  refresh_token: string;
-  expires_at: string;
-  token_type: string;
-}
-
 export interface StreamSettings {
   rtmpUrl: string;
-  accessToken?: string;
+  streaming_url?: string;
+}
+
+export interface StreamHealthStatus {
+  status: 'healthy' | 'warning' | 'error';
+  message?: string;
 }

@@ -1,73 +1,79 @@
-import { useState } from 'react';
+
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Copy, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import type { Stream } from '@/types/stream';
 
-interface StreamKeyManagerProps {
+interface StreamAuthManagerProps {
   streamId: string;
 }
 
-export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
-  const [showKey, setShowKey] = useState(false);
+export const StreamAuthManager = ({ streamId }: StreamAuthManagerProps) => {
+  const [showToken, setShowToken] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
-  const regenerateKey = async () => {
+  const regenerateToken = async () => {
     try {
       setIsRegenerating(true);
-      const { data, error } = await supabase.rpc('generate_stream_key');
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('oauth', {
+        body: {
+          action: 'initialize_stream',
+          userId: userData.user.id
+        }
+      });
       
       if (error) throw error;
 
-      await supabase
-        .from('streams')
-        .update({ stream_key: data })
-        .eq('id', streamId);
-
-      toast.success('Stream key regenerated successfully');
+      toast.success('Stream token regenerated successfully');
     } catch (error) {
-      console.error('Failed to regenerate stream key:', error);
-      toast.error('Failed to regenerate stream key');
+      console.error('Failed to regenerate stream token:', error);
+      toast.error('Failed to regenerate stream token');
     } finally {
       setIsRegenerating(false);
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard');
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success(`${label} copied to clipboard`))
+      .catch(() => toast.error(`Failed to copy ${label}`));
   };
 
   return (
     <Card className="p-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Stream Key</h3>
+          <h3 className="text-lg font-semibold">Stream Authentication</h3>
           <Button
             variant="outline"
             size="sm"
-            onClick={regenerateKey}
+            onClick={regenerateToken}
             disabled={isRegenerating}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
-            Regenerate Key
+            Regenerate Token
           </Button>
         </div>
 
         <div className="flex gap-2">
           <Input
-            type={showKey ? 'text' : 'password'}
+            type={showToken ? 'text' : 'password'}
             value="••••••••••••••••"
             readOnly
           />
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setShowKey(!showKey)}
+            onClick={() => setShowToken(!showToken)}
           >
-            {showKey ? (
+            {showToken ? (
               <EyeOff className="h-4 w-4" />
             ) : (
               <Eye className="h-4 w-4" />
@@ -76,14 +82,14 @@ export const StreamKeyManager = ({ streamId }: StreamKeyManagerProps) => {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => copyToClipboard('stream-key')}
+            onClick={() => copyToClipboard('stream-token', 'Stream Token')}
           >
             <Copy className="h-4 w-4" />
           </Button>
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Keep your stream key private. If compromised, click "Regenerate Key".
+          Keep your stream token private. If compromised, click "Regenerate Token".
         </p>
       </div>
     </Card>
