@@ -16,7 +16,7 @@ export interface Stream {
   stream_health_status: string;
   playback_url: string | null;
   stream_key: string | null;
-  encrypted_stream_key: string | null;
+  oauth_token_id: string | null;
 }
 
 export interface StreamSettings {

@@ -74,13 +74,23 @@ serve(async (req: Request) => {
           .from('streams')
           .update({
             is_live: false,
-            ended_at: new Date().toISOString()
+            ended_at: new Date().toISOString(),
+            streaming_url: null,
+            oauth_token_id: null
           })
           .eq('user_id', user.id)
           .select()
           .single()
 
         if (error) throw error
+
+        // Revoke the OAuth token
+        const { error: revokeError } = await supabaseClient
+          .from('stream_oauth_tokens')
+          .update({ is_revoked: true })
+          .eq('user_id', user.id)
+
+        if (revokeError) throw revokeError
 
         return new Response(
           JSON.stringify({ success: true, stream: data }),
