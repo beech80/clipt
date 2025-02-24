@@ -15,12 +15,13 @@ export interface Stream {
   stream_resolution: string | null;
   stream_health_status: string;
   playback_url: string | null;
-  oauth_token_id: string | null;
+  stream_key: string | null;
+  encrypted_stream_key: string | null;
 }
 
 export interface StreamSettings {
   rtmpUrl: string;
-  streaming_url?: string;
+  streamKey?: string;
 }
 
 export interface StreamHealthStatus {
