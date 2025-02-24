@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { BroadcastPresetForm } from "@/components/broadcasting/BroadcastPresetForm";
 import { Card } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import type { Stream } from "@/types/stream";
 
 const Broadcasting = () => {
   const { user } = useAuth();
-  const [showKey, setShowKey] = useState(false);
+  const [showToken, setShowToken] = useState(false);
   const queryClient = useQueryClient();
 
   // Query for stream data
@@ -179,7 +179,7 @@ const Broadcasting = () => {
                 <h4 className="text-sm font-medium mb-2">Access Token</h4>
                 <div className="flex gap-2">
                   <Input
-                    type={showKey ? 'text' : 'password'}
+                    type={showToken ? 'text' : 'password'}
                     value={new URL(stream.streaming_url).searchParams.get('access_token') || ''}
                     readOnly
                     className="font-mono"
@@ -187,9 +187,9 @@ const Broadcasting = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setShowKey(!showKey)}
+                    onClick={() => setShowToken(!showToken)}
                   >
-                    {showKey ? (
+                    {showToken ? (
                       <EyeOff className="h-4 w-4" />
                     ) : (
                       <Eye className="h-4 w-4" />

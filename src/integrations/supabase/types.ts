@@ -6283,30 +6283,6 @@ export type Database = {
           },
         ]
       }
-      stream_keys: {
-        Row: {
-          created_at: string
-          id: string
-          key: string
-          last_used_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          key: string
-          last_used_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          key?: string
-          last_used_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       stream_moderators: {
         Row: {
           assigned_by: string | null
@@ -7592,7 +7568,6 @@ export type Database = {
           description: string | null
           dvr_enabled: boolean | null
           dvr_window_seconds: number | null
-          encrypted_stream_key: string | null
           ended_at: string | null
           health_status: string | null
           hls_playback_url: string | null
@@ -7614,7 +7589,6 @@ export type Database = {
           search_vector: unknown | null
           started_at: string | null
           stream_health_status: string | null
-          stream_key: string | null
           stream_latency_ms: number | null
           stream_resolution: string | null
           stream_settings: Json | null
@@ -7641,7 +7615,6 @@ export type Database = {
           description?: string | null
           dvr_enabled?: boolean | null
           dvr_window_seconds?: number | null
-          encrypted_stream_key?: string | null
           ended_at?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
@@ -7663,7 +7636,6 @@ export type Database = {
           search_vector?: unknown | null
           started_at?: string | null
           stream_health_status?: string | null
-          stream_key?: string | null
           stream_latency_ms?: number | null
           stream_resolution?: string | null
           stream_settings?: Json | null
@@ -7690,7 +7662,6 @@ export type Database = {
           description?: string | null
           dvr_enabled?: boolean | null
           dvr_window_seconds?: number | null
-          encrypted_stream_key?: string | null
           ended_at?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
@@ -7712,7 +7683,6 @@ export type Database = {
           search_vector?: unknown | null
           started_at?: string | null
           stream_health_status?: string | null
-          stream_key?: string | null
           stream_latency_ms?: number | null
           stream_resolution?: string | null
           stream_settings?: Json | null
@@ -9218,24 +9188,16 @@ export type Database = {
       }
       trending_streams: {
         Row: {
-          available_qualities: Json | null
-          chat_enabled: boolean | null
-          created_at: string | null
-          current_bitrate: number | null
-          current_fps: number | null
+          avatar_url: string | null
           description: string | null
-          ended_at: string | null
-          health_status: string | null
           id: string | null
           is_live: boolean | null
           started_at: string | null
-          stream_key: string | null
-          stream_resolution: string | null
-          stream_url: string | null
+          streaming_url: string | null
           thumbnail_url: string | null
           title: string | null
-          trending_score: number | null
           user_id: string | null
+          username: string | null
           viewer_count: number | null
         }
         Relationships: [
@@ -9421,23 +9383,11 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      decrypt_stream_key: {
-        Args: {
-          encrypted_key: string
-        }
-        Returns: string
-      }
       delete_user_account: {
         Args: {
           user_id_param: string
         }
         Returns: boolean
-      }
-      encrypt_stream_key: {
-        Args: {
-          stream_key: string
-        }
-        Returns: string
       }
       filter_chat_message: {
         Args: {
@@ -9450,17 +9400,6 @@ export type Database = {
           filter_matched: string
         }[]
       }
-      generate_stream_key:
-        | {
-            Args: Record<PropertyKey, never>
-            Returns: string
-          }
-        | {
-            Args: {
-              user_id: string
-            }
-            Returns: string
-          }
       generate_streaming_token: {
         Args: {
           user_id_param: string
