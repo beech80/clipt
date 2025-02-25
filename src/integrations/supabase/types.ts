@@ -6283,33 +6283,6 @@ export type Database = {
           },
         ]
       }
-      stream_keys: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          key: string
-          last_used_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          key: string
-          last_used_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          key?: string
-          last_used_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       stream_moderators: {
         Row: {
           assigned_by: string | null
@@ -7595,7 +7568,6 @@ export type Database = {
           description: string | null
           dvr_enabled: boolean | null
           dvr_window_seconds: number | null
-          encrypted_stream_key: string | null
           ended_at: string | null
           health_status: string | null
           hls_playback_url: string | null
@@ -7617,7 +7589,6 @@ export type Database = {
           search_vector: unknown | null
           started_at: string | null
           stream_health_status: string | null
-          stream_key: string | null
           stream_latency_ms: number | null
           stream_resolution: string | null
           stream_settings: Json | null
@@ -7644,7 +7615,6 @@ export type Database = {
           description?: string | null
           dvr_enabled?: boolean | null
           dvr_window_seconds?: number | null
-          encrypted_stream_key?: string | null
           ended_at?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
@@ -7666,7 +7636,6 @@ export type Database = {
           search_vector?: unknown | null
           started_at?: string | null
           stream_health_status?: string | null
-          stream_key?: string | null
           stream_latency_ms?: number | null
           stream_resolution?: string | null
           stream_settings?: Json | null
@@ -7693,7 +7662,6 @@ export type Database = {
           description?: string | null
           dvr_enabled?: boolean | null
           dvr_window_seconds?: number | null
-          encrypted_stream_key?: string | null
           ended_at?: string | null
           health_status?: string | null
           hls_playback_url?: string | null
@@ -7715,7 +7683,6 @@ export type Database = {
           search_vector?: unknown | null
           started_at?: string | null
           stream_health_status?: string | null
-          stream_key?: string | null
           stream_latency_ms?: number | null
           stream_resolution?: string | null
           stream_settings?: Json | null
@@ -9416,23 +9383,11 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      decrypt_stream_key: {
-        Args: {
-          encrypted_key: string
-        }
-        Returns: string
-      }
       delete_user_account: {
         Args: {
           user_id_param: string
         }
         Returns: boolean
-      }
-      encrypt_stream_key: {
-        Args: {
-          key_text: string
-        }
-        Returns: string
       }
       filter_chat_message: {
         Args: {
@@ -9444,10 +9399,6 @@ export type Database = {
           is_blocked: boolean
           filter_matched: string
         }[]
-      }
-      generate_stream_key: {
-        Args: Record<PropertyKey, never>
-        Returns: string
       }
       generate_streaming_token: {
         Args: {

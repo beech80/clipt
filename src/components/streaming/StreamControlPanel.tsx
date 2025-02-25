@@ -20,6 +20,7 @@ export function StreamControlPanel({ stream, isLoading, userId }: StreamControlP
     mutationFn: async () => {
       console.log('Initializing stream with OAuth...', userId);
       
+      // Get OAuth tokens
       const { data: oauthData, error: oauthError } = await supabase.functions.invoke<{ stream: Stream }>('oauth', {
         body: {
           action: 'initialize_stream',

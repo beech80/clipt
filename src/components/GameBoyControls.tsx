@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { Menu, Camera, Trophy, Bot, Gamepad, MessageSquare, Users, Video, Home, Crown, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import {
 import Joystick from './gameboy/Joystick';
 import ActionButtons from './gameboy/ActionButtons';
 import { handleVideoControl } from './gameboy/VideoControls';
+import { useSheetState } from '@/hooks/use-sheet-state';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -18,7 +19,7 @@ interface GameBoyControlsProps {
 
 const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
+  const { setIsOpen } = useSheetState();
 
   const handleAction = (action: string) => {
     switch(action) {
@@ -55,7 +56,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   return (
     <div className="gameboy-container h-[180px] sm:h-[200px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none border-t-2 border-gaming-400">
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <Sheet>
           <SheetTrigger asChild>
             <button className="rounded-full bg-gaming-400/20 p-2.5 sm:p-3 backdrop-blur-sm border border-gaming-400/30 
               hover:bg-gaming-400/30 transition-all duration-300 touch-none active:scale-95">
@@ -70,7 +71,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
                   onClick={() => {
                     navigate(item.path);
                     toast.success(`Navigating to ${item.name}`);
-                    setIsOpen(false);
                   }}
                   className="flex items-center gap-2 p-3 sm:p-4 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 
                     active:bg-gaming-400/30 transition-all duration-300 text-gaming-400 

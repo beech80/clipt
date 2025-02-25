@@ -15,16 +15,17 @@ export interface Stream {
   stream_resolution: string | null;
   stream_health_status: string;
   playback_url: string | null;
-  stream_key: string | null;
   oauth_token_id: string | null;
+}
+
+export interface OAuthToken {
+  access_token: string;
+  refresh_token: string;
+  expires_at: string;
+  token_type: string;
 }
 
 export interface StreamSettings {
   rtmpUrl: string;
-  streamKey?: string;
-}
-
-export interface StreamHealthStatus {
-  status: 'healthy' | 'warning' | 'error';
-  message?: string;
+  accessToken?: string;
 }

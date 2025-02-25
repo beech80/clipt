@@ -1,85 +1,79 @@
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { serve } from "https://deno.fresh.dev/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
-serve(async (req: Request) => {
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   try {
-    // Handle CORS preflight requests
-    if (req.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders })
-    }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase environment variables')
-    }
-
-    const supabaseClient = createClient(supabaseUrl, supabaseKey)
-
-    // Get auth user
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header')
-    }
-
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
-      authHeader.split(' ')[1]
-    )
-    
-    if (userError || !user) {
-      throw new Error('Unauthorized')
-    }
-
-    const { action } = await req.json()
-    console.log(`Processing ${action} for user ${user.id}`)
+    const { action, userId, access_token } = await req.json();
 
     switch (action) {
       case 'initialize_stream': {
-        // Generate streaming tokens
-        const { data: tokenData, error: tokenError } = await supabaseClient.rpc(
+        // Generate new streaming token using our database function
+        const { data: tokenData, error: tokenError } = await supabase.rpc(
           'generate_streaming_token',
-          { user_id_param: user.id }
-        )
-        
-        if (tokenError) {
-          console.error('Token generation error:', tokenError)
-          throw tokenError
-        }
+          { user_id_param: userId }
+        );
 
-        // Create or update stream record
-        const { data: stream, error: streamError } = await supabaseClient
+        if (tokenError) throw tokenError;
+
+        // Create or update stream with the new token
+        const streamingUrl = `rtmp://stream.clipt.com/live?access_token=${tokenData.access_token}`;
+        
+        const { data: stream, error: streamError } = await supabase
           .from('streams')
           .upsert({
-            user_id: user.id,
+            user_id: userId,
             is_live: false,
-            streaming_url: `rtmp://stream.lovable.dev/live?access_token=${tokenData.access_token}`,
-            oauth_token_id: tokenData.token_id
+            streaming_url: streamingUrl,
+            oauth_token_id: tokenData.token_id,
+            started_at: null,
+            ended_at: null
           })
           .select()
-          .single()
+          .single();
 
-        if (streamError) {
-          console.error('Stream creation error:', streamError)
-          throw streamError
-        }
+        if (streamError) throw streamError;
 
-        console.log('Stream initialized successfully:', stream)
         return new Response(
           JSON.stringify({ stream }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
+        );
+      }
+
+      case 'validate_token': {
+        if (!access_token) {
+          throw new Error('Access token is required');
+        }
+
+        const { data: validation, error: validationError } = await supabase.rpc(
+          'validate_streaming_token',
+          { token_param: access_token }
+        );
+
+        if (validationError) throw validationError;
+
+        return new Response(
+          JSON.stringify(validation),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
 
       case 'end_stream': {
-        // End stream and revoke token
-        const { data: stream, error: streamError } = await supabaseClient
+        const { error: updateError } = await supabase
           .from('streams')
           .update({
             is_live: false,
@@ -87,44 +81,40 @@ serve(async (req: Request) => {
             streaming_url: null,
             oauth_token_id: null
           })
-          .eq('user_id', user.id)
-          .select()
-          .single()
+          .eq('user_id', userId);
 
-        if (streamError) {
-          console.error('Stream update error:', streamError)
-          throw streamError
-        }
+        if (updateError) throw updateError;
 
-        // Revoke the OAuth token
-        const { error: revokeError } = await supabaseClient
+        // Revoke the access token
+        const { error: revokeError } = await supabase
           .from('stream_oauth_tokens')
           .update({ is_revoked: true })
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
+          .eq('is_revoked', false);
 
-        if (revokeError) {
-          console.error('Token revocation error:', revokeError)
-          throw revokeError
-        }
+        if (revokeError) throw revokeError;
 
-        console.log('Stream ended successfully')
         return new Response(
-          JSON.stringify({ success: true, stream }),
+          JSON.stringify({ success: true }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
+        );
       }
 
       default:
-        throw new Error(`Invalid action: ${action}`)
+        throw new Error('Invalid action');
     }
   } catch (error) {
-    console.error('Error in oauth function:', error.message)
+    console.error('OAuth error:', error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'Internal server error',
+        error_description: error.description || 'An unexpected error occurred'
+      }),
       { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    )
+    );
   }
-})
+});
