@@ -103,13 +103,17 @@ export function ProfileEditForm() {
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ 
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', user?.id)
 
       if (updateError) throw updateError
 
       toast.success("Profile picture updated successfully!")
-      refetch()
+      await refetch()
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
     } catch (error) {
       toast.error("Error updating profile picture")
       console.error(error)
@@ -127,13 +131,19 @@ export function ProfileEditForm() {
           display_name: data.displayName,
           bio: data.bioDescription,
           website: data.website,
+          updated_at: new Date().toISOString()
         })
         .eq('id', user?.id)
 
       if (error) throw error
       
-      // Invalidate the profile query to trigger a refetch
-      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      // Invalidate both profile queries to ensure all components update
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] }),
+      ])
+      
+      await refetch()
       toast.success("Profile updated successfully!")
     } catch (error) {
       toast.error("Failed to update profile")
