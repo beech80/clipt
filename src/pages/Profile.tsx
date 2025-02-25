@@ -66,6 +66,10 @@ const Profile = () => {
     navigate('/post/new');
   };
 
+  const handleAchievementClick = () => {
+    navigate('/progress');
+  };
+
   if (profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -118,10 +122,16 @@ const Profile = () => {
                   <div className="text-xl font-bold text-purple-400">{userStats.following}</div>
                   <div className="text-sm text-gray-400">Following</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-purple-400">{userStats.achievements}</div>
-                  <div className="text-sm text-gray-400">Achievements</div>
-                </div>
+                <Button
+                  variant="ghost"
+                  className="text-center"
+                  onClick={handleAchievementClick}
+                >
+                  <div>
+                    <div className="text-xl font-bold text-purple-400">{userStats.achievements}</div>
+                    <div className="text-sm text-gray-400">Achievements</div>
+                  </div>
+                </Button>
               </div>
             </div>
           </div>

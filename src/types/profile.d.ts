@@ -9,12 +9,13 @@ export interface DatabaseProfile {
   id: string;
   username?: string;
   avatar_url?: string;
-  custom_theme?: CustomTheme;
+  custom_theme?: CustomTheme | null;
   enable_notifications?: boolean;
   enable_sounds?: boolean;
   bio?: string;
   display_name?: string;
   created_at?: string;
+  website?: string;
 }
 
 export interface Profile extends DatabaseProfile {

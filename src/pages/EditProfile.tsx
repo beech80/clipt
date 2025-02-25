@@ -11,18 +11,12 @@ import { useNavigate } from "react-router-dom";
 import GameBoyControls from "@/components/GameBoyControls";
 import { toast } from "sonner";
 import { Profile } from "@/types/profile";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
   
   const { data: profile } = useQuery<Profile>({
     queryKey: ['profile'],
@@ -61,12 +55,14 @@ const EditProfile = () => {
   });
 
   const { data: availableGames } = useQuery({
-    queryKey: ['available-games'],
+    queryKey: ['available-games', searchTerm],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('game_categories')
         .select('*')
-        .order('name');
+        .ilike('name', `%${searchTerm}%`)
+        .order('name')
+        .limit(10);
 
       if (error) throw error;
       return data;
@@ -150,21 +146,30 @@ const EditProfile = () => {
             </div>
             
             <div className="space-y-4">
-              <Select onValueChange={handleAddGame}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Add a game..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Available Games</SelectLabel>
-                    {availableGames?.map((game) => (
-                      <SelectItem key={game.id} value={game.id}>
-                        {game.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <Input
+                placeholder="Search for games..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+
+              {searchTerm && availableGames && availableGames.length > 0 && (
+                <Card className="p-2 absolute z-10 w-full max-h-60 overflow-y-auto bg-background border shadow-lg">
+                  {availableGames.map((game) => (
+                    <Button
+                      key={game.id}
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleAddGame(game.id);
+                        setSearchTerm('');
+                      }}
+                    >
+                      {game.name}
+                    </Button>
+                  ))}
+                </Card>
+              )}
 
               <div className="space-y-2">
                 {userGames?.map((userGame) => (
