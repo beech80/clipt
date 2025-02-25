@@ -43,6 +43,7 @@ export interface Achievement {
   points: number;
   category: 'gaming' | 'social' | 'streaming' | 'general';
   frequency: 'one-time' | 'daily' | 'weekly' | 'monthly';
+  created_at?: string;
 }
 
 export interface AchievementProgress {

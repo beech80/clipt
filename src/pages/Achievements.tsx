@@ -13,21 +13,25 @@ import type { Achievement, AchievementProgress } from '@/types/profile';
 export default function Achievements() {
   const { user } = useAuth();
 
-  const { data: achievementProgress } = useQuery({
+  const { data: achievementProgress } = useQuery<(AchievementProgress & { achievement: Achievement })[]>({
     queryKey: ['achievement-progress', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('achievement_progress')
-        .select('*, achievement:achievements(*)')
+        .select(`
+          *,
+          achievement:achievements(*)
+        `)
         .eq('user_id', user?.id);
 
       if (error) throw error;
-      return data as (AchievementProgress & { achievement: Achievement })[];
+      const typedData = data as (AchievementProgress & { achievement: Achievement })[];
+      return typedData;
     },
     enabled: !!user?.id,
   });
 
-  const { data: achievements } = useQuery({
+  const { data: achievements } = useQuery<Achievement[]>({
     queryKey: ['achievements'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -37,7 +41,12 @@ export default function Achievements() {
         .order('points', { ascending: false });
 
       if (error) throw error;
-      return data as Achievement[];
+      // Cast the reward_value to the correct type
+      const typedData = data.map(achievement => ({
+        ...achievement,
+        reward_value: achievement.reward_value as unknown as { points: number }
+      }));
+      return typedData;
     },
   });
 
