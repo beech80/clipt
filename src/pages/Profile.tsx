@@ -67,7 +67,7 @@ const Profile = () => {
   };
 
   const handleAchievementClick = () => {
-    navigate('/progress');
+    navigate('/achievements');
   };
 
   if (profileLoading) {

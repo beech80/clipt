@@ -28,3 +28,28 @@ export interface Profile extends DatabaseProfile {
   background_processing?: boolean;
   auto_download_media?: boolean;
 }
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon_url?: string;
+  progress_type: 'count' | 'value' | 'boolean';
+  reward_type: 'points' | 'badge' | 'title';
+  reward_value: {
+    points: number;
+  };
+  target_value: number;
+  points: number;
+  category: 'gaming' | 'social' | 'streaming' | 'general';
+  frequency: 'one-time' | 'daily' | 'weekly' | 'monthly';
+}
+
+export interface AchievementProgress {
+  achievement_id: string;
+  user_id: string;
+  current_value: number;
+  completed?: boolean;
+  earned_at?: string;
+  achievement?: Achievement;
+}

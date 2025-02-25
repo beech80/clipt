@@ -1,90 +1,136 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { AchievementList } from "@/components/achievements/AchievementList";
-import { AchievementProgress } from "@/components/achievements/AchievementProgress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Star, Award, LogIn } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { BackButton } from "@/components/ui/back-button";
 
-const Achievements = () => {
+import React from 'react';
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Trophy, Gamepad2, Bookmark } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import type { Achievement, AchievementProgress } from '@/types/profile';
+import { useAuth } from '@/contexts/AuthContext';
+
+export default function Achievements() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+
+  const { data: achievementProgress } = useQuery<AchievementProgress[]>({
+    queryKey: ['achievement-progress', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('achievement_progress')
+        .select(`
+          *,
+          achievement:achievements(*)
+        `)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: achievements } = useQuery<Achievement[]>({
+    queryKey: ['achievements'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('achievements')
+        .select('*')
+        .order('category', { ascending: true })
+        .order('points', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const renderAchievementIcon = (category: string) => {
+    switch (category) {
+      case 'gaming':
+        return <Gamepad2 className="w-6 h-6 text-purple-500" />;
+      case 'social':
+        return <Trophy className="w-6 h-6 text-yellow-500" />;
+      default:
+        return <Bookmark className="w-6 h-6 text-blue-500" />;
+    }
+  };
+
+  const getProgressForAchievement = (achievementId: string) => {
+    return achievementProgress?.find(p => p.achievement_id === achievementId);
+  };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <BackButton />
-          <Trophy className="h-6 w-6 text-gaming-400" />
-          <h1 className="text-2xl font-bold">Achievements</h1>
-        </div>
-        {!user && (
-          <Button 
-            onClick={() => navigate('/login')} 
-            className="flex items-center gap-2"
-          >
-            <LogIn className="w-4 h-4" />
-            Sign in to track progress
-          </Button>
-        )}
+    <div className="container mx-auto p-6 space-y-8 pb-40">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <Trophy className="w-8 h-8 text-yellow-500" />
+          Achievements
+        </h1>
+        <p className="text-muted-foreground">Track your progress and earn rewards</p>
       </div>
 
-      <Tabs defaultValue="all" className="space-y-4">
+      <Separator />
+
+      <Tabs defaultValue="all" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="all">
-            <Trophy className="h-4 w-4 mr-2" />
-            All
-          </TabsTrigger>
-          <TabsTrigger value="in-progress">
-            <Star className="h-4 w-4 mr-2" />
-            In Progress
-          </TabsTrigger>
-          <TabsTrigger value="completed">
-            <Award className="h-4 w-4 mr-2" />
-            Completed
-          </TabsTrigger>
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="gaming">Gaming</TabsTrigger>
+          <TabsTrigger value="social">Social</TabsTrigger>
+          <TabsTrigger value="streaming">Streaming</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-[1fr_300px]">
-            <div className="space-y-4">
-              {!user ? (
-                <Card className="p-6">
-                  <div className="text-center space-y-4">
-                    <Trophy className="w-12 h-12 mx-auto text-gaming-400" />
-                    <div>
-                      <h3 className="text-lg font-semibold">Preview Mode</h3>
-                      <p className="text-muted-foreground">
-                        Sign in to track your achievements and earn rewards
-                      </p>
+        {['all', 'gaming', 'social', 'streaming'].map(category => (
+          <TabsContent key={category} value={category} className="space-y-4">
+            {achievements
+              ?.filter(a => category === 'all' || a.category === category)
+              .map(achievement => {
+                const progress = getProgressForAchievement(achievement.id);
+                const progressPercent = progress 
+                  ? (progress.current_value / achievement.target_value) * 100
+                  : 0;
+
+                return (
+                  <Card key={achievement.id} className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-4">
+                          {renderAchievementIcon(achievement.category)}
+                          <div>
+                            <h3 className="font-semibold">{achievement.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {achievement.description}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-semibold text-purple-500">
+                            {achievement.points} pts
+                          </span>
+                          {progress?.completed && (
+                            <p className="text-xs text-muted-foreground">
+                              Earned {new Date(progress.earned_at!).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Progress</span>
+                          <span>{Math.round(progressPercent)}%</span>
+                        </div>
+                        <Progress value={progressPercent} className="h-2" />
+                        <p className="text-xs text-muted-foreground">
+                          {progress?.current_value || 0} / {achievement.target_value} {achievement.progress_type === 'count' ? 'times' : 'points'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              ) : null}
-              <AchievementList userId={user?.id || ''} filter="all" />
-            </div>
-            {user && <AchievementProgress />}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="in-progress" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-[1fr_300px]">
-            <AchievementList userId={user?.id || ''} filter="in-progress" />
-            {user && <AchievementProgress />}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="completed" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-[1fr_300px]">
-            <AchievementList userId={user?.id || ''} filter="completed" />
-            {user && <AchievementProgress />}
-          </div>
-        </TabsContent>
+                  </Card>
+                );
+              })}
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
-};
-
-export default Achievements;
+}
