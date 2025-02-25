@@ -48,7 +48,23 @@ export function ProfileEditForm() {
         .single()
 
       if (error) throw error
-      return data as Profile
+      
+      // Transform the data to match the Profile type
+      const transformedData: Profile = {
+        ...data,
+        custom_theme: data.custom_theme ? {
+          primary: (data.custom_theme as any).primary || "#1EAEDB",
+          secondary: (data.custom_theme as any).secondary || "#000000",
+        } : {
+          primary: "#1EAEDB",
+          secondary: "#000000"
+        },
+        enable_notifications: data.enable_notifications ?? true,
+        enable_sounds: data.enable_sounds ?? true,
+        keyboard_shortcuts: data.keyboard_shortcuts ?? true,
+      }
+
+      return transformedData
     },
     enabled: !!user
   })
@@ -124,6 +140,13 @@ export function ProfileEditForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
+      // Get the current profile data to preserve custom_theme
+      const currentProfile = await supabase
+        .from('profiles')
+        .select('custom_theme')
+        .eq('id', user?.id)
+        .single()
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -131,7 +154,11 @@ export function ProfileEditForm() {
           display_name: data.displayName,
           bio: data.bioDescription,
           website: data.website,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          custom_theme: currentProfile.data?.custom_theme || { 
+            primary: "#1EAEDB", 
+            secondary: "#000000" 
+          }
         })
         .eq('id', user?.id)
 
