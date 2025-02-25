@@ -46,10 +46,13 @@ export interface Achievement {
 }
 
 export interface AchievementProgress {
+  id: string;
   achievement_id: string;
   user_id: string;
   current_value: number;
-  completed?: boolean;
+  completed: boolean;
   earned_at?: string;
+  created_at: string;
+  updated_at: string;
   achievement?: Achievement;
 }
