@@ -21,7 +21,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { Profile } from "@/types/profile"
+import type { CustomTheme, Profile } from "@/types/profile"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -48,17 +48,23 @@ export function ProfileEditForm() {
         .single()
 
       if (error) throw error
-      
+
       // Transform the data to match the Profile type
+      const rawCustomTheme = data.custom_theme as any
+      const customTheme: CustomTheme = {
+        primary: rawCustomTheme?.primary || "#1EAEDB",
+        secondary: rawCustomTheme?.secondary || "#000000",
+      }
+
       const transformedData: Profile = {
-        ...data,
-        custom_theme: data.custom_theme ? {
-          primary: (data.custom_theme as any).primary || "#1EAEDB",
-          secondary: (data.custom_theme as any).secondary || "#000000",
-        } : {
-          primary: "#1EAEDB",
-          secondary: "#000000"
-        },
+        id: data.id,
+        username: data.username,
+        avatar_url: data.avatar_url,
+        display_name: data.display_name,
+        bio: data.bio,
+        website: data.website,
+        created_at: data.created_at,
+        custom_theme: customTheme,
         enable_notifications: data.enable_notifications ?? true,
         enable_sounds: data.enable_sounds ?? true,
         keyboard_shortcuts: data.keyboard_shortcuts ?? true,
@@ -140,12 +146,11 @@ export function ProfileEditForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      // Get the current profile data to preserve custom_theme
-      const currentProfile = await supabase
-        .from('profiles')
-        .select('custom_theme')
-        .eq('id', user?.id)
-        .single()
+      // Preserve the existing custom theme when updating
+      const customTheme = profile?.custom_theme ?? {
+        primary: "#1EAEDB",
+        secondary: "#000000"
+      }
 
       const { error } = await supabase
         .from('profiles')
@@ -155,10 +160,7 @@ export function ProfileEditForm() {
           bio: data.bioDescription,
           website: data.website,
           updated_at: new Date().toISOString(),
-          custom_theme: currentProfile.data?.custom_theme || { 
-            primary: "#1EAEDB", 
-            secondary: "#000000" 
-          }
+          custom_theme: customTheme
         })
         .eq('id', user?.id)
 
