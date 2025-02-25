@@ -22,7 +22,21 @@ export const AchievementList = ({ userId }: AchievementListProps) => {
         .eq('user_id', userId);
 
       if (error) throw error;
-      return data as (AchievementProgress & { achievement: Achievement })[];
+      
+      // Transform the data to match our types
+      return (data as any[]).map(progress => ({
+        ...progress,
+        completed: progress.current_value >= progress.achievement.target_value,
+        achievement: {
+          ...progress.achievement,
+          reward_value: {
+            points: progress.achievement.points
+          },
+          progress_type: progress.achievement.progress_type as "count" | "value" | "boolean",
+          reward_type: progress.achievement.reward_type as "points" | "badge" | "title",
+          category: progress.achievement.category as "gaming" | "social" | "streaming" | "general"
+        }
+      })) as (AchievementProgress & { achievement: Achievement })[];
     },
   });
 
@@ -56,7 +70,7 @@ export const AchievementList = ({ userId }: AchievementListProps) => {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       {achievements.map((progress) => {
         const achievement = progress.achievement;
         const progressPercent = Math.min(100, (progress.current_value / achievement.target_value) * 100);
@@ -65,72 +79,87 @@ export const AchievementList = ({ userId }: AchievementListProps) => {
           <div
             key={achievement.id}
             className={`
-              relative overflow-hidden rounded-lg border border-gray-800
+              relative overflow-hidden rounded-lg border border-gray-800 p-6
               ${progress.completed ? 'bg-gray-900/50' : 'bg-gray-900/30'}
               hover:bg-gray-900/60 transition-all duration-200
-              shadow-[0_0_15px_rgba(0,255,0,0.1)]
             `}
           >
-            <div className="p-4 flex items-center gap-4">
+            <div className="flex gap-6">
+              {/* Icon Section */}
               <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center">
                 {getAchievementIcon(achievement.category)}
               </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between mb-1">
+              {/* Content Section */}
+              <div className="flex-1 space-y-4">
+                {/* Header */}
+                <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-semibold text-gray-200">
+                    <h3 className="text-xl font-bold text-white">
                       {achievement.name}
                     </h3>
-                    <p className="text-sm text-gray-400">
-                      {achievement.description} - {progress.current_value}/{achievement.target_value}
+                    <p className="text-sm text-gray-400 mt-1">
+                      {achievement.description}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-400 font-bold">+{achievement.points}</span>
+                  <div className="text-right">
+                    <span className="text-green-400 font-bold">+{achievement.points} pts</span>
                     {progress.completed && (
-                      <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                        <svg
-                          className="w-4 h-4 text-green-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Completed {new Date(progress.created_at).toLocaleDateString()}
+                      </p>
                     )}
                   </div>
                 </div>
 
-                <div className="relative pt-1">
+                {/* Progress Section */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Progress</span>
+                    <span className="text-gray-400">
+                      {progress.current_value} / {achievement.target_value}
+                    </span>
+                  </div>
                   <Progress 
-                    value={progressPercent}
+                    value={progressPercent} 
                     className="h-2 bg-gray-800"
                     indicatorClassName="bg-gradient-to-r from-green-500 to-emerald-400"
                   />
                 </div>
+
+                {/* How to Obtain */}
+                <div className="pt-2 border-t border-gray-800">
+                  <p className="text-sm text-gray-500">
+                    <span className="font-medium text-gray-400">How to obtain: </span>
+                    {achievement.category === 'gaming' 
+                      ? `Play games and accumulate ${achievement.target_value} points in gaming sessions.`
+                      : `Engage in ${achievement.category} activities and reach ${achievement.target_value} interactions.`
+                    }
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Glowing border effect */}
-            <div 
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `
-                  linear-gradient(90deg, 
-                    transparent 0%, 
-                    rgba(0,255,0,0.03) 50%,
-                    transparent 100%
-                  )
-                `
-              }}
-            />
+            {/* Completion Overlay */}
+            {progress.completed && (
+              <div className="absolute top-4 right-4">
+                <div className="bg-green-500/20 rounded-full p-1">
+                  <svg
+                    className="w-5 h-5 text-green-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
