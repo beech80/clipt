@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -31,7 +32,10 @@ const Profile = () => {
         console.error('Error fetching profile:', error);
         return null;
       }
-      return data as ProfileType;
+      return {
+        ...data,
+        custom_theme: data.custom_theme || { primary: "#1EAEDB", secondary: "#000000" }
+      } as ProfileType;
     }
   });
 
@@ -67,7 +71,7 @@ const Profile = () => {
   };
 
   const handleAchievementClick = () => {
-    navigate('/achievements');
+    setActiveTab('achievements');
   };
 
   if (profileLoading) {
