@@ -39,21 +39,37 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
 
     try {
       setIsSubmitting(true);
-      
-      const { error } = await supabase
+      console.log("Submitting comment with data:", {
+        post_id: postId,
+        user_id: user.id,
+        content: newComment.trim(),
+        parent_id: parentId
+      });
+
+      const { data, error } = await supabase
         .from('comments')
         .insert({
           post_id: postId,
           user_id: user.id,
           content: newComment.trim(),
-          parent_id: parentId || null
-        });
+          parent_id: parentId,
+          created_at: new Date().toISOString()
+        })
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            avatar_url
+          )
+        `)
+        .single();
 
       if (error) {
         console.error("Error adding comment:", error);
         throw error;
       }
 
+      console.log("Comment added successfully:", data);
       toast.success("Comment added successfully!");
       setNewComment("");
       
