@@ -21,7 +21,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import type { CustomTheme, Profile } from "@/types/profile"
+import type { CustomTheme, Profile, DatabaseProfile } from "@/types/profile"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -49,25 +49,30 @@ export function ProfileEditForm() {
 
       if (error) throw error
 
-      // Transform the data to match the Profile type
+      const dbProfile = data as DatabaseProfile
+      
+      // Transform custom theme
       const customTheme: CustomTheme = {
-        primary: ((data.custom_theme as Record<string, string>)?.primary) || "#1EAEDB",
-        secondary: ((data.custom_theme as Record<string, string>)?.secondary) || "#000000"
+        primary: dbProfile.custom_theme?.primary || "#1EAEDB",
+        secondary: dbProfile.custom_theme?.secondary || "#000000"
       }
 
-      return {
-        id: data.id,
-        username: data.username,
-        avatar_url: data.avatar_url,
-        display_name: data.display_name,
-        bio: data.bio,
-        website: data.website,
-        created_at: data.created_at,
+      // Transform to Profile type
+      const transformedProfile: Profile = {
+        id: dbProfile.id,
+        username: dbProfile.username,
+        avatar_url: dbProfile.avatar_url,
+        display_name: dbProfile.display_name,
+        bio: dbProfile.bio,
+        website: dbProfile.website,
+        created_at: dbProfile.created_at,
         custom_theme: customTheme,
-        enable_notifications: data.enable_notifications ?? true,
-        enable_sounds: data.enable_sounds ?? true,
-        keyboard_shortcuts: data.keyboard_shortcuts ?? true,
-      } as Profile
+        enable_notifications: dbProfile.enable_notifications ?? true,
+        enable_sounds: dbProfile.enable_sounds ?? true,
+        keyboard_shortcuts: true
+      }
+
+      return transformedProfile
     },
     enabled: !!user?.id
   })
@@ -102,27 +107,38 @@ export function ProfileEditForm() {
       if (!event.target.files || event.target.files.length === 0) {
         return
       }
-      const file = event.target.files[0]
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user?.id}-${Date.now()}.${fileExt}`
 
       setUploading(true)
+      const file = event.target.files[0]
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${user?.id}-${Date.now()}.${fileExt}`
 
-      // First, upload the file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true })
+      // First check if the avatars bucket exists, if not create it
+      const { data: bucketExists } = await supabase
+        .storage
+        .getBucket('avatars')
 
-      if (uploadError) {
-        throw uploadError
+      if (!bucketExists) {
+        const { error: bucketError } = await supabase
+          .storage
+          .createBucket('avatars', { public: true })
+
+        if (bucketError) throw bucketError
       }
 
-      // Get the public URL for the uploaded file
+      // Upload the file
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(fileName)
+        .getPublicUrl(filePath)
 
-      // Update the profile with the new avatar URL
+      // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
@@ -133,11 +149,11 @@ export function ProfileEditForm() {
 
       if (updateError) throw updateError
 
+      await queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })
       toast.success("Profile picture updated successfully!")
-      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })
     } catch (error) {
-      console.error('Error updating avatar:', error)
-      toast.error("Error updating profile picture")
+      console.error('Error uploading avatar:', error)
+      toast.error("Failed to update profile picture")
     } finally {
       setUploading(false)
     }
@@ -145,19 +161,17 @@ export function ProfileEditForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      // Prepare the custom theme object
-      const customThemeObj: Record<string, string> = {
-        primary: profile?.custom_theme?.primary || "#1EAEDB",
-        secondary: profile?.custom_theme?.secondary || "#000000"
-      }
-
+      // Prepare the update data
       const updateData = {
         username: data.username,
         display_name: data.displayName,
         bio: data.bioDescription,
         website: data.website,
         updated_at: new Date().toISOString(),
-        custom_theme: customThemeObj
+        custom_theme: {
+          primary: profile?.custom_theme?.primary || "#1EAEDB",
+          secondary: profile?.custom_theme?.secondary || "#000000"
+        }
       }
 
       const { error } = await supabase
@@ -166,12 +180,8 @@ export function ProfileEditForm() {
         .eq('id', user?.id)
 
       if (error) throw error
-      
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['profile', user?.id] }),
-        queryClient.invalidateQueries({ queryKey: ['user-profile', user?.id] })
-      ])
 
+      await queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })
       toast.success("Profile updated successfully!")
     } catch (error) {
       console.error('Error updating profile:', error)
