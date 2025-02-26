@@ -39,25 +39,29 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
 
     try {
       setIsSubmitting(true);
-      console.log("Submitting comment with data:", {
+      
+      // Create the base comment data
+      const commentData = {
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
-        parent_id: parentId
-      });
+        parent_id: parentId || null,
+        created_at: new Date().toISOString()
+      };
 
+      console.log("Submitting comment with data:", commentData);
+
+      // Insert the comment and get the profiles data in a single query
       const { data, error } = await supabase
         .from('comments')
-        .insert({
-          post_id: postId,
-          user_id: user.id,
-          content: newComment.trim(),
-          parent_id: parentId,
-          created_at: new Date().toISOString()
-        })
+        .insert(commentData)
         .select(`
-          *,
-          profiles:user_id (
+          id,
+          content,
+          created_at,
+          parent_id,
+          user_id,
+          profiles (
             username,
             avatar_url
           )
