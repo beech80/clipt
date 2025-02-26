@@ -38,7 +38,12 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
       const { data: allComments, error } = await supabase
         .from('comments')
         .select(`
-          *,
+          id,
+          content,
+          created_at,
+          parent_id,
+          likes_count,
+          user_id,
           profiles:user_id (
             username,
             avatar_url
@@ -73,7 +78,6 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
 
       return rootComments;
     },
-    refetchInterval: 5000 // Refresh every 5 seconds
   });
 
   return (
