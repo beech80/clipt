@@ -39,7 +39,7 @@ export function ProfileEditForm() {
   const queryClient = useQueryClient()
 
   const { data: profile, refetch } = useQuery({
-    queryKey: ['profile'],
+    queryKey: ['profile', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
@@ -50,13 +50,12 @@ export function ProfileEditForm() {
       if (error) throw error
 
       // Transform the data to match the Profile type
-      const rawCustomTheme = data.custom_theme as Record<string, unknown>
       const customTheme: CustomTheme = {
-        primary: (rawCustomTheme?.primary as string) || "#1EAEDB",
-        secondary: (rawCustomTheme?.secondary as string) || "#000000",
+        primary: ((data.custom_theme as Record<string, string>)?.primary) || "#1EAEDB",
+        secondary: ((data.custom_theme as Record<string, string>)?.secondary) || "#000000"
       }
 
-      const transformedData: Profile = {
+      return {
         id: data.id,
         username: data.username,
         avatar_url: data.avatar_url,
@@ -68,11 +67,9 @@ export function ProfileEditForm() {
         enable_notifications: data.enable_notifications ?? true,
         enable_sounds: data.enable_sounds ?? true,
         keyboard_shortcuts: data.keyboard_shortcuts ?? true,
-      }
-
-      return transformedData
+      } as Profile
     },
-    enabled: !!user
+    enabled: !!user?.id
   })
 
   const form = useForm<ProfileFormValues>({
@@ -107,10 +104,11 @@ export function ProfileEditForm() {
       }
       const file = event.target.files[0]
       const fileExt = file.name.split('.').pop()
-      const fileName = `${user?.id}.${fileExt}`
+      const fileName = `${user?.id}-${Date.now()}.${fileExt}`
 
       setUploading(true)
 
+      // First, upload the file to storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { upsert: true })
@@ -119,10 +117,12 @@ export function ProfileEditForm() {
         throw uploadError
       }
 
+      // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName)
 
+      // Update the profile with the new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
@@ -134,11 +134,10 @@ export function ProfileEditForm() {
       if (updateError) throw updateError
 
       toast.success("Profile picture updated successfully!")
-      await refetch()
-      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })
     } catch (error) {
+      console.error('Error updating avatar:', error)
       toast.error("Error updating profile picture")
-      console.error(error)
     } finally {
       setUploading(false)
     }
@@ -146,37 +145,37 @@ export function ProfileEditForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      // Convert custom theme to a plain object to match Json type
-      const customThemeObj = {
+      // Prepare the custom theme object
+      const customThemeObj: Record<string, string> = {
         primary: profile?.custom_theme?.primary || "#1EAEDB",
         secondary: profile?.custom_theme?.secondary || "#000000"
       }
 
+      const updateData = {
+        username: data.username,
+        display_name: data.displayName,
+        bio: data.bioDescription,
+        website: data.website,
+        updated_at: new Date().toISOString(),
+        custom_theme: customThemeObj
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          username: data.username,
-          display_name: data.displayName,
-          bio: data.bioDescription,
-          website: data.website,
-          updated_at: new Date().toISOString(),
-          custom_theme: customThemeObj as Record<string, unknown> // Cast to match Json type
-        })
+        .update(updateData)
         .eq('id', user?.id)
 
       if (error) throw error
       
-      // Invalidate both profile queries to ensure all components update
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['profile'] }),
-        queryClient.invalidateQueries({ queryKey: ['user-profile'] }),
+        queryClient.invalidateQueries({ queryKey: ['profile', user?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['user-profile', user?.id] })
       ])
-      
-      await refetch()
+
       toast.success("Profile updated successfully!")
     } catch (error) {
+      console.error('Error updating profile:', error)
       toast.error("Failed to update profile")
-      console.error(error)
     }
   }
 
