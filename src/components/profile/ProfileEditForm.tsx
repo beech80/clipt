@@ -50,10 +50,10 @@ export function ProfileEditForm() {
       if (error) throw error
 
       // Transform the data to match the Profile type
-      const rawCustomTheme = data.custom_theme as any
+      const rawCustomTheme = data.custom_theme as Record<string, unknown>
       const customTheme: CustomTheme = {
-        primary: rawCustomTheme?.primary || "#1EAEDB",
-        secondary: rawCustomTheme?.secondary || "#000000",
+        primary: (rawCustomTheme?.primary as string) || "#1EAEDB",
+        secondary: (rawCustomTheme?.secondary as string) || "#000000",
       }
 
       const transformedData: Profile = {
@@ -146,10 +146,10 @@ export function ProfileEditForm() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      // Preserve the existing custom theme when updating
-      const customTheme = profile?.custom_theme ?? {
-        primary: "#1EAEDB",
-        secondary: "#000000"
+      // Convert custom theme to a plain object to match Json type
+      const customThemeObj = {
+        primary: profile?.custom_theme?.primary || "#1EAEDB",
+        secondary: profile?.custom_theme?.secondary || "#000000"
       }
 
       const { error } = await supabase
@@ -160,7 +160,7 @@ export function ProfileEditForm() {
           bio: data.bioDescription,
           website: data.website,
           updated_at: new Date().toISOString(),
-          custom_theme: customTheme
+          custom_theme: customThemeObj as Record<string, unknown> // Cast to match Json type
         })
         .eq('id', user?.id)
 
