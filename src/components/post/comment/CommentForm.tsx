@@ -40,13 +40,12 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     try {
       setIsSubmitting(true);
       
-      // Basic comment data
+      // Basic comment data - removed likes_count since it has a default value of 0
       const commentData = {
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
-        parent_id: parentId || null,
-        likes_count: 0
+        parent_id: parentId || null
       };
 
       // Insert the comment
