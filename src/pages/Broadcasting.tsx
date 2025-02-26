@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { BroadcastPresetForm } from "@/components/broadcasting/BroadcastPresetForm";
@@ -14,6 +15,10 @@ import { supabase } from "@/lib/supabase";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
 import type { Stream } from "@/types/stream";
 
+interface StreamKey {
+  stream_key: string;
+}
+
 const Broadcasting = () => {
   const { user } = useAuth();
   const [showToken, setShowToken] = useState(false);
@@ -21,7 +26,7 @@ const Broadcasting = () => {
   const queryClient = useQueryClient();
 
   // Query for stream key
-  const { data: streamKey, isLoading: isLoadingStreamKey } = useQuery({
+  const { data: streamKey, isLoading: isLoadingStreamKey } = useQuery<StreamKey | null>({
     queryKey: ['streamKey', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -38,7 +43,7 @@ const Broadcasting = () => {
         return null;
       }
 
-      return data?.stream_key;
+      return data;
     },
     enabled: !!user?.id
   });
@@ -231,7 +236,7 @@ const Broadcasting = () => {
               <div className="flex gap-2">
                 <Input
                   type={showStreamKey ? 'text' : 'password'}
-                  value={streamKey || ''}
+                  value={streamKey?.stream_key || ''}
                   readOnly
                   className="font-mono"
                   placeholder={isLoadingStreamKey ? 'Loading...' : 'No stream key generated'}
@@ -250,8 +255,8 @@ const Broadcasting = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => copyToClipboard(streamKey, 'Stream key')}
-                  disabled={!streamKey}
+                  onClick={() => copyToClipboard(streamKey?.stream_key || null, 'Stream key')}
+                  disabled={!streamKey?.stream_key}
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
