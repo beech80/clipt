@@ -38,7 +38,6 @@ export function ProfileEditForm() {
   const [uploading, setUploading] = useState(false)
   const queryClient = useQueryClient()
 
-  // Fetch profile data
   const { data: profile, refetch } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
@@ -57,8 +56,7 @@ export function ProfileEditForm() {
 
       if (!data) throw new Error('Profile not found')
 
-      // Transform database profile to frontend profile
-      const transformedProfile: Profile = {
+      return {
         id: data.id,
         username: data.username,
         avatar_url: data.avatar_url,
@@ -67,15 +65,13 @@ export function ProfileEditForm() {
         website: data.website,
         created_at: data.created_at,
         custom_theme: {
-          primary: data.custom_theme?.primary || "#1EAEDB",
-          secondary: data.custom_theme?.secondary || "#000000"
+          primary: typeof data.custom_theme === 'object' ? data.custom_theme?.primary || "#1EAEDB" : "#1EAEDB",
+          secondary: typeof data.custom_theme === 'object' ? data.custom_theme?.secondary || "#000000" : "#000000"
         },
         enable_notifications: data.enable_notifications ?? true,
         enable_sounds: data.enable_sounds ?? true,
         keyboard_shortcuts: data.keyboard_shortcuts ?? true
-      }
-
-      return transformedProfile
+      } as Profile
     },
     enabled: !!user?.id
   })
@@ -114,46 +110,45 @@ export function ProfileEditForm() {
       setUploading(true)
       const file = event.target.files[0]
       const fileExt = file.name.split('.').pop()
-      const filePath = `${user.id}-${Date.now()}.${fileExt}`
+      const fileName = `${user.id}-${Math.random().toString(36).slice(2)}.${fileExt}`
+      const filePath = `public/${fileName}`
 
-      // Create bucket if it doesn't exist
-      const { data: bucketExists } = await supabase
-        .storage
-        .getBucket('avatars')
+      // Upload file to storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { 
+          upsert: true,
+          contentType: file.type
+        })
 
-      if (!bucketExists) {
-        const { error: bucketError } = await supabase
-          .storage
-          .createBucket('avatars', { public: true })
-
-        if (bucketError) throw bucketError
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError)
+        throw new Error('Error uploading file')
       }
 
-      // Upload file
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true })
-
-      if (uploadError) throw uploadError
-
-      // Get public URL
+      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath)
 
-      // Update profile
+      // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ 
+          avatar_url: publicUrl
+        })
         .eq('id', user.id)
 
-      if (updateError) throw updateError
+      if (updateError) {
+        console.error('Error updating profile:', updateError)
+        throw new Error('Error updating profile')
+      }
 
       await queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
       toast.success("Profile picture updated successfully!")
     } catch (error) {
       console.error('Error updating avatar:', error)
-      toast.error("Error updating profile picture")
+      toast.error(error instanceof Error ? error.message : "Error updating profile picture")
     } finally {
       setUploading(false)
     }
@@ -166,8 +161,7 @@ export function ProfileEditForm() {
     }
 
     try {
-      // Prepare the update data with proper types
-      const updateData: Partial<DatabaseProfile> = {
+      const updateData = {
         username: data.username,
         display_name: data.displayName,
         bio: data.bioDescription,
@@ -175,11 +169,9 @@ export function ProfileEditForm() {
         custom_theme: {
           primary: profile?.custom_theme?.primary || "#1EAEDB",
           secondary: profile?.custom_theme?.secondary || "#000000"
-        },
-        updated_at: new Date().toISOString()
+        }
       }
 
-      // Update profile
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
