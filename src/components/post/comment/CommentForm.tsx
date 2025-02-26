@@ -40,15 +40,26 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     try {
       setIsSubmitting(true);
       
-      const { data, error } = await supabase
+      // Basic comment data
+      const commentData = {
+        post_id: postId,
+        user_id: user.id,
+        content: newComment.trim(),
+        parent_id: parentId || null,
+        likes_count: 0
+      };
+
+      // Insert the comment
+      const { data: newCommentData, error } = await supabase
         .from('comments')
-        .insert({
-          content: newComment.trim(),
-          post_id: postId,
-          user_id: user.id,
-          parent_id: parentId || null,
-        })
-        .select('*, profiles:user_id (username, avatar_url)')
+        .insert(commentData)
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            avatar_url
+          )
+        `)
         .single();
 
       if (error) {
