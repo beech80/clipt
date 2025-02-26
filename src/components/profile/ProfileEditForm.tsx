@@ -21,7 +21,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import type { CustomTheme, Profile, DatabaseProfile, JsonCustomTheme } from "@/types/profile"
+import type { CustomTheme, Profile, DatabaseProfile } from "@/types/profile"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -56,7 +56,8 @@ export function ProfileEditForm() {
 
       if (!data) throw new Error('Profile not found')
 
-      return {
+      // Transform database profile to frontend profile with proper typing
+      const transformedProfile: Profile = {
         id: data.id,
         username: data.username,
         avatar_url: data.avatar_url,
@@ -64,14 +65,19 @@ export function ProfileEditForm() {
         bio: data.bio,
         website: data.website,
         created_at: data.created_at,
-        custom_theme: {
-          primary: typeof data.custom_theme === 'object' ? data.custom_theme?.primary || "#1EAEDB" : "#1EAEDB",
-          secondary: typeof data.custom_theme === 'object' ? data.custom_theme?.secondary || "#000000" : "#000000"
+        custom_theme: typeof data.custom_theme === 'object' ? {
+          primary: data.custom_theme?.primary || "#1EAEDB",
+          secondary: data.custom_theme?.secondary || "#000000"
+        } : {
+          primary: "#1EAEDB",
+          secondary: "#000000"
         },
         enable_notifications: data.enable_notifications ?? true,
         enable_sounds: data.enable_sounds ?? true,
         keyboard_shortcuts: data.keyboard_shortcuts ?? true
-      } as Profile
+      }
+
+      return transformedProfile
     },
     enabled: !!user?.id
   })
@@ -111,12 +117,11 @@ export function ProfileEditForm() {
       const file = event.target.files[0]
       const fileExt = file.name.split('.').pop()
       const fileName = `${user.id}-${Math.random().toString(36).slice(2)}.${fileExt}`
-      const filePath = `public/${fileName}`
 
       // Upload file to storage
       const { error: uploadError, data } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { 
+        .upload(`public/${fileName}`, file, { 
           upsert: true,
           contentType: file.type
         })
@@ -129,7 +134,7 @@ export function ProfileEditForm() {
       // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath)
+        .getPublicUrl(`public/${fileName}`)
 
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
@@ -161,7 +166,7 @@ export function ProfileEditForm() {
     }
 
     try {
-      const updateData = {
+      const updateData: Partial<DatabaseProfile> = {
         username: data.username,
         display_name: data.displayName,
         bio: data.bioDescription,

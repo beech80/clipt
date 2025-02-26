@@ -27,7 +27,7 @@ export interface DatabaseProfile {
   id: string;
   username?: string | null;
   avatar_url?: string | null;
-  custom_theme?: JsonCustomTheme | null;
+  custom_theme: JsonCustomTheme;
   enable_notifications?: boolean;
   enable_sounds?: boolean;
   bio?: string | null;
