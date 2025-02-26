@@ -59,6 +59,8 @@ export function ProfileEditForm() {
       if (!data) throw new Error('Profile not found')
 
       // Transform database profile to frontend profile with proper typing
+      const customTheme = typeof data.custom_theme === 'object' ? data.custom_theme : { primary: "#1EAEDB", secondary: "#000000" }
+
       const transformedProfile: Profile = {
         id: data.id,
         username: data.username,
@@ -67,12 +69,9 @@ export function ProfileEditForm() {
         bio: data.bio,
         website: data.website,
         created_at: data.created_at,
-        custom_theme: typeof data.custom_theme === 'object' ? {
-          primary: data.custom_theme?.primary || "#1EAEDB",
-          secondary: data.custom_theme?.secondary || "#000000"
-        } : {
-          primary: "#1EAEDB",
-          secondary: "#000000"
+        custom_theme: {
+          primary: customTheme.primary || "#1EAEDB",
+          secondary: customTheme.secondary || "#000000"
         },
         enable_notifications: data.enable_notifications ?? true,
         enable_sounds: data.enable_sounds ?? true,
@@ -152,6 +151,7 @@ export function ProfileEditForm() {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
+      await refetch() // Explicitly refetch to ensure UI updates
       toast.success("Profile picture updated successfully!")
     } catch (error) {
       console.error('Error updating avatar:', error)
@@ -168,7 +168,7 @@ export function ProfileEditForm() {
     }
 
     try {
-      const updateData = {
+      const updateData: Partial<DatabaseProfile> = {
         username: data.username,
         display_name: data.displayName,
         bio: data.bioDescription,
@@ -187,9 +187,8 @@ export function ProfileEditForm() {
       if (error) throw error
 
       await queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
+      await refetch() // Explicitly refetch the profile data
       toast.success("Profile updated successfully!")
-      
-      // Navigate back to the profile page after successful update
       navigate('/profile')
     } catch (error) {
       console.error('Error updating profile:', error)
