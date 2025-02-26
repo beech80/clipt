@@ -13,27 +13,28 @@ interface Comment {
   parent_id?: string | null;
   likes_count: number;
   user_id: string;
-  replies: Comment[];  
+  replies: Comment[];
   profiles: {
     username: string;
-    avatar_url: string;
+    avatar_url: string | null;
   };
 }
 
 interface CommentListProps {
   postId: string;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export const CommentList = ({ postId, onBack }: CommentListProps) => {
   const { data: comments, isLoading } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
-      // Add validation to ensure postId exists
+      // Validate postId
       if (!postId) {
         throw new Error('Post ID is required');
       }
 
+      // Fetch all comments for the post
       const { data: allComments, error } = await supabase
         .from('comments')
         .select(`
@@ -51,8 +52,8 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         throw error;
       }
 
+      // Process comments into a tree structure
       const typedComments = allComments as (Omit<Comment, 'replies'> & { post_id: string })[];
-      
       const commentMap = new Map<string, Comment>();
       const rootComments: Comment[] = [];
 
@@ -72,8 +73,7 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
 
       return rootComments;
     },
-    refetchInterval: 5000, // Refresh comments every 5 seconds
-    enabled: Boolean(postId) // Only run query if postId exists
+    refetchInterval: 5000 // Refresh every 5 seconds
   });
 
   return (
@@ -89,7 +89,7 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
             <p className="text-gray-500 text-xs">Start the conversation</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 p-4">
             {comments?.map((comment) => (
               <CommentItem 
                 key={comment.id} 
@@ -101,7 +101,7 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         )}
       </div>
 
-      <div className="border-t border-[#9b87f5]/20">
+      <div className="border-t border-[#9b87f5]/20 mt-auto">
         <CommentForm postId={postId} />
       </div>
     </div>

@@ -20,6 +20,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!user) {
       toast.error("Please login to comment");
       return;
@@ -49,8 +50,9 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
 
       toast.success("Comment added!");
       setNewComment("");
+      
+      // Invalidate comments query to trigger refetch
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
-      queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
       
       if (onReplyComplete) {
         onReplyComplete();
@@ -62,7 +64,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
   };
 
   return (
-    <form onSubmit={handleSubmitComment} className="p-2">
+    <form onSubmit={handleSubmitComment} className="p-4">
       <textarea
         placeholder="Write your comment..."
         value={newComment}
