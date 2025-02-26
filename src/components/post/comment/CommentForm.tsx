@@ -42,13 +42,14 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       
       const { data, error } = await supabase
         .from('comments')
-        .insert({
+        .insert([{
           content: newComment.trim(),
           post_id: postId,
           user_id: user.id,
-          parent_id: parentId || null
-        })
-        .select('*')
+          parent_id: parentId || null,
+          likes_count: 0
+        }])
+        .select('*, profiles:user_id (username, avatar_url)')
         .single();
 
       if (error) {
@@ -56,7 +57,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         throw error;
       }
 
-      toast.success("Comment added!");
+      toast.success("Comment added successfully!");
       setNewComment("");
       
       // Invalidate comments query to trigger refetch
