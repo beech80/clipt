@@ -40,26 +40,14 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     try {
       setIsSubmitting(true);
       
-      // Basic comment data - removed likes_count since it has a default value of 0
-      const commentData = {
-        post_id: postId,
-        user_id: user.id,
-        content: newComment.trim(),
-        parent_id: parentId || null
-      };
-
-      // Insert the comment
-      const { data: newCommentData, error } = await supabase
+      const { error } = await supabase
         .from('comments')
-        .insert(commentData)
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .single();
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          content: newComment.trim(),
+          parent_id: parentId || null
+        });
 
       if (error) {
         console.error("Error adding comment:", error);
