@@ -21,6 +21,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import type { CustomTheme, Profile, DatabaseProfile } from "@/types/profile"
 
 const profileFormSchema = z.object({
@@ -34,6 +35,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 
 export function ProfileEditForm() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const queryClient = useQueryClient()
@@ -166,14 +168,14 @@ export function ProfileEditForm() {
     }
 
     try {
-      const updateData: Partial<DatabaseProfile> = {
+      const updateData = {
         username: data.username,
         display_name: data.displayName,
         bio: data.bioDescription,
         website: data.website || null,
-        custom_theme: {
-          primary: profile?.custom_theme?.primary || "#1EAEDB",
-          secondary: profile?.custom_theme?.secondary || "#000000"
+        custom_theme: profile?.custom_theme || {
+          primary: "#1EAEDB",
+          secondary: "#000000"
         }
       }
 
@@ -186,6 +188,9 @@ export function ProfileEditForm() {
 
       await queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
       toast.success("Profile updated successfully!")
+      
+      // Navigate back to the profile page after successful update
+      navigate('/profile')
     } catch (error) {
       console.error('Error updating profile:', error)
       toast.error("Failed to update profile")
