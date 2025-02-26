@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { BroadcastPresetForm } from "@/components/broadcasting/BroadcastPresetForm";
@@ -8,7 +7,7 @@ import GameBoyControls from "@/components/GameBoyControls";
 import { OBSSetupGuide } from "@/components/streaming/setup/OBSSetupGuide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Copy, Radio, StopCircle } from "lucide-react";
+import { Eye, EyeOff, Copy, Radio, StopCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -18,7 +17,59 @@ import type { Stream } from "@/types/stream";
 const Broadcasting = () => {
   const { user } = useAuth();
   const [showToken, setShowToken] = useState(false);
+  const [showStreamKey, setShowStreamKey] = useState(false);
   const queryClient = useQueryClient();
+
+  // Query for stream key
+  const { data: streamKey, isLoading: isLoadingStreamKey } = useQuery({
+    queryKey: ['streamKey', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      console.log('Fetching stream key...');
+      const { data, error } = await supabase
+        .from('stream_keys')
+        .select('stream_key')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error loading stream key:', error);
+        return null;
+      }
+
+      return data?.stream_key;
+    },
+    enabled: !!user?.id
+  });
+
+  // Generate new stream key mutation
+  const generateStreamKey = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      
+      console.log('Generating new stream key...');
+      const { data, error } = await supabase
+        .rpc('generate_stream_key', {
+          user_id_param: user.id
+        });
+      
+      if (error) {
+        console.error('Error generating stream key:', error);
+        throw error;
+      }
+      
+      return data;
+    },
+    onError: (error) => {
+      console.error('Failed to generate stream key:', error);
+      toast.error('Failed to generate stream key. Please try again.');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['streamKey'] });
+      toast.success('Stream key generated successfully!');
+    }
+  });
 
   // Query for stream data
   const { data: stream, isLoading } = useQuery<Stream | null>({
@@ -173,66 +224,113 @@ const Broadcasting = () => {
             </div>
           </div>
 
-          {stream?.streaming_url && (
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium mb-2">Access Token</h4>
-                <div className="flex gap-2">
-                  <Input
-                    type={showToken ? 'text' : 'password'}
-                    value={new URL(stream.streaming_url).searchParams.get('access_token') || ''}
-                    readOnly
-                    className="font-mono"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowToken(!showToken)}
-                  >
-                    {showToken ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyToClipboard(
-                      new URL(stream.streaming_url).searchParams.get('access_token'),
-                      'Access token'
-                    )}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
+          <div className="space-y-4">
+            {/* Stream Key Section */}
+            <div>
+              <h4 className="text-sm font-medium mb-2">Stream Key</h4>
+              <div className="flex gap-2">
+                <Input
+                  type={showStreamKey ? 'text' : 'password'}
+                  value={streamKey || ''}
+                  readOnly
+                  className="font-mono"
+                  placeholder={isLoadingStreamKey ? 'Loading...' : 'No stream key generated'}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowStreamKey(!showStreamKey)}
+                >
+                  {showStreamKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => copyToClipboard(streamKey, 'Stream key')}
+                  disabled={!streamKey}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => generateStreamKey.mutate()}
+                  disabled={generateStreamKey.isPending}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${generateStreamKey.isPending ? 'animate-spin' : ''}`} />
+                  Generate New Key
+                </Button>
               </div>
-
-              <div>
-                <h4 className="text-sm font-medium mb-2">Stream URL</h4>
-                <div className="flex gap-2">
-                  <Input
-                    value={stream.streaming_url}
-                    readOnly
-                    className="font-mono"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyToClipboard(stream.streaming_url, 'Stream URL')}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Use this URL in your streaming software (OBS, Streamlabs, etc.)
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Keep your stream key private. Generate a new one if it gets exposed.
+              </p>
             </div>
-          )}
+
+            {/* Existing Stream URL and Access Token sections */}
+            {stream?.streaming_url && (
+              <>
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Access Token</h4>
+                  <div className="flex gap-2">
+                    <Input
+                      type={showToken ? 'text' : 'password'}
+                      value={new URL(stream.streaming_url).searchParams.get('access_token') || ''}
+                      readOnly
+                      className="font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowToken(!showToken)}
+                    >
+                      {showToken ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copyToClipboard(
+                        new URL(stream.streaming_url).searchParams.get('access_token'),
+                        'Access token'
+                      )}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-2">Stream URL</h4>
+                  <div className="flex gap-2">
+                    <Input
+                      value={stream.streaming_url}
+                      readOnly
+                      className="font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copyToClipboard(stream.streaming_url, 'Stream URL')}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Use this URL in your streaming software (OBS, Streamlabs, etc.)
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
 
           <p className="text-sm text-muted-foreground">
-            Keep your access token private. If compromised, end the stream and create a new one.
+            Keep your stream key and access token private. If compromised, generate new ones immediately.
           </p>
         </div>
       </Card>
