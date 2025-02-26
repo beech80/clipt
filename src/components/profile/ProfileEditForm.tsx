@@ -57,24 +57,22 @@ export function ProfileEditForm() {
 
       if (!data) throw new Error('Profile not found')
 
-      const dbProfile = data as DatabaseProfile
-
       // Transform database profile to frontend profile
       const transformedProfile: Profile = {
-        id: dbProfile.id,
-        username: dbProfile.username,
-        avatar_url: dbProfile.avatar_url,
-        display_name: dbProfile.display_name,
-        bio: dbProfile.bio,
-        website: dbProfile.website,
-        created_at: dbProfile.created_at,
+        id: data.id,
+        username: data.username,
+        avatar_url: data.avatar_url,
+        display_name: data.display_name,
+        bio: data.bio,
+        website: data.website,
+        created_at: data.created_at,
         custom_theme: {
-          primary: dbProfile.custom_theme?.primary || "#1EAEDB",
-          secondary: dbProfile.custom_theme?.secondary || "#000000"
+          primary: data.custom_theme?.primary || "#1EAEDB",
+          secondary: data.custom_theme?.secondary || "#000000"
         },
-        enable_notifications: dbProfile.enable_notifications ?? true,
-        enable_sounds: dbProfile.enable_sounds ?? true,
-        keyboard_shortcuts: dbProfile.keyboard_shortcuts ?? true
+        enable_notifications: data.enable_notifications ?? true,
+        enable_sounds: data.enable_sounds ?? true,
+        keyboard_shortcuts: data.keyboard_shortcuts ?? true
       }
 
       return transformedProfile
@@ -168,19 +166,16 @@ export function ProfileEditForm() {
     }
 
     try {
-      // Prepare the custom theme object
-      const customTheme: JsonCustomTheme = {
-        primary: profile?.custom_theme?.primary || "#1EAEDB",
-        secondary: profile?.custom_theme?.secondary || "#000000"
-      }
-
-      // Prepare update data
-      const updateData = {
+      // Prepare the update data with proper types
+      const updateData: Partial<DatabaseProfile> = {
         username: data.username,
         display_name: data.displayName,
         bio: data.bioDescription,
         website: data.website || null,
-        custom_theme: customTheme,
+        custom_theme: {
+          primary: profile?.custom_theme?.primary || "#1EAEDB",
+          secondary: profile?.custom_theme?.secondary || "#000000"
+        },
         updated_at: new Date().toISOString()
       }
 
