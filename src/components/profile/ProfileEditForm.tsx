@@ -21,7 +21,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import type { CustomTheme, Profile, DatabaseProfile } from "@/types/profile"
+import type { CustomTheme, Profile, DatabaseProfile, JsonCustomTheme } from "@/types/profile"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -38,26 +38,28 @@ export function ProfileEditForm() {
   const [uploading, setUploading] = useState(false)
   const queryClient = useQueryClient()
 
+  // Fetch profile data
   const { data: profile, refetch } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
+      if (!user?.id) throw new Error('User not found')
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single()
 
-      if (error) throw error
-
-      const dbProfile = data as DatabaseProfile
-      
-      // Transform custom theme
-      const customTheme: CustomTheme = {
-        primary: dbProfile.custom_theme?.primary || "#1EAEDB",
-        secondary: dbProfile.custom_theme?.secondary || "#000000"
+      if (error) {
+        console.error('Error fetching profile:', error)
+        throw error
       }
 
-      // Transform to Profile type
+      if (!data) throw new Error('Profile not found')
+
+      const dbProfile = data as DatabaseProfile
+
+      // Transform database profile to frontend profile
       const transformedProfile: Profile = {
         id: dbProfile.id,
         username: dbProfile.username,
@@ -66,10 +68,13 @@ export function ProfileEditForm() {
         bio: dbProfile.bio,
         website: dbProfile.website,
         created_at: dbProfile.created_at,
-        custom_theme: customTheme,
+        custom_theme: {
+          primary: dbProfile.custom_theme?.primary || "#1EAEDB",
+          secondary: dbProfile.custom_theme?.secondary || "#000000"
+        },
         enable_notifications: dbProfile.enable_notifications ?? true,
         enable_sounds: dbProfile.enable_sounds ?? true,
-        keyboard_shortcuts: true
+        keyboard_shortcuts: dbProfile.keyboard_shortcuts ?? true
       }
 
       return transformedProfile
@@ -104,16 +109,16 @@ export function ProfileEditForm() {
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (!event.target.files || event.target.files.length === 0) {
+      if (!event.target.files || event.target.files.length === 0 || !user?.id) {
         return
       }
 
       setUploading(true)
       const file = event.target.files[0]
       const fileExt = file.name.split('.').pop()
-      const filePath = `${user?.id}-${Date.now()}.${fileExt}`
+      const filePath = `${user.id}-${Date.now()}.${fileExt}`
 
-      // First check if the avatars bucket exists, if not create it
+      // Create bucket if it doesn't exist
       const { data: bucketExists } = await supabase
         .storage
         .getBucket('avatars')
@@ -126,62 +131,68 @@ export function ProfileEditForm() {
         if (bucketError) throw bucketError
       }
 
-      // Upload the file
+      // Upload file
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { upsert: true })
 
       if (uploadError) throw uploadError
 
-      // Get the public URL
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath)
 
-      // Update profile with new avatar URL
+      // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ 
-          avatar_url: publicUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user?.id)
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id)
 
       if (updateError) throw updateError
 
-      await queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })
+      await queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
       toast.success("Profile picture updated successfully!")
     } catch (error) {
-      console.error('Error uploading avatar:', error)
-      toast.error("Failed to update profile picture")
+      console.error('Error updating avatar:', error)
+      toast.error("Error updating profile picture")
     } finally {
       setUploading(false)
     }
   }
 
-  async function onSubmit(data: ProfileFormValues) {
+  const onSubmit = async (data: ProfileFormValues) => {
+    if (!user?.id) {
+      toast.error("You must be logged in to update your profile")
+      return
+    }
+
     try {
-      // Prepare the update data
+      // Prepare the custom theme object
+      const customTheme: JsonCustomTheme = {
+        primary: profile?.custom_theme?.primary || "#1EAEDB",
+        secondary: profile?.custom_theme?.secondary || "#000000"
+      }
+
+      // Prepare update data
       const updateData = {
         username: data.username,
         display_name: data.displayName,
         bio: data.bioDescription,
-        website: data.website,
-        updated_at: new Date().toISOString(),
-        custom_theme: {
-          primary: profile?.custom_theme?.primary || "#1EAEDB",
-          secondary: profile?.custom_theme?.secondary || "#000000"
-        }
+        website: data.website || null,
+        custom_theme: customTheme,
+        updated_at: new Date().toISOString()
       }
 
+      // Update profile
       const { error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', user?.id)
+        .eq('id', user.id)
 
       if (error) throw error
 
-      await queryClient.invalidateQueries({ queryKey: ['profile', user?.id] })
+      await queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
       toast.success("Profile updated successfully!")
     } catch (error) {
       console.error('Error updating profile:', error)

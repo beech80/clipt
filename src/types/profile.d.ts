@@ -4,6 +4,11 @@ export interface CustomTheme {
   secondary: string;
 }
 
+export interface JsonCustomTheme {
+  primary: string;
+  secondary: string;
+}
+
 export interface Profile {
   id: string;
   username?: string | null;
@@ -22,11 +27,12 @@ export interface DatabaseProfile {
   id: string;
   username?: string | null;
   avatar_url?: string | null;
-  custom_theme?: Record<string, string> | null;
+  custom_theme?: JsonCustomTheme | null;
   enable_notifications?: boolean;
   enable_sounds?: boolean;
   bio?: string | null;
   display_name?: string | null;
   created_at?: string;
   website?: string | null;
+  keyboard_shortcuts?: boolean;
 }
