@@ -42,13 +42,12 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       
       const { data, error } = await supabase
         .from('comments')
-        .insert([{
+        .insert({
           content: newComment.trim(),
           post_id: postId,
           user_id: user.id,
           parent_id: parentId || null,
-          likes_count: 0
-        }])
+        })
         .select('*, profiles:user_id (username, avatar_url)')
         .single();
 
