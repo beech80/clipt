@@ -30,6 +30,9 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
   // Log the postId for debugging
   useEffect(() => {
     console.log("CommentList received postId:", postId);
+    if (!postId) {
+      console.error("Missing or invalid postId in CommentList:", postId);
+    }
   }, [postId]);
   
   const { data: comments, isLoading } = useQuery({

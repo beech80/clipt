@@ -28,6 +28,7 @@ const PostItem = ({ post }: PostItemProps) => {
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
   const [showComments, setShowComments] = useState(false);
+  const queryClient = useQueryClient();
 
   // Log the post ID for debugging
   useEffect(() => {
@@ -93,7 +94,7 @@ const PostItem = ({ post }: PostItemProps) => {
             onClick={() => handleProfileClick(post.user_id)}
           >
             <AvatarImage src={avatarUrl || ''} alt={username} />
-            <AvatarFallback>{username[0]?.toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{username[0]?.toUpperCase() || '?'}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <span 
@@ -186,7 +187,7 @@ const PostItem = ({ post }: PostItemProps) => {
       {/* Comments Section */}
       {showComments && (
         <div className="border-t border-gaming-400/20">
-          <CommentList postId={post.id} onBack={() => setShowComments(false)} />
+          <CommentList postId={post.id.toString()} onBack={() => setShowComments(false)} />
         </div>
       )}
     </article>
