@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -19,6 +19,20 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize audio element
+  useEffect(() => {
+    audioRef.current = new Audio("/sounds/alert.mp3");
+    audioRef.current.volume = 0.5; // Set volume to 50%
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   // Add this for debugging - as a useEffect to avoid repeated logs
   useEffect(() => {
@@ -93,6 +107,13 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       }
 
       console.log("Comment added successfully:", data);
+
+      // Play success sound
+      if (audioRef.current) {
+        audioRef.current.play().catch(err => {
+          console.warn("Could not play audio notification:", err);
+        });
+      }
 
       // Clear form and notify success
       setNewComment("");
