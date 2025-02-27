@@ -35,7 +35,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     try {
       setIsSubmitting(true);
       
-      // Create the base comment data
+      // Create the comment data with proper typing
       const commentData = {
         post_id: postId,
         user_id: user.id,
@@ -44,21 +44,9 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       };
 
       // Insert the comment
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('comments')
-        .insert(commentData)
-        .select(`
-          id,
-          content,
-          created_at,
-          parent_id,
-          user_id,
-          profiles (
-            username,
-            avatar_url
-          )
-        `)
-        .single();
+        .insert(commentData);
 
       if (error) {
         console.error("Error adding comment:", error);
