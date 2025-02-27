@@ -55,6 +55,22 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         content: newComment.trim(),
         parent_id: parentId
       });
+
+      // Verify the post exists before trying to add a comment
+      const { data: postCheck, error: postCheckError } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('id', postId)
+        .single();
+
+      if (postCheckError) {
+        console.error("Error checking if post exists:", postCheckError);
+        toast.error("The post you're trying to comment on doesn't exist");
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log("Post exists:", postCheck);
       
       // Make sure we're sending the exact format expected by Supabase
       const commentData = {
@@ -124,10 +140,6 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         >
           {isSubmitting ? "Posting..." : "Post"}
         </Button>
-      </div>
-      {/* Debug element - remove in production */}
-      <div className="text-xs text-gray-500 mt-1 opacity-50">
-        {postId ? `Ready to post comment to: ${postId.substring(0, 8)}...` : 'No post ID available'}
       </div>
     </form>
   );
