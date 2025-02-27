@@ -27,25 +27,22 @@ interface CommentListProps {
 }
 
 export const CommentList = ({ postId, onBack }: CommentListProps) => {
-  // Validate postId on mount
+  // Log component initialization for debugging
   useEffect(() => {
-    if (!postId) {
-      console.error("Missing or invalid postId in CommentList:", postId);
-    } else {
-      console.log("CommentList initialized with postId:", postId);
-    }
+    console.log("CommentList initialized for postId:", postId);
   }, [postId]);
 
   const { data: comments, isLoading, error } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
+      console.log("Fetching comments for postId:", postId);
+      
       if (!postId) {
-        throw new Error('Post ID is required');
+        console.error("No postId provided to CommentList");
+        return [];
       }
 
-      console.log("Fetching comments for post:", postId);
-
-      const { data: allComments, error } = await supabase
+      const { data, error } = await supabase
         .from('comments')
         .select(`
           id,
@@ -67,10 +64,10 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         throw error;
       }
 
-      console.log("Comments fetched successfully:", allComments);
+      console.log("Comments data fetched:", data);
 
       // Process comments into a tree structure
-      const typedComments = allComments as (Omit<Comment, 'replies'> & { post_id: string })[];
+      const typedComments = data as unknown as (Omit<Comment, 'replies'>)[];
       const commentMap = new Map<string, Comment>();
       const rootComments: Comment[] = [];
 
@@ -82,6 +79,9 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
           const parent = commentMap.get(comment.parent_id);
           if (parent) {
             parent.replies.push(commentWithReplies);
+          } else {
+            // Parent not found, treat as root
+            rootComments.push(commentWithReplies);
           }
         } else {
           rootComments.push(commentWithReplies);
@@ -90,27 +90,29 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
 
       return rootComments;
     },
-    enabled: Boolean(postId),
+    enabled: !!postId,
     retry: 1
   });
 
+  // Handle error or missing postId case
   if (!postId) {
     return (
       <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
-        <div className="text-center py-6 text-red-500">
-          <p className="text-lg">Error: Cannot identify post</p>
-          <p className="text-sm mt-2">Please try refreshing the page</p>
+        <div className="text-center py-6">
+          <p className="text-red-500 text-lg">Error: Cannot identify post</p>
+          <p className="text-red-500 text-sm mt-2">Please try refreshing the page</p>
         </div>
       </div>
     );
   }
 
   if (error) {
+    console.error("Error in comments query:", error);
     return (
       <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
-        <div className="text-center py-6 text-red-500">
-          <p className="text-lg">Error loading comments</p>
-          <p className="text-sm mt-2">Please try again later</p>
+        <div className="text-center py-6">
+          <p className="text-red-500 text-lg">Error loading comments</p>
+          <p className="text-red-500 text-sm mt-2">Please try again later</p>
         </div>
       </div>
     );

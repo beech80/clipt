@@ -30,34 +30,34 @@ const PostItem = ({ post }: PostItemProps) => {
   const [showComments, setShowComments] = useState(false);
   const queryClient = useQueryClient();
 
-  // Ensure post.id is a valid string
-  const postId = post?.id ? (typeof post.id === 'string' ? post.id : String(post.id)) : null;
+  // Ensure post.id is available
+  const postId = post?.id || null;
 
-  // Log the post ID for debugging
   useEffect(() => {
-    if (!postId) {
-      console.error("Invalid or missing post ID:", post);
-    } else {
-      console.log("PostItem with ID:", postId);
-    }
-  }, [postId, post]);
+    console.log("PostItem rendering with postId:", postId);
+    setIsLoading(false);
+  }, [postId]);
 
+  // Fetch comment count
   const { data: commentsCount = 0 } = useQuery({
     queryKey: ['comments-count', postId],
     queryFn: async () => {
       if (!postId) return 0;
-      const { count } = await supabase
+      
+      const { count, error } = await supabase
         .from('comments')
         .select('*', { count: 'exact', head: true })
         .eq('post_id', postId);
+      
+      if (error) {
+        console.error("Error fetching comments count:", error);
+        return 0;
+      }
+      
       return count || 0;
     },
     enabled: !!postId
   });
-
-  useEffect(() => {
-    setIsLoading(false);
-  }, []);
 
   const handleDeletePost = async () => {
     try {
@@ -70,7 +70,7 @@ const PostItem = ({ post }: PostItemProps) => {
       if (error) throw error;
       
       toast.success('Post deleted successfully');
-      // Optionally force a page refresh to update the feed
+      // Refresh the feed
       window.location.reload();
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -79,7 +79,7 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   const handleCommentClick = () => {
-    console.log("Comment button clicked for post:", postId);
+    console.log("Comment button clicked, toggling comments for post:", postId);
     setShowComments(!showComments);
   };
 
@@ -92,7 +92,11 @@ const PostItem = ({ post }: PostItemProps) => {
   const gameName = post.games?.name;
 
   if (!postId) {
-    return <div>Error: Invalid post data</div>;
+    return (
+      <div className="gaming-card p-4 text-red-500">
+        Error: Invalid post data
+      </div>
+    );
   }
 
   return (
@@ -198,7 +202,7 @@ const PostItem = ({ post }: PostItemProps) => {
       )}
 
       {/* Comments Section */}
-      {showComments && postId && (
+      {showComments && (
         <div className="border-t border-gaming-400/20">
           <CommentList 
             postId={postId} 

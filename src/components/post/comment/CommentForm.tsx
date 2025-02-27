@@ -21,12 +21,11 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
   const queryClient = useQueryClient();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Validate postId on mount
+  // Log initialization for debugging
   useEffect(() => {
+    console.log("CommentForm initialized for postId:", postId);
     if (!postId) {
-      console.error("Missing or invalid postId in CommentForm:", postId);
-    } else {
-      console.log("CommentForm initialized with postId:", postId);
+      console.error("Missing postId in CommentForm");
     }
   }, [postId]);
 
@@ -56,6 +55,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
+    // Validation - ensure postId is provided
     if (!postId) {
       console.error("Cannot submit comment: Missing postId");
       toast.error("Cannot identify post for this comment");
@@ -67,6 +67,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     try {
       console.log(`Submitting comment to post ${postId} by user ${user.id}`);
       
+      // Construct comment data
       const commentData = {
         post_id: postId,
         user_id: user.id,
@@ -76,6 +77,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       
       console.log("Sending comment data:", commentData);
       
+      // Insert the comment
       const { data, error } = await supabase
         .from('comments')
         .insert(commentData)
@@ -106,6 +108,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       await queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       await queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
       
+      // If replying, call the callback
       if (onReplyComplete) {
         onReplyComplete();
       }
@@ -117,19 +120,23 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     }
   };
 
+  // Handle missing postId case
+  if (!postId) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-red-500 text-sm">Error: Cannot identify post</p>
+        <p className="text-red-500 text-xs mt-1">Please try refreshing the page</p>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmitComment} className="p-4">
-      {!postId && (
-        <div className="text-red-500 text-sm mb-2">
-          Error: Cannot identify post. Please try refreshing the page.
-        </div>
-      )}
-      
       <Textarea
         placeholder={user ? "Write your comment..." : "Please login to comment"}
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
-        disabled={!user || isSubmitting || !postId}
+        disabled={!user || isSubmitting}
         className="w-full min-h-[60px] bg-[#1e2230] text-white rounded-lg p-2 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50"
       />
       <div className="flex justify-end gap-2 mt-2">
@@ -146,7 +153,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         <Button 
           type="submit"
           className="h-7 text-xs bg-[#9b87f5] hover:bg-[#8b77e5] text-white transition-colors disabled:opacity-50"
-          disabled={!user || !newComment.trim() || isSubmitting || !postId}
+          disabled={!user || !newComment.trim() || isSubmitting}
         >
           {isSubmitting ? "Posting..." : "Post"}
         </Button>
