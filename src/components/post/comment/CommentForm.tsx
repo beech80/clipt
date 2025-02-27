@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -19,6 +19,11 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Add this for debugging - as a useEffect to avoid repeated logs
+  useEffect(() => {
+    console.log("CommentForm initialized with postId:", postId);
+  }, [postId]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +49,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     
     try {
       // Log the request for debugging
-      console.log("Submitting comment with data:", {
+      console.log("Attempting to submit comment with data:", {
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
@@ -59,16 +64,19 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         parent_id: parentId || null
       };
       
-      console.log("Final comment data being sent:", commentData);
+      console.log("Final comment data being sent to Supabase:", commentData);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('comments')
-        .insert(commentData);
+        .insert(commentData)
+        .select();
 
       if (error) {
         console.error("Error adding comment:", error);
         throw error;
       }
+
+      console.log("Comment added successfully:", data);
 
       // Clear form and notify success
       setNewComment("");
@@ -88,9 +96,6 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       setIsSubmitting(false);
     }
   };
-
-  // Add this for debugging
-  console.log("Current postId in CommentForm:", postId);
 
   return (
     <form onSubmit={handleSubmitComment} className="p-4">
@@ -119,6 +124,10 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         >
           {isSubmitting ? "Posting..." : "Post"}
         </Button>
+      </div>
+      {/* Debug element - remove in production */}
+      <div className="text-xs text-gray-500 mt-1 opacity-50">
+        {postId ? `Ready to post comment to: ${postId.substring(0, 8)}...` : 'No post ID available'}
       </div>
     </form>
   );
