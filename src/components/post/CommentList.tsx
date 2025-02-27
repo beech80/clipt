@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { CommentItem } from "./comment/CommentItem";
 import { CommentForm } from "./comment/CommentForm";
+import { useEffect } from "react";
 
 interface Comment {
   id: string;
@@ -26,13 +27,21 @@ interface CommentListProps {
 }
 
 export const CommentList = ({ postId, onBack }: CommentListProps) => {
+  // Log the postId for debugging
+  useEffect(() => {
+    console.log("CommentList received postId:", postId);
+  }, [postId]);
+  
   const { data: comments, isLoading } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
       // Validate postId
       if (!postId) {
+        console.error("Missing postId in CommentList");
         throw new Error('Post ID is required');
       }
+
+      console.log("Fetching comments for post:", postId);
 
       // Fetch all comments for the post
       const { data: allComments, error } = await supabase
@@ -57,6 +66,8 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         throw error;
       }
 
+      console.log("Comments fetched successfully:", allComments);
+
       // Process comments into a tree structure
       const typedComments = allComments as (Omit<Comment, 'replies'> & { post_id: string })[];
       const commentMap = new Map<string, Comment>();
@@ -78,6 +89,7 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
 
       return rootComments;
     },
+    enabled: !!postId, // Only run query if postId exists
   });
 
   return (

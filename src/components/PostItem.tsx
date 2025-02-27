@@ -29,6 +29,11 @@ const PostItem = ({ post }: PostItemProps) => {
   const isOwner = user?.id === post.user_id;
   const [showComments, setShowComments] = useState(false);
 
+  // Log the post ID for debugging
+  useEffect(() => {
+    console.log("PostItem with ID:", post.id);
+  }, [post.id]);
+
   const { data: commentsCount = 0 } = useQuery({
     queryKey: ['comments-count', post.id],
     queryFn: async () => {
@@ -64,6 +69,7 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   const handleCommentClick = () => {
+    console.log("Comment button clicked for post:", post.id);
     setShowComments(!showComments);
   };
 
