@@ -37,6 +37,11 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
   // Add this for debugging - as a useEffect to avoid repeated logs
   useEffect(() => {
     console.log("CommentForm initialized with postId:", postId);
+    
+    // Check if the postId is valid on mount
+    if (!postId) {
+      console.error("CommentForm mounted with invalid or missing postId");
+    }
   }, [postId]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
@@ -62,8 +67,28 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     setIsSubmitting(true);
     
     try {
-      // Simplify our approach - first make sure we're logged in properly
-      console.log("Current user ID:", user.id);
+      // Log essential information for debugging
+      console.log(`Submitting comment to post ${postId} by user ${user.id}`);
+      
+      // First check if the post exists
+      const { data: postExists, error: postCheckError } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('id', postId)
+        .maybeSingle();
+        
+      if (postCheckError) {
+        console.error("Error checking post:", postCheckError);
+      }
+      
+      if (!postExists) {
+        console.error(`Post with ID ${postId} does not exist`);
+        toast.error("Cannot comment: Post not found");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      console.log("Post exists:", postExists);
       
       // Construct comment data - ensure all required fields are included
       const commentData = {
