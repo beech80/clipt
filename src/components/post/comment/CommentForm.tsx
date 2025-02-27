@@ -32,38 +32,40 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
+    setIsSubmitting(true);
+    
     try {
-      setIsSubmitting(true);
-      
-      // Create the comment data with proper typing
+      // Simple comment data structure
       const commentData = {
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
         parent_id: parentId || null
       };
-
-      // Insert the comment
+      
+      // Insert comment with minimal operation - no select or single
       const { error } = await supabase
         .from('comments')
         .insert(commentData);
 
       if (error) {
-        console.error("Error adding comment:", error);
-        throw error;
+        console.error("Error inserting comment:", error);
+        throw new Error("Failed to post comment");
       }
 
-      toast.success("Comment added successfully!");
+      // Success! Clear form and notify
       setNewComment("");
+      toast.success("Comment added successfully!");
       
-      // Invalidate comments query to trigger refetch
+      // Refresh comments data
       await queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       
+      // If replying, call the callback
       if (onReplyComplete) {
         onReplyComplete();
       }
     } catch (error) {
-      console.error("Error adding comment:", error);
+      console.error("Comment submission error:", error);
       toast.error("Error adding comment. Please try again.");
     } finally {
       setIsSubmitting(false);
