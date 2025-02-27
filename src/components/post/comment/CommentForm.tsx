@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 
 interface CommentFormProps {
   postId: string;
@@ -32,28 +33,37 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
+    if (!postId) {
+      console.error("Missing postId:", postId);
+      toast.error("Error identifying post");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
-      // Simple comment data structure
-      const commentData = {
+      console.log("Submitting comment with data:", {
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
-        parent_id: parentId || null
-      };
+        parent_id: parentId
+      });
       
-      // Insert comment with minimal operation - no select or single
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('comments')
-        .insert(commentData);
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          content: newComment.trim(),
+          parent_id: parentId || null
+        });
 
       if (error) {
-        console.error("Error inserting comment:", error);
-        throw new Error("Failed to post comment");
+        console.error("Error adding comment:", error);
+        throw error;
       }
 
-      // Success! Clear form and notify
+      console.log("Comment added successfully:", data);
       setNewComment("");
       toast.success("Comment added successfully!");
       
@@ -74,12 +84,12 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
 
   return (
     <form onSubmit={handleSubmitComment} className="p-4">
-      <textarea
+      <Textarea
         placeholder={user ? "Write your comment..." : "Please login to comment"}
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
         disabled={!user || isSubmitting}
-        className="w-full min-h-[50px] bg-[#1e2230] text-white rounded-lg p-2 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50"
+        className="w-full min-h-[60px] bg-[#1e2230] text-white rounded-lg p-2 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50"
       />
       <div className="flex justify-end gap-2 mt-2">
         {onCancel && (
