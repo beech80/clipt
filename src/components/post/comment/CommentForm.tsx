@@ -33,8 +33,9 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
-    if (!postId) {
-      console.error("Missing postId:", postId);
+    // Check if postId exists and is valid
+    if (!postId || typeof postId !== 'string' || postId.trim() === '') {
+      console.error("Invalid postId:", postId);
       toast.error("Error identifying post");
       return;
     }
@@ -50,14 +51,19 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         parent_id: parentId
       });
       
+      // Make sure we're sending the exact format expected by Supabase
+      const commentData = {
+        post_id: postId,
+        user_id: user.id,
+        content: newComment.trim(),
+        parent_id: parentId || null
+      };
+      
+      console.log("Final comment data being sent:", commentData);
+      
       const { error } = await supabase
         .from('comments')
-        .insert({
-          post_id: postId,
-          user_id: user.id,
-          content: newComment.trim(),
-          parent_id: parentId || null
-        });
+        .insert(commentData);
 
       if (error) {
         console.error("Error adding comment:", error);
@@ -82,6 +88,9 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       setIsSubmitting(false);
     }
   };
+
+  // Add this for debugging
+  console.log("Current postId in CommentForm:", postId);
 
   return (
     <form onSubmit={handleSubmitComment} className="p-4">
