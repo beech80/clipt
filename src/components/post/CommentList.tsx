@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { CommentItem } from "./comment/CommentItem";
 import { CommentForm } from "./comment/CommentForm";
 import { useEffect } from "react";
@@ -35,7 +35,7 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
     }
   }, [postId]);
   
-  const { data: comments, isLoading } = useQuery({
+  const { data: comments, isLoading, error } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
       // Validate postId
@@ -95,12 +95,36 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
     enabled: !!postId, // Only run query if postId exists
   });
 
+  if (error) {
+    console.error("Error in comments query:", error);
+  }
+
   return (
     <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col">
+      {/* Header with back button */}
+      <div className="flex items-center justify-between p-4 bg-[#252B3B] border-b border-[#9b87f5]/20">
+        <h3 className="text-xl font-semibold text-white">Comments</h3>
+        {onBack && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onBack}
+            className="text-gray-400 hover:text-white"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
+      
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
             <Loader2 className="h-6 w-6 animate-spin text-[#9b87f5]" />
+          </div>
+        ) : !postId ? (
+          <div className="text-center py-6 text-red-500">
+            <p className="text-lg">Error: Cannot identify post</p>
+            <p className="text-sm mt-2">Please try refreshing the page</p>
           </div>
         ) : comments?.length === 0 ? (
           <div className="text-center py-6">

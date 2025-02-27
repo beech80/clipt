@@ -108,6 +108,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       
       // Refresh comments data
       await queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      await queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
       
       // If replying, call the callback
       if (onReplyComplete) {

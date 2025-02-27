@@ -187,7 +187,10 @@ const PostItem = ({ post }: PostItemProps) => {
       {/* Comments Section */}
       {showComments && (
         <div className="border-t border-gaming-400/20">
-          <CommentList postId={String(post.id)} onBack={() => setShowComments(false)} />
+          <CommentList 
+            postId={typeof post.id === 'string' ? post.id : String(post.id)} 
+            onBack={() => setShowComments(false)} 
+          />
         </div>
       )}
     </article>
