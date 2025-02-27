@@ -27,12 +27,6 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
-    if (!postId) {
-      console.error("Invalid post ID:", postId);
-      toast.error("Invalid post");
-      return;
-    }
-
     if (!newComment.trim()) {
       toast.error("Comment cannot be empty");
       return;
@@ -41,9 +35,6 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     try {
       setIsSubmitting(true);
       
-      // Log the post ID to verify it's correct
-      console.log("Submitting comment for post:", postId);
-
       // Create the base comment data
       const commentData = {
         post_id: postId,
@@ -51,8 +42,6 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         content: newComment.trim(),
         parent_id: parentId || null
       };
-
-      console.log("Comment data being submitted:", commentData);
 
       // Insert the comment
       const { data, error } = await supabase
@@ -76,7 +65,6 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         throw error;
       }
 
-      console.log("Comment added successfully:", data);
       toast.success("Comment added successfully!");
       setNewComment("");
       
