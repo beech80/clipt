@@ -34,12 +34,11 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     };
   }, []);
 
-  // Add this for debugging - as a useEffect to avoid repeated logs
+  // Log when the component is mounted with the postId
   useEffect(() => {
-    console.log("CommentForm initialized with postId:", postId);
-    
-    // Check if the postId is valid on mount
-    if (!postId) {
+    if (postId) {
+      console.log("CommentForm initialized with postId:", postId);
+    } else {
       console.error("CommentForm mounted with invalid or missing postId");
     }
   }, [postId]);
@@ -57,66 +56,38 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
-    // Check if postId exists and is valid
-    if (!postId || typeof postId !== 'string' || postId.trim() === '') {
-      console.error("Invalid postId:", postId);
-      toast.error("Error identifying post");
+    // Clear validation - ensure postId is provided
+    if (!postId) {
+      console.error("Cannot submit comment: Missing postId");
+      toast.error("Cannot identify post for this comment");
       return;
     }
 
     setIsSubmitting(true);
     
     try {
-      // Log essential information for debugging
       console.log(`Submitting comment to post ${postId} by user ${user.id}`);
       
-      // First check if the post exists
-      const { data: postExists, error: postCheckError } = await supabase
-        .from('posts')
-        .select('id')
-        .eq('id', postId)
-        .maybeSingle();
-        
-      if (postCheckError) {
-        console.error("Error checking post:", postCheckError);
-      }
-      
-      if (!postExists) {
-        console.error(`Post with ID ${postId} does not exist`);
-        toast.error("Cannot comment: Post not found");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      console.log("Post exists:", postExists);
-      
-      // Construct comment data - ensure all required fields are included
+      // Construct comment data
       const commentData = {
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
-        // Only include parent_id if it exists and isn't null/undefined
         ...(parentId ? { parent_id: parentId } : {})
       };
       
       console.log("Sending comment data:", commentData);
       
-      // Insert the comment with more detailed error handling
+      // Insert the comment
       const { data, error } = await supabase
         .from('comments')
         .insert(commentData)
         .select();
 
       if (error) {
-        console.error("Detailed error adding comment:", error);
-        // More specific error feedback to the user
-        if (error.code === '23503') {
-          toast.error("Cannot comment: The post may have been deleted.");
-        } else if (error.code === '42501') {
-          toast.error("Permission denied. You may need to log in again.");
-        } else {
-          toast.error(`Error: ${error.message}`);
-        }
+        console.error("Error adding comment:", error);
+        toast.error(`Error: ${error.message}`);
+        setIsSubmitting(false);
         return;
       }
 
@@ -152,11 +123,17 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
 
   return (
     <form onSubmit={handleSubmitComment} className="p-4">
+      {!postId && (
+        <div className="text-red-500 text-sm mb-2">
+          Error: Cannot identify post. Please try refreshing the page.
+        </div>
+      )}
+      
       <Textarea
         placeholder={user ? "Write your comment..." : "Please login to comment"}
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
-        disabled={!user || isSubmitting}
+        disabled={!user || isSubmitting || !postId}
         className="w-full min-h-[60px] bg-[#1e2230] text-white rounded-lg p-2 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50"
       />
       <div className="flex justify-end gap-2 mt-2">
@@ -173,7 +150,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         <Button 
           type="submit"
           className="h-7 text-xs bg-[#9b87f5] hover:bg-[#8b77e5] text-white transition-colors disabled:opacity-50"
-          disabled={!user || !newComment.trim() || isSubmitting}
+          disabled={!user || !newComment.trim() || isSubmitting || !postId}
         >
           {isSubmitting ? "Posting..." : "Post"}
         </Button>
