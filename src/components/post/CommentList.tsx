@@ -30,9 +30,6 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
   // Log the postId for debugging
   useEffect(() => {
     console.log("CommentList received postId:", postId);
-    if (!postId) {
-      console.error("Missing or invalid postId in CommentList:", postId);
-    }
   }, [postId]);
   
   const { data: comments, isLoading, error } = useQuery({
@@ -101,7 +98,7 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
 
   return (
     <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col">
-      {/* Header with back button */}
+      {/* Header */}
       <div className="flex items-center justify-between p-4 bg-[#252B3B] border-b border-[#9b87f5]/20">
         <h3 className="text-xl font-semibold text-white">Comments</h3>
         {onBack && (

@@ -36,11 +36,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
 
   // Log when the component is mounted with the postId
   useEffect(() => {
-    if (postId) {
-      console.log("CommentForm initialized with postId:", postId);
-    } else {
-      console.error("CommentForm mounted with invalid or missing postId");
-    }
+    console.log("CommentForm initialized with postId:", postId);
   }, [postId]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {

@@ -30,18 +30,21 @@ const PostItem = ({ post }: PostItemProps) => {
   const [showComments, setShowComments] = useState(false);
   const queryClient = useQueryClient();
 
+  // Ensure post.id is a string and available
+  const postId = typeof post.id === 'string' ? post.id : String(post.id);
+
   // Log the post ID for debugging
   useEffect(() => {
-    console.log("PostItem with ID:", post.id);
-  }, [post.id]);
+    console.log("PostItem with ID:", postId);
+  }, [postId]);
 
   const { data: commentsCount = 0 } = useQuery({
-    queryKey: ['comments-count', post.id],
+    queryKey: ['comments-count', postId],
     queryFn: async () => {
       const { count } = await supabase
         .from('comments')
         .select('*', { count: 'exact', head: true })
-        .eq('post_id', post.id);
+        .eq('post_id', postId);
       return count || 0;
     }
   });
@@ -55,7 +58,7 @@ const PostItem = ({ post }: PostItemProps) => {
       const { error } = await supabase
         .from('posts')
         .delete()
-        .eq('id', post.id)
+        .eq('id', postId)
         .eq('user_id', user?.id); // Extra safety check
 
       if (error) throw error;
@@ -70,7 +73,7 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   const handleCommentClick = () => {
-    console.log("Comment button clicked for post:", post.id);
+    console.log("Comment button clicked for post:", postId);
     setShowComments(!showComments);
   };
 
@@ -133,7 +136,7 @@ const PostItem = ({ post }: PostItemProps) => {
         <PostContent
           imageUrl={post.image_url}
           videoUrl={post.video_url}
-          postId={post.id}
+          postId={postId}
         />
       </div>
 
@@ -188,7 +191,7 @@ const PostItem = ({ post }: PostItemProps) => {
       {showComments && (
         <div className="border-t border-gaming-400/20">
           <CommentList 
-            postId={typeof post.id === 'string' ? post.id : String(post.id)} 
+            postId={postId} 
             onBack={() => setShowComments(false)} 
           />
         </div>
