@@ -40,13 +40,15 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     try {
       setIsSubmitting(true);
       
+      // Log the post ID to verify it's correct
+      console.log("Attempting to comment on post:", postId);
+
       // Create the base comment data
       const commentData = {
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
-        parent_id: parentId || null,
-        created_at: new Date().toISOString()
+        parent_id: parentId || null
       };
 
       console.log("Submitting comment with data:", commentData);
