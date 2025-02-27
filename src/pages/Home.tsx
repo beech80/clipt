@@ -13,7 +13,7 @@ const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: posts } = useQuery({
+  const { data: posts, isLoading, error } = useQuery({
     queryKey: ['posts', 'home'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -31,13 +31,21 @@ const Home = () => {
         .eq('post_type', 'home')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching posts:", error);
+        throw error;
+      }
 
-      return data?.map(post => ({
+      // Ensure each post has a properly formatted id
+      const formattedPosts = data?.map(post => ({
         ...post,
+        id: post.id.toString(), // Ensure ID is a string
         likes_count: post.likes?.[0]?.count || 0,
         clip_votes: post.clip_votes || []
       })) as Post[];
+
+      console.log("Posts fetched:", formattedPosts);
+      return formattedPosts;
     },
   });
 
@@ -52,9 +60,23 @@ const Home = () => {
 
       {/* Posts Feed */}
       <div className="container mx-auto px-4 py-6 space-y-6 max-w-2xl">
-        {posts?.map((post) => (
-          <PostItem key={post.id} post={post} />
-        ))}
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 text-red-400">
+            <p>Failed to load posts. Please try again later.</p>
+          </div>
+        ) : posts && posts.length > 0 ? (
+          posts.map((post) => (
+            <PostItem key={post.id} post={post} />
+          ))
+        ) : (
+          <div className="text-center py-20 text-gray-400">
+            <p>No posts available. Create your first post!</p>
+          </div>
+        )}
       </div>
 
       {/* Center Camera Button */}

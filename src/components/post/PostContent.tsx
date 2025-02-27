@@ -1,171 +1,86 @@
 
-import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-import { Play, Pause, Volume2, VolumeX, Heart } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import React, { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { Gamepad2 } from 'lucide-react';
 
-export interface PostContentProps {
-  videoUrl?: string | null;
+interface PostContentProps {
   imageUrl?: string | null;
-  postId?: string;
-  onLike?: () => void;
+  videoUrl?: string | null;
+  postId: string;
 }
 
-const PostContent: React.FC<PostContentProps> = ({ videoUrl, imageUrl, onLike }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [showLikeAnimation, setShowLikeAnimation] = useState(false);
-  const location = useLocation();
+const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
+  const [isMediaLoaded, setIsMediaLoaded] = useState(false);
+  const [isMediaError, setIsMediaError] = useState(false);
 
-  // Determine if we're on a route that should use widescreen format
-  const isWidescreenRoute = location.pathname.includes('/clipts') || 
-    location.pathname.includes('/discover') || 
-    location.pathname.includes('/game/');
+  // Debug logging for postId
+  React.useEffect(() => {
+    console.log(`PostContent rendering for postId: ${postId}`);
+  }, [postId]);
 
-  // Set aspect ratio based on route
-  const aspectRatio = isWidescreenRoute ? 'aspect-video' : 'aspect-[4/5]';
-  
-  const containerClasses = cn(
-    "relative w-full bg-black overflow-hidden",
-    aspectRatio
-  );
-
-  const mediaClasses = cn(
-    "w-full h-full object-contain",
-    !isVideoLoaded && !isImageLoaded && "invisible"
-  );
-
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
+  const handleMediaLoad = () => {
+    setIsMediaLoaded(true);
   };
 
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
+  const handleMediaError = () => {
+    setIsMediaError(true);
+    toast.error("Failed to load media");
   };
 
-  const handleVideoClick = () => {
-    togglePlay();
+  const handlePlayError = (error: any) => {
+    console.error("Video playback error:", error);
+    setIsMediaError(true);
+    toast.error("Failed to play video");
   };
 
-  const handleDoubleTap = () => {
-    if (onLike) {
-      onLike();
-      setShowLikeAnimation(true);
-      setTimeout(() => setShowLikeAnimation(false), 1000);
-    }
-  };
-
-  useEffect(() => {
-    const updateProgress = () => {
-      if (videoRef.current) {
-        const currentTime = videoRef.current.currentTime;
-        const duration = videoRef.current.duration;
-        setProgress((currentTime / duration) * 100);
-      }
-    };
-
-    const videoElement = videoRef.current;
-    if (videoElement) {
-      videoElement.addEventListener("timeupdate", updateProgress);
-    }
-
-    return () => {
-      if (videoElement) {
-        videoElement.removeEventListener("timeupdate", updateProgress);
-      }
-    };
-  }, [videoRef]);
+  if (!imageUrl && !videoUrl) {
+    return (
+      <div className="w-full aspect-video bg-gray-900 flex items-center justify-center">
+        <Gamepad2 className="h-12 w-12 text-gray-700" />
+      </div>
+    );
+  }
 
   return (
-    <div 
-      ref={containerRef} 
-      className={containerClasses}
-      onDoubleClick={handleDoubleTap}
-    >
+    <div className="relative">
+      {/* Media Content */}
       {videoUrl ? (
-        <>
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            className={mediaClasses}
-            playsInline
-            loop
-            muted={isMuted}
-            onClick={handleVideoClick}
-            onLoadedData={() => setIsVideoLoaded(true)}
-          />
-          {!isVideoLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            </div>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-            <Progress value={progress} className="h-1 mb-4" />
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={togglePlay}
-                className="text-white hover:text-white/80"
-              >
-                {isPlaying ? (
-                  <Pause className="h-6 w-6" />
-                ) : (
-                  <Play className="h-6 w-6" />
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleMute}
-                className="text-white hover:text-white/80"
-              >
-                {isMuted ? (
-                  <VolumeX className="h-6 w-6" />
-                ) : (
-                  <Volume2 className="h-6 w-6" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </>
+        <video
+          src={videoUrl}
+          className="w-full aspect-video object-cover bg-black"
+          controls
+          onLoadedData={handleMediaLoad}
+          onError={handleMediaError}
+          onPlay={(e) => {
+            try {
+              e.currentTarget.play().catch(handlePlayError);
+            } catch (error) {
+              handlePlayError(error);
+            }
+          }}
+        />
       ) : imageUrl ? (
-        <>
-          <img
-            src={imageUrl}
-            alt="Post content"
-            className={mediaClasses}
-            onLoad={() => setIsImageLoaded(true)}
-            loading="lazy"
-          />
-          {!isImageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            </div>
-          )}
-        </>
+        <img
+          src={imageUrl}
+          alt="Post content"
+          className="w-full object-cover bg-black"
+          onLoad={handleMediaLoad}
+          onError={handleMediaError}
+        />
       ) : null}
-      
-      {showLikeAnimation && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Heart className="text-red-500 h-24 w-24 animate-like" fill="currentColor" />
+
+      {/* Loading State */}
+      {!isMediaLoaded && !isMediaError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+          <div className="animate-pulse rounded-full h-12 w-12 border-2 border-purple-500 border-t-transparent animate-spin"></div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {isMediaError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+          <Badge variant="destructive">Failed to load media</Badge>
         </div>
       )}
     </div>

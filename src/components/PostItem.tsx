@@ -30,20 +30,14 @@ const PostItem = ({ post }: PostItemProps) => {
   const [showComments, setShowComments] = useState(false);
   const queryClient = useQueryClient();
 
-  // Ensure post ID is properly typed and available
-  // The key change here is to ensure postId is a string and never null
-  const postId = post?.id ? String(post.id) : "";
+  // Ensure we have a valid string post ID
+  const postId = post && post.id ? String(post.id) : "";
 
+  // Debug logging
   useEffect(() => {
+    console.log(`PostItem rendering with postId: ${postId}`);
     setIsLoading(false);
-  }, []);
-
-  // Log the post ID when attempting to load comments
-  useEffect(() => {
-    if (showComments) {
-      console.log("Showing comments for post:", postId);
-    }
-  }, [showComments, postId]);
+  }, [postId]);
 
   // Fetch comment count
   const { data: commentsCount = 0 } = useQuery({
@@ -77,8 +71,7 @@ const PostItem = ({ post }: PostItemProps) => {
       if (error) throw error;
       
       toast.success('Post deleted successfully');
-      // Refresh the feed
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
     } catch (error) {
       console.error('Error deleting post:', error);
       toast.error('Failed to delete post');
@@ -86,7 +79,7 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   const handleCommentClick = () => {
-    console.log("Comment button clicked, toggling comments for post:", postId);
+    console.log("Comment button clicked for post:", postId);
     setShowComments(!showComments);
   };
 
@@ -98,7 +91,8 @@ const PostItem = ({ post }: PostItemProps) => {
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
 
-  if (!postId) {
+  // Early return if post data is invalid
+  if (!post || !postId) {
     return (
       <div className="gaming-card p-4 text-red-500">
         Error: Invalid post data
@@ -208,13 +202,14 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
       )}
 
-      {/* Comments Section */}
+      {/* Comments Section - Make sure postId is valid and passed correctly */}
       {showComments && (
         <div className="border-t border-gaming-400/20">
           {postId ? (
             <CommentList 
-              postId={postId} 
+              postId={postId}
               onBack={() => setShowComments(false)} 
+              key={`comments-${postId}`} // Force re-render with key
             />
           ) : (
             <div className="p-4 text-center text-red-500">
