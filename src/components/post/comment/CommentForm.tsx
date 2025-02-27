@@ -42,6 +42,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     setIsSubmitting(true);
     
     try {
+      // Log the request for debugging
       console.log("Submitting comment with data:", {
         post_id: postId,
         user_id: user.id,
@@ -49,7 +50,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         parent_id: parentId
       });
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('comments')
         .insert({
           post_id: postId,
@@ -63,7 +64,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         throw error;
       }
 
-      console.log("Comment added successfully:", data);
+      // Clear form and notify success
       setNewComment("");
       toast.success("Comment added successfully!");
       
