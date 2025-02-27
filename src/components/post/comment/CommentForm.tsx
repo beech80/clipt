@@ -117,17 +117,19 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     }
   };
 
-  if (!postId) {
-    return null;
-  }
-
   return (
     <form onSubmit={handleSubmitComment} className="p-4">
+      {!postId && (
+        <div className="text-red-500 text-sm mb-2">
+          Error: Cannot identify post. Please try refreshing the page.
+        </div>
+      )}
+      
       <Textarea
         placeholder={user ? "Write your comment..." : "Please login to comment"}
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
-        disabled={!user || isSubmitting}
+        disabled={!user || isSubmitting || !postId}
         className="w-full min-h-[60px] bg-[#1e2230] text-white rounded-lg p-2 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50"
       />
       <div className="flex justify-end gap-2 mt-2">
@@ -144,7 +146,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         <Button 
           type="submit"
           className="h-7 text-xs bg-[#9b87f5] hover:bg-[#8b77e5] text-white transition-colors disabled:opacity-50"
-          disabled={!user || !newComment.trim() || isSubmitting}
+          disabled={!user || !newComment.trim() || isSubmitting || !postId}
         >
           {isSubmitting ? "Posting..." : "Post"}
         </Button>
