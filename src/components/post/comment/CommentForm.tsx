@@ -23,10 +23,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
 
   // Log initialization for debugging
   useEffect(() => {
-    console.log("CommentForm initialized for postId:", postId);
-    if (!postId) {
-      console.error("Missing postId in CommentForm");
-    }
+    console.log(`CommentForm initialized for postId: ${postId}`);
   }, [postId]);
 
   // Initialize audio element
@@ -55,7 +52,6 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
-    // Validation - ensure postId is provided
     if (!postId) {
       console.error("Cannot submit comment: Missing postId");
       toast.error("Cannot identify post for this comment");
@@ -120,7 +116,6 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     }
   };
 
-  // Handle missing postId case
   if (!postId) {
     return (
       <div className="p-4 text-center">

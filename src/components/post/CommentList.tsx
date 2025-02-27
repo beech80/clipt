@@ -27,21 +27,21 @@ interface CommentListProps {
 }
 
 export const CommentList = ({ postId, onBack }: CommentListProps) => {
-  // Log component initialization for debugging
+  // Debug logging to see what postId we're receiving
   useEffect(() => {
-    console.log("CommentList initialized for postId:", postId);
+    console.log(`CommentList component mounted with postId: ${postId}`);
   }, [postId]);
 
   const { data: comments, isLoading, error } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
-      console.log("Fetching comments for postId:", postId);
-      
       if (!postId) {
-        console.error("No postId provided to CommentList");
+        console.error("No postId provided to query function");
         return [];
       }
 
+      console.log(`Fetching comments for post: ${postId}`);
+      
       const { data, error } = await supabase
         .from('comments')
         .select(`
@@ -64,8 +64,6 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         throw error;
       }
 
-      console.log("Comments data fetched:", data);
-
       // Process comments into a tree structure
       const typedComments = data as unknown as (Omit<Comment, 'replies'>)[];
       const commentMap = new Map<string, Comment>();
@@ -74,27 +72,28 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
       typedComments.forEach((comment) => {
         const commentWithReplies = { ...comment, replies: [] } as Comment;
         commentMap.set(comment.id, commentWithReplies);
-        
-        if (comment.parent_id) {
+      });
+
+      // Build hierarchy after all comments are in the map
+      typedComments.forEach((comment) => {
+        if (comment.parent_id && commentMap.has(comment.parent_id)) {
           const parent = commentMap.get(comment.parent_id);
           if (parent) {
-            parent.replies.push(commentWithReplies);
-          } else {
-            // Parent not found, treat as root
-            rootComments.push(commentWithReplies);
+            parent.replies.push(commentMap.get(comment.id)!);
           }
         } else {
-          rootComments.push(commentWithReplies);
+          rootComments.push(commentMap.get(comment.id)!);
         }
       });
 
+      console.log("Processed comments:", rootComments);
       return rootComments;
     },
-    enabled: !!postId,
-    retry: 1
+    enabled: Boolean(postId),
+    retry: 2,
+    retryDelay: 1000
   });
 
-  // Handle error or missing postId case
   if (!postId) {
     return (
       <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
@@ -107,12 +106,12 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
   }
 
   if (error) {
-    console.error("Error in comments query:", error);
+    console.error("Error in comment query:", error);
     return (
       <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
         <div className="text-center py-6">
           <p className="text-red-500 text-lg">Error loading comments</p>
-          <p className="text-red-500 text-sm mt-2">Please try again later</p>
+          <p className="text-red-500 text-sm mt-2">{error.message || "Please try again later"}</p>
         </div>
       </div>
     );
@@ -140,14 +139,14 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
           <div className="flex justify-center items-center h-40">
             <Loader2 className="h-6 w-6 animate-spin text-[#9b87f5]" />
           </div>
-        ) : comments?.length === 0 ? (
+        ) : !comments || comments.length === 0 ? (
           <div className="text-center py-6">
             <p className="text-gray-400 text-sm">No comments yet</p>
             <p className="text-gray-500 text-xs">Start the conversation</p>
           </div>
         ) : (
           <div className="space-y-3 p-4">
-            {comments?.map((comment) => (
+            {comments.map((comment) => (
               <CommentItem 
                 key={comment.id} 
                 comment={comment}
