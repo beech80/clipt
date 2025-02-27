@@ -28,6 +28,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     }
 
     if (!postId) {
+      console.error("Invalid post ID:", postId);
       toast.error("Invalid post");
       return;
     }
@@ -41,7 +42,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       setIsSubmitting(true);
       
       // Log the post ID to verify it's correct
-      console.log("Attempting to comment on post:", postId);
+      console.log("Submitting comment for post:", postId);
 
       // Create the base comment data
       const commentData = {
@@ -51,9 +52,9 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
         parent_id: parentId || null
       };
 
-      console.log("Submitting comment with data:", commentData);
+      console.log("Comment data being submitted:", commentData);
 
-      // Insert the comment and get the profiles data in a single query
+      // Insert the comment
       const { data, error } = await supabase
         .from('comments')
         .insert(commentData)
