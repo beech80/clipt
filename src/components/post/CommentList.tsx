@@ -27,19 +27,27 @@ interface CommentListProps {
 }
 
 export const CommentList = ({ postId, onBack }: CommentListProps) => {
-  // Debug logging to see what postId we're receiving
+  // Add logging to see the postId value
   useEffect(() => {
     console.log(`CommentList component mounted with postId: ${postId}`);
   }, [postId]);
 
+  // Exit early if no postId is provided
+  if (!postId || typeof postId !== 'string' || postId.trim() === '') {
+    console.error("Invalid or empty postId received by CommentList:", postId);
+    return (
+      <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
+        <div className="text-center py-6">
+          <p className="text-red-500 text-lg">Error: Cannot identify post</p>
+          <p className="text-red-500 text-sm mt-2">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
   const { data: comments, isLoading, error } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
-      if (!postId) {
-        console.error("No postId provided to query function");
-        return [];
-      }
-
       console.log(`Fetching comments for post: ${postId}`);
       
       const { data, error } = await supabase
@@ -64,6 +72,8 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         throw error;
       }
 
+      console.log(`Retrieved ${data?.length || 0} comments for post ${postId}`);
+
       // Process comments into a tree structure
       const typedComments = data as unknown as (Omit<Comment, 'replies'>)[];
       const commentMap = new Map<string, Comment>();
@@ -80,30 +90,20 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
           const parent = commentMap.get(comment.parent_id);
           if (parent) {
             parent.replies.push(commentMap.get(comment.id)!);
+          } else {
+            rootComments.push(commentMap.get(comment.id)!);
           }
         } else {
           rootComments.push(commentMap.get(comment.id)!);
         }
       });
 
-      console.log("Processed comments:", rootComments);
       return rootComments;
     },
-    enabled: Boolean(postId),
+    enabled: !!postId,
     retry: 2,
     retryDelay: 1000
   });
-
-  if (!postId) {
-    return (
-      <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
-        <div className="text-center py-6">
-          <p className="text-red-500 text-lg">Error: Cannot identify post</p>
-          <p className="text-red-500 text-sm mt-2">Please try refreshing the page</p>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     console.error("Error in comment query:", error);

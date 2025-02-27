@@ -21,9 +21,12 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
   const queryClient = useQueryClient();
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Log initialization for debugging
+  // Validate postId on mount
   useEffect(() => {
-    console.log(`CommentForm initialized for postId: ${postId}`);
+    console.log(`CommentForm initialized with postId: ${postId}`);
+    if (!postId || typeof postId !== 'string' || postId.trim() === '') {
+      console.error("Invalid postId in CommentForm:", postId);
+    }
   }, [postId]);
 
   // Initialize audio element
@@ -39,6 +42,16 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     };
   }, []);
 
+  // Early return if no valid postId
+  if (!postId || typeof postId !== 'string' || postId.trim() === '') {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-red-500 text-sm">Error: Cannot identify post</p>
+        <p className="text-red-500 text-xs mt-1">Please try refreshing the page</p>
+      </div>
+    );
+  }
+
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -52,8 +65,9 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
-    if (!postId) {
-      console.error("Cannot submit comment: Missing postId");
+    // Double check postId before submission
+    if (!postId || typeof postId !== 'string' || postId.trim() === '') {
+      console.error("Cannot submit comment: Invalid postId", postId);
       toast.error("Cannot identify post for this comment");
       return;
     }
@@ -115,15 +129,6 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       setIsSubmitting(false);
     }
   };
-
-  if (!postId) {
-    return (
-      <div className="p-4 text-center">
-        <p className="text-red-500 text-sm">Error: Cannot identify post</p>
-        <p className="text-red-500 text-xs mt-1">Please try refreshing the page</p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmitComment} className="p-4">

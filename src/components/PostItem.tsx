@@ -30,13 +30,20 @@ const PostItem = ({ post }: PostItemProps) => {
   const [showComments, setShowComments] = useState(false);
   const queryClient = useQueryClient();
 
-  // Ensure post.id is available
-  const postId = post?.id || null;
+  // Ensure post ID is properly typed and available
+  // The key change here is to ensure postId is a string and never null
+  const postId = post?.id ? String(post.id) : "";
 
   useEffect(() => {
-    console.log("PostItem rendering with postId:", postId);
     setIsLoading(false);
-  }, [postId]);
+  }, []);
+
+  // Log the post ID when attempting to load comments
+  useEffect(() => {
+    if (showComments) {
+      console.log("Showing comments for post:", postId);
+    }
+  }, [showComments, postId]);
 
   // Fetch comment count
   const { data: commentsCount = 0 } = useQuery({
@@ -204,10 +211,16 @@ const PostItem = ({ post }: PostItemProps) => {
       {/* Comments Section */}
       {showComments && (
         <div className="border-t border-gaming-400/20">
-          <CommentList 
-            postId={postId} 
-            onBack={() => setShowComments(false)} 
-          />
+          {postId ? (
+            <CommentList 
+              postId={postId} 
+              onBack={() => setShowComments(false)} 
+            />
+          ) : (
+            <div className="p-4 text-center text-red-500">
+              Error: Cannot identify post
+            </div>
+          )}
         </div>
       )}
     </article>

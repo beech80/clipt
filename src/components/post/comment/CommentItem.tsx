@@ -43,6 +43,12 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId }) => 
   const avatarUrl = comment.profiles?.avatar_url;
   const formattedDate = formatDistanceToNow(new Date(comment.created_at), { addSuffix: true });
 
+  // Exit early if no valid postId
+  if (!postId || typeof postId !== 'string' || postId.trim() === '') {
+    console.error("Invalid postId in CommentItem for comment:", comment.id);
+    return null;
+  }
+
   return (
     <div className="w-full bg-[#1e2230] rounded-lg p-3 mb-2">
       <div className="flex items-start space-x-2">
