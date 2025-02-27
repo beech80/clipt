@@ -62,57 +62,48 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     setIsSubmitting(true);
     
     try {
-      // Log the request for debugging
-      console.log("Attempting to submit comment with data:", {
-        post_id: postId,
-        user_id: user.id,
-        content: newComment.trim(),
-        parent_id: parentId
-      });
-
-      // Verify the post exists before trying to add a comment
-      const { data: postCheck, error: postCheckError } = await supabase
-        .from('posts')
-        .select('id')
-        .eq('id', postId)
-        .single();
-
-      if (postCheckError) {
-        console.error("Error checking if post exists:", postCheckError);
-        toast.error("The post you're trying to comment on doesn't exist");
-        setIsSubmitting(false);
-        return;
-      }
-
-      console.log("Post exists:", postCheck);
+      // Simplify our approach - first make sure we're logged in properly
+      console.log("Current user ID:", user.id);
       
-      // Make sure we're sending the exact format expected by Supabase
+      // Construct comment data - ensure all required fields are included
       const commentData = {
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
-        parent_id: parentId || null
+        // Only include parent_id if it exists and isn't null/undefined
+        ...(parentId ? { parent_id: parentId } : {})
       };
       
-      console.log("Final comment data being sent to Supabase:", commentData);
+      console.log("Sending comment data:", commentData);
       
+      // Insert the comment with more detailed error handling
       const { data, error } = await supabase
         .from('comments')
         .insert(commentData)
         .select();
 
       if (error) {
-        console.error("Error adding comment:", error);
-        throw error;
+        console.error("Detailed error adding comment:", error);
+        // More specific error feedback to the user
+        if (error.code === '23503') {
+          toast.error("Cannot comment: The post may have been deleted.");
+        } else if (error.code === '42501') {
+          toast.error("Permission denied. You may need to log in again.");
+        } else {
+          toast.error(`Error: ${error.message}`);
+        }
+        return;
       }
 
       console.log("Comment added successfully:", data);
 
       // Play success sound
       if (audioRef.current) {
-        audioRef.current.play().catch(err => {
+        try {
+          await audioRef.current.play();
+        } catch (err) {
           console.warn("Could not play audio notification:", err);
-        });
+        }
       }
 
       // Clear form and notify success
@@ -126,9 +117,9 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       if (onReplyComplete) {
         onReplyComplete();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Comment submission error:", error);
-      toast.error("Error adding comment. Please try again.");
+      toast.error(`Error: ${error?.message || "Unknown error adding comment"}`);
     } finally {
       setIsSubmitting(false);
     }
