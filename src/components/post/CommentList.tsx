@@ -27,23 +27,24 @@ interface CommentListProps {
 }
 
 export const CommentList = ({ postId, onBack }: CommentListProps) => {
-  // Log the postId for debugging
+  // Validate postId on mount
   useEffect(() => {
-    console.log("CommentList received postId:", postId);
+    if (!postId) {
+      console.error("Missing or invalid postId in CommentList:", postId);
+    } else {
+      console.log("CommentList initialized with postId:", postId);
+    }
   }, [postId]);
-  
+
   const { data: comments, isLoading, error } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
-      // Validate postId
       if (!postId) {
-        console.error("Missing postId in CommentList");
         throw new Error('Post ID is required');
       }
 
       console.log("Fetching comments for post:", postId);
 
-      // Fetch all comments for the post
       const { data: allComments, error } = await supabase
         .from('comments')
         .select(`
@@ -89,11 +90,30 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
 
       return rootComments;
     },
-    enabled: !!postId, // Only run query if postId exists
+    enabled: Boolean(postId),
+    retry: 1
   });
 
+  if (!postId) {
+    return (
+      <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
+        <div className="text-center py-6 text-red-500">
+          <p className="text-lg">Error: Cannot identify post</p>
+          <p className="text-sm mt-2">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
-    console.error("Error in comments query:", error);
+    return (
+      <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
+        <div className="text-center py-6 text-red-500">
+          <p className="text-lg">Error loading comments</p>
+          <p className="text-sm mt-2">Please try again later</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -117,11 +137,6 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
             <Loader2 className="h-6 w-6 animate-spin text-[#9b87f5]" />
-          </div>
-        ) : !postId ? (
-          <div className="text-center py-6 text-red-500">
-            <p className="text-lg">Error: Cannot identify post</p>
-            <p className="text-sm mt-2">Please try refreshing the page</p>
           </div>
         ) : comments?.length === 0 ? (
           <div className="text-center py-6">

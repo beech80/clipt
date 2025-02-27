@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { useNavigate } from "react-router-dom";
@@ -30,23 +29,29 @@ const PostItem = ({ post }: PostItemProps) => {
   const [showComments, setShowComments] = useState(false);
   const queryClient = useQueryClient();
 
-  // Ensure post.id is a string and available
-  const postId = typeof post.id === 'string' ? post.id : String(post.id);
+  // Ensure post.id is a valid string
+  const postId = post?.id ? (typeof post.id === 'string' ? post.id : String(post.id)) : null;
 
   // Log the post ID for debugging
   useEffect(() => {
-    console.log("PostItem with ID:", postId);
-  }, [postId]);
+    if (!postId) {
+      console.error("Invalid or missing post ID:", post);
+    } else {
+      console.log("PostItem with ID:", postId);
+    }
+  }, [postId, post]);
 
   const { data: commentsCount = 0 } = useQuery({
     queryKey: ['comments-count', postId],
     queryFn: async () => {
+      if (!postId) return 0;
       const { count } = await supabase
         .from('comments')
         .select('*', { count: 'exact', head: true })
         .eq('post_id', postId);
       return count || 0;
-    }
+    },
+    enabled: !!postId
   });
 
   useEffect(() => {
@@ -59,7 +64,7 @@ const PostItem = ({ post }: PostItemProps) => {
         .from('posts')
         .delete()
         .eq('id', postId)
-        .eq('user_id', user?.id); // Extra safety check
+        .eq('user_id', user?.id);
 
       if (error) throw error;
       
@@ -84,6 +89,10 @@ const PostItem = ({ post }: PostItemProps) => {
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
+
+  if (!postId) {
+    return <div>Error: Invalid post data</div>;
+  }
 
   return (
     <article className={`relative w-full gaming-card transition-opacity duration-300 ${
@@ -188,7 +197,7 @@ const PostItem = ({ post }: PostItemProps) => {
       )}
 
       {/* Comments Section */}
-      {showComments && (
+      {showComments && postId && (
         <div className="border-t border-gaming-400/20">
           <CommentList 
             postId={postId} 
