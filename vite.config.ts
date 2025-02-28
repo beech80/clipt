@@ -1,6 +1,6 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { VitePWA } from 'vite-plugin-pwa';
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
@@ -12,8 +12,57 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === 'development' && componentTagger(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'logo192.png', 'logo512.png', 'offline.html'],
+      manifest: {
+        name: 'Clip - Social Gaming Platform',
+        short_name: 'Clip',
+        description: 'Share your gaming moments',
+        theme_color: '#1A1F2C',
+        background_color: '#1A1F2C',
+        display: 'standalone',
+        orientation: 'portrait',
+        icons: [
+          {
+            src: 'favicon.ico',
+            sizes: '64x64',
+            type: 'image/x-icon'
+          },
+          {
+            src: 'logo192.png',
+            type: 'image/png',
+            sizes: '192x192',
+            purpose: 'any maskable'
+          },
+          {
+            src: 'logo512.png',
+            type: 'image/png',
+            sizes: '512x512'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,json}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/slnjliheyiiummxhrgmk\.supabase\.co\/rest\/v1\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 1 week
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+      }
+    }),
   ].filter(Boolean),
   resolve: {
     alias: {
