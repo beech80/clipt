@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Loader2, X } from "lucide-react";
+import { Loader2, RefreshCw, X } from "lucide-react";
 import { CommentItem } from "./comment/CommentItem";
 import { CommentForm } from "./comment/CommentForm";
 import { useEffect } from "react";
@@ -29,16 +29,29 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
   // Add logging to see the postId value
   useEffect(() => {
     console.log(`CommentList component mounted with postId: ${postId}`);
+    
+    // Additional check to see the exact type and value
+    console.log('PostId type:', typeof postId);
+    console.log('PostId value:', postId);
   }, [postId]);
 
-  // Exit early if no postId is provided
-  if (!postId || typeof postId !== 'string' || postId.trim() === '') {
-    console.error("Invalid or empty postId received by CommentList:", postId);
+  // Exit early if no postId is provided or if it's invalid
+  if (!postId) {
+    console.error("Empty postId received by CommentList");
     return (
       <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
         <div className="text-center py-6">
           <p className="text-red-500 text-lg">Error: Cannot identify post</p>
           <p className="text-red-500 text-sm mt-2">Please try refreshing the page</p>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh Page
+          </Button>
         </div>
       </div>
     );
@@ -78,55 +91,69 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         const typedComments = data as unknown as (Omit<Comment, 'replies'>)[];
         const commentMap = new Map<string, Comment>();
         const rootComments: Comment[] = [];
-
-        typedComments.forEach((comment) => {
-          const commentWithReplies = { ...comment, replies: [] } as Comment;
-          commentMap.set(comment.id, commentWithReplies);
+        
+        // First pass: create all comment objects with empty replies array
+        typedComments.forEach(comment => {
+          commentMap.set(comment.id, { ...comment, replies: [] });
         });
-
-        // Build hierarchy after all comments are in the map
-        typedComments.forEach((comment) => {
+        
+        // Second pass: populate replies and build root comments list
+        typedComments.forEach(comment => {
+          const fullComment = commentMap.get(comment.id)!;
+          
           if (comment.parent_id && commentMap.has(comment.parent_id)) {
-            const parent = commentMap.get(comment.parent_id);
-            if (parent) {
-              parent.replies.push(commentMap.get(comment.id)!);
-            } else {
-              rootComments.push(commentMap.get(comment.id)!);
-            }
+            // This is a reply, add it to parent's replies
+            const parentComment = commentMap.get(comment.parent_id)!;
+            parentComment.replies.push(fullComment);
           } else {
-            rootComments.push(commentMap.get(comment.id)!);
+            // This is a root comment
+            rootComments.push(fullComment);
           }
         });
-
+        
+        // Sort root comments by creation date (newest first)
+        rootComments.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        
         return rootComments;
-      } catch (error) {
-        console.error("Error processing comments:", error);
-        throw error;
+      } catch (err) {
+        console.error("Error in comments query function:", err);
+        throw err;
       }
     },
-    staleTime: 1000 * 30, // 30 seconds
-    refetchOnWindowFocus: true,
-    retry: 2
+    retry: 2, // Retry failed queries up to 2 times
+    refetchOnWindowFocus: false,
   });
 
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="bg-[#1A1F2C] min-h-[400px] flex items-center justify-center">
+        <div className="text-center py-6">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-sm text-gray-400">Loading comments...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
   if (error) {
-    console.error("Error in comment query:", error);
+    console.error("Error displaying comments:", error);
     return (
       <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
         <div className="text-center py-6">
           <p className="text-red-500 text-lg">Error loading comments</p>
-          <p className="text-red-500 text-sm mt-2">{error.message || "Please try again later"}</p>
-        </div>
-        {/* Refresh button, retry on error */}
-        <div className="w-full flex justify-center mt-4">
+          <p className="text-sm text-gray-400 mt-2">{(error as Error).message || 'An unknown error occurred'}</p>
           <Button 
             variant="outline" 
-            size="sm" 
+            size="sm"
+            className="mt-4"
             onClick={() => refetch()}
-            className="text-sm flex items-center gap-2"
           >
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Error loading comments - Click to retry
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try Again
           </Button>
         </div>
       </div>
@@ -135,49 +162,28 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
 
   return (
     <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-[#252B3B] border-b border-[#9b87f5]/20">
-        <h3 className="text-xl font-semibold text-white">Comments</h3>
-        {onBack && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={onBack}
-            className="text-gray-400 hover:text-white"
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        )}
+      <div className="sticky top-0 z-10 bg-[#1A1F2C] py-4 px-4 border-b border-[#2A2F3C] flex items-center">
+        <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
+          <X className="h-4 w-4" />
+        </Button>
+        <h2 className="text-lg font-semibold">Comments</h2>
       </div>
-      
-      <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="h-6 w-6 animate-spin text-[#9b87f5]" />
-          </div>
-        ) : !comments || comments.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-gray-400 text-sm">No comments yet</p>
-            <p className="text-gray-500 text-xs">Start the conversation</p>
-          </div>
+
+      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+        {comments && comments.length > 0 ? (
+          comments.map((comment) => (
+            <CommentItem key={comment.id} comment={comment} onReplyAdded={refetch} />
+          ))
         ) : (
-          <div className="space-y-3 p-4">
-            {comments.map((comment) => (
-              <CommentItem 
-                key={comment.id} 
-                comment={comment}
-                postId={postId}
-              />
-            ))}
+          <div className="py-8 text-center">
+            <p className="text-gray-500">No comments yet. Be the first to comment!</p>
           </div>
         )}
       </div>
 
-      <div className="border-t border-[#9b87f5]/20 mt-auto">
-        <CommentForm postId={postId} />
+      <div className="sticky bottom-0 border-t border-[#2A2F3C] bg-[#1A1F2C] p-4">
+        <CommentForm postId={postId} onCommentAdded={refetch} />
       </div>
     </div>
   );
 };
-
-export default CommentList;
