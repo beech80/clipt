@@ -8,21 +8,22 @@ set VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 echo === Starting Clipt deployment process ===
 
-REM Step 1: Install dependencies
-echo Installing dependencies...
-call npm ci
-if %ERRORLEVEL% neq 0 (
-  echo Failed to install dependencies
-  exit /b 1
-)
-echo Dependencies installed successfully
-
-REM Step 2: Build the app
+REM Step 1: Build the app (skip dependency install to avoid permission issues)
 echo Building application...
 call npm run build
 if %ERRORLEVEL% neq 0 (
-  echo Build failed
-  exit /b 1
+  echo Build failed. Trying to install dependencies first...
+  call npm install --force
+  if %ERRORLEVEL% neq 0 (
+    echo Failed to install dependencies
+    exit /b 1
+  )
+  
+  call npm run build
+  if %ERRORLEVEL% neq 0 (
+    echo Build failed again
+    exit /b 1
+  )
 )
 echo Application built successfully
 
