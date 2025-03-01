@@ -130,7 +130,7 @@ export const getReplies = async (commentId: string): Promise<CommentResponse> =>
 
 export const likeComment = async (commentId: string, userId: string): Promise<CommentResponse> => {
   try {
-    // First check if the like already exists
+    // First check if the user has already liked this comment
     const { data: existingLike, error: checkError } = await supabase
       .from('comment_likes')
       .select('id')
@@ -138,36 +138,46 @@ export const likeComment = async (commentId: string, userId: string): Promise<Co
       .eq('user_id', userId)
       .single();
 
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is the "not found" error
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      console.error("Error checking existing like:", checkError);
       throw checkError;
     }
 
-    // If like exists, remove it (unlike)
     if (existingLike) {
-      const { error: unlikeError } = await supabase
+      // User already liked this comment, so unlike it
+      console.log("Removing existing like");
+      const { error: deleteError } = await supabase
         .from('comment_likes')
         .delete()
         .eq('id', existingLike.id);
 
-      if (unlikeError) throw unlikeError;
+      if (deleteError) {
+        console.error("Error removing like:", deleteError);
+        throw deleteError;
+      }
 
-      return { data: { action: 'unliked' }, error: null };
+      return { data: { liked: false }, error: null };
+    } else {
+      // Add new like
+      console.log("Adding new like");
+      const { data: newLike, error: insertError } = await supabase
+        .from('comment_likes')
+        .insert({
+          comment_id: commentId,
+          user_id: userId
+        })
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error("Error adding like:", insertError);
+        throw insertError;
+      }
+
+      return { data: { liked: true }, error: null };
     }
-
-    // If like doesn't exist, add it
-    const { data: newLike, error: likeError } = await supabase
-      .from('comment_likes')
-      .insert({
-        comment_id: commentId,
-        user_id: userId
-      })
-      .select();
-
-    if (likeError) throw likeError;
-
-    return { data: { action: 'liked', like: newLike }, error: null };
   } catch (error) {
-    console.error("Error in likeComment:", error);
+    console.error("Error liking/unliking comment:", error);
     return { data: null, error: error as Error };
   }
 };

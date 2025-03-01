@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -45,64 +44,69 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
     );
   }
 
-  const { data: comments, isLoading, error } = useQuery({
+  const { data: comments, isLoading, error, refetch } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
       console.log(`Fetching comments for post: ${postId}`);
       
-      const { data, error } = await supabase
-        .from('comments')
-        .select(`
-          id,
-          content,
-          created_at,
-          parent_id,
-          likes_count,
-          user_id,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('post_id', postId)
-        .order('created_at', { ascending: false });
+      try {
+        const { data, error } = await supabase
+          .from('comments')
+          .select(`
+            id,
+            content,
+            created_at,
+            parent_id,
+            likes_count,
+            user_id,
+            profiles:user_id (
+              username,
+              avatar_url
+            )
+          `)
+          .eq('post_id', postId)
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Error fetching comments:", error);
-        throw error;
-      }
+        if (error) {
+          console.error("Error fetching comments:", error);
+          throw error;
+        }
 
-      console.log(`Retrieved ${data?.length || 0} comments for post ${postId}`);
+        console.log(`Retrieved ${data?.length || 0} comments for post ${postId}`);
 
-      // Process comments into a tree structure
-      const typedComments = data as unknown as (Omit<Comment, 'replies'>)[];
-      const commentMap = new Map<string, Comment>();
-      const rootComments: Comment[] = [];
+        // Process comments into a tree structure
+        const typedComments = data as unknown as (Omit<Comment, 'replies'>)[];
+        const commentMap = new Map<string, Comment>();
+        const rootComments: Comment[] = [];
 
-      typedComments.forEach((comment) => {
-        const commentWithReplies = { ...comment, replies: [] } as Comment;
-        commentMap.set(comment.id, commentWithReplies);
-      });
+        typedComments.forEach((comment) => {
+          const commentWithReplies = { ...comment, replies: [] } as Comment;
+          commentMap.set(comment.id, commentWithReplies);
+        });
 
-      // Build hierarchy after all comments are in the map
-      typedComments.forEach((comment) => {
-        if (comment.parent_id && commentMap.has(comment.parent_id)) {
-          const parent = commentMap.get(comment.parent_id);
-          if (parent) {
-            parent.replies.push(commentMap.get(comment.id)!);
+        // Build hierarchy after all comments are in the map
+        typedComments.forEach((comment) => {
+          if (comment.parent_id && commentMap.has(comment.parent_id)) {
+            const parent = commentMap.get(comment.parent_id);
+            if (parent) {
+              parent.replies.push(commentMap.get(comment.id)!);
+            } else {
+              rootComments.push(commentMap.get(comment.id)!);
+            }
           } else {
             rootComments.push(commentMap.get(comment.id)!);
           }
-        } else {
-          rootComments.push(commentMap.get(comment.id)!);
-        }
-      });
+        });
 
-      return rootComments;
+        return rootComments;
+      } catch (error) {
+        console.error("Error processing comments:", error);
+        throw error;
+      }
     },
-    enabled: !!postId,
-    retry: 2,
-    retryDelay: 1000
+    staleTime: 1000 * 30, // 30 seconds
+    refetchOnWindowFocus: true,
+    retry: 2
   });
 
   if (error) {
@@ -112,6 +116,18 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
         <div className="text-center py-6">
           <p className="text-red-500 text-lg">Error loading comments</p>
           <p className="text-red-500 text-sm mt-2">{error.message || "Please try again later"}</p>
+        </div>
+        {/* Refresh button, retry on error */}
+        <div className="w-full flex justify-center mt-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetch()}
+            className="text-sm flex items-center gap-2"
+          >
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Error loading comments - Click to retry
+          </Button>
         </div>
       </div>
     );

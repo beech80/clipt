@@ -274,20 +274,41 @@ export const updateStream = async (streamId: string, updates: Partial<Stream>): 
  */
 export const regenerateStreamKey = async (streamId: string): Promise<StreamResponse> => {
   try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      throw new Error('You must be logged in to regenerate a stream key');
+    }
+
+    // First, directly call the RPC function
     const { data: newKey, error: rpcError } = await supabase.rpc('generate_stream_key');
     
-    if (rpcError) throw rpcError;
+    if (rpcError) {
+      console.error("Error calling RPC function:", rpcError);
+      throw rpcError;
+    }
     
+    if (!newKey) {
+      throw new Error('Failed to generate new stream key');
+    }
+    
+    console.log("Successfully generated new key:", newKey);
+    
+    // Then update the stream with the new key
     const { data, error } = await supabase
       .from('streams')
       .update({ stream_key: newKey })
       .eq('id', streamId)
-      .select('stream_key')
+      .eq('user_id', userData.user.id) // Ensure user only updates own stream
+      .select('id, stream_key')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error updating stream with new key:", error);
+      throw error;
+    }
 
-    return { data: { ...data, new_key: newKey }, error: null };
+    return { data: { stream_key: newKey }, error: null };
   } catch (error) {
     console.error("Error regenerating stream key:", error);
     return { data: null, error: error as Error };
