@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { BroadcastPresetForm } from "@/components/broadcasting/BroadcastPresetForm";
 import { Card } from "@/components/ui/card";
@@ -8,140 +7,57 @@ import GameBoyControls from "@/components/GameBoyControls";
 import { OBSSetupGuide } from "@/components/streaming/setup/OBSSetupGuide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, Copy, Radio, StopCircle, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, Copy, Radio, StopCircle, RefreshCw, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { StreamPlayer } from "@/components/streaming/StreamPlayer";
+import { StreamKeyManager } from "@/components/streaming/broadcast/StreamKeyManager";
+import { getUserStream, startStream, endStream } from "@/services/streamService";
 import type { Stream } from "@/types/stream";
-
-interface StreamKey {
-  stream_key: string;
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Broadcasting = () => {
   const { user } = useAuth();
-  const [showToken, setShowToken] = useState(false);
-  const [showStreamKey, setShowStreamKey] = useState(false);
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("stream-key");
 
-  // Query for stream key
-  const { data: streamKey, isLoading: isLoadingStreamKey } = useQuery<StreamKey | null>({
-    queryKey: ['streamKey', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      
-      console.log('Fetching stream key...');
-      const { data, error } = await supabase
-        .from('stream_keys')
-        .select('stream_key')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error loading stream key:', error);
-        return null;
-      }
-
-      return data;
-    },
-    enabled: !!user?.id
-  });
-
-  // Generate new stream key mutation
-  const generateStreamKey = useMutation({
-    mutationFn: async () => {
-      if (!user?.id) throw new Error('User not authenticated');
-      
-      console.log('Generating new stream key...');
-      const { data, error } = await supabase
-        .rpc('generate_stream_key', {
-          user_id_param: user.id
-        });
-      
-      if (error) {
-        console.error('Error generating stream key:', error);
-        throw error;
-      }
-      
-      return data;
-    },
-    onError: (error) => {
-      console.error('Failed to generate stream key:', error);
-      toast.error('Failed to generate stream key. Please try again.');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['streamKey'] });
-      toast.success('Stream key generated successfully!');
-    }
-  });
-
-  // Query for stream data
-  const { data: stream, isLoading } = useQuery<Stream | null>({
+  // Query for stream data using our new streamService
+  const { data: streamData, isLoading, refetch } = useQuery({
     queryKey: ['stream', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      
       console.log('Fetching stream data...');
-      const { data, error } = await supabase
-        .from('streams')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error loading stream:', error);
-        throw error;
-      }
-
+      const { data, error } = await getUserStream();
+      if (error) throw error;
       return data;
     },
     enabled: !!user?.id
   });
 
-  // Create stream mutation using OAuth
-  const createStreamMutation = useMutation({
+  // Start stream mutation
+  const startStreamMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.id) throw new Error('User not authenticated');
-      
-      console.log('Initializing stream with OAuth...');
-      const { data, error } = await supabase.functions.invoke('oauth', {
-        body: { 
-          action: 'initialize_stream',
-          userId: user.id
-        }
-      });
-      
-      if (error) {
-        console.error('Error initializing stream:', error);
-        throw error;
-      }
-      
+      if (!streamData?.id) throw new Error('Stream not found');
+      const { data, error } = await startStream(streamData.id);
+      if (error) throw error;
       return data;
     },
     onError: (error) => {
-      console.error('Failed to initialize stream:', error);
-      toast.error('Failed to initialize stream. Please try again.');
+      console.error('Failed to start stream:', error);
+      toast.error('Failed to start stream. Please try again.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stream'] });
-      toast.success('Stream initialized! You can now start streaming.');
+      toast.success('Stream started! You can now broadcast through OBS.');
     }
   });
 
   // End stream mutation
   const endStreamMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.id) throw new Error('User not authenticated');
-      
-      console.log('Ending stream via OAuth...');
-      const { data, error } = await supabase.functions.invoke('oauth', {
-        body: { 
-          action: 'end_stream',
-          userId: user.id
-        }
-      });
-      
+      if (!streamData?.id) throw new Error('Stream not found');
+      const { data, error } = await endStream(streamData.id);
       if (error) throw error;
       return data;
     },
@@ -154,13 +70,6 @@ const Broadcasting = () => {
       toast.success('Stream ended successfully');
     }
   });
-
-  const copyToClipboard = (text: string | null, label: string) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text)
-      .then(() => toast.success(`${label} copied to clipboard`))
-      .catch(() => toast.error(`Failed to copy ${label}`));
-  };
 
   if (!user) {
     return (
@@ -179,7 +88,10 @@ const Broadcasting = () => {
     return (
       <div className="container mx-auto p-4">
         <Card className="p-8 text-center">
-          <h2 className="text-2xl font-bold mb-4">Loading...</h2>
+          <div className="flex justify-center">
+            <div className="animate-spin h-8 w-8 rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+          <h2 className="text-xl font-bold mt-4">Loading your broadcasting studio...</h2>
         </Card>
       </div>
     );
@@ -187,164 +99,107 @@ const Broadcasting = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-6 pb-40">
-      <div className="flex items-center gap-4">
-        <BackButton />
-        <h1 className="text-2xl font-bold">Broadcasting Studio</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <BackButton />
+          <h1 className="text-2xl font-bold">Broadcasting Studio</h1>
+        </div>
+        {streamData?.is_live && (
+          <div className="flex items-center">
+            <div className="bg-red-500 animate-pulse h-3 w-3 rounded-full mr-2"></div>
+            <span className="text-sm font-medium">LIVE</span>
+            <span className="mx-2 text-muted-foreground">•</span>
+            <span className="text-sm text-muted-foreground">{streamData.viewer_count || 0} viewers</span>
+          </div>
+        )}
       </div>
 
-      {stream && (
+      {streamData && streamData.is_live && (
         <StreamPlayer
-          streamId={stream.id}
-          title={stream.title || ''}
-          isLive={stream.is_live}
-          viewerCount={stream.viewer_count}
-          playbackUrl={stream.playback_url}
+          streamId={streamData.id}
+          title={streamData.title || ''}
+          isLive={streamData.is_live}
+          viewerCount={streamData.viewer_count || 0}
+          playbackUrl={streamData.playback_url}
         />
       )}
 
-      {/* Stream Control */}
-      <Card className="p-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Stream Control</h3>
-            <div className="flex gap-2">
-              {!stream ? (
-                <Button
-                  onClick={() => createStreamMutation.mutate()}
-                  disabled={createStreamMutation.isPending}
-                >
-                  <Radio className="h-4 w-4 mr-2" />
-                  Initialize Stream
-                </Button>
-              ) : (
-                <Button
-                  variant="destructive"
-                  onClick={() => endStreamMutation.mutate()}
-                  disabled={endStreamMutation.isPending}
-                >
-                  <StopCircle className="h-4 w-4 mr-2" />
-                  End Stream
-                </Button>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {/* Stream Key Section */}
-            <div>
-              <h4 className="text-sm font-medium mb-2">Stream Key</h4>
-              <div className="flex gap-2">
-                <Input
-                  type={showStreamKey ? 'text' : 'password'}
-                  value={streamKey?.stream_key || ''}
-                  readOnly
-                  className="font-mono"
-                  placeholder={isLoadingStreamKey ? 'Loading...' : 'No stream key generated'}
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowStreamKey(!showStreamKey)}
-                >
-                  {showStreamKey ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => copyToClipboard(streamKey?.stream_key || null, 'Stream key')}
-                  disabled={!streamKey?.stream_key}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => generateStreamKey.mutate()}
-                  disabled={generateStreamKey.isPending}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${generateStreamKey.isPending ? 'animate-spin' : ''}`} />
-                  Generate New Key
-                </Button>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full justify-start mb-6">
+          <TabsTrigger value="stream-key">Stream Settings</TabsTrigger>
+          <TabsTrigger value="obs-setup">OBS Setup Guide</TabsTrigger>
+          <TabsTrigger value="presets">Stream Presets</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="stream-key" className="space-y-6">
+          {/* Stream Control Card */}
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold">Stream Control</h3>
+                <p className="text-sm text-muted-foreground">Start or end your live broadcast</p>
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Keep your stream key private. Generate a new one if it gets exposed.
-              </p>
+              
+              <div className="flex gap-2">
+                {!streamData?.is_live ? (
+                  <Button
+                    onClick={() => startStreamMutation.mutate()}
+                    disabled={startStreamMutation.isPending}
+                    className="gap-2"
+                  >
+                    {startStreamMutation.isPending ? (
+                      <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></span>
+                    ) : (
+                      <Radio className="h-4 w-4" />
+                    )}
+                    Go Live
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    onClick={() => endStreamMutation.mutate()}
+                    disabled={endStreamMutation.isPending}
+                    className="gap-2"
+                  >
+                    {endStreamMutation.isPending ? (
+                      <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></span>
+                    ) : (
+                      <StopCircle className="h-4 w-4" />
+                    )}
+                    End Stream
+                  </Button>
+                )}
+                
+                {streamData?.is_live && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open(`/live/${streamData.stream_path || streamData.id}`, '_blank')}
+                    className="gap-2"
+                  >
+                    <ArrowUpRight className="h-4 w-4" />
+                    View Stream
+                  </Button>
+                )}
+              </div>
             </div>
-
-            {/* Existing Stream URL and Access Token sections */}
-            {stream?.streaming_url && (
-              <>
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Access Token</h4>
-                  <div className="flex gap-2">
-                    <Input
-                      type={showToken ? 'text' : 'password'}
-                      value={new URL(stream.streaming_url).searchParams.get('access_token') || ''}
-                      readOnly
-                      className="font-mono"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowToken(!showToken)}
-                    >
-                      {showToken ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(
-                        new URL(stream.streaming_url).searchParams.get('access_token'),
-                        'Access token'
-                      )}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Stream URL</h4>
-                  <div className="flex gap-2">
-                    <Input
-                      value={stream.streaming_url}
-                      readOnly
-                      className="font-mono"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(stream.streaming_url, 'Stream URL')}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Use this URL in your streaming software (OBS, Streamlabs, etc.)
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-
-          <p className="text-sm text-muted-foreground">
-            Keep your stream key and access token private. If compromised, generate new ones immediately.
-          </p>
-        </div>
-      </Card>
-
-      <OBSSetupGuide />
-      
-      {user?.id && <BroadcastPresetForm userId={user.id} />}
-      
-      <GameBoyControls />
+            
+            {/* Stream Key Manager */}
+            {streamData && <StreamKeyManager streamId={streamData.id} />}
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="obs-setup">
+          <Card className="p-6">
+            <OBSSetupGuide />
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="presets">
+          <Card className="p-6">
+            <BroadcastPresetForm />
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -28,6 +28,12 @@ Run the deployment script by double-clicking `deploy.bat` or from the command li
 deploy.bat
 ```
 
+If you encounter permission issues, try running as Administrator or use this manual process:
+```bash
+npm install --force
+npm run build
+```
+
 #### Linux/Mac
 Make the script executable and run it:
 ```bash
@@ -39,7 +45,7 @@ chmod +x deploy.sh
 
 1. Install dependencies:
 ```bash
-npm ci
+npm install
 ```
 
 2. Build the application:
@@ -101,6 +107,17 @@ supabase gen types typescript --project-id slnjliheyiiummxhrgmk > src/integratio
 ```
 
 ## Troubleshooting
+
+### Permission Issues on Windows
+If you encounter "EPERM: operation not permitted" errors during deployment:
+
+1. Close any running instances of the application or development server
+2. Close code editors that might be locking files
+3. Temporarily disable antivirus or add exceptions for the project folder
+4. Try running the command prompt as Administrator
+5. Use the `--force` flag with npm install: `npm install --force`
+
+### Other Common Issues
 
 - **Build Errors**: Check the error logs and make sure all dependencies are installed
 - **PWA Not Working**: Verify that the service worker is registered correctly

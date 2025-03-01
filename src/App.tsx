@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -8,6 +7,7 @@ import { MessagesProvider } from '@/contexts/MessagesContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { routes } from '@/config/routes';
 import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
+import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -32,8 +32,9 @@ function App() {
         <AuthProvider>
           <MessagesProvider>
             <ReportDialogProvider>
+              <Toaster richColors position="top-center" />
               <AppContent />
-              <Toaster position="top-center" />
+              <PWAInstallPrompt />
             </ReportDialogProvider>
           </MessagesProvider>
         </AuthProvider>
