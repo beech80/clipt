@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import CommentList from "./post/CommentList";
+import { CommentList } from "./post/CommentList"; // Fix the import statement for CommentList
 import { Button } from "./ui/button";
 
 interface PostItemProps {

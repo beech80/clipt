@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Heart, MessageSquare, UserPlus, Trophy, Camera, ArrowLeft } from 'lucide-react';
 import { toast } from "sonner";
@@ -6,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import CommentList from '../post/CommentList';
+import { CommentList } from '../post/CommentList';
 import { useNavigate } from 'react-router-dom';
 
 interface ActionButtonsProps {
