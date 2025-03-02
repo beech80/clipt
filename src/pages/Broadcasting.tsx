@@ -3,7 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BroadcastPresetForm } from "@/components/broadcasting/BroadcastPresetForm";
 import { Card } from "@/components/ui/card";
 import { BackButton } from "@/components/ui/back-button";
-import GameBoyControls from "@/components/GameBoyControls";
 import { OBSSetupGuide } from "@/components/streaming/setup/OBSSetupGuide";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
