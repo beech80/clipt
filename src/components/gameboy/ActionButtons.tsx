@@ -176,48 +176,48 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
         <div className="col-start-2">
           <button 
             className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-red-600 border border-red-600/30
-            shadow-[0_0_15px_rgba(255,0,0,0.3)]
-            hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110"
+            bg-black/90 border border-red-500 
+            shadow-[0_0_12px_rgba(255,0,0,0.5)]
+            hover:shadow-[0_0_18px_rgba(255,0,0,0.7)] transition-all hover:scale-110"
             onClick={handleLike}
           >
-            <Heart className={`w-6 h-6 text-white ${isLiked ? 'fill-white' : ''}`} />
+            <Heart className={`w-6 h-6 text-red-500 ${isLiked ? 'fill-red-500' : ''}`} />
           </button>
         </div>
         
         <div className="col-start-1 row-start-2">
           <button 
             className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-blue-600 border border-blue-600/30
-            shadow-[0_0_15px_rgba(0,120,255,0.3)]
-            hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110"
+            bg-black/90 border border-blue-500
+            shadow-[0_0_12px_rgba(0,120,255,0.5)]
+            hover:shadow-[0_0_18px_rgba(0,120,255,0.7)] transition-all hover:scale-110"
             onClick={() => setIsCommentOpen(true)}
           >
-            <MessageSquare className="w-6 h-6 text-white" />
+            <MessageSquare className="w-6 h-6 text-blue-500" />
           </button>
         </div>
         
         <div className="col-start-3 row-start-2">
           <button 
             className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-green-600 border border-green-600/30
-            shadow-[0_0_15px_rgba(0,255,0,0.3)]
-            hover:shadow-[0_0_20px_rgba(0,255,0,0.4)] transition-all hover:scale-110"
+            bg-black/90 border border-green-500
+            shadow-[0_0_12px_rgba(0,255,0,0.5)]
+            hover:shadow-[0_0_18px_rgba(0,255,0,0.7)] transition-all hover:scale-110"
             onClick={handleFollow}
           >
-            <UserPlus className={`w-6 h-6 text-white ${isFollowing ? 'fill-white' : ''}`} />
+            <UserPlus className={`w-6 h-6 text-green-500 ${isFollowing ? 'fill-green-500' : ''}`} />
           </button>
         </div>
         
         <div className="col-start-2 row-start-3">
           <button 
             className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-yellow-600 border border-yellow-600/30
-            shadow-[0_0_15px_rgba(255,215,0,0.3)]
-            hover:shadow-[0_0_20px_rgba(255,215,0,0.4)] transition-all hover:scale-110"
+            bg-black/90 border border-yellow-500
+            shadow-[0_0_12px_rgba(255,215,0,0.5)]
+            hover:shadow-[0_0_18px_rgba(255,215,0,0.7)] transition-all hover:scale-110"
             onClick={handleRank}
           >
-            <Trophy className="w-6 h-6 text-white" />
+            <Trophy className="w-6 h-6 text-yellow-500" />
           </button>
         </div>
       </div>
@@ -225,13 +225,14 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
       {/* Post button below diamond */}
       <div className="flex justify-center mt-4">
         <button 
-          className="action-button w-14 h-14 rounded-full flex items-center justify-center
-          bg-purple-600 border border-purple-600/30
-          shadow-[0_0_15px_rgba(128,0,128,0.3)]
-          hover:shadow-[0_0_20px_rgba(128,0,128,0.4)] transition-all hover:scale-110"
+          className="action-button w-14 h-14 rounded-full flex flex-col items-center justify-center
+          bg-black/90 border border-purple-500
+          shadow-[0_0_12px_rgba(160,32,240,0.5)]
+          hover:shadow-[0_0_18px_rgba(160,32,240,0.7)] transition-all hover:scale-110"
           onClick={handlePost}
         >
-          <div className="text-white text-xs font-bold">POST</div>
+          <Camera className="w-6 h-6 text-purple-500 mb-0.5" />
+          <div className="text-purple-500 text-xs font-bold">POST</div>
         </button>
       </div>
 
