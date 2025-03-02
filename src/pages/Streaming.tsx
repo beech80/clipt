@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Copy, Eye, EyeOff, Calendar, Settings2, Play, Clock } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { StreamHeader } from "@/components/streaming/StreamHeader";
 import { StreamChat } from "@/components/streaming/StreamChat";
 import { StreamDashboard } from "@/components/streaming/StreamDashboard";
 
@@ -67,7 +66,7 @@ export default function Streaming() {
 
   return (
     <div className="container py-4 space-y-6">
-      <StreamHeader />
+      <h1 className="text-3xl font-bold">Streaming</h1>
       
       <Tabs defaultValue="live" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-3 mb-6">
