@@ -1,5 +1,5 @@
-import React from 'react';
-import { Menu, Camera, Heart, MessageSquare, User, Trophy } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, Camera, Trophy, Bot, Gamepad, MessageSquare, Users, Video, Home, Crown, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -7,9 +7,9 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import Joystick from './gameboy/Joystick';
+import ActionButtons from './gameboy/ActionButtons';
 import { handleVideoControl } from './gameboy/VideoControls';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -17,239 +17,51 @@ interface GameBoyControlsProps {
 
 const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleLike = async () => {
-    if (!user || !currentPostId) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      // Check if user already liked this post
-      const { data: existingLike } = await supabase
-        .from('likes')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('post_id', currentPostId)
-        .single();
-
-      if (existingLike) {
-        // Unlike
-        await supabase
-          .from('likes')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('post_id', currentPostId);
-        
-        toast.success('Unliked post');
-      } else {
-        // Like
-        await supabase
-          .from('likes')
-          .insert([{ user_id: user.id, post_id: currentPostId }]);
-        
-        toast.success('Liked post!');
-      }
-    } catch (error) {
-      toast.error('Failed to like post. Please try again.');
-    }
-  };
-
-  const handleComment = () => {
-    // Implementation of comment functionality
-    toast('Opening comments');
-  };
-
-  const handleFollow = async () => {
-    if (!user || !currentPostId) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      // Get post creator id
-      const { data: post } = await supabase
-        .from('posts')
-        .select('user_id')
-        .eq('id', currentPostId)
-        .single();
-      
-      if (!post) {
-        toast.error('Post not found');
-        return;
-      }
-
-      // Check if user already follows this creator
-      const { data: existingFollow } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', user.id)
-        .eq('following_id', post.user_id)
-        .single();
-
-      if (existingFollow) {
-        // Unfollow
-        await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', user.id)
-          .eq('following_id', post.user_id);
-        
-        toast.success('Unfollowed user');
-      } else {
-        // Follow
-        await supabase
-          .from('follows')
-          .insert([{ follower_id: user.id, following_id: post.user_id }]);
-        
-        toast.success('Now following user!');
-      }
-    } catch (error) {
-      toast.error('Failed to follow. Please try again.');
-    }
-  };
-
-  const handleRank = async () => {
-    if (!user || !currentPostId) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      // Check if user already ranked this post
-      const { data: existingVote } = await supabase
-        .from('clip_votes')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('post_id', currentPostId)
-        .single();
-
-      if (existingVote) {
-        // Remove rank
-        await supabase
-          .from('clip_votes')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('post_id', currentPostId);
-        
-        toast.success('Rank removed');
-      } else {
-        // Rank
-        await supabase
-          .from('clip_votes')
-          .insert([{ user_id: user.id, post_id: currentPostId }]);
-        
-        toast.success('Clip ranked!');
-      }
-    } catch (error) {
-      toast.error('Failed to rank clip. Please try again.');
+  const handleAction = (action: string) => {
+    switch(action) {
+      case 'like':
+        // Handled in ActionButtons
+        break;
+      case 'comment':
+        // Handled in ActionButtons
+        break;
+      case 'follow':
+        // Handled in ActionButtons
+        break;
+      case 'rank':
+        // Handled in ActionButtons
+        break;
+      default:
+        break;
     }
   };
 
   const navigationItems = [
-    { name: 'Home', path: '/' },
-    { name: 'Discover', path: '/discover' },
-    { name: 'Messages', path: '/messages' },
-    { name: 'Profile', path: '/profile' },
-    { name: 'Streaming', path: '/streaming' },
-    { name: 'Top Clips', path: '/top-clips' },
-    { name: 'Clipts', path: '/clipts' },
-    { name: 'AI Assistant', path: '/ai-assistant' },
-    { name: 'Settings', path: '/settings' },
-    { name: 'Esports', path: '/esports' }
+    { name: 'Home', path: '/', icon: <Home className="w-4 h-4" /> },
+    { name: 'Discover', path: '/discover', icon: <Gamepad className="w-4 h-4" /> },
+    { name: 'Messages', path: '/messages', icon: <MessageSquare className="w-4 h-4" /> },
+    { name: 'Profile', path: '/profile', icon: <Users className="w-4 h-4" /> },
+    { name: 'Streaming', path: '/streaming', icon: <Video className="w-4 h-4" /> },
+    { name: 'Top Clips', path: '/top-clips', icon: <Trophy className="w-4 h-4" /> },
+    { name: 'Clipts', path: '/clipts', icon: <Camera className="w-4 h-4" /> },
+    { name: 'AI Assistant', path: '/ai-assistant', icon: <Bot className="w-4 h-4" /> },
+    { name: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" /> },
+    { name: 'Esports', path: '/esports', icon: <Crown className="w-4 h-4" /> }
   ];
 
   return (
-    <div className="h-[70px] bg-[#171923] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#2d3748]/30 flex items-center justify-between">
-      {/* Joystick on left */}
-      <div className="ml-5 -mt-6">
-        <div className="w-[60px] h-[60px] bg-[#1E1E2A] rounded-full border border-[#2d3748]/50 flex items-center justify-center">
-          <div className="w-[40px] h-[40px] bg-[#141721] rounded-full flex items-center justify-center">
-            <div className="w-3 h-3 bg-[#2d3748]/40 rounded-full"></div>
-          </div>
-        </div>
-      </div>
-      
-      {/* CLIPT button in center with gradient background */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 top-[-20px]">
-        <button 
-          onClick={() => {
-            navigate('/clipts');
-            toast.success('Welcome to Clipts!');
-          }}
-          className="relative w-[50px] h-[50px] active:scale-95 transition-transform"
-          aria-label="Go to Clipts"
-        >
-          <div className="absolute inset-0 rounded-full border-[3px] border-transparent bg-clip-padding" 
-               style={{ background: 'linear-gradient(135deg, #4f9cf9, #a651fb, #f046ff) border-box' }}>
-            <div className="w-full h-full rounded-full bg-[#171923] flex items-center justify-center">
-              <Camera className="w-5 h-5 text-white" />
-            </div>
-          </div>
-          <div className="absolute bottom-[-14px] text-center w-full">
-            <span className="text-[10px] text-white font-bold tracking-wider">CLIPT</span>
-          </div>
-        </button>
-      </div>
-      
-      {/* Action buttons on right */}
-      <div className="mr-5 -mt-6">
-        {/* Heart button (top) */}
-        <button 
-          onClick={handleLike}
-          className="absolute right-12 top-[-28px] w-[32px] h-[32px] rounded-full bg-transparent flex items-center justify-center"
-          aria-label="Like"
-        >
-          <Heart className="w-[32px] h-[32px] text-[#FF3866]" fill="#FF3866" />
-        </button>
-        
-        {/* Message button (left) */}
-        <button 
-          onClick={handleComment}
-          className="absolute right-28 top-0 w-[32px] h-[32px] rounded-full bg-transparent flex items-center justify-center"
-          aria-label="Comment"
-        >
-          <MessageSquare className="w-[32px] h-[32px] text-[#3D93FC]" fill="#3D93FC" />
-        </button>
-        
-        {/* Follow button (right) */}
-        <button 
-          onClick={handleFollow}
-          className="absolute right-[-4px] top-0 w-[32px] h-[32px] rounded-full bg-transparent flex items-center justify-center"
-          aria-label="Follow"
-        >
-          <User className="w-[32px] h-[32px] text-[#26C870]" fill="#26C870" />
-        </button>
-        
-        {/* Trophy button (bottom) */}
-        <button 
-          onClick={handleRank}
-          className="absolute right-12 top-[28px] w-[32px] h-[32px] rounded-full bg-transparent flex items-center justify-center"
-          aria-label="Rank"
-        >
-          <Trophy className="w-[32px] h-[32px] text-[#FFE55C]" fill="#FFE55C" />
-        </button>
-        
-        {/* POST button */}
-        <button
-          onClick={() => navigate('/post/new')}
-          className="absolute right-8 top-[55px] rounded-full bg-[#9c27b0] px-2 py-0.5 text-[10px] text-white font-bold flex items-center justify-center"
-          aria-label="Post"
-        >
-          <span>POST</span>
-        </button>
-      </div>
-      
-      {/* Menu button at bottom center */}
-      <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
-        <Sheet>
+    <div className="gameboy-container h-[180px] sm:h-[200px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none border-t-2 border-gaming-400">
+      <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="w-8 h-8 rounded-full bg-[#2d3748]/50 flex items-center justify-center">
-              <Menu className="w-4 h-4 text-white" />
+            <button className="rounded-full bg-gaming-400/20 p-2.5 sm:p-3 backdrop-blur-sm border border-gaming-400/30 
+              hover:bg-gaming-400/30 transition-all duration-300 touch-none active:scale-95">
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gaming-400" />
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-[#171923]/95 backdrop-blur-xl border-[#3e4462]/30">
+          <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-gaming-900/95 backdrop-blur-xl border-gaming-400/30">
             <nav className="grid grid-cols-2 gap-2 p-3">
               {navigationItems.map((item) => (
                 <button
@@ -257,17 +69,42 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
                   onClick={() => {
                     navigate(item.path);
                     toast.success(`Navigating to ${item.name}`);
+                    setIsOpen(false);
                   }}
-                  className="flex items-center gap-2 p-3 sm:p-4 rounded-lg bg-[#2d3748]/20 hover:bg-[#2d3748]/30 
-                    active:bg-[#2d3748]/40 transition-all duration-300 text-white/80 
+                  className="flex items-center gap-2 p-3 sm:p-4 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 
+                    active:bg-gaming-400/30 transition-all duration-300 text-gaming-400 
                     font-medium text-sm sm:text-base active:scale-95"
                 >
+                  {item.icon}
                   <span>{item.name}</span>
                 </button>
               ))}
             </nav>
           </SheetContent>
         </Sheet>
+      </div>
+
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
+        <button 
+          onClick={() => {
+            navigate('/clipts');
+            toast.success('Welcome to Clipts!');
+          }}
+          className="clip-button active:scale-95 transition-transform"
+          aria-label="Go to Clipts"
+          style={{ width: '80px', height: '60px' }}
+        >
+          <Camera className="clip-button-icon" />
+          <span className="clip-button-text">Clipt</span>
+        </button>
+      </div>
+
+      <div className="fixed right-4 sm:right-8 bottom-20 sm:bottom-24 w-20 sm:w-24 h-20 sm:h-24">
+        <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
+      </div>
+
+      <div className="fixed left-4 sm:left-8 bottom-16 sm:bottom-20 w-24 sm:w-28 h-24 sm:h-28">
+        <Joystick onDirectionChange={handleVideoControl} />
       </div>
     </div>
   );
