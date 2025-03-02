@@ -53,13 +53,42 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   ];
 
   return (
-    <div className="gameboy-container h-[180px] sm:h-[200px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none border-t-2 border-gaming-400">
-      <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
+    <div className="h-[70px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-gaming-400/30 flex items-center justify-between px-4">
+      {/* Joystick on left */}
+      <div className="flex-none w-16 h-16">
+        <Joystick onDirectionChange={handleVideoControl} />
+      </div>
+      
+      {/* CLIPT button in center with gradient background */}
+      <div className="flex-none">
+        <button 
+          onClick={() => {
+            navigate('/clipts');
+            toast.success('Welcome to Clipts!');
+          }}
+          className="relative flex items-center justify-center w-16 h-16 active:scale-95 transition-transform"
+          aria-label="Go to Clipts"
+        >
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 opacity-80"></div>
+          <div className="relative flex flex-col items-center justify-center text-white">
+            <Camera className="w-5 h-5 mb-0.5" />
+            <span className="text-xs font-bold">CLIPT</span>
+          </div>
+        </button>
+      </div>
+      
+      {/* Action buttons on right */}
+      <div className="flex-none w-20 h-20">
+        <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
+      </div>
+      
+      {/* Menu button at bottom center */}
+      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
         <Sheet>
           <SheetTrigger asChild>
-            <button className="rounded-full bg-gaming-400/20 p-2.5 sm:p-3 backdrop-blur-sm border border-gaming-400/30 
+            <button className="rounded-full bg-gaming-400/20 p-2 backdrop-blur-sm border border-gaming-400/30 
               hover:bg-gaming-400/30 transition-all duration-300 touch-none active:scale-95">
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gaming-400" />
+              <Menu className="w-5 h-5 text-gaming-400" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-gaming-900/95 backdrop-blur-xl border-gaming-400/30">
@@ -82,29 +111,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
             </nav>
           </SheetContent>
         </Sheet>
-      </div>
-
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
-        <button 
-          onClick={() => {
-            navigate('/clipts');
-            toast.success('Welcome to Clipts!');
-          }}
-          className="clip-button active:scale-95 transition-transform"
-          aria-label="Go to Clipts"
-          style={{ width: '80px', height: '60px' }}
-        >
-          <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Clipt</span>
-        </button>
-      </div>
-
-      <div className="fixed right-4 sm:right-8 bottom-16 sm:bottom-20 w-20 sm:w-24 h-20 sm:h-24">
-        <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
-      </div>
-
-      <div className="fixed left-4 sm:left-8 bottom-16 sm:bottom-20 w-24 sm:w-28 h-24 sm:h-28">
-        <Joystick onDirectionChange={handleVideoControl} />
       </div>
     </div>
   );
