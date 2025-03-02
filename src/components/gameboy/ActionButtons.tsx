@@ -1,253 +1,206 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, MessageSquare, UserPlus, Trophy, Camera, ArrowLeft, Share2, Bookmark, Zap, Flag } from 'lucide-react';
-import { toast } from "sonner";
-import { useAuth } from '@/contexts/AuthContext';
+import React from 'react';
+import { Heart, MessageSquare, User, Trophy, Camera } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { CommentList } from '../post/CommentList';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface ActionButtonsProps {
-  onAction: (action: string) => void;
   postId: string;
 }
 
-const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({ postId }) => {
   const { user } = useAuth();
-  const [isCommentOpen, setIsCommentOpen] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const navigate = useNavigate();
-  
-  // Log postId for debugging
-  useEffect(() => {
-    console.log(`ActionButtons component mounted with postId: ${postId}`);
-    console.log('postId type:', typeof postId);
-  }, [postId]);
-
-  // Exit early if no postId
-  if (!postId) {
-    console.error("No postId provided to ActionButtons");
-    return null;
-  }
 
   const handleLike = async () => {
     if (!user) {
-      toast.error("Please login to like posts");
+      navigate('/login');
       return;
     }
 
     try {
-      if (!isLiked) {
-        await supabase
-          .from('likes')
-          .insert([{ post_id: postId, user_id: user.id }]);
-        setIsLiked(true);
-        toast.success("Post liked!");
-      } else {
+      // Check if user already liked this post
+      const { data: existingLike } = await supabase
+        .from('likes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('post_id', postId)
+        .single();
+
+      if (existingLike) {
+        // Unlike
         await supabase
           .from('likes')
           .delete()
-          .match({ post_id: postId, user_id: user.id });
-        setIsLiked(false);
-        toast.success("Post unliked!");
+          .eq('user_id', user.id)
+          .eq('post_id', postId);
+        
+        toast.success('Unliked post');
+      } else {
+        // Like
+        await supabase
+          .from('likes')
+          .insert([{ user_id: user.id, post_id: postId }]);
+        
+        toast.success('Liked post!');
       }
-      onAction('like');
     } catch (error) {
-      toast.error("Error updating like status");
+      toast.error('Failed to like post. Please try again.');
     }
+  };
+
+  const handleComment = () => {
+    // Implementation of comment functionality
+    toast('Opening comments');
   };
 
   const handleFollow = async () => {
     if (!user) {
-      toast.error("Please login to follow users");
+      navigate('/login');
       return;
     }
 
     try {
-      if (!isFollowing) {
-        await supabase
-          .from('follows')
-          .insert([{ follower_id: user.id, following_id: postId }]);
-        setIsFollowing(true);
-        toast.success("Following user!");
-      } else {
+      // Get post creator id
+      const { data: post } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', postId)
+        .single();
+      
+      if (!post) {
+        toast.error('Post not found');
+        return;
+      }
+
+      // Check if user already follows this creator
+      const { data: existingFollow } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('follower_id', user.id)
+        .eq('following_id', post.user_id)
+        .single();
+
+      if (existingFollow) {
+        // Unfollow
         await supabase
           .from('follows')
           .delete()
-          .match({ follower_id: user.id, following_id: postId });
-        setIsFollowing(false);
-        toast.success("Unfollowed user!");
+          .eq('follower_id', user.id)
+          .eq('following_id', post.user_id);
+        
+        toast.success('Unfollowed user');
+      } else {
+        // Follow
+        await supabase
+          .from('follows')
+          .insert([{ follower_id: user.id, following_id: post.user_id }]);
+        
+        toast.success('Now following user!');
       }
-      onAction('follow');
     } catch (error) {
-      toast.error("Error updating follow status");
+      toast.error('Failed to follow. Please try again.');
     }
   };
 
   const handleRank = async () => {
     if (!user) {
-      toast.error("Please login to rank posts");
+      navigate('/login');
       return;
     }
 
     try {
-      await supabase
+      // Check if user already ranked this post
+      const { data: existingVote } = await supabase
         .from('clip_votes')
-        .insert([{ post_id: postId, user_id: user.id }]);
-      toast.success("Clip ranked!");
-      onAction('rank');
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('post_id', postId)
+        .single();
+
+      if (existingVote) {
+        // Remove rank
+        await supabase
+          .from('clip_votes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('post_id', postId);
+        
+        toast.success('Rank removed');
+      } else {
+        // Rank
+        await supabase
+          .from('clip_votes')
+          .insert([{ user_id: user.id, post_id: postId }]);
+        
+        toast.success('Clip ranked!');
+      }
     } catch (error) {
-      toast.error("You've already ranked this clip!");
-    }
-  };
-
-  const handlePost = () => {
-    navigate('/post/create');
-    toast.success("Creating a new post");
-    onAction('post');
-  };
-
-  const handleBookmark = () => {
-    if (!user) {
-      toast.error("Please login to bookmark posts");
-      return;
-    }
-    
-    setIsBookmarked(!isBookmarked);
-    toast.success(isBookmarked ? "Removed from bookmarks" : "Added to bookmarks");
-    onAction('bookmark');
-  };
-
-  const handleShare = () => {
-    const clipUrl = `${window.location.origin}/post/${postId}`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: 'Check out this clip on Clipt',
-        text: 'I found this awesome clip on Clipt!',
-        url: clipUrl,
-      })
-      .then(() => {
-        toast.success('Shared successfully');
-      })
-      .catch((error) => {
-        console.error('Error sharing:', error);
-        copyToClipboard(clipUrl);
-      });
-    } else {
-      copyToClipboard(clipUrl);
-    }
-    
-    onAction('share');
-  };
-  
-  const handleReport = () => {
-    toast.info("Report submitted. Thank you for keeping Clipt safe.");
-    onAction('report');
-  };
-  
-  const handleBoost = () => {
-    if (!user) {
-      toast.error("Please login to boost clips");
-      return;
-    }
-    
-    toast.success("Clip boosted! It will be shown to more users.");
-    onAction('boost');
-  };
-  
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      toast.success("Link copied to clipboard");
-    } catch (err) {
-      console.error("Failed to copy:", err);
-      toast.error("Failed to copy link");
+      toast.error('Failed to rank clip. Please try again.');
     }
   };
 
   return (
-    <div className="relative">
-      {/* Diamond formation buttons */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="col-start-2">
-          <button 
-            className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-black/90 border border-red-500 
-            shadow-[0_0_12px_rgba(255,0,0,0.5)]
-            hover:shadow-[0_0_18px_rgba(255,0,0,0.7)] transition-all hover:scale-110"
-            onClick={handleLike}
-          >
-            <Heart className={`w-6 h-6 text-red-500 ${isLiked ? 'fill-red-500' : ''}`} />
-          </button>
-        </div>
-        
-        <div className="col-start-1 row-start-2">
-          <button 
-            className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-black/90 border border-blue-500
-            shadow-[0_0_12px_rgba(0,120,255,0.5)]
-            hover:shadow-[0_0_18px_rgba(0,120,255,0.7)] transition-all hover:scale-110"
-            onClick={() => setIsCommentOpen(true)}
-          >
-            <MessageSquare className="w-6 h-6 text-blue-500" />
-          </button>
-        </div>
-        
-        <div className="col-start-3 row-start-2">
-          <button 
-            className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-black/90 border border-green-500
-            shadow-[0_0_12px_rgba(0,255,0,0.5)]
-            hover:shadow-[0_0_18px_rgba(0,255,0,0.7)] transition-all hover:scale-110"
-            onClick={handleFollow}
-          >
-            <UserPlus className={`w-6 h-6 text-green-500 ${isFollowing ? 'fill-green-500' : ''}`} />
-          </button>
-        </div>
-        
-        <div className="col-start-2 row-start-3">
-          <button 
-            className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-black/90 border border-yellow-500
-            shadow-[0_0_12px_rgba(255,215,0,0.5)]
-            hover:shadow-[0_0_18px_rgba(255,215,0,0.7)] transition-all hover:scale-110"
-            onClick={handleRank}
-          >
-            <Trophy className="w-6 h-6 text-yellow-500" />
-          </button>
-        </div>
-      </div>
-      
-      {/* Post button below diamond */}
-      <div className="flex justify-center mt-4">
-        <button 
-          className="action-button w-14 h-14 rounded-full flex flex-col items-center justify-center
-          bg-black/90 border border-purple-500
-          shadow-[0_0_12px_rgba(160,32,240,0.5)]
-          hover:shadow-[0_0_18px_rgba(160,32,240,0.7)] transition-all hover:scale-110"
-          onClick={handlePost}
+    <div className="relative w-[70px] h-[70px] flex items-center justify-center">
+      {/* Diamond shaped action buttons */}
+      <div className="relative w-full h-full">
+        {/* Top button - Like (Heart) */}
+        <button
+          onClick={handleLike}
+          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 w-8 h-8 
+            bg-[#ff3a5e] bg-opacity-20 rounded-full flex items-center justify-center
+            shadow-sm hover:bg-opacity-30 active:scale-95 transition-all"
+          aria-label="Like"
         >
-          <Camera className="w-6 h-6 text-purple-500 mb-0.5" />
-          <div className="text-purple-500 text-xs font-bold">POST</div>
+          <Heart className="w-4 h-4 text-[#ff3a5e]" />
+        </button>
+        
+        {/* Left button - Comment */}
+        <button
+          onClick={handleComment}
+          className="absolute top-1/2 left-0 -translate-x-1/4 -translate-y-1/2 w-8 h-8 
+            bg-[#4f9cf9] bg-opacity-20 rounded-full flex items-center justify-center
+            shadow-sm hover:bg-opacity-30 active:scale-95 transition-all"
+          aria-label="Comment"
+        >
+          <MessageSquare className="w-4 h-4 text-[#4f9cf9]" />
+        </button>
+        
+        {/* Right button - Follow */}
+        <button
+          onClick={handleFollow}
+          className="absolute top-1/2 right-0 translate-x-1/4 -translate-y-1/2 w-8 h-8 
+            bg-[#2ecc71] bg-opacity-20 rounded-full flex items-center justify-center
+            shadow-sm hover:bg-opacity-30 active:scale-95 transition-all"
+          aria-label="Follow"
+        >
+          <User className="w-4 h-4 text-[#2ecc71]" />
+        </button>
+        
+        {/* Bottom button - Rank */}
+        <button
+          onClick={handleRank}
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/4 w-8 h-8 
+            bg-[#f1c40f] bg-opacity-20 rounded-full flex items-center justify-center
+            shadow-sm hover:bg-opacity-30 active:scale-95 transition-all"
+          aria-label="Rank"
+        >
+          <Trophy className="w-4 h-4 text-[#f1c40f]" />
+        </button>
+        
+        {/* Center POST button */}
+        <button
+          onClick={() => navigate('/clipts/post')}
+          className="absolute bottom-[calc(100%+15px)] left-1/2 -translate-x-1/2 px-3 py-1.5 
+            bg-[#8047f8] text-white rounded-full text-xs font-medium flex items-center gap-1
+            shadow-sm hover:bg-opacity-90 active:scale-95 transition-all"
+          aria-label="Post"
+        >
+          <Camera className="w-3.5 h-3.5" />
+          <span>POST</span>
         </button>
       </div>
-
-      {/* Comment dialog */}
-      <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
-        <DialogContent className="sm:max-w-md">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Comments</h2>
-            <Button variant="ghost" size="icon" onClick={() => setIsCommentOpen(false)}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </div>
-          <CommentList postId={postId} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

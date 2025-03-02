@@ -1,8 +1,6 @@
-
 import React, { useState } from 'react';
 import { FeaturedCarousel } from "@/components/content/FeaturedCarousel";
 import { TopGames } from "@/components/discover/TopGames";
-import GameBoyControls from "@/components/GameBoyControls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { useQuery } from '@tanstack/react-query';
@@ -160,8 +158,6 @@ const Discover = () => {
           </TabsContent>
         </Tabs>
       </div>
-
-      <GameBoyControls />
     </div>
   );
 };

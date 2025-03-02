@@ -3,7 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { TeamManagement } from "@/components/esports/TeamManagement";
 import { Card } from "@/components/ui/card";
 import { BackButton } from "@/components/ui/back-button";
-import GameBoyControls from "@/components/GameBoyControls";
 
 const Esports = () => {
   const { user } = useAuth();
@@ -29,8 +28,6 @@ const Esports = () => {
       </div>
 
       <TeamManagement />
-      
-      <GameBoyControls />
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import React from "react";
-import GameBoyControls from "@/components/GameBoyControls";
 
 const TopClips = () => {
   return (
@@ -17,8 +16,6 @@ const TopClips = () => {
           {/* Empty state - ready for testing */}
         </div>
       </div>
-
-      <GameBoyControls />
     </div>
   );
 };

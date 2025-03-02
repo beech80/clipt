@@ -1,12 +1,14 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import GameBoyControls from '@/components/GameBoyControls';
-import { useNavigate } from 'react-router-dom';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
+import PostItem from "@/components/PostItem";
+import { cn } from "@/lib/utils";
+import GameCategories from "@/components/GameCategories";
+import { useNavigate } from "react-router-dom";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Camera } from "lucide-react";
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import PostItem from '@/components/PostItem';
 import { Post } from '@/types/post';
 
 const Home = () => {
@@ -92,7 +94,9 @@ const Home = () => {
         </button>
       </div>
 
-      <GameBoyControls />
+      <div className="main-container">
+      </div>
+
     </div>
   );
 };

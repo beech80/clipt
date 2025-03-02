@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FolderPlus } from "lucide-react";
 import { BackButton } from "@/components/ui/back-button";
-import GameBoyControls from '@/components/GameBoyControls';
 
 const Collections = () => {
   const [newCollectionName, setNewCollectionName] = useState("");
@@ -74,8 +73,6 @@ const Collections = () => {
           postCount={0}
         />
       </div>
-      
-      <GameBoyControls />
     </div>
   );
 };

@@ -36,7 +36,7 @@ function App() {
               <Toaster richColors position="top-center" />
               <AppContent />
               <PWAInstallPrompt />
-              <GameBoyControls currentPostId="global" />
+              <GameBoyControls />
             </ReportDialogProvider>
           </MessagesProvider>
         </AuthProvider>

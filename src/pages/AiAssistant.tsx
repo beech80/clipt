@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import GameBoyControls from '@/components/GameBoyControls';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -149,7 +147,14 @@ export default function AiAssistant() {
         </form>
       </div>
 
-      <GameBoyControls />
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="container mx-auto max-w-4xl">
+          <div className="space-y-8">
+            {/* Add your content here */}
+          </div>
+        </div>
+      </div>
+      
     </div>
   );
 }

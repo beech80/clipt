@@ -1,124 +1,118 @@
 import React from 'react';
-import { Menu, Camera, Trophy, Bot, Gamepad, MessageSquare, Users, Video, Home, Crown, Settings } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import Joystick from './gameboy/Joystick';
-import ActionButtons from './gameboy/ActionButtons';
-import { handleVideoControl } from './gameboy/VideoControls';
-import { useSheetState } from '@/hooks/use-sheet-state';
 
-interface GameBoyControlsProps {
-  currentPostId?: string;
-}
-
-const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
+const GameBoyControls: React.FC = () => {
   const navigate = useNavigate();
-  const { setIsOpen } = useSheetState();
-
-  const handleAction = (action: string) => {
-    switch(action) {
-      case 'like':
-        // Handled in ActionButtons
-        break;
-      case 'comment':
-        // Handled in ActionButtons
-        break;
-      case 'follow':
-        // Handled in ActionButtons
-        break;
-      case 'rank':
-        // Handled in ActionButtons
-        break;
-      default:
-        break;
-    }
-  };
-
-  const navigationItems = [
-    { name: 'Home', path: '/', icon: <Home className="w-4 h-4" /> },
-    { name: 'Discover', path: '/discover', icon: <Gamepad className="w-4 h-4" /> },
-    { name: 'Messages', path: '/messages', icon: <MessageSquare className="w-4 h-4" /> },
-    { name: 'Profile', path: '/profile', icon: <Users className="w-4 h-4" /> },
-    { name: 'Streaming', path: '/streaming', icon: <Video className="w-4 h-4" /> },
-    { name: 'Top Clips', path: '/top-clips', icon: <Trophy className="w-4 h-4" /> },
-    { name: 'Clipts', path: '/clipts', icon: <Camera className="w-4 h-4" /> },
-    { name: 'AI Assistant', path: '/ai-assistant', icon: <Bot className="w-4 h-4" /> },
-    { name: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" /> },
-    { name: 'Esports', path: '/esports', icon: <Crown className="w-4 h-4" /> }
-  ];
 
   return (
-    <div className="h-[70px] bg-[#1e2130] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#3e4462]/30 flex items-center justify-between px-5">
-      {/* Joystick on left */}
-      <div className="flex-none w-[70px] h-[70px] flex items-center">
-        <div className="w-[65px] h-[65px] bg-[#30323d]/60 rounded-full flex items-center justify-center">
-          <Joystick onDirectionChange={handleVideoControl} />
+    <div className="h-14 bg-[#1e2130] fixed bottom-0 left-0 right-0 z-50 border-t border-[#3e4462]/30 flex items-center justify-between px-5">
+      {/* Left joystick */}
+      <div className="w-16 h-16 flex items-center justify-center">
+        <div className="w-14 h-14 bg-[#262734] rounded-full border border-[#34363F] flex items-center justify-center">
+          <div className="w-7 h-7 bg-[#1e2130] rounded-full border border-[#34363F]"></div>
         </div>
       </div>
       
-      {/* Empty space for proper spacing */}
-      <div className="flex-1"></div>
-      
-      {/* CLIPT button in center with gradient background */}
-      <div className="flex-none">
-        <button 
-          onClick={() => {
-            navigate('/clipts');
-            toast.success('Welcome to Clipts!');
-          }}
-          className="relative flex items-center justify-center w-[75px] h-[75px] active:scale-95 transition-transform"
-          aria-label="Go to Clipts"
-        >
-          <div className="absolute inset-0 rounded-full border-2 border-transparent bg-clip-padding p-[2px]" 
-               style={{ background: 'linear-gradient(to right, #4f9cf9, #a651fb, #f046ff) border-box' }}>
-            <div className="w-full h-full rounded-full bg-[#1e2130]"></div>
+      {/* CLIPT button in center */}
+      <div className="flex items-center justify-center">
+        <div className="relative w-14 h-14">
+          <div className="absolute inset-0 rounded-full" style={{ 
+            background: 'linear-gradient(135deg, #4f9cf9 0%, #a651fb 50%, #f046ff 100%)',
+            padding: '2px' 
+          }}>
+            <div className="w-full h-full rounded-full bg-[#1e2130] flex items-center justify-center text-white">
+              <div className="flex flex-col items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-1">
+                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+                  <circle cx="12" cy="13" r="3"></circle>
+                </svg>
+                <span className="text-[10px] font-bold">CLIPT</span>
+              </div>
+            </div>
           </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-            <Camera className="w-5 h-5 mb-0.5" />
-            <span className="text-xs font-bold">CLIPT</span>
-          </div>
-        </button>
+        </div>
       </div>
       
-      {/* Empty space for proper spacing */}
-      <div className="flex-1"></div>
-      
-      {/* Action buttons on right */}
-      <div className="flex-none w-[90px] h-[70px] flex items-center justify-center">
-        <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
+      {/* Right buttons */}
+      <div className="w-16 h-16 relative">
+        {/* Heart button (top) */}
+        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+          <div className="w-7 h-7 bg-[#ff3a5e]/20 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff3a5e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+            </svg>
+          </div>
+        </div>
+        
+        {/* Comment button (left) */}
+        <div className="absolute top-1/2 -left-2 transform -translate-y-1/2">
+          <div className="w-7 h-7 bg-[#4f9cf9]/20 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f9cf9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+        </div>
+        
+        {/* Person button (right) */}
+        <div className="absolute top-1/2 -right-2 transform -translate-y-1/2">
+          <div className="w-7 h-7 bg-[#2ecc71]/20 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+        </div>
+        
+        {/* Trophy button (bottom) */}
+        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+          <div className="w-7 h-7 bg-[#f1c40f]/20 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f1c40f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+              <path d="M4 22h16"></path>
+              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+            </svg>
+          </div>
+        </div>
+        
+        {/* POST button */}
+        <div className="absolute -top-8 right-3">
+          <div className="px-2 py-1 bg-[#8047f8] rounded-full flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+              <circle cx="12" cy="13" r="3"></circle>
+            </svg>
+            <span className="text-[10px] text-white font-medium">POST</span>
+          </div>
+        </div>
       </div>
       
       {/* Menu button at bottom center */}
       <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+        <SheetTrigger asChild>
+          <button className="w-7 h-7 rounded-full bg-[#4c4f74]/50 flex items-center justify-center border border-[#5f6384]/30">
+            <Menu className="w-4 h-4 text-[#8c91c0]" />
+          </button>
+        </SheetTrigger>
         <Sheet>
-          <SheetTrigger asChild>
-            <button className="rounded-full bg-[#4c4f74]/50 p-2 backdrop-blur-sm border border-[#5f6384]/30 
-              hover:bg-[#5f6384]/50 transition-all duration-300 touch-none active:scale-95">
-              <Menu className="w-4 h-4 text-[#8c91c0]" />
-            </button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-gaming-900/95 backdrop-blur-xl border-gaming-400/30">
+          <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-[#1e2130]/95 backdrop-blur-xl border-[#3e4462]/30">
             <nav className="grid grid-cols-2 gap-2 p-3">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    toast.success(`Navigating to ${item.name}`);
-                  }}
-                  className="flex items-center gap-2 p-3 sm:p-4 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 
-                    active:bg-gaming-400/30 transition-all duration-300 text-gaming-400 
-                    font-medium text-sm sm:text-base active:scale-95"
-                >
-                  {item.icon}
-                  <span>{item.name}</span>
-                </button>
-              ))}
+              <button onClick={() => navigate('/')} 
+                className="flex items-center gap-2 p-3 rounded-lg bg-[#30323d]/20 hover:bg-[#30323d]/30 text-white/80">
+                Home
+              </button>
+              <button onClick={() => navigate('/discover')} 
+                className="flex items-center gap-2 p-3 rounded-lg bg-[#30323d]/20 hover:bg-[#30323d]/30 text-white/80">
+                Discover
+              </button>
             </nav>
           </SheetContent>
         </Sheet>
