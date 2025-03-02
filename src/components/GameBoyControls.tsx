@@ -163,28 +163,28 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   return (
     <div className="h-[70px] bg-[#171923] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#2d3748]/30 flex items-center justify-between">
       {/* Joystick on left */}
-      <div className="flex-none pl-5">
-        <div className="w-20 h-20 bg-[#2d3748]/20 rounded-full border border-[#2d3748]/30 flex items-center justify-center">
-          <div className="w-16 h-16 bg-[#141721] rounded-full border border-[#2d3748]/20 flex items-center justify-center">
-            <div className="w-4 h-4 bg-[#2d3748]/40 rounded-full"></div>
+      <div className="ml-5 -mt-6">
+        <div className="w-[60px] h-[60px] bg-[#1E1E2A] rounded-full border border-[#2d3748]/50 flex items-center justify-center">
+          <div className="w-[40px] h-[40px] bg-[#141721] rounded-full flex items-center justify-center">
+            <div className="w-3 h-3 bg-[#2d3748]/40 rounded-full"></div>
           </div>
         </div>
       </div>
       
       {/* CLIPT button in center with gradient background */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 top-[-25px]">
+      <div className="absolute left-1/2 transform -translate-x-1/2 top-[-20px]">
         <button 
           onClick={() => {
             navigate('/clipts');
             toast.success('Welcome to Clipts!');
           }}
-          className="relative flex items-center justify-center w-16 h-16 active:scale-95 transition-transform"
+          className="relative w-[50px] h-[50px] active:scale-95 transition-transform"
           aria-label="Go to Clipts"
         >
-          <div className="absolute inset-0 rounded-full border-2 border-transparent bg-clip-padding p-[2px]" 
+          <div className="absolute inset-0 rounded-full border-[3px] border-transparent bg-clip-padding" 
                style={{ background: 'linear-gradient(135deg, #4f9cf9, #a651fb, #f046ff) border-box' }}>
             <div className="w-full h-full rounded-full bg-[#171923] flex items-center justify-center">
-              <Camera className="w-6 h-6 text-white" />
+              <Camera className="w-5 h-5 text-white" />
             </div>
           </div>
           <div className="absolute bottom-[-14px] text-center w-full">
@@ -194,56 +194,59 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       </div>
       
       {/* Action buttons on right */}
-      <div className="flex-none pr-5">
-        <div className="relative w-20 h-20 flex items-center justify-center">
-          {/* Heart button (top) */}
-          <button 
-            onClick={handleLike}
-            className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#922B3E]/20 border border-[#922B3E]/40 flex items-center justify-center"
-          >
-            <Heart className="w-5 h-5 text-[#FF3866]" fill="#FF3866" />
-          </button>
-          
-          {/* Message button (left) */}
-          <button 
-            onClick={handleComment}
-            className="absolute left-[-15px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#1E4976]/20 border border-[#1E4976]/40 flex items-center justify-center"
-          >
-            <MessageSquare className="w-5 h-5 text-[#3D93FC]" fill="#3D93FC" />
-          </button>
-          
-          {/* Follow button (right) */}
-          <button 
-            onClick={handleFollow}
-            className="absolute right-[-15px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#0C6B35]/20 border border-[#0C6B35]/40 flex items-center justify-center"
-          >
-            <User className="w-5 h-5 text-[#26C870]" />
-          </button>
-          
-          {/* Trophy button (bottom) */}
-          <button 
-            onClick={handleRank}
-            className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#9B7D31]/20 border border-[#9B7D31]/40 flex items-center justify-center"
-          >
-            <Trophy className="w-5 h-5 text-[#FFE55C]" fill="#FFE55C" />
-          </button>
-          
-          {/* POST button */}
-          <button
-            onClick={() => navigate('/post/new')}
-            className="absolute -bottom-10 left-1/2 -translate-x-[20%] rounded-full bg-[#9c27b0] px-3 py-1 text-[10px] text-white font-bold"
-          >
-            POST
-          </button>
-        </div>
+      <div className="mr-5 -mt-6">
+        {/* Heart button (top) */}
+        <button 
+          onClick={handleLike}
+          className="absolute right-12 top-[-28px] w-[32px] h-[32px] rounded-full bg-transparent flex items-center justify-center"
+          aria-label="Like"
+        >
+          <Heart className="w-[32px] h-[32px] text-[#FF3866]" fill="#FF3866" />
+        </button>
+        
+        {/* Message button (left) */}
+        <button 
+          onClick={handleComment}
+          className="absolute right-28 top-0 w-[32px] h-[32px] rounded-full bg-transparent flex items-center justify-center"
+          aria-label="Comment"
+        >
+          <MessageSquare className="w-[32px] h-[32px] text-[#3D93FC]" fill="#3D93FC" />
+        </button>
+        
+        {/* Follow button (right) */}
+        <button 
+          onClick={handleFollow}
+          className="absolute right-[-4px] top-0 w-[32px] h-[32px] rounded-full bg-transparent flex items-center justify-center"
+          aria-label="Follow"
+        >
+          <User className="w-[32px] h-[32px] text-[#26C870]" fill="#26C870" />
+        </button>
+        
+        {/* Trophy button (bottom) */}
+        <button 
+          onClick={handleRank}
+          className="absolute right-12 top-[28px] w-[32px] h-[32px] rounded-full bg-transparent flex items-center justify-center"
+          aria-label="Rank"
+        >
+          <Trophy className="w-[32px] h-[32px] text-[#FFE55C]" fill="#FFE55C" />
+        </button>
+        
+        {/* POST button */}
+        <button
+          onClick={() => navigate('/post/new')}
+          className="absolute right-8 top-[55px] rounded-full bg-[#9c27b0] px-2 py-0.5 text-[10px] text-white font-bold flex items-center justify-center"
+          aria-label="Post"
+        >
+          <span>POST</span>
+        </button>
       </div>
       
       {/* Menu button at bottom center */}
       <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
         <Sheet>
           <SheetTrigger asChild>
-            <button className="w-10 h-10 rounded-full bg-[#2d3748]/30 flex items-center justify-center">
-              <Menu className="w-5 h-5 text-white" />
+            <button className="w-8 h-8 rounded-full bg-[#2d3748]/50 flex items-center justify-center">
+              <Menu className="w-4 h-4 text-white" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-[#171923]/95 backdrop-blur-xl border-[#3e4462]/30">
