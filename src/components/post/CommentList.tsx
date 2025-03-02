@@ -27,17 +27,20 @@ interface CommentListProps {
 }
 
 export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps) => {
+  // Ensure postId is always a string
+  const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
+  
   // Add logging to see the postId value
   useEffect(() => {
-    console.log(`CommentList component mounted with postId: ${postId}`);
+    console.log(`CommentList component mounted with postId: ${normalizedPostId}`);
     
     // Additional check to see the exact type and value
-    console.log('PostId type:', typeof postId);
-    console.log('PostId value:', postId);
-  }, [postId]);
+    console.log('PostId type:', typeof normalizedPostId);
+    console.log('PostId value:', normalizedPostId);
+  }, [normalizedPostId]);
 
   // Exit early if no postId is provided or if it's invalid
-  if (!postId) {
+  if (!normalizedPostId) {
     console.error("Empty postId received by CommentList");
     return (
       <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
@@ -59,9 +62,9 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
   }
 
   const { data: comments, isLoading, error, refetch } = useQuery({
-    queryKey: ['comments', postId],
+    queryKey: ['comments', normalizedPostId],
     queryFn: async () => {
-      console.log(`Fetching comments for post: ${postId}`);
+      console.log(`Fetching comments for post: ${normalizedPostId}`);
       
       try {
         const { data, error } = await supabase
@@ -78,7 +81,7 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
               avatar_url
             )
           `)
-          .eq('post_id', postId)
+          .eq('post_id', normalizedPostId)
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -86,7 +89,7 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
           throw error;
         }
 
-        console.log(`Retrieved ${data?.length || 0} comments for post ${postId}`);
+        console.log(`Retrieved ${data?.length || 0} comments for post ${normalizedPostId}`);
 
         // Process comments into a tree structure
         const typedComments = data as unknown as (Omit<Comment, 'replies'>)[];
@@ -178,7 +181,7 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
       <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         {comments && comments.length > 0 ? (
           comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} onReplyAdded={handleCommentAdded} postId={postId} />
+            <CommentItem key={comment.id} comment={comment} onReplyAdded={handleCommentAdded} postId={normalizedPostId} />
           ))
         ) : (
           <div className="py-8 text-center">
@@ -188,7 +191,7 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
       </div>
 
       <div className="sticky bottom-0 border-t border-[#2A2F3C] bg-[#1A1F2C] p-4">
-        <CommentForm postId={postId} onCommentAdded={handleCommentAdded} />
+        <CommentForm postId={normalizedPostId} onCommentAdded={handleCommentAdded} />
       </div>
     </div>
   );
