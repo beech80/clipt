@@ -23,9 +23,10 @@ interface Comment {
 interface CommentListProps {
   postId: string;
   onBack?: () => void;
+  onCommentAdded?: () => void;
 }
 
-export const CommentList = ({ postId, onBack }: CommentListProps) => {
+export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps) => {
   // Add logging to see the postId value
   useEffect(() => {
     console.log(`CommentList component mounted with postId: ${postId}`);
@@ -160,6 +161,11 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
     );
   }
 
+  const handleCommentAdded = () => {
+    refetch();
+    if (onCommentAdded) onCommentAdded();
+  };
+
   return (
     <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col">
       <div className="sticky top-0 z-10 bg-[#1A1F2C] py-4 px-4 border-b border-[#2A2F3C] flex items-center">
@@ -172,7 +178,7 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
       <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         {comments && comments.length > 0 ? (
           comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} onReplyAdded={refetch} />
+            <CommentItem key={comment.id} comment={comment} onReplyAdded={handleCommentAdded} postId={postId} />
           ))
         ) : (
           <div className="py-8 text-center">
@@ -182,7 +188,7 @@ export const CommentList = ({ postId, onBack }: CommentListProps) => {
       </div>
 
       <div className="sticky bottom-0 border-t border-[#2A2F3C] bg-[#1A1F2C] p-4">
-        <CommentForm postId={postId} onCommentAdded={refetch} />
+        <CommentForm postId={postId} onCommentAdded={handleCommentAdded} />
       </div>
     </div>
   );
