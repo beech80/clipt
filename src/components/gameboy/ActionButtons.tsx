@@ -164,133 +164,119 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
   };
 
   return (
-    <>
-      {/* Top Button - Heart/Like */}
-      <button 
-        className="action-button absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[40%]
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
-        shadow-[0_0_15px_rgba(255,0,0,0.3)] border-red-400/30
-        hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110 active:scale-95
-        w-8 h-8 sm:w-10 sm:h-10"
-        onClick={handleLike}
-      >
-        <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'} 
-          drop-shadow-[0_0_8px_rgba(255,0,0,0.5)]`} />
-      </button>
-
-      {/* Left Button - Comment */}
-      <button 
-        className="action-button absolute left-0 top-1/2 -translate-x-[40%] -translate-y-1/2
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(0,120,255,0.3)] border-blue-400/30
-        hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110 active:scale-95
-        w-8 h-8 sm:w-10 sm:h-10"
-        onClick={() => {
-          console.log(`Opening comments for postId: ${postId}`);
-          setIsCommentOpen(true);
-        }}
-      >
-        <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500
-          drop-shadow-[0_0_8px_rgba(0,120,255,0.5)]" />
-      </button>
-
-      {/* Right Button - Follow */}
-      <button 
-        className="action-button absolute right-0 top-1/2 translate-x-[40%] -translate-y-1/2
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(0,255,0,0.3)] border-green-400/30
-        hover:shadow-[0_0_20px_rgba(0,255,0,0.4)] transition-all hover:scale-110 active:scale-95
-        w-8 h-8 sm:w-10 sm:h-10"
-        onClick={handleFollow}
-      >
-        <UserPlus className={`w-4 h-4 sm:w-5 sm:h-5 ${isFollowing ? 'text-green-500' : 'text-green-500'}
-          drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]`} />
-      </button>
-
-      {/* Bottom Button - Rank */}
-      <button 
-        className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[40%]
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(255,255,0,0.3)] border-yellow-400/30
-        hover:shadow-[0_0_20px_rgba(255,255,0,0.4)] transition-all hover:scale-110 active:scale-95
-        w-8 h-8 sm:w-10 sm:h-10"
-        onClick={handleRank}
-      >
-        <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500
-          drop-shadow-[0_0_8px_rgba(255,255,0,0.5)]" />
-      </button>
-
-      {/* Right Side Buttons - Additional Actions */}
+    <div className="relative">
+      {/* Center diamond layout buttons */}
+      <div className="flex flex-col items-center relative">
+        {/* Heart button - Top */}
+        <button 
+          className="action-button w-12 h-12 rounded-full flex items-center justify-center
+          bg-[#1A1F2C] border border-red-600/30 mb-8 
+          shadow-[0_0_15px_rgba(255,0,0,0.3)]
+          hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110"
+          onClick={handleLike}
+        >
+          <Heart className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'}`} />
+        </button>
+        
+        <div className="flex w-full justify-between mb-8">
+          {/* Comment button - Left */}
+          <button 
+            className="action-button w-12 h-12 rounded-full flex items-center justify-center
+            bg-[#1A1F2C] border border-blue-600/30
+            shadow-[0_0_15px_rgba(0,120,255,0.3)]
+            hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110"
+            onClick={() => setIsCommentOpen(true)}
+          >
+            <MessageSquare className="w-6 h-6 text-blue-500" />
+          </button>
+          
+          {/* Follow button - Right */}
+          <button 
+            className="action-button w-12 h-12 rounded-full flex items-center justify-center
+            bg-[#1A1F2C] border border-green-600/30
+            shadow-[0_0_15px_rgba(0,255,0,0.3)]
+            hover:shadow-[0_0_20px_rgba(0,255,0,0.4)] transition-all hover:scale-110"
+            onClick={handleFollow}
+          >
+            <UserPlus className={`w-6 h-6 ${isFollowing ? 'text-green-500' : 'text-green-500'}`} />
+          </button>
+        </div>
+        
+        {/* Trophy button - Bottom */}
+        <button 
+          className="action-button w-12 h-12 rounded-full flex items-center justify-center
+          bg-[#1A1F2C] border border-yellow-600/30 mb-8
+          shadow-[0_0_15px_rgba(255,255,0,0.3)]
+          hover:shadow-[0_0_20px_rgba(255,255,0,0.4)] transition-all hover:scale-110"
+          onClick={handleRank}
+        >
+          <Trophy className="w-6 h-6 text-yellow-500" />
+        </button>
+        
+        {/* Camera/Post button - Very Bottom */}
+        <button 
+          className="action-button w-12 h-12 rounded-full flex flex-col items-center justify-center
+          bg-[#1A1F2C] border border-purple-600/30 mt-4
+          shadow-[0_0_15px_rgba(147,51,234,0.3)]
+          hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all hover:scale-110"
+          onClick={() => {
+            navigate('/post/new');
+            toast.success('Opening post creation...');
+          }}
+        >
+          <Camera className="w-5 h-5 text-purple-500 mb-1" />
+          <span className="text-[10px] text-purple-500 font-bold">POST</span>
+        </button>
+      </div>
       
-      {/* Share Button */}
-      <button 
-        className="action-button absolute right-[20%] top-[15%] 
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(147,51,234,0.3)] border-purple-400/30
-        hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all hover:scale-110 active:scale-95
-        w-7 h-7 sm:w-8 sm:h-8"
-        onClick={handleShare}
-      >
-        <Share2 className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500
-          drop-shadow-[0_0_8px_rgba(147,51,234,0.5)]" />
-      </button>
+      {/* Right side action buttons */}
+      <div className="absolute right-0 top-0 h-full flex flex-col justify-between py-4">
+        {/* Share Button */}
+        <button 
+          className="action-button w-8 h-8 rounded-full flex items-center justify-center
+          bg-[#1A1F2C] border border-purple-400/30 mb-3
+          shadow-[0_0_10px_rgba(147,51,234,0.3)]
+          hover:shadow-[0_0_15px_rgba(147,51,234,0.4)] transition-all hover:scale-110"
+          onClick={handleShare}
+        >
+          <Share2 className="w-4 h-4 text-purple-500" />
+        </button>
+        
+        {/* Bookmark Button */}
+        <button 
+          className="action-button w-8 h-8 rounded-full flex items-center justify-center
+          bg-[#1A1F2C] border border-orange-400/30 mb-3
+          shadow-[0_0_10px_rgba(249,115,22,0.3)]
+          hover:shadow-[0_0_15px_rgba(249,115,22,0.4)] transition-all hover:scale-110"
+          onClick={handleBookmark}
+        >
+          <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-orange-500' : ''} text-orange-500`} />
+        </button>
+        
+        {/* Boost Button */}
+        <button 
+          className="action-button w-8 h-8 rounded-full flex items-center justify-center
+          bg-[#1A1F2C] border border-sky-400/30 mb-3
+          shadow-[0_0_10px_rgba(56,189,248,0.3)]
+          hover:shadow-[0_0_15px_rgba(56,189,248,0.4)] transition-all hover:scale-110"
+          onClick={handleBoost}
+        >
+          <Zap className="w-4 h-4 text-sky-500" />
+        </button>
+        
+        {/* Report Button */}
+        <button 
+          className="action-button w-8 h-8 rounded-full flex items-center justify-center
+          bg-[#1A1F2C] border border-red-400/30
+          shadow-[0_0_10px_rgba(239,68,68,0.3)]
+          hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all hover:scale-110"
+          onClick={handleReport}
+        >
+          <Flag className="w-4 h-4 text-red-500" />
+        </button>
+      </div>
       
-      {/* Bookmark Button */}
-      <button 
-        className="action-button absolute right-[20%] top-[35%]
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(249,115,22,0.3)] border-orange-400/30
-        hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all hover:scale-110 active:scale-95
-        w-7 h-7 sm:w-8 sm:h-8"
-        onClick={handleBookmark}
-      >
-        <Bookmark className={`w-3 h-3 sm:w-4 sm:h-4 ${isBookmarked ? 'fill-orange-500' : ''} text-orange-500
-          drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]`} />
-      </button>
-      
-      {/* Boost Button */}
-      <button 
-        className="action-button absolute right-[20%] top-[55%]
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(56,189,248,0.3)] border-sky-400/30
-        hover:shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all hover:scale-110 active:scale-95
-        w-7 h-7 sm:w-8 sm:h-8"
-        onClick={handleBoost}
-      >
-        <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-sky-500
-          drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
-      </button>
-      
-      {/* Report Button */}
-      <button 
-        className="action-button absolute right-[20%] top-[75%]
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
-        shadow-[0_0_15px_rgba(239,68,68,0.3)] border-red-400/30
-        hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all hover:scale-110 active:scale-95
-        w-7 h-7 sm:w-8 sm:h-8"
-        onClick={handleReport}
-      >
-        <Flag className="w-3 h-3 sm:w-4 sm:h-4 text-red-500
-          drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-      </button>
-
-      {/* Create Post Button */}
-      <button 
-        className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[180%]
-        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
-        shadow-[0_0_15px_rgba(147,51,234,0.3)] border-purple-400/30
-        hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all hover:scale-110 active:scale-95
-        flex flex-col items-center gap-1 w-8 h-8 sm:w-10 sm:h-10"
-        onClick={() => {
-          navigate('/post/new');
-          toast.success('Opening post creation...');
-        }}
-      >
-        <Camera className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500
-          drop-shadow-[0_0_8px_rgba(147,51,234,0.5)]" />
-        <span className="text-[8px] sm:text-[10px] text-purple-500 font-bold mt-1">POST</span>
-      </button>
-
+      {/* Comment dialog */}
       {postId && (
         <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
           <DialogContent className="sm:max-w-[600px] bg-gaming-800/95 backdrop-blur-sm p-0 border-gaming-400/30">
@@ -319,7 +305,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           </DialogContent>
         </Dialog>
       )}
-    </>
+    </div>
   );
 };
 
