@@ -199,39 +199,39 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
           {/* Heart button (top) */}
           <button 
             onClick={handleLike}
-            className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-transparent flex items-center justify-center"
+            className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#922B3E]/20 border border-[#922B3E]/40 flex items-center justify-center"
           >
-            <Heart className="w-6 h-6 text-red-500" />
+            <Heart className="w-5 h-5 text-[#FF3866]" fill="#FF3866" />
           </button>
           
           {/* Message button (left) */}
           <button 
             onClick={handleComment}
-            className="absolute left-[-15px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-transparent flex items-center justify-center"
+            className="absolute left-[-15px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#1E4976]/20 border border-[#1E4976]/40 flex items-center justify-center"
           >
-            <MessageSquare className="w-6 h-6 text-blue-400" />
+            <MessageSquare className="w-5 h-5 text-[#3D93FC]" fill="#3D93FC" />
           </button>
           
           {/* Follow button (right) */}
           <button 
             onClick={handleFollow}
-            className="absolute right-[-15px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-transparent flex items-center justify-center"
+            className="absolute right-[-15px] top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#0C6B35]/20 border border-[#0C6B35]/40 flex items-center justify-center"
           >
-            <User className="w-6 h-6 text-green-400" />
+            <User className="w-5 h-5 text-[#26C870]" />
           </button>
           
           {/* Trophy button (bottom) */}
           <button 
             onClick={handleRank}
-            className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-transparent flex items-center justify-center"
+            className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#9B7D31]/20 border border-[#9B7D31]/40 flex items-center justify-center"
           >
-            <Trophy className="w-6 h-6 text-yellow-400" />
+            <Trophy className="w-5 h-5 text-[#FFE55C]" fill="#FFE55C" />
           </button>
           
           {/* POST button */}
           <button
             onClick={() => navigate('/post/new')}
-            className="absolute -bottom-12 right-0 rounded-full bg-[#9c27b0] px-3 py-1 text-xs text-white font-bold"
+            className="absolute -bottom-10 left-1/2 -translate-x-[20%] rounded-full bg-[#9c27b0] px-3 py-1 text-[10px] text-white font-bold"
           >
             POST
           </button>
