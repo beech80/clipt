@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageSquare, UserPlus, Trophy, Camera, ArrowLeft } from 'lucide-react';
+import { Heart, MessageSquare, UserPlus, Trophy, Camera, ArrowLeft, Share2, Bookmark, Zap, Flag } from 'lucide-react';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -18,6 +18,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
   const navigate = useNavigate();
   
   // Log postId for debugging
@@ -103,8 +104,68 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
     }
   };
 
+  const handleBookmark = () => {
+    if (!user) {
+      toast.error("Please login to bookmark posts");
+      return;
+    }
+    
+    setIsBookmarked(!isBookmarked);
+    toast.success(isBookmarked ? "Removed from bookmarks" : "Added to bookmarks");
+    onAction('bookmark');
+  };
+
+  const handleShare = () => {
+    const clipUrl = `${window.location.origin}/post/${postId}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'Check out this clip on Clipt',
+        text: 'I found this awesome clip on Clipt!',
+        url: clipUrl,
+      })
+      .then(() => {
+        toast.success('Shared successfully');
+      })
+      .catch((error) => {
+        console.error('Error sharing:', error);
+        copyToClipboard(clipUrl);
+      });
+    } else {
+      copyToClipboard(clipUrl);
+    }
+    
+    onAction('share');
+  };
+  
+  const handleReport = () => {
+    toast.info("Report submitted. Thank you for keeping Clipt safe.");
+    onAction('report');
+  };
+  
+  const handleBoost = () => {
+    if (!user) {
+      toast.error("Please login to boost clips");
+      return;
+    }
+    
+    toast.success("Clip boosted! It will be shown to more users.");
+    onAction('boost');
+  };
+  
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Link copied to clipboard");
+    } catch (err) {
+      console.error("Failed to copy:", err);
+      toast.error("Failed to copy link");
+    }
+  };
+
   return (
     <>
+      {/* Top Button - Heart/Like */}
       <button 
         className="action-button absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[40%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
@@ -117,6 +178,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(255,0,0,0.5)]`} />
       </button>
 
+      {/* Left Button - Comment */}
       <button 
         className="action-button absolute left-0 top-1/2 -translate-x-[40%] -translate-y-1/2
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
@@ -132,6 +194,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(0,120,255,0.5)]" />
       </button>
 
+      {/* Right Button - Follow */}
       <button 
         className="action-button absolute right-0 top-1/2 translate-x-[40%] -translate-y-1/2
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
@@ -144,6 +207,7 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(0,255,0,0.5)]`} />
       </button>
 
+      {/* Bottom Button - Rank */}
       <button 
         className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[40%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
@@ -156,6 +220,61 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
           drop-shadow-[0_0_8px_rgba(255,255,0,0.5)]" />
       </button>
 
+      {/* Right Side Buttons - Additional Actions */}
+      
+      {/* Share Button */}
+      <button 
+        className="action-button absolute right-[20%] top-[15%] 
+        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
+        shadow-[0_0_15px_rgba(147,51,234,0.3)] border-purple-400/30
+        hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all hover:scale-110 active:scale-95
+        w-7 h-7 sm:w-8 sm:h-8"
+        onClick={handleShare}
+      >
+        <Share2 className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500
+          drop-shadow-[0_0_8px_rgba(147,51,234,0.5)]" />
+      </button>
+      
+      {/* Bookmark Button */}
+      <button 
+        className="action-button absolute right-[20%] top-[35%]
+        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
+        shadow-[0_0_15px_rgba(249,115,22,0.3)] border-orange-400/30
+        hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all hover:scale-110 active:scale-95
+        w-7 h-7 sm:w-8 sm:h-8"
+        onClick={handleBookmark}
+      >
+        <Bookmark className={`w-3 h-3 sm:w-4 sm:h-4 ${isBookmarked ? 'fill-orange-500' : ''} text-orange-500
+          drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]`} />
+      </button>
+      
+      {/* Boost Button */}
+      <button 
+        className="action-button absolute right-[20%] top-[55%]
+        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
+        shadow-[0_0_15px_rgba(56,189,248,0.3)] border-sky-400/30
+        hover:shadow-[0_0_20px_rgba(56,189,248,0.4)] transition-all hover:scale-110 active:scale-95
+        w-7 h-7 sm:w-8 sm:h-8"
+        onClick={handleBoost}
+      >
+        <Zap className="w-3 h-3 sm:w-4 sm:h-4 text-sky-500
+          drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
+      </button>
+      
+      {/* Report Button */}
+      <button 
+        className="action-button absolute right-[20%] top-[75%]
+        bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C]
+        shadow-[0_0_15px_rgba(239,68,68,0.3)] border-red-400/30
+        hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all hover:scale-110 active:scale-95
+        w-7 h-7 sm:w-8 sm:h-8"
+        onClick={handleReport}
+      >
+        <Flag className="w-3 h-3 sm:w-4 sm:h-4 text-red-500
+          drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+      </button>
+
+      {/* Create Post Button */}
       <button 
         className="action-button absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-[180%]
         bg-gradient-to-b from-[#1A1F2C]/80 to-[#1A1F2C] 
