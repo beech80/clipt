@@ -135,18 +135,22 @@ const Joystick: React.FC<JoystickProps> = ({ onDirectionChange }) => {
   }, []);
 
   return (
-    <div className="xbox-joystick">
+    <div
+      ref={joystickRef}
+      className={`joystick-base rounded-full h-full w-full bg-[#272831] relative border border-[#3a3c4a]/40 cursor-grab touch-none select-none ${
+        isDraggingRef.current ? 'cursor-grabbing' : 'cursor-grab'
+      }`}
+      onMouseDown={handleJoystickStart}
+      onTouchStart={handleJoystickStart}
+    >
       <div
-        ref={joystickRef}
-        className={`xbox-joystick-thumb transition-transform duration-200 ${
-          activeDirection !== 'neutral' ? 'scale-110' : ''
-        }`}
+        className="joystick-handle absolute rounded-full bg-[#1A1B24] border border-[#2c2e3e]/40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[60%] w-[60%] shadow-md flex items-center justify-center"
         style={{
-          transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
+          transform: `translate3d(calc(-50% + ${joystickPosition.x}px), calc(-50% + ${joystickPosition.y}px), 0)`,
         }}
-        onMouseDown={handleJoystickStart}
-        onTouchStart={handleJoystickStart}
-      />
+      >
+        <div className="h-[30%] w-[30%] bg-[#3a3c4a]/40 rounded-full"></div>
+      </div>
     </div>
   );
 };

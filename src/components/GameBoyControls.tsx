@@ -53,11 +53,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   ];
 
   return (
-    <div className="h-[70px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-gaming-400/30 flex items-center justify-between px-4">
+    <div className="h-[70px] bg-[#1e2130] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#3e4462]/30 flex items-center justify-between px-5">
       {/* Joystick on left */}
-      <div className="flex-none w-16 h-16">
-        <Joystick onDirectionChange={handleVideoControl} />
+      <div className="flex-none w-[70px] h-[70px] flex items-center">
+        <div className="w-[65px] h-[65px] bg-[#30323d]/60 rounded-full flex items-center justify-center">
+          <Joystick onDirectionChange={handleVideoControl} />
+        </div>
       </div>
+      
+      {/* Empty space for proper spacing */}
+      <div className="flex-1"></div>
       
       {/* CLIPT button in center with gradient background */}
       <div className="flex-none">
@@ -66,19 +71,25 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
             navigate('/clipts');
             toast.success('Welcome to Clipts!');
           }}
-          className="relative flex items-center justify-center w-16 h-16 active:scale-95 transition-transform"
+          className="relative flex items-center justify-center w-[75px] h-[75px] active:scale-95 transition-transform"
           aria-label="Go to Clipts"
         >
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 opacity-80"></div>
-          <div className="relative flex flex-col items-center justify-center text-white">
+          <div className="absolute inset-0 rounded-full border-2 border-transparent bg-clip-padding p-[2px]" 
+               style={{ background: 'linear-gradient(to right, #4f9cf9, #a651fb, #f046ff) border-box' }}>
+            <div className="w-full h-full rounded-full bg-[#1e2130]"></div>
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
             <Camera className="w-5 h-5 mb-0.5" />
             <span className="text-xs font-bold">CLIPT</span>
           </div>
         </button>
       </div>
       
+      {/* Empty space for proper spacing */}
+      <div className="flex-1"></div>
+      
       {/* Action buttons on right */}
-      <div className="flex-none w-20 h-20">
+      <div className="flex-none w-[90px] h-[70px] flex items-center justify-center">
         <ActionButtons onAction={handleAction} postId={currentPostId || ''} />
       </div>
       
@@ -86,9 +97,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
         <Sheet>
           <SheetTrigger asChild>
-            <button className="rounded-full bg-gaming-400/20 p-2 backdrop-blur-sm border border-gaming-400/30 
-              hover:bg-gaming-400/30 transition-all duration-300 touch-none active:scale-95">
-              <Menu className="w-5 h-5 text-gaming-400" />
+            <button className="rounded-full bg-[#4c4f74]/50 p-2 backdrop-blur-sm border border-[#5f6384]/30 
+              hover:bg-[#5f6384]/50 transition-all duration-300 touch-none active:scale-95">
+              <Menu className="w-4 h-4 text-[#8c91c0]" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-gaming-900/95 backdrop-blur-xl border-gaming-400/30">
