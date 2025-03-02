@@ -23,7 +23,7 @@ export default function Streaming() {
   const STREAM_KEY = "live_5f9b3a2e1d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a";
   
   // Example schedule data - in real app, this would come from API
-  const scheduleItems = [
+  const [scheduleItems, setScheduleItems] = useState([
     {
       id: 1,
       title: "Weekly Gaming Session",
@@ -38,7 +38,16 @@ export default function Streaming() {
       time: "3:00 PM - 6:00 PM",
       description: "Join us for a special community event with prizes!"
     }
-  ];
+  ]);
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingItem, setEditingItem] = useState({
+    id: 0,
+    title: "",
+    date: "",
+    time: "",
+    description: ""
+  });
   
   // Copy to clipboard function
   const copyToClipboard = async (text: string, type: string) => {
@@ -138,12 +147,14 @@ export default function Streaming() {
           </Card>
           
           {/* GameBoy Controls */}
-          <Card className="p-4">
+          <Card className="p-6 border border-gaming-700">
             <CardTitle className="mb-4 flex items-center">
               <Gamepad className="mr-2 h-5 w-5" />
               Stream Controls
             </CardTitle>
-            <GameBoyControls />
+            <div className="flex justify-center">
+              <GameBoyControls currentPostId="streaming-page" />
+            </div>
           </Card>
         </TabsContent>
         
@@ -265,12 +276,14 @@ RECOMMENDED SETTINGS:
           </Card>
           
           {/* GameBoy Controls */}
-          <Card className="p-4">
+          <Card className="p-6 border border-gaming-700">
             <CardTitle className="mb-4 flex items-center">
               <Gamepad className="mr-2 h-5 w-5" />
               Stream Controls
             </CardTitle>
-            <GameBoyControls />
+            <div className="flex justify-center">
+              <GameBoyControls currentPostId="streaming-page" />
+            </div>
           </Card>
         </TabsContent>
         
@@ -282,49 +295,180 @@ RECOMMENDED SETTINGS:
               <CardDescription>Plan and share your upcoming streams</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {scheduleItems.length > 0 ? (
-                <div className="space-y-4">
-                  {scheduleItems.map((item) => (
-                    <div key={item.id} className="border border-gray-700 rounded-md p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-lg font-medium">{item.title}</h3>
-                          <div className="flex items-center text-gray-400 mt-1">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            <span className="text-sm">{item.date}</span>
+              {!isEditing ? (
+                // Schedule List View
+                <>
+                  {scheduleItems.length > 0 ? (
+                    <div className="space-y-4">
+                      {scheduleItems.map((item) => (
+                        <div key={item.id} className="border border-gray-700 rounded-md p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-lg font-medium">{item.title}</h3>
+                              <div className="flex items-center text-gray-400 mt-1">
+                                <Calendar className="h-4 w-4 mr-1" />
+                                <span className="text-sm">{item.date}</span>
+                              </div>
+                              <div className="flex items-center text-gray-400 mt-1">
+                                <Clock className="h-4 w-4 mr-1" />
+                                <span className="text-sm">{item.time}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingItem(item);
+                                  setIsEditing(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="destructive"
+                                onClick={() => {
+                                  setScheduleItems(scheduleItems.filter(s => s.id !== item.id));
+                                  toast({
+                                    title: "Stream deleted",
+                                    description: "The scheduled stream has been removed",
+                                  });
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex items-center text-gray-400 mt-1">
-                            <Clock className="h-4 w-4 mr-1" />
-                            <span className="text-sm">{item.time}</span>
-                          </div>
+                          <p className="mt-2 text-gray-300">{item.description}</p>
                         </div>
-                        <Button size="sm" variant="outline">Edit</Button>
-                      </div>
-                      <p className="mt-2 text-gray-300">{item.description}</p>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Calendar className="h-12 w-12 mx-auto text-gray-500" />
+                      <h3 className="mt-2 text-lg font-medium">No Scheduled Streams</h3>
+                      <p className="text-gray-400 mt-1">Plan your first stream to let your followers know when you'll be live.</p>
+                    </div>
+                  )}
+                  
+                  <Button 
+                    className="w-full mt-2"
+                    onClick={() => {
+                      setEditingItem({
+                        id: scheduleItems.length > 0 ? Math.max(...scheduleItems.map(s => s.id)) + 1 : 1,
+                        title: "",
+                        date: "",
+                        time: "",
+                        description: ""
+                      });
+                      setIsEditing(true);
+                    }}
+                  >
+                    Schedule New Stream
+                  </Button>
+                </>
               ) : (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 mx-auto text-gray-500" />
-                  <h3 className="mt-2 text-lg font-medium">No Scheduled Streams</h3>
-                  <p className="text-gray-400 mt-1">Plan your first stream to let your followers know when you'll be live.</p>
+                // Schedule Edit View
+                <div className="space-y-4">
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <label htmlFor="title" className="text-sm font-medium">Stream Title</label>
+                      <Input 
+                        id="title"
+                        placeholder="What are you streaming?"
+                        value={editingItem.title}
+                        onChange={(e) => setEditingItem({...editingItem, title: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <label htmlFor="date" className="text-sm font-medium">Date</label>
+                      <Input 
+                        id="date"
+                        placeholder="e.g. Monday, March 10, 2025"
+                        value={editingItem.date}
+                        onChange={(e) => setEditingItem({...editingItem, date: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <label htmlFor="time" className="text-sm font-medium">Time</label>
+                      <Input 
+                        id="time"
+                        placeholder="e.g. 7:00 PM - 9:00 PM"
+                        value={editingItem.time}
+                        onChange={(e) => setEditingItem({...editingItem, time: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <label htmlFor="description" className="text-sm font-medium">Description</label>
+                      <Input 
+                        id="description"
+                        placeholder="What will you be doing in this stream?"
+                        value={editingItem.description}
+                        onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsEditing(false);
+                        setEditingItem({id: 0, title: "", date: "", time: "", description: ""});
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        if (editingItem.title && editingItem.date && editingItem.time) {
+                          // Update existing item
+                          if (scheduleItems.some(item => item.id === editingItem.id)) {
+                            setScheduleItems(scheduleItems.map(item => 
+                              item.id === editingItem.id ? editingItem : item
+                            ));
+                            toast({
+                              title: "Stream updated",
+                              description: "Your scheduled stream has been updated",
+                            });
+                          } 
+                          // Add new item
+                          else {
+                            setScheduleItems([...scheduleItems, editingItem]);
+                            toast({
+                              title: "Stream scheduled",
+                              description: "Your new stream has been scheduled",
+                            });
+                          }
+                          setIsEditing(false);
+                          setEditingItem({id: 0, title: "", date: "", time: "", description: ""});
+                        } else {
+                          toast({
+                            title: "Incomplete form",
+                            description: "Please fill in all required fields",
+                            variant: "destructive"
+                          });
+                        }
+                      }}
+                    >
+                      {scheduleItems.some(item => item.id === editingItem.id) ? "Update" : "Schedule"} Stream
+                    </Button>
+                  </div>
                 </div>
               )}
-              
-              <Button className="w-full mt-2">
-                Schedule New Stream
-              </Button>
             </CardContent>
           </Card>
           
           {/* GameBoy Controls */}
-          <Card className="p-4">
+          <Card className="p-6 border border-gaming-700">
             <CardTitle className="mb-4 flex items-center">
               <Gamepad className="mr-2 h-5 w-5" />
               Stream Controls
             </CardTitle>
-            <GameBoyControls />
+            <div className="flex justify-center">
+              <GameBoyControls currentPostId="streaming-page" />
+            </div>
           </Card>
         </TabsContent>
         
@@ -383,12 +527,14 @@ RECOMMENDED SETTINGS:
           </Card>
           
           {/* GameBoy Controls */}
-          <Card className="p-4">
+          <Card className="p-6 border border-gaming-700">
             <CardTitle className="mb-4 flex items-center">
               <Gamepad className="mr-2 h-5 w-5" />
               Stream Controls
             </CardTitle>
-            <GameBoyControls />
+            <div className="flex justify-center">
+              <GameBoyControls currentPostId="streaming-page" />
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
