@@ -26,6 +26,9 @@ export function StreamDashboard() {
   const [showKey, setShowKey] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Define the correct RTMP URL
+  const RTMP_URL = "rtmp://stream.clipt.live/live";
+
   // Fetch or create stream on component mount
   useEffect(() => {
     const fetchOrCreateStream = async () => {
@@ -53,6 +56,21 @@ export function StreamDashboard() {
         
         if (existingStream) {
           console.log("Existing stream found:", existingStream);
+          // Ensure the RTMP URL is always up to date
+          if (existingStream.rtmp_url !== RTMP_URL) {
+            const { data: updatedStream, error: updateError } = await supabase
+              .from('streams')
+              .update({ rtmp_url: RTMP_URL })
+              .eq('id', existingStream.id)
+              .select()
+              .single();
+              
+            if (updateError) {
+              console.error("Error updating RTMP URL:", updateError);
+            } else {
+              existingStream.rtmp_url = RTMP_URL;
+            }
+          }
           setStream(existingStream);
         } else {
           console.log("No stream found, creating new stream");
@@ -66,7 +84,7 @@ export function StreamDashboard() {
               description: "Welcome to my stream!",
               is_live: false,
               stream_key: await generateRandomKey(),
-              rtmp_url: "rtmp://stream.clipt.live/live",
+              rtmp_url: RTMP_URL,
               viewer_count: 0
             })
             .select()
@@ -136,7 +154,10 @@ export function StreamDashboard() {
       // Update the stream with new key
       const { data, error } = await supabase
         .from('streams')
-        .update({ stream_key: newKey })
+        .update({ 
+          stream_key: newKey,
+          rtmp_url: RTMP_URL // Ensure RTMP URL is always up to date
+        })
         .eq('id', stream.id)
         .eq('user_id', user?.id)
         .select()
@@ -149,17 +170,17 @@ export function StreamDashboard() {
       
       console.log("Stream key regenerated:", data);
       setStream(data);
-      toast.success("Stream key regenerated");
-      
+      setShowKey(true);
+      toast.success("Stream key regenerated successfully");
     } catch (err: any) {
       console.error("Failed to regenerate stream key:", err);
-      toast.error(`Error: ${err.message}`);
+      toast.error("Failed to regenerate stream key");
     } finally {
       setIsRegenerating(false);
     }
   };
   
-  // Handle starting the stream
+  // Handle starting a stream
   const handleStartStream = async () => {
     if (!stream?.id) {
       toast.error("No stream available");
@@ -169,205 +190,249 @@ export function StreamDashboard() {
     setIsStarting(true);
     
     try {
+      // Update the stream to set is_live to true
       const { data, error } = await supabase
         .from('streams')
-        .update({
-          is_live: true,
-          started_at: new Date().toISOString()
+        .update({ 
+          is_live: true, 
+          started_at: new Date().toISOString(),
+          rtmp_url: RTMP_URL // Ensure RTMP URL is always up to date
         })
         .eq('id', stream.id)
         .eq('user_id', user?.id)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error starting stream:", error);
+        throw error;
+      }
       
       console.log("Stream started:", data);
       setStream(data);
-      toast.success("Stream is now live!");
+      toast.success("Stream started successfully");
+      
     } catch (err: any) {
       console.error("Failed to start stream:", err);
-      toast.error(`Error starting stream: ${err.message}`);
+      toast.error("Failed to start stream");
     } finally {
       setIsStarting(false);
     }
   };
   
-  // Return loading state
+  // Handle ending a stream
+  const handleEndStream = async () => {
+    if (!stream?.id) {
+      toast.error("No stream available");
+      return;
+    }
+    
+    try {
+      // Update the stream to set is_live to false
+      const { data, error } = await supabase
+        .from('streams')
+        .update({ 
+          is_live: false, 
+          ended_at: new Date().toISOString()
+        })
+        .eq('id', stream.id)
+        .eq('user_id', user?.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error ending stream:", error);
+        throw error;
+      }
+      
+      console.log("Stream ended:", data);
+      setStream(data);
+      toast.success("Stream ended successfully");
+      
+    } catch (err: any) {
+      console.error("Failed to end stream:", err);
+      toast.error("Failed to end stream");
+    }
+  };
+  
+  // Render loading state
   if (isLoading) {
     return (
-      <div className="space-y-4 p-4">
-        <Skeleton className="h-8 w-1/3" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-32 w-full" />
-      </div>
-    );
-  }
-  
-  // Return error state
-  if (error) {
-    return (
-      <div className="p-4">
-        <Alert variant="destructive">
-          <Info className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-        <Button className="mt-4" onClick={() => window.location.reload()}>
-          Retry
-        </Button>
-      </div>
-    );
-  }
-  
-  // Main dashboard content
-  return (
-    <div className="p-4 space-y-6">
-      <h1 className="text-2xl font-bold">Stream Dashboard</h1>
-      
-      {/* Stream Info Card */}
-      <Card>
+      <Card className="w-full">
         <CardHeader>
-          <CardTitle>Stream Information</CardTitle>
+          <CardTitle>
+            <Skeleton className="h-8 w-48" />
+          </CardTitle>
           <CardDescription>
-            Your personal stream details
+            <Skeleton className="h-4 w-64" />
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium mb-2">RTMP URL</h3>
-            <div className="flex items-center gap-2">
-              <Input 
-                readOnly 
-                value={stream?.rtmp_url || 'rtmp://stream.clipt.live/live'} 
-                className="bg-black/10 font-mono text-sm"
-              />
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => copyToClipboard(stream?.rtmp_url || 'rtmp://stream.clipt.live/live', 'RTMP URL')}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Render error state
+  if (error) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-red-500">Stream Setup Error</CardTitle>
+          <CardDescription>We encountered a problem setting up your stream</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <Button 
+            variant="outline" 
+            className="mt-4 w-full"
+            onClick={() => window.location.reload()}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Stream Dashboard</CardTitle>
+        <CardDescription>
+          Manage your stream settings and start broadcasting
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <h3 className="text-sm font-medium mb-2">Stream URL</h3>
+          <div className="flex items-center">
+            <Input
+              value={RTMP_URL}
+              readOnly
+              className="font-mono text-xs"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => copyToClipboard(RTMP_URL, "Stream URL")}
+              className="ml-2"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <div>
+          <h3 className="text-sm font-medium mb-2">Stream Key</h3>
+          <div className="flex items-center">
+            <Input
+              type={showKey ? "text" : "password"}
+              value={stream?.stream_key || ""}
+              readOnly
+              className="font-mono text-xs"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowKey(!showKey)}
+              className="ml-2"
+            >
+              {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => copyToClipboard(stream?.stream_key || "", "Stream key")}
+              className="ml-2"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button 
+            variant="outline" 
+            className="mt-2"
+            onClick={handleRegenerateKey}
+            disabled={isRegenerating}
+          >
+            {isRegenerating ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Regenerating...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Regenerate Key
+              </>
+            )}
+          </Button>
+        </div>
+        
+        <Separator className="my-4" />
+        
+        <div className="flex flex-col gap-4">
+          <div className="bg-black/10 p-4 rounded-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">{stream?.title || 'Your Stream'}</p>
+                <p className="text-sm text-muted-foreground">{stream?.is_live ? 'Live' : 'Offline'}</p>
+              </div>
+              <div className="flex items-center gap-1 text-sm">
+                <Eye className="h-4 w-4 text-muted-foreground" />
+                <span>{stream?.viewer_count || 0}</span>
+              </div>
             </div>
           </div>
           
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium">Stream Key</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowKey(!showKey)}
-                className="h-8 px-2"
-              >
-                {showKey ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
-                {showKey ? 'Hide' : 'Show'}
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Input 
-                readOnly 
-                type={showKey ? 'text' : 'password'} 
-                value={stream?.stream_key || ''} 
-                className="bg-black/10 font-mono text-sm"
-              />
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>OBS Setup Instructions</AlertTitle>
+            <AlertDescription>
+              In OBS Studio, go to Settings → Stream, select "Custom..." as the service, 
+              enter the Stream URL and Stream Key above, then click Apply.
+            </AlertDescription>
+          </Alert>
+          
+          <div className="flex gap-2">
+            {!stream?.is_live ? (
               <Button
-                variant="outline"
-                size="icon"
-                onClick={() => copyToClipboard(stream?.stream_key || '', 'Stream Key')}
+                className="flex-1"
+                onClick={handleStartStream}
+                disabled={isStarting}
               >
-                <Copy className="h-4 w-4" />
+                {isStarting ? (
+                  <>Starting...</>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    Start Stream
+                  </>
+                )}
               </Button>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleRegenerateKey} 
-              disabled={isRegenerating}
-              className="mt-2"
-            >
-              {isRegenerating && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
-              {isRegenerating ? 'Regenerating...' : 'Regenerate Key'}
-            </Button>
-            <p className="text-xs text-muted-foreground mt-2">
-              Warning: Regenerating your stream key will invalidate your current key and disconnect any active streams.
-            </p>
+            ) : (
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleEndStream}
+              >
+                End Stream
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
-      
-      {/* OBS Setup Instructions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>OBS Setup</CardTitle>
-          <CardDescription>
-            Follow these steps to connect OBS to your Clipt stream
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <ol className="list-decimal list-inside space-y-2">
-            <li>Open OBS Studio on your computer</li>
-            <li>Go to Settings &gt; Stream</li>
-            <li>Select "Custom..." as the service</li>
-            <li>For Server, enter: <span className="font-mono bg-black/10 px-1.5 py-0.5 rounded text-sm">rtmp://stream.clipt.live/live</span></li>
-            <li>For Stream Key, copy the key from above and paste it here</li>
-            <li>Click Apply and OK</li>
-            <li>Back in the main OBS window, click "Start Streaming"</li>
-            <li>Return to Clipt and click "Start Stream" below when you're ready to go live</li>
-          </ol>
-        </CardContent>
-      </Card>
-      
-      {/* Stream Control */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Stream Controls</CardTitle>
-          <CardDescription>
-            Manage your live stream
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4">
-            <div className="bg-black/10 p-4 rounded-md">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{stream?.title || 'Your Stream'}</p>
-                  <p className="text-sm text-muted-foreground">{stream?.is_live ? 'Live' : 'Offline'}</p>
-                </div>
-                <div className="flex items-center gap-1 text-sm">
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                  <span>{stream?.viewer_count || 0}</span>
-                </div>
-              </div>
-            </div>
-            
-            <Button
-              className="w-full bg-red-500 hover:bg-red-600"
-              size="lg"
-              onClick={handleStartStream}
-              disabled={isStarting || stream?.is_live}
-            >
-              {isStarting ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Starting Stream...
-                </>
-              ) : stream?.is_live ? (
-                <>
-                  <Play className="mr-2 h-4 w-4" />
-                  Stream is Live
-                </>
-              ) : (
-                <>
-                  <Play className="mr-2 h-4 w-4" />
-                  Start Stream
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+      <CardFooter className="text-xs text-muted-foreground">
+        For advanced stream settings, use OBS Studio or Streamlabs.
+      </CardFooter>
+    </Card>
   );
 }

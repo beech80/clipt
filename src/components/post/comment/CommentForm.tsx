@@ -20,6 +20,9 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCom
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Ensure postId is always a string
+  const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
 
   // Initialize audio element
   useEffect(() => {
@@ -37,12 +40,12 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCom
   // Log for debugging
   useEffect(() => {
     console.log("CommentForm Debug:", { 
-      postId,
-      postIdType: typeof postId,
+      postId: normalizedPostId,
+      postIdType: typeof normalizedPostId,
       user: user?.id,
       parentId 
     });
-  }, [postId, user, parentId]);
+  }, [normalizedPostId, user, parentId]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +60,8 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCom
       return;
     }
 
-    if (!postId) {
-      console.error("Cannot submit comment: Invalid postId", postId);
+    if (!normalizedPostId) {
+      console.error("Cannot submit comment: Invalid postId", normalizedPostId);
       toast.error("Cannot identify post for this comment");
       return;
     }
@@ -66,13 +69,13 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCom
     setIsSubmitting(true);
     
     try {
-      console.log(`Submitting comment to post ${postId} by user ${user.id}`);
+      console.log(`Submitting comment to post ${normalizedPostId} by user ${user.id}`);
       
       // Create comment directly
       const { data, error } = await supabase
         .from('comments')
         .insert({
-          post_id: postId,
+          post_id: normalizedPostId,
           user_id: user.id,
           content: newComment.trim(),
           ...(parentId ? { parent_id: parentId } : {})
@@ -112,8 +115,8 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCom
       }
       
       // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
-      queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
+      queryClient.invalidateQueries({ queryKey: ['comments', normalizedPostId] });
+      queryClient.invalidateQueries({ queryKey: ['comments-count', normalizedPostId] });
       
     } catch (error: any) {
       console.error("Comment submission error:", error);
