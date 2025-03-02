@@ -13,9 +13,10 @@ import { toast } from "@/components/ui/use-toast";
 export default function StreamSetup() {
   const [showKey, setShowKey] = useState(false);
   
-  // Hardcoded values
-  const RTMP_URL = "rtmp://stream.clipt.cc/live";
-  const STREAM_KEY = "clipt-temporary-stream-key-123456";
+  // Hardcoded values - Update these with the actual values from your streaming server
+  // IMPORTANT: These must match your actual RTMP server configuration
+  const RTMP_URL = "rtmp://live.clipt.cc/live";
+  const STREAM_KEY = "live_5f9b3a2e1d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a";
   
   // Copy to clipboard function
   const copyToClipboard = async (text: string, type: string) => {
@@ -74,6 +75,9 @@ export default function StreamSetup() {
                 Copy URL
               </Button>
             </div>
+            <p className="text-xs text-gray-400 mt-1">
+              This is the Server URL you'll enter in OBS
+            </p>
           </div>
           
           {/* Stream Key Section */}
@@ -104,6 +108,23 @@ export default function StreamSetup() {
                 Copy Key
               </Button>
             </div>
+            <p className="text-xs text-gray-400 mt-1">
+              Keep this key secret - anyone with this key can stream to your channel
+            </p>
+          </div>
+          
+          {/* Test Instructions */}
+          <div className="bg-green-950/30 p-4 rounded-md border border-green-600/30">
+            <h2 className="text-lg font-semibold mb-2 text-green-400">Testing Your Stream</h2>
+            <p className="text-gray-200 mb-2">
+              After setting up OBS with these details:
+            </p>
+            <ol className="list-decimal ml-5 space-y-1 text-gray-200">
+              <li>Set your video output to 720p or 1080p</li>
+              <li>Set your bitrate between 2,500-4,000 Kbps</li>
+              <li>Click "Start Streaming" in OBS</li>
+              <li>Return to Clipt and check if your stream appears</li>
+            </ol>
           </div>
           
           {/* Quick Copy Section */}
