@@ -104,6 +104,12 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
     }
   };
 
+  const handlePost = () => {
+    navigate('/post/create');
+    toast.success("Creating a new post");
+    onAction('post');
+  };
+
   const handleBookmark = () => {
     if (!user) {
       toast.error("Please login to bookmark posts");
@@ -165,146 +171,82 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
 
   return (
     <div className="relative">
-      {/* Center diamond layout buttons */}
-      <div className="flex flex-col items-center relative">
-        {/* Heart button - Top */}
-        <button 
-          className="action-button w-12 h-12 rounded-full flex items-center justify-center
-          bg-[#1A1F2C] border border-red-600/30 mb-8 
-          shadow-[0_0_15px_rgba(255,0,0,0.3)]
-          hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110"
-          onClick={handleLike}
-        >
-          <Heart className={`w-6 h-6 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'}`} />
-        </button>
-        
-        <div className="flex w-full justify-between mb-8">
-          {/* Comment button - Left */}
+      {/* Diamond formation buttons */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="col-start-2">
           <button 
             className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-[#1A1F2C] border border-blue-600/30
+            bg-red-600 border border-red-600/30
+            shadow-[0_0_15px_rgba(255,0,0,0.3)]
+            hover:shadow-[0_0_20px_rgba(255,0,0,0.4)] transition-all hover:scale-110"
+            onClick={handleLike}
+          >
+            <Heart className={`w-6 h-6 text-white ${isLiked ? 'fill-white' : ''}`} />
+          </button>
+        </div>
+        
+        <div className="col-start-1 row-start-2">
+          <button 
+            className="action-button w-12 h-12 rounded-full flex items-center justify-center
+            bg-blue-600 border border-blue-600/30
             shadow-[0_0_15px_rgba(0,120,255,0.3)]
             hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110"
             onClick={() => setIsCommentOpen(true)}
           >
-            <MessageSquare className="w-6 h-6 text-blue-500" />
+            <MessageSquare className="w-6 h-6 text-white" />
           </button>
-          
-          {/* Follow button - Right */}
+        </div>
+        
+        <div className="col-start-3 row-start-2">
           <button 
             className="action-button w-12 h-12 rounded-full flex items-center justify-center
-            bg-[#1A1F2C] border border-green-600/30
+            bg-green-600 border border-green-600/30
             shadow-[0_0_15px_rgba(0,255,0,0.3)]
             hover:shadow-[0_0_20px_rgba(0,255,0,0.4)] transition-all hover:scale-110"
             onClick={handleFollow}
           >
-            <UserPlus className={`w-6 h-6 ${isFollowing ? 'text-green-500' : 'text-green-500'}`} />
+            <UserPlus className={`w-6 h-6 text-white ${isFollowing ? 'fill-white' : ''}`} />
           </button>
         </div>
         
-        {/* Trophy button - Bottom */}
-        <button 
-          className="action-button w-12 h-12 rounded-full flex items-center justify-center
-          bg-[#1A1F2C] border border-yellow-600/30 mb-8
-          shadow-[0_0_15px_rgba(255,255,0,0.3)]
-          hover:shadow-[0_0_20px_rgba(255,255,0,0.4)] transition-all hover:scale-110"
-          onClick={handleRank}
-        >
-          <Trophy className="w-6 h-6 text-yellow-500" />
-        </button>
-        
-        {/* Camera/Post button - Very Bottom */}
-        <button 
-          className="action-button w-12 h-12 rounded-full flex flex-col items-center justify-center
-          bg-[#1A1F2C] border border-purple-600/30 mt-4
-          shadow-[0_0_15px_rgba(147,51,234,0.3)]
-          hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all hover:scale-110"
-          onClick={() => {
-            navigate('/post/new');
-            toast.success('Opening post creation...');
-          }}
-        >
-          <Camera className="w-5 h-5 text-purple-500 mb-1" />
-          <span className="text-[10px] text-purple-500 font-bold">POST</span>
-        </button>
+        <div className="col-start-2 row-start-3">
+          <button 
+            className="action-button w-12 h-12 rounded-full flex items-center justify-center
+            bg-yellow-600 border border-yellow-600/30
+            shadow-[0_0_15px_rgba(255,215,0,0.3)]
+            hover:shadow-[0_0_20px_rgba(255,215,0,0.4)] transition-all hover:scale-110"
+            onClick={handleRank}
+          >
+            <Trophy className="w-6 h-6 text-white" />
+          </button>
+        </div>
       </div>
       
-      {/* Right side action buttons */}
-      <div className="absolute right-0 top-0 h-full flex flex-col justify-between py-4">
-        {/* Share Button */}
+      {/* Post button below diamond */}
+      <div className="flex justify-center mt-4">
         <button 
-          className="action-button w-8 h-8 rounded-full flex items-center justify-center
-          bg-[#1A1F2C] border border-purple-400/30 mb-3
-          shadow-[0_0_10px_rgba(147,51,234,0.3)]
-          hover:shadow-[0_0_15px_rgba(147,51,234,0.4)] transition-all hover:scale-110"
-          onClick={handleShare}
+          className="action-button w-14 h-14 rounded-full flex items-center justify-center
+          bg-purple-600 border border-purple-600/30
+          shadow-[0_0_15px_rgba(128,0,128,0.3)]
+          hover:shadow-[0_0_20px_rgba(128,0,128,0.4)] transition-all hover:scale-110"
+          onClick={handlePost}
         >
-          <Share2 className="w-4 h-4 text-purple-500" />
-        </button>
-        
-        {/* Bookmark Button */}
-        <button 
-          className="action-button w-8 h-8 rounded-full flex items-center justify-center
-          bg-[#1A1F2C] border border-orange-400/30 mb-3
-          shadow-[0_0_10px_rgba(249,115,22,0.3)]
-          hover:shadow-[0_0_15px_rgba(249,115,22,0.4)] transition-all hover:scale-110"
-          onClick={handleBookmark}
-        >
-          <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-orange-500' : ''} text-orange-500`} />
-        </button>
-        
-        {/* Boost Button */}
-        <button 
-          className="action-button w-8 h-8 rounded-full flex items-center justify-center
-          bg-[#1A1F2C] border border-sky-400/30 mb-3
-          shadow-[0_0_10px_rgba(56,189,248,0.3)]
-          hover:shadow-[0_0_15px_rgba(56,189,248,0.4)] transition-all hover:scale-110"
-          onClick={handleBoost}
-        >
-          <Zap className="w-4 h-4 text-sky-500" />
-        </button>
-        
-        {/* Report Button */}
-        <button 
-          className="action-button w-8 h-8 rounded-full flex items-center justify-center
-          bg-[#1A1F2C] border border-red-400/30
-          shadow-[0_0_10px_rgba(239,68,68,0.3)]
-          hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all hover:scale-110"
-          onClick={handleReport}
-        >
-          <Flag className="w-4 h-4 text-red-500" />
+          <div className="text-white text-xs font-bold">POST</div>
         </button>
       </div>
-      
+
       {/* Comment dialog */}
-      {postId && (
-        <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
-          <DialogContent className="sm:max-w-[600px] bg-gaming-800/95 backdrop-blur-sm p-0 border-gaming-400/30">
-            <div className="flex items-center gap-2 p-4 border-b border-gaming-400/20">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsCommentOpen(false)}
-                className="text-white hover:bg-white/10"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <h2 className="text-lg font-semibold text-white">Comments</h2>
-            </div>
-            
-            <div className="max-h-[80vh] overflow-y-auto">
-              <CommentList 
-                postId={postId} 
-                onBack={() => setIsCommentOpen(false)}
-                onCommentAdded={() => {
-                  console.log("Comment added, refreshing");
-                  // You can add any additional refresh logic here
-                }}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
+        <DialogContent className="sm:max-w-md">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Comments</h2>
+            <Button variant="ghost" size="icon" onClick={() => setIsCommentOpen(false)}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </div>
+          <CommentList postId={postId} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
