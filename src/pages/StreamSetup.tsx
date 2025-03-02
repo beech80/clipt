@@ -1,226 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Copy, Eye, EyeOff, RefreshCw } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Copy, Eye, EyeOff } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
-// This is a simplified standalone page just for stream setup
 export default function StreamSetup() {
-  const { user } = useAuth();
-  const [stream, setStream] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRegenerating, setIsRegenerating] = useState(false);
   const [showKey, setShowKey] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Define the RTMP URL - this is the server URL for OBS
-  const RTMP_URL = "rtmp://stream.clipt.live/live";
-
-  // Function to copy text to clipboard
-  const copyToClipboard = async (text: string, label: string) => {
+  
+  // Hardcoded values
+  const RTMP_URL = "rtmp://stream.clipt.cc/live";
+  const STREAM_KEY = "clipt-temporary-stream-key-123456";
+  
+  // Copy to clipboard function
+  const copyToClipboard = async (text: string, type: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied to clipboard!`);
+      toast({
+        title: "Copied!",
+        description: `${type} copied to clipboard.`,
+        duration: 2000,
+      });
     } catch (err) {
-      console.error('Failed to copy:', err);
-      toast.error(`Failed to copy ${label}`);
+      console.error("Failed to copy:", err);
+      toast({
+        title: "Copy Failed",
+        description: "Please try again or copy manually.",
+        variant: "destructive",
+      });
     }
   };
-
-  // Function to generate a random stream key
-  const generateRandomKey = async () => {
-    try {
-      // Call RPC function if available
-      const { data, error } = await supabase.rpc('generate_stream_key');
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      console.error('Error generating key via RPC, using fallback:', err);
-      // Fallback to client-side generation
-      const array = new Uint8Array(18);
-      window.crypto.getRandomValues(array);
-      return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-  };
-
-  // Regenerate stream key
-  const handleRegenerateKey = async () => {
-    if (!user || !stream) return;
-    
-    setIsRegenerating(true);
-    
-    try {
-      const newKey = await generateRandomKey();
-      
-      const { data, error } = await supabase
-        .from('streams')
-        .update({ stream_key: newKey })
-        .eq('id', stream.id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      setStream(data);
-      toast.success('Stream key regenerated successfully!');
-    } catch (err: any) {
-      console.error('Error regenerating stream key:', err);
-      toast.error('Failed to regenerate stream key');
-    } finally {
-      setIsRegenerating(false);
-    }
-  };
-
-  // Fetch or create stream on component mount
-  useEffect(() => {
-    const fetchOrCreateStream = async () => {
-      if (!user) return;
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        console.log("Fetching stream for user:", user.id);
-        
-        // Try to get existing stream
-        const { data: existingStream, error: fetchError } = await supabase
-          .from('streams')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          console.error("Error fetching stream:", fetchError);
-          throw fetchError;
-        }
-        
-        if (existingStream) {
-          console.log("Existing stream found:", existingStream);
-          // Ensure the RTMP URL is always up to date
-          if (existingStream.rtmp_url !== RTMP_URL) {
-            const { data: updatedStream, error: updateError } = await supabase
-              .from('streams')
-              .update({ rtmp_url: RTMP_URL })
-              .eq('id', existingStream.id)
-              .select()
-              .single();
-              
-            if (updateError) {
-              console.error("Error updating RTMP URL:", updateError);
-            } else {
-              existingStream.rtmp_url = RTMP_URL;
-            }
-          }
-          setStream(existingStream);
-        } else {
-          console.log("No stream found, attempting to create new stream");
-          
-          // Verify user exists in the database first
-          const { data: userExists, error: userCheckError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', user.id)
-            .single();
-            
-          if (userCheckError) {
-            console.error("User profile does not exist:", userCheckError);
-            setError("Your user profile needs to be created first. Please try visiting your profile page.");
-            setIsLoading(false);
-            return;
-          }
-          
-          // Create new stream with default values and add created_at/updated_at timestamps
-          const streamKey = await generateRandomKey();
-          const timestamp = new Date().toISOString();
-          
-          // Log the data we're about to insert
-          const streamData = {
-            user_id: user.id,
-            title: `${user.user_metadata?.username || user.email}'s Stream`,
-            description: "Welcome to my stream!",
-            is_live: false,
-            stream_key: streamKey,
-            rtmp_url: RTMP_URL,
-            viewer_count: 0,
-            created_at: timestamp,
-            updated_at: timestamp
-          };
-          
-          console.log("Creating stream with data:", streamData);
-          
-          const { data: newStream, error: createError } = await supabase
-            .from('streams')
-            .insert(streamData)
-            .select()
-            .single();
-          
-          if (createError) {
-            console.error("Error creating stream:", createError);
-            
-            // Provide more helpful error message
-            if (createError.message.includes("foreign key constraint")) {
-              setError("Unable to create stream due to user profile issues. Please try visiting your profile page first.");
-            } else {
-              setError(`Failed to create stream: ${createError.message}`);
-            }
-            
-            setIsLoading(false);
-            return;
-          }
-          
-          console.log("New stream created:", newStream);
-          setStream(newStream);
-        }
-      } catch (err: any) {
-        console.error("Error in fetchOrCreateStream:", err);
-        setError(err.message || "Failed to setup streaming");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchOrCreateStream();
-  }, [user]);
-
-  if (!user) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Authentication Required</AlertTitle>
-        <AlertDescription>Please log in to access streaming features.</AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto py-12">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">Loading Stream Settings...</CardTitle>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
 
   return (
     <div className="container mx-auto py-8">
@@ -229,21 +43,6 @@ export default function StreamSetup() {
           <CardTitle className="text-2xl">Stream Setup</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {error ? (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
-          
-          {/* Temporary hardcoded solution while we fix the database issues */}
-          <div className="bg-yellow-900/30 p-4 rounded-md border border-yellow-600/30 mb-4">
-            <h2 className="text-lg font-semibold mb-2 text-yellow-400">⚠️ Temporary Stream Details</h2>
-            <p className="text-gray-200 mb-2">
-              While we're fixing some database issues, you can use these temporary stream details:
-            </p>
-          </div>
-          
           <div className="bg-blue-950/30 p-4 rounded-md border border-blue-600/30">
             <h2 className="text-lg font-semibold mb-2 text-blue-400">How to Stream</h2>
             <ol className="list-decimal ml-5 space-y-1 text-gray-200">
@@ -257,8 +56,6 @@ export default function StreamSetup() {
               <li>Click "Start Streaming" in OBS when ready</li>
             </ol>
           </div>
-
-          <Separator />
           
           {/* Stream URL Section */}
           <div>
@@ -286,8 +83,7 @@ export default function StreamSetup() {
               <div className="relative flex-grow">
                 <Input
                   type={showKey ? "text" : "password"}
-                  // Use a hardcoded stream key for now if the database one isn't available
-                  value={stream?.stream_key || "clipt-temporary-stream-key-123456"}
+                  value={STREAM_KEY}
                   readOnly
                   className="font-mono pr-10 bg-black/20 border-gray-700"
                 />
@@ -301,49 +97,17 @@ export default function StreamSetup() {
                 </Button>
               </div>
               <Button
-                onClick={() => copyToClipboard(stream?.stream_key || "clipt-temporary-stream-key-123456", "Stream Key")}
+                onClick={() => copyToClipboard(STREAM_KEY, "Stream Key")}
                 className="whitespace-nowrap"
               >
                 <Copy className="h-4 w-4 mr-2" />
                 Copy Key
               </Button>
             </div>
-            
-            <div className="flex gap-2 mt-3">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={handleRegenerateKey}
-                disabled={isRegenerating || !stream}
-              >
-                {isRegenerating ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Regenerating...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Regenerate Key
-                  </>
-                )}
-              </Button>
-              <Button 
-                className="flex-1"
-                onClick={() => {
-                  copyToClipboard(`Server: ${RTMP_URL}\nStream Key: ${stream?.stream_key || "clipt-temporary-stream-key-123456"}`, "All Stream Info");
-                }}
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Copy Both
-              </Button>
-            </div>
           </div>
           
-          <Separator />
-          
           {/* Quick Copy Section */}
-          <div className="pt-2">
+          <div className="pt-4">
             <Button 
               variant="secondary" 
               size="lg"
@@ -351,7 +115,7 @@ export default function StreamSetup() {
               onClick={() => {
                 copyToClipboard(`OBS STREAM SETTINGS:
 Server: ${RTMP_URL}
-Stream Key: ${stream?.stream_key || "clipt-temporary-stream-key-123456"}
+Stream Key: ${STREAM_KEY}
 
 INSTRUCTIONS:
 1. Open OBS Studio
