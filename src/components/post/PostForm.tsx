@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Upload, Camera, Search, Hash, AtSign } from 'lucide-react';
-import GameBoyControls from '@/components/GameBoyControls';
 import { useQuery } from '@tanstack/react-query';
 import { Progress } from '@/components/ui/progress';
 
@@ -523,7 +522,6 @@ export const PostForm = () => {
           </div>
         </div>
       </div>
-      <GameBoyControls />
     </div>
   );
 };

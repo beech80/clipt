@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Gamepad2 } from "lucide-react";
-import GameBoyControls from "@/components/GameBoyControls";
 
 const ResetPassword = () => {
   const [email, setEmail] = useState("");
@@ -77,7 +76,6 @@ const ResetPassword = () => {
           </Button>
         </form>
       </div>
-      <GameBoyControls />
     </div>
   );
 };

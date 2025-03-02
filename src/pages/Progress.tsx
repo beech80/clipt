@@ -5,7 +5,6 @@ import { Trophy, Star, Award, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '@/components/ui/back-button';
-import GameBoyControls from '@/components/GameBoyControls';
 
 const Progress = () => {
   const { user } = useAuth();
@@ -67,8 +66,6 @@ const Progress = () => {
           <AchievementProgress />
         </div>
       </div>
-      
-      <GameBoyControls />
     </div>
   );
 };

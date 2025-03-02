@@ -1,10 +1,8 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { BackButton } from "@/components/ui/back-button";
 import { Calendar } from "@/components/ui/calendar";
-import GameBoyControls from "@/components/GameBoyControls";
 import { Button } from "@/components/ui/button";
 import { StreamScheduleForm } from "@/components/streaming/StreamScheduleForm";
 import { useQuery } from "@tanstack/react-query";
@@ -139,8 +137,6 @@ const Schedule = () => {
           </div>
         </div>
       )}
-      
-      <GameBoyControls />
     </div>
   );
 };

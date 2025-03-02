@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Gamepad2 } from "lucide-react";
 import { toast } from "sonner";
-import GameBoyControls from "@/components/GameBoyControls";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -90,7 +88,6 @@ const Signup = () => {
           </div>
         </form>
       </div>
-      <GameBoyControls />
     </div>
   );
 };
