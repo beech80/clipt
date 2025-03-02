@@ -4,29 +4,22 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-import { createComment } from "@/services/commentService"; // Import the new service
+import { supabase } from "@/lib/supabase";
 
 interface CommentFormProps {
   postId: string;
   onCancel?: () => void;
   parentId?: string | null;
   onReplyComplete?: () => void;
+  onCommentAdded?: () => void;
 }
 
-export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: CommentFormProps) => {
+export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCommentAdded }: CommentFormProps) => {
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Validate postId on mount
-  useEffect(() => {
-    console.log(`CommentForm initialized with postId: ${postId}`);
-    if (!postId || typeof postId !== 'string' || postId.trim() === '') {
-      console.error("Invalid postId in CommentForm:", postId);
-    }
-  }, [postId]);
 
   // Initialize audio element
   useEffect(() => {
@@ -41,15 +34,15 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     };
   }, []);
 
-  // Early return if no valid postId
-  if (!postId || typeof postId !== 'string' || postId.trim() === '') {
-    return (
-      <div className="p-4 text-center">
-        <p className="text-red-500 text-sm">Error: Cannot identify post</p>
-        <p className="text-red-500 text-xs mt-1">Please try refreshing the page</p>
-      </div>
-    );
-  }
+  // Log for debugging
+  useEffect(() => {
+    console.log("CommentForm Debug:", { 
+      postId,
+      postIdType: typeof postId,
+      user: user?.id,
+      parentId 
+    });
+  }, [postId, user, parentId]);
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,8 +57,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
       return;
     }
 
-    // Double check postId before submission
-    if (!postId || typeof postId !== 'string' || postId.trim() === '') {
+    if (!postId) {
       console.error("Cannot submit comment: Invalid postId", postId);
       toast.error("Cannot identify post for this comment");
       return;
@@ -76,18 +68,16 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
     try {
       console.log(`Submitting comment to post ${postId} by user ${user.id}`);
       
-      // Construct comment data
-      const commentData = {
-        post_id: postId,
-        user_id: user.id,
-        content: newComment.trim(),
-        ...(parentId ? { parent_id: parentId } : {})
-      };
-      
-      console.log("Sending comment data:", commentData);
-      
-      // Use the new commentService instead of directly calling supabase
-      const { data, error } = await createComment(commentData);
+      // Create comment directly
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          content: newComment.trim(),
+          ...(parentId ? { parent_id: parentId } : {})
+        })
+        .select();
 
       if (error) {
         console.error("Error adding comment:", error);
@@ -97,30 +87,37 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete }: Com
 
       console.log("Comment added successfully:", data);
 
-      // Play success sound
+      // Play sound
       if (audioRef.current) {
         try {
-          await audioRef.current.play();
+          audioRef.current.play().catch(() => {
+            console.log("Audio play failed - this is normal in some browsers");
+          });
         } catch (err) {
-          console.warn("Could not play audio notification:", err);
+          console.warn("Could not play audio notification");
         }
       }
 
-      // Clear form and notify success
+      // Clear form
       setNewComment("");
       toast.success("Comment added successfully!");
       
-      // Refresh comments data
-      await queryClient.invalidateQueries({ queryKey: ['comments', postId] });
-      await queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
+      // Force refresh comments
+      if (onCommentAdded) {
+        onCommentAdded();
+      }
       
-      // If replying, call the callback
       if (onReplyComplete) {
         onReplyComplete();
       }
+      
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
+      
     } catch (error: any) {
       console.error("Comment submission error:", error);
-      toast.error(`Error: ${error?.message || "Unknown error adding comment"}`);
+      toast.error("Error adding comment. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
