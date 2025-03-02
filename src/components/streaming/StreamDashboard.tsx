@@ -321,12 +321,13 @@ export function StreamDashboard() {
               className="font-mono text-xs"
             />
             <Button
-              variant="ghost"
-              size="icon"
+              variant="outline"
+              size="sm"
               onClick={() => copyToClipboard(RTMP_URL, "Stream URL")}
-              className="ml-2"
+              className="ml-2 whitespace-nowrap"
             >
-              <Copy className="h-4 w-4" />
+              <Copy className="h-4 w-4 mr-1" />
+              Copy URL
             </Button>
           </div>
         </div>
@@ -349,35 +350,74 @@ export function StreamDashboard() {
               {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </Button>
             <Button
-              variant="ghost"
-              size="icon"
+              variant="outline"
+              size="sm"
               onClick={() => copyToClipboard(stream?.stream_key || "", "Stream key")}
-              className="ml-2"
+              className="ml-2 whitespace-nowrap"
             >
-              <Copy className="h-4 w-4" />
+              <Copy className="h-4 w-4 mr-1" />
+              Copy Key
             </Button>
           </div>
-          <Button 
-            variant="outline" 
-            className="mt-2"
-            onClick={handleRegenerateKey}
-            disabled={isRegenerating}
-          >
-            {isRegenerating ? (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                Regenerating...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Regenerate Key
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2 mt-2">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={handleRegenerateKey}
+              disabled={isRegenerating}
+            >
+              {isRegenerating ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Regenerating...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Regenerate Key
+                </>
+              )}
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => {
+                copyToClipboard(`${RTMP_URL}\n${stream?.stream_key || ""}`, "Stream URL and Key");
+              }}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Both
+            </Button>
+          </div>
         </div>
         
         <Separator className="my-4" />
+        
+        <div className="bg-muted p-4 rounded-md space-y-3">
+          <h3 className="font-medium text-sm">Quick OBS Setup</h3>
+          <ol className="list-decimal pl-5 text-sm space-y-2">
+            <li>Open OBS Studio</li>
+            <li>Go to <strong>Settings → Stream</strong></li>
+            <li>Select <strong>"Custom..."</strong> as the service</li>
+            <li>Paste <strong>{RTMP_URL}</strong> as the Server</li>
+            <li>Paste your stream key in the Stream Key field</li>
+            <li>Click <strong>Apply</strong> then <strong>OK</strong></li>
+            <li>Click <strong>"Start Streaming"</strong> in OBS</li>
+          </ol>
+          <Button 
+            variant="default" 
+            size="sm"
+            className="mt-2 w-full"
+            onClick={() => {
+              copyToClipboard(`OBS Stream Settings:
+Server: ${RTMP_URL}
+Stream Key: ${stream?.stream_key || ""}`, "OBS Settings");
+            }}
+          >
+            <Copy className="mr-2 h-4 w-4" />
+            Copy OBS Instructions
+          </Button>
+        </div>
         
         <div className="flex flex-col gap-4">
           <div className="bg-black/10 p-4 rounded-md">
@@ -395,10 +435,10 @@ export function StreamDashboard() {
           
           <Alert>
             <Info className="h-4 w-4" />
-            <AlertTitle>OBS Setup Instructions</AlertTitle>
+            <AlertTitle>Important</AlertTitle>
             <AlertDescription>
-              In OBS Studio, go to Settings → Stream, select "Custom..." as the service, 
-              enter the Stream URL and Stream Key above, then click Apply.
+              Use the exact stream URL <strong>{RTMP_URL}</strong> in OBS.
+              Make sure to keep your stream key secure and never share it publicly.
             </AlertDescription>
           </Alert>
           
