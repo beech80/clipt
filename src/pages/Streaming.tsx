@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { ChatModerationDashboard } from "@/components/streaming/moderation/ChatM
 import { StreamHeader } from "@/components/streaming/StreamHeader";
 import { StreamKeyDisplay } from "@/components/streaming/StreamKeyDisplay";
 import { StreamControlPanel } from "@/components/streaming/StreamControlPanel";
+import { StreamDashboard } from "@/components/streaming/StreamDashboard";
 import type { Stream } from "@/types/stream";
 
 export default function Streaming() {
@@ -69,6 +69,9 @@ export default function Streaming() {
       <StreamHeader />
 
       <Card className="p-6 space-y-4">
+        {/* Add StreamDashboard component to display stream URL and key */}
+        <StreamDashboard />
+        
         <StreamControlPanel 
           stream={stream} 
           isLoading={isLoading}
@@ -99,11 +102,15 @@ export default function Streaming() {
 
       <EnhancedGamingDashboard 
         streamId={stream?.id || ''} 
-        userId={user.id}
-        isLive={stream?.is_live || false}
+        isLoading={isLoading}
+        isActive={!!stream?.is_live} 
       />
-
-      <GameBoyControls />
+      
+      {stream?.is_live && (
+        <Card className="p-4">
+          <GameBoyControls />
+        </Card>
+      )}
     </div>
   );
 }
