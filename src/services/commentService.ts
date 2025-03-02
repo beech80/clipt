@@ -128,56 +128,57 @@ export const getReplies = async (commentId: string): Promise<CommentResponse> =>
   }
 };
 
-export const likeComment = async (commentId: string, userId: string): Promise<CommentResponse> => {
+export const likeComment = async (commentId: string, userId: string): Promise<{ data: any; error: Error | null }> => {
   try {
-    // First check if the user has already liked this comment
+    if (!commentId || !userId) {
+      throw new Error("Comment ID and User ID are required");
+    }
+
+    console.log(`Toggling like for comment ${commentId} by user ${userId}`);
+    
+    // First check if user has already liked this comment
     const { data: existingLike, error: checkError } = await supabase
       .from('comment_likes')
       .select('id')
       .eq('comment_id', commentId)
       .eq('user_id', userId)
       .single();
-
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      
+    if (checkError && checkError.code !== 'PGRST116') {
+      // Error other than "no rows returned"
       console.error("Error checking existing like:", checkError);
       throw checkError;
     }
 
     if (existingLike) {
       // User already liked this comment, so unlike it
-      console.log("Removing existing like");
-      const { error: deleteError } = await supabase
+      const { error: unlikeError } = await supabase
         .from('comment_likes')
         .delete()
         .eq('id', existingLike.id);
 
-      if (deleteError) {
-        console.error("Error removing like:", deleteError);
-        throw deleteError;
+      if (unlikeError) {
+        console.error("Error unliking comment:", unlikeError);
+        throw unlikeError;
       }
 
       return { data: { liked: false }, error: null };
     } else {
-      // Add new like
-      console.log("Adding new like");
-      const { data: newLike, error: insertError } = await supabase
+      // User hasn't liked this comment yet, so like it
+      const { data: newLike, error: likeError } = await supabase
         .from('comment_likes')
-        .insert({
-          comment_id: commentId,
-          user_id: userId
-        })
-        .select('id')
-        .single();
+        .insert({ comment_id: commentId, user_id: userId })
+        .select();
 
-      if (insertError) {
-        console.error("Error adding like:", insertError);
-        throw insertError;
+      if (likeError) {
+        console.error("Error liking comment:", likeError);
+        throw likeError;
       }
 
       return { data: { liked: true }, error: null };
     }
   } catch (error) {
-    console.error("Error liking/unliking comment:", error);
+    console.error("Error in likeComment function:", error);
     return { data: null, error: error as Error };
   }
 };

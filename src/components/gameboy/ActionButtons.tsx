@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, MessageSquare, UserPlus, Trophy, Camera, ArrowLeft } from 'lucide-react';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,6 +19,18 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const navigate = useNavigate();
+  
+  // Log postId for debugging
+  useEffect(() => {
+    console.log(`ActionButtons component mounted with postId: ${postId}`);
+    console.log('postId type:', typeof postId);
+  }, [postId]);
+
+  // Exit early if no postId
+  if (!postId) {
+    console.error("No postId provided to ActionButtons");
+    return null;
+  }
 
   const handleLike = async () => {
     if (!user) {
@@ -111,7 +123,10 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
         shadow-[0_0_15px_rgba(0,120,255,0.3)] border-blue-400/30
         hover:shadow-[0_0_20px_rgba(0,120,255,0.4)] transition-all hover:scale-110 active:scale-95
         w-8 h-8 sm:w-10 sm:h-10"
-        onClick={() => setIsCommentOpen(true)}
+        onClick={() => {
+          console.log(`Opening comments for postId: ${postId}`);
+          setIsCommentOpen(true);
+        }}
       >
         <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500
           drop-shadow-[0_0_8px_rgba(0,120,255,0.5)]" />
@@ -157,25 +172,34 @@ const ActionButtons = ({ onAction, postId }: ActionButtonsProps) => {
         <span className="text-[8px] sm:text-[10px] text-purple-500 font-bold mt-1">POST</span>
       </button>
 
-      <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-gaming-800/95 backdrop-blur-sm p-0 border-gaming-400/30">
-          <div className="flex items-center gap-2 p-4 border-b border-gaming-400/20">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsCommentOpen(false)}
-              className="text-white hover:bg-white/10"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-lg font-semibold text-white">Comments</h2>
-          </div>
-          
-          <div className="max-h-[80vh] overflow-y-auto">
-            <CommentList postId={postId} onBack={() => setIsCommentOpen(false)} />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {postId && (
+        <Dialog open={isCommentOpen} onOpenChange={setIsCommentOpen}>
+          <DialogContent className="sm:max-w-[600px] bg-gaming-800/95 backdrop-blur-sm p-0 border-gaming-400/30">
+            <div className="flex items-center gap-2 p-4 border-b border-gaming-400/20">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsCommentOpen(false)}
+                className="text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="text-lg font-semibold text-white">Comments</h2>
+            </div>
+            
+            <div className="max-h-[80vh] overflow-y-auto">
+              <CommentList 
+                postId={postId} 
+                onBack={() => setIsCommentOpen(false)}
+                onCommentAdded={() => {
+                  console.log("Comment added, refreshing");
+                  // You can add any additional refresh logic here
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };
