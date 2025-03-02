@@ -9,7 +9,7 @@ import { Copy, Eye, EyeOff, Calendar, Settings2, Play, Clock, ChartBar, Gamepad,
 import { toast } from "@/components/ui/use-toast";
 import { StreamChat } from "@/components/streaming/StreamChat";
 import { StreamDashboard } from "@/components/streaming/StreamDashboard";
-import GameBoyControls from "@/components/GameBoyControls";
+import StreamControlButtons from "@/components/StreamControlButtons";
 import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
 import { ChatModerationDashboard } from "@/components/streaming/moderation/ChatModerationDashboard";
 
@@ -146,14 +146,14 @@ export default function Streaming() {
             </CardContent>
           </Card>
           
-          {/* GameBoy Controls */}
+          {/* Stream Control Buttons */}
           <Card className="p-6 border border-gaming-700">
             <CardTitle className="mb-4 flex items-center">
               <Gamepad className="mr-2 h-5 w-5" />
               Stream Controls
             </CardTitle>
             <div className="flex justify-center">
-              <GameBoyControls currentPostId="streaming-page" />
+              <StreamControlButtons currentStreamId="streaming-page" />
             </div>
           </Card>
         </TabsContent>
@@ -275,14 +275,14 @@ RECOMMENDED SETTINGS:
             </CardContent>
           </Card>
           
-          {/* GameBoy Controls */}
+          {/* Stream Control Buttons */}
           <Card className="p-6 border border-gaming-700">
             <CardTitle className="mb-4 flex items-center">
               <Gamepad className="mr-2 h-5 w-5" />
               Stream Controls
             </CardTitle>
             <div className="flex justify-center">
-              <GameBoyControls currentPostId="streaming-page" />
+              <StreamControlButtons currentStreamId="streaming-page" />
             </div>
           </Card>
         </TabsContent>
@@ -460,14 +460,14 @@ RECOMMENDED SETTINGS:
             </CardContent>
           </Card>
           
-          {/* GameBoy Controls */}
+          {/* Stream Control Buttons */}
           <Card className="p-6 border border-gaming-700">
             <CardTitle className="mb-4 flex items-center">
               <Gamepad className="mr-2 h-5 w-5" />
               Stream Controls
             </CardTitle>
             <div className="flex justify-center">
-              <GameBoyControls currentPostId="streaming-page" />
+              <StreamControlButtons currentStreamId="streaming-page" />
             </div>
           </Card>
         </TabsContent>
@@ -526,14 +526,14 @@ RECOMMENDED SETTINGS:
             </CardContent>
           </Card>
           
-          {/* GameBoy Controls */}
+          {/* Stream Control Buttons */}
           <Card className="p-6 border border-gaming-700">
             <CardTitle className="mb-4 flex items-center">
               <Gamepad className="mr-2 h-5 w-5" />
               Stream Controls
             </CardTitle>
             <div className="flex justify-center">
-              <GameBoyControls currentPostId="streaming-page" />
+              <StreamControlButtons currentStreamId="streaming-page" />
             </div>
           </Card>
         </TabsContent>
