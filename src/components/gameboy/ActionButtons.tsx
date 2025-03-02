@@ -7,9 +7,10 @@ import { toast } from 'sonner';
 
 interface ActionButtonsProps {
   postId: string;
+  onAction?: (action: string) => void;
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ postId }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -142,63 +143,74 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId }) => {
   };
 
   return (
-    <div className="relative w-[70px] h-[70px] flex items-center justify-center">
-      {/* Diamond shaped action buttons */}
+    <div className="relative w-full h-full flex items-center justify-center">
+      {/* Diamond shaped action buttons - with solid colored backgrounds */}
       <div className="relative w-full h-full">
         {/* Top button - Like (Heart) */}
         <button
-          onClick={handleLike}
-          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 w-8 h-8 
-            bg-[#ff3a5e] bg-opacity-20 rounded-full flex items-center justify-center
-            shadow-sm hover:bg-opacity-30 active:scale-95 transition-all"
+          onClick={() => {
+            handleLike();
+            if (onAction) onAction('like');
+          }}
+          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 w-10 h-10 sm:w-12 sm:h-12
+            bg-[#FF3866] rounded-full flex items-center justify-center
+            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
           aria-label="Like"
         >
-          <Heart className="w-4 h-4 text-[#ff3a5e]" />
+          <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="white" />
         </button>
         
-        {/* Left button - Comment */}
+        {/* Left button - Comment (MessageSquare) */}
         <button
-          onClick={handleComment}
-          className="absolute top-1/2 left-0 -translate-x-1/4 -translate-y-1/2 w-8 h-8 
-            bg-[#4f9cf9] bg-opacity-20 rounded-full flex items-center justify-center
-            shadow-sm hover:bg-opacity-30 active:scale-95 transition-all"
+          onClick={() => {
+            handleComment();
+            if (onAction) onAction('comment');
+          }}
+          className="absolute top-1/2 left-0 -translate-x-1/4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12
+            bg-[#3D93FC] rounded-full flex items-center justify-center
+            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
           aria-label="Comment"
         >
-          <MessageSquare className="w-4 h-4 text-[#4f9cf9]" />
+          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="white" />
         </button>
         
-        {/* Right button - Follow */}
+        {/* Right button - Follow (User) */}
         <button
-          onClick={handleFollow}
-          className="absolute top-1/2 right-0 translate-x-1/4 -translate-y-1/2 w-8 h-8 
-            bg-[#2ecc71] bg-opacity-20 rounded-full flex items-center justify-center
-            shadow-sm hover:bg-opacity-30 active:scale-95 transition-all"
+          onClick={() => {
+            handleFollow();
+            if (onAction) onAction('follow');
+          }}
+          className="absolute top-1/2 right-0 translate-x-1/4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12
+            bg-[#26C870] rounded-full flex items-center justify-center
+            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
           aria-label="Follow"
         >
-          <User className="w-4 h-4 text-[#2ecc71]" />
+          <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="white" />
         </button>
         
-        {/* Bottom button - Rank */}
+        {/* Bottom button - Rank (Trophy) */}
         <button
-          onClick={handleRank}
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/4 w-8 h-8 
-            bg-[#f1c40f] bg-opacity-20 rounded-full flex items-center justify-center
-            shadow-sm hover:bg-opacity-30 active:scale-95 transition-all"
+          onClick={() => {
+            handleRank();
+            if (onAction) onAction('rank');
+          }}
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/4 w-10 h-10 sm:w-12 sm:h-12
+            bg-[#FFE55C] rounded-full flex items-center justify-center
+            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
           aria-label="Rank"
         >
-          <Trophy className="w-4 h-4 text-[#f1c40f]" />
+          <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="white" />
         </button>
         
-        {/* Center POST button */}
+        {/* POST button */}
         <button
-          onClick={() => navigate('/clipts/post')}
-          className="absolute bottom-[calc(100%+15px)] left-1/2 -translate-x-1/2 px-3 py-1.5 
-            bg-[#8047f8] text-white rounded-full text-xs font-medium flex items-center gap-1
-            shadow-sm hover:bg-opacity-90 active:scale-95 transition-all"
+          onClick={() => navigate('/post/new')}
+          className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 w-14 h-14 sm:w-16 sm:h-16
+            bg-[#9c27b0] text-white rounded-full text-xs font-medium flex items-center justify-center
+            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
           aria-label="Post"
         >
-          <Camera className="w-3.5 h-3.5" />
-          <span>POST</span>
+          <span className="font-bold">POST</span>
         </button>
       </div>
     </div>
