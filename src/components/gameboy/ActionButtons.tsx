@@ -142,69 +142,84 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
     }
   };
 
-  const buttonStyle = "w-[36px] h-[36px] rounded-full flex items-center justify-center active:scale-95 transition-all";
+  // Xbox controller style button class with glossy effect
+  const xboxButtonStyle = `
+    w-[42px] h-[42px] rounded-full 
+    flex items-center justify-center 
+    active:scale-95 transition-all
+    bg-black border border-gray-800
+    shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_3px_5px_rgba(0,0,0,0.5)]
+  `;
 
   return (
-    <div className="relative w-[120px] h-[120px] flex items-center justify-center">
-      {/* Diamond shaped formation with more spacing like xbox controller */}
+    <div className="relative w-[130px] h-[130px] flex items-center justify-center">
+      {/* Xbox controller style button diamond */}
       
-      {/* Heart button (top) */}
+      {/* Heart button (Y position - top) */}
       <button
         onClick={() => {
           handleLike();
           if (onAction) onAction('like');
         }}
-        className={`${buttonStyle} bg-[#FF385F] absolute -top-12 left-1/2 -translate-x-1/2`}
+        className={`${xboxButtonStyle} absolute -top-14 left-1/2 -translate-x-1/2`}
         aria-label="Like"
       >
-        <Heart className="w-5 h-5 text-white" fill="white" stroke="none" />
+        <Heart className="w-5 h-5 text-[#FF385F]" fill="#FF385F" stroke="none" />
       </button>
       
-      {/* Message button (left) */}
+      {/* Message button (X position - left) */}
       <button
         onClick={() => {
           handleComment();
           if (onAction) onAction('comment');
         }}
-        className={`${buttonStyle} bg-[#2F5EC4] absolute top-1/2 -left-12 -translate-y-1/2`}
+        className={`${xboxButtonStyle} absolute top-1/2 -left-14 -translate-y-1/2`}
         aria-label="Comment"
       >
-        <MessageSquare className="w-5 h-5 text-white" fill="white" stroke="none" />
+        <MessageSquare className="w-5 h-5 text-[#2F5EC4]" fill="#2F5EC4" stroke="none" />
       </button>
       
-      {/* Follow button (right) */}
+      {/* Follow button (B position - right) */}
       <button
         onClick={() => {
           handleFollow();
           if (onAction) onAction('follow');
         }}
-        className={`${buttonStyle} bg-[#27AE60] absolute top-1/2 -right-12 -translate-y-1/2`}
+        className={`${xboxButtonStyle} absolute top-1/2 -right-14 -translate-y-1/2`}
         aria-label="Follow"
       >
-        <User className="w-5 h-5 text-white" fill="white" stroke="none" />
+        <User className="w-5 h-5 text-[#27AE60]" fill="#27AE60" stroke="none" />
       </button>
       
-      {/* Trophy button (bottom) */}
+      {/* Trophy button (A position - bottom) */}
       <button
         onClick={() => {
           handleRank();
           if (onAction) onAction('rank');
         }}
-        className={`${buttonStyle} bg-[#F1C40F] absolute -bottom-12 left-1/2 -translate-x-1/2`}
+        className={`${xboxButtonStyle} absolute -bottom-14 left-1/2 -translate-x-1/2`}
         aria-label="Rank"
       >
-        <Trophy className="w-5 h-5 text-white" fill="white" stroke="none" />
+        <Trophy className="w-5 h-5 text-[#F1C40F]" fill="#F1C40F" stroke="none" />
       </button>
       
-      {/* POST button */}
+      {/* POST button - positioned below the button diamond */}
       <button
         onClick={() => navigate('/post/new')}
-        className={`absolute -bottom-24 left-1/2 -translate-x-1/2 ${buttonStyle} bg-[#9C27B0]`}
+        className="absolute -bottom-28 left-1/2 -translate-x-1/2 w-[36px] h-[36px] bg-[#9C27B0] rounded-full flex items-center justify-center active:scale-95 transition-all"
         aria-label="Post"
       >
         <Camera className="w-5 h-5 text-white" />
         <span className="absolute text-[10px] font-bold text-white -bottom-5">POST</span>
       </button>
+
+      {/* Small colored dots in center like Xbox controller */}
+      <div className="absolute w-14 h-14 flex items-center justify-center pointer-events-none">
+        <div className="w-1.5 h-1.5 bg-[#FF385F] rounded-full absolute top-1.5"></div>
+        <div className="w-1.5 h-1.5 bg-[#2F5EC4] rounded-full absolute left-1.5"></div>
+        <div className="w-1.5 h-1.5 bg-[#27AE60] rounded-full absolute right-1.5"></div>
+        <div className="w-1.5 h-1.5 bg-[#F1C40F] rounded-full absolute bottom-1.5"></div>
+      </div>
     </div>
   );
 };
