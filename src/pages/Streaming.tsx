@@ -5,10 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Copy, Eye, EyeOff, Calendar, Settings2, Play, Clock } from "lucide-react";
+import { Copy, Eye, EyeOff, Calendar, Settings2, Play, Clock, ChartBar, Gamepad, Layers } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { StreamChat } from "@/components/streaming/StreamChat";
 import { StreamDashboard } from "@/components/streaming/StreamDashboard";
+import GameBoyControls from "@/components/GameBoyControls";
+import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
+import { ChatModerationDashboard } from "@/components/streaming/moderation/ChatModerationDashboard";
 
 export default function Streaming() {
   const { user } = useAuth();
@@ -69,18 +72,22 @@ export default function Streaming() {
       <h1 className="text-3xl font-bold">Streaming</h1>
       
       <Tabs defaultValue="live" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-6">
+        <TabsList className="grid grid-cols-4 mb-6">
           <TabsTrigger value="live">
             <Play className="w-4 h-4 mr-2" />
             Live
           </TabsTrigger>
           <TabsTrigger value="setup">
             <Settings2 className="w-4 h-4 mr-2" />
-            Stream Setup
+            Setup
           </TabsTrigger>
           <TabsTrigger value="schedule">
             <Calendar className="w-4 h-4 mr-2" />
             Schedule
+          </TabsTrigger>
+          <TabsTrigger value="dashboard">
+            <ChartBar className="w-4 h-4 mr-2" />
+            Dashboard
           </TabsTrigger>
         </TabsList>
         
@@ -108,7 +115,7 @@ export default function Streaming() {
               <div className="bg-black/20 rounded-md p-5 space-y-5">
                 <h3 className="text-lg font-medium mb-3">Stream Quick-Start Guide</h3>
                 <ol className="list-decimal ml-5 space-y-2 text-gray-200">
-                  <li>Click the <span className="text-purple-400 font-medium">"Stream Setup"</span> tab to view your stream key</li>
+                  <li>Click the <span className="text-purple-400 font-medium">"Setup"</span> tab to view your stream key</li>
                   <li>Copy the RTMP URL and Stream Key</li>
                   <li>Open your streaming software (e.g. OBS Studio)</li>
                   <li>Go to Settings → Stream</li>
@@ -128,6 +135,15 @@ export default function Streaming() {
                 <StreamChat />
               </div>
             </CardContent>
+          </Card>
+          
+          {/* GameBoy Controls */}
+          <Card className="p-4">
+            <CardTitle className="mb-4 flex items-center">
+              <Gamepad className="mr-2 h-5 w-5" />
+              Stream Controls
+            </CardTitle>
+            <GameBoyControls />
           </Card>
         </TabsContent>
         
@@ -247,6 +263,15 @@ RECOMMENDED SETTINGS:
               </div>
             </CardContent>
           </Card>
+          
+          {/* GameBoy Controls */}
+          <Card className="p-4">
+            <CardTitle className="mb-4 flex items-center">
+              <Gamepad className="mr-2 h-5 w-5" />
+              Stream Controls
+            </CardTitle>
+            <GameBoyControls />
+          </Card>
         </TabsContent>
         
         {/* Schedule Tab */}
@@ -291,6 +316,79 @@ RECOMMENDED SETTINGS:
                 Schedule New Stream
               </Button>
             </CardContent>
+          </Card>
+          
+          {/* GameBoy Controls */}
+          <Card className="p-4">
+            <CardTitle className="mb-4 flex items-center">
+              <Gamepad className="mr-2 h-5 w-5" />
+              Stream Controls
+            </CardTitle>
+            <GameBoyControls />
+          </Card>
+        </TabsContent>
+        
+        {/* Dashboard Tab */}
+        <TabsContent value="dashboard" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Stream Dashboard</CardTitle>
+              <CardDescription>Monitor your stream performance and analytics</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="bg-blue-950/30 border-blue-600/30">
+                  <CardHeader className="pb-2">
+                    <CardDescription>Current Viewers</CardDescription>
+                    <CardTitle className="text-2xl">0</CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card className="bg-purple-950/30 border-purple-600/30">
+                  <CardHeader className="pb-2">
+                    <CardDescription>Total Views</CardDescription>
+                    <CardTitle className="text-2xl">0</CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card className="bg-green-950/30 border-green-600/30">
+                  <CardHeader className="pb-2">
+                    <CardDescription>Chat Messages</CardDescription>
+                    <CardTitle className="text-2xl">0</CardTitle>
+                  </CardHeader>
+                </Card>
+                <Card className="bg-orange-950/30 border-orange-600/30">
+                  <CardHeader className="pb-2">
+                    <CardDescription>Stream Duration</CardDescription>
+                    <CardTitle className="text-2xl">00:00:00</CardTitle>
+                  </CardHeader>
+                </Card>
+              </div>
+              
+              <Separator />
+              
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Stream Analytics</h3>
+                <div className="aspect-video bg-black/30 rounded-md flex items-center justify-center">
+                  <p className="text-gray-400">Analytics visualization will appear here during active streams</p>
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <EnhancedGamingDashboard streamId="example-stream" isLoading={false} isActive={false} />
+              
+              <Separator />
+              
+              <ChatModerationDashboard streamId="example-stream" />
+            </CardContent>
+          </Card>
+          
+          {/* GameBoy Controls */}
+          <Card className="p-4">
+            <CardTitle className="mb-4 flex items-center">
+              <Gamepad className="mr-2 h-5 w-5" />
+              Stream Controls
+            </CardTitle>
+            <GameBoyControls />
           </Card>
         </TabsContent>
       </Tabs>

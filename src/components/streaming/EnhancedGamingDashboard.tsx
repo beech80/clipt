@@ -18,11 +18,19 @@ interface GamingMetrics {
 
 interface EnhancedGamingDashboardProps {
   streamId: string;
-  userId: string;
-  isLive: boolean;
+  userId?: string;
+  isLive?: boolean;
+  isLoading?: boolean;
+  isActive?: boolean;
 }
 
-export function EnhancedGamingDashboard({ streamId, userId, isLive }: EnhancedGamingDashboardProps) {
+export function EnhancedGamingDashboard({ 
+  streamId, 
+  userId, 
+  isLive = false, 
+  isLoading = false,
+  isActive = false 
+}: EnhancedGamingDashboardProps) {
   const [streamKey, setStreamKey] = useState<string | null>(null);
 
   const { data: gamingMetrics } = useQuery({
