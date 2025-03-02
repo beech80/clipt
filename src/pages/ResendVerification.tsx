@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Mail } from 'lucide-react';
 import { toast } from "sonner";
-import GameBoyControls from "@/components/GameBoyControls";
 
 const ResendVerification = () => {
   const [email, setEmail] = useState('');
@@ -77,7 +76,6 @@ const ResendVerification = () => {
           </Button>
         </form>
       </div>
-      <GameBoyControls />
     </div>
   );
 };

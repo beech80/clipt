@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { GroupChatList } from "@/components/chat/GroupChatList";
 import { GroupChatMessages } from "@/components/chat/GroupChatMessages";
-import GameBoyControls from "@/components/GameBoyControls";
 
 const GroupChat = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -26,8 +25,6 @@ const GroupChat = () => {
           )}
         </div>
       </div>
-
-      <GameBoyControls />
     </div>
   );
 };

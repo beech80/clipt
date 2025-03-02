@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -7,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Check, CreditCard, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import GameBoyControls from "@/components/GameBoyControls";
 import { BackButton } from "@/components/ui/back-button";
 
 interface SubscriptionPlan {
@@ -149,8 +147,6 @@ const Subscription = () => {
           </div>
         )}
       </div>
-
-      <GameBoyControls />
     </div>
   );
 };

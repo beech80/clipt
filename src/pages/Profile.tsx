@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -8,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
 import { AchievementList } from "@/components/achievements/AchievementList";
-import GameBoyControls from "@/components/GameBoyControls";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
@@ -234,8 +232,6 @@ const Profile = () => {
           </Card>
         )}
       </div>
-      
-      <GameBoyControls />
     </div>
   );
 };

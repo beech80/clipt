@@ -1,5 +1,4 @@
 import React from "react";
-import GameBoyControls from "@/components/GameBoyControls";
 import { Button } from "@/components/ui/button";
 import { Search, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -257,8 +256,6 @@ const Messages = () => {
           )}
         </div>
       </div>
-
-      <GameBoyControls />
     </div>
   );
 };

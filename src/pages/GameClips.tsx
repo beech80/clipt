@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -6,7 +5,6 @@ import PostItem from "@/components/PostItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/ui/back-button";
 import { Gamepad2 } from "lucide-react";
-import GameBoyControls from "@/components/GameBoyControls";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function GameClips() {
@@ -84,8 +82,6 @@ export default function GameClips() {
           </div>
         )}
       </div>
-
-      <GameBoyControls />
     </div>
   );
 }

@@ -12,7 +12,6 @@ import { AccessibilitySettings } from "@/components/accessibility/AccessibilityS
 import { TwoFactorSettings } from "@/components/settings/TwoFactorSettings";
 import { DataPrivacySettings } from "@/components/settings/DataPrivacySettings";
 import { StreamSettings } from "@/components/streaming/StreamSettings";
-import GameBoyControls from "@/components/GameBoyControls";
 import {
   Bell,
   Volume2,
@@ -435,7 +434,6 @@ const Settings = () => {
           </div>
         </div>
       </div>
-      <GameBoyControls />
     </div>
   );
 };

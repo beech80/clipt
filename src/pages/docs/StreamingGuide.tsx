@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
-import GameBoyControls from '@/components/GameBoyControls';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -162,8 +161,6 @@ const StreamingGuide = () => {
           </section>
         </div>
       </Card>
-      
-      <GameBoyControls />
     </div>
   );
 };

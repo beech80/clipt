@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,6 @@ import { toast } from "sonner";
 import { Scissors, Play, Pause, Save } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { handleVideoControl } from '@/components/gameboy/VideoControls';
-import GameBoyControls from "@/components/GameBoyControls";
 
 interface ClipEditorProps {
   videoUrl: string;
@@ -137,8 +135,6 @@ export const ClipEditor = ({ videoUrl, onSave }: ClipEditorProps) => {
           </div>
         </div>
       </Card>
-
-      <GameBoyControls />
     </>
   );
 };
