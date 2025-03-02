@@ -5,12 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Copy, Eye, EyeOff, Calendar, Settings2, Play, Clock, ChartBar, Gamepad, Layers } from "lucide-react";
+import { Copy, Eye, EyeOff, Calendar, Settings2, Play, Clock, ChartBar, Layers } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { StreamChat } from "@/components/streaming/StreamChat";
 import { StreamDashboard } from "@/components/streaming/StreamDashboard";
-import StreamControlButtons from "@/components/StreamControlButtons";
-import GameBoyControls from "@/components/GameBoyControls";
 import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
 import { ChatModerationDashboard } from "@/components/streaming/moderation/ChatModerationDashboard";
 
@@ -146,25 +144,6 @@ export default function Streaming() {
               </div>
             </CardContent>
           </Card>
-          
-          {/* Controller UI */}
-          <Card className="p-6 border border-gaming-700">
-            <CardTitle className="mb-4 flex items-center">
-              <Gamepad className="mr-2 h-5 w-5" />
-              Game Controls
-            </CardTitle>
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              {/* Left side - GameBoy Controls */}
-              <div className="w-full md:w-1/2">
-                <GameBoyControls currentPostId="streaming-page" />
-              </div>
-              
-              {/* Right side - Custom Stream Controls */}
-              <div className="w-full md:w-1/2">
-                <StreamControlButtons currentStreamId="streaming-page" />
-              </div>
-            </div>
-          </Card>
         </TabsContent>
         
         {/* Setup Tab */}
@@ -282,25 +261,6 @@ RECOMMENDED SETTINGS:
                 </Button>
               </div>
             </CardContent>
-          </Card>
-          
-          {/* Controller UI */}
-          <Card className="p-6 border border-gaming-700">
-            <CardTitle className="mb-4 flex items-center">
-              <Gamepad className="mr-2 h-5 w-5" />
-              Game Controls
-            </CardTitle>
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              {/* Left side - GameBoy Controls */}
-              <div className="w-full md:w-1/2">
-                <GameBoyControls currentPostId="streaming-page" />
-              </div>
-              
-              {/* Right side - Custom Stream Controls */}
-              <div className="w-full md:w-1/2">
-                <StreamControlButtons currentStreamId="streaming-page" />
-              </div>
-            </div>
           </Card>
         </TabsContent>
         
@@ -476,25 +436,6 @@ RECOMMENDED SETTINGS:
               )}
             </CardContent>
           </Card>
-          
-          {/* Controller UI */}
-          <Card className="p-6 border border-gaming-700">
-            <CardTitle className="mb-4 flex items-center">
-              <Gamepad className="mr-2 h-5 w-5" />
-              Game Controls
-            </CardTitle>
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              {/* Left side - GameBoy Controls */}
-              <div className="w-full md:w-1/2">
-                <GameBoyControls currentPostId="streaming-page" />
-              </div>
-              
-              {/* Right side - Custom Stream Controls */}
-              <div className="w-full md:w-1/2">
-                <StreamControlButtons currentStreamId="streaming-page" />
-              </div>
-            </div>
-          </Card>
         </TabsContent>
         
         {/* Dashboard Tab */}
@@ -549,25 +490,6 @@ RECOMMENDED SETTINGS:
               
               <ChatModerationDashboard streamId="example-stream" />
             </CardContent>
-          </Card>
-          
-          {/* Controller UI */}
-          <Card className="p-6 border border-gaming-700">
-            <CardTitle className="mb-4 flex items-center">
-              <Gamepad className="mr-2 h-5 w-5" />
-              Game Controls
-            </CardTitle>
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              {/* Left side - GameBoy Controls */}
-              <div className="w-full md:w-1/2">
-                <GameBoyControls currentPostId="streaming-page" />
-              </div>
-              
-              {/* Right side - Custom Stream Controls */}
-              <div className="w-full md:w-1/2">
-                <StreamControlButtons currentStreamId="streaming-page" />
-              </div>
-            </div>
           </Card>
         </TabsContent>
       </Tabs>

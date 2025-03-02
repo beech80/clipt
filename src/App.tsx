@@ -8,6 +8,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { routes } from '@/config/routes';
 import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
+import GameBoyControllerUI from '@/components/GameBoyControllerUI';
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -35,6 +36,7 @@ function App() {
               <Toaster richColors position="top-center" />
               <AppContent />
               <PWAInstallPrompt />
+              <GameBoyControllerUI />
             </ReportDialogProvider>
           </MessagesProvider>
         </AuthProvider>
