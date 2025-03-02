@@ -1,4 +1,3 @@
-
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { useQuery } from "@tanstack/react-query";
@@ -8,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import { UserCog, Paintbrush, ArrowLeft, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import GameBoyControls from "@/components/GameBoyControls";
 import { toast } from "sonner";
 import { Profile } from "@/types/profile";
 import { Input } from "@/components/ui/input";
@@ -206,8 +204,6 @@ const EditProfile = () => {
           )}
         </div>
       </div>
-      
-      <GameBoyControls />
     </div>
   );
 };

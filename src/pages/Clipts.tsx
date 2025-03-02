@@ -1,7 +1,5 @@
-
 import React from 'react';
 import { useNavigate } from "react-router-dom";
-import GameBoyControls from "@/components/GameBoyControls";
 import { BackButton } from "@/components/ui/back-button";
 import { Camera } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
@@ -80,9 +78,8 @@ const Clipts = () => {
         </button>
       </div>
 
-      <GameBoyControls />
     </div>
   );
-}
+};
 
 export default Clipts;
