@@ -122,7 +122,10 @@ export default function StreamSetup() {
         } else {
           console.log("No stream found, creating new stream");
           
-          // Create new stream with default values
+          // Create new stream with default values and add created_at/updated_at timestamps
+          const streamKey = await generateRandomKey();
+          const timestamp = new Date().toISOString();
+          
           const { data: newStream, error: createError } = await supabase
             .from('streams')
             .insert({
@@ -130,9 +133,11 @@ export default function StreamSetup() {
               title: `${user.user_metadata?.username || user.email}'s Stream`,
               description: "Welcome to my stream!",
               is_live: false,
-              stream_key: await generateRandomKey(),
+              stream_key: streamKey,
               rtmp_url: RTMP_URL,
-              viewer_count: 0
+              viewer_count: 0,
+              created_at: timestamp,
+              updated_at: timestamp
             })
             .select()
             .single();
