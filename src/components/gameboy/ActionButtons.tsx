@@ -142,77 +142,67 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
     }
   };
 
+  const buttonStyle = "w-[36px] h-[36px] rounded-full flex items-center justify-center active:scale-95 transition-all";
+
   return (
-    <div className="relative w-full h-full flex items-center justify-center">
-      {/* Diamond shaped action buttons - with solid colored backgrounds */}
-      <div className="relative w-full h-full">
-        {/* Top button - Like (Heart) */}
-        <button
-          onClick={() => {
-            handleLike();
-            if (onAction) onAction('like');
-          }}
-          className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/4 w-10 h-10 sm:w-12 sm:h-12
-            bg-[#FF3866] rounded-full flex items-center justify-center
-            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
-          aria-label="Like"
-        >
-          <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="white" />
-        </button>
-        
-        {/* Left button - Comment (MessageSquare) */}
-        <button
-          onClick={() => {
-            handleComment();
-            if (onAction) onAction('comment');
-          }}
-          className="absolute top-1/2 left-0 -translate-x-1/4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12
-            bg-[#3D93FC] rounded-full flex items-center justify-center
-            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
-          aria-label="Comment"
-        >
-          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="white" />
-        </button>
-        
-        {/* Right button - Follow (User) */}
-        <button
-          onClick={() => {
-            handleFollow();
-            if (onAction) onAction('follow');
-          }}
-          className="absolute top-1/2 right-0 translate-x-1/4 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12
-            bg-[#26C870] rounded-full flex items-center justify-center
-            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
-          aria-label="Follow"
-        >
-          <User className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="white" />
-        </button>
-        
-        {/* Bottom button - Rank (Trophy) */}
-        <button
-          onClick={() => {
-            handleRank();
-            if (onAction) onAction('rank');
-          }}
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/4 w-10 h-10 sm:w-12 sm:h-12
-            bg-[#FFE55C] rounded-full flex items-center justify-center
-            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
-          aria-label="Rank"
-        >
-          <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="white" />
-        </button>
-        
-        {/* POST button */}
-        <button
-          onClick={() => navigate('/post/new')}
-          className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 w-14 h-14 sm:w-16 sm:h-16
-            bg-[#9c27b0] text-white rounded-full text-xs font-medium flex items-center justify-center
-            shadow-md hover:bg-opacity-90 active:scale-95 transition-all"
-          aria-label="Post"
-        >
-          <span className="font-bold">POST</span>
-        </button>
-      </div>
+    <div className="relative w-[80px] h-[120px] flex flex-col items-center">
+      {/* Heart button (top) */}
+      <button
+        onClick={() => {
+          handleLike();
+          if (onAction) onAction('like');
+        }}
+        className={`${buttonStyle} bg-[#FF385F] absolute top-0 left-1/2 -translate-x-1/2`}
+        aria-label="Like"
+      >
+        <Heart className="w-5 h-5 text-white" fill="white" stroke="none" />
+      </button>
+      
+      {/* Message button (left) */}
+      <button
+        onClick={() => {
+          handleComment();
+          if (onAction) onAction('comment');
+        }}
+        className={`${buttonStyle} bg-[#2F5EC4] absolute top-[40px] left-0`}
+        aria-label="Comment"
+      >
+        <MessageSquare className="w-5 h-5 text-white" fill="white" stroke="none" />
+      </button>
+      
+      {/* Follow button (right) */}
+      <button
+        onClick={() => {
+          handleFollow();
+          if (onAction) onAction('follow');
+        }}
+        className={`${buttonStyle} bg-[#27AE60] absolute top-[40px] right-0`}
+        aria-label="Follow"
+      >
+        <User className="w-5 h-5 text-white" fill="white" stroke="none" />
+      </button>
+      
+      {/* Trophy button (bottom) */}
+      <button
+        onClick={() => {
+          handleRank();
+          if (onAction) onAction('rank');
+        }}
+        className={`${buttonStyle} bg-[#F1C40F] absolute top-[80px] left-1/2 -translate-x-1/2`}
+        aria-label="Rank"
+      >
+        <Trophy className="w-5 h-5 text-white" fill="white" stroke="none" />
+      </button>
+      
+      {/* POST button */}
+      <button
+        onClick={() => navigate('/post/new')}
+        className={`absolute bottom-[-36px] left-1/2 -translate-x-1/2 ${buttonStyle} bg-[#9C27B0]`}
+        aria-label="Post"
+      >
+        <Camera className="w-5 h-5 text-white" />
+        <span className="absolute text-[10px] font-bold text-white -bottom-5">POST</span>
+      </button>
     </div>
   );
 };
