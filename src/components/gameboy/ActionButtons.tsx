@@ -145,14 +145,16 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   const buttonStyle = "w-[36px] h-[36px] rounded-full flex items-center justify-center active:scale-95 transition-all";
 
   return (
-    <div className="relative w-[80px] h-[120px] flex flex-col items-center">
+    <div className="relative w-[120px] h-[120px] flex items-center justify-center">
+      {/* Diamond shaped formation with more spacing like xbox controller */}
+      
       {/* Heart button (top) */}
       <button
         onClick={() => {
           handleLike();
           if (onAction) onAction('like');
         }}
-        className={`${buttonStyle} bg-[#FF385F] absolute top-0 left-1/2 -translate-x-1/2`}
+        className={`${buttonStyle} bg-[#FF385F] absolute -top-12 left-1/2 -translate-x-1/2`}
         aria-label="Like"
       >
         <Heart className="w-5 h-5 text-white" fill="white" stroke="none" />
@@ -164,7 +166,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
           handleComment();
           if (onAction) onAction('comment');
         }}
-        className={`${buttonStyle} bg-[#2F5EC4] absolute top-[40px] left-0`}
+        className={`${buttonStyle} bg-[#2F5EC4] absolute top-1/2 -left-12 -translate-y-1/2`}
         aria-label="Comment"
       >
         <MessageSquare className="w-5 h-5 text-white" fill="white" stroke="none" />
@@ -176,7 +178,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
           handleFollow();
           if (onAction) onAction('follow');
         }}
-        className={`${buttonStyle} bg-[#27AE60] absolute top-[40px] right-0`}
+        className={`${buttonStyle} bg-[#27AE60] absolute top-1/2 -right-12 -translate-y-1/2`}
         aria-label="Follow"
       >
         <User className="w-5 h-5 text-white" fill="white" stroke="none" />
@@ -188,7 +190,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
           handleRank();
           if (onAction) onAction('rank');
         }}
-        className={`${buttonStyle} bg-[#F1C40F] absolute top-[80px] left-1/2 -translate-x-1/2`}
+        className={`${buttonStyle} bg-[#F1C40F] absolute -bottom-12 left-1/2 -translate-x-1/2`}
         aria-label="Rank"
       >
         <Trophy className="w-5 h-5 text-white" fill="white" stroke="none" />
@@ -197,7 +199,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
       {/* POST button */}
       <button
         onClick={() => navigate('/post/new')}
-        className={`absolute bottom-[-36px] left-1/2 -translate-x-1/2 ${buttonStyle} bg-[#9C27B0]`}
+        className={`absolute -bottom-24 left-1/2 -translate-x-1/2 ${buttonStyle} bg-[#9C27B0]`}
         aria-label="Post"
       >
         <Camera className="w-5 h-5 text-white" />
