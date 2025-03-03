@@ -135,21 +135,57 @@ const Joystick: React.FC<JoystickProps> = ({ onDirectionChange }) => {
   }, []);
 
   return (
-    <div
-      ref={joystickRef}
-      className={`joystick-base rounded-full h-full w-full bg-[#272831] relative border border-[#3a3c4a]/40 cursor-grab touch-none select-none ${
-        isDraggingRef.current ? 'cursor-grabbing' : 'cursor-grab'
-      }`}
-      onMouseDown={handleJoystickStart}
-      onTouchStart={handleJoystickStart}
-    >
-      <div
-        className="joystick-handle absolute rounded-full bg-[#1A1B24] border border-[#2c2e3e]/40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[60%] w-[60%] shadow-md flex items-center justify-center"
-        style={{
-          transform: `translate3d(calc(-50% + ${joystickPosition.x}px), calc(-50% + ${joystickPosition.y}px), 0)`,
-        }}
+    <div className="relative h-full w-full flex items-center justify-center">
+      {/* Xbox-style joystick base with concentric circles for depth */}
+      <div 
+        ref={joystickRef}
+        className={`
+          joystick-base 
+          rounded-full h-[90%] w-[90%] 
+          bg-gradient-to-b from-gray-900 to-black
+          relative cursor-grab touch-none select-none
+          shadow-[inset_0_2px_8px_rgba(0,0,0,0.5),0_1px_3px_rgba(255,255,255,0.1)]
+          border border-gray-800
+          ${isDraggingRef.current ? 'cursor-grabbing' : 'cursor-grab'}
+        `}
+        onMouseDown={handleJoystickStart}
+        onTouchStart={handleJoystickStart}
       >
-        <div className="h-[30%] w-[30%] bg-[#3a3c4a]/40 rounded-full"></div>
+        {/* Outer concentric ring */}
+        <div className="absolute inset-2 rounded-full border border-gray-800/30"></div>
+        
+        {/* Middle concentric ring */}
+        <div className="absolute inset-5 rounded-full border border-gray-800/20"></div>
+
+        {/* Joystick thumb */}
+        <div
+          className="
+            joystick-handle 
+            absolute rounded-full 
+            bg-gradient-to-b from-gray-800 to-gray-900
+            left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 
+            h-[60%] w-[60%] 
+            shadow-lg
+            flex items-center justify-center
+            border border-gray-700
+          "
+          style={{
+            transform: `translate3d(calc(-50% + ${joystickPosition.x}px), calc(-50% + ${joystickPosition.y}px), 0)`,
+            boxShadow: '0 3px 10px rgba(0,0,0,0.4), inset 0 -2px 5px rgba(0,0,0,0.5), inset 0 2px 2px rgba(255,255,255,0.1)',
+          }}
+        >
+          {/* Xbox logo-inspired center */}
+          <div className="h-[40%] w-[40%] rounded-full bg-gray-950 relative overflow-hidden flex items-center justify-center shadow-inner">
+            {/* Center radial gradient created manually with a pseudo-element */}
+            <div 
+              className="absolute inset-0 rounded-full"
+              style={{ 
+                background: 'radial-gradient(circle, rgba(75,75,75,0.5) 0%, rgba(30,30,30,0) 70%)' 
+              }}
+            ></div>
+            <div className="h-[30%] w-[30%] rounded-full bg-gray-700"></div>
+          </div>
+        </div>
       </div>
     </div>
   );
