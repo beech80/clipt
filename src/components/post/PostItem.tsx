@@ -43,7 +43,8 @@ const PostItem = ({ post }: PostItemProps) => {
     // Navigate to game-specific page when a game is clicked
     if (gameId) {
       console.log(`Navigating to game: ${gameName} (${gameId})`);
-      navigate(`/games/${gameId}`);
+      // Use the correct route format to match the gameRoutes.tsx definition
+      navigate(`/game/${gameId}`);
     }
   };
 

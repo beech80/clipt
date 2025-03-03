@@ -29,24 +29,49 @@ const Profile = () => {
     achievements: 0
   });
 
-  const { data: profile, isLoading: profileLoading } = useQuery<ProfileType | null>({
-    queryKey: ['user-profile', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  const fetchUserProfile = async () => {
+    try {
+      const profileId = id || user?.id;
+      
+      if (!profileId) {
+        console.error("No profile ID available");
+        return;
+      }
+      
+      console.log("Fetching profile:", profileId);
+      
+      // Fetch user profile data
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', id || user?.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
+        .eq('id', profileId)
+        .single();
+        
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
       }
+      
+      if (!profileData) {
+        console.error("No profile data found");
+        return;
+      }
+      
+      console.log("Fetched profile data:", profileData);
+      
       return {
-        ...data,
-        custom_theme: data.custom_theme || { primary: "#1EAEDB", secondary: "#000000" }
+        ...profileData,
+        custom_theme: profileData.custom_theme || { primary: "#1EAEDB", secondary: "#000000" }
       } as ProfileType;
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      return null;
     }
+  };
+
+  const { data: profile, isLoading: profileLoading } = useQuery<ProfileType | null>({
+    queryKey: ['user-profile', id],
+    queryFn: fetchUserProfile
   });
   
   // Fetch user games
