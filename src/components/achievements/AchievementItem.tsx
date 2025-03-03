@@ -23,26 +23,26 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
     );
 
     return (
-      <div className={`flex w-full overflow-hidden ${percentComplete > 0 ? 'border-l-4 border-green-500' : ''}`}>
+      <div className={`flex w-full overflow-hidden mb-3 ${percentComplete > 0 ? 'border-l-4 border-green-500' : ''}`}>
         <div className="h-24 w-24 flex-shrink-0 relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0d3320] to-[#083015]">
+          <div className="absolute inset-0 bg-[#012e14]">
             <div className="w-full h-full flex items-center justify-center">
-              {getIconForAchievement(gameAchievement.name)}
+              {getAchievementIcon(gameAchievement.name)}
             </div>
           </div>
-          <div className="absolute top-1 left-1 text-cyan-400 font-bold text-lg">
+          <div className="absolute top-1 left-1 text-[#34dfeb] font-bold text-lg">
             +{gameAchievement.points}
           </div>
         </div>
-        <div className="flex-1 p-3 bg-gradient-to-r from-gray-900 to-gray-800">
+        <div className="flex-1 p-3 bg-[#222222]">
           <h3 className="text-white font-semibold text-lg">{gameAchievement.name}</h3>
-          <p className="text-gray-400 text-sm mb-2">{gameAchievement.description}</p>
+          <p className="text-gray-400 text-sm mb-2">{gameAchievement.description} - {gameAchievement.currentValue}/{gameAchievement.targetValue}</p>
           <div className="flex justify-between text-sm mb-1">
             <div>
               <Progress 
                 value={percentComplete} 
                 className="h-2 w-[200px] bg-gray-700" 
-                indicatorClassName="bg-blue-500" 
+                indicatorClassName="bg-[#0078d7]" 
               />
             </div>
             <span className="text-white font-medium">{percentComplete}%</span>
@@ -66,32 +66,38 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
   // Get the current/total display
   const progressDisplay = `${progress.currentValue}/${achievement.target_value}`;
 
-  // Check if achievement has specific style
-  const isHighlighted = isInProgress && achievement.name === 'Earn Your Way';
+  // Check if achievement is the Earn Your Way achievement
+  const isEarnYourWay = achievement.name === 'Earn Your Way';
 
   return (
-    <div className={`flex w-full overflow-hidden mb-3 ${isHighlighted ? 'border border-green-500' : ''}`}>
+    <div className={`flex w-full overflow-hidden mb-3 ${isEarnYourWay ? 'border border-green-500 rounded-sm' : ''}`}>
       <div className="h-24 w-24 flex-shrink-0 relative">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0d3320] to-[#083015]">
-          <div className="w-full h-full flex items-center justify-center">
-            {getIconForAchievement(achievement.name)}
+        <div className="absolute inset-0 bg-[#012e14]">
+          <div className="w-full h-full flex items-center justify-center" style={{ 
+            backgroundImage: achievement.name === 'Dead Space' ? 
+              "radial-gradient(circle at center, #021e11 0%, #010e07 100%)" : 
+              (achievement.name === 'The Long Dark' ? 
+              "radial-gradient(circle at center, #021e11 0%, #010e07 100%)" : 
+              "url('/images/achievement-bg.png')") 
+          }}>
+            {getAchievementIcon(achievement.name)}
           </div>
         </div>
-        <div className="absolute top-1 left-1 text-cyan-400 font-bold text-lg">
+        <div className="absolute top-1 left-1 text-[#34dfeb] font-bold text-lg">
           +{achievement.points}
         </div>
       </div>
-      <div className="flex-1 p-3 bg-gradient-to-r from-gray-900 to-gray-800">
+      <div className="flex-1 p-3 bg-[#222222]">
         <h3 className="text-white font-semibold text-lg">{achievement.name}</h3>
         <p className="text-gray-400 text-sm mb-2">
-          {achievement.description} - {progressDisplay}
+          {achievement.name === 'Complete 4 Daily Quests' ? 'Complete 4 daily quests this week' : achievement.description} - {progressDisplay}
         </p>
         <div className="flex justify-between text-sm mb-1">
           <div>
             <Progress 
               value={percentComplete} 
               className="h-2 w-[200px] bg-gray-700" 
-              indicatorClassName="bg-blue-500" 
+              indicatorClassName="bg-[#0078d7]" 
             />
           </div>
           <span className="text-white font-medium">{percentComplete}%</span>
@@ -102,12 +108,12 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
 };
 
 // Helper function to get specific icons for achievements that match the Xbox style
-const getIconForAchievement = (name: string) => {
+const getAchievementIcon = (name: string) => {
   if (name.includes('Complete 4 Daily')) {
-    return <Rocket className="w-12 h-12 text-green-500" />;
+    return <Rocket className="w-12 h-12 text-[#42ff77]" />;
   }
   if (name.includes('Earn Your Way')) {
-    return <Shield className="w-12 h-12 text-green-500" />;
+    return <Shield className="w-12 h-12 text-[#42ff77]" />;
   }
   if (name.includes('Dead Space')) {
     // Since we don't have real images, use a themed icon
@@ -118,11 +124,11 @@ const getIconForAchievement = (name: string) => {
     return <Calendar className="w-12 h-12 text-blue-400" />;
   }
   if (name.includes('Game Pass')) {
-    return <Trophy className="w-12 h-12 text-green-500" />;
+    return <Trophy className="w-12 h-12 text-[#42ff77]" />;
   }
   
   // For other achievements, use the category-based icons
-  return <Trophy className="w-12 h-12 text-green-500" />;
+  return <Trophy className="w-12 h-12 text-[#42ff77]" />;
 };
 
 export default AchievementItem;

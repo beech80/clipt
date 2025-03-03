@@ -26,7 +26,7 @@ const defaultAchievements = [
   // Game-specific Achievements
   {
     name: 'Dead Space',
-    description: 'Play',
+    description: 'Play Dead Space and earn 100 points',
     target_value: 1,
     points: 25,
     category: 'gaming',
@@ -35,7 +35,7 @@ const defaultAchievements = [
   },
   {
     name: 'The Long Dark',
-    description: 'Have 2 Distance Travelled',
+    description: 'Travel 10 km in The Long Dark and earn 50 points',
     target_value: 2,
     points: 50,
     category: 'gaming',
@@ -44,7 +44,7 @@ const defaultAchievements = [
   },
   {
     name: 'Earn an Achievement in Game Pass',
-    description: 'Earn an achievement in any Game Pass game',
+    description: 'Earn an achievement in any Game Pass game and earn 10 points',
     target_value: 1,
     points: 10,
     category: 'gaming',
