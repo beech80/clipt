@@ -1,9 +1,9 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Search, Users, MessageSquare } from "lucide-react";
+import { Search, Users, MessageSquare, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -20,9 +20,10 @@ const Messages = () => {
   const [activeChats, setActiveChats] = useState<any[]>([]);
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [message, setMessage] = useState("");
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
 
   // Fetch active chats when component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       fetchActiveChats();
     }
@@ -41,7 +42,7 @@ const Messages = () => {
           sender:sender_id (username, avatar_url),
           recipient:recipient_id (username, avatar_url)
         `)
-        .or(`and(sender_id.eq.${user?.id},recipient_id.eq.${user?.id})`)
+        .or(`sender_id.eq.${user?.id},recipient_id.eq.${user?.id}`)
         .order('created_at', { ascending: false });
 
       if (directError) throw directError;
@@ -196,9 +197,10 @@ const Messages = () => {
       fetchActiveChats();
     }
     
-    // Clear search results after selecting a chat
+    // Clear search results and dialog
     setSearchResults([]);
     setSearchTerm("");
+    setShowNewChatDialog(false);
   };
 
   const handleCreateGroup = async () => {
@@ -266,24 +268,68 @@ const Messages = () => {
       <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
         {/* Left sidebar - active chats */}
         <div className="gaming-card overflow-y-auto relative">
-          <div className="sticky top-0 bg-gaming-800 p-4 z-10">
-            <div className="relative flex-1 mb-4">
-              <Input
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  handleSearch();
-                }}
-                className="pr-8"
-              />
-              <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="sticky top-0 bg-gaming-800 p-4 z-10 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Conversations</h2>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setShowNewChatDialog(true)}
+                className="h-8 w-8"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
+            <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Start New Conversation</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <Input
+                    placeholder="Search for users..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearchUsers(e.target.value)}
+                    autoFocus
+                  />
+                  {searchResults.length > 0 ? (
+                    <div className="mt-2 max-h-[300px] overflow-y-auto space-y-2">
+                      {searchResults.map((user) => (
+                        <div
+                          key={user.id}
+                          className="flex items-center justify-between p-2 rounded bg-gaming-800 hover:bg-gaming-700 cursor-pointer"
+                          onClick={() => startOrContinueChat(user.id)}
+                        >
+                          <div className="flex items-center gap-3">
+                            {user.avatar_url ? (
+                              <img
+                                src={user.avatar_url}
+                                alt={user.username}
+                                className="w-8 h-8 rounded-full"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-700">
+                                <span>{user.username.slice(0, 2).toUpperCase()}</span>
+                              </div>
+                            )}
+                            <span>{user.display_name || user.username}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    searchTerm.length > 0 && (
+                      <p className="text-center text-gray-400 py-2">No users found</p>
+                    )
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
             <Dialog>
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full mb-4"
+                  className="w-full"
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Create Group Chat
@@ -399,42 +445,10 @@ const Messages = () => {
               </div>
             ) : (
               <div className="text-center p-4 text-gray-400">
-                No active conversations. Search for users to start chatting!
+                No active conversations. Start a new chat!
               </div>
             )}
           </div>
-          
-          {/* Search Results */}
-          {searchResults.length > 0 && (
-            <div className="mt-2 p-2 border-t border-gaming-700">
-              <h3 className="text-sm font-medium mb-2 text-gray-400">Search Results</h3>
-              <div className="space-y-2">
-                {searchResults.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between p-3 rounded bg-gaming-800 hover:bg-gaming-700 cursor-pointer transition-colors"
-                    onClick={() => startOrContinueChat(user.id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      {user.avatar_url ? (
-                        <img
-                          src={user.avatar_url}
-                          alt={user.username}
-                          className="w-8 h-8 rounded-full"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-700">
-                          <span>{user.username.slice(0, 2).toUpperCase()}</span>
-                        </div>
-                      )}
-                      <span>{user.display_name || user.username}</span>
-                    </div>
-                    <Button size="sm" variant="outline">Message</Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Right side - chat area */}
@@ -472,8 +486,15 @@ const Messages = () => {
                 <MessageSquare className="h-16 w-16 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No conversation selected</h3>
                 <p className="text-gray-400 mb-4">
-                  Select a chat from the sidebar or search for a user to start messaging
+                  Select a chat from the sidebar or start a new conversation
                 </p>
+                <Button 
+                  onClick={() => setShowNewChatDialog(true)}
+                  className="mx-auto"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Start New Conversation
+                </Button>
               </div>
             </div>
           )}
