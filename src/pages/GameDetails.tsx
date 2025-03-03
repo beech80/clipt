@@ -49,7 +49,7 @@ const GameDetails = () => {
             *,
             user:profiles(*)
           `)
-          .eq('game_id', numericGameId)
+          .eq('game_id', String(numericGameId))  // Convert to string for the query
           .order('created_at', { ascending: false });
           
         if (postsError) {
