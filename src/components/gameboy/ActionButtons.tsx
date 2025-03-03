@@ -1,21 +1,22 @@
 import React, { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface ActionButtonsProps {
-  postId: string;
+  postId?: string;
   onAction?: (action: string) => void;
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Debug logging for postId
   useEffect(() => {
-    console.log("ActionButtons received postId:", postId);
+    console.log("ActionButtons received postId:", postId, "type:", typeof postId);
   }, [postId]);
 
   const handleLike = async () => {
@@ -56,38 +57,47 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   };
 
   const handleComment = () => {
-    console.log("Comment button clicked, postId:", postId);
+    console.log("Comment button clicked, postId:", postId, "type:", typeof postId);
     
-    if (postId) {
-      // Check if already on post page
-      const currentPath = window.location.pathname;
-      const postPath = `/post/${postId}`;
-      
-      if (currentPath === postPath) {
-        // If already on post page, find the post element and scroll to comments
-        const postElement = document.querySelector('.gaming-card');
-        if (postElement) {
-          // Find comment button in PostItem and trigger click event
-          const commentBtn = document.querySelector('.comment-btn');
-          if (commentBtn && commentBtn instanceof HTMLElement) {
-            commentBtn.click();
+    // Get current path information
+    const currentPath = location.pathname;
+    const onPostPage = currentPath.startsWith('/post/');
+    
+    // Try to extract postId from URL if not provided
+    let effectivePostId = postId;
+    if (!effectivePostId && onPostPage) {
+      const match = currentPath.match(/\/post\/([^/?#]+)/);
+      if (match && match[1]) {
+        effectivePostId = match[1];
+        console.log("Extracted postId from URL:", effectivePostId);
+      }
+    }
+    
+    if (effectivePostId && effectivePostId !== 'undefined' && effectivePostId !== 'null') {
+      if (onPostPage) {
+        // If already on a post page, find and trigger the comment button
+        const commentBtn = document.querySelector('.comment-btn');
+        if (commentBtn && commentBtn instanceof HTMLElement) {
+          commentBtn.click();
+          console.log("Found and clicked comment button on post page");
+        } else {
+          // Or try to scroll to the comments section
+          const commentsSection = document.getElementById('comments');
+          if (commentsSection) {
+            commentsSection.scrollIntoView({ behavior: 'smooth' });
+            console.log("Found and scrolled to comments section");
           } else {
             toast.info('Scroll down to view comments');
-            // Scroll to the bottom of the post where comments would be
-            window.scrollTo({
-              top: postElement.getBoundingClientRect().bottom,
-              behavior: 'smooth'
-            });
           }
-        } else {
-          toast.error('Could not find comments section');
         }
       } else {
         // Navigate to the post page with comments hash
-        navigate(`/post/${postId}#comments`);
+        console.log(`Navigating to /post/${effectivePostId}#comments`);
+        navigate(`/post/${effectivePostId}#comments`);
         toast.success('Opening comments');
       }
     } else {
+      console.error("Invalid postId in ActionButtons:", effectivePostId);
       toast.error('Cannot open comments for this post');
     }
   };

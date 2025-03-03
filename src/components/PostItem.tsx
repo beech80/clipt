@@ -35,9 +35,13 @@ const PostItem = ({ post, onCommentClick }: PostItemProps) => {
 
   // Debug logging
   useEffect(() => {
-    console.log(`PostItem rendering with postId: ${postId}`);
+    console.log(`PostItem rendering with postId: ${postId}`, {
+      postObject: post,
+      postIdRaw: post?.id,
+      postIdNormalized: postId
+    });
     setIsLoading(false);
-  }, [postId]);
+  }, [postId, post]);
 
   // Fetch comment count
   const { data: commentsCount = 0 } = useQuery({
