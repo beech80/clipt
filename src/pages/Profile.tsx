@@ -129,21 +129,33 @@ const Profile = () => {
     
     try {
       setLoading(true);
+      console.log("Following user:", profile.id);
+      
+      // Optimistically update UI
+      const isCurrentlyFollowing = userFollows;
+      setUserFollows(!isCurrentlyFollowing);
+      setStats(prev => ({
+        ...prev,
+        followers: prev.followers + (!isCurrentlyFollowing ? 1 : -1)
+      }));
+      
+      // Make API call
       const response = await toggleFollow(user.id, profile.id);
       
       if (response.error) {
+        // If there was an error, revert the optimistic update
+        setUserFollows(isCurrentlyFollowing);
+        setStats(prev => ({
+          ...prev,
+          followers: prev.followers + (isCurrentlyFollowing ? 1 : -1)
+        }));
         throw response.error;
       }
       
-      // Update local state
-      setUserFollows(!!response.followed);
+      // Server response should match our optimistic update
+      console.log("Follow response:", response);
       
-      // Update follower count
-      setStats(prev => ({
-        ...prev,
-        followers: prev.followers + (response.followed ? 1 : -1)
-      }));
-      
+      // Confirm toast
       toast.success(response.followed ? `Following ${profile.username || 'user'}` : `Unfollowed ${profile.username || 'user'}`);
       
       // Invalidate related queries
@@ -189,6 +201,17 @@ const Profile = () => {
       </div>
     );
   }
+
+  useEffect(() => {
+    const profileId = profile?.id;
+    if (profileId) {
+      // Scroll to top when a profile is loaded
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [profile?.id]);
 
   return (
     <div className="relative max-w-4xl mx-auto p-4 sm:p-6 space-y-6 pb-40">
