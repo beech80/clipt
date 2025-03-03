@@ -218,12 +218,12 @@
 
 .gameboy-container {
   @apply fixed bottom-0 left-0 right-0 bg-[#1A1F2C]/95 backdrop-blur-sm z-40;
-  height: 220px; /* Increased height for mobile */
+  height: 180px; /* Reduced height for mobile */
 }
 
 @media (min-width: 640px) {
   .gameboy-container {
-    height: 240px; /* Increased height for desktop */
+    height: 200px; /* Reduced height for desktop */
   }
 }
 
