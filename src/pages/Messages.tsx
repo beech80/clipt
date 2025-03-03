@@ -58,11 +58,84 @@ const Messages = () => {
 
   const fetchActiveChats = async () => {
     try {
-      // Clear active chats - only keeping Create Group Chat button
-      setActiveChats([]);
-      console.log("Cleared conversation list as requested");
+      if (!user) return;
+      
+      // Fetch all messages where user is either sender or recipient
+      const { data: messages, error } = await supabase
+        .from('direct_messages')
+        .select('*, profiles!direct_messages_sender_id_fkey(username, avatar_url, display_name)')
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error("Error fetching messages:", error);
+        toast.error("Error loading conversations");
+        return;
+      }
+      
+      // Group messages by conversations (unique combinations of sender/recipient)
+      const conversationsMap = new Map();
+      
+      messages.forEach(msg => {
+        // Determine the other party in the conversation
+        const otherUserId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
+        
+        // Create a unique ID for this conversation
+        const chatId = `chat_${Math.min(user.id, otherUserId)}_${Math.max(user.id, otherUserId)}`;
+        
+        if (!conversationsMap.has(chatId)) {
+          // Start tracking this conversation
+          const otherUserProfile = msg.sender_id === user.id 
+            ? null // Need to fetch this separately
+            : msg.profiles;
+            
+          conversationsMap.set(chatId, {
+            id: chatId,
+            type: 'direct',
+            participant_id: otherUserId,
+            last_message: msg.message,
+            last_message_time: msg.created_at,
+            profile: otherUserProfile
+          });
+        }
+      });
+      
+      // For conversations where we need to fetch the other user's profile
+      const profilePromises = Array.from(conversationsMap.values())
+        .filter(convo => !convo.profile)
+        .map(async (convo) => {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('username, avatar_url, display_name')
+            .eq('id', convo.participant_id)
+            .single();
+            
+          if (!error && data) {
+            convo.profile = data;
+          }
+          return convo;
+        });
+        
+      // Wait for all profile fetches to complete
+      await Promise.all(profilePromises);
+      
+      // Convert to array and format for display
+      const conversations = Array.from(conversationsMap.values())
+        .map(convo => ({
+          id: convo.id,
+          type: 'direct',
+          recipient_id: convo.participant_id,
+          recipient_name: convo.profile?.username || convo.profile?.display_name || 'User',
+          recipient_avatar: convo.profile?.avatar_url,
+          last_message: convo.last_message,
+          last_message_time: new Date(convo.last_message_time).toLocaleString(),
+        }))
+        .sort((a, b) => new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime());
+      
+      setActiveChats(conversations);
+      
     } catch (error) {
-      console.error("Error fetching chats:", error);
+      console.error("Error processing chats:", error);
       toast.error("Error loading conversations");
     }
   };
@@ -405,8 +478,57 @@ const Messages = () => {
         <h1 className="gameboy-title">MESSAGES</h1>
       </div>
 
-      <div className="mt-20 grid grid-cols-1 md:grid-cols-1 gap-4 h-[calc(100vh-8rem)]">
-        {/* Left sidebar removed as requested */}
+      <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
+        {/* Left sidebar - conversation list */}
+        <div className="gaming-card p-4 hidden md:flex flex-col overflow-y-auto">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Conversations</h2>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setShowNewChatDialog(true)}
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+          </div>
+          
+          <div className="space-y-2">
+            {activeChats.length > 0 ? (
+              activeChats.map(chat => (
+                <div 
+                  key={chat.id}
+                  className="p-3 hover:bg-gaming-700/30 rounded-lg cursor-pointer flex items-center"
+                  onClick={() => startOrContinueChat(chat.recipient_id)}
+                >
+                  <Avatar className="h-10 w-10 mr-3">
+                    <AvatarImage src={chat.recipient_avatar || ''} />
+                    <AvatarFallback className="bg-primary/30 text-primary-foreground">
+                      {chat.recipient_name?.charAt(0) || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{chat.recipient_name}</p>
+                    <p className="text-sm text-gray-400 truncate">{chat.last_message}</p>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {chat.last_message_time}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center p-4 text-gray-400">
+                <p>No conversations yet</p>
+                <Button 
+                  variant="link" 
+                  onClick={() => setShowNewChatDialog(true)}
+                  className="mt-2"
+                >
+                  Start one now
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Right side - chat area */}
         <div className="gaming-card p-4 flex flex-col h-full">
