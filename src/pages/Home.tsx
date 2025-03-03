@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Camera } from "lucide-react";
 import { Post } from '@/types/post';
-import { TopWeeklyClips } from '@/components/home/TopWeeklyClips';
 
 const Home = () => {
   const { user } = useAuth();
@@ -60,14 +59,9 @@ const Home = () => {
         </h1>
       </div>
 
-      <div className="container mx-auto px-4 py-6 flex flex-row space-x-4">
-        {/* Left sidebar with weekly top clips */}
-        <div className="hidden md:block w-80 space-y-4">
-          <TopWeeklyClips />
-        </div>
-
+      <div className="container mx-auto px-4 py-6">
         {/* Main feed */}
-        <div className="flex-1 space-y-6 max-w-2xl mx-auto">
+        <div className="space-y-6 max-w-2xl mx-auto">
           {isLoading ? (
             <div className="flex justify-center items-center py-20">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
