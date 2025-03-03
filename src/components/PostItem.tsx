@@ -14,15 +14,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CommentList } from "./post/CommentList"; // Fix the import statement for CommentList
+import { CommentList } from "./post/CommentList"; 
 import { Button } from "./ui/button";
 
 interface PostItemProps {
   post: Post;
   onCommentClick?: () => void;
+  highlight?: boolean;
+  'data-post-id'?: string;
 }
 
-const PostItem = ({ post, onCommentClick }: PostItemProps) => {
+const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = false, 'data-post-id': postIdAttr }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -109,9 +111,12 @@ const PostItem = ({ post, onCommentClick }: PostItemProps) => {
   }
 
   return (
-    <article className={`relative w-full gaming-card transition-opacity duration-300 ${
-      isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
-    }`}>
+    <article 
+      className={`relative w-full gaming-card transition-opacity duration-300 ${
+        isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
+      } ${highlight ? 'ring-2 ring-primary' : ''}`}
+      data-post-id={postIdAttr || post.id}
+    >
       {/* User Header */}
       <div className="flex items-center justify-between p-4 border-b border-gaming-400/20">
         <div className="flex items-center space-x-3">

@@ -154,12 +154,12 @@ const Post = () => {
             </div>
           </div>
           
-          <div className="gaming-card">
-            <PostItem post={post} onCommentClick={() => setShowComments(!showComments)} />
+          <div className="gaming-card" data-post-id={id}>
+            <PostItem post={post} onCommentClick={() => setShowComments(!showComments)} data-post-id={id} />
           </div>
           
           {/* Comments section */}
-          <div ref={commentsRef} id="comments" className="mt-6">
+          <div ref={commentsRef} id="comments" className="mt-6" data-post-id={id}>
             {showComments ? (
               <CommentList 
                 postId={id || ''} 
