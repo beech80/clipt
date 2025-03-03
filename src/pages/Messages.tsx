@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase, createMessagingTablesDirectly } from "@/lib/supabase";
+import { supabase, createMessagesTable, checkTableExists } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const Messages = () => {
@@ -28,32 +28,26 @@ const Messages = () => {
       
       console.log("Setting up messaging tables...");
       try {
-        // First check if messages table exists by trying to select from it
-        const { error: messagesCheckError } = await supabase
-          .from('messages')
-          .select('id')
-          .limit(1);
+        // Check if messages table exists
+        const tableExists = await checkTableExists('messages');
+        
+        if (!tableExists) {
+          console.log("Messages table doesn't exist, creating it now...");
+          const result = await createMessagesTable();
           
-        if (messagesCheckError) {
-          console.error("Messages table check error:", messagesCheckError);
-          // If error indicates table doesn't exist, create it
-          if (messagesCheckError.message.includes("does not exist")) {
-            console.log("Creating messages table directly...");
-            const result = await createMessagingTablesDirectly();
-            if (!result.success) {
-              console.error("Error creating messaging tables:", result.error);
-              toast.error("Could not set up messaging. Please contact support.");
-            } else {
-              console.log("Messaging tables created successfully");
-              toast.success("Messaging system initialized");
-              // Refresh after table creation
-              setTimeout(() => {
-                fetchActiveChats();
-              }, 1000);
-            }
+          if (!result.success) {
+            console.error("Failed to create messages table:", result.error);
+            toast.error("Could not set up messaging. Please contact support.");
+          } else {
+            console.log("Messages table created successfully");
+            toast.success("Messaging system initialized");
+            // Refresh after table creation
+            setTimeout(() => {
+              fetchActiveChats();
+            }, 1000);
           }
         } else {
-          console.log("Messages table exists");
+          console.log("Messages table already exists");
         }
       } catch (error) {
         console.error("Setup error:", error);
@@ -185,6 +179,7 @@ const Messages = () => {
     setSearchResults(data || []);
   };
 
+  // Modified function to handle both standard and fallback messaging
   const startOrContinueChat = async (userId: string) => {
     if (!user) {
       toast.error("Please sign in to message users");
@@ -196,61 +191,93 @@ const Messages = () => {
       console.log("Starting chat with user ID:", userId);
       console.log("Current user ID:", user.id);
       
-      // First, let's check if the messages table exists
-      const { error: tableCheckError } = await supabase
-        .from('messages')
-        .select('count')
-        .limit(1);
+      // First, let's verify the messages table exists
+      const tableExists = await checkTableExists('messages');
+      if (!tableExists) {
+        toast.loading("Setting up messaging system...");
+        console.log("Messages table doesn't exist yet, creating it...");
+        const createResult = await createMessagesTable();
         
-      if (tableCheckError) {
-        console.error("Table check error:", tableCheckError);
-        throw new Error(`Table check failed: ${tableCheckError.message}`);
+        if (!createResult.success) {
+          throw new Error("Failed to create messages table: " + JSON.stringify(createResult.error));
+        }
+        
+        if (createResult.fallback) {
+          // We're using the fallback storage system
+          toast.success("Using backup messaging system");
+          
+          // Generate a unique conversation ID
+          const conversationId = `conv_${user.id}_${userId}_${Date.now()}`;
+          
+          // In fallback mode, we'll use Supabase Storage instead of a database table
+          const message = {
+            id: conversationId,
+            sender_id: user.id,
+            recipient_id: userId,
+            message: "Hi there!",
+            created_at: new Date().toISOString(),
+            read: false
+          };
+          
+          // Save this message to Supabase Storage
+          const { error: saveError } = await supabase.storage
+            .from('messages')
+            .upload(`${conversationId}/1.json`, new Blob([JSON.stringify(message)], { type: 'application/json' }));
+            
+          if (saveError) {
+            throw new Error("Failed to create conversation: " + saveError.message);
+          }
+          
+          // Set selected chat
+          setSelectedChat({
+            id: conversationId,
+            type: 'direct',
+            recipient_id: userId,
+            fallback: true
+          });
+          
+          toast.success("Conversation started!");
+          setSearchResults([]);
+          setSearchTerm("");
+          setShowNewChatDialog(false);
+          return;
+        }
+        
+        console.log("Messages table created successfully");
+        toast.success("Messaging system ready");
       }
       
+      // If we get here, we're using the regular database table approach
       console.log("Messages table exists, checking for existing conversations...");
       
       // Check if a chat already exists - using a different approach
-      const { data: existingChatsAsSender, error: senderError } = await supabase
+      const { data: existingChats, error: checkError } = await supabase
         .from('messages')
-        .select('id')
-        .eq('sender_id', user.id)
-        .eq('recipient_id', userId)
-        .limit(1);
+        .select('id, sender_id, recipient_id')
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+        .limit(10);
 
-      if (senderError) {
-        console.error("Sender check error:", senderError);
-        throw new Error(senderError.message);
+      if (checkError) {
+        console.error("Error checking conversations:", checkError);
+        throw new Error("Error checking conversations: " + checkError.message);
       }
       
-      console.log("Existing chats as sender:", existingChatsAsSender);
-
-      const { data: existingChatsAsRecipient, error: recipientError } = await supabase
-        .from('messages')
-        .select('id')
-        .eq('sender_id', userId)
-        .eq('recipient_id', user.id)
-        .limit(1);
-
-      if (recipientError) {
-        console.error("Recipient check error:", recipientError);
-        throw new Error(recipientError.message);
-      }
+      console.log("All messages results:", existingChats);
       
-      console.log("Existing chats as recipient:", existingChatsAsRecipient);
-
-      // Combine results
-      const existingChats = [
-        ...(existingChatsAsSender || []),
-        ...(existingChatsAsRecipient || [])
-      ];
+      // Filter to find only conversations between these two users
+      const relevantChats = existingChats?.filter(chat => 
+        (chat.sender_id === user.id && chat.recipient_id === userId) || 
+        (chat.sender_id === userId && chat.recipient_id === user.id)
+      ) || [];
       
-      console.log("Combined existing chats:", existingChats);
+      console.log("Filtered conversations between these users:", relevantChats);
 
-      if (existingChats.length > 0) {
+      if (relevantChats.length > 0) {
         console.log("Existing chat found, loading conversation...");
         // Chat exists - load it
         setSelectedChat({
-          id: existingChats[0].id,
+          id: relevantChats[0].id,
           type: 'direct',
           recipient_id: userId
         });
@@ -260,21 +287,22 @@ const Messages = () => {
         toast.success("Conversation loaded");
       } else {
         console.log("No existing chat found, creating new conversation...");
-        // Create a new chat
+        // Create a new chat with simpler schema (no foreign key constraints)
         const { data: newChat, error: createError } = await supabase
           .from('messages')
           .insert({
             sender_id: user.id,
             recipient_id: userId,
             message: "Hi there!", // Initial message
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            read: false
           })
           .select()
           .single();
 
         if (createError) {
           console.error("Create chat error:", createError);
-          throw new Error(createError.message);
+          throw new Error("Failed to start conversation: " + createError.message);
         }
         
         console.log("New chat created:", newChat);
