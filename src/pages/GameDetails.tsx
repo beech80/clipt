@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { igdbService } from "@/services/igdbService";
@@ -26,7 +26,24 @@ const formatDate = (timestamp: number) => {
 const GameDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"clips" | "about">("clips");
+
+  useEffect(() => {
+    // Force reload when the id changes to prevent stale data
+    if (id) {
+      console.log("GameDetails: Loading game data for ID:", id);
+      queryClient.invalidateQueries({ queryKey: ["game", id] });
+      queryClient.invalidateQueries({ queryKey: ["gameClips", id] });
+      queryClient.invalidateQueries({ queryKey: ["gameAchievements", id] });
+      
+      // Make sure we're showing the clips tab by default
+      setActiveTab("clips");
+      
+      // Force scroll to top
+      window.scrollTo(0, 0);
+    }
+  }, [id, queryClient]);
 
   // Fetch game details
   const { data: game, isLoading: gameLoading } = useQuery({
@@ -44,6 +61,8 @@ const GameDetails = () => {
     queryFn: async () => {
       if (!id) return [];
       
+      console.log("Fetching game clips for ID:", id);
+      
       const { data, error } = await supabase
         .from("posts")
         .select(`
@@ -56,6 +75,7 @@ const GameDetails = () => {
           like_count,
           comment_count,
           user_id,
+          game_id,
           profiles(username, avatar_url, display_name)
         `)
         .eq("game_id", id)
@@ -64,6 +84,12 @@ const GameDetails = () => {
       if (error) {
         console.error("Error fetching clips:", error);
         return [];
+      }
+      
+      if (!data || data.length === 0) {
+        console.log("No clips found for game ID:", id);
+      } else {
+        console.log(`Found ${data.length} clips for game ID:`, id);
       }
       
       return data || [];

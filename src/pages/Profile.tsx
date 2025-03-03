@@ -29,51 +29,81 @@ const Profile = () => {
     achievements: 0
   });
 
-  const fetchUserProfile = async () => {
-    try {
-      const profileId = id || user?.id;
-      
-      if (!profileId) {
-        console.error("No profile ID available");
-        return;
-      }
-      
-      console.log("Fetching profile:", profileId);
-      
-      // Fetch user profile data
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .single();
-        
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw profileError;
-      }
-      
-      if (!profileData) {
-        console.error("No profile data found");
-        return;
-      }
-      
-      console.log("Fetched profile data:", profileData);
-      
-      return {
-        ...profileData,
-        custom_theme: profileData.custom_theme || { primary: "#1EAEDB", secondary: "#000000" }
-      } as ProfileType;
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-      return null;
-    }
-  };
+  const [profile, setProfile] = useState<ProfileType | null>(null);
 
-  const { data: profile, isLoading: profileLoading } = useQuery<ProfileType | null>({
-    queryKey: ['user-profile', id],
-    queryFn: fetchUserProfile
-  });
-  
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!id && !user?.id) {
+        console.error('No profile ID provided');
+        setLoading(false);
+        return;
+      }
+      
+      const profileId = id || user?.id;
+      setLoading(true);
+      console.log(`Fetching profile data for profile ID: ${profileId}`);
+      
+      try {
+        // Force cache invalidation for consistency
+        queryClient.invalidateQueries({ queryKey: ['user-profile', profileId] });
+        
+        // First, check if we have the profile in the cache
+        const cachedProfile = queryClient.getQueryData(['user-profile', profileId]);
+        if (cachedProfile) {
+          console.log('Using cached profile data');
+          setProfile(cachedProfile as ProfileType);
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch profile with a timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', profileId)
+          .abortSignal(controller.signal)
+          .single();
+          
+        clearTimeout(timeoutId);
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          toast.error(`Error loading profile: ${profileError.message}`);
+          navigate('/');
+          return;
+        }
+
+        if (!profileData) {
+          console.error('No profile found for ID:', profileId);
+          toast.error('Profile not found');
+          navigate('/');
+          return;
+        }
+
+        console.log('Profile data fetched successfully:', profileData);
+        setProfile(profileData as ProfileType);
+        
+        // Store in cache
+        queryClient.setQueryData(['user-profile', profileId], profileData);
+      } catch (error: any) {
+        console.error('Error in fetchProfileData:', error);
+        if (error.name === 'AbortError') {
+          toast.error('Profile loading timed out. Please try again.');
+        } else {
+          toast.error(`Failed to load profile: ${error.message || 'Unknown error'}`);
+        }
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [id, user?.id, navigate, queryClient]);
+
   // Fetch user games
   const { data: userGames } = useQuery({
     queryKey: ['user-games', id || user?.id],
@@ -204,7 +234,7 @@ const Profile = () => {
     setActiveTab('achievements');
   };
 
-  if (profileLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
