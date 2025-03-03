@@ -203,7 +203,9 @@ const GameDetailsPage = () => {
                 <h3 className="text-lg font-medium mb-2">Genres</h3>
                 <p className="text-gray-300">
                   {game.genres && game.genres.length > 0 
-                    ? game.genres.join(', ') 
+                    ? (typeof game.genres[0] === 'string' 
+                        ? game.genres.join(', ')
+                        : game.genres.map((g: any) => g.name || g).join(', '))
                     : 'Unknown'}
                 </p>
               </div>
@@ -212,14 +214,22 @@ const GameDetailsPage = () => {
                 <h3 className="text-lg font-medium mb-2">Platforms</h3>
                 <p className="text-gray-300">
                   {game.platforms && game.platforms.length > 0 
-                    ? game.platforms.join(', ') 
+                    ? (typeof game.platforms[0] === 'string' 
+                        ? game.platforms.join(', ')
+                        : game.platforms.map((p: any) => p.name || p).join(', '))
                     : 'Unknown'}
                 </p>
               </div>
               
               <div>
                 <h3 className="text-lg font-medium mb-2">Developer</h3>
-                <p className="text-gray-300">{game.developers && game.developers.length > 0 ? game.developers[0] : 'Unknown'}</p>
+                <p className="text-gray-300">
+                  {game.developers && game.developers.length > 0 
+                    ? (typeof game.developers[0] === 'string' 
+                        ? game.developers[0]
+                        : game.developers[0].name || 'Unknown')
+                    : 'Unknown'}
+                </p>
               </div>
             </div>
           </div>
