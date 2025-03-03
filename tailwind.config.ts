@@ -102,7 +102,13 @@ export default {
         glow: "glow 2s ease-in-out infinite",
         "scale-up": "scale-up 0.6s ease-out",
       },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require('tailwindcss-gradients'),
+  ],
 } satisfies Config;
