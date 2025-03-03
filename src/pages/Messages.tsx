@@ -474,7 +474,8 @@ const Messages = () => {
 
   return (
     <div className="container mx-auto p-4 min-h-screen relative">
-      <div className="grid grid-cols-1 gap-4 h-[calc(100vh-2rem)]">
+      <h1 className="text-2xl font-bold text-primary mb-6">Messages</h1>
+      <div className="grid grid-cols-1 gap-4 h-[calc(100vh-6rem)]">
         {/* Conversations section */}
         <div className="gaming-card p-4 flex flex-col overflow-y-auto">
           {!selectedChat ? (
