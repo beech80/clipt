@@ -1,21 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark, UserX } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark, UserX, UserMinus } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
 import { AchievementList } from "@/components/achievements/AchievementList";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
+import { getFollowerCount, getFollowingCount, isFollowing, toggleFollow } from "@/services/followService";
 
 const Profile = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collections'>('clips');
+  const [userFollows, setUserFollows] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
+  
+  // Stats with realistic initial values
+  const [stats, setStats] = useState({
+    followers: 0,
+    following: 0,
+    achievements: 0
+  });
 
   const { data: profile, isLoading: profileLoading } = useQuery<ProfileType | null>({
     queryKey: ['user-profile', id],
@@ -38,21 +49,77 @@ const Profile = () => {
   });
 
   const isOwnProfile = user && (!id || id === user?.id);
+  
+  // Fetch follow counts and status on profile load
+  useEffect(() => {
+    const fetchFollowData = async () => {
+      if (!profile) return;
+      
+      const profileId = profile.id;
+      try {
+        // Get follower and following counts
+        const followerCount = await getFollowerCount(profileId);
+        const followingCount = await getFollowingCount(profileId);
+        
+        // Get achievements count (placeholder)
+        const achievementsCount = 0; // This would come from an achievement service
+        
+        // Update stats
+        setStats({
+          followers: followerCount,
+          following: followingCount,
+          achievements: achievementsCount
+        });
+        
+        // Check if current user is following this profile
+        if (user && !isOwnProfile) {
+          const following = await isFollowing(user.id, profileId);
+          setUserFollows(following);
+        }
+      } catch (error) {
+        console.error("Error fetching follow data:", error);
+      }
+    };
+    
+    fetchFollowData();
+  }, [profile, user, isOwnProfile]);
 
-  const userStats = {
-    followers: 1234,
-    following: 567,
-    gamesPlayed: 89,
-    achievements: 45
-  };
-
-  const handleAddFriend = () => {
+  const handleToggleFollow = async () => {
     if (!user) {
-      toast.error("Please sign in to add friends");
+      toast.error("Please sign in to follow users");
       navigate('/login');
       return;
     }
-    toast.success("Friend request sent!");
+    
+    if (!profile || isOwnProfile) return;
+    
+    try {
+      setLoading(true);
+      const response = await toggleFollow(user.id, profile.id);
+      
+      if (response.error) {
+        throw response.error;
+      }
+      
+      // Update local state
+      setUserFollows(!!response.followed);
+      
+      // Update follower count
+      setStats(prev => ({
+        ...prev,
+        followers: prev.followers + (response.followed ? 1 : -1)
+      }));
+      
+      toast.success(response.followed ? `Following ${profile.username || 'user'}` : `Unfollowed ${profile.username || 'user'}`);
+      
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['user-profile', profile.id] });
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      toast.error("Failed to update follow status");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleMessage = () => {
@@ -62,10 +129,6 @@ const Profile = () => {
       return;
     }
     navigate('/messages');
-  };
-
-  const handleNewPost = () => {
-    navigate('/post/new');
   };
 
   const handleAchievementClick = () => {
@@ -117,11 +180,11 @@ const Profile = () => {
               
               <div className="flex flex-wrap justify-center sm:justify-start gap-6 mt-4">
                 <div className="text-center">
-                  <div className="text-xl font-bold text-purple-400">{userStats.followers}</div>
+                  <div className="text-xl font-bold text-purple-400">{stats.followers}</div>
                   <div className="text-sm text-gray-400">Followers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xl font-bold text-purple-400">{userStats.following}</div>
+                  <div className="text-xl font-bold text-purple-400">{stats.following}</div>
                   <div className="text-sm text-gray-400">Following</div>
                 </div>
                 <Button
@@ -130,7 +193,7 @@ const Profile = () => {
                   onClick={handleAchievementClick}
                 >
                   <div>
-                    <div className="text-xl font-bold text-purple-400">{userStats.achievements}</div>
+                    <div className="text-xl font-bold text-purple-400">{stats.achievements}</div>
                     <div className="text-sm text-gray-400">Achievements</div>
                   </div>
                 </Button>
@@ -142,12 +205,16 @@ const Profile = () => {
             {!isOwnProfile && (
               <>
                 <Button 
-                  onClick={handleAddFriend}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  onClick={handleToggleFollow}
+                  className={`${userFollows ? 'bg-gray-600 hover:bg-gray-700' : 'bg-purple-600 hover:bg-purple-700'} text-white`}
                   size="sm"
+                  disabled={loading}
                 >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Add Friend
+                  {userFollows ? (
+                    <><UserMinus className="w-4 h-4 mr-2" />Unfollow</>
+                  ) : (
+                    <><UserPlus className="w-4 h-4 mr-2" />Follow</>
+                  )}
                 </Button>
                 <Button 
                   onClick={handleMessage}
@@ -168,14 +235,6 @@ const Profile = () => {
                 >
                   <Pencil className="w-4 h-4 mr-2" />
                   Edit Profile
-                </Button>
-                <Button
-                  onClick={handleNewPost}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                  size="sm"
-                >
-                  <Gamepad2 className="w-4 h-4 mr-2" />
-                  New Post
                 </Button>
               </>
             )}
