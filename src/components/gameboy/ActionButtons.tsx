@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface ActionButtonsProps {
@@ -12,16 +12,15 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Debug logging for postId
-  useEffect(() => {
-    console.log("ActionButtons received postId:", postId, "type:", typeof postId);
-  }, [postId]);
 
   const handleLike = async () => {
     if (!user) {
       navigate('/login');
+      return;
+    }
+
+    if (!postId) {
+      toast.error('No post selected');
       return;
     }
 
@@ -57,54 +56,48 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   };
 
   const handleComment = () => {
-    console.log("Comment button clicked, postId:", postId, "type:", typeof postId);
+    // If we're on a post page, we can try to find and click the comment button
+    const pathMatch = window.location.pathname.match(/^\/post\/([^/?#]+)/);
     
-    // Get current path information
-    const currentPath = location.pathname;
-    const onPostPage = currentPath.startsWith('/post/');
-    
-    // Try to extract postId from URL if not provided
-    let effectivePostId = postId;
-    if (!effectivePostId && onPostPage) {
-      const match = currentPath.match(/\/post\/([^/?#]+)/);
-      if (match && match[1]) {
-        effectivePostId = match[1];
-        console.log("Extracted postId from URL:", effectivePostId);
-      }
-    }
-    
-    if (effectivePostId && effectivePostId !== 'undefined' && effectivePostId !== 'null') {
-      if (onPostPage) {
-        // If already on a post page, find and trigger the comment button
-        const commentBtn = document.querySelector('.comment-btn');
-        if (commentBtn && commentBtn instanceof HTMLElement) {
-          commentBtn.click();
-          console.log("Found and clicked comment button on post page");
-        } else {
-          // Or try to scroll to the comments section
-          const commentsSection = document.getElementById('comments');
-          if (commentsSection) {
-            commentsSection.scrollIntoView({ behavior: 'smooth' });
-            console.log("Found and scrolled to comments section");
-          } else {
-            toast.info('Scroll down to view comments');
+    if (pathMatch) {
+      // We're on a post page - try to find and click the comment button or scroll to comments
+      const commentsSection = document.getElementById('comments');
+      if (commentsSection) {
+        commentsSection.scrollIntoView({ behavior: 'smooth' });
+        
+        // Try to focus the comment input if it exists
+        setTimeout(() => {
+          const commentInput = document.querySelector('.comment-form-input');
+          if (commentInput instanceof HTMLElement) {
+            commentInput.focus();
           }
-        }
-      } else {
-        // Navigate to the post page with comments hash
-        console.log(`Navigating to /post/${effectivePostId}#comments`);
-        navigate(`/post/${effectivePostId}#comments`);
-        toast.success('Opening comments');
+        }, 500);
+        
+        toast.success('Comments section opened');
+        return;
       }
-    } else {
-      console.error("Invalid postId in ActionButtons:", effectivePostId);
-      toast.error('Cannot open comments for this post');
     }
+    
+    // If we have a postId, navigate to that post
+    if (postId) {
+      navigate(`/post/${postId}#comments`);
+      toast.success('Opening comments');
+      return;
+    }
+    
+    // If we don't have a postId and aren't on a post page, go to the main feed
+    navigate('/clipts');
+    toast.info('Navigate to a post to comment');
   };
 
   const handleFollow = async () => {
     if (!user) {
       navigate('/login');
+      return;
+    }
+
+    if (!postId) {
+      toast.error('No post selected');
       return;
     }
 
@@ -154,6 +147,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   const handleRank = async () => {
     if (!user) {
       navigate('/login');
+      return;
+    }
+
+    if (!postId) {
+      toast.error('No post selected');
       return;
     }
 
