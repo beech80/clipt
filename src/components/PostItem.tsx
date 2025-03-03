@@ -97,7 +97,10 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     navigate(`/profile/${userId}`);
   };
 
-  const handleGameClick = (gameId: string, gameName: string) => {
+  const handleGameClick = (e: React.MouseEvent, gameId: string, gameName: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Navigate to game-specific page when a game is clicked
     if (gameId) {
       console.log(`Navigating to game: ${gameName} (${gameId})`);
@@ -144,13 +147,15 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             >
               {username}
             </span>
-            {gameName && (
-              <span 
-                className="text-sm text-gaming-300 hover:text-gaming-100 cursor-pointer" 
-                onClick={() => handleGameClick(gameId, gameName)}
-              >
-                {gameName}
-              </span>
+            {gameName && gameId && (
+              <div className="mb-1">
+                <span 
+                  className="text-gaming-300 hover:text-gaming-100 cursor-pointer text-sm"
+                  onClick={(e) => handleGameClick(e, gameId, gameName)} 
+                >
+                  Playing {gameName}
+                </span>
+              </div>
             )}
           </div>
         </div>

@@ -39,13 +39,17 @@ const PostItem = ({ post }: PostItemProps) => {
     navigate(`/profile/${userId}`);
   };
 
-  const handleGameClick = (gameId: string, gameName: string) => {
-    // Navigate to game-specific page when a game is clicked
-    if (gameId) {
-      console.log(`Navigating to game: ${gameName} (${gameId})`);
-      // Use the correct route format to match the gameRoutes.tsx definition
-      navigate(`/game/${gameId}`);
+  const handleGameClick = (e: React.MouseEvent, gameId?: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!gameId) {
+      console.warn("Attempted to navigate to game, but no game ID was provided");
+      return;
     }
+    
+    console.log("Navigating to game from post:", gameId);
+    navigate(`/game/${gameId}`);
   };
 
   const username = post.profiles?.username || 'Anonymous';
@@ -74,12 +78,12 @@ const PostItem = ({ post }: PostItemProps) => {
             >
               {username}
             </span>
-            {gameName && (
+            {post.games && (
               <span 
-                className="text-xs text-gaming-300 hover:text-gaming-100 cursor-pointer" 
-                onClick={() => handleGameClick(gameId, gameName)}
+                className="block text-sm text-gaming-300 hover:text-gaming-100 cursor-pointer" 
+                onClick={(e) => handleGameClick(e, post.games.id)}
               >
-                {gameName}
+                Playing {post.games.name}
               </span>
             )}
           </div>
