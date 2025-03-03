@@ -13,6 +13,22 @@ import AchievementList from '@/components/achievements/AchievementList';
 import { gameIdToUuid, uuidToGameId } from '@/utils/idUtils';
 import { toast } from 'sonner';
 
+// Helper function to safely render any value that might be an object
+const safeRender = (value: any): string => {
+  if (value === null || value === undefined) return 'Unknown';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  if (typeof value === 'object') {
+    if (Array.isArray(value)) {
+      return value.map(safeRender).join(', ');
+    }
+    if (value.name) return value.name;
+    if (value.id) return String(value.id);
+    return JSON.stringify(value);
+  }
+  return String(value);
+};
+
 const GameDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -48,7 +64,23 @@ const GameDetailsPage = () => {
           return;
         }
         
-        setGame(gameData);
+        console.log('Game data received:', JSON.stringify(gameData));
+        
+        // Ensure all game data properties are safe to render
+        const safeGameData = {
+          ...gameData,
+          genres: gameData.genres ? gameData.genres.map(g => 
+            typeof g === 'string' ? g : (g.name || String(g.id))
+          ) : [],
+          platforms: gameData.platforms ? gameData.platforms.map(p => 
+            typeof p === 'string' ? p : (p.name || String(p.id))
+          ) : [],
+          developers: gameData.developers ? gameData.developers.map(d => 
+            typeof d === 'string' ? d : (d.name || String(d.id))
+          ) : []
+        };
+        
+        setGame(safeGameData);
         
         // Create a UUID-compatible version of the game ID for database queries
         const uuidCompatibleId = gameIdToUuid(numericGameId);
@@ -148,9 +180,9 @@ const GameDetailsPage = () => {
             
             {game.genres && game.genres.length > 0 && (
               <div className="flex gap-2 flex-wrap">
-                {game.genres.map(genre => (
-                  <span key={genre} className="bg-gray-700 text-gray-200 px-2 py-1 rounded text-xs">
-                    {genre}
+                {game.genres.map((genre, idx) => (
+                  <span key={idx} className="bg-gray-700 text-gray-200 px-2 py-1 rounded text-xs">
+                    {safeRender(genre)}
                   </span>
                 ))}
               </div>
@@ -203,9 +235,7 @@ const GameDetailsPage = () => {
                 <h3 className="text-lg font-medium mb-2">Genres</h3>
                 <p className="text-gray-300">
                   {game.genres && game.genres.length > 0 
-                    ? (typeof game.genres[0] === 'string' 
-                        ? game.genres.join(', ')
-                        : game.genres.map((g: any) => g.name || g).join(', '))
+                    ? game.genres.map(safeRender).join(', ')
                     : 'Unknown'}
                 </p>
               </div>
@@ -214,9 +244,7 @@ const GameDetailsPage = () => {
                 <h3 className="text-lg font-medium mb-2">Platforms</h3>
                 <p className="text-gray-300">
                   {game.platforms && game.platforms.length > 0 
-                    ? (typeof game.platforms[0] === 'string' 
-                        ? game.platforms.join(', ')
-                        : game.platforms.map((p: any) => p.name || p).join(', '))
+                    ? game.platforms.map(safeRender).join(', ')
                     : 'Unknown'}
                 </p>
               </div>
@@ -225,9 +253,7 @@ const GameDetailsPage = () => {
                 <h3 className="text-lg font-medium mb-2">Developer</h3>
                 <p className="text-gray-300">
                   {game.developers && game.developers.length > 0 
-                    ? (typeof game.developers[0] === 'string' 
-                        ? game.developers[0]
-                        : game.developers[0].name || 'Unknown')
+                    ? safeRender(game.developers[0])
                     : 'Unknown'}
                 </p>
               </div>
