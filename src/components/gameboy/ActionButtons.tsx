@@ -52,9 +52,34 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
 
   const handleComment = () => {
     if (postId) {
-      // Navigate to comments section of the post
-      navigate(`/post/${postId}#comments`);
-      toast.success('Opening comments');
+      // Check if already on post page
+      const currentPath = window.location.pathname;
+      const postPath = `/post/${postId}`;
+      
+      if (currentPath === postPath) {
+        // If already on post page, find the post element and scroll to comments
+        const postElement = document.querySelector('.gaming-card');
+        if (postElement) {
+          // Find comment button in PostItem and trigger click event
+          const commentBtn = document.querySelector('.comment-btn');
+          if (commentBtn && commentBtn instanceof HTMLElement) {
+            commentBtn.click();
+          } else {
+            toast.info('Scroll down to view comments');
+            // Scroll to the bottom of the post where comments would be
+            window.scrollTo({
+              top: postElement.getBoundingClientRect().bottom,
+              behavior: 'smooth'
+            });
+          }
+        } else {
+          toast.error('Could not find comments section');
+        }
+      } else {
+        // Navigate to the post page with comments hash
+        navigate(`/post/${postId}#comments`);
+        toast.success('Opening comments');
+      }
     } else {
       toast.error('Cannot open comments for this post');
     }
