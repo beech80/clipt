@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, Star, Users, Monitor, Calendar, ArrowUp, MessageSquare, Heart } from 'lucide-react';
+import { Trophy, Star, Users, Monitor, Calendar, ArrowUp, MessageSquare, Heart, Rocket, Shield } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import type { Achievement, AchievementProgress, GameAchievement } from '@/types/profile';
@@ -23,41 +23,31 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
     );
 
     return (
-      <div className="relative overflow-hidden rounded-md border border-gray-700 bg-gradient-to-br from-gray-900 to-gray-800">
-        <div className="p-4 flex gap-4">
-          <div className="h-16 w-16 flex-shrink-0 rounded-md bg-gradient-to-b from-purple-500/20 to-blue-500/20 flex items-center justify-center relative">
-            {getAchievementIcon(gameAchievement.category)}
-            <div className="absolute top-0 right-0 bg-yellow-500 text-xs text-black font-bold px-1 rounded">
-              +{gameAchievement.points}
+      <div className={`flex w-full overflow-hidden ${percentComplete > 0 ? 'border-l-4 border-green-500' : ''}`}>
+        <div className="h-24 w-24 flex-shrink-0 relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0d3320] to-[#083015]">
+            <div className="w-full h-full flex items-center justify-center">
+              {getIconForAchievement(gameAchievement.name)}
             </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-white font-semibold">{gameAchievement.name}</h3>
-            <p className="text-gray-400 text-sm line-clamp-2">{gameAchievement.description}</p>
-            <div className="mt-2">
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-400">
-                  {gameAchievement.currentValue} / {gameAchievement.targetValue}
-                </span>
-                <span className={cn("font-semibold", gameAchievement.completed ? "text-green-400" : "text-blue-400")}>
-                  {percentComplete}%
-                </span>
-              </div>
-              <Progress 
-                value={percentComplete} 
-                className="h-2 bg-gray-700" 
-                indicatorClassName={gameAchievement.completed ? "bg-green-500" : "bg-blue-500"} 
-              />
-            </div>
+          <div className="absolute top-1 left-1 text-cyan-400 font-bold text-lg">
+            +{gameAchievement.points}
           </div>
         </div>
-        {gameAchievement.completed && (
-          <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20 pointer-events-none flex items-center justify-center">
-            <div className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-              Completed
+        <div className="flex-1 p-3 bg-gradient-to-r from-gray-900 to-gray-800">
+          <h3 className="text-white font-semibold text-lg">{gameAchievement.name}</h3>
+          <p className="text-gray-400 text-sm mb-2">{gameAchievement.description}</p>
+          <div className="flex justify-between text-sm mb-1">
+            <div>
+              <Progress 
+                value={percentComplete} 
+                className="h-2 w-[200px] bg-gray-700" 
+                indicatorClassName="bg-blue-500" 
+              />
             </div>
+            <span className="text-white font-medium">{percentComplete}%</span>
           </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -71,74 +61,68 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
   );
 
   const isCompleted = progress.completed || percentComplete >= 100;
+  const isInProgress = percentComplete > 0 && percentComplete < 100;
+
+  // Get the current/total display
+  const progressDisplay = `${progress.currentValue}/${achievement.target_value}`;
+
+  // Check if achievement has specific style
+  const isHighlighted = isInProgress && achievement.name === 'Earn Your Way';
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-gray-700 bg-gradient-to-br from-gray-900 to-gray-800">
-      <div className="p-4 flex gap-4">
-        <div className="h-16 w-16 flex-shrink-0 rounded-md bg-gradient-to-b from-purple-500/20 to-blue-500/20 flex items-center justify-center relative">
-          {getAchievementIcon(achievement.category)}
-          <div className="absolute top-0 right-0 bg-yellow-500 text-xs text-black font-bold px-1 rounded">
-            +{achievement.points}
+    <div className={`flex w-full overflow-hidden mb-3 ${isHighlighted ? 'border border-green-500' : ''}`}>
+      <div className="h-24 w-24 flex-shrink-0 relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0d3320] to-[#083015]">
+          <div className="w-full h-full flex items-center justify-center">
+            {getIconForAchievement(achievement.name)}
           </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-white font-semibold">{achievement.name}</h3>
-          <p className="text-gray-400 text-sm line-clamp-2">{achievement.description}</p>
-          <div className="mt-2">
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-400">
-                {progress.currentValue} / {achievement.target_value}
-              </span>
-              <span 
-                className={cn(
-                  "font-semibold", 
-                  isCompleted ? "text-green-400" : "text-blue-400"
-                )}
-              >
-                {percentComplete}%
-              </span>
-            </div>
-            <Progress 
-              value={percentComplete} 
-              className="h-2 bg-gray-700" 
-              indicatorClassName={isCompleted ? "bg-green-500" : "bg-blue-500"} 
-            />
-          </div>
+        <div className="absolute top-1 left-1 text-cyan-400 font-bold text-lg">
+          +{achievement.points}
         </div>
       </div>
-      {isCompleted && (
-        <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20 pointer-events-none flex items-center justify-center">
-          <div className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-            Completed
+      <div className="flex-1 p-3 bg-gradient-to-r from-gray-900 to-gray-800">
+        <h3 className="text-white font-semibold text-lg">{achievement.name}</h3>
+        <p className="text-gray-400 text-sm mb-2">
+          {achievement.description} - {progressDisplay}
+        </p>
+        <div className="flex justify-between text-sm mb-1">
+          <div>
+            <Progress 
+              value={percentComplete} 
+              className="h-2 w-[200px] bg-gray-700" 
+              indicatorClassName="bg-blue-500" 
+            />
           </div>
+          <span className="text-white font-medium">{percentComplete}%</span>
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-// Helper function to get the appropriate icon based on category
-const getAchievementIcon = (category: string) => {
-  switch (category) {
-    case 'streaming':
-      return <Star className="w-8 h-8 text-purple-400" />;
-    case 'social':
-      return <Users className="w-8 h-8 text-blue-400" />;
-    case 'gaming':
-      return <Monitor className="w-8 h-8 text-green-400" />;
-    case 'daily':
-      return <Calendar className="w-8 h-8 text-amber-400" />;
-    case 'trophy':
-      return <Trophy className="w-8 h-8 text-yellow-400" />;
-    case 'comment':
-      return <MessageSquare className="w-8 h-8 text-indigo-400" />;
-    case 'follower':
-      return <Users className="w-8 h-8 text-blue-400" />;
-    case 'weekly':
-      return <ArrowUp className="w-8 h-8 text-red-400" />;
-    default:
-      return <Trophy className="w-8 h-8 text-amber-400" />;
+// Helper function to get specific icons for achievements that match the Xbox style
+const getIconForAchievement = (name: string) => {
+  if (name.includes('Complete 4 Daily')) {
+    return <Rocket className="w-12 h-12 text-green-500" />;
   }
+  if (name.includes('Earn Your Way')) {
+    return <Shield className="w-12 h-12 text-green-500" />;
+  }
+  if (name.includes('Dead Space')) {
+    // Since we don't have real images, use a themed icon
+    return <Monitor className="w-12 h-12 text-red-500" />;
+  }
+  if (name.includes('Long Dark')) {
+    // Since we don't have real images, use a themed icon
+    return <Calendar className="w-12 h-12 text-blue-400" />;
+  }
+  if (name.includes('Game Pass')) {
+    return <Trophy className="w-12 h-12 text-green-500" />;
+  }
+  
+  // For other achievements, use the category-based icons
+  return <Trophy className="w-12 h-12 text-green-500" />;
 };
 
 export default AchievementItem;
