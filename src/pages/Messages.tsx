@@ -48,35 +48,9 @@ const Messages = () => {
 
   const fetchActiveChats = async () => {
     try {
-      // Let's use the profiles table which definitely exists instead of messages table
-      const { data: recentProfiles, error } = await supabase
-        .from('profiles')
-        .select(`
-          id, 
-          username, 
-          avatar_url, 
-          display_name,
-          created_at
-        `)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) throw error;
-
-      // Create a simplified chat list from profiles
-      // This is a fallback when we don't have actual messages
-      const simplifiedChats = (recentProfiles || [])
-        .filter(profile => profile.id !== user?.id) // Don't include current user
-        .map(profile => ({
-          id: profile.id, // Use profile ID as chat ID
-          type: 'direct',
-          name: profile.username || profile.display_name || 'User',
-          avatar_url: profile.avatar_url,
-          last_message_at: profile.created_at,
-          other_user_id: profile.id
-        }));
-
-      setActiveChats(simplifiedChats);
+      // Clear active chats - only keeping Create Group Chat button
+      setActiveChats([]);
+      console.log("Cleared conversation list as requested");
     } catch (error) {
       console.error("Error fetching chats:", error);
       toast.error("Error loading conversations");
@@ -259,185 +233,30 @@ const Messages = () => {
         {/* Left sidebar - active chats */}
         <div className="gaming-card overflow-y-auto relative">
           <div className="sticky top-0 bg-gaming-800 p-4 z-10 flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Conversations</h2>
-              <Button 
-                variant="outline" 
-                size="icon"
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h1 className="text-2xl font-bold">Conversations</h1>
+              <button 
                 onClick={() => setShowNewChatDialog(true)}
-                className="h-8 w-8"
+                className="p-2 bg-primary text-white rounded-md"
+                aria-label="New conversation"
               >
                 <Plus className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
-            <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Start New Conversation</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <Input
-                    placeholder="Search for users..."
-                    value={searchTerm}
-                    onChange={(e) => handleSearchUsers(e.target.value)}
-                    autoFocus
-                  />
-                  {searchResults.length > 0 ? (
-                    <div className="mt-2 max-h-[300px] overflow-y-auto space-y-2">
-                      {searchResults.map((user) => (
-                        <div
-                          key={user.id}
-                          className="flex items-center justify-between p-2 rounded bg-gaming-800 hover:bg-gaming-700 cursor-pointer"
-                          onClick={() => startOrContinueChat(user.id)}
-                        >
-                          <div className="flex items-center gap-3">
-                            {user.avatar_url ? (
-                              <img
-                                src={user.avatar_url}
-                                alt={user.username}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-700">
-                                <span>{user.username.slice(0, 2).toUpperCase()}</span>
-                              </div>
-                            )}
-                            <span>{user.display_name || user.username}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    searchTerm.length > 0 && (
-                      <p className="text-center text-gray-400 py-2">No users found</p>
-                    )
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Create Group Chat
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Group Chat</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <Input
-                    placeholder="Group Name"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                  />
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Search users to add..."
-                      value={searchTerm}
-                      onChange={(e) => handleSearchUsers(e.target.value)}
-                    />
-                    {searchResults.length > 0 && (
-                      <div className="mt-2 space-y-2">
-                        {searchResults.map((user) => (
-                          <div
-                            key={user.id}
-                            className="flex items-center justify-between p-2 rounded bg-gaming-800 hover:bg-gaming-700"
-                          >
-                            <span>{user.username}</span>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                if (!selectedUsers.includes(user.id)) {
-                                  setSelectedUsers([...selectedUsers, user.id]);
-                                  toast.success(`Added ${user.username} to group`);
-                                }
-                              }}
-                              disabled={selectedUsers.includes(user.id)}
-                            >
-                              {selectedUsers.includes(user.id) ? 'Added' : 'Add'}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {selectedUsers.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium mb-2">Selected Users:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedUsers.map((userId) => {
-                          const user = searchResults.find(u => u.id === userId);
-                          return (
-                            <div
-                              key={userId}
-                              className="flex items-center gap-2 bg-gaming-800 rounded px-2 py-1"
-                            >
-                              <span>{user?.username}</span>
-                              <button
-                                onClick={() => setSelectedUsers(selectedUsers.filter(id => id !== userId))}
-                                className="text-red-500 hover:text-red-400"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  <Button
-                    onClick={handleCreateGroup}
-                    disabled={!groupName || selectedUsers.length === 0}
-                    className="w-full mt-4"
-                  >
-                    Create Group
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          {/* Active Chats List */}
-          <div className="p-2">
-            {activeChats.length > 0 ? (
-              <div className="space-y-2">
-                {activeChats.map((chat) => (
-                  <div
-                    key={chat.id}
-                    className={`flex items-center p-3 rounded ${
-                      selectedChat?.id === chat.id 
-                        ? 'bg-gaming-600' 
-                        : 'bg-gaming-800 hover:bg-gaming-700'
-                    } cursor-pointer transition-colors`}
-                    onClick={() => setSelectedChat(chat)}
-                  >
-                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 mr-3">
-                      {chat.avatar_url ? (
-                        <img src={chat.avatar_url} alt={chat.name} className="h-10 w-10 rounded-full object-cover" />
-                      ) : (
-                        <span>{chat.name.slice(0, 2).toUpperCase()}</span>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{chat.name}</h3>
-                      <p className="text-sm text-gray-400">
-                        {chat.type === 'group' ? 'Group chat' : 'Direct message'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center p-4 text-gray-400">
-                No active conversations. Start a new chat!
-              </div>
-            )}
+            
+            {/* Create Group Chat button */}
+            <div className="p-2">
+              <button
+                onClick={() => setShowNewChatDialog(true)}
+                className="flex items-center justify-center gap-2 w-full p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
+              >
+                <Users className="h-4 w-4" />
+                Create Group Chat
+              </button>
+            </div>
+            
+            {/* We're not displaying the active chat list per user request */}
+            {/* Only showing the Create Group Chat button above */}
           </div>
         </div>
 
@@ -447,7 +266,7 @@ const Messages = () => {
             <>
               <div className="p-4 border-b border-gaming-700 flex items-center">
                 <h2 className="text-xl font-semibold">
-                  {activeChats.find(c => c.id === selectedChat.id)?.name || 'Chat'}
+                  {selectedChat.name}
                 </h2>
               </div>
               
