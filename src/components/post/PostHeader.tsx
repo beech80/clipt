@@ -3,11 +3,8 @@ import { formatDistanceToNow } from "date-fns";
 import { Heart, MessageCircle, Trophy } from "lucide-react";
 import { PostHeaderProps } from "@/types/post";
 import PostMenu from "./PostMenu";
-import { useNavigate } from "react-router-dom";
 
 export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
-  const navigate = useNavigate();
-  
   // Safely extract username and check if post and profiles exist
   const username = post?.profiles?.display_name || post?.profiles?.username || 'Anonymous';
   const avatarUrl = post?.profiles?.avatar_url || '';
@@ -16,6 +13,8 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
   // Function to safely navigate to a user profile
   const handleProfileClick = (e: React.MouseEvent, userId: string) => {
     e.stopPropagation();
+    e.preventDefault();
+    
     if (!userId) {
       console.error('Invalid user ID for profile navigation');
       return;
@@ -23,7 +22,9 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
     
     try {
       console.log(`PostHeader: Navigating to profile: ${userId}`);
-      navigate(`/profile/${userId}`);
+      
+      // Use window.location instead of navigate for more reliable navigation
+      window.location.href = `/profile/${userId}`;
     } catch (error) {
       console.error('Error navigating to profile:', error);
     }
@@ -36,7 +37,7 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
     const handleClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       console.log("Navigating to game:", game.id);
-      navigate(`/game/${game.id}`);
+      window.location.href = `/game/${game.id}`;
     };
     
     return (
