@@ -9,20 +9,25 @@ const ScrollToTop = () => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Scroll to top when the route changes
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
+    console.log("ScrollToTop activated for path:", pathname);
+    
+    // Force scroll to top immediately
+    window.scrollTo(0, 0);
+    
+    // Also ensure all scroll containers are reset
+    document.querySelectorAll('.overflow-auto, .overflow-y-auto, .overflow-scroll, .overflow-y-scroll').forEach(element => {
+      if (element instanceof HTMLElement) {
+        element.scrollTop = 0;
+      }
     });
     
-    // Also ensure the main content area is scrolled to top
+    // Also handle any main content element
     const mainContent = document.querySelector('main');
     if (mainContent) {
-      mainContent.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
+      mainContent.scrollTop = 0;
     }
+    
+    console.log("Scrolling complete");
   }, [pathname]);
 
   return null; // This component doesn't render anything
