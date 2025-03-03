@@ -1,20 +1,99 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Search, Users } from "lucide-react";
+import { Search, Users, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const Messages = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [groupName, setGroupName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [activeChats, setActiveChats] = useState<any[]>([]);
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [message, setMessage] = useState("");
+
+  // Fetch active chats when component mounts
+  React.useEffect(() => {
+    if (user) {
+      fetchActiveChats();
+    }
+  }, [user]);
+
+  const fetchActiveChats = async () => {
+    try {
+      // First get direct messages
+      const { data: directChats, error: directError } = await supabase
+        .from('direct_messages')
+        .select(`
+          id,
+          sender_id,
+          recipient_id,
+          created_at,
+          sender:sender_id (username, avatar_url),
+          recipient:recipient_id (username, avatar_url)
+        `)
+        .or(`and(sender_id.eq.${user?.id},recipient_id.eq.${user?.id})`)
+        .order('created_at', { ascending: false });
+
+      if (directError) throw directError;
+
+      // Get group chats the user is a member of
+      const { data: groupChats, error: groupError } = await supabase
+        .from('group_chat_members')
+        .select(`
+          group_id,
+          group_chats (
+            id,
+            name,
+            created_at
+          )
+        `)
+        .eq('user_id', user?.id);
+
+      if (groupError) throw groupError;
+
+      // Combine and format the chats
+      const formattedDirectChats = (directChats || []).map(chat => {
+        const isUserSender = chat.sender_id === user?.id;
+        const otherUser = isUserSender ? chat.recipient : chat.sender;
+        
+        return {
+          id: chat.id,
+          type: 'direct',
+          name: otherUser.username,
+          avatar_url: otherUser.avatar_url,
+          last_message_at: chat.created_at,
+          other_user_id: isUserSender ? chat.recipient_id : chat.sender_id
+        };
+      });
+
+      const formattedGroupChats = (groupChats || []).map(membership => ({
+        id: membership.group_chats.id,
+        type: 'group',
+        name: membership.group_chats.name,
+        avatar_url: null, // Default group avatar
+        last_message_at: membership.group_chats.created_at
+      }));
+
+      // Combine and sort by most recent
+      const allChats = [...formattedDirectChats, ...formattedGroupChats]
+        .sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
+
+      setActiveChats(allChats);
+    } catch (error) {
+      console.error("Error fetching chats:", error);
+      toast.error("Error loading conversations");
+    }
+  };
 
   const handleSearch = async () => {
     setIsSearching(true);
@@ -26,7 +105,7 @@ const Messages = () => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url')
+      .select('id, username, avatar_url, display_name')
       .ilike('username', `%${searchTerm}%`)
       .limit(10);
 
@@ -49,7 +128,7 @@ const Messages = () => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url')
+      .select('id, username, avatar_url, display_name')
       .ilike('username', `%${term}%`)
       .limit(5);
 
@@ -59,6 +138,67 @@ const Messages = () => {
     }
 
     setSearchResults(data || []);
+  };
+
+  const startOrContinueChat = async (userId: string) => {
+    if (!user) {
+      toast.error("Please sign in to message users");
+      navigate('/login');
+      return;
+    }
+
+    // Check if a chat already exists
+    const { data: existingChats, error: existingError } = await supabase
+      .from('direct_messages')
+      .select('id')
+      .or(`and(sender_id.eq.${user.id},recipient_id.eq.${userId}),and(sender_id.eq.${userId},recipient_id.eq.${user.id})`)
+      .limit(1);
+
+    if (existingError) {
+      toast.error("Error checking existing conversations");
+      return;
+    }
+
+    if (existingChats && existingChats.length > 0) {
+      // Chat exists - load it
+      setSelectedChat({
+        id: existingChats[0].id,
+        type: 'direct',
+        recipient_id: userId
+      });
+      toast.success("Conversation loaded");
+    } else {
+      // Create a new chat
+      const { data: newChat, error: createError } = await supabase
+        .from('direct_messages')
+        .insert({
+          sender_id: user.id,
+          recipient_id: userId,
+          message: "Hi there!", // Initial message
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        toast.error("Error starting conversation");
+        return;
+      }
+
+      setSelectedChat({
+        id: newChat.id,
+        type: 'direct',
+        recipient_id: userId
+      });
+      toast.success("Conversation started!");
+      
+      // Refresh active chats
+      fetchActiveChats();
+    }
+    
+    // Clear search results after selecting a chat
+    setSearchResults([]);
+    setSearchTerm("");
   };
 
   const handleCreateGroup = async () => {
@@ -114,6 +254,7 @@ const Messages = () => {
     setGroupName("");
     setSelectedUsers([]);
     setSearchResults([]);
+    fetchActiveChats();
   };
 
   return (
@@ -122,10 +263,11 @@ const Messages = () => {
         <h1 className="gameboy-title">MESSAGES</h1>
       </div>
 
-      <div className="mt-20 grid grid-cols-1 h-[calc(100vh-8rem)]">
+      <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
+        {/* Left sidebar - active chats */}
         <div className="gaming-card overflow-y-auto relative">
-          <div className="absolute top-4 right-4 flex gap-2">
-            <div className="relative flex-1 mr-2">
+          <div className="sticky top-0 bg-gaming-800 p-4 z-10">
+            <div className="relative flex-1 mb-4">
               <Input
                 placeholder="Search users..."
                 value={searchTerm}
@@ -141,11 +283,10 @@ const Messages = () => {
               <DialogTrigger asChild>
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
+                  className="w-full mb-4"
                 >
-                  <Users className="h-4 w-4" />
-                  <span className="sr-only">Create Group</span>
+                  <Users className="h-4 w-4 mr-2" />
+                  Create Group Chat
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -226,31 +367,113 @@ const Messages = () => {
             </Dialog>
           </div>
           
+          {/* Active Chats List */}
+          <div className="p-2">
+            {activeChats.length > 0 ? (
+              <div className="space-y-2">
+                {activeChats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    className={`flex items-center p-3 rounded ${
+                      selectedChat?.id === chat.id 
+                        ? 'bg-gaming-600' 
+                        : 'bg-gaming-800 hover:bg-gaming-700'
+                    } cursor-pointer transition-colors`}
+                    onClick={() => setSelectedChat(chat)}
+                  >
+                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 mr-3">
+                      {chat.avatar_url ? (
+                        <img src={chat.avatar_url} alt={chat.name} className="h-10 w-10 rounded-full object-cover" />
+                      ) : (
+                        <span>{chat.name.slice(0, 2).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-medium">{chat.name}</h3>
+                      <p className="text-sm text-gray-400">
+                        {chat.type === 'group' ? 'Group chat' : 'Direct message'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-4 text-gray-400">
+                No active conversations. Search for users to start chatting!
+              </div>
+            )}
+          </div>
+          
           {/* Search Results */}
           {searchResults.length > 0 && (
-            <div className="mt-16 p-4">
+            <div className="mt-2 p-2 border-t border-gaming-700">
+              <h3 className="text-sm font-medium mb-2 text-gray-400">Search Results</h3>
               <div className="space-y-2">
                 {searchResults.map((user) => (
                   <div
                     key={user.id}
                     className="flex items-center justify-between p-3 rounded bg-gaming-800 hover:bg-gaming-700 cursor-pointer transition-colors"
-                    onClick={() => {
-                      // Here you can implement the logic to open a chat with this user
-                      toast.info(`Chat with ${user.username} coming soon!`);
-                    }}
+                    onClick={() => startOrContinueChat(user.id)}
                   >
                     <div className="flex items-center gap-3">
-                      {user.avatar_url && (
+                      {user.avatar_url ? (
                         <img
                           src={user.avatar_url}
                           alt={user.username}
                           className="w-8 h-8 rounded-full"
                         />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-700">
+                          <span>{user.username.slice(0, 2).toUpperCase()}</span>
+                        </div>
                       )}
-                      <span>{user.username}</span>
+                      <span>{user.display_name || user.username}</span>
                     </div>
+                    <Button size="sm" variant="outline">Message</Button>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right side - chat area */}
+        <div className="gaming-card col-span-2 flex flex-col">
+          {selectedChat ? (
+            <>
+              <div className="p-4 border-b border-gaming-700 flex items-center">
+                <h2 className="text-xl font-semibold">
+                  {activeChats.find(c => c.id === selectedChat.id)?.name || 'Chat'}
+                </h2>
+              </div>
+              
+              <div className="flex-1 p-4 overflow-y-auto">
+                {/* Placeholder for chat messages */}
+                <div className="text-center text-gray-400 py-8">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-40" />
+                  <p>Messages will appear here</p>
+                  <p className="text-sm">Send your first message below</p>
+                </div>
+              </div>
+              
+              <div className="p-4 border-t border-gaming-700 flex gap-2">
+                <Input
+                  placeholder="Type a message..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="flex-1"
+                />
+                <Button>Send</Button>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center p-8">
+                <MessageSquare className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No conversation selected</h3>
+                <p className="text-gray-400 mb-4">
+                  Select a chat from the sidebar or search for a user to start messaging
+                </p>
               </div>
             </div>
           )}

@@ -4,17 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { UserCog, Paintbrush, ArrowLeft, Gamepad2 } from "lucide-react";
+import { UserCog, Paintbrush, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Profile } from "@/types/profile";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
 
 const EditProfile = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
   
   const { data: profile } = useQuery<Profile>({
     queryKey: ['profile'],
@@ -35,70 +32,6 @@ const EditProfile = () => {
       } as Profile;
     },
   });
-
-  const { data: userGames } = useQuery({
-    queryKey: ['user-games'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_games')
-        .select(`
-          *,
-          game_categories (name, id)
-        `)
-        .order('last_played', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const { data: availableGames } = useQuery({
-    queryKey: ['available-games', searchTerm],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('game_categories')
-        .select('*')
-        .ilike('name', `%${searchTerm}%`)
-        .order('name')
-        .limit(10);
-
-      if (error) throw error;
-      return data;
-    }
-  });
-
-  const handleAddGame = async (gameId: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_games')
-        .insert({
-          game_id: gameId,
-          user_id: profile?.id
-        });
-
-      if (error) throw error;
-      toast.success("Game added to your profile!");
-    } catch (error) {
-      toast.error("Failed to add game");
-      console.error(error);
-    }
-  };
-
-  const handleRemoveGame = async (gameId: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_games')
-        .delete()
-        .eq('game_id', gameId)
-        .eq('user_id', profile?.id);
-
-      if (error) throw error;
-      toast.success("Game removed from your profile");
-    } catch (error) {
-      toast.error("Failed to remove game");
-      console.error(error);
-    }
-  };
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8 pb-40">
@@ -135,56 +68,6 @@ const EditProfile = () => {
               <h2 className="text-xl font-semibold">Basic Information</h2>
             </div>
             <ProfileEditForm />
-          </Card>
-
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Gamepad2 className="w-5 h-5 text-purple-500" />
-              <h2 className="text-xl font-semibold">Games You Play</h2>
-            </div>
-            
-            <div className="space-y-4">
-              <Input
-                placeholder="Search for games..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full"
-              />
-
-              {searchTerm && availableGames && availableGames.length > 0 && (
-                <Card className="p-2 absolute z-10 w-full max-h-60 overflow-y-auto bg-background border shadow-lg">
-                  {availableGames.map((game) => (
-                    <Button
-                      key={game.id}
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => {
-                        handleAddGame(game.id);
-                        setSearchTerm('');
-                      }}
-                    >
-                      {game.name}
-                    </Button>
-                  ))}
-                </Card>
-              )}
-
-              <div className="space-y-2">
-                {userGames?.map((userGame) => (
-                  <div key={userGame.id} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                    <span>{userGame.game_categories.name}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleRemoveGame(userGame.game_id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
           </Card>
         </div>
 
