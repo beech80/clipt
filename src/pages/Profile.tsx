@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
-import { AchievementList } from "@/components/achievements/AchievementList";
+import AchievementList from "@/components/achievements/AchievementList";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
@@ -199,16 +199,10 @@ const Profile = () => {
                   <div className="text-xl font-bold text-purple-400">{stats.following}</div>
                   <div className="text-sm text-gray-400">Following</div>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="text-center"
-                  onClick={handleAchievementClick}
-                >
-                  <div>
-                    <div className="text-xl font-bold text-purple-400">{stats.achievements}</div>
-                    <div className="text-sm text-gray-400">Achievements</div>
-                  </div>
-                </Button>
+                <div className="text-center cursor-pointer" onClick={handleAchievementClick}>
+                  <div className="text-xl font-bold text-purple-400">{stats.achievements}</div>
+                  <div className="text-sm text-gray-400">Achievements</div>
+                </div>
               </div>
             </div>
           </div>
