@@ -95,24 +95,7 @@ const Discover = () => {
   const { data: filteredGames } = useQuery({
     queryKey: ['games', gameFilter],
     queryFn: async () => {
-      switch (gameFilter) {
-        case 'top_rated':
-          return igdbService.getPopularGames();
-        case 'most_played':
-          // Custom query for most played games
-          return igdbService.searchGames('', {
-            sort: 'follows desc',
-            limit: 10
-          });
-        case 'most_watched':
-          // Custom query for most watched games
-          return igdbService.searchGames('', {
-            sort: 'total_rating desc',
-            limit: 10
-          });
-        default:
-          return igdbService.getPopularGames();
-      }
+      return igdbService.getTopGames(gameFilter);
     }
   });
 
@@ -121,9 +104,7 @@ const Discover = () => {
     queryKey: ['games', 'search', searchQuery, activeTab],
     enabled: !!searchQuery && searchQuery.length > 2 && activeTab === 'games',
     queryFn: async () => {
-      return igdbService.searchGames(searchQuery, {
-        limit: 10
-      });
+      return igdbService.searchGames(searchQuery);
     }
   });
 
