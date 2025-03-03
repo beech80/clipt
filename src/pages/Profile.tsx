@@ -247,21 +247,21 @@ const Profile = () => {
           <Toggle
             pressed={activeTab === 'clips'}
             onPressedChange={() => setActiveTab('clips')}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
+            className={`w-10 h-10 transition-all ${activeTab === 'clips' ? 'bg-purple-600 text-white' : 'bg-gray-600 text-gray-400 hover:bg-gray-700'}`}
           >
             <Gamepad2 className="w-5 h-5" />
           </Toggle>
           <Toggle
             pressed={activeTab === 'achievements'}
             onPressedChange={() => setActiveTab('achievements')}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
+            className={`w-10 h-10 transition-all ${activeTab === 'achievements' ? 'bg-purple-600 text-white' : 'bg-gray-600 text-gray-400 hover:bg-gray-700'}`}
           >
             <Trophy className="w-5 h-5" />
           </Toggle>
           <Toggle
             pressed={activeTab === 'collections'}
             onPressedChange={() => setActiveTab('collections')}
-            className="data-[state=on]:bg-purple-600 data-[state=on]:text-white w-10 h-10 transition-all"
+            className={`w-10 h-10 transition-all ${activeTab === 'collections' ? 'bg-purple-600 text-white' : 'bg-gray-600 text-gray-400 hover:bg-gray-700'}`}
           >
             <Bookmark className="w-5 h-5" />
           </Toggle>

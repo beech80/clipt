@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Gamepad2, Trophy, Users, Star } from 'lucide-react';
@@ -83,10 +82,10 @@ export const AchievementList = ({ userId }: AchievementListProps) => {
 
   if (!achievements?.length) {
     return (
-      <div className="text-center py-12">
-        <Trophy className="w-12 h-12 mx-auto text-gray-600 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-400">No achievements yet</h3>
-        <p className="text-gray-500">Keep engaging with the platform to earn achievements!</p>
+      <div className="flex flex-col items-center justify-center py-24">
+        <Trophy className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+        <h3 className="text-2xl font-semibold text-gray-400 mb-2">No achievements yet</h3>
+        <p className="text-gray-500 text-center">Keep engaging with the platform to earn achievements!</p>
       </div>
     );
   }
