@@ -10,7 +10,7 @@ import AchievementList from "@/components/achievements/AchievementList";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
-import { getFollowerCount, getFollowingCount, isFollowing, toggleFollow } from "@/services/followService";
+import { getFollowerCount, getFollowingCount, isFollowing } from "@/services/followService";
 import { achievementService } from "@/services/achievementService";
 
 const Profile = () => {
@@ -143,7 +143,8 @@ const Profile = () => {
     fetchFollowData();
   }, [profile, user, isOwnProfile, achievements]);
 
-  const handleToggleFollow = async () => {
+  // Fixed follow button functionality
+  const handleFollowAction = async () => {
     if (!user) {
       toast.error("Please sign in to follow users");
       navigate('/login');
@@ -151,42 +152,39 @@ const Profile = () => {
     }
     
     if (!profile || isOwnProfile) return;
-    
+  
     try {
       setLoading(true);
-      console.log("Following user:", profile.id);
       
-      // Optimistically update UI
-      const isCurrentlyFollowing = userFollows;
-      setUserFollows(!isCurrentlyFollowing);
-      setStats(prev => ({
-        ...prev,
-        followers: prev.followers + (!isCurrentlyFollowing ? 1 : -1)
-      }));
+      // Import dynamically to avoid circular dependencies
+      const { followUser } = await import('@/lib/follow-helper');
       
-      // Make API call
-      const response = await toggleFollow(user.id, profile.id);
-      
-      if (response.error) {
-        // If there was an error, revert the optimistic update
-        setUserFollows(isCurrentlyFollowing);
-        setStats(prev => ({
-          ...prev,
-          followers: prev.followers + (isCurrentlyFollowing ? 1 : -1)
-        }));
-        throw response.error;
+      if (!profile || !profile.id) {
+        toast.error("Unable to follow this user");
+        return;
       }
       
-      // Server response should match our optimistic update
-      console.log("Follow response:", response);
+      // Optimistically update UI
+      setUserFollows(!userFollows);
+      setStats(prev => ({
+        ...prev,
+        followers: prev.followers + (!userFollows ? 1 : -1)
+      }));
       
-      // Confirm toast
-      toast.success(response.followed ? `Following ${profile.username || 'user'}` : `Unfollowed ${profile.username || 'user'}`);
+      // Perform actual follow action
+      const result = await followUser(profile.id);
+      console.log("Follow result:", result);
       
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ['user-profile', profile.id] });
+      // If the action failed, revert the UI
+      if (result !== !userFollows) {
+        setUserFollows(userFollows);
+        setStats(prev => ({
+          ...prev,
+          followers: prev.followers + (userFollows ? 1 : -1)
+        }));
+      }
     } catch (error) {
-      console.error("Error toggling follow:", error);
+      console.error("Follow action failed:", error);
       toast.error("Failed to update follow status");
     } finally {
       setLoading(false);
@@ -287,10 +285,9 @@ const Profile = () => {
           <div className="flex flex-wrap justify-center sm:justify-end gap-3 mt-6">
             {!isOwnProfile && (
               <>
-                <Button 
-                  onClick={handleToggleFollow}
+                <Button
+                  onClick={handleFollowAction}
                   className={`${userFollows ? 'bg-gray-600 hover:bg-gray-700' : 'bg-purple-600 hover:bg-purple-700'} text-white`}
-                  size="sm"
                   disabled={loading}
                 >
                   {userFollows ? (

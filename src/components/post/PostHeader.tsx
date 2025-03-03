@@ -3,12 +3,35 @@ import { formatDistanceToNow } from "date-fns";
 import { Heart, MessageCircle, Trophy } from "lucide-react";
 import { PostHeaderProps } from "@/types/post";
 import PostMenu from "./PostMenu";
+import { useNavigate } from "react-router-dom";
 
 export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
   // Get username from profiles, fallback to display_name, then to 'Anonymous'
   const username = post.profiles?.display_name || post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url || '';
   const firstLetter = username[0]?.toUpperCase() || 'A';
+
+  // Make sure game name is clickable and navigates to game page
+  const GameLink = ({ game, className }: { game: any, className: string }) => {
+    const navigate = useNavigate();
+    
+    if (!game) return null;
+    
+    const handleClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      console.log("Navigating to game:", game.id);
+      navigate(`/game/${game.id}`);
+    };
+    
+    return (
+      <span 
+        className={`${className} cursor-pointer hover:text-gaming-100 transition-colors duration-200`}
+        onClick={handleClick}
+      >
+        {game.name}
+      </span>
+    );
+  };
 
   return (
     <div>
@@ -39,6 +62,11 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
           <p className="text-sm text-muted-foreground">
             {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
           </p>
+        </div>
+        <div>
+          {post.games && (
+            <GameLink game={post.games} className="text-xs text-gaming-300" />
+          )}
         </div>
       </div>
 

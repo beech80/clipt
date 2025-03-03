@@ -8,6 +8,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { CommentsProvider } from '@/contexts/CommentContext';
 import { routes } from '@/config/routes';
 import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
+import { useQueryClient } from 'react-query'; // Import useQueryClient
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import GameBoyControls from '@/components/GameBoyControls';
 import ScrollToTop from './components/common/ScrollToTop';
@@ -33,6 +34,7 @@ function AppContent() {
 function App() {
   const location = useLocation();
   const [currentPostId, setCurrentPostId] = useState<string | undefined>(undefined);
+  const queryClient = useQueryClient(); // Initialize queryClient
   
   // Extract post ID from URL if on a post page
   useEffect(() => {
@@ -50,7 +52,15 @@ function App() {
     });
     
     setCurrentPostId(newPostId);
-  }, [location.pathname]);
+    
+    // Clear the cache when navigation occurs
+    // This forces components to re-fetch fresh data
+    if (location.pathname.startsWith('/profile/') || 
+        location.pathname.startsWith('/game/')) {
+      console.log("Clearing query cache for navigation:", location.pathname);
+      queryClient.clear();
+    }
+  }, [location.pathname, queryClient]);
 
   return (
     <ErrorBoundary>
