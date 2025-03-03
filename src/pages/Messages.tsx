@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, MessageSquare, Plus, Users, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -8,8 +8,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, createMessagesTable, checkTableExists } from "@/lib/supabase";
 import { toast } from "sonner";
-import { formatDistanceToNow, format } from "date-fns";
-import { formatMessageTime } from "@/utils/TimeFormatters";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -510,7 +508,7 @@ const Messages = () => {
                           <div className="flex items-baseline justify-between">
                             <h3 className="font-medium">{chat.recipient_name}</h3>
                             <span className="text-xs text-muted-foreground">
-                              {chat.last_message_time ? formatMessageTime(chat.last_message_time) : ''}
+                              {chat.last_message_time ? new Date(chat.last_message_time).toLocaleString() : ''}
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground truncate">
@@ -559,7 +557,7 @@ const Messages = () => {
                       >
                         <p className="text-sm">{msg.message}</p>
                         <div className="text-xs mt-1 opacity-70 text-right">
-                          {formatMessageTime(msg.created_at)}
+                          {new Date(msg.created_at).toLocaleString()}
                         </div>
                       </div>
                     </div>
