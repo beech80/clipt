@@ -8,6 +8,20 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, createMessagesTable, checkTableExists } from "@/lib/supabase";
 import { toast } from "sonner";
+import { formatDistanceToNow, format } from "date-fns";
+
+// Function to format message timestamps
+const formatMessageTime = (timestamp: string) => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  
+  if (isToday) {
+    return format(date, 'h:mm a'); // Format as "1:23 PM"
+  } else {
+    return formatDistanceToNow(date, { addSuffix: true }); // "2 hours ago", "3 days ago", etc.
+  }
+};
 
 const Messages = () => {
   const { user } = useAuth();
