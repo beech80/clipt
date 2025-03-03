@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/lib/supabase";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { StreamerDashboardChat } from "./chat/StreamerDashboardChat";
 
 export function StreamDashboard() {
   const { user } = useAuth();
@@ -475,6 +476,9 @@ Stream Key: ${stream?.stream_key || ""}`, "OBS Settings");
       <CardFooter className="text-xs text-muted-foreground">
         For advanced stream settings, use OBS Studio or Streamlabs.
       </CardFooter>
+      
+      {/* Add the StreamerDashboardChat component */}
+      {stream && <StreamerDashboardChat streamId={stream.id} isLive={stream.is_live} />}
     </Card>
   );
 }

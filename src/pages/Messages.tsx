@@ -478,137 +478,126 @@ const Messages = () => {
         <h1 className="gameboy-title">MESSAGES</h1>
       </div>
 
-      <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
-        {/* Left sidebar - conversation list */}
-        <div className="gaming-card p-4 hidden md:flex flex-col overflow-y-auto">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Conversations</h2>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setShowNewChatDialog(true)}
-            >
-              <Plus className="h-5 w-5" />
-            </Button>
-          </div>
-          
-          <div className="space-y-2">
-            {activeChats.length > 0 ? (
-              activeChats.map(chat => (
-                <div 
-                  key={chat.id}
-                  className="p-3 hover:bg-gaming-700/30 rounded-lg cursor-pointer flex items-center"
-                  onClick={() => startOrContinueChat(chat.recipient_id)}
-                >
-                  <Avatar className="h-10 w-10 mr-3">
-                    <AvatarImage src={chat.recipient_avatar || ''} />
-                    <AvatarFallback className="bg-primary/30 text-primary-foreground">
-                      {chat.recipient_name?.charAt(0) || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{chat.recipient_name}</p>
-                    <p className="text-sm text-gray-400 truncate">{chat.last_message}</p>
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {chat.last_message_time}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center p-4 text-gray-400">
-                <p>No conversations yet</p>
-                <Button 
-                  variant="link" 
-                  onClick={() => setShowNewChatDialog(true)}
-                  className="mt-2"
-                >
-                  Start one now
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right side - chat area */}
-        <div className="gaming-card p-4 flex flex-col h-full">
-          {selectedChat ? (
+      <div className="mt-20 grid grid-cols-1 gap-4 h-[calc(100vh-8rem)]">
+        {/* Conversations section */}
+        <div className="gaming-card p-4 flex flex-col overflow-y-auto">
+          {!selectedChat ? (
             <>
-              <div className="p-4 border-b border-gaming-700 flex items-center">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold">Messages</h2>
                 <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="mr-2" 
-                  onClick={() => {
-                    setSelectedChat(null);
-                    // Clear URL parameters if they exist
-                    if (userId) {
-                      navigate('/messages');
-                    }
-                  }}
+                  variant="default" 
+                  onClick={() => setShowNewChatDialog(true)}
+                  className="flex items-center gap-2"
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <Plus className="h-5 w-5" />
+                  New Conversation
                 </Button>
-                <h2 className="text-xl font-semibold">
-                  {selectedChat.recipient_name || 'Chat'}
-                </h2>
               </div>
               
-              {/* Messages area */}
-              <div className="flex-1 overflow-y-auto p-4 max-h-[calc(65vh)]" style={{ scrollbarWidth: 'thin' }}>
-                {/* Display the initial "Hi there!" message or any messages */}
-                {selectedChat.messages && selectedChat.messages.length > 0 ? (
-                  <div className="space-y-4">
-                    {selectedChat.messages.map(msg => (
-                      <div key={msg.id} className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[70%] p-3 rounded-lg ${
-                          msg.sender_id === user?.id 
-                            ? 'bg-primary text-white rounded-tr-none' 
-                            : 'bg-gaming-700 text-white rounded-tl-none'
-                        }`}>
-                          <p>{msg.message}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {msg.sender_id === user?.id ? 'You' : selectedChat.recipient_name}
+              <div className="space-y-4">
+                {activeChats.length > 0 ? (
+                  activeChats.map(chat => (
+                    <Button 
+                      key={chat.id}
+                      variant="ghost"
+                      className="p-4 hover:bg-gaming-700/30 rounded-lg w-full flex flex-col items-start"
+                      onClick={() => startOrContinueChat(chat.recipient_id)}
+                    >
+                      <div className="flex items-center gap-3 w-full mb-2">
+                        <Avatar>
+                          <AvatarImage src={chat.recipient_avatar} />
+                          <AvatarFallback>{chat.recipient_name?.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-baseline justify-between">
+                            <h3 className="font-medium">{chat.recipient_name}</h3>
+                            <span className="text-xs text-muted-foreground">
+                              {chat.last_message_time ? formatTimeAgo(new Date(chat.last_message_time)) : ''}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {chat.last_message || "No messages yet"}
                           </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </Button>
+                  ))
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-400">No messages yet</p>
+                  <div className="text-center py-12">
+                    <div className="mb-4">
+                      <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground" />
+                    </div>
+                    <h3 className="font-medium text-lg mb-2">No conversations yet</h3>
+                    <p className="text-muted-foreground mb-6">Start a new conversation to connect with friends</p>
+                    <Button onClick={() => setShowNewChatDialog(true)}>
+                      Start a conversation
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            // Active chat section
+            <div className="flex flex-col h-full">
+              <div className="flex items-center gap-3 pb-4 border-b mb-4">
+                <Button variant="ghost" size="icon" onClick={() => setSelectedChat(null)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <Avatar>
+                  <AvatarImage src={selectedChat.recipient_avatar} />
+                  <AvatarFallback>{selectedChat.recipient_name?.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-medium">{selectedChat.recipient_name}</h3>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto mb-4 space-y-4">
+                {selectedChat.messages && selectedChat.messages.length > 0 ? (
+                  selectedChat.messages.map((msg, index) => (
+                    <div 
+                      key={index} 
+                      className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div 
+                        className={`max-w-[80%] p-3 rounded-lg ${
+                          msg.sender_id === user?.id 
+                            ? 'bg-primary text-primary-foreground rounded-br-none' 
+                            : 'bg-muted rounded-bl-none'
+                        }`}
+                      >
+                        <p className="text-sm">{msg.message}</p>
+                        <div className="text-xs mt-1 opacity-70 text-right">
+                          {formatMessageTime(msg.created_at)}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>No messages yet. Say hello!</p>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
               
-              <div className="p-4 border-t border-gaming-700 flex gap-2">
-                <Input
-                  placeholder="Type your message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  className="flex-1"
-                />
-                <Button onClick={sendMessage}>Send</Button>
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center p-8">
-                <MessageSquare className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No conversation selected</h3>
-                <p className="text-gray-400 mb-4">
-                  Select a chat from the sidebar or start a new conversation
-                </p>
-                <Button 
-                  onClick={() => setShowNewChatDialog(true)}
-                  className="mx-auto"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Start New Conversation
-                </Button>
-              </div>
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                sendMessage();
+              }} className="mt-auto">
+                <div className="flex gap-2">
+                  <Input 
+                    value={message} 
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Type a message..."
+                    className="flex-1"
+                  />
+                  <Button type="submit" disabled={!message.trim()}>
+                    Send
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
         </div>
