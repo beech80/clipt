@@ -484,8 +484,8 @@ export const achievementService = {
       game_id: gameId,
       id: `${gameSlug}-${achievement.name.toLowerCase().replace(/\s+/g, '-')}`,
       icon_url: `/images/achievements/${gameSlug}/${achievement.name.toLowerCase().replace(/\s+/g, '-')}.png`,
-      progress: Math.floor(Math.random() * achievement.target_value),
-      completed: Math.random() > 0.7
+      progress: 0, // Always set to 0%
+      completed: false // Set all to not completed
     }));
   },
 
@@ -545,29 +545,57 @@ export const achievementService = {
 
   async updateAchievementProgress(userId: string, achievementType: string, incrementBy: number = 1): Promise<void> {
     try {
-      // Get achievements matching the type
-      const { data: achievements, error: getError } = await supabase
-        .from('achievements')
-        .select('id')
-        .eq('category', achievementType);
-      
-      if (getError) throw getError;
-      
-      // For each matching achievement, update the progress
-      for (const achievement of achievements) {
+      // First, check if the achievement progress entry exists
+      const { data: existingProgress, error: fetchError } = await supabase
+        .from('achievement_progress')
+        .select('id, progress, target_value')
+        .eq('user_id', userId)
+        .eq('achievement_id', achievementType)
+        .maybeSingle();
+  
+      if (fetchError) throw fetchError;
+  
+      if (existingProgress) {
+        // Update existing progress
+        const newProgress = Math.min(existingProgress.progress + incrementBy, existingProgress.target_value);
+        const completed = newProgress >= existingProgress.target_value;
+  
         const { error: updateError } = await supabase
           .from('achievement_progress')
-          .update({
-            current_value: supabase.rpc('increment', { x: incrementBy }),
+          .update({ 
+            progress: newProgress,
+            completed,
             updated_at: new Date().toISOString()
           })
-          .match({ user_id: userId, achievement_id: achievement.id });
-        
+          .eq('id', existingProgress.id);
+  
         if (updateError) throw updateError;
+      } else {
+        // Create new progress entry with 0 progress
+        const { data: achievement, error: achievementError } = await supabase
+          .from('achievements')
+          .select('id, target_value')
+          .eq('id', achievementType)
+          .single();
+  
+        if (achievementError) throw achievementError;
+  
+        if (achievement) {
+          const { error: insertError } = await supabase
+            .from('achievement_progress')
+            .insert({
+              user_id: userId,
+              achievement_id: achievementType,
+              progress: 0, // Initialize at 0
+              target_value: achievement.target_value,
+              completed: false
+            });
+  
+          if (insertError) throw insertError;
+        }
       }
     } catch (error) {
       console.error('Error updating achievement progress:', error);
-      throw error;
     }
   },
 
