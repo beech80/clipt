@@ -94,7 +94,17 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   };
 
   const handleProfileClick = (userId: string) => {
-    navigate(`/profile/${userId}`);
+    if (!userId) {
+      console.error('Invalid user ID for profile navigation');
+      return;
+    }
+    try {
+      console.log(`Navigating to profile: ${userId}`);
+      navigate(`/profile/${userId}`);
+    } catch (error) {
+      console.error('Error navigating to profile:', error);
+      toast.error('Could not navigate to profile');
+    }
   };
 
   const handleGameClick = (e: React.MouseEvent, gameId: string, gameName: string) => {

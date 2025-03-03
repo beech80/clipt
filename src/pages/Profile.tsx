@@ -36,19 +36,21 @@ const Profile = () => {
     const profileId = id || user?.id;
     console.log(`Profile.tsx loaded with profile ID: ${profileId}`);
     
+    // If profileId is undefined, don't attempt to load any data
+    if (!profileId) {
+      setError("No profile ID provided");
+      console.error("Profile.tsx: No profile ID provided");
+      setLoading(false);
+      return;
+    }
+
     const fetchProfileData = async () => {
       setLoading(true);
-      if (!profileId) {
-        setError("No profile ID provided");
-        console.error("Profile.tsx: No profile ID provided");
-        setLoading(false);
-        return;
-      }
-
+      
       console.log(`Profile.tsx: Starting to fetch profile with ID: ${profileId}`);
       
       // Use a timeout to ensure we don't wait forever
-      const timeoutId = setTimeout(() => {
+      let timeoutId: NodeJS.Timeout | null = setTimeout(() => {
         // Only set timeout error if we're still loading
         if (loading) {
           console.error(`Profile.tsx: Timeout while fetching profile: ${profileId}`);
@@ -109,7 +111,10 @@ const Profile = () => {
           .eq('id', profileId)
           .maybeSingle();
           
-        clearTimeout(timeoutId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
         
         if (profileError) {
           console.error(`Profile.tsx: Error fetching profile for ${profileId}:`, profileError);
@@ -166,7 +171,10 @@ const Profile = () => {
         
         setLoading(false);
       } catch (error) {
-        clearTimeout(timeoutId);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
         console.error(`Profile.tsx: Exception fetching profile for ${profileId}:`, error);
         setError(`Failed to load profile: ${(error as Error).message}`);
         setLoading(false);
@@ -175,6 +183,14 @@ const Profile = () => {
 
     fetchProfileData();
   }, [id, user?.id, navigate, queryClient]);
+
+  // Cleanup function to ensure we clean up timeouts and subscriptions
+  useEffect(() => {
+    return () => {
+      // Cancel any pending queries when component unmounts
+      queryClient.cancelQueries({ queryKey: ['profile', id || user?.id] });
+    };
+  }, [id, user?.id, queryClient]);
 
   // Fetch user games
   const { data: userGames } = useQuery({
