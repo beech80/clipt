@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
 import { getFollowerCount, getFollowingCount, isFollowing, toggleFollow } from "@/services/followService";
+import { achievementService } from "@/services/achievementService";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -48,6 +49,16 @@ const Profile = () => {
     }
   });
 
+  // Fetch achievements count
+  const { data: achievements } = useQuery({
+    queryKey: ['user-achievements-count', id || user?.id],
+    queryFn: async () => {
+      if (!id && !user?.id) return [];
+      return await achievementService.getUserAchievements(id || user?.id || '');
+    },
+    enabled: !!(id || user?.id)
+  });
+
   const isOwnProfile = user && (!id || id === user?.id);
   
   // Fetch follow counts and status on profile load
@@ -61,8 +72,9 @@ const Profile = () => {
         const followerCount = await getFollowerCount(profileId);
         const followingCount = await getFollowingCount(profileId);
         
-        // Get achievements count (placeholder)
-        const achievementsCount = 0; // This would come from an achievement service
+        // Get achievements count from achievements data
+        const achievementsCount = achievements ? 
+          achievements.filter(a => a.completed).length : 0;
         
         // Update stats
         setStats({
@@ -82,7 +94,7 @@ const Profile = () => {
     };
     
     fetchFollowData();
-  }, [profile, user, isOwnProfile]);
+  }, [profile, user, isOwnProfile, achievements]);
 
   const handleToggleFollow = async () => {
     if (!user) {
