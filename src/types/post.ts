@@ -1,4 +1,3 @@
-
 export interface Post {
   id: string;
   content: string | null;
@@ -12,8 +11,10 @@ export interface Post {
     display_name?: string | null;
   } | null;
   games?: {
+    id: string | number;
     name: string | null;
   } | null;
+  game_id?: string | number;
   likes_count?: number;
   clip_votes?: Array<{ count: number }>;
   comments_count?: number;
