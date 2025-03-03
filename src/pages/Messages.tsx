@@ -122,7 +122,7 @@ const Messages = () => {
 
   const handleSearchUsers = async (term: string) => {
     setSearchTerm(term);
-    if (term.length < 3) {
+    if (term.length < 1) {
       setSearchResults([]);
       return;
     }
@@ -130,8 +130,9 @@ const Messages = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('id, username, avatar_url, display_name')
+      .not('id', 'eq', user?.id)
       .ilike('username', `%${term}%`)
-      .limit(5);
+      .limit(10);
 
     if (error) {
       toast.error("Error searching users");
@@ -167,6 +168,9 @@ const Messages = () => {
         type: 'direct',
         recipient_id: userId
       });
+      
+      // Refresh active chats
+      fetchActiveChats();
       toast.success("Conversation loaded");
     } else {
       // Create a new chat
@@ -191,10 +195,10 @@ const Messages = () => {
         type: 'direct',
         recipient_id: userId
       });
-      toast.success("Conversation started!");
       
       // Refresh active chats
       fetchActiveChats();
+      toast.success("Conversation started!");
     }
     
     // Clear search results and dialog
@@ -257,6 +261,48 @@ const Messages = () => {
     setSelectedUsers([]);
     setSearchResults([]);
     fetchActiveChats();
+  };
+
+  const sendMessage = async () => {
+    if (!message.trim() || !selectedChat || !user) return;
+    
+    try {
+      if (selectedChat.type === 'direct') {
+        // Send direct message
+        const { error } = await supabase
+          .from('direct_messages')
+          .insert({
+            sender_id: user.id,
+            recipient_id: selectedChat.recipient_id || selectedChat.other_user_id,
+            message: message,
+            created_at: new Date().toISOString()
+          });
+          
+        if (error) throw error;
+      } else if (selectedChat.type === 'group') {
+        // Send group message
+        const { error } = await supabase
+          .from('group_messages')
+          .insert({
+            group_id: selectedChat.id,
+            sender_id: user.id,
+            message: message,
+            created_at: new Date().toISOString()
+          });
+          
+        if (error) throw error;
+      }
+      
+      // Clear the message input
+      setMessage("");
+      toast.success("Message sent!");
+      
+      // Refresh the chat list to show the most recent chat at top
+      fetchActiveChats();
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+    }
   };
 
   return (
@@ -476,8 +522,14 @@ const Messages = () => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
                 />
-                <Button>Send</Button>
+                <Button onClick={sendMessage}>Send</Button>
               </div>
             </>
           ) : (
