@@ -85,7 +85,9 @@ export function StreamDashboard() {
               is_live: false,
               stream_key: await generateRandomKey(),
               rtmp_url: RTMP_URL,
-              viewer_count: 0
+              viewer_count: 0,
+              updated_at: new Date().toISOString(),
+              created_at: new Date().toISOString()
             })
             .select()
             .single();
