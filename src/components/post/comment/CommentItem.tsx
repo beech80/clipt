@@ -114,7 +114,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
       const { data, error } = await editComment(comment.id, user.id, editedContent);
       
       if (error) {
-        throw error;
+        console.error("Error editing comment:", error);
+        toast.error(`Failed to update comment: ${error.message}`);
+        return;
       }
       
       // Update the UI with edited content
@@ -125,9 +127,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
       
       setIsEditing(false);
       toast.success("Comment updated");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error editing comment:", error);
-      toast.error("Failed to update comment");
+      toast.error(`Failed to update comment: ${error.message || "Unknown error"}`);
     }
   };
   

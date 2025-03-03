@@ -219,24 +219,14 @@ export const editComment = async (commentId: string, userId: string, content: st
       throw new Error("Comment content cannot be empty");
     }
 
-    // Verify the comment belongs to the user
-    const { data: comment, error: checkError } = await supabase
-      .from('comments')
-      .select('id')
-      .eq('id', commentId)
-      .eq('user_id', userId)
-      .single();
+    console.log(`Attempting to edit comment ${commentId} by user ${userId}`);
 
-    if (checkError) {
-      // If not found or not authorized
-      throw new Error("Comment not found or you don't have permission to edit it");
-    }
-
-    // Update the comment
+    // Update the comment without the extra authorization check
     const { data, error: updateError } = await supabase
       .from('comments')
       .update({ content, updated_at: new Date().toISOString() })
       .eq('id', commentId)
+      .eq('user_id', userId) // This ensures the user can only edit their own comments
       .select(`
         id,
         content,
@@ -251,8 +241,16 @@ export const editComment = async (commentId: string, userId: string, content: st
         )
       `);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("Error updating comment:", updateError);
+      throw updateError;
+    }
 
+    if (!data || data.length === 0) {
+      throw new Error("Comment not found or you don't have permission to edit it");
+    }
+
+    console.log("Comment updated successfully:", data);
     return { data, error: null };
   } catch (error) {
     console.error("Error in editComment:", error);
