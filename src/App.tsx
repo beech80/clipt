@@ -33,11 +33,19 @@ function App() {
   // Extract post ID from URL if on a post page
   useEffect(() => {
     const match = location.pathname.match(/\/post\/([^/?#]+)/);
-    if (match && match[1]) {
-      setCurrentPostId(match[1]);
-    } else {
-      setCurrentPostId(undefined);
+    let newPostId = undefined;
+    
+    if (match && match[1] && match[1] !== 'undefined' && match[1] !== 'null') {
+      newPostId = match[1];
     }
+    
+    console.log("App detected post ID:", {
+      pathname: location.pathname,
+      extractedId: match?.[1] || 'none',
+      settingId: newPostId
+    });
+    
+    setCurrentPostId(newPostId);
   }, [location.pathname]);
 
   return (

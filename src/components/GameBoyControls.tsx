@@ -23,15 +23,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   
   // Set postId with priority: currentPostId from App > URL params > empty string
   useEffect(() => {
-    if (currentPostId) {
-      setPostId(currentPostId);
-    } else if (params.id) {
-      setPostId(params.id);
-    } else {
-      setPostId('');
+    let newPostId = '';
+    if (currentPostId && currentPostId !== 'undefined' && currentPostId !== 'null') {
+      newPostId = currentPostId;
+    } else if (params.id && params.id !== 'undefined' && params.id !== 'null') {
+      newPostId = params.id;
     }
     
-    console.log("GameBoyControls postId set to:", currentPostId || params.id || '');
+    console.log("GameBoyControls setting postId:", {
+      currentPostId,
+      paramsId: params.id,
+      finalPostId: newPostId,
+      currentPathname: window.location.pathname
+    });
+    
+    setPostId(newPostId);
   }, [currentPostId, params.id]);
 
   const handleAction = (action: string) => {
