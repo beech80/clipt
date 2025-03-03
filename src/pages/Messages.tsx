@@ -149,62 +149,77 @@ const Messages = () => {
       return;
     }
 
-    // Check if a chat already exists
-    const { data: existingChats, error: existingError } = await supabase
-      .from('direct_messages')
-      .select('id')
-      .or(`and(sender_id.eq.${user.id},recipient_id.eq.${userId}),and(sender_id.eq.${userId},recipient_id.eq.${user.id})`)
-      .limit(1);
-
-    if (existingError) {
-      toast.error("Error checking existing conversations");
-      return;
-    }
-
-    if (existingChats && existingChats.length > 0) {
-      // Chat exists - load it
-      setSelectedChat({
-        id: existingChats[0].id,
-        type: 'direct',
-        recipient_id: userId
-      });
-      
-      // Refresh active chats
-      fetchActiveChats();
-      toast.success("Conversation loaded");
-    } else {
-      // Create a new chat
-      const { data: newChat, error: createError } = await supabase
+    try {
+      // Check if a chat already exists - using a different approach
+      const { data: existingChatsAsSender, error: senderError } = await supabase
         .from('direct_messages')
-        .insert({
-          sender_id: user.id,
-          recipient_id: userId,
-          message: "Hi there!", // Initial message
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+        .select('id')
+        .eq('sender_id', user.id)
+        .eq('recipient_id', userId)
+        .limit(1);
 
-      if (createError) {
-        toast.error("Error starting conversation");
-        return;
+      if (senderError) throw new Error(senderError.message);
+
+      const { data: existingChatsAsRecipient, error: recipientError } = await supabase
+        .from('direct_messages')
+        .select('id')
+        .eq('sender_id', userId)
+        .eq('recipient_id', user.id)
+        .limit(1);
+
+      if (recipientError) throw new Error(recipientError.message);
+
+      // Combine results
+      const existingChats = [
+        ...(existingChatsAsSender || []),
+        ...(existingChatsAsRecipient || [])
+      ];
+
+      if (existingChats.length > 0) {
+        // Chat exists - load it
+        setSelectedChat({
+          id: existingChats[0].id,
+          type: 'direct',
+          recipient_id: userId
+        });
+        
+        // Refresh active chats
+        fetchActiveChats();
+        toast.success("Conversation loaded");
+      } else {
+        // Create a new chat
+        const { data: newChat, error: createError } = await supabase
+          .from('direct_messages')
+          .insert({
+            sender_id: user.id,
+            recipient_id: userId,
+            message: "Hi there!", // Initial message
+            created_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (createError) throw new Error(createError.message);
+
+        setSelectedChat({
+          id: newChat.id,
+          type: 'direct',
+          recipient_id: userId
+        });
+        
+        // Refresh active chats
+        fetchActiveChats();
+        toast.success("Conversation started!");
       }
-
-      setSelectedChat({
-        id: newChat.id,
-        type: 'direct',
-        recipient_id: userId
-      });
       
-      // Refresh active chats
-      fetchActiveChats();
-      toast.success("Conversation started!");
+      // Clear search results and dialog
+      setSearchResults([]);
+      setSearchTerm("");
+      setShowNewChatDialog(false);
+    } catch (error) {
+      console.error("Error with chat:", error);
+      toast.error("Error with conversation: " + (error instanceof Error ? error.message : "Unknown error"));
     }
-    
-    // Clear search results and dialog
-    setSearchResults([]);
-    setSearchTerm("");
-    setShowNewChatDialog(false);
   };
 
   const handleCreateGroup = async () => {
