@@ -10,7 +10,7 @@ import { Gamepad2, Info, Video, Clock, Calendar, Trophy } from "lucide-react";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { AchievementItem } from "@/components/achievements/AchievementItem";
+import AchievementItem from "@/components/achievements/AchievementItem";
 import { achievementService } from "@/services/achievementService";
 
 const formatDate = (timestamp: number) => {
