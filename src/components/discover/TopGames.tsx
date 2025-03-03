@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { IGDBGame } from '@/services/igdbService';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { Gamepad2 } from 'lucide-react';
 
 interface TopGamesProps {
   games?: IGDBGame[];
@@ -26,14 +26,23 @@ export const TopGames = ({ games }: TopGamesProps) => {
       {games.map((game) => (
         <Card
           key={game.id}
-          className="relative overflow-hidden cursor-pointer group"
+          className="relative overflow-hidden cursor-pointer group h-48"
           onClick={() => navigate(`/game/${game.id}`)}
         >
-          <img
-            src={game.cover?.url.replace('thumb', 'cover_big') || '/placeholder.svg'}
-            alt={game.name}
-            className="w-full h-48 object-cover transition-transform group-hover:scale-105"
-          />
+          {game.cover?.url ? (
+            <img
+              src={game.cover.url}
+              alt={game.name}
+              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder.svg';
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gaming-800">
+              <Gamepad2 className="w-12 h-12 text-gaming-500" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
             <h3 className="text-lg font-semibold text-white">{game.name}</h3>
             {game.rating && (
