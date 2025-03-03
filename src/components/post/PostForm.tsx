@@ -26,6 +26,8 @@ export const PostForm = () => {
   const [showMentionInput, setShowMentionInput] = useState(false);
   const [currentHashtag, setCurrentHashtag] = useState('');
   const [currentMention, setCurrentMention] = useState('');
+  const [userResults, setUserResults] = useState<any[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -67,6 +69,7 @@ export const PostForm = () => {
       setCurrentMention('');
     }
     setShowMentionInput(false);
+    setUserResults([]);
   };
 
   const removeHashtag = (tag: string) => {
@@ -280,6 +283,39 @@ export const PostForm = () => {
     }
   };
 
+  const searchUsers = async (query: string) => {
+    if (!query || query.length < 2) {
+      setUserResults([]);
+      return;
+    }
+    
+    setSearchingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .ilike('username', `%${query}%`)
+        .limit(5);
+        
+      if (error) throw error;
+      
+      setUserResults(data || []);
+    } catch (error) {
+      console.error('Error searching users:', error);
+    } finally {
+      setSearchingUsers(false);
+    }
+  };
+
+  const handleUserSelect = (username: string) => {
+    if (!mentions.includes(username)) {
+      setMentions([...mentions, username]);
+    }
+    setCurrentMention('');
+    setUserResults([]);
+    setShowMentionInput(false);
+  };
+
   return (
     <div className="relative min-h-screen bg-gaming-900">
       <div className="space-y-6 max-w-2xl mx-auto p-6 pb-48">
@@ -377,16 +413,60 @@ export const PostForm = () => {
             )}
 
             {showMentionInput && (
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  value={currentMention}
-                  onChange={(e) => setCurrentMention(e.target.value)}
-                  placeholder="Enter username"
-                  className="flex-1"
-                />
-                <Button onClick={addMention}>Add</Button>
-                <Button variant="ghost" onClick={() => setShowMentionInput(false)}>Cancel</Button>
+              <div className="relative mt-2">
+                <div className="flex items-center">
+                  <AtSign className="w-5 h-5 text-gray-400 absolute left-3" />
+                  <Input
+                    value={currentMention}
+                    onChange={(e) => {
+                      setCurrentMention(e.target.value);
+                      searchUsers(e.target.value);
+                    }}
+                    placeholder="Mention a user"
+                    className="pl-10 pr-16"
+                    autoFocus
+                  />
+                  <Button 
+                    onClick={addMention} 
+                    size="sm" 
+                    className="absolute right-1"
+                  >
+                    Add
+                  </Button>
+                </div>
+                
+                {/* User search results */}
+                {userResults.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {userResults.map(user => (
+                      <div 
+                        key={user.id}
+                        onClick={() => handleUserSelect(user.username)}
+                        className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 overflow-hidden">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                              {user.username.substring(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium">{user.display_name || user.username}</div>
+                          <div className="text-xs text-gray-500">@{user.username}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {searchingUsers && (
+                  <div className="flex justify-center items-center p-4">
+                    <Loader2 className="animate-spin h-5 w-5 text-gray-400" />
+                  </div>
+                )}
               </div>
             )}
 

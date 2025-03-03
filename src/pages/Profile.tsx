@@ -11,10 +11,21 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
 import { followUser } from "@/lib/follow-helper";
+import styled from "styled-components";
 
 /**
  * Profile page component - displays user profile details and allows following/unfollowing
  */
+const ProfileContent = styled.div`
+  max-height: none; /* Remove any height restrictions */
+  overflow-y: visible; /* Allow content to be visible */
+  padding-bottom: 80px; /* Add padding at bottom for better scrolling */
+  
+  /* Apply CSS to ensure scrolling works */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+`;
+
 const Profile = () => {
   // Component state
   const { id } = useParams();
@@ -238,7 +249,7 @@ const Profile = () => {
 
   // Main profile content
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
+    <ProfileContent>
       {/* Profile Header */}
       <div className="gaming-card p-6 mb-6">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -362,7 +373,7 @@ const Profile = () => {
           <AchievementList userId={profileId} />
         </div>
       )}
-    </div>
+    </ProfileContent>
   );
 };
 
