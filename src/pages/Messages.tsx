@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, MessageSquare, Plus, Users, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,19 +9,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase, createMessagesTable, checkTableExists } from "@/lib/supabase";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
-
-// Function to format message timestamps
-const formatMessageTime = (timestamp: string) => {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
-  
-  if (isToday) {
-    return format(date, 'h:mm a'); // Format as "1:23 PM"
-  } else {
-    return formatDistanceToNow(date, { addSuffix: true }); // "2 hours ago", "3 days ago", etc.
-  }
-};
 
 const Messages = () => {
   const { user } = useAuth();
@@ -38,6 +25,19 @@ const Messages = () => {
   const [message, setMessage] = useState("");
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [showCreateGroupChat, setShowCreateGroupChat] = useState(false);
+
+  // Format message timestamps using useCallback to memoize the function
+  const formatMessageTime = useCallback((timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const isToday = date.toDateString() === now.toDateString();
+    
+    if (isToday) {
+      return format(date, 'h:mm a'); // Format as "1:23 PM"
+    } else {
+      return formatDistanceToNow(date, { addSuffix: true }); // "2 hours ago", "3 days ago", etc.
+    }
+  }, []);
 
   useEffect(() => {
     const setupMessagingTables = async () => {
@@ -522,7 +522,7 @@ const Messages = () => {
                           <div className="flex items-baseline justify-between">
                             <h3 className="font-medium">{chat.recipient_name}</h3>
                             <span className="text-xs text-muted-foreground">
-                              {chat.last_message_time ? formatTimeAgo(new Date(chat.last_message_time)) : ''}
+                              {chat.last_message_time ? formatMessageTime(chat.last_message_time) : ''}
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground truncate">
