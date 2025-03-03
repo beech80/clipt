@@ -17,10 +17,8 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
 }) => {
   // If this is a game achievement, use its properties
   if (gameAchievement) {
-    const percentComplete = Math.min(
-      100,
-      Math.round((gameAchievement.currentValue / gameAchievement.targetValue) * 100)
-    );
+    // Always set progress to 0 for game achievements
+    const percentComplete = 0;
 
     return (
       <div className={`flex w-full overflow-hidden mb-3 ${percentComplete > 0 ? 'border-l-4 border-green-500' : ''}`}>
@@ -36,16 +34,16 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
         </div>
         <div className="flex-1 p-3 bg-[#222222]">
           <h3 className="text-white font-semibold text-lg">{gameAchievement.name}</h3>
-          <p className="text-gray-400 text-sm mb-2">{gameAchievement.description} - {gameAchievement.currentValue}/{gameAchievement.targetValue}</p>
+          <p className="text-gray-400 text-sm mb-2">{gameAchievement.description} - 0/{gameAchievement.targetValue}</p>
           <div className="flex justify-between text-sm mb-1">
             <div>
               <Progress 
-                value={percentComplete} 
+                value={0} 
                 className="h-2 w-[200px] bg-gray-700" 
                 indicatorClassName="bg-[#0078d7]" 
               />
             </div>
-            <span className="text-white font-medium">{percentComplete}%</span>
+            <span className="text-white font-medium">0%</span>
           </div>
         </div>
       </div>
@@ -55,19 +53,11 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
   // For regular user achievements
   if (!achievement || !progress) return null;
 
-  // Always show 0% for trophies that haven't been started
-  const percentComplete = progress.currentValue === 0 
-    ? 0
-    : Math.min(100, Math.round((progress.currentValue / achievement.target_value) * 100));
-
-  const isCompleted = progress.completed || percentComplete >= 100;
-  const isInProgress = percentComplete > 0 && percentComplete < 100;
-
-  // Get the current/total display
-  const progressDisplay = `${progress.currentValue}/${achievement.target_value}`;
+  // Always show 0% for all achievements
+  const percentComplete = 0;
 
   return (
-    <div className={`flex w-full overflow-hidden mb-3 ${isCompleted ? 'border border-green-500 rounded-sm' : ''}`}>
+    <div className={`flex w-full overflow-hidden mb-3 ${progress.completed ? 'border-l-4 border-green-500' : ''}`}>
       <div className="h-24 w-24 flex-shrink-0 relative">
         <div className="absolute inset-0 bg-[#012e14]">
           <div className="w-full h-full flex items-center justify-center">
@@ -80,56 +70,47 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
       </div>
       <div className="flex-1 p-3 bg-[#222222]">
         <h3 className="text-white font-semibold text-lg">{achievement.name}</h3>
-        <p className="text-gray-400 text-sm mb-2">
-          {achievement.name === 'Complete 4 Daily Quests' ? 'Complete 4 daily quests this week' : achievement.description} - {progressDisplay}
-        </p>
+        <p className="text-gray-400 text-sm mb-2">{achievement.description} - 0/{achievement.target_value}</p>
         <div className="flex justify-between text-sm mb-1">
           <div>
             <Progress 
-              value={percentComplete} 
+              value={0} 
               className="h-2 w-[200px] bg-gray-700" 
-              indicatorClassName="bg-[#0078d7]" 
+              indicatorClassName={cn("bg-[#0078d7]", {
+                "bg-green-500": progress.completed
+              })}
             />
           </div>
-          <span className="text-white font-medium">{percentComplete}%</span>
+          <span className="text-white font-medium">0%</span>
         </div>
       </div>
     </div>
   );
 };
 
-// Helper function to get specific icons for achievements that match the Xbox style
+// Helper function to get the appropriate icon based on achievement name
 const getAchievementIcon = (name: string) => {
-  if (name.includes('Complete 4 Daily')) {
-    return <Rocket className="w-12 h-12 text-[#42ff77]" />;
-  }
-  if (name.includes('Earn Your Way')) {
-    return <Shield className="w-12 h-12 text-[#42ff77]" />;
-  }
-  if (name.includes('Trophy Collector')) {
-    return <Trophy className="w-12 h-12 text-amber-400" />;
-  }
-  if (name.includes('Growing Community')) {
-    return <Users className="w-12 h-12 text-blue-400" />;
-  }
-  if (name.includes('Content Creator')) {
-    return <Star className="w-12 h-12 text-purple-400" />;
-  }
-  if (name.includes('Weekly Top')) {
-    return <ArrowUp className="w-12 h-12 text-[#42ff77]" />;
-  }
-  if (name.includes('Follower')) {
-    return <Users className="w-12 h-12 text-blue-400" />;
-  }
-  if (name.includes('Comment')) {
-    return <MessageSquare className="w-12 h-12 text-green-400" />;
-  }
-  if (name.includes('Viral Hit')) {
-    return <Heart className="w-12 h-12 text-red-400" />;
-  }
+  const iconClassName = "h-12 w-12 text-[#01e6c9]";
   
-  // For other achievements, use the category-based icons
-  return <Trophy className="w-12 h-12 text-[#42ff77]" />;
+  if (name.includes('Trophy') || name.includes('trophy')) {
+    return <Trophy className={iconClassName} />;
+  } else if (name.includes('Daily') || name.includes('daily')) {
+    return <Calendar className={iconClassName} />;
+  } else if (name.includes('Follower') || name.includes('Community')) {
+    return <Users className={iconClassName} />;
+  } else if (name.includes('Creator') || name.includes('Stream')) {
+    return <Monitor className={iconClassName} />;
+  } else if (name.includes('Comment')) {
+    return <MessageSquare className={iconClassName} />;
+  } else if (name.includes('Like') || name.includes('love')) {
+    return <Heart className={iconClassName} />;
+  } else if (name.includes('Level') || name.includes('Rank')) {
+    return <ArrowUp className={iconClassName} />;
+  } else if (name.includes('First') || name.includes('Starter')) {
+    return <Rocket className={iconClassName} />;
+  } else {
+    return <Star className={iconClassName} />;
+  }
 };
 
 export default AchievementItem;
