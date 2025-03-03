@@ -87,8 +87,13 @@ export function StreamDashboard() {
               stream_key: await generateRandomKey(),
               rtmp_url: RTMP_URL,
               viewer_count: 0,
+              created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
-              created_at: new Date().toISOString()
+              stream_path: null,
+              thumbnail_url: null,
+              started_at: null,
+              ended_at: null,
+              game_id: null
             })
             .select()
             .single();
