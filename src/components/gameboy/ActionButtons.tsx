@@ -175,8 +175,79 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
       return;
     }
 
-    if (!postId) {
-      toast.error('No post selected');
+    // Try to get the post ID using the same detection logic as handleComment
+    const isPostPage = window.location.pathname.match(/^\/post\/([^/?#]+)/);
+    const isProfilePage = window.location.pathname.match(/^\/profile\/([^/?#]+)/);
+    
+    console.log("[Follow] Current URL:", window.location.pathname);
+    
+    // Try to get the post ID from various sources
+    let currentPostId = postId;
+    
+    // If no postId passed, try to extract it from URL
+    if (!currentPostId && isPostPage) {
+      const match = window.location.pathname.match(/\/post\/([^/?#]+)/);
+      if (match && match[1]) {
+        currentPostId = match[1];
+        console.log("[Follow] Extracted post ID from URL:", currentPostId);
+      }
+    }
+    
+    // If we're on a profile page, we can extract the profile ID directly
+    if (isProfilePage) {
+      const match = window.location.pathname.match(/\/profile\/([^/?#]+)/);
+      if (match && match[1]) {
+        const profileId = match[1];
+        console.log("[Follow] On profile page, using profile ID directly:", profileId);
+        
+        try {
+          // Import the follow-helper dynamically to avoid circular dependencies
+          const { followUser } = await import('@/lib/follow-helper');
+          const result = await followUser(profileId);
+          
+          // Success is handled inside followUser with toast notifications
+          if (onAction) onAction('follow');
+          return;
+        } catch (error) {
+          console.error("Error following profile directly:", error);
+          toast.error("Failed to follow. Please try again.");
+          return;
+        }
+      }
+    }
+    
+    // Try to get post ID from the DOM if we still don't have it
+    if (!currentPostId) {
+      const postElements = document.querySelectorAll('[data-post-id]');
+      if (postElements.length === 1) {
+        currentPostId = postElements[0].getAttribute('data-post-id') || '';
+        console.log("[Follow] Found post ID in DOM:", currentPostId);
+      } else if (postElements.length > 1) {
+        // Get the most visible post element
+        let mostVisiblePost = null;
+        let maxVisibility = 0;
+        
+        postElements.forEach(element => {
+          const rect = element.getBoundingClientRect();
+          const visibility = Math.min(
+            rect.bottom, window.innerHeight
+          ) - Math.max(rect.top, 0);
+          
+          if (visibility > maxVisibility) {
+            maxVisibility = visibility;
+            mostVisiblePost = element;
+          }
+        });
+        
+        if (mostVisiblePost) {
+          currentPostId = mostVisiblePost.getAttribute('data-post-id') || '';
+          console.log("[Follow] Using most visible post ID:", currentPostId);
+        }
+      }
+    }
+    
+    if (!currentPostId) {
+      toast.error('Cannot follow: No post or profile selected');
       return;
     }
 
@@ -184,8 +255,8 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
       // Get post creator id
       const { data: post } = await supabase
         .from('posts')
-        .select('user_id')
-        .eq('id', postId)
+        .select('user_id, profiles:user_id(username)')
+        .eq('id', currentPostId)
         .single();
       
       if (!post) {
@@ -205,39 +276,20 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
         followButton.classList.add('animate-pulse');
       }
 
-      // Check if user already follows this creator
-      const { data: existingFollow } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', user.id)
-        .eq('following_id', post.user_id)
-        .single();
-
-      if (existingFollow) {
-        // Unfollow
-        await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', user.id)
-          .eq('following_id', post.user_id);
-        
-        toast.success('Unfollowed user');
-      } else {
-        // Follow
-        await supabase
-          .from('follows')
-          .insert([{ follower_id: user.id, following_id: post.user_id }]);
-        
-        toast.success('Now following user!');
-      }
-
+      // Import the follow-helper dynamically to avoid circular dependencies
+      const { followUser } = await import('@/lib/follow-helper');
+      const result = await followUser(post.user_id);
+      
       // Remove animation after completion
       setTimeout(() => {
         if (followButton) {
           followButton.classList.remove('animate-pulse');
         }
       }, 500);
+      
+      if (onAction) onAction('follow');
     } catch (error) {
+      console.error("Error in handleFollow:", error);
       toast.error('Failed to follow. Please try again.');
       
       // Remove animation in case of error

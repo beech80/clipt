@@ -65,7 +65,7 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
         </div>
         <div>
           {post.games && (
-            <GameLink game={post.games} className="text-xs text-gaming-300" />
+            <GameLink game={post.games} className="text-sm text-gaming-300 mr-2" />
           )}
         </div>
       </div>
