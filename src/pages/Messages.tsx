@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, Users, MessageSquare, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase, createMessagingTablesDirectly } from "@/lib/supabase";
+import { toast } from "sonner";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -21,6 +21,48 @@ const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [message, setMessage] = useState("");
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+
+  useEffect(() => {
+    const setupMessagingTables = async () => {
+      if (!user) return;
+      
+      console.log("Setting up messaging tables...");
+      try {
+        // First check if messages table exists by trying to select from it
+        const { error: messagesCheckError } = await supabase
+          .from('messages')
+          .select('id')
+          .limit(1);
+          
+        if (messagesCheckError) {
+          console.error("Messages table check error:", messagesCheckError);
+          // If error indicates table doesn't exist, create it
+          if (messagesCheckError.message.includes("does not exist")) {
+            console.log("Creating messages table directly...");
+            const result = await createMessagingTablesDirectly();
+            if (!result.success) {
+              console.error("Error creating messaging tables:", result.error);
+              toast.error("Could not set up messaging. Please contact support.");
+            } else {
+              console.log("Messaging tables created successfully");
+              toast.success("Messaging system initialized");
+              // Refresh after table creation
+              setTimeout(() => {
+                fetchActiveChats();
+              }, 1000);
+            }
+          }
+        } else {
+          console.log("Messages table exists");
+        }
+      } catch (error) {
+        console.error("Setup error:", error);
+        toast.error("Error initializing messaging");
+      }
+    };
+    
+    setupMessagingTables();
+  }, [user]);
 
   // Fetch active chats when component mounts
   useEffect(() => {
@@ -151,6 +193,22 @@ const Messages = () => {
     }
 
     try {
+      console.log("Starting chat with user ID:", userId);
+      console.log("Current user ID:", user.id);
+      
+      // First, let's check if the messages table exists
+      const { error: tableCheckError } = await supabase
+        .from('messages')
+        .select('count')
+        .limit(1);
+        
+      if (tableCheckError) {
+        console.error("Table check error:", tableCheckError);
+        throw new Error(`Table check failed: ${tableCheckError.message}`);
+      }
+      
+      console.log("Messages table exists, checking for existing conversations...");
+      
       // Check if a chat already exists - using a different approach
       const { data: existingChatsAsSender, error: senderError } = await supabase
         .from('messages')
@@ -159,7 +217,12 @@ const Messages = () => {
         .eq('recipient_id', userId)
         .limit(1);
 
-      if (senderError) throw new Error(senderError.message);
+      if (senderError) {
+        console.error("Sender check error:", senderError);
+        throw new Error(senderError.message);
+      }
+      
+      console.log("Existing chats as sender:", existingChatsAsSender);
 
       const { data: existingChatsAsRecipient, error: recipientError } = await supabase
         .from('messages')
@@ -168,15 +231,23 @@ const Messages = () => {
         .eq('recipient_id', user.id)
         .limit(1);
 
-      if (recipientError) throw new Error(recipientError.message);
+      if (recipientError) {
+        console.error("Recipient check error:", recipientError);
+        throw new Error(recipientError.message);
+      }
+      
+      console.log("Existing chats as recipient:", existingChatsAsRecipient);
 
       // Combine results
       const existingChats = [
         ...(existingChatsAsSender || []),
         ...(existingChatsAsRecipient || [])
       ];
+      
+      console.log("Combined existing chats:", existingChats);
 
       if (existingChats.length > 0) {
+        console.log("Existing chat found, loading conversation...");
         // Chat exists - load it
         setSelectedChat({
           id: existingChats[0].id,
@@ -188,6 +259,7 @@ const Messages = () => {
         fetchActiveChats();
         toast.success("Conversation loaded");
       } else {
+        console.log("No existing chat found, creating new conversation...");
         // Create a new chat
         const { data: newChat, error: createError } = await supabase
           .from('messages')
@@ -200,7 +272,12 @@ const Messages = () => {
           .select()
           .single();
 
-        if (createError) throw new Error(createError.message);
+        if (createError) {
+          console.error("Create chat error:", createError);
+          throw new Error(createError.message);
+        }
+        
+        console.log("New chat created:", newChat);
 
         setSelectedChat({
           id: newChat.id,
