@@ -283,7 +283,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
                 </div>
               </div>
             ) : (
-              <p className="text-sm mb-2 whitespace-pre-wrap break-words text-gray-200">
+              <p className="text-sm mb-2 whitespace-pre-wrap break-words text-black dark:text-gray-200">
                 {comment.content}
               </p>
             )}

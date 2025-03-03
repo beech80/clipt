@@ -292,24 +292,34 @@ const Profile = () => {
                     <span>Edit Profile</span>
                   </Button>
                 ) : (
-                  <Button 
-                    onClick={handleFollow} 
-                    variant={userFollows ? "outline" : "default"}
-                    className="flex items-center gap-2"
-                    disabled={loading}
-                  >
-                    {userFollows ? (
-                      <>
-                        <UserMinus className="w-4 h-4" />
-                        <span>Unfollow</span>
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4" />
-                        <span>Follow</span>
-                      </>
-                    )}
-                  </Button>
+                  <>
+                    <Button 
+                      onClick={handleFollow} 
+                      variant={userFollows ? "outline" : "default"}
+                      className="flex items-center gap-2"
+                      disabled={loading}
+                    >
+                      {userFollows ? (
+                        <>
+                          <UserMinus className="w-4 h-4" />
+                          <span>Unfollow</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-4 h-4" />
+                          <span>Follow</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => window.location.href = `/messages/${profileId}`}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>Message</span>
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
