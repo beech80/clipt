@@ -8,9 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import GameCard from '@/components/gaming/GameCard';
 import PostItem from '@/components/PostItem';
-import GameDetails from '@/components/gaming/GameDetails';
 import AchievementList from '@/components/achievements/AchievementList';
 import { gameIdToUuid, uuidToGameId } from '@/utils/idUtils';
 import { toast } from 'sonner';
@@ -189,7 +187,42 @@ const GameDetailsPage = () => {
         
         <TabsContent value="about" className="mt-0">
           <h2 className="text-xl font-semibold mb-4">About {game.name}</h2>
-          {game ? <GameDetails game={game} /> : <p>No details available</p>}
+          <div className="bg-gray-800 rounded-lg p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium mb-2">Description</h3>
+              <p className="text-gray-300">{game.summary || 'No description available.'}</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-medium mb-2">Release Date</h3>
+                <p className="text-gray-300">{game.first_release_date ? formatDate(game.first_release_date) : 'Unknown'}</p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Genres</h3>
+                <p className="text-gray-300">
+                  {game.genres && game.genres.length > 0 
+                    ? game.genres.join(', ') 
+                    : 'Unknown'}
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Platforms</h3>
+                <p className="text-gray-300">
+                  {game.platforms && game.platforms.length > 0 
+                    ? game.platforms.join(', ') 
+                    : 'Unknown'}
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Developer</h3>
+                <p className="text-gray-300">{game.developers && game.developers.length > 0 ? game.developers[0] : 'Unknown'}</p>
+              </div>
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="achievements" className="mt-0">
