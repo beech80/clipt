@@ -488,10 +488,9 @@ const Messages = () => {
                 <Button 
                   variant="default" 
                   onClick={() => setShowNewChatDialog(true)}
-                  className="flex items-center gap-2"
+                  size="icon"
                 >
                   <Plus className="h-5 w-5" />
-                  New Conversation
                 </Button>
               </div>
               
@@ -524,15 +523,8 @@ const Messages = () => {
                     </Button>
                   ))
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="mb-4">
-                      <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground" />
-                    </div>
-                    <h3 className="font-medium text-lg mb-2">No conversations yet</h3>
-                    <p className="text-muted-foreground mb-6">Start a new conversation to connect with friends</p>
-                    <Button onClick={() => setShowNewChatDialog(true)}>
-                      Start a conversation
-                    </Button>
+                  <div className="flex-1 flex items-center justify-center">
+                    <MessageSquare className="h-16 w-16 text-muted-foreground opacity-30" />
                   </div>
                 )}
               </div>
