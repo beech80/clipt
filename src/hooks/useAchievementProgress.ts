@@ -52,8 +52,17 @@ export const useAchievementProgress = (userId: string) => {
         `)
         .eq('user_id', userId);
 
-      if (error) throw error;
-      return data as AchievementProgress[];
+      if (error) {
+        console.error('Error fetching achievement progress:', error);
+        throw error;
+      }
+
+      // Set all current values to 0 as requested
+      return data?.map(item => ({
+        ...item,
+        current_value: 0,
+        completed: false
+      })) || [];
     },
     enabled: !!userId,
   });

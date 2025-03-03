@@ -484,10 +484,10 @@ export const achievementService = {
       game_id: gameId,
       id: `${gameSlug}-${achievement.name.toLowerCase().replace(/\s+/g, '-')}`,
       icon_url: `/images/achievements/${gameSlug}/${achievement.name.toLowerCase().replace(/\s+/g, '-')}.png`,
-      // For game achievements, show some progress (not all at 0)
-      currentValue: Math.floor(Math.random() * achievement.target_value),
+      // Always set progress to 0 as requested
+      currentValue: 0,
       targetValue: achievement.target_value,
-      completed: Math.random() > 0.7
+      completed: false
     }));
   },
 
