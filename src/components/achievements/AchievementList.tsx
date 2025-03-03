@@ -13,9 +13,9 @@ type AchievementListProps = {
 const achievementOrder = [
   'Complete 4 Daily Quests',
   'Earn Your Way',
-  'Dead Space',
-  'The Long Dark',
-  'Earn an Achievement in Game Pass'
+  'Trophy Collector',
+  'Growing Community',
+  'Content Creator'
 ];
 
 const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => {
@@ -25,7 +25,6 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
     { id: 'daily', label: 'Daily' },
     { id: 'streaming', label: 'Streaming' },
     { id: 'social', label: 'Social' },
-    { id: 'gaming', label: 'Gaming' },
     { id: 'general', label: 'General' }
   ];
 
@@ -86,7 +85,7 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
     return <div className="p-4 text-center">Loading achievements...</div>;
   }
 
-  // Show demo achievements to match Xbox style
+  // Show demo achievements to match Xbox style but with platform-specific content
   const mockShowXboxAchievements = true;
   if (mockShowXboxAchievements) {
     return (
@@ -124,7 +123,7 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
           <AchievementItem 
             achievement={{
               name: 'Earn Your Way',
-              description: 'Unlock 3 achievements or play 3 different Game Pass games',
+              description: 'Upload 3 clips or earn 3 trophies',
               target_value: 3,
               points: 10,
               category: 'daily',
@@ -138,7 +137,7 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
               completed: false,
               achievement: {
                 name: 'Earn Your Way',
-                description: 'Unlock 3 achievements or play 3 different Game Pass games',
+                description: 'Upload 3 clips or earn 3 trophies',
                 target_value: 3,
                 points: 10,
                 category: 'daily',
@@ -152,11 +151,11 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
         <div className="flex w-full overflow-hidden">
           <AchievementItem 
             achievement={{
-              name: 'Dead Space',
-              description: 'Play',
+              name: 'Trophy Collector',
+              description: 'Earn your first trophy by getting into the weekly top 10',
               target_value: 1,
               points: 25,
-              category: 'gaming',
+              category: 'streaming',
               progress_type: 'count',
               reward_type: 'points'
             }}
@@ -166,11 +165,11 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
               currentValue: 0,
               completed: false,
               achievement: {
-                name: 'Dead Space',
-                description: 'Play',
+                name: 'Trophy Collector',
+                description: 'Earn your first trophy by getting into the weekly top 10',
                 target_value: 1,
                 points: 25,
-                category: 'gaming',
+                category: 'streaming',
                 progress_type: 'count',
                 reward_type: 'points'
               }
@@ -181,25 +180,25 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
         <div className="flex w-full overflow-hidden">
           <AchievementItem 
             achievement={{
-              name: 'The Long Dark',
-              description: 'Have 2 Distance Travelled',
-              target_value: 2,
+              name: 'Growing Community',
+              description: 'Reach 10 followers on your profile',
+              target_value: 10,
               points: 50,
-              category: 'gaming',
+              category: 'social',
               progress_type: 'count',
               reward_type: 'points'
             }}
             progress={{
               achievementId: '4',
               userId: '1',
-              currentValue: 0,
+              currentValue: 4,
               completed: false,
               achievement: {
-                name: 'The Long Dark',
-                description: 'Have 2 Distance Travelled',
-                target_value: 2,
+                name: 'Growing Community',
+                description: 'Reach 10 followers on your profile',
+                target_value: 10,
                 points: 50,
-                category: 'gaming',
+                category: 'social',
                 progress_type: 'count',
                 reward_type: 'points'
               }
@@ -210,25 +209,25 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
         <div className="flex w-full overflow-hidden">
           <AchievementItem 
             achievement={{
-              name: 'Earn an Achievement in Game Pass',
-              description: 'Earn an achievement in any Game Pass game',
-              target_value: 1,
+              name: 'Content Creator',
+              description: 'Upload 5 clips to your profile',
+              target_value: 5,
               points: 10,
-              category: 'gaming',
+              category: 'streaming',
               progress_type: 'count',
               reward_type: 'points'
             }}
             progress={{
               achievementId: '5',
               userId: '1',
-              currentValue: 0,
+              currentValue: 3,
               completed: false,
               achievement: {
-                name: 'Earn an Achievement in Game Pass',
-                description: 'Earn an achievement in any Game Pass game',
-                target_value: 1,
+                name: 'Content Creator',
+                description: 'Upload 5 clips to your profile',
+                target_value: 5,
                 points: 10,
-                category: 'gaming',
+                category: 'streaming',
                 progress_type: 'count',
                 reward_type: 'points'
               }

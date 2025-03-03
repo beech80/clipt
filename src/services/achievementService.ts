@@ -15,7 +15,7 @@ const defaultAchievements = [
   },
   {
     name: 'Earn Your Way',
-    description: 'Unlock 3 achievements or play 3 different Game Pass games',
+    description: 'Upload 3 clips or earn 3 trophies',
     target_value: 3,
     points: 10,
     category: 'daily',
@@ -23,45 +23,36 @@ const defaultAchievements = [
     reward_type: 'points',
   },
   
-  // Game-specific Achievements
+  // Platform-specific Achievements
   {
-    name: 'Dead Space',
-    description: 'Play Dead Space and earn 100 points',
+    name: 'Trophy Collector',
+    description: 'Earn your first trophy by getting into the weekly top 10',
     target_value: 1,
     points: 25,
-    category: 'gaming',
+    category: 'streaming',
     progress_type: 'count',
     reward_type: 'points',
   },
   {
-    name: 'The Long Dark',
-    description: 'Travel 10 km in The Long Dark and earn 50 points',
-    target_value: 2,
+    name: 'Growing Community',
+    description: 'Reach 10 followers on your profile',
+    target_value: 10,
     points: 50,
-    category: 'gaming',
+    category: 'social',
     progress_type: 'count',
     reward_type: 'points',
   },
   {
-    name: 'Earn an Achievement in Game Pass',
-    description: 'Earn an achievement in any Game Pass game and earn 10 points',
-    target_value: 1,
+    name: 'Content Creator',
+    description: 'Upload 5 clips to your profile',
+    target_value: 5,
     points: 10,
-    category: 'gaming',
+    category: 'streaming',
     progress_type: 'count',
     reward_type: 'points',
   },
 
   // Trophy Achievements
-  {
-    name: 'Trophy Collector',
-    description: 'Earn your first trophy',
-    target_value: 1,
-    points: 25,
-    category: 'general',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
   {
     name: 'Trophy Hunter',
     description: 'Earn 5 trophies across all categories',
@@ -122,8 +113,8 @@ const defaultAchievements = [
   },
   {
     name: 'Rising Star',
-    description: 'Reach 10 followers',
-    target_value: 10,
+    description: 'Reach 50 followers',
+    target_value: 50,
     points: 30, 
     category: 'social',
     progress_type: 'count',
@@ -179,9 +170,9 @@ const defaultAchievements = [
     reward_type: 'points',
   },
   {
-    name: 'Content Creator',
-    description: 'Upload 10 clips',
-    target_value: 10,
+    name: 'Clip Master',
+    description: 'Upload 20 clips',
+    target_value: 20,
     points: 40,
     category: 'streaming',
     progress_type: 'count',
@@ -270,29 +261,24 @@ const sampleUserProgress = [
     completed: false
   },
   
-  // Game-specific Achievements
+  // Platform-specific Achievements
   {
-    achievementName: 'Dead Space',
+    achievementName: 'Trophy Collector',
     currentValue: 0,
     completed: false
   },
   {
-    achievementName: 'The Long Dark',
-    currentValue: 0,
+    achievementName: 'Growing Community',
+    currentValue: 4,
     completed: false
   },
   {
-    achievementName: 'Earn an Achievement in Game Pass',
-    currentValue: 0,
+    achievementName: 'Content Creator',
+    currentValue: 3,
     completed: false
   },
 
   // Trophy Achievements
-  {
-    achievementName: 'Trophy Collector',
-    currentValue: 1,
-    completed: true
-  },
   {
     achievementName: 'Trophy Hunter',
     currentValue: 3,
@@ -329,7 +315,7 @@ const sampleUserProgress = [
   },
   {
     achievementName: 'Rising Star',
-    currentValue: 6,
+    currentValue: 26,
     completed: false
   },
   {
@@ -362,8 +348,8 @@ const sampleUserProgress = [
     completed: true
   },
   {
-    achievementName: 'Content Creator',
-    currentValue: 4,
+    achievementName: 'Clip Master',
+    currentValue: 8,
     completed: false
   },
   {

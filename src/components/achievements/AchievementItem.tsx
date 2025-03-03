@@ -73,13 +73,7 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
     <div className={`flex w-full overflow-hidden mb-3 ${isEarnYourWay ? 'border border-green-500 rounded-sm' : ''}`}>
       <div className="h-24 w-24 flex-shrink-0 relative">
         <div className="absolute inset-0 bg-[#012e14]">
-          <div className="w-full h-full flex items-center justify-center" style={{ 
-            backgroundImage: achievement.name === 'Dead Space' ? 
-              "radial-gradient(circle at center, #021e11 0%, #010e07 100%)" : 
-              (achievement.name === 'The Long Dark' ? 
-              "radial-gradient(circle at center, #021e11 0%, #010e07 100%)" : 
-              "url('/images/achievement-bg.png')") 
-          }}>
+          <div className="w-full h-full flex items-center justify-center">
             {getAchievementIcon(achievement.name)}
           </div>
         </div>
@@ -115,16 +109,26 @@ const getAchievementIcon = (name: string) => {
   if (name.includes('Earn Your Way')) {
     return <Shield className="w-12 h-12 text-[#42ff77]" />;
   }
-  if (name.includes('Dead Space')) {
-    // Since we don't have real images, use a themed icon
-    return <Monitor className="w-12 h-12 text-red-500" />;
+  if (name.includes('Trophy Collector')) {
+    return <Trophy className="w-12 h-12 text-amber-400" />;
   }
-  if (name.includes('Long Dark')) {
-    // Since we don't have real images, use a themed icon
-    return <Calendar className="w-12 h-12 text-blue-400" />;
+  if (name.includes('Growing Community')) {
+    return <Users className="w-12 h-12 text-blue-400" />;
   }
-  if (name.includes('Game Pass')) {
-    return <Trophy className="w-12 h-12 text-[#42ff77]" />;
+  if (name.includes('Content Creator')) {
+    return <Star className="w-12 h-12 text-purple-400" />;
+  }
+  if (name.includes('Weekly Top')) {
+    return <ArrowUp className="w-12 h-12 text-[#42ff77]" />;
+  }
+  if (name.includes('Follower')) {
+    return <Users className="w-12 h-12 text-blue-400" />;
+  }
+  if (name.includes('Comment')) {
+    return <MessageSquare className="w-12 h-12 text-green-400" />;
+  }
+  if (name.includes('Viral Hit')) {
+    return <Heart className="w-12 h-12 text-red-400" />;
   }
   
   // For other achievements, use the category-based icons
