@@ -1,0 +1,32 @@
+/* Pulse animations for GameBoy action feedback */
+@keyframes liked-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 86, 125, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 86, 125, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 86, 125, 0);
+  }
+}
+
+@keyframes ranked-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(249, 212, 35, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(249, 212, 35, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(249, 212, 35, 0);
+  }
+}
+
+.liked-pulse {
+  animation: liked-pulse 1s 1;
+}
+
+.ranked-pulse {
+  animation: ranked-pulse 1s 1;
+}

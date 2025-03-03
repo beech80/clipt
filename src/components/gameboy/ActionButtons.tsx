@@ -21,8 +21,45 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
       return;
     }
 
-    if (!postId) {
-      toast.error('No post selected');
+    // Try to get the post ID using the same detection logic as handleComment
+    const isPostPage = window.location.pathname.match(/^\/post\/([^/?#]+)/);
+    const isSquadPage = window.location.pathname.includes('/squads/') || window.location.pathname.includes('/squad/');
+    
+    console.log("[Like] Current URL:", window.location.pathname);
+    
+    // Try to get the post ID from various sources
+    let currentPostId = postId;
+    
+    // If no postId passed, try to extract it from URL
+    if (!currentPostId && isPostPage) {
+      const match = window.location.pathname.match(/\/post\/([^/?#]+)/);
+      if (match && match[1]) {
+        currentPostId = match[1];
+        console.log("[Like] Extracted post ID from URL:", currentPostId);
+      }
+    }
+    
+    // For squad posts that might have a different URL pattern
+    if (!currentPostId && isSquadPage) {
+      const match = window.location.pathname.match(/\/squad(?:s)?\/([^/?#]+)/);
+      if (match && match[1]) {
+        currentPostId = match[1];
+        console.log("[Like] Extracted squad post ID from URL:", currentPostId);
+      }
+    }
+    
+    // Try to get post ID from the DOM if we still don't have it
+    if (!currentPostId) {
+      // Look for data attributes that might contain post ID
+      const postElement = document.querySelector('[data-post-id]');
+      if (postElement instanceof HTMLElement && postElement.dataset.postId) {
+        currentPostId = postElement.dataset.postId;
+        console.log("[Like] Found post ID in DOM:", currentPostId);
+      }
+    }
+
+    if (!currentPostId) {
+      toast.error('No post selected to like');
       return;
     }
 
@@ -32,7 +69,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
         .from('likes')
         .select('*')
         .eq('user_id', user.id)
-        .eq('post_id', postId)
+        .eq('post_id', currentPostId)
         .single();
 
       if (existingLike) {
@@ -41,17 +78,28 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
           .from('likes')
           .delete()
           .eq('user_id', user.id)
-          .eq('post_id', postId);
+          .eq('post_id', currentPostId);
         
         toast.success('Unliked post');
       } else {
         // Like
         await supabase
           .from('likes')
-          .insert([{ user_id: user.id, post_id: postId }]);
+          .insert([{ user_id: user.id, post_id: currentPostId }]);
         
         toast.success('Liked post!');
       }
+      
+      // Refresh any post data that might be in view
+      const postElement = document.querySelector(`[data-post-id="${currentPostId}"]`);
+      if (postElement) {
+        // Add a temporary visual feedback
+        postElement.classList.add('liked-pulse');
+        setTimeout(() => {
+          postElement.classList.remove('liked-pulse');
+        }, 1000);
+      }
+      
     } catch (error) {
       toast.error('Failed to like post. Please try again.');
     }
@@ -181,8 +229,45 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
       return;
     }
 
-    if (!postId) {
-      toast.error('No post selected');
+    // Try to get the post ID using the same detection logic as handleComment
+    const isPostPage = window.location.pathname.match(/^\/post\/([^/?#]+)/);
+    const isSquadPage = window.location.pathname.includes('/squads/') || window.location.pathname.includes('/squad/');
+    
+    console.log("[Rank] Current URL:", window.location.pathname);
+    
+    // Try to get the post ID from various sources
+    let currentPostId = postId;
+    
+    // If no postId passed, try to extract it from URL
+    if (!currentPostId && isPostPage) {
+      const match = window.location.pathname.match(/\/post\/([^/?#]+)/);
+      if (match && match[1]) {
+        currentPostId = match[1];
+        console.log("[Rank] Extracted post ID from URL:", currentPostId);
+      }
+    }
+    
+    // For squad posts that might have a different URL pattern
+    if (!currentPostId && isSquadPage) {
+      const match = window.location.pathname.match(/\/squad(?:s)?\/([^/?#]+)/);
+      if (match && match[1]) {
+        currentPostId = match[1];
+        console.log("[Rank] Extracted squad post ID from URL:", currentPostId);
+      }
+    }
+    
+    // Try to get post ID from the DOM if we still don't have it
+    if (!currentPostId) {
+      // Look for data attributes that might contain post ID
+      const postElement = document.querySelector('[data-post-id]');
+      if (postElement instanceof HTMLElement && postElement.dataset.postId) {
+        currentPostId = postElement.dataset.postId;
+        console.log("[Rank] Found post ID in DOM:", currentPostId);
+      }
+    }
+
+    if (!currentPostId) {
+      toast.error('No post selected to rank');
       return;
     }
 
@@ -192,7 +277,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
         .from('clip_votes')
         .select('*')
         .eq('user_id', user.id)
-        .eq('post_id', postId)
+        .eq('post_id', currentPostId)
         .single();
 
       if (existingVote) {
@@ -201,17 +286,28 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
           .from('clip_votes')
           .delete()
           .eq('user_id', user.id)
-          .eq('post_id', postId);
+          .eq('post_id', currentPostId);
         
         toast.success('Rank removed');
       } else {
         // Rank
         await supabase
           .from('clip_votes')
-          .insert([{ user_id: user.id, post_id: postId }]);
+          .insert([{ user_id: user.id, post_id: currentPostId }]);
         
         toast.success('Clip ranked!');
       }
+      
+      // Refresh any post data that might be in view
+      const postElement = document.querySelector(`[data-post-id="${currentPostId}"]`);
+      if (postElement) {
+        // Add a temporary visual feedback
+        postElement.classList.add('ranked-pulse');
+        setTimeout(() => {
+          postElement.classList.remove('ranked-pulse');
+        }, 1000);
+      }
+      
     } catch (error) {
       toast.error('Failed to rank clip. Please try again.');
     }
