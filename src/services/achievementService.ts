@@ -23,6 +23,35 @@ const defaultAchievements = [
     reward_type: 'points',
   },
   
+  // Game-specific Achievements
+  {
+    name: 'Dead Space',
+    description: 'Play',
+    target_value: 1,
+    points: 25,
+    category: 'gaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'The Long Dark',
+    description: 'Have 2 Distance Travelled',
+    target_value: 2,
+    points: 50,
+    category: 'gaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Earn an Achievement in Game Pass',
+    description: 'Earn an achievement in any Game Pass game',
+    target_value: 1,
+    points: 10,
+    category: 'gaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+
   // Trophy Achievements
   {
     name: 'Trophy Collector',
@@ -127,7 +156,7 @@ const defaultAchievements = [
     points: 100,
     category: 'streaming',
     progress_type: 'count',
-    reward_type: 'badge',
+    reward_type: 'points',
   },
   {
     name: 'Weekly Champion',
@@ -166,26 +195,6 @@ const defaultAchievements = [
     category: 'streaming',
     progress_type: 'count',
     reward_type: 'badge',
-  },
-  
-  // Gaming Achievements
-  {
-    name: 'Game Explorer',
-    description: 'Play 3 different games',
-    target_value: 3,
-    points: 25,
-    category: 'gaming',
-    progress_type: 'count',
-    reward_type: 'points',
-  },
-  {
-    name: 'Game Master',
-    description: 'Upload clips from 10 different games',
-    target_value: 10,
-    points: 50,
-    category: 'gaming',
-    progress_type: 'count',
-    reward_type: 'points',
   }
 ];
 
@@ -249,6 +258,35 @@ const defaultGameAchievements = {
 
 // Sample user progress data for demo purposes
 const sampleUserProgress = [
+  // Daily Quests
+  {
+    achievementName: 'Complete 4 Daily Quests',
+    currentValue: 2,
+    completed: false
+  },
+  {
+    achievementName: 'Earn Your Way',
+    currentValue: 1,
+    completed: false
+  },
+  
+  // Game-specific Achievements
+  {
+    achievementName: 'Dead Space',
+    currentValue: 0,
+    completed: false
+  },
+  {
+    achievementName: 'The Long Dark',
+    currentValue: 0,
+    completed: false
+  },
+  {
+    achievementName: 'Earn an Achievement in Game Pass',
+    currentValue: 0,
+    completed: false
+  },
+
   // Trophy Achievements
   {
     achievementName: 'Trophy Collector',
@@ -331,30 +369,6 @@ const sampleUserProgress = [
   {
     achievementName: 'Viral Hit',
     currentValue: 437,
-    completed: false
-  },
-  
-  // Gaming Achievements
-  {
-    achievementName: 'Game Explorer',
-    currentValue: 2,
-    completed: false
-  },
-  {
-    achievementName: 'Game Master',
-    currentValue: 3,
-    completed: false
-  },
-  
-  // Daily Quests
-  {
-    achievementName: 'Complete 4 Daily Quests',
-    currentValue: 2,
-    completed: false
-  },
-  {
-    achievementName: 'Earn Your Way',
-    currentValue: 1,
     completed: false
   }
 ];
