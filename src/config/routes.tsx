@@ -1,4 +1,3 @@
-
 import { RouteObject } from "react-router-dom";
 import Home from "@/pages/Home";
 import Progress from "@/pages/Progress";
@@ -24,6 +23,10 @@ export const routes: RouteObject[] = [
   },
   {
     path: "/messages",
+    element: <Messages />,
+  },
+  {
+    path: "/messages/:userId",
     element: <Messages />,
   },
   {
