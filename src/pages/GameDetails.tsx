@@ -6,10 +6,12 @@ import { Card } from "@/components/ui/card";
 import { igdbService } from "@/services/igdbService";
 import { supabase } from "@/lib/supabase";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Gamepad2, Info, Video, Clock, Calendar } from "lucide-react";
+import { Gamepad2, Info, Video, Clock, Calendar, Trophy } from "lucide-react";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { AchievementItem } from "@/components/achievements/AchievementItem";
+import { achievementService } from "@/services/achievementService";
 
 const formatDate = (timestamp: number) => {
   if (!timestamp) return "Unknown";
@@ -68,6 +70,16 @@ const GameDetails = () => {
     },
     enabled: !!id,
   });
+  
+  // Fetch game achievements
+  const { data: achievements, isLoading: achievementsLoading } = useQuery({
+    queryKey: ["gameAchievements", id],
+    queryFn: async () => {
+      if (!id) return [];
+      return await achievementService.getGameAchievements(parseInt(id));
+    },
+    enabled: !!id,
+  });
 
   if (gameLoading) {
     return (
@@ -111,6 +123,30 @@ const GameDetails = () => {
               alt={game.name} 
               className="w-full md:w-64 h-auto rounded-lg shadow-lg"
             />
+            
+            {/* Achievement Section */}
+            {achievementsLoading ? (
+              <div className="mt-4 space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-20 bg-gray-800/60 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : achievements && achievements.length > 0 ? (
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy className="h-5 w-5 text-yellow-400" />
+                  <h3 className="text-lg font-semibold">Achievements</h3>
+                </div>
+                <div className="space-y-2">
+                  {achievements.map((achievement) => (
+                    <AchievementItem 
+                      key={achievement.id} 
+                      gameAchievement={achievement} 
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
           
           <div className="flex-1">
@@ -241,6 +277,20 @@ const GameDetails = () => {
               <div>
                 <h2 className="text-xl font-bold mb-2">Summary</h2>
                 <p className="text-gray-700 dark:text-gray-300">{game.summary}</p>
+              </div>
+            )}
+            
+            {achievements && achievements.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold mb-3">Achievements</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {achievements.map((achievement) => (
+                    <AchievementItem 
+                      key={achievement.id} 
+                      gameAchievement={achievement} 
+                    />
+                  ))}
+                </div>
               </div>
             )}
             
