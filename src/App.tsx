@@ -10,6 +10,7 @@ import { routes } from '@/config/routes';
 import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import GameBoyControls from '@/components/GameBoyControls';
+import ScrollToTop from './components/common/ScrollToTop';
 import '@/index.css';
 import '@/styles/animations.css';
 
@@ -59,6 +60,7 @@ function App() {
             <ReportDialogProvider>
               <CommentsProvider>
                 <Toaster richColors position="top-center" />
+                <ScrollToTop />
                 <AppContent />
                 <PWAInstallPrompt />
                 <GameBoyControls currentPostId={currentPostId} />

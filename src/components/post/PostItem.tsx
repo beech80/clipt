@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import PostContent from "./PostContent";
 import { useNavigate } from "react-router-dom";
@@ -40,9 +39,18 @@ const PostItem = ({ post }: PostItemProps) => {
     navigate(`/profile/${userId}`);
   };
 
+  const handleGameClick = (gameId: string, gameName: string) => {
+    // Navigate to game-specific page when a game is clicked
+    if (gameId) {
+      console.log(`Navigating to game: ${gameName} (${gameId})`);
+      navigate(`/games/${gameId}`);
+    }
+  };
+
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
+  const gameId = post.games?.id;
 
   return (
     <div className={`relative w-full gaming-card transition-opacity duration-300 ${
@@ -66,7 +74,10 @@ const PostItem = ({ post }: PostItemProps) => {
               {username}
             </span>
             {gameName && (
-              <span className="text-xs text-gaming-300">
+              <span 
+                className="text-xs text-gaming-300 hover:text-gaming-100 cursor-pointer" 
+                onClick={() => handleGameClick(gameId, gameName)}
+              >
                 {gameName}
               </span>
             )}

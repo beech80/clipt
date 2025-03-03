@@ -53,7 +53,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       
       const { count, error } = await supabase
         .from('comments')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true})
         .eq('post_id', postId);
       
       if (error) {
@@ -97,9 +97,18 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     navigate(`/profile/${userId}`);
   };
 
+  const handleGameClick = (gameId: string, gameName: string) => {
+    // Navigate to game-specific page when a game is clicked
+    if (gameId) {
+      console.log(`Navigating to game: ${gameName} (${gameId})`);
+      navigate(`/games/${gameId}`);
+    }
+  };
+
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
+  const gameId = post.games?.id;
 
   // Early return if post data is invalid
   if (!post || !postId) {
@@ -135,7 +144,10 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
               {username}
             </span>
             {gameName && (
-              <span className="text-sm text-gaming-300">
+              <span 
+                className="text-sm text-gaming-300 hover:text-gaming-100 cursor-pointer" 
+                onClick={() => handleGameClick(gameId, gameName)}
+              >
                 {gameName}
               </span>
             )}
