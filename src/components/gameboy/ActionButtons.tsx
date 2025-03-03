@@ -193,6 +193,18 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
         return;
       }
 
+      // Don't allow following yourself
+      if (user.id === post.user_id) {
+        toast.error('You cannot follow yourself');
+        return;
+      }
+
+      // Add pulse animation to the follow button
+      const followButton = document.querySelector('.follow-button');
+      if (followButton) {
+        followButton.classList.add('animate-pulse');
+      }
+
       // Check if user already follows this creator
       const { data: existingFollow } = await supabase
         .from('follows')
@@ -218,8 +230,21 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
         
         toast.success('Now following user!');
       }
+
+      // Remove animation after completion
+      setTimeout(() => {
+        if (followButton) {
+          followButton.classList.remove('animate-pulse');
+        }
+      }, 500);
     } catch (error) {
       toast.error('Failed to follow. Please try again.');
+      
+      // Remove animation in case of error
+      const followButton = document.querySelector('.follow-button');
+      if (followButton) {
+        followButton.classList.remove('animate-pulse');
+      }
     }
   };
 
