@@ -6,15 +6,31 @@ import PostMenu from "./PostMenu";
 import { useNavigate } from "react-router-dom";
 
 export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
-  // Get username from profiles, fallback to display_name, then to 'Anonymous'
-  const username = post.profiles?.display_name || post.profiles?.username || 'Anonymous';
-  const avatarUrl = post.profiles?.avatar_url || '';
+  const navigate = useNavigate();
+  
+  // Safely extract username and check if post and profiles exist
+  const username = post?.profiles?.display_name || post?.profiles?.username || 'Anonymous';
+  const avatarUrl = post?.profiles?.avatar_url || '';
   const firstLetter = username[0]?.toUpperCase() || 'A';
+  
+  // Function to safely navigate to a user profile
+  const handleProfileClick = (e: React.MouseEvent, userId: string) => {
+    e.stopPropagation();
+    if (!userId) {
+      console.error('Invalid user ID for profile navigation');
+      return;
+    }
+    
+    try {
+      console.log(`PostHeader: Navigating to profile: ${userId}`);
+      navigate(`/profile/${userId}`);
+    } catch (error) {
+      console.error('Error navigating to profile:', error);
+    }
+  };
 
   // Make sure game name is clickable and navigates to game page
   const GameLink = ({ game, className }: { game: any, className: string }) => {
-    const navigate = useNavigate();
-    
     if (!game) return null;
     
     const handleClick = (e: React.MouseEvent) => {
@@ -36,14 +52,22 @@ export const PostHeader = ({ post, commentsCount }: PostHeaderProps) => {
   return (
     <div>
       <div className="flex items-center space-x-4">
-        <Avatar className="ring-2 ring-gaming-500 ring-offset-2 ring-offset-background">
+        <Avatar 
+          className="ring-2 ring-gaming-500 ring-offset-2 ring-offset-background cursor-pointer"
+          onClick={(e) => post?.user_id ? handleProfileClick(e, post.user_id) : null}
+        >
           <AvatarImage src={avatarUrl} />
           <AvatarFallback>{firstLetter}</AvatarFallback>
         </Avatar>
         
         <div className="space-y-1">
           <div className="flex flex-col space-y-2">
-            <span className="font-semibold text-lg text-gaming-400">{username}</span>
+            <span 
+              className="font-semibold text-lg text-gaming-400 cursor-pointer hover:text-gaming-300"
+              onClick={(e) => post?.user_id ? handleProfileClick(e, post.user_id) : null}
+            >
+              {username}
+            </span>
             <div className="flex items-center space-x-4 text-sm">
               <div className="flex items-center space-x-1">
                 <Heart className="w-4 h-4 text-red-500" />
