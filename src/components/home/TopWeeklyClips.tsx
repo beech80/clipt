@@ -3,27 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Loader2, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Post as PostType } from '@/types/post';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
-interface TopClip {
-  id: string;
-  title: string;
-  image_url: string | null;
-  video_url: string | null;
-  vote_count: number;
-  user_id: string;
-  created_at: string;
-  profiles: {
-    username: string;
-    avatar_url: string | null;
-  };
-  games?: {
-    name: string;
-  } | null;
-}
 
 export function TopWeeklyClips() {
   const navigate = useNavigate();
@@ -48,6 +30,7 @@ export function TopWeeklyClips() {
     setWeekStart(startDate.toISOString().split('T')[0]);
     setWeekEnd(endDate.toISOString().split('T')[0]);
     
+    console.log("Set date range:", startDate.toISOString(), "to", endDate.toISOString());
   }, []);
   
   const { data: topClips, isLoading, error } = useQuery({
@@ -58,7 +41,8 @@ export function TopWeeklyClips() {
       
       console.log(`Fetching top clips from ${weekStart} to ${weekEnd}`);
       
-      const { data, error } = await supabase
+      // First, get posts with their vote counts
+      const { data: posts, error: postsError } = await supabase
         .from('posts')
         .select(`
           id,
@@ -73,33 +57,60 @@ export function TopWeeklyClips() {
           ),
           games:game_id (
             name
-          ),
-          vote_count:clip_votes(count)
+          )
         `)
         .gte('created_at', `${weekStart}T00:00:00Z`)
         .lte('created_at', `${weekEnd}T23:59:59Z`)
-        .order('vote_count', { ascending: false })
-        .limit(10);
-        
-      if (error) {
-        console.error('Error fetching top weekly clips:', error);
-        throw error;
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (postsError) {
+        console.error('Error fetching posts:', postsError);
+        throw postsError;
       }
       
-      // Process data to extract vote count
-      return data.map(item => ({
-        ...item,
-        vote_count: item.vote_count?.[0]?.count || 0
+      // If no posts, return empty array
+      if (!posts || posts.length === 0) {
+        return [];
+      }
+      
+      // Get vote counts for these posts
+      const postIds = posts.map(post => post.id);
+      
+      const { data: voteData, error: voteError } = await supabase
+        .from('clip_votes')
+        .select('post_id, count')
+        .in('post_id', postIds);
+      
+      if (voteError) {
+        console.error('Error fetching vote counts:', voteError);
+        throw voteError;
+      }
+      
+      // Create a map of post_id to vote count
+      const voteCountMap = {};
+      
+      voteData?.forEach(vote => {
+        if (!voteCountMap[vote.post_id]) {
+          voteCountMap[vote.post_id] = 0;
+        }
+        voteCountMap[vote.post_id] += 1;
+      });
+      
+      // Add vote counts to posts
+      const postsWithVotes = posts.map(post => ({
+        ...post,
+        vote_count: voteCountMap[post.id] || 0
       }));
+      
+      // Sort by vote count and return top 10
+      return postsWithVotes
+        .sort((a, b) => b.vote_count - a.vote_count)
+        .slice(0, 10);
     },
     enabled: Boolean(weekStart && weekEnd),
     staleTime: 5 * 60 * 1000 // 5 minutes
   });
-  
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
-  };
   
   const handleClipClick = (clipId: string) => {
     navigate(`/post/${clipId}`);
@@ -114,32 +125,8 @@ export function TopWeeklyClips() {
             Top Weekly Clips
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex justify-center py-10">
-          <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (error) {
-    return (
-      <Card className="w-full bg-[#1A1F2C]">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl font-bold flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
-            Top Weekly Clips
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-center py-6 text-red-400">
-          <p>Failed to load top clips</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="mt-2"
-            onClick={() => window.location.reload()}
-          >
-            Retry
-          </Button>
+        <CardContent className="flex justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-yellow-500" />
         </CardContent>
       </Card>
     );
@@ -156,7 +143,7 @@ export function TopWeeklyClips() {
       
       <CardContent className="pt-0">
         {topClips && topClips.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {topClips.map((clip, index) => (
               <div 
                 key={clip.id}
@@ -168,16 +155,6 @@ export function TopWeeklyClips() {
                     {index + 1}
                   </span>
                 </div>
-                
-                {clip.image_url && (
-                  <div className="w-14 h-14 rounded overflow-hidden mr-3 flex-shrink-0">
-                    <img 
-                      src={clip.image_url} 
-                      alt={clip.title || 'Clip thumbnail'} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
                 
                 <div className="flex-grow min-w-0">
                   <div className="flex items-center">
