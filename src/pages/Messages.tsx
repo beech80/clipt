@@ -104,7 +104,106 @@ const Messages = () => {
     setSearchResults(data || []);
   };
 
-  // Simplified direct messaging - we won't use database tables at all
+  // Send message function that saves to the database
+  const sendMessage = async () => {
+    if (!message.trim() || !selectedChat || !user) return;
+    
+    try {
+      // Create a new message object
+      const newMessage = {
+        sender_id: user.id,
+        recipient_id: selectedChat.recipient_id,
+        message: message.trim(),
+        created_at: new Date().toISOString(),
+        read: false
+      };
+      
+      // Store message in database
+      const { data: savedMessage, error } = await supabase
+        .from('direct_messages')
+        .insert(newMessage)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error saving message to database:", error);
+        throw error;
+      }
+      
+      // Add to local messages array with database ID
+      setSelectedChat({
+        ...selectedChat,
+        messages: [...(selectedChat.messages || []), {
+          ...savedMessage,
+          sender_name: user.user_metadata?.username || 'You'
+        }]
+      });
+      
+      // Clear input
+      setMessage("");
+      
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+    }
+  };
+
+  // Function to fetch messages for a conversation
+  const fetchMessages = async (chatId: string, recipientId: string) => {
+    if (!user) return;
+    
+    try {
+      // Query messages where current user is either sender or recipient
+      const { data: messages, error } = await supabase
+        .from('direct_messages')
+        .select('*')
+        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .or(`sender_id.eq.${recipientId},recipient_id.eq.${recipientId}`)
+        .order('created_at', { ascending: true });
+        
+      if (error) {
+        console.error("Error fetching messages:", error);
+        throw error;
+      }
+      
+      // Get profiles for message senders
+      const senderIds = [...new Set(messages.map(m => m.sender_id))];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, display_name')
+        .in('id', senderIds);
+        
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+      }
+      
+      // Add sender_name to each message
+      const messagesWithNames = messages.map(msg => {
+        const sender = profiles?.find(p => p.id === msg.sender_id);
+        return {
+          ...msg,
+          sender_name: sender ? (sender.username || sender.display_name) : 
+                      (msg.sender_id === user.id ? 'You' : 'User')
+        };
+      });
+      
+      // Update selected chat with messages
+      if (selectedChat && selectedChat.id === chatId) {
+        setSelectedChat({
+          ...selectedChat,
+          messages: messagesWithNames
+        });
+      }
+      
+      return messagesWithNames;
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      toast.error("Failed to load messages");
+      return [];
+    }
+  };
+
+  // Modified function to start or continue a chat
   const startOrContinueChat = async (userId: string) => {
     if (!user) {
       toast.error("Please sign in to message users");
@@ -130,18 +229,24 @@ const Messages = () => {
 
       const recipientName = profile.username || profile.display_name || 'User';
       
-      // We'll create a direct chat just using the user's ID
+      // Check if direct_messages table exists, create if needed
+      await ensureMessagesTableExists();
+      
+      // Generate chat ID
       const chatId = `chat_${user.id}_${userId}`;
       
-      // Create a conversation without an initial message
+      // Initialize chat with empty messages array for now
       setSelectedChat({
         id: chatId,
         type: 'direct',
         recipient_id: userId,
         recipient_name: recipientName,
         recipient_avatar: profile.avatar_url,
-        messages: [] // Empty array for messages
+        messages: []
       });
+      
+      // Fetch any existing messages
+      fetchMessages(chatId, userId);
       
       // Clear search results and dialog
       setSearchResults([]);
@@ -152,6 +257,73 @@ const Messages = () => {
     } catch (error) {
       console.error("Error with chat:", error);
       toast.error("Error with conversation: " + (error instanceof Error ? error.message : "Unknown error"));
+    }
+  };
+
+  // Setup real-time messaging
+  useEffect(() => {
+    if (!user || !selectedChat) return;
+    
+    // Subscribe to new messages
+    const subscription = supabase
+      .channel('direct_messages')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'direct_messages',
+        filter: `recipient_id=eq.${user.id}`
+      }, (payload) => {
+        console.log('New message received:', payload);
+        
+        // If this message is for the current chat, add it to the messages
+        if (selectedChat && 
+            (payload.new.sender_id === selectedChat.recipient_id || 
+             payload.new.recipient_id === selectedChat.recipient_id)) {
+          
+          // Get sender profile
+          supabase
+            .from('profiles')
+            .select('username, display_name')
+            .eq('id', payload.new.sender_id)
+            .single()
+            .then(({ data: profile }) => {
+              const senderName = profile ? 
+                                (profile.username || profile.display_name) : 
+                                (payload.new.sender_id === user.id ? 'You' : 'User');
+              
+              // Add message to chat
+              setSelectedChat(current => {
+                if (!current) return null;
+                return {
+                  ...current,
+                  messages: [...(current.messages || []), {
+                    ...payload.new,
+                    sender_name: senderName
+                  }]
+                };
+              });
+            });
+        }
+      })
+      .subscribe();
+      
+    // Cleanup subscription on component unmount or when selected chat changes
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user, selectedChat]);
+
+  // Ensure messages table exists
+  const ensureMessagesTableExists = async () => {
+    try {
+      // Check if direct_messages table exists, create if needed
+      const tableExists = await checkTableExists('direct_messages');
+      if (!tableExists) {
+        console.log("Creating direct_messages table...");
+        await createMessagesTable();
+      }
+    } catch (error) {
+      console.error("Error ensuring messages table exists:", error);
     }
   };
 
@@ -167,54 +339,6 @@ const Messages = () => {
     } catch (error) {
       console.error("Error creating group:", error);
       toast.error("Failed to create group");
-    }
-  };
-
-  // Modified send message function to add messages to the local state 
-  // This simulates sending messages in demo mode, but could be easily updated for real DB storage
-  const sendMessage = async () => {
-    if (!message.trim() || !selectedChat || !user) return;
-    
-    try {
-      // Create a new message object
-      const newMessage = {
-        id: Date.now().toString(),
-        sender_id: user.id,
-        recipient_id: selectedChat.recipient_id,
-        message: message.trim(),
-        created_at: new Date().toISOString(),
-        read: false,
-        sender_name: user.user_metadata?.username || 'You'
-      };
-      
-      // Add to local messages array
-      setSelectedChat({
-        ...selectedChat,
-        messages: [...(selectedChat.messages || []), newMessage]
-      });
-      
-      // Clear input
-      setMessage("");
-      
-      // In a full implementation, we would save to the database like this:
-      /*
-      // Store message in database
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          sender_id: user.id,
-          recipient_id: selectedChat.recipient_id,
-          message: message.trim(),
-          created_at: new Date().toISOString(),
-          read: false
-        });
-        
-      if (error) throw error;
-      */
-      
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Failed to send message");
     }
   };
 
@@ -412,7 +536,7 @@ const Messages = () => {
               </div>
             )}
             <Button
-              onClick={handleCreateGroup}
+              onClick={() => handleCreateGroup()}
               disabled={!groupName || selectedUsers.length === 0}
               className="w-full mt-4"
             >
