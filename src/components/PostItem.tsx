@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
 import { Heart, MessageSquare, Trophy, Trash2, MoreVertical } from "lucide-react";
@@ -25,7 +24,6 @@ interface PostItemProps {
 }
 
 const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = false, 'data-post-id': postIdAttr }) => {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
@@ -100,7 +98,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     }
     try {
       console.log(`Navigating to profile: ${userId}`);
-      navigate(`/profile/${userId}`);
+      // Use window.location for more reliable navigation
+      window.location.href = `/profile/${userId}`;
     } catch (error) {
       console.error('Error navigating to profile:', error);
       toast.error('Could not navigate to profile');
@@ -114,8 +113,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     // Navigate to game-specific page when a game is clicked
     if (gameId) {
       console.log(`Navigating to game: ${gameName} (${gameId})`);
-      // Use the correct route format to match the gameRoutes.tsx definition
-      navigate(`/game/${gameId}`);
+      // Use window.location for more reliable navigation
+      window.location.href = `/game/${gameId}`;
     }
   };
 
