@@ -239,25 +239,6 @@ const Messages = () => {
       <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
         {/* Left sidebar - active chats */}
         <div className="bg-gaming-900 overflow-y-auto relative w-64">
-          <div className="flex justify-center items-center p-4 space-x-4">
-            {/* Icon for Create Group Chat */}
-            <button
-              onClick={() => setShowCreateGroupChat(true)}
-              className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition"
-              aria-label="Create Group Chat"
-            >
-              <Users className="h-6 w-6" />
-            </button>
-            
-            {/* Icon for Start New Conversation */}
-            <button
-              onClick={() => setShowNewChatDialog(true)}
-              className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition"
-              aria-label="Start New Conversation"
-            >
-              <MessageSquare className="h-6 w-6" />
-            </button>
-          </div>
         </div>
 
         {/* Right side - chat area */}
