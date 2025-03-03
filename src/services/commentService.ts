@@ -221,12 +221,40 @@ export const editComment = async (commentId: string, userId: string, content: st
 
     console.log(`Attempting to edit comment ${commentId} by user ${userId}`);
 
-    // Update the comment without the extra authorization check
+    // First check if updated_at column exists
+    const { data: columnCheck, error: columnError } = await supabase
+      .from('comments')
+      .select('updated_at')
+      .eq('id', commentId)
+      .eq('user_id', userId)
+      .limit(1);
+    
+    if (columnError) {
+      console.error("Error checking updated_at column:", columnError);
+      // If column doesn't exist, just update the content
+      const { data: fallbackUpdate, error: fallbackError } = await supabase
+        .from('comments')
+        .update({ content })
+        .eq('id', commentId)
+        .eq('user_id', userId)
+        .select('*');
+      
+      if (fallbackError) {
+        throw fallbackError;
+      }
+      
+      return { data: fallbackUpdate, error: null };
+    }
+
+    // If we get here, the updated_at column exists, so use it
     const { data, error: updateError } = await supabase
       .from('comments')
-      .update({ content, updated_at: new Date().toISOString() })
+      .update({ 
+        content, 
+        updated_at: new Date().toISOString() 
+      })
       .eq('id', commentId)
-      .eq('user_id', userId) // This ensures the user can only edit their own comments
+      .eq('user_id', userId)
       .select(`
         id,
         content,

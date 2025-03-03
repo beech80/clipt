@@ -2,6 +2,8 @@
 
 -- First, ensure comments table has all necessary columns including likes_count
 ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0;
+-- Add updated_at column if it doesn't exist
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT now();
 
 -- Create trigger function to update the likes_count
 CREATE OR REPLACE FUNCTION public.update_comment_likes_count()
