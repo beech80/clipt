@@ -77,7 +77,15 @@ const Profile = () => {
     try {
       console.log(`Profile: Fetching profile data for: ${profileId}`);
       
-      // Simple, direct query for profile data
+      // First try to ensure the profile exists
+      const { ensureProfileExists } = await import('@/lib/follow-helper');
+      const profileCreated = await ensureProfileExists(profileId);
+      
+      if (!profileCreated) {
+        console.log("ensureProfileExists failed, falling back to direct query");
+      }
+      
+      // Query for profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -92,7 +100,7 @@ const Profile = () => {
       }
       
       if (!profileData) {
-        console.log("No profile found, trying to create fallback profile");
+        console.log("No profile found, creating fallback profile");
         
         // Simple creation of fallback profile if missing
         try {
@@ -102,6 +110,9 @@ const Profile = () => {
               id: profileId,
               username: `user_${profileId.substring(0, 8)}`,
               display_name: `User ${profileId.substring(0, 8)}`,
+              followers: 0,
+              following: 0,
+              achievements: 0,
               created_at: new Date().toISOString()
             })
             .select()
@@ -166,14 +177,14 @@ const Profile = () => {
     setLoading(true);
     setError(null);
     
-    // Use a simple timeout for loading
+    // Use a longer timeout (30 seconds instead of 10) for profile loading
     const timer = setTimeout(() => {
       if (loading) {
         console.log("Profile load timed out");
-        setError("Loading timed out, please refresh");
-        setLoading(false);
+        setError("Profile is taking longer than expected to load. Please wait or refresh the page.");
+        // Don't set loading to false here - let the user continue waiting if they want
       }
-    }, 10000);
+    }, 30000);
     
     fetchProfileData().catch(err => {
       console.error("Fetch profile error:", err);
