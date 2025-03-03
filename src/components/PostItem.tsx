@@ -121,8 +121,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
-  // Ensure gameId is a string
-  const gameId = post.games?.id ? String(post.games.id) : '';
+  // Extract the original game ID from the UUID format
+  const gameId = post.games?.id ? String(post.games.id).replace('00000000-0000-0000-0000-', '').replace(/^0+/, '') : '';
 
   // Early return if post data is invalid
   if (!post || !postId) {

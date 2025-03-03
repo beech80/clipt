@@ -29,7 +29,7 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
   ];
 
   // Fetch achievements based on whether this is for a game or a user
-  const { data: achievements, isLoading } = useQuery({
+  const { data: achievements, isLoading, error } = useQuery({
     queryKey: gameId ? ['game-achievements', gameId] : ['user-achievements', userId],
     queryFn: async () => {
       if (gameId) {
