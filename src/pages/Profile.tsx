@@ -1,492 +1,365 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark, UserX, UserMinus } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import AchievementList from "@/components/achievements/AchievementList";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
-import { getFollowerCount, getFollowingCount, isFollowing } from "@/services/followService";
-import { achievementService } from "@/services/achievementService";
+import { followUser } from "@/lib/follow-helper";
 
+/**
+ * Profile page component - displays user profile details and allows following/unfollowing
+ */
 const Profile = () => {
-  const navigate = useNavigate();
+  // Component state
   const { id } = useParams();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'clips' | 'achievements'>('clips');
-  const [userFollows, setUserFollows] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'clips' | 'achievements'>('clips');
+  const [profile, setProfile] = useState<ProfileType | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userFollows, setUserFollows] = useState(false);
   
-  // Stats with realistic initial values
+  // Stats for displaying counts
   const [stats, setStats] = useState({
     followers: 0,
     following: 0,
     achievements: 0
   });
 
-  const [profile, setProfile] = useState<ProfileType | null>(null);
+  // Safe profile ID handling
+  const profileId = id || user?.id;
+  const isOwnProfile = user?.id === profileId;
 
-  useEffect(() => {
-    const profileId = id || user?.id;
-    console.log(`Profile.tsx loaded with profile ID: ${profileId}`);
+  /**
+   * Handle follow/unfollow action
+   */
+  const handleFollow = useCallback(async () => {
+    if (!profileId || !user) return;
     
-    // If profileId is undefined, don't attempt to load any data
-    if (!profileId) {
-      setError("No profile ID provided");
-      console.error("Profile.tsx: No profile ID provided");
-      setLoading(false);
-      return;
-    }
-
-    const fetchProfileData = async () => {
-      setLoading(true);
-      
-      console.log(`Profile.tsx: Starting to fetch profile with ID: ${profileId}`);
-      
-      // Use a timeout to ensure we don't wait forever
-      let timeoutId: NodeJS.Timeout | null = setTimeout(() => {
-        // Only set timeout error if we're still loading
-        if (loading) {
-          console.error(`Profile.tsx: Timeout while fetching profile: ${profileId}`);
-          setError("Loading timed out. Please try again.");
-          setLoading(false);
-        }
-      }, 10000); // 10 second timeout
-      
-      try {
-        // First check if this user exists at all
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', profileId)
-          .maybeSingle();
-        
-        // If we can't find the user, check auth.users as a fallback (if we have permission)
-        if (!userData && !userError) {
-          console.log(`Profile.tsx: No profile found in profiles table for ${profileId}, checking auth.users`);
-          try {
-            // We might not have permission to query auth.users, but it's worth a try
-            const { data: authUser, error: authError } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', profileId)
-              .maybeSingle();
-            
-            if (authUser && !authError) {
-              console.log(`Profile.tsx: Found user in auth table but not in profiles: ${profileId}`);
-              // If we find in auth but not profiles, create a basic profile
-              const { error: createError } = await supabase
-                .from('profiles')
-                .insert({
-                  id: profileId,
-                  username: `user_${profileId.substring(0, 8)}`,
-                  display_name: `User ${profileId.substring(0, 8)}`,
-                  bio: '',
-                  avatar_url: '',
-                  created_at: new Date().toISOString()
-                });
-              
-              if (createError) {
-                console.error(`Profile.tsx: Failed to create profile for ${profileId}:`, createError);
-              } else {
-                console.log(`Profile.tsx: Created new profile for ${profileId}`);
-              }
-            }
-          } catch (authCheckError) {
-            console.error(`Profile.tsx: Error checking auth for ${profileId}:`, authCheckError);
-            // Silently continue - we'll try to fetch the profile again below
-          }
-        }
-        
-        // Fetch or re-fetch the profile data
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', profileId)
-          .maybeSingle();
-          
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
-        
-        if (profileError) {
-          console.error(`Profile.tsx: Error fetching profile for ${profileId}:`, profileError);
-          setError(`Error loading profile: ${profileError.message}`);
-          setLoading(false);
-          return;
-        }
-        
-        if (!profile) {
-          console.error(`Profile.tsx: No profile found for ${profileId}`);
-          setError("Profile not found");
-          setLoading(false);
-          return;
-        }
-        
-        console.log(`Profile.tsx: Successfully loaded profile for ${profileId}:`, profile);
-        setProfile(profile);
-        
-        // Initialize followers, following, and achievements to 0 if not set
-        if (profile.followers === null || profile.followers === undefined) {
-          profile.followers = 0;
-        }
-        
-        if (profile.following === null || profile.following === undefined) {
-          profile.following = 0;
-        }
-        
-        if (profile.achievements === null || profile.achievements === undefined) {
-          profile.achievements = 0;
-        }
-        
-        queryClient.setQueryData(['profile', profileId], profile);
-        
-        // Fetch follow status if user is logged in
-        if (user && user.id !== profileId) {
-          try {
-            const { data: isFollowing, error: followError } = await supabase
-              .from('follows')
-              .select('*')
-              .eq('follower_id', user.id)
-              .eq('following_id', profileId)
-              .maybeSingle();
-              
-            if (followError) {
-              console.error(`Profile.tsx: Error checking follow status for ${profileId}:`, followError);
-            } else {
-              setUserFollows(!!isFollowing);
-              console.log(`Profile.tsx: Follow status for ${profileId}: ${!!isFollowing}`);
-            }
-          } catch (followCheckError) {
-            console.error(`Profile.tsx: Exception checking follow status:`, followCheckError);
-          }
-        }
-        
-        setLoading(false);
-      } catch (error) {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
-        console.error(`Profile.tsx: Exception fetching profile for ${profileId}:`, error);
-        setError(`Failed to load profile: ${(error as Error).message}`);
-        setLoading(false);
-      }
-    };
-
-    fetchProfileData();
-  }, [id, user?.id, navigate, queryClient]);
-
-  // Cleanup function to ensure we clean up timeouts and subscriptions
-  useEffect(() => {
-    return () => {
-      // Cancel any pending queries when component unmounts
-      queryClient.cancelQueries({ queryKey: ['profile', id || user?.id] });
-    };
-  }, [id, user?.id, queryClient]);
-
-  // Fetch user games
-  const { data: userGames } = useQuery({
-    queryKey: ['user-games', id || user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_games')
-        .select(`
-          *,
-          game_categories (name, id)
-        `)
-        .eq('user_id', id || user?.id)
-        .order('last_played', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching user games:', error);
-        return [];
-      }
-      return data || [];
-    },
-    enabled: !!(id || user?.id)
-  });
-
-  // Fetch achievements count
-  const { data: achievements } = useQuery({
-    queryKey: ['user-achievements-count', id || user?.id],
-    queryFn: async () => {
-      if (!id && !user?.id) return [];
-      return await achievementService.getUserAchievements(id || user?.id || '');
-    },
-    enabled: !!(id || user?.id)
-  });
-
-  const isOwnProfile = user && (!id || id === user?.id);
-  
-  // Fetch follow counts and status on profile load
-  useEffect(() => {
-    const fetchFollowData = async () => {
-      if (!profile) return;
-      
-      const profileId = profile.id;
-      try {
-        // Get follower and following counts
-        const followerCount = await getFollowerCount(profileId);
-        const followingCount = await getFollowingCount(profileId);
-        
-        // Get achievements count from achievements data
-        const achievementsCount = achievements ? 
-          achievements.filter(a => a.completed).length : 0;
-        
-        // Update stats
-        setStats({
-          followers: followerCount,
-          following: followingCount,
-          achievements: achievementsCount
-        });
-        
-        // Check if current user is following this profile
-        if (user && !isOwnProfile) {
-          const following = await isFollowing(user.id, profileId);
-          setUserFollows(following);
-        }
-      } catch (error) {
-        console.error("Error fetching follow data:", error);
-      }
-    };
-    
-    fetchFollowData();
-  }, [profile, user, isOwnProfile, achievements]);
-
-  // Fixed follow button functionality
-  const handleFollowAction = async () => {
-    if (!user) {
-      toast.error("Please sign in to follow users");
-      navigate('/login');
-      return;
-    }
-    
-    if (!profile || isOwnProfile) return;
-  
     try {
       setLoading(true);
+      const result = await followUser(profileId);
       
-      // Import dynamically to avoid circular dependencies
-      const { followUser } = await import('@/lib/follow-helper');
+      // Update state based on follow result
+      setUserFollows(result);
       
-      if (!profile || !profile.id) {
-        toast.error("Unable to follow this user");
-        return;
-      }
-      
-      // Optimistically update UI
-      setUserFollows(!userFollows);
+      // Update follower count optimistically
       setStats(prev => ({
         ...prev,
-        followers: prev.followers + (!userFollows ? 1 : -1)
+        followers: result ? prev.followers + 1 : Math.max(0, prev.followers - 1)
       }));
       
-      // Perform actual follow action
-      const result = await followUser(profile.id);
-      console.log("Follow result:", result);
-      
-      // If the action failed, revert the UI
-      if (result !== !userFollows) {
-        setUserFollows(userFollows);
-        setStats(prev => ({
-          ...prev,
-          followers: prev.followers + (userFollows ? 1 : -1)
-        }));
-      }
     } catch (error) {
-      console.error("Follow action failed:", error);
+      console.error("Error following user:", error);
       toast.error("Failed to update follow status");
     } finally {
       setLoading(false);
     }
-  };
+  }, [profileId, user]);
 
-  const handleMessage = () => {
-    if (!user) {
-      toast.error("Please sign in to send messages");
-      navigate('/login');
+  /**
+   * Fetch the user's profile data
+   */
+  const fetchProfileData = useCallback(async () => {
+    if (!profileId) {
+      setError("No profile ID provided");
+      setLoading(false);
       return;
     }
-    navigate('/messages');
-  };
 
-  const handleAchievementClick = () => {
-    setActiveTab('achievements');
-  };
+    try {
+      console.log(`Profile: Fetching profile data for: ${profileId}`);
+      
+      // Simple, direct query for profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profileId)
+        .maybeSingle();
+        
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        setError("Could not load profile data");
+        setLoading(false);
+        return;
+      }
+      
+      if (!profileData) {
+        console.log("No profile found, trying to create fallback profile");
+        
+        // Simple creation of fallback profile if missing
+        try {
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: profileId,
+              username: `user_${profileId.substring(0, 8)}`,
+              display_name: `User ${profileId.substring(0, 8)}`,
+              created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+            
+          if (createError || !newProfile) {
+            setError("Could not create profile");
+            setLoading(false);
+            return;
+          }
+          
+          setProfile(newProfile);
+          setStats({
+            followers: 0,
+            following: 0,
+            achievements: 0
+          });
+          
+        } catch (createError) {
+          console.error("Error creating profile:", createError);
+          setError("Could not create profile");
+        }
+        
+        setLoading(false);
+        return;
+      }
+      
+      // Process the profile data
+      console.log("Profile data loaded successfully:", profileData);
+      setProfile(profileData);
+      
+      // Set default stats
+      setStats({
+        followers: profileData.followers || 0,
+        following: profileData.following || 0,
+        achievements: profileData.achievements || 0
+      });
+      
+      // Check if the current user follows this profile
+      if (user && user.id !== profileId) {
+        const { data: followData } = await supabase
+          .from('follows')
+          .select('*')
+          .eq('follower_id', user.id)
+          .eq('following_id', profileId)
+          .maybeSingle();
+          
+        setUserFollows(!!followData);
+      }
+      
+    } catch (error) {
+      console.error("Error in profile data fetch:", error);
+      setError("An error occurred while loading profile");
+    } finally {
+      setLoading(false);
+    }
+  }, [profileId, user]);
 
+  // Load profile data when component mounts or profile ID changes
+  useEffect(() => {
+    console.log("Profile component initial load for ID:", profileId);
+    setLoading(true);
+    setError(null);
+    
+    // Use a simple timeout for loading
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.log("Profile load timed out");
+        setError("Loading timed out, please refresh");
+        setLoading(false);
+      }
+    }, 10000);
+    
+    fetchProfileData().catch(err => {
+      console.error("Fetch profile error:", err);
+      setError("Failed to load profile data");
+      setLoading(false);
+    });
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [profileId]); // Only depend on profileId, not fetchProfileData
+
+  // Render loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="gaming-card p-8 w-full max-w-md">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-24 h-24 rounded-full bg-gaming-800 animate-pulse"></div>
+            <div className="w-40 h-6 bg-gaming-800 animate-pulse rounded"></div>
+            <div className="w-full h-4 bg-gaming-800 animate-pulse rounded"></div>
+            <div className="w-full h-4 bg-gaming-800 animate-pulse rounded"></div>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Render error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <UserX className="w-16 h-16 text-gray-400" />
-        <h1 className="text-2xl font-bold text-gray-700">{error}</h1>
-        <p className="text-gray-500">This user profile doesn't exist or has been removed.</p>
-        <Button onClick={() => navigate('/')} variant="outline">
-          Go Home
-        </Button>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="gaming-card p-8 w-full max-w-md text-center">
+          <UserX className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Profile Error</h2>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <Button onClick={() => window.location.href = '/'}>
+            Go Home
+          </Button>
+        </div>
       </div>
     );
   }
 
+  // Render empty state if no profile
   if (!profile) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <UserX className="w-16 h-16 text-gray-400" />
-        <h1 className="text-2xl font-bold text-gray-700">Profile Not Found</h1>
-        <p className="text-gray-500">This user profile doesn't exist or has been removed.</p>
-        <Button onClick={() => navigate('/')} variant="outline">
-          Go Home
-        </Button>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="gaming-card p-8 w-full max-w-md text-center">
+          <UserX className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Profile Not Found</h2>
+          <p className="text-gray-400 mb-4">This profile doesn't exist or has been removed.</p>
+          <Button onClick={() => window.location.href = '/'}>
+            Go Home
+          </Button>
+        </div>
       </div>
     );
   }
 
-  useEffect(() => {
-    const profileId = profile?.id;
-    if (profileId) {
-      // Scroll to top when a profile is loaded
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }
-  }, [profile?.id]);
-
+  // Main profile content
   return (
-    <div className="relative max-w-4xl mx-auto p-4 sm:p-6 space-y-6 pb-40">
-      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-none text-white">
-        <div className="p-6">
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="relative">
-              <img
-                src={profile?.avatar_url || "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop"}
-                alt="Profile"
-                className="w-32 h-32 rounded-full border-4 border-purple-500 shadow-lg hover:scale-105 transition-transform duration-200"
-              />
-              <div className="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-2 border-white"></div>
-            </div>
-            
-            <div className="flex-1 text-center sm:text-left">
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                {profile?.display_name || "Unknown User"}
-              </h1>
-              <p className="text-gray-300 mt-2 max-w-md">
-                {profile?.bio || "This user hasn't added a bio yet."}
-              </p>
-              
-              {/* User's games */}
-              {userGames && userGames.length > 0 && (
-                <div className="mt-2 text-gray-300">
-                  <p className="text-sm font-medium">Plays: {userGames.map(game => game.game_name).join(', ')}</p>
+    <div className="container max-w-4xl mx-auto px-4 py-8">
+      {/* Profile Header */}
+      <div className="gaming-card p-6 mb-6">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+          {/* Avatar */}
+          <div className="relative">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gaming-800 overflow-hidden border-4 border-gaming-500">
+              {profile.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt={profile.username || 'User'} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gaming-700 text-4xl font-bold text-gaming-300">
+                  {(profile.username?.[0] || profile.display_name?.[0] || 'U').toUpperCase()}
                 </div>
               )}
+            </div>
+          </div>
+          
+          {/* Profile Info */}
+          <div className="flex-1">
+            <div className="flex flex-col md:flex-row gap-4 items-center md:items-start justify-between">
+              <div className="text-center md:text-left">
+                <h1 className="text-2xl font-bold text-gaming-200 mb-1">
+                  {profile.display_name || profile.username || 'User'}
+                </h1>
+                <p className="text-gaming-400 mb-2">@{profile.username || 'username'}</p>
+                <p className="text-gaming-300 max-w-md mb-4">{profile.bio || 'No bio provided'}</p>
+              </div>
               
-              <div className="flex flex-wrap justify-center sm:justify-start gap-6 mt-4">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-purple-400">{stats.followers}</div>
-                  <div className="text-sm text-gray-400">Followers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-purple-400">{stats.following}</div>
-                  <div className="text-sm text-gray-400">Following</div>
-                </div>
-                <div className="text-center cursor-pointer" onClick={handleAchievementClick}>
-                  <div className="text-xl font-bold text-purple-400">{stats.achievements}</div>
-                  <div className="text-sm text-gray-400">Achievements</div>
-                </div>
+              <div className="flex gap-2">
+                {isOwnProfile ? (
+                  <Button 
+                    onClick={() => window.location.href = '/profile/edit'} 
+                    variant="outline" 
+                    className="flex items-center gap-2"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    <span>Edit Profile</span>
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleFollow} 
+                    variant={userFollows ? "outline" : "default"}
+                    className="flex items-center gap-2"
+                    disabled={loading}
+                  >
+                    {userFollows ? (
+                      <>
+                        <UserMinus className="w-4 h-4" />
+                        <span>Unfollow</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4" />
+                        <span>Follow</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            {/* Stats */}
+            <div className="flex justify-center md:justify-start gap-6 mt-4">
+              <div className="text-center">
+                <p className="text-gaming-200 font-bold">{stats.followers}</p>
+                <p className="text-gaming-400 text-sm">Followers</p>
+              </div>
+              <div className="text-center">
+                <p className="text-gaming-200 font-bold">{stats.following}</p>
+                <p className="text-gaming-400 text-sm">Following</p>
+              </div>
+              <div className="text-center">
+                <p className="text-gaming-200 font-bold">{stats.achievements}</p>
+                <p className="text-gaming-400 text-sm">Achievements</p>
               </div>
             </div>
           </div>
-
-          <div className="flex flex-wrap justify-center sm:justify-end gap-3 mt-6">
-            {!isOwnProfile && (
-              <>
-                <Button
-                  onClick={handleFollowAction}
-                  className={`${userFollows ? 'bg-gray-600 hover:bg-gray-700' : 'bg-purple-600 hover:bg-purple-700'} text-white`}
-                  disabled={loading}
-                >
-                  {userFollows ? (
-                    <><UserMinus className="w-4 h-4 mr-2" />Unfollow</>
-                  ) : (
-                    <><UserPlus className="w-4 h-4 mr-2" />Follow</>
-                  )}
-                </Button>
-                <Button 
-                  onClick={handleMessage}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                  size="sm"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Message
-                </Button>
-              </>
-            )}
-            {isOwnProfile && (
-              <>
-                <Button
-                  onClick={() => navigate('/profile/edit')}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      <div className="flex justify-center w-full overflow-x-auto scrollbar-none -mx-4 px-4">
-        <div className="inline-flex flex-nowrap items-center gap-1.5 p-1.5 rounded-lg bg-black/20 backdrop-blur-sm border border-white/10">
-          <Toggle
-            pressed={activeTab === 'clips'}
-            onPressedChange={() => setActiveTab('clips')}
-            className={`w-10 h-10 transition-all ${activeTab === 'clips' ? 'bg-purple-600 text-white' : 'bg-gray-600 text-gray-400 hover:bg-gray-700'}`}
-          >
-            <Gamepad2 className="w-5 h-5" />
-          </Toggle>
-          <Toggle
-            pressed={activeTab === 'achievements'}
-            onPressedChange={() => setActiveTab('achievements')}
-            className={`w-10 h-10 transition-all ${activeTab === 'achievements' ? 'bg-purple-600 text-white' : 'bg-gray-600 text-gray-400 hover:bg-gray-700'}`}
-          >
-            <Trophy className="w-5 h-5" />
-          </Toggle>
         </div>
       </div>
-
-      <div className="mt-6">
-        {activeTab === 'clips' && (
-          <div className="space-y-4">
-            <Card className="p-12 text-center">
-              <Gamepad2 className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold">No clips yet</h3>
-              <p className="text-gray-500">Share your gaming moments!</p>
-            </Card>
+      
+      {/* Tabs */}
+      <div className="flex justify-center mb-6">
+        <div className="gaming-card p-2">
+          <div className="flex gap-2">
+            <Toggle
+              pressed={activeTab === 'clips'}
+              onPressedChange={() => setActiveTab('clips')}
+              variant="outline"
+              className="flex gap-2 items-center"
+            >
+              <Gamepad2 className="w-4 h-4" />
+              <span>Clips</span>
+            </Toggle>
+            <Toggle
+              pressed={activeTab === 'achievements'}
+              onPressedChange={() => setActiveTab('achievements')}
+              variant="outline"
+              className="flex gap-2 items-center"
+            >
+              <Trophy className="w-4 h-4" />
+              <span>Achievements</span>
+            </Toggle>
           </div>
-        )}
-
-        {activeTab === 'achievements' && (
-          <AchievementList userId={id || user?.id || ''} />
-        )}
+        </div>
       </div>
+      
+      {/* Tab Content */}
+      {activeTab === 'clips' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60">
+            <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
+            <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Clips Yet</h3>
+            <p className="text-gaming-400">User hasn't posted any gaming clips</p>
+          </Card>
+        </div>
+      ) : (
+        <div className="gaming-card p-6">
+          <AchievementList userId={profileId} />
+        </div>
+      )}
     </div>
   );
 };
