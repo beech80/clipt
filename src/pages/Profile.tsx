@@ -17,7 +17,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collections'>('clips');
+  const [activeTab, setActiveTab] = useState<'clips' | 'achievements'>('clips');
   const [userFollows, setUserFollows] = useState(false);
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
@@ -47,6 +47,28 @@ const Profile = () => {
         custom_theme: data.custom_theme || { primary: "#1EAEDB", secondary: "#000000" }
       } as ProfileType;
     }
+  });
+  
+  // Fetch user games
+  const { data: userGames } = useQuery({
+    queryKey: ['user-games', id || user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_games')
+        .select(`
+          *,
+          game_categories (name, id)
+        `)
+        .eq('user_id', id || user?.id)
+        .order('last_played', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching user games:', error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!(id || user?.id)
   });
 
   // Fetch achievements count
@@ -190,6 +212,13 @@ const Profile = () => {
                 {profile?.bio || "This user hasn't added a bio yet."}
               </p>
               
+              {/* User's games */}
+              {userGames && userGames.length > 0 && (
+                <div className="mt-2 text-gray-300">
+                  <p className="text-sm font-medium">Plays: {userGames.map(game => game.game_name).join(', ')}</p>
+                </div>
+              )}
+              
               <div className="flex flex-wrap justify-center sm:justify-start gap-6 mt-4">
                 <div className="text-center">
                   <div className="text-xl font-bold text-purple-400">{stats.followers}</div>
@@ -264,13 +293,6 @@ const Profile = () => {
           >
             <Trophy className="w-5 h-5" />
           </Toggle>
-          <Toggle
-            pressed={activeTab === 'collections'}
-            onPressedChange={() => setActiveTab('collections')}
-            className={`w-10 h-10 transition-all ${activeTab === 'collections' ? 'bg-purple-600 text-white' : 'bg-gray-600 text-gray-400 hover:bg-gray-700'}`}
-          >
-            <Bookmark className="w-5 h-5" />
-          </Toggle>
         </div>
       </div>
 
@@ -287,14 +309,6 @@ const Profile = () => {
 
         {activeTab === 'achievements' && (
           <AchievementList userId={id || user?.id || ''} />
-        )}
-
-        {activeTab === 'collections' && (
-          <Card className="p-12 text-center">
-            <Bookmark className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold">View your collections</h3>
-            <p className="text-gray-500">Organize and manage your favorite content!</p>
-          </Card>
         )}
       </div>
     </div>
