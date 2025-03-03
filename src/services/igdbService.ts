@@ -3,141 +3,100 @@ import { supabase } from "@/lib/supabase";
 export interface IGDBGame {
   id: number;
   name: string;
+  rating?: number;
   cover?: {
     id: number;
     url: string;
   };
+  first_release_date?: string;
+  genres?: {id: number; name: string;}[];
+  platforms?: {id: number; name: string;}[];
+  developers?: {id: number; name: string;}[];
   summary?: string;
-  rating?: number;
-  total_rating?: number;
-  first_release_date?: number;
-  genres?: Array<{ id: number; name: string }>;
-  screenshots?: Array<{ id: number; url: string }>;
-  similar_games?: Array<IGDBGame>;
 }
 
-interface SearchOptions {
-  sort?: string;
-  limit?: number;
-}
-
-export const igdbService = {
-  async searchGames(searchTerm: string, options: SearchOptions = {}): Promise<IGDBGame[]> {
-    console.log("Searching for games with term:", searchTerm);
-    const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
-    
-    const query = `
-      ${searchTerm ? `search "${searchTerm}";` : ''}
-      fields name,cover.url,summary,rating,total_rating,first_release_date,genres.name,genres.id;
-      where version_parent = null
-      & first_release_date >= ${oneYearAgo};
-      ${options.sort ? `sort ${options.sort};` : ''}
-      limit ${options.limit || 10};
-    `;
-
+class IGDBService {
+  async searchGames(query: string): Promise<IGDBGame[]> {
     try {
       const { data, error } = await supabase.functions.invoke('igdb', {
         body: {
           endpoint: 'games',
-          query,
-        },
+          query: `search "${query}"; fields name,rating,cover.url; limit 10;`
+        }
       });
 
-      if (error) {
-        console.error('Error searching games:', error);
-        throw error;
-      }
-
-      console.log("IGDB search results:", data);
-      return data;
-    } catch (err) {
-      console.error('Failed to search games:', err);
-      throw err;
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching games:', error);
+      return [];
     }
-  },
+  }
 
-  async getPopularGames(): Promise<IGDBGame[]> {
-    console.log("Fetching popular games");
-    const oneYearAgo = Math.floor(Date.now() / 1000) - (365 * 24 * 60 * 60);
-    
-    const query = `
-      fields name,cover.url,summary,rating,total_rating,first_release_date,genres.name,genres.id;
-      where rating != null 
-      & version_parent = null
-      & first_release_date >= ${oneYearAgo};
-      sort rating desc;
-      limit 10;
-    `;
-
+  async getTopGames(filter: 'top_rated' | 'most_played' | 'most_watched' = 'top_rated'): Promise<IGDBGame[]> {
     try {
+      let query = '';
+
+      switch (filter) {
+        case 'top_rated':
+          query = 'fields name,rating,cover.url; sort rating desc; where rating != null; limit 12;';
+          break;
+        case 'most_played':
+          query = 'fields name,rating,cover.url; sort follows desc; where follows != null; limit 12;';
+          break;
+        case 'most_watched':
+          query = 'fields name,rating,cover.url; sort hypes desc; where hypes != null; limit 12;';
+          break;
+      }
+
       const { data, error } = await supabase.functions.invoke('igdb', {
         body: {
           endpoint: 'games',
-          query,
-        },
+          query
+        }
       });
 
-      if (error) {
-        console.error('Error fetching popular games:', error);
-        throw error;
-      }
-
-      console.log("Popular games results:", data);
-      return data;
-    } catch (err) {
-      console.error('Failed to fetch popular games:', err);
-      throw err;
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching top games:', error);
+      return [];
     }
-  },
-
-  async getGameById(gameId: number): Promise<IGDBGame | null> {
-    console.log("Fetching game details for ID:", gameId);
-    const query = `
-      fields name,cover.url,summary,rating,total_rating,first_release_date,genres.name,genres.id,screenshots.url;
-      where id = ${gameId};
-    `;
-
+  }
+  
+  async getGameById(id: number): Promise<IGDBGame | null> {
     try {
       const { data, error } = await supabase.functions.invoke('igdb', {
         body: {
           endpoint: 'games',
-          query,
-        },
+          query: `fields name,rating,cover.url,first_release_date,genres.name,platforms.name,involved_companies.company.name,summary; 
+                  where id = ${id}; 
+                  limit 1;`
+        }
       });
 
-      if (error) {
-        console.error('Error fetching game details:', error);
-        throw error;
-      }
-
+      if (error) throw error;
+      
       if (!data || data.length === 0) {
         return null;
       }
-
-      // Fetch similar games
-      const similarGamesQuery = `
-        fields name,cover.url;
-        where similar_games = ${gameId}
-        & cover != null;
-        limit 6;
-      `;
-
-      const { data: similarGames, error: similarError } = await supabase.functions.invoke('igdb', {
-        body: {
-          endpoint: 'games',
-          query: similarGamesQuery,
-        },
-      });
-
-      if (!similarError && similarGames && similarGames.length > 0) {
-        data[0].similar_games = similarGames;
-      }
-
-      console.log("Game details:", data[0]);
-      return data[0];
-    } catch (err) {
-      console.error('Failed to fetch game details:', err);
-      throw err;
+      
+      // Process the data to extract developers from involved companies
+      const game = data[0];
+      
+      // Format the game data
+      return {
+        ...game,
+        developers: game.involved_companies?.map(ic => ({ 
+          id: ic.company.id, 
+          name: ic.company.name 
+        })) || []
+      };
+    } catch (error) {
+      console.error('Error fetching game:', error);
+      return null;
     }
   }
-};
+}
+
+export const igdbService = new IGDBService();
