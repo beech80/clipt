@@ -28,8 +28,11 @@ const GameDetails = () => {
       setError(null);
       
       try {
+        // Ensure we have a numeric game ID
+        const numericGameId = parseInt(id, 10);
+        
         // Fetch game details from IGDB
-        const gameData = await igdbService.getGameById(parseInt(id, 10));
+        const gameData = await igdbService.getGameById(numericGameId);
         
         if (!gameData) {
           setError('Game not found');
@@ -39,18 +42,22 @@ const GameDetails = () => {
         
         setGame(gameData);
         
-        // Fetch posts for this game
+        // Fetch posts for this game - with numeric ID
         const { data: postsData, error: postsError } = await supabase
           .from('posts')
           .select(`
             *,
             user:profiles(*)
           `)
-          .eq('game_id', parseInt(id))  // Convert ID to number for Supabase
+          .eq('game_id', numericGameId)
           .order('created_at', { ascending: false });
           
-        if (postsError) throw postsError;
+        if (postsError) {
+          console.error('Error fetching posts:', postsError);
+          throw postsError;
+        }
         
+        console.log('Posts data:', postsData);
         setPosts(postsData || []);
         setLoading(false);
       } catch (err: any) {
@@ -88,6 +95,9 @@ const GameDetails = () => {
       </div>
     );
   }
+
+  // Ensure we have a numeric ID for the achievements section
+  const numericGameId = parseInt(id as string, 10);
 
   return (
     <div className="container max-w-4xl mx-auto p-4 pb-20">
@@ -165,7 +175,7 @@ const GameDetails = () => {
         
         <TabsContent value="achievements" className="mt-0">
           <h2 className="text-xl font-semibold mb-4">Achievements for {game.name}</h2>
-          <AchievementList gameId={parseInt(id, 10)} />
+          <AchievementList gameId={numericGameId} userId="" />
         </TabsContent>
       </Tabs>
     </div>

@@ -33,7 +33,9 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
     queryKey: gameId ? ['game-achievements', gameId] : ['user-achievements', userId],
     queryFn: async () => {
       if (gameId) {
-        return await achievementService.getGameAchievements(gameId);
+        // Make sure gameId is a number
+        const numericGameId = typeof gameId === 'string' ? parseInt(gameId, 10) : gameId;
+        return await achievementService.getGameAchievements(numericGameId);
       } else {
         return await achievementService.getUserAchievements(userId);
       }
