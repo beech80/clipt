@@ -17,13 +17,9 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
 }) => {
   // If this is a game achievement, use its properties
   if (gameAchievement) {
-    const percentComplete = Math.min(
-      100,
-      Math.round((gameAchievement.currentValue / gameAchievement.targetValue) * 100)
-    );
-
+    // Always set progress to 0% as requested
     return (
-      <div className={`flex w-full overflow-hidden mb-3 ${percentComplete > 0 ? 'border-l-4 border-green-500' : ''}`}>
+      <div className="flex w-full overflow-hidden mb-3">
         <div className="h-24 w-24 flex-shrink-0 relative">
           <div className="absolute inset-0 bg-[#012e14]">
             <div className="w-full h-full flex items-center justify-center">
@@ -36,16 +32,16 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
         </div>
         <div className="flex-1 p-3 bg-[#222222]">
           <h3 className="text-white font-semibold text-lg">{gameAchievement.name}</h3>
-          <p className="text-gray-400 text-sm mb-2">{gameAchievement.description} - {gameAchievement.currentValue}/{gameAchievement.targetValue}</p>
+          <p className="text-gray-400 text-sm mb-2">{gameAchievement.description} - 0/{gameAchievement.targetValue}</p>
           <div className="flex justify-between text-sm mb-1">
             <div>
               <Progress 
-                value={percentComplete} 
+                value={0} 
                 className="h-2 w-[200px] bg-gray-700" 
                 indicatorClassName="bg-[#0078d7]" 
               />
             </div>
-            <span className="text-white font-medium">{percentComplete}%</span>
+            <span className="text-white font-medium">0%</span>
           </div>
         </div>
       </div>
@@ -55,14 +51,8 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
   // For regular user achievements
   if (!achievement || !progress) return null;
 
-  // Calculate progress percentage
-  const percentComplete = Math.min(
-    100,
-    Math.round((progress.currentValue / achievement.target_value) * 100)
-  );
-
   return (
-    <div className={`flex w-full overflow-hidden mb-3 ${progress.completed ? 'border-l-4 border-green-500' : ''}`}>
+    <div className="flex w-full overflow-hidden mb-3">
       <div className="h-24 w-24 flex-shrink-0 relative">
         <div className="absolute inset-0 bg-[#012e14]">
           <div className="w-full h-full flex items-center justify-center">
@@ -75,18 +65,16 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
       </div>
       <div className="flex-1 p-3 bg-[#222222]">
         <h3 className="text-white font-semibold text-lg">{achievement.name}</h3>
-        <p className="text-gray-400 text-sm mb-2">{achievement.description} - {progress.currentValue}/{achievement.target_value}</p>
+        <p className="text-gray-400 text-sm mb-2">{achievement.description} - 0/{achievement.target_value}</p>
         <div className="flex justify-between text-sm mb-1">
           <div>
             <Progress 
-              value={percentComplete} 
+              value={0} 
               className="h-2 w-[200px] bg-gray-700" 
-              indicatorClassName={cn("bg-[#0078d7]", {
-                "bg-green-500": progress.completed
-              })}
+              indicatorClassName="bg-[#0078d7]"
             />
           </div>
-          <span className="text-white font-medium">{percentComplete}%</span>
+          <span className="text-white font-medium">0%</span>
         </div>
       </div>
     </div>

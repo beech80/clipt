@@ -6,6 +6,7 @@ import PostItem from '@/components/PostItem';
 import AchievementList from '@/components/achievements/AchievementList';
 import { Gamepad2 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { igdbService } from '@/services/igdbService';
 
 const GameDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,14 +28,8 @@ const GameDetails = () => {
       setError(null);
       
       try {
-        // Fetch game details
-        const { data: gameData, error: gameError } = await supabase
-          .from('games')
-          .select('*')
-          .eq('id', id)
-          .single();
-          
-        if (gameError) throw gameError;
+        // Fetch game details from IGDB
+        const gameData = await igdbService.getGameById(parseInt(id, 10));
         
         if (!gameData) {
           setError('Game not found');
@@ -51,7 +46,7 @@ const GameDetails = () => {
             *,
             user:profiles(*)
           `)
-          .eq('game_id', id)
+          .eq('game_id', parseInt(id))  // Convert ID to number for Supabase
           .order('created_at', { ascending: false });
           
         if (postsError) throw postsError;
@@ -98,10 +93,10 @@ const GameDetails = () => {
     <div className="container max-w-4xl mx-auto p-4 pb-20">
       <div className="mb-6 flex items-center gap-3">
         <div className="w-16 h-16 rounded overflow-hidden bg-gray-800 flex items-center justify-center">
-          {game.image_url ? (
+          {game.cover ? (
             <img
-              src={game.image_url}
-              alt={game.title}
+              src={game.cover.url}
+              alt={game.name}
               className="w-full h-full object-cover"
             />
           ) : (
@@ -109,8 +104,8 @@ const GameDetails = () => {
           )}
         </div>
         <div>
-          <h1 className="text-2xl font-bold">{game.title}</h1>
-          <p className="text-gray-400">{game.developer || 'Unknown developer'}</p>
+          <h1 className="text-2xl font-bold">{game.name}</h1>
+          <p className="text-gray-400">{game.developers?.[0].name || 'Unknown developer'}</p>
         </div>
       </div>
       
@@ -122,7 +117,7 @@ const GameDetails = () => {
         </TabsList>
         
         <TabsContent value="clips" className="mt-0">
-          <h2 className="text-xl font-semibold mb-4">Clips for {game.title}</h2>
+          <h2 className="text-xl font-semibold mb-4">Clips for {game.name}</h2>
           {posts.length > 0 ? (
             <div className="space-y-6">
               {posts.map((post) => (
@@ -137,39 +132,39 @@ const GameDetails = () => {
         </TabsContent>
         
         <TabsContent value="about" className="mt-0">
-          <h2 className="text-xl font-semibold mb-4">About {game.title}</h2>
+          <h2 className="text-xl font-semibold mb-4">About {game.name}</h2>
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="mb-4">
               <h3 className="text-lg font-medium mb-2">Description</h3>
-              <p className="text-gray-300">{game.description || 'No description available.'}</p>
+              <p className="text-gray-300">{game.summary || 'No description available.'}</p>
             </div>
             
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-medium mb-2">Release Date</h3>
-                <p className="text-gray-300">{game.release_date || 'Unknown'}</p>
+                <p className="text-gray-300">{game.first_release_date || 'Unknown'}</p>
               </div>
               
               <div>
                 <h3 className="text-lg font-medium mb-2">Genre</h3>
-                <p className="text-gray-300">{game.genre || 'Unknown'}</p>
+                <p className="text-gray-300">{game.genres?.[0].name || 'Unknown'}</p>
               </div>
               
               <div>
                 <h3 className="text-lg font-medium mb-2">Platforms</h3>
-                <p className="text-gray-300">{game.platforms || 'Unknown'}</p>
+                <p className="text-gray-300">{game.platforms?.[0].name || 'Unknown'}</p>
               </div>
               
               <div>
                 <h3 className="text-lg font-medium mb-2">Developer</h3>
-                <p className="text-gray-300">{game.developer || 'Unknown'}</p>
+                <p className="text-gray-300">{game.developers?.[0].name || 'Unknown'}</p>
               </div>
             </div>
           </div>
         </TabsContent>
         
         <TabsContent value="achievements" className="mt-0">
-          <h2 className="text-xl font-semibold mb-4">Achievements for {game.title}</h2>
+          <h2 className="text-xl font-semibold mb-4">Achievements for {game.name}</h2>
           <AchievementList gameId={parseInt(id, 10)} />
         </TabsContent>
       </Tabs>
