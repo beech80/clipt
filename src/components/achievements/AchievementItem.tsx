@@ -55,10 +55,10 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
   // For regular user achievements
   if (!achievement || !progress) return null;
 
-  const percentComplete = Math.min(
-    100,
-    Math.round((progress.currentValue / achievement.target_value) * 100)
-  );
+  // Always show 0% for trophies that haven't been started
+  const percentComplete = progress.currentValue === 0 
+    ? 0
+    : Math.min(100, Math.round((progress.currentValue / achievement.target_value) * 100));
 
   const isCompleted = progress.completed || percentComplete >= 100;
   const isInProgress = percentComplete > 0 && percentComplete < 100;
@@ -66,11 +66,8 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
   // Get the current/total display
   const progressDisplay = `${progress.currentValue}/${achievement.target_value}`;
 
-  // Check if achievement is the Earn Your Way achievement
-  const isEarnYourWay = achievement.name === 'Earn Your Way';
-
   return (
-    <div className={`flex w-full overflow-hidden mb-3 ${isEarnYourWay ? 'border border-green-500 rounded-sm' : ''}`}>
+    <div className={`flex w-full overflow-hidden mb-3 ${isCompleted ? 'border border-green-500 rounded-sm' : ''}`}>
       <div className="h-24 w-24 flex-shrink-0 relative">
         <div className="absolute inset-0 bg-[#012e14]">
           <div className="w-full h-full flex items-center justify-center">

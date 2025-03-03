@@ -174,155 +174,167 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
 
   return (
     <div className="rounded-lg bg-[#252A39] p-3 mb-3">
-      <div className="flex">
-        <Avatar className="h-8 w-8 mr-3 rounded-full">
-          {avatarUrl ? (
-            <AvatarImage src={avatarUrl} alt={username} />
-          ) : (
-            <AvatarFallback className="bg-[#9b87f5]/30 text-[#9b87f5]">
-              {username.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          )}
-        </Avatar>
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center">
-              <span className="font-medium text-sm">{username}</span>
+      <div className="flex gap-3 group relative">
+        <div className="flex-shrink-0">
+          <Avatar className="h-8 w-8">
+            {avatarUrl ? (
+              <AvatarImage src={avatarUrl} alt={username} />
+            ) : (
+              <AvatarFallback>
+                {username.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            )}
+          </Avatar>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg relative">
+            <div className="flex justify-between items-start gap-2">
+              <a 
+                href={`/profile/${comment.user_id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = `/profile/${comment.user_id}`;
+                }}
+                className="font-semibold text-gray-900 dark:text-white hover:underline"
+              >
+                {username}
+              </a>
               {wasEdited && (
                 <span className="text-xs text-gray-400 ml-2">(edited)</span>
               )}
-            </div>
-            <div className="flex items-center">
-              <span className="text-xs text-gray-400 mr-2">{formattedDate}</span>
-              
-              {isAuthor && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="p-1 hover:bg-[#1A1F2C] rounded-full">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                        <circle cx="12" cy="12" r="1" />
-                        <circle cx="19" cy="12" r="1" />
-                        <circle cx="5" cy="12" r="1" />
-                      </svg>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-36">
-                    <DropdownMenuItem 
-                      onClick={handleEditClick}
-                      disabled={isEditing || isDeleting}
-                      className="cursor-pointer"
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                      className="text-red-500 focus:text-red-400 cursor-pointer"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-          </div>
-          
-          {isEditing ? (
-            <div className="mb-2">
-              <Textarea
-                value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
-                className="min-h-[80px] text-sm bg-[#1A1F2C] border-[#3A3F4C] mb-2"
-                placeholder="Edit your comment..."
-              />
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleCancelEdit}
-                  className="text-xs h-8"
-                >
-                  <X className="h-3.5 w-3.5 mr-1" />
-                  Cancel
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  onClick={handleSaveEdit}
-                  className="text-xs h-8 bg-[#9b87f5] hover:bg-[#8a78d9]"
-                >
-                  <Check className="h-3.5 w-3.5 mr-1" />
-                  Save
-                </Button>
+              <div className="flex items-center">
+                <span className="text-xs text-gray-400 mr-2">{formattedDate}</span>
+                
+                {isAuthor && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1 hover:bg-[#1A1F2C] rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="19" cy="12" r="1" />
+                          <circle cx="5" cy="12" r="1" />
+                        </svg>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-36">
+                      <DropdownMenuItem 
+                        onClick={handleEditClick}
+                        disabled={isEditing || isDeleting}
+                        className="cursor-pointer"
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="text-red-500 focus:text-red-400 cursor-pointer"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             </div>
-          ) : (
-            <p className="text-sm mb-2 whitespace-pre-wrap break-words text-gray-200">
-              {comment.content}
-            </p>
-          )}
-          
-          {!isEditing && (
-            <div className="flex items-center space-x-4 mt-2">
-              <button 
-                className={`text-xs flex items-center ${isLiking ? 'opacity-50' : 'hover:text-[#9b87f5]'} transition-colors`}
-                onClick={handleLike}
-                disabled={isLiking}
-              >
-                <Heart className={`h-3.5 w-3.5 mr-1 ${likesCount > 0 ? 'text-red-500 fill-red-500' : ''}`} />
-                <span>{likesCount}</span>
-              </button>
-              <button 
-                className="text-xs flex items-center hover:text-[#9b87f5] transition-colors"
-                onClick={handleReplyClick}
-              >
-                <Reply className="h-3.5 w-3.5 mr-1" />
-                <span>Reply</span>
-              </button>
-            </div>
-          )}
-          
-          {isReplying && (
-            <div className="mt-3 ml-4 border-l-2 border-[#9b87f5]/20 pl-3">
-              <CommentForm 
-                postId={postId} 
-                parentId={comment.id} 
-                onCancel={() => setIsReplying(false)}
-                onCommentAdded={handleReplyComplete}
-              />
-            </div>
-          )}
-          
-          {hasReplies && (
-            <div className="mt-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleReplies}
-                className="text-xs text-[#9b87f5] hover:text-[#8a78d9] px-3 py-1"
-              >
-                {showReplies 
-                  ? `Hide ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
-                  : `Show ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
-                }
-              </Button>
-              
-              {showReplies && (
-                <div className="ml-4 mt-2 border-l-2 border-[#9b87f5]/20 pl-3 space-y-3">
-                  {comment.replies.map((reply) => (
-                    <CommentItem 
-                      key={reply.id} 
-                      comment={reply}
-                      postId={postId}
-                      onReplyAdded={onReplyAdded}
-                    />
-                  ))}
+            
+            {isEditing ? (
+              <div className="mb-2">
+                <Textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  className="min-h-[80px] text-sm bg-[#1A1F2C] border-[#3A3F4C] mb-2"
+                  placeholder="Edit your comment..."
+                />
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleCancelEdit}
+                    className="text-xs h-8"
+                  >
+                    <X className="h-3.5 w-3.5 mr-1" />
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={handleSaveEdit}
+                    className="text-xs h-8 bg-[#9b87f5] hover:bg-[#8a78d9]"
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1" />
+                    Save
+                  </Button>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            ) : (
+              <p className="text-sm mb-2 whitespace-pre-wrap break-words text-gray-200">
+                {comment.content}
+              </p>
+            )}
+            
+            {!isEditing && (
+              <div className="flex items-center space-x-4 mt-2">
+                <button 
+                  className={`text-xs flex items-center ${isLiking ? 'opacity-50' : 'hover:text-[#9b87f5]'} transition-colors`}
+                  onClick={handleLike}
+                  disabled={isLiking}
+                >
+                  <Heart className={`h-3.5 w-3.5 mr-1 ${likesCount > 0 ? 'text-red-500 fill-red-500' : ''}`} />
+                  <span>{likesCount}</span>
+                </button>
+                <button 
+                  className="text-xs flex items-center hover:text-[#9b87f5] transition-colors"
+                  onClick={handleReplyClick}
+                >
+                  <Reply className="h-3.5 w-3.5 mr-1" />
+                  <span>Reply</span>
+                </button>
+              </div>
+            )}
+            
+            {isReplying && (
+              <div className="mt-3 ml-4 border-l-2 border-[#9b87f5]/20 pl-3">
+                <CommentForm 
+                  postId={postId} 
+                  parentId={comment.id} 
+                  onCancel={() => setIsReplying(false)}
+                  onCommentAdded={handleReplyComplete}
+                />
+              </div>
+            )}
+            
+            {hasReplies && (
+              <div className="mt-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleReplies}
+                  className="text-xs text-[#9b87f5] hover:text-[#8a78d9] px-3 py-1"
+                >
+                  {showReplies 
+                    ? `Hide ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
+                    : `Show ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
+                  }
+                </Button>
+                
+                {showReplies && (
+                  <div className="ml-4 mt-2 border-l-2 border-[#9b87f5]/20 pl-3 space-y-3">
+                    {comment.replies.map((reply) => (
+                      <CommentItem 
+                        key={reply.id} 
+                        comment={reply}
+                        postId={postId}
+                        onReplyAdded={onReplyAdded}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
