@@ -54,7 +54,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   ];
 
   return (
-    <div className="gameboy-container h-[180px] sm:h-[200px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none border-t-2 border-gaming-400">
+    <div className="gameboy-container h-[200px] sm:h-[220px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none border-t-2 border-gaming-400">
       {/* Menu button (center bottom) */}
       <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -103,13 +103,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </button>
       </div>
 
-      {/* Action buttons (right side) */}
-      <div className="fixed right-8 bottom-24 w-24 h-24">
+      {/* Action buttons (right side) - moved down */}
+      <div className="fixed right-6 sm:right-8 bottom-16 sm:bottom-20 w-24 h-24">
         <ActionButtons onAction={handleAction} postId={postId} />
       </div>
 
-      {/* Joystick (left side) */}
-      <div className="fixed left-8 bottom-20 w-28 h-28">
+      {/* Joystick (left side) - moved down */}
+      <div className="fixed left-6 sm:left-8 bottom-12 sm:bottom-16 w-28 h-28">
         <Joystick onDirectionChange={handleVideoControl} />
       </div>
     </div>
