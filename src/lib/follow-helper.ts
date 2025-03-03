@@ -243,6 +243,20 @@ export const ensureProfileExists = async (userId: string): Promise<boolean> => {
     }
     
     console.log('Profile created successfully:', newProfile);
+    
+    // Also create default achievements for this user with 0 progress
+    try {
+      const { createDefaultAchievementsForUser } = await import('@/services/achievementService').then(
+        module => ({ createDefaultAchievementsForUser: module.default.createDefaultAchievementsForUser })
+      );
+      
+      await createDefaultAchievementsForUser(userId);
+      console.log('Default achievements created for new user:', userId);
+    } catch (achievementError) {
+      console.error('Error creating default achievements:', achievementError);
+      // Continue anyway, the profile was created successfully
+    }
+    
     return true;
   } catch (error) {
     console.error('Exception in ensureProfileExists:', error);

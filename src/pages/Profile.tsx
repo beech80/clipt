@@ -177,14 +177,7 @@ const Profile = () => {
     setLoading(true);
     setError(null);
     
-    // Use a longer timeout (30 seconds instead of 10) for profile loading
-    const timer = setTimeout(() => {
-      if (loading) {
-        console.log("Profile load timed out");
-        setError("Profile is taking longer than expected to load. Please wait or refresh the page.");
-        // Don't set loading to false here - let the user continue waiting if they want
-      }
-    }, 30000);
+    // No timeout - let the user wait as long as needed
     
     fetchProfileData().catch(err => {
       console.error("Fetch profile error:", err);
@@ -192,9 +185,7 @@ const Profile = () => {
       setLoading(false);
     });
     
-    return () => {
-      clearTimeout(timer);
-    };
+    // No cleanup for timeout since we're not using one
   }, [profileId]); // Only depend on profileId, not fetchProfileData
 
   // Render loading state
