@@ -62,6 +62,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
     const isPostPage = window.location.pathname.match(/^\/post\/([^/?#]+)/);
     const isSquadPage = window.location.pathname.includes('/squads/') || window.location.pathname.includes('/squad/');
     
+    console.log("Current URL:", window.location.pathname);
+    console.log("Is post page:", isPostPage);
+    console.log("Is squad page:", isSquadPage);
+    console.log("Current postId prop:", postId);
+    
     // Try to get the post ID from various sources
     let currentPostId = postId;
     
@@ -70,6 +75,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
       const match = window.location.pathname.match(/\/post\/([^/?#]+)/);
       if (match && match[1]) {
         currentPostId = match[1];
+        console.log("Extracted post ID from URL:", currentPostId);
       }
     }
     
@@ -78,6 +84,17 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
       const match = window.location.pathname.match(/\/squad(?:s)?\/([^/?#]+)/);
       if (match && match[1]) {
         currentPostId = match[1];
+        console.log("Extracted squad post ID from URL:", currentPostId);
+      }
+    }
+    
+    // Try to get post ID from the DOM if we still don't have it
+    if (!currentPostId) {
+      // Look for data attributes that might contain post ID
+      const postElement = document.querySelector('[data-post-id]');
+      if (postElement instanceof HTMLElement && postElement.dataset.postId) {
+        currentPostId = postElement.dataset.postId;
+        console.log("Found post ID in DOM:", currentPostId);
       }
     }
     
@@ -89,9 +106,19 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
       return;
     }
     
+    // Last resort: if we're on what looks like a post page but couldn't extract the ID,
+    // try to find the comments section directly
+    if (isPostPage || isSquadPage) {
+      const commentsSection = document.getElementById('comments');
+      if (commentsSection) {
+        commentsSection.scrollIntoView({ behavior: 'smooth' });
+        toast.success('Comments section opened');
+        return;
+      }
+    }
+    
     // If we don't have a postId and aren't on a post/squad page
     toast.info('Navigate to a post to comment');
-    navigate('/');
   };
 
   const handleFollow = async () => {
