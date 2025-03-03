@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, Camera, Trophy, Bot, Gamepad, MessageSquare, Users, Video, Home, Crown, Settings } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -19,7 +19,20 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   const navigate = useNavigate();
   const params = useParams();
   const [isOpen, setIsOpen] = useState(false);
-  const postId = currentPostId || params.id || '';
+  const [postId, setPostId] = useState('');
+  
+  // Set postId with priority: currentPostId from App > URL params > empty string
+  useEffect(() => {
+    if (currentPostId) {
+      setPostId(currentPostId);
+    } else if (params.id) {
+      setPostId(params.id);
+    } else {
+      setPostId('');
+    }
+    
+    console.log("GameBoyControls postId set to:", currentPostId || params.id || '');
+  }, [currentPostId, params.id]);
 
   const handleAction = (action: string) => {
     switch(action) {

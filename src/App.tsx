@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
@@ -27,6 +27,19 @@ function AppContent() {
 }
 
 function App() {
+  const location = useLocation();
+  const [currentPostId, setCurrentPostId] = useState<string | undefined>(undefined);
+  
+  // Extract post ID from URL if on a post page
+  useEffect(() => {
+    const match = location.pathname.match(/\/post\/([^/?#]+)/);
+    if (match && match[1]) {
+      setCurrentPostId(match[1]);
+    } else {
+      setCurrentPostId(undefined);
+    }
+  }, [location.pathname]);
+
   return (
     <ErrorBoundary>
       <React.Suspense fallback={<div>Loading...</div>}>
@@ -36,7 +49,7 @@ function App() {
               <Toaster richColors position="top-center" />
               <AppContent />
               <PWAInstallPrompt />
-              <GameBoyControls />
+              <GameBoyControls currentPostId={currentPostId} />
             </ReportDialogProvider>
           </MessagesProvider>
         </AuthProvider>

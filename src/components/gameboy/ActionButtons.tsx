@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,11 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Debug logging for postId
+  useEffect(() => {
+    console.log("ActionButtons received postId:", postId);
+  }, [postId]);
 
   const handleLike = async () => {
     if (!user) {
@@ -51,6 +56,8 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   };
 
   const handleComment = () => {
+    console.log("Comment button clicked, postId:", postId);
+    
     if (postId) {
       // Check if already on post page
       const currentPath = window.location.pathname;
