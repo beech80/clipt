@@ -4,7 +4,7 @@ import { Search, MessageSquare, Plus, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, createMessagesTable, checkTableExists } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 const Messages = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { userId } = useParams();
   const [groupName, setGroupName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,16 +30,23 @@ const Messages = () => {
       
       console.log("Setting up messaging...");
       try {
-        // Skip attempting to create tables - not needed for our simpler approach
-        // Just log it and continue with the app
-        console.log("Using direct messaging approach without tables");
+        // Check if direct_messages table exists, create if needed
+        await ensureMessagesTableExists();
       } catch (error) {
-        console.error("Setup error:", error);
+        console.error("Error setting up messaging tables:", error);
+        toast.error("Error setting up messaging");
       }
     };
     
+    // Set up messaging tables when component loads
     setupMessagingTables();
-  }, [user]);
+    
+    // If userId is provided in URL, start conversation with that user
+    if (userId && user) {
+      // Initialize the chat with the specified user
+      startOrContinueChat(userId);
+    }
+  }, [user, userId]);
 
   // Fetch active chats when component mounts
   useEffect(() => {
@@ -226,28 +234,22 @@ const Messages = () => {
     }
   };
 
-  // Modified function to start or continue a chat
-  const startOrContinueChat = async (userId: string) => {
-    if (!user) {
-      toast.error("Please sign in to message users");
-      navigate('/login');
-      return;
-    }
+  // This function will be used to either start a new chat or continue an existing chat with a user
+  const startOrContinueChat = async (targetUserId: string) => {
+    if (!user) return;
 
     try {
-      console.log("Starting chat with user ID:", userId);
-      console.log("Current user ID:", user.id);
-      
-      // Get the user's profile to display their information
-      const { data: profile, error: profileError } = await supabase
+      // Fetch the profile of the target user
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('username, avatar_url, display_name')
-        .eq('id', userId)
+        .select('username, display_name, avatar_url')
+        .eq('id', targetUserId)
         .single();
-        
-      if (profileError) {
-        console.error("Error fetching user profile:", profileError);
-        throw new Error("Couldn't find that user");
+
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        toast.error("Couldn't find this user");
+        return;
       }
 
       const recipientName = profile.username || profile.display_name || 'User';
@@ -256,30 +258,36 @@ const Messages = () => {
       await ensureMessagesTableExists();
       
       // Generate chat ID
-      const chatId = `chat_${user.id}_${userId}`;
+      const chatId = `chat_${user.id}_${targetUserId}`;
       
       // Initialize chat with empty messages array for now
       setSelectedChat({
         id: chatId,
         type: 'direct',
-        recipient_id: userId,
+        recipient_id: targetUserId,
         recipient_name: recipientName,
         recipient_avatar: profile.avatar_url,
         messages: []
       });
       
       // Fetch any existing messages
-      fetchMessages(chatId, userId);
+      fetchMessages(chatId, targetUserId);
       
       // Clear search results and dialog
       setSearchResults([]);
       setSearchTerm("");
       setShowNewChatDialog(false);
-      toast.success(`Chat with ${recipientName} started!`);
       
+      // Focus on the message input field
+      setTimeout(() => {
+        const messageInput = document.querySelector('input[placeholder="Type your message..."]') as HTMLInputElement;
+        if (messageInput) {
+          messageInput.focus();
+        }
+      }, 300);
     } catch (error) {
-      console.error("Error with chat:", error);
-      toast.error("Error with conversation: " + (error instanceof Error ? error.message : "Unknown error"));
+      console.error("Error starting chat:", error);
+      toast.error("Error starting conversation");
     }
   };
 
