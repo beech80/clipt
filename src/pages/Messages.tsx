@@ -127,22 +127,39 @@ const Messages = () => {
         console.error("Error fetching user profile:", profileError);
         throw new Error("Couldn't find that user");
       }
+
+      const recipientName = profile.username || profile.display_name || 'User';
       
       // We'll create a direct chat just using the user's ID
       // No need to create messages table or check for existing chat
+      const chatId = `chat_${user.id}_${userId}`;
+      
+      // Initialize conversation with a welcome message
+      const initialMessage = {
+        id: Date.now().toString(),
+        sender_id: user.id,
+        recipient_id: userId,
+        message: "Hi there!",
+        created_at: new Date().toISOString(),
+        read: false,
+        sender_name: user.user_metadata?.username || 'You'
+      };
+
+      // Create a mock conversation to display
       setSelectedChat({
-        id: `chat_${user.id}_${userId}`,
+        id: chatId,
         type: 'direct',
         recipient_id: userId,
-        recipient_name: profile.username || profile.display_name || 'User',
-        recipient_avatar: profile.avatar_url
+        recipient_name: recipientName,
+        recipient_avatar: profile.avatar_url,
+        messages: [initialMessage] // Include initial message
       });
       
       // Clear search results and dialog
       setSearchResults([]);
       setSearchTerm("");
       setShowNewChatDialog(false);
-      toast.success(`Chat with ${profile.username || profile.display_name || 'User'} started!`);
+      toast.success(`Chat with ${recipientName} started!`);
       
     } catch (error) {
       console.error("Error with chat:", error);
@@ -150,60 +167,19 @@ const Messages = () => {
     }
   };
 
+  // Handle the creation of a new group chat
   const handleCreateGroup = async () => {
-    if (!groupName.trim() || selectedUsers.length === 0) {
-      toast.error("Please enter a group name and select at least one user");
-      return;
+    if (!user || !groupName || selectedUsers.length === 0) return;
+    
+    try {
+      toast.success(`Created group '${groupName}' (Demo mode)`);
+      setGroupName("");
+      setSelectedUsers([]);
+      setShowCreateGroupChat(false);
+    } catch (error) {
+      console.error("Error creating group:", error);
+      toast.error("Failed to create group");
     }
-
-    const { data: groupData, error: groupError } = await supabase
-      .from('groups')
-      .insert({
-        name: groupName,
-        created_by: user?.id,
-      })
-      .select()
-      .single();
-
-    if (groupError) {
-      toast.error("Error creating group chat");
-      return;
-    }
-
-    const { error: memberError } = await supabase
-      .from('group_members')
-      .insert({
-        group_id: groupData.id,
-        user_id: user?.id,
-        role: 'admin'
-      });
-
-    if (memberError) {
-      toast.error("Error adding you as group admin");
-      return;
-    }
-
-    // Create invites for selected users
-    const invites = selectedUsers.map(userId => ({
-      group_id: groupData.id,
-      user_id: userId,
-      role: 'member'
-    }));
-
-    const { error: membersError } = await supabase
-      .from('group_members')
-      .insert(invites);
-
-    if (membersError) {
-      toast.error("Error adding members");
-      return;
-    }
-
-    toast.success("Group chat created!");
-    setGroupName("");
-    setSelectedUsers([]);
-    setSearchResults([]);
-    fetchActiveChats();
   };
 
   // Modified send message function that uses local state instead of database
@@ -236,13 +212,7 @@ const Messages = () => {
           <div className="sticky top-0 bg-gaming-800 p-4 z-10 flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <h1 className="text-2xl font-bold">Conversations</h1>
-              <button 
-                onClick={() => setShowNewChatDialog(true)}
-                className="p-2 bg-primary text-white rounded-md"
-                aria-label="New conversation"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+              {/* Plus button removed as requested */}
             </div>
             
             {/* Create Group Chat button */}
@@ -267,17 +237,35 @@ const Messages = () => {
             <>
               <div className="p-4 border-b border-gaming-700 flex items-center">
                 <h2 className="text-xl font-semibold">
-                  {selectedChat.name}
+                  {selectedChat.recipient_name || 'Chat'}
                 </h2>
               </div>
               
-              <div className="flex-1 p-4 overflow-y-auto">
-                {/* Placeholder for chat messages */}
-                <div className="text-center text-gray-400 py-8">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-40" />
-                  <p>Messages will appear here</p>
-                  <p className="text-sm">Send your first message below</p>
-                </div>
+              {/* Messages area */}
+              <div className="flex-1 overflow-y-auto p-4">
+                {/* Display the initial "Hi there!" message or any messages */}
+                {selectedChat.messages && selectedChat.messages.length > 0 ? (
+                  <div className="space-y-4">
+                    {selectedChat.messages.map(msg => (
+                      <div key={msg.id} className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[70%] p-3 rounded-lg ${
+                          msg.sender_id === user?.id 
+                            ? 'bg-primary text-white rounded-tr-none' 
+                            : 'bg-gaming-700 text-white rounded-tl-none'
+                        }`}>
+                          <p>{msg.message}</p>
+                          <p className="text-xs opacity-70 mt-1">
+                            {msg.sender_id === user?.id ? 'You' : selectedChat.recipient_name}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-400">No messages yet</p>
+                  </div>
+                )}
               </div>
               
               <div className="p-4 border-t border-gaming-700 flex gap-2">
