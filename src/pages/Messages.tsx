@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, Users, MessageSquare, Plus } from "lucide-react";
+import { Search, MessageSquare, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, createMessagesTable, checkTableExists } from "@/lib/supabase";
 import { toast } from "sonner";
+import { FaUsers } from "react-icons/fa";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -250,7 +251,7 @@ const Messages = () => {
                 onClick={() => setShowNewChatDialog(true)}
                 className="flex items-center justify-center gap-2 w-full p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
               >
-                <Users className="h-4 w-4" />
+                <FaUsers />
                 Create Group Chat
               </button>
             </div>
