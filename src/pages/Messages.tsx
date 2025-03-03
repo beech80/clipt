@@ -182,17 +182,47 @@ const Messages = () => {
     }
   };
 
-  // Modified send message function that uses local state instead of database
+  // Modified send message function to add messages to the local state 
+  // This simulates sending messages in demo mode, but could be easily updated for real DB storage
   const sendMessage = async () => {
     if (!message.trim() || !selectedChat || !user) return;
     
     try {
-      // In this simplified approach, we can just show UI feedback
-      toast.success("Message sent! (Demo mode)");
+      // Create a new message object
+      const newMessage = {
+        id: Date.now().toString(),
+        sender_id: user.id,
+        recipient_id: selectedChat.recipient_id,
+        message: message.trim(),
+        created_at: new Date().toISOString(),
+        read: false,
+        sender_name: user.user_metadata?.username || 'You'
+      };
       
-      // We could use local state to keep track of messages
-      // but for now we'll just clear the input
+      // Add to local messages array
+      setSelectedChat({
+        ...selectedChat,
+        messages: [...(selectedChat.messages || []), newMessage]
+      });
+      
+      // Clear input
       setMessage("");
+      
+      // In a full implementation, we would save to the database like this:
+      /*
+      // Store message in database
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          recipient_id: selectedChat.recipient_id,
+          message: message.trim(),
+          created_at: new Date().toISOString(),
+          read: false
+        });
+        
+      if (error) throw error;
+      */
       
     } catch (error) {
       console.error("Error sending message:", error);
@@ -270,16 +300,11 @@ const Messages = () => {
               
               <div className="p-4 border-t border-gaming-700 flex gap-2">
                 <Input
-                  placeholder="Type a message..."
+                  placeholder="Type your message..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                   className="flex-1"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
                 />
                 <Button onClick={sendMessage}>Send</Button>
               </div>
