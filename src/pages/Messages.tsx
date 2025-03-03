@@ -238,26 +238,25 @@ const Messages = () => {
 
       <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
         {/* Left sidebar - active chats */}
-        <div className="gaming-card overflow-y-auto relative">
-          <div className="sticky top-0 bg-gaming-800 p-4 z-10 flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h1 className="text-2xl font-bold">Conversations</h1>
-              {/* Plus button removed as requested */}
-            </div>
+        <div className="bg-gaming-900 overflow-y-auto relative w-64">
+          <div className="flex justify-center items-center p-4 space-x-4">
+            {/* Icon for Create Group Chat */}
+            <button
+              onClick={() => setShowCreateGroupChat(true)}
+              className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition"
+              aria-label="Create Group Chat"
+            >
+              <Users className="h-6 w-6" />
+            </button>
             
-            {/* Create Group Chat button */}
-            <div className="p-2">
-              <button
-                onClick={() => setShowCreateGroupChat(true)}
-                className="flex items-center justify-center gap-2 w-full p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Create Group Chat
-              </button>
-            </div>
-            
-            {/* We're not displaying the active chat list per user request */}
-            {/* Only showing the Create Group Chat button above */}
+            {/* Icon for Start New Conversation */}
+            <button
+              onClick={() => setShowNewChatDialog(true)}
+              className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition"
+              aria-label="Start New Conversation"
+            >
+              <MessageSquare className="h-6 w-6" />
+            </button>
           </div>
         </div>
 
