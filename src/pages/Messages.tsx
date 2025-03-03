@@ -78,7 +78,7 @@ const Messages = () => {
       
       messages.forEach(msg => {
         // Determine the other party in the conversation
-        const otherUserId = msg.sender_id === user.id ? msg.recipient_id : msg.sender_id;
+        const otherUserId = msg.sender_id === user.id ? msg.recipient_id : msg.recipient_id;
         
         // Create a unique ID for this conversation
         const chatId = `chat_${Math.min(user.id, otherUserId)}_${Math.max(user.id, otherUserId)}`;
@@ -473,18 +473,13 @@ const Messages = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 min-h-screen relative pb-[280px]">
-      <div className="gameboy-header">
-        <h1 className="gameboy-title">MESSAGES</h1>
-      </div>
-
-      <div className="mt-20 grid grid-cols-1 gap-4 h-[calc(100vh-8rem)]">
+    <div className="container mx-auto p-4 min-h-screen relative">
+      <div className="grid grid-cols-1 gap-4 h-[calc(100vh-2rem)]">
         {/* Conversations section */}
         <div className="gaming-card p-4 flex flex-col overflow-y-auto">
           {!selectedChat ? (
             <>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Messages</h2>
+              <div className="flex items-center justify-end mb-6">
                 <Button 
                   variant="default" 
                   onClick={() => setShowNewChatDialog(true)}
