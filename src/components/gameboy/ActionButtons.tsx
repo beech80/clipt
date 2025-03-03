@@ -2,6 +2,7 @@ import React from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useComments } from '@/contexts/CommentContext';
 import { toast } from 'sonner';
 
 interface ActionButtonsProps {
@@ -12,6 +13,7 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { openComments } = useComments();
 
   const handleLike = async () => {
     if (!user) {
@@ -79,43 +81,17 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
       }
     }
     
-    // If we're on a post or squad page, try to scroll to comments
-    if (isPostPage || isSquadPage) {
-      // Try to find and scroll to comments section
-      const commentsSection = document.getElementById('comments');
-      if (commentsSection) {
-        commentsSection.scrollIntoView({ behavior: 'smooth' });
-        
-        // Try to focus the comment input if it exists
-        setTimeout(() => {
-          const commentInput = document.querySelector('.comment-form-input');
-          if (commentInput instanceof HTMLElement) {
-            commentInput.focus();
-          }
-        }, 500);
-        
-        toast.success('Comments section opened');
-        return;
-      }
-      
-      // Try clicking any comment button (for squads posts that might have a different UI)
-      const commentBtn = document.querySelector('.comment-btn');
-      if (commentBtn && commentBtn instanceof HTMLElement) {
-        commentBtn.click();
-        return;
-      }
-    }
-    
-    // If we have a postId, navigate to that post
+    // If we have a post ID, open the comments modal
     if (currentPostId) {
-      navigate(`/post/${currentPostId}#comments`);
-      toast.success('Opening comments');
+      console.log("Opening comments modal for post:", currentPostId);
+      openComments(currentPostId);
+      if (onAction) onAction('comment');
       return;
     }
     
-    // If we don't have a postId and aren't on a specific page, go to home/feed
-    navigate('/');
+    // If we don't have a postId and aren't on a post/squad page
     toast.info('Navigate to a post to comment');
+    navigate('/');
   };
 
   const handleFollow = async () => {
