@@ -131,28 +131,16 @@ const Messages = () => {
       const recipientName = profile.username || profile.display_name || 'User';
       
       // We'll create a direct chat just using the user's ID
-      // No need to create messages table or check for existing chat
       const chatId = `chat_${user.id}_${userId}`;
       
-      // Initialize conversation with a welcome message
-      const initialMessage = {
-        id: Date.now().toString(),
-        sender_id: user.id,
-        recipient_id: userId,
-        message: "Hi there!",
-        created_at: new Date().toISOString(),
-        read: false,
-        sender_name: user.user_metadata?.username || 'You'
-      };
-
-      // Create a mock conversation to display
+      // Create a conversation without an initial message
       setSelectedChat({
         id: chatId,
         type: 'direct',
         recipient_id: userId,
         recipient_name: recipientName,
         recipient_avatar: profile.avatar_url,
-        messages: [initialMessage] // Include initial message
+        messages: [] // Empty array for messages
       });
       
       // Clear search results and dialog
