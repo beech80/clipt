@@ -33,12 +33,13 @@ const Messages = () => {
     try {
       // First get direct messages
       const { data: directChats, error: directError } = await supabase
-        .from('direct_messages')
+        .from('messages')
         .select(`
           id,
           sender_id,
           recipient_id,
           created_at,
+          message,
           sender:sender_id (username, avatar_url),
           recipient:recipient_id (username, avatar_url)
         `)
@@ -49,10 +50,10 @@ const Messages = () => {
 
       // Get group chats the user is a member of
       const { data: groupChats, error: groupError } = await supabase
-        .from('group_chat_members')
+        .from('group_members')
         .select(`
           group_id,
-          group_chats (
+          groups (
             id,
             name,
             created_at
@@ -78,11 +79,11 @@ const Messages = () => {
       });
 
       const formattedGroupChats = (groupChats || []).map(membership => ({
-        id: membership.group_chats.id,
+        id: membership.groups.id,
         type: 'group',
-        name: membership.group_chats.name,
+        name: membership.groups.name,
         avatar_url: null, // Default group avatar
-        last_message_at: membership.group_chats.created_at
+        last_message_at: membership.groups.created_at
       }));
 
       // Combine and sort by most recent
@@ -152,7 +153,7 @@ const Messages = () => {
     try {
       // Check if a chat already exists - using a different approach
       const { data: existingChatsAsSender, error: senderError } = await supabase
-        .from('direct_messages')
+        .from('messages')
         .select('id')
         .eq('sender_id', user.id)
         .eq('recipient_id', userId)
@@ -161,7 +162,7 @@ const Messages = () => {
       if (senderError) throw new Error(senderError.message);
 
       const { data: existingChatsAsRecipient, error: recipientError } = await supabase
-        .from('direct_messages')
+        .from('messages')
         .select('id')
         .eq('sender_id', userId)
         .eq('recipient_id', user.id)
@@ -189,7 +190,7 @@ const Messages = () => {
       } else {
         // Create a new chat
         const { data: newChat, error: createError } = await supabase
-          .from('direct_messages')
+          .from('messages')
           .insert({
             sender_id: user.id,
             recipient_id: userId,
@@ -229,7 +230,7 @@ const Messages = () => {
     }
 
     const { data: groupData, error: groupError } = await supabase
-      .from('group_chats')
+      .from('groups')
       .insert({
         name: groupName,
         created_by: user?.id,
@@ -243,7 +244,7 @@ const Messages = () => {
     }
 
     const { error: memberError } = await supabase
-      .from('group_chat_members')
+      .from('group_members')
       .insert({
         group_id: groupData.id,
         user_id: user?.id,
@@ -263,7 +264,7 @@ const Messages = () => {
     }));
 
     const { error: membersError } = await supabase
-      .from('group_chat_members')
+      .from('group_members')
       .insert(invites);
 
     if (membersError) {
@@ -285,7 +286,7 @@ const Messages = () => {
       if (selectedChat.type === 'direct') {
         // Send direct message
         const { error } = await supabase
-          .from('direct_messages')
+          .from('messages')
           .insert({
             sender_id: user.id,
             recipient_id: selectedChat.recipient_id || selectedChat.other_user_id,
