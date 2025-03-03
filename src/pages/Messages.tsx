@@ -26,19 +26,6 @@ const Messages = () => {
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [showCreateGroupChat, setShowCreateGroupChat] = useState(false);
 
-  // Format message timestamps using useCallback to memoize the function
-  const formatMessageTime = useCallback((timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-    
-    if (isToday) {
-      return format(date, 'h:mm a'); // Format as "1:23 PM"
-    } else {
-      return formatDistanceToNow(date, { addSuffix: true }); // "2 hours ago", "3 days ago", etc.
-    }
-  }, []);
-
   useEffect(() => {
     const setupMessagingTables = async () => {
       if (!user) return;
@@ -522,7 +509,15 @@ const Messages = () => {
                           <div className="flex items-baseline justify-between">
                             <h3 className="font-medium">{chat.recipient_name}</h3>
                             <span className="text-xs text-muted-foreground">
-                              {chat.last_message_time ? formatMessageTime(chat.last_message_time) : ''}
+                              {chat.last_message_time ? (() => {
+                                const date = new Date(chat.last_message_time);
+                                const now = new Date();
+                                const isToday = date.toDateString() === now.toDateString();
+                                
+                                return isToday 
+                                  ? format(date, 'h:mm a') 
+                                  : formatDistanceToNow(date, { addSuffix: true });
+                              })() : ''}
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground truncate">
@@ -571,7 +566,15 @@ const Messages = () => {
                       >
                         <p className="text-sm">{msg.message}</p>
                         <div className="text-xs mt-1 opacity-70 text-right">
-                          {formatMessageTime(msg.created_at)}
+                          {(() => {
+                            const date = new Date(msg.created_at);
+                            const now = new Date();
+                            const isToday = date.toDateString() === now.toDateString();
+                            
+                            return isToday 
+                              ? format(date, 'h:mm a') 
+                              : formatDistanceToNow(date, { addSuffix: true });
+                          })()}
                         </div>
                       </div>
                     </div>
