@@ -236,13 +236,11 @@ const Messages = () => {
         <h1 className="gameboy-title">MESSAGES</h1>
       </div>
 
-      <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
-        {/* Left sidebar - active chats */}
-        <div className="bg-gaming-900 overflow-y-auto relative w-64">
-        </div>
+      <div className="mt-20 grid grid-cols-1 md:grid-cols-1 gap-4 h-[calc(100vh-8rem)]">
+        {/* Left sidebar removed as requested */}
 
         {/* Right side - chat area */}
-        <div className="gaming-card col-span-2 flex flex-col">
+        <div className="gaming-card p-4 flex flex-col h-full">
           {selectedChat ? (
             <>
               <div className="p-4 border-b border-gaming-700 flex items-center">
