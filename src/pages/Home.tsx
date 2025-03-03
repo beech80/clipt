@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Camera } from "lucide-react";
 import { Post } from '@/types/post';
+import { TopWeeklyClips } from '@/components/home/TopWeeklyClips';
 
 const Home = () => {
   const { user } = useAuth();
@@ -59,25 +60,32 @@ const Home = () => {
         </h1>
       </div>
 
-      {/* Posts Feed */}
-      <div className="container mx-auto px-4 py-6 space-y-6 max-w-2xl">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
-          </div>
-        ) : error ? (
-          <div className="text-center py-20 text-red-400">
-            <p>Failed to load posts. Please try again later.</p>
-          </div>
-        ) : posts && posts.length > 0 ? (
-          posts.map((post) => (
-            <PostItem key={post.id} post={post} />
-          ))
-        ) : (
-          <div className="text-center py-20 text-gray-400">
-            <p>No posts available. Create your first post!</p>
-          </div>
-        )}
+      <div className="container mx-auto px-4 py-6 flex flex-row space-x-4">
+        {/* Left sidebar with weekly top clips */}
+        <div className="hidden md:block w-80 space-y-4">
+          <TopWeeklyClips />
+        </div>
+
+        {/* Main feed */}
+        <div className="flex-1 space-y-6 max-w-2xl mx-auto">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-20 text-red-400">
+              <p>Failed to load posts. Please try again later.</p>
+            </div>
+          ) : posts && posts.length > 0 ? (
+            posts.map((post) => (
+              <PostItem key={post.id} post={post} />
+            ))
+          ) : (
+            <div className="text-center py-20 text-gray-400">
+              <p>No posts available. Create your first post!</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Center Camera Button */}
@@ -92,10 +100,6 @@ const Home = () => {
           <span className="clip-button-text">Clipt</span>
         </button>
       </div>
-
-      <div className="main-container">
-      </div>
-
     </div>
   );
 };
