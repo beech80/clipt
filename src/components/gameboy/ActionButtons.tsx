@@ -147,15 +147,22 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
     }
   };
 
-  // Xbox style button class with glossy effect - larger size
-  const xboxButtonStyle = `
+  // Modern button style with glass morphism and gradients
+  const modernButtonStyle = `
     w-[32px] h-[32px] 
     flex items-center justify-center 
-    active:scale-95 transition-all
-    bg-black border border-gray-800
+    active:scale-95 transition-all duration-300
+    bg-gradient-to-br from-gray-900 to-black
     rounded-full
-    shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_3px_5px_rgba(0,0,0,0.5)]
+    backdrop-blur
+    border border-gray-800
+    shadow-lg
+    hover:shadow-xl hover:scale-105
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-opacity-50
   `;
+
+  // Icon style with modern look
+  const iconStyle = "filter drop-shadow(0 2px 3px rgba(0,0,0,0.3))";
 
   return (
     <div className="relative w-[70px] h-[70px] flex items-center justify-center">
@@ -165,10 +172,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
           handleLike();
           if (onAction) onAction('like');
         }}
-        className={`${xboxButtonStyle} absolute -top-5 left-1/2 -translate-x-1/2`}
+        className={`${modernButtonStyle} absolute -top-5 left-1/2 -translate-x-1/2 focus:ring-red-500`}
         aria-label="Like"
+        style={{background: "linear-gradient(145deg, #111, #000)"}}
       >
-        <Heart className="w-5 h-5 text-[#FF385F]" fill="#FF385F" stroke="none" />
+        <Heart className={`w-5 h-5 text-[#FF385F] ${iconStyle}`} fill="#FF385F" stroke="none" />
       </button>
       
       {/* Message button (X position - left) */}
@@ -177,10 +185,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
           handleComment();
           if (onAction) onAction('comment');
         }}
-        className={`${xboxButtonStyle} absolute top-1/2 -left-5 -translate-y-1/2`}
+        className={`${modernButtonStyle} absolute top-1/2 -left-5 -translate-y-1/2 focus:ring-blue-500`}
         aria-label="Comment"
+        style={{background: "linear-gradient(145deg, #111, #000)"}}
       >
-        <MessageSquare className="w-5 h-5 text-[#2F5EC4]" fill="#2F5EC4" stroke="none" />
+        <MessageSquare className={`w-5 h-5 text-[#2F5EC4] ${iconStyle}`} fill="#2F5EC4" stroke="none" />
       </button>
       
       {/* Follow button (B position - right) */}
@@ -189,10 +198,11 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
           handleFollow();
           if (onAction) onAction('follow');
         }}
-        className={`${xboxButtonStyle} absolute top-1/2 -right-5 -translate-y-1/2`}
+        className={`${modernButtonStyle} absolute top-1/2 -right-5 -translate-y-1/2 focus:ring-green-500`}
         aria-label="Follow"
+        style={{background: "linear-gradient(145deg, #111, #000)"}}
       >
-        <User className="w-5 h-5 text-[#27AE60]" fill="#27AE60" stroke="none" />
+        <User className={`w-5 h-5 text-[#27AE60] ${iconStyle}`} fill="#27AE60" stroke="none" />
       </button>
       
       {/* Trophy button (A position - bottom) */}
@@ -201,20 +211,22 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
           handleRank();
           if (onAction) onAction('rank');
         }}
-        className={`${xboxButtonStyle} absolute -bottom-5 left-1/2 -translate-x-1/2`}
+        className={`${modernButtonStyle} absolute -bottom-5 left-1/2 -translate-x-1/2 focus:ring-yellow-500`}
         aria-label="Rank"
+        style={{background: "linear-gradient(145deg, #111, #000)"}}
       >
-        <Trophy className="w-5 h-5 text-[#F1C40F]" fill="#F1C40F" stroke="none" />
+        <Trophy className={`w-5 h-5 text-[#F1C40F] ${iconStyle}`} fill="#F1C40F" stroke="none" />
       </button>
       
       {/* POST button - positioned below the button diamond */}
       <button
         onClick={() => navigate('/post/new')}
-        className="absolute -bottom-14 left-1/2 -translate-x-1/2 w-[32px] h-[32px] bg-[#9C27B0] rounded-full flex items-center justify-center active:scale-95 transition-all"
+        className="absolute -bottom-14 left-1/2 -translate-x-1/2 w-[32px] h-[32px] bg-gradient-to-r from-purple-600 to-purple-800 rounded-full flex items-center justify-center active:scale-95 transition-all duration-300 hover:shadow-lg hover:scale-105 shadow-md"
         aria-label="Post"
+        style={{background: "linear-gradient(145deg, #9C27B0, #7B1FA2)"}}
       >
-        <Camera className="w-5 h-5 text-white" />
-        <span className="absolute text-[8px] font-bold text-white -bottom-5">POST</span>
+        <Camera className="w-5 h-5 text-white filter drop-shadow(0 1px 2px rgba(0,0,0,0.3))" />
+        <span className="absolute text-[8px] font-bold text-white -bottom-5 drop-shadow-sm">POST</span>
       </button>
     </div>
   );
