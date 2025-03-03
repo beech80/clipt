@@ -119,8 +119,8 @@ const Messages = () => {
       // Wait for all profile fetches to complete
       await Promise.all(profilePromises);
       
-      // Convert to array and format for display
-      const conversations = Array.from(conversationsMap.values())
+      // Map conversations to a more usable format
+      const formattedConversations = conversationsMap.values()
         .map(convo => ({
           id: convo.id,
           type: 'direct',
@@ -128,11 +128,16 @@ const Messages = () => {
           recipient_name: convo.profile?.username || convo.profile?.display_name || 'User',
           recipient_avatar: convo.profile?.avatar_url,
           last_message: convo.last_message,
-          last_message_time: convo.last_message_time,
+          last_message_time: convo.last_message_time
         }))
-        .sort((a, b) => new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime());
+        .sort((a, b) => {
+          // Safely compare dates
+          const dateA = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
+          const dateB = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
+          return dateB - dateA;
+        });
       
-      setActiveChats(conversations);
+      setActiveChats(formattedConversations);
       
     } catch (error) {
       console.error("Error processing chats:", error);
