@@ -56,11 +56,32 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
   };
 
   const handleComment = () => {
-    // If we're on a post page, we can try to find and click the comment button
-    const pathMatch = window.location.pathname.match(/^\/post\/([^/?#]+)/);
+    // Check if we're on a post page or squad post page
+    const isPostPage = window.location.pathname.match(/^\/post\/([^/?#]+)/);
+    const isSquadPage = window.location.pathname.includes('/squads/') || window.location.pathname.includes('/squad/');
     
-    if (pathMatch) {
-      // We're on a post page - try to find and click the comment button or scroll to comments
+    // Try to get the post ID from various sources
+    let currentPostId = postId;
+    
+    // If no postId passed, try to extract it from URL
+    if (!currentPostId && isPostPage) {
+      const match = window.location.pathname.match(/\/post\/([^/?#]+)/);
+      if (match && match[1]) {
+        currentPostId = match[1];
+      }
+    }
+    
+    // For squad posts that might have a different URL pattern
+    if (!currentPostId && isSquadPage) {
+      const match = window.location.pathname.match(/\/squad(?:s)?\/([^/?#]+)/);
+      if (match && match[1]) {
+        currentPostId = match[1];
+      }
+    }
+    
+    // If we're on a post or squad page, try to scroll to comments
+    if (isPostPage || isSquadPage) {
+      // Try to find and scroll to comments section
       const commentsSection = document.getElementById('comments');
       if (commentsSection) {
         commentsSection.scrollIntoView({ behavior: 'smooth' });
@@ -76,17 +97,24 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
         toast.success('Comments section opened');
         return;
       }
+      
+      // Try clicking any comment button (for squads posts that might have a different UI)
+      const commentBtn = document.querySelector('.comment-btn');
+      if (commentBtn && commentBtn instanceof HTMLElement) {
+        commentBtn.click();
+        return;
+      }
     }
     
     // If we have a postId, navigate to that post
-    if (postId) {
-      navigate(`/post/${postId}#comments`);
+    if (currentPostId) {
+      navigate(`/post/${currentPostId}#comments`);
       toast.success('Opening comments');
       return;
     }
     
-    // If we don't have a postId and aren't on a post page, go to the main feed
-    navigate('/clipts');
+    // If we don't have a postId and aren't on a specific page, go to home/feed
+    navigate('/');
     toast.info('Navigate to a post to comment');
   };
 
