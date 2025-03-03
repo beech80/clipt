@@ -45,9 +45,12 @@ export const TopGames = ({ games }: TopGamesProps) => {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
             <h3 className="text-lg font-semibold text-white">{game.name}</h3>
+            <p className="text-xs text-white/90 mt-1">CLIPTS</p>
+            {/* Removing rating display
             {game.rating && (
               <p className="text-sm text-white/80">Rating: {Math.round(game.rating)}%</p>
             )}
+            */}
           </div>
         </Card>
       ))}

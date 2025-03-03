@@ -144,17 +144,18 @@ const GameDetailsPage = () => {
   return (
     <div className="page-container container max-w-4xl mx-auto pb-24">
       <div className="gameboy-header">
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            className="p-2 text-black" 
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="gameboy-title">{game.name}</h1>
-          <span className="gameboy-title px-2">•</span>
-          <span className="gameboy-title">CLIPTS</span>
+        <div className="flex flex-col items-center">
+          <div className="flex items-center gap-2 w-full">
+            <Button 
+              variant="ghost" 
+              className="p-2 text-black" 
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="gameboy-title">{game.name}</h1>
+          </div>
+          <div className="gameboy-title text-sm mt-1">CLIPTS</div>
         </div>
       </div>
       
