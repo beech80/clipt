@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import { Trophy, Star, Users } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import type { Achievement, AchievementProgress } from '@/types/profile';
@@ -87,16 +86,6 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId }) => {
         {[...Array(3)].map((_, i) => (
           <div key={i} className="h-24 bg-gray-800 rounded-lg animate-pulse" />
         ))}
-      </div>
-    );
-  }
-
-  if (!achievements?.length) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24">
-        <Trophy className="w-16 h-16 mx-auto text-gray-600 mb-4" />
-        <h3 className="text-2xl font-semibold text-gray-400 mb-2">No achievements yet</h3>
-        <p className="text-gray-500 text-center">Keep engaging with the platform to earn achievements!</p>
       </div>
     );
   }
