@@ -19,11 +19,15 @@ import styled from "styled-components";
 const ProfileContent = styled.div`
   max-height: none; /* Remove any height restrictions */
   overflow-y: visible; /* Allow content to be visible */
-  padding-bottom: 80px; /* Add padding at bottom for better scrolling */
+  padding-bottom: 250px; /* Add more padding at bottom for better scrolling */
   
   /* Apply CSS to ensure scrolling works */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  
+  /* Make sure content is fully visible */
+  display: block;
+  width: 100%;
 `;
 
 const Profile = () => {

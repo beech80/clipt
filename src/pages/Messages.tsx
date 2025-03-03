@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, MessageSquare, Plus, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,6 +13,7 @@ const Messages = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { userId } = useParams();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [groupName, setGroupName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -358,6 +359,31 @@ const Messages = () => {
     }
   };
 
+  // Function to scroll to the bottom of messages
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    if (selectedChat?.messages?.length) {
+      scrollToBottom();
+    }
+  }, [selectedChat?.messages]);
+
+  // Auto-scroll when a message is sent
+  useEffect(() => {
+    const handleMessageSent = () => {
+      setTimeout(scrollToBottom, 100);
+    };
+
+    if (message === '' && selectedChat?.messages?.length) {
+      handleMessageSent();
+    }
+  }, [message, selectedChat?.messages]);
+
   // Handle the creation of a new group chat
   const handleCreateGroup = async () => {
     if (!user || !groupName || selectedUsers.length === 0) return;
@@ -374,7 +400,7 @@ const Messages = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 min-h-screen relative pb-[200px]">
+    <div className="container mx-auto p-4 min-h-screen relative pb-[280px]">
       <div className="gameboy-header">
         <h1 className="gameboy-title">MESSAGES</h1>
       </div>
@@ -393,7 +419,7 @@ const Messages = () => {
               </div>
               
               {/* Messages area */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 max-h-[calc(65vh)]" style={{ scrollbarWidth: 'thin' }}>
                 {/* Display the initial "Hi there!" message or any messages */}
                 {selectedChat.messages && selectedChat.messages.length > 0 ? (
                   <div className="space-y-4">
@@ -417,6 +443,7 @@ const Messages = () => {
                     <p className="text-gray-400">No messages yet</p>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
               
               <div className="p-4 border-t border-gaming-700 flex gap-2">

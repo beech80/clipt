@@ -71,7 +71,9 @@ function App() {
               <CommentsProvider>
                 <Toaster richColors position="top-center" />
                 <ScrollToTop />
-                <AppContent />
+                <div className="app-content-wrapper" style={{ paddingBottom: '250px', minHeight: '100vh' }}>
+                  <AppContent />
+                </div>
                 <PWAInstallPrompt />
                 <GameBoyControls currentPostId={currentPostId} />
               </CommentsProvider>

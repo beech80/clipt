@@ -34,16 +34,18 @@
   html {
     height: 100%;
     overflow: auto;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
     height: auto;
     position: relative;
-    overflow-y: visible !important;
+    overflow-y: auto !important;
     overflow-x: hidden;
     margin: 0;
     padding: 0;
+    padding-bottom: 250px; /* Add extra padding to ensure content isn't hidden behind gameboy UI */
     background-color: var(--background-override, #1A1F2C);
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),

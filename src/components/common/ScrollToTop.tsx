@@ -12,7 +12,10 @@ const ScrollToTop = () => {
     console.log("ScrollToTop activated for path:", pathname);
     
     // Force scroll to top immediately
-    window.scrollTo(0, 0);
+    window.scrollTo({
+      top: 0,
+      behavior: 'auto'
+    });
     
     // Also ensure all scroll containers are reset
     document.querySelectorAll('.overflow-auto, .overflow-y-auto, .overflow-scroll, .overflow-y-scroll').forEach(element => {
@@ -26,6 +29,18 @@ const ScrollToTop = () => {
     if (mainContent) {
       mainContent.scrollTop = 0;
     }
+    
+    // Fix for content visibility - ensure container elements don't restrict scrolling
+    document.querySelectorAll('.container, .min-h-screen, [class*="h-["]').forEach(element => {
+      if (element instanceof HTMLElement) {
+        if (element.style.maxHeight) {
+          element.style.maxHeight = 'none';
+        }
+        if (element.style.overflowY === 'hidden') {
+          element.style.overflowY = 'visible';
+        }
+      }
+    });
     
     console.log("Scrolling complete");
   }, [pathname]);
