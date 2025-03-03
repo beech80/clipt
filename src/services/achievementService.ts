@@ -3,6 +3,45 @@ import type { Achievement, AchievementProgress } from '@/types/profile';
 
 // Default achievement data to create for new users
 const defaultAchievements = [
+  // Daily Quests
+  {
+    name: 'Complete 4 Daily Quests',
+    description: 'Complete 4 daily quests this week',
+    target_value: 4,
+    points: 10,
+    category: 'daily',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Earn Your Way',
+    description: 'Unlock 3 achievements or play 3 different Game Pass games',
+    target_value: 3,
+    points: 10,
+    category: 'daily',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Weekday Warrior',
+    description: 'Log in 5 days in a row',
+    target_value: 5, 
+    points: 15,
+    category: 'daily',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Social Sunday',
+    description: 'Comment on 3 posts on Sunday',
+    target_value: 3,
+    points: 10,
+    category: 'daily',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+
+  // Streaming Achievements
   {
     name: 'First Blood',
     description: 'Upload your first clip',
@@ -22,23 +61,72 @@ const defaultAchievements = [
     reward_type: 'points',
   },
   {
+    name: 'Popular Content',
+    description: 'Get 50 views on your clips',
+    target_value: 50,
+    points: 25,
+    category: 'streaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Viral Hit',
+    description: 'Get 1000 views on a single clip',
+    target_value: 1,
+    points: 100,
+    category: 'streaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Content Creator',
+    description: 'Upload clips for 10 different games',
+    target_value: 10,
+    points: 50,
+    category: 'streaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+
+  // Social Achievements
+  {
     name: 'Social Butterfly',
     description: 'Follow 5 other users',
     target_value: 5,
-    points: 75,
+    points: 15,
     category: 'social',
     progress_type: 'count',
     reward_type: 'points',
   },
   {
-    name: 'Popular Content',
-    description: 'Get 50 views on your clips',
-    target_value: 50,
-    points: 150,
-    category: 'streaming',
+    name: 'Influencer',
+    description: 'Get 20 followers',
+    target_value: 20,
+    points: 25,
+    category: 'social',
     progress_type: 'count',
     reward_type: 'points',
   },
+  {
+    name: 'Community Member',
+    description: 'Comment on 10 clips',
+    target_value: 10,
+    points: 10,
+    category: 'social',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Networking Pro',
+    description: 'Follow users from 5 different countries',
+    target_value: 5,
+    points: 50,
+    category: 'social',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+
+  // Gaming Achievements
   {
     name: 'Gaming Newbie',
     description: 'Add your first game to your profile',
@@ -50,19 +138,37 @@ const defaultAchievements = [
   },
   {
     name: 'Game Enthusiast',
-    description: 'Play 5 different games',
+    description: 'Add 5 different games to your profile',
     target_value: 5,
-    points: 125,
+    points: 50,
     category: 'gaming',
     progress_type: 'count',
     reward_type: 'points',
   },
   {
-    name: 'Community Member',
-    description: 'Comment on 10 clips',
-    target_value: 10,
-    points: 100,
-    category: 'social',
+    name: 'Dead Space',
+    description: 'Play Dead Space',
+    target_value: 1,
+    points: 25, 
+    category: 'gaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'The Long Dark',
+    description: 'Have 2 Distance Travelled',
+    target_value: 2,
+    points: 50,
+    category: 'gaming',
+    progress_type: 'count',
+    reward_type: 'points',
+  },
+  {
+    name: 'Game Pass Pro',
+    description: 'Earn an achievement in any Game Pass game',
+    target_value: 1,
+    points: 10,
+    category: 'gaming',
     progress_type: 'count',
     reward_type: 'points',
   },
@@ -70,7 +176,7 @@ const defaultAchievements = [
     name: 'Trophy Hunter',
     description: 'Complete 5 achievements',
     target_value: 5,
-    points: 200,
+    points: 50,
     category: 'general',
     progress_type: 'count',
     reward_type: 'badge',
@@ -137,6 +243,29 @@ const defaultGameAchievements = {
 
 // Sample user progress data for demo purposes
 const sampleUserProgress = [
+  // Daily Quests
+  {
+    achievementName: 'Complete 4 Daily Quests',
+    currentValue: 2,
+    completed: false
+  },
+  {
+    achievementName: 'Earn Your Way',
+    currentValue: 1,
+    completed: false
+  },
+  {
+    achievementName: 'Weekday Warrior',
+    currentValue: 3,
+    completed: false
+  },
+  {
+    achievementName: 'Social Sunday',
+    currentValue: 2,
+    completed: false
+  },
+
+  // Streaming achievements
   {
     achievementName: 'First Blood',
     currentValue: 1,
@@ -148,15 +277,44 @@ const sampleUserProgress = [
     completed: false
   },
   {
+    achievementName: 'Popular Content',
+    currentValue: 22,
+    completed: false
+  },
+  {
+    achievementName: 'Viral Hit',
+    currentValue: 0,
+    completed: false
+  },
+  {
+    achievementName: 'Content Creator',
+    currentValue: 3,
+    completed: false
+  },
+
+  // Social achievements
+  {
     achievementName: 'Social Butterfly',
     currentValue: 3,
     completed: false
   },
   {
-    achievementName: 'Popular Content',
-    currentValue: 22,
+    achievementName: 'Influencer',
+    currentValue: 8,
     completed: false
   },
+  {
+    achievementName: 'Community Member',
+    currentValue: 5,
+    completed: false
+  },
+  {
+    achievementName: 'Networking Pro',
+    currentValue: 2,
+    completed: false
+  },
+
+  // Gaming achievements  
   {
     achievementName: 'Gaming Newbie',
     currentValue: 1,
@@ -168,8 +326,18 @@ const sampleUserProgress = [
     completed: false
   },
   {
-    achievementName: 'Community Member',
-    currentValue: 5,
+    achievementName: 'Dead Space',
+    currentValue: 0,
+    completed: false
+  },
+  {
+    achievementName: 'The Long Dark',
+    currentValue: 0,
+    completed: false
+  },
+  {
+    achievementName: 'Game Pass Pro',
+    currentValue: 0,
     completed: false
   },
   {
