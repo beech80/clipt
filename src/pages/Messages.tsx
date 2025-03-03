@@ -21,6 +21,7 @@ const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [message, setMessage] = useState("");
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [showCreateGroupChat, setShowCreateGroupChat] = useState(false);
 
   useEffect(() => {
     const setupMessagingTables = async () => {
@@ -247,7 +248,7 @@ const Messages = () => {
             {/* Create Group Chat button */}
             <div className="p-2">
               <button
-                onClick={() => setShowNewChatDialog(true)}
+                onClick={() => setShowCreateGroupChat(true)}
                 className="flex items-center justify-center gap-2 w-full p-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition"
               >
                 <Users className="h-4 w-4 mr-2" />
@@ -315,6 +316,132 @@ const Messages = () => {
           )}
         </div>
       </div>
+
+      {/* New Chat Dialog */}
+      <Dialog open={showNewChatDialog} onOpenChange={setShowNewChatDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Start New Conversation</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <Input
+              placeholder="Search for users..."
+              value={searchTerm}
+              onChange={(e) => handleSearchUsers(e.target.value)}
+              autoFocus
+            />
+            {searchResults.length > 0 ? (
+              <div className="mt-2 max-h-[300px] overflow-y-auto space-y-2">
+                {searchResults.map((user) => (
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-2 rounded bg-gaming-800 hover:bg-gaming-700 cursor-pointer"
+                    onClick={() => startOrContinueChat(user.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      {user.avatar_url ? (
+                        <img
+                          src={user.avatar_url}
+                          alt={user.username}
+                          className="w-8 h-8 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-700">
+                          <span>{user.username ? user.username.slice(0, 2).toUpperCase() : 'U'}</span>
+                        </div>
+                      )}
+                      <span>{user.display_name || user.username || 'User'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              searchTerm.length > 0 && (
+                <p className="text-center text-gray-400 py-2">No users found</p>
+              )
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Group Chat Dialog */}
+      <Dialog open={showCreateGroupChat} onOpenChange={setShowCreateGroupChat}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Group Chat</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <Input
+              placeholder="Group Name"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+            />
+            <div className="space-y-2">
+              <Input
+                placeholder="Search users to add..."
+                value={searchTerm}
+                onChange={(e) => handleSearchUsers(e.target.value)}
+              />
+              {searchResults.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {searchResults.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-2 rounded bg-gaming-800 hover:bg-gaming-700"
+                    >
+                      <span>{user.username || user.display_name || 'User'}</span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (!selectedUsers.includes(user.id)) {
+                            setSelectedUsers([...selectedUsers, user.id]);
+                            toast.success(`Added ${user.username || user.display_name || 'User'} to group`);
+                          }
+                        }}
+                        disabled={selectedUsers.includes(user.id)}
+                      >
+                        {selectedUsers.includes(user.id) ? 'Added' : 'Add'}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {selectedUsers.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium mb-2">Selected Users:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedUsers.map((userId) => {
+                    const user = searchResults.find(u => u.id === userId);
+                    return (
+                      <div
+                        key={userId}
+                        className="flex items-center gap-2 bg-gaming-800 rounded px-2 py-1"
+                      >
+                        <span>{user?.username || user?.display_name || 'User'}</span>
+                        <button
+                          onClick={() => setSelectedUsers(selectedUsers.filter(id => id !== userId))}
+                          className="text-red-500 hover:text-red-400"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <Button
+              onClick={handleCreateGroup}
+              disabled={!groupName || selectedUsers.length === 0}
+              className="w-full mt-4"
+            >
+              Create Group
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
