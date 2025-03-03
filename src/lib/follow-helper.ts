@@ -1,8 +1,254 @@
 /**
  * Utility functions for the follow functionality
  */
-import { supabase } from './supabase';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+
+/**
+ * Fetches the number of followers for a specific user
+ * @param userId - The ID of the user to get follower count for
+ * @returns Number of followers
+ */
+export const getFollowerCount = async (userId: string): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('following_id', userId);
+    
+    if (error) {
+      console.error('Error fetching follower count:', error);
+      return 0;
+    }
+    
+    return count || 0;
+  } catch (error) {
+    console.error('Exception in getFollowerCount:', error);
+    return 0;
+  }
+};
+
+/**
+ * Fetches the number of users that a specific user is following
+ * @param userId - The ID of the user to get following count for
+ * @returns Number of users being followed
+ */
+export const getFollowingCount = async (userId: string): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('follower_id', userId);
+    
+    if (error) {
+      console.error('Error fetching following count:', error);
+      return 0;
+    }
+    
+    return count || 0;
+  } catch (error) {
+    console.error('Exception in getFollowingCount:', error);
+    return 0;
+  }
+};
+
+/**
+ * Checks if followerUserId is following targetUserId
+ * @param followerUserId - The ID of the potential follower
+ * @param targetUserId - The ID of the user potentially being followed
+ * @returns Boolean indicating if following relationship exists
+ */
+export const isFollowing = async (followerUserId: string, targetUserId: string): Promise<boolean> => {
+  if (!followerUserId || !targetUserId) return false;
+  
+  try {
+    const { data, error } = await supabase
+      .from('follows')
+      .select('*')
+      .eq('follower_id', followerUserId)
+      .eq('following_id', targetUserId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error checking follow status:', error);
+      return false;
+    }
+    
+    return !!data;
+  } catch (error) {
+    console.error('Exception in isFollowing:', error);
+    return false;
+  }
+};
+
+/**
+ * Toggles follow status between current user and target user
+ * If already following, unfollows. If not following, follows.
+ * 
+ * @param targetUserId - User ID to follow or unfollow
+ * @returns Current follow status after toggle (true = following, false = not following)
+ */
+export const followUser = async (targetUserId: string): Promise<boolean> => {
+  try {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast.error("You must be logged in to follow users");
+      return false;
+    }
+    
+    const followerUserId = user.id;
+    
+    // Prevent self-following
+    if (followerUserId === targetUserId) {
+      toast.error("You cannot follow yourself");
+      return false;
+    }
+    
+    // Check if user is already following
+    const { data: existingFollow, error: checkError } = await supabase
+      .from('follows')
+      .select('*')
+      .eq('follower_id', followerUserId)
+      .eq('following_id', targetUserId)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Error checking follow status:', checkError);
+      toast.error("Unable to check follow status");
+      return false;
+    }
+    
+    // If already following, unfollow
+    if (existingFollow) {
+      const { error: deleteError } = await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', followerUserId)
+        .eq('following_id', targetUserId);
+      
+      if (deleteError) {
+        console.error('Error unfollowing user:', deleteError);
+        toast.error("Failed to unfollow user");
+        return true; // Still following
+      }
+      
+      // Update follower count in profiles table
+      await updateFollowerCounts(targetUserId);
+      
+      toast.success("User unfollowed");
+      return false; // No longer following
+    }
+    
+    // Not following, so create follow relationship
+    const { error: insertError } = await supabase
+      .from('follows')
+      .insert({
+        follower_id: followerUserId,
+        following_id: targetUserId,
+        created_at: new Date().toISOString()
+      });
+    
+    if (insertError) {
+      console.error('Error following user:', insertError);
+      toast.error("Failed to follow user");
+      return false; // Not following
+    }
+    
+    // Update follower count in profiles table
+    await updateFollowerCounts(targetUserId);
+    
+    toast.success("User followed");
+    return true; // Now following
+  } catch (error) {
+    console.error('Exception in followUser:', error);
+    toast.error("An error occurred while updating follow status");
+    return false;
+  }
+};
+
+/**
+ * Updates the follower and following counts in the profiles table
+ * @param userId - User ID to update counts for
+ */
+export const updateFollowerCounts = async (userId: string): Promise<void> => {
+  try {
+    // Get follower count
+    const followerCount = await getFollowerCount(userId);
+    
+    // Update profile with new count
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ followers: followerCount })
+      .eq('id', userId);
+    
+    if (updateError) {
+      console.error('Error updating follower count:', updateError);
+    }
+  } catch (error) {
+    console.error('Exception in updateFollowerCounts:', error);
+  }
+};
+
+/**
+ * Utility function to ensure a profile exists for a user
+ * Creates a basic profile if one doesn't exist
+ * 
+ * @param userId - User ID to ensure profile for
+ * @returns Boolean indicating success
+ */
+export const ensureProfileExists = async (userId: string): Promise<boolean> => {
+  try {
+    // Check if profile exists
+    const { data: existingProfile, error: checkError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Error checking profile existence:', checkError);
+      return false;
+    }
+    
+    // Profile exists
+    if (existingProfile) {
+      return true;
+    }
+    
+    // Profile doesn't exist, create it
+    console.log(`Creating profile for user ${userId}`);
+    
+    const { data: newProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        username: `user_${userId.substring(0, 8)}`,
+        display_name: `User ${userId.substring(0, 8)}`,
+        bio: '',
+        avatar_url: '',
+        followers: 0,
+        following: 0,
+        achievements: 0,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (createError) {
+      console.error('Error creating profile:', createError);
+      return false;
+    }
+    
+    console.log('Profile created successfully:', newProfile);
+    return true;
+  } catch (error) {
+    console.error('Exception in ensureProfileExists:', error);
+    return false;
+  }
+};
 
 /**
  * Create the follows table if it doesn't exist
@@ -16,130 +262,6 @@ export const createFollowsTableIfNeeded = async (): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error("Error creating follows table:", error);
-    return false;
-  }
-};
-
-/**
- * Toggle following a user
- */
-export const followUser = async (targetUserId: string): Promise<boolean> => {
-  try {
-    console.log(`Attempting to follow/unfollow user: ${targetUserId}`);
-    
-    // Ensure we have the user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError) {
-      console.error("Error getting current user:", userError);
-      toast.error("Could not access your user data");
-      return false;
-    }
-    
-    if (!user) {
-      console.error("No authenticated user found");
-      toast.error("You must be logged in to follow users");
-      return false;
-    }
-    
-    // Don't bother checking if the table exists, just proceed with the operation
-    
-    // Check if already following - with error handling
-    try {
-      const { data: existingFollow, error: checkError } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', user.id)
-        .eq('following_id', targetUserId)
-        .maybeSingle();
-      
-      if (checkError) {
-        console.error("Error checking follow status:", checkError);
-        
-        // Try to create the follows relationship anyway
-        const { error: insertError } = await supabase
-          .from('follows')
-          .insert({
-            follower_id: user.id,
-            following_id: targetUserId
-          });
-          
-        if (insertError) {
-          // If the insert fails with a unique violation, we're already following
-          if (insertError.code === '23505') {
-            // Already following, so unfollow
-            const { error: unfollowError } = await supabase
-              .from('follows')
-              .delete()
-              .match({
-                follower_id: user.id,
-                following_id: targetUserId
-              });
-              
-            if (unfollowError) {
-              console.error("Error unfollowing:", unfollowError);
-              toast.error("Couldn't update follow status");
-              return false;
-            }
-            
-            toast.success("Unfollowed user");
-            return false; // No longer following
-          } else {
-            console.error("Error creating follow:", insertError);
-            toast.error("Couldn't follow user");
-            return false;
-          }
-        }
-        
-        toast.success("Following user!");
-        return true;
-      }
-      
-      if (existingFollow) {
-        // Already following, so unfollow
-        console.log("Already following, removing follow relationship");
-        const { error: unfollowError } = await supabase
-          .from('follows')
-          .delete()
-          .match({
-            follower_id: user.id,
-            following_id: targetUserId
-          });
-          
-        if (unfollowError) {
-          console.error("Error unfollowing:", unfollowError);
-          toast.error("Failed to unfollow user");
-          return false;
-        }
-        
-        toast.success("Unfollowed user");
-        return false; // No longer following
-      } else {
-        // Not following, so follow
-        console.log("Not following, creating follow relationship");
-        const { error: followError } = await supabase
-          .from('follows')
-          .insert({
-            follower_id: user.id,
-            following_id: targetUserId
-          });
-          
-        if (followError) {
-          console.error("Error following user:", followError);
-          toast.error("Failed to follow user");
-          return false;
-        }
-        
-        toast.success("Following user!");
-        return true; // Now following
-      }
-    } catch (error) {
-      console.error("Error in follow status check:", error);
-      toast.error("Couldn't check follow status");
-      return false;
-    }
-  } catch (error) {
-    console.error("Error in followUser:", error);
-    toast.error("Something went wrong with the follow action");
     return false;
   }
 };
