@@ -29,16 +29,15 @@
 
 @layer base {
   * {
-    @apply border-border touch-manipulation;
+    @apply border-border;
   }
   body {
-    @apply text-white overscroll-none;
-    background-color: var(--background-override, #1A1F2C);
-    background-image: 
-      radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
-    background-attachment: fixed;
-    -webkit-tap-highlight-color: transparent;
+    @apply bg-background text-foreground overflow-y-auto overflow-x-hidden min-h-screen;
+  }
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
   }
 }
 
