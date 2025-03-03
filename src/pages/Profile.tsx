@@ -20,6 +20,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState<'clips' | 'achievements'>('clips');
   const [userFollows, setUserFollows] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   
   // Stats with realistic initial values
@@ -32,71 +33,142 @@ const Profile = () => {
   const [profile, setProfile] = useState<ProfileType | null>(null);
 
   useEffect(() => {
+    const profileId = id || user?.id;
+    console.log(`Profile.tsx loaded with profile ID: ${profileId}`);
+    
     const fetchProfileData = async () => {
-      if (!id && !user?.id) {
-        console.error('No profile ID provided');
+      setLoading(true);
+      if (!profileId) {
+        setError("No profile ID provided");
+        console.error("Profile.tsx: No profile ID provided");
         setLoading(false);
         return;
       }
+
+      console.log(`Profile.tsx: Starting to fetch profile with ID: ${profileId}`);
       
-      const profileId = id || user?.id;
-      setLoading(true);
-      console.log(`Fetching profile data for profile ID: ${profileId}`);
+      // Use a timeout to ensure we don't wait forever
+      const timeoutId = setTimeout(() => {
+        // Only set timeout error if we're still loading
+        if (loading) {
+          console.error(`Profile.tsx: Timeout while fetching profile: ${profileId}`);
+          setError("Loading timed out. Please try again.");
+          setLoading(false);
+        }
+      }, 10000); // 10 second timeout
       
       try {
-        // Force cache invalidation for consistency
-        queryClient.invalidateQueries({ queryKey: ['user-profile', profileId] });
+        // First check if this user exists at all
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', profileId)
+          .maybeSingle();
         
-        // First, check if we have the profile in the cache
-        const cachedProfile = queryClient.getQueryData(['user-profile', profileId]);
-        if (cachedProfile) {
-          console.log('Using cached profile data');
-          setProfile(cachedProfile as ProfileType);
+        // If we can't find the user, check auth.users as a fallback (if we have permission)
+        if (!userData && !userError) {
+          console.log(`Profile.tsx: No profile found in profiles table for ${profileId}, checking auth.users`);
+          try {
+            // We might not have permission to query auth.users, but it's worth a try
+            const { data: authUser, error: authError } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', profileId)
+              .maybeSingle();
+            
+            if (authUser && !authError) {
+              console.log(`Profile.tsx: Found user in auth table but not in profiles: ${profileId}`);
+              // If we find in auth but not profiles, create a basic profile
+              const { error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: profileId,
+                  username: `user_${profileId.substring(0, 8)}`,
+                  display_name: `User ${profileId.substring(0, 8)}`,
+                  bio: '',
+                  avatar_url: '',
+                  created_at: new Date().toISOString()
+                });
+              
+              if (createError) {
+                console.error(`Profile.tsx: Failed to create profile for ${profileId}:`, createError);
+              } else {
+                console.log(`Profile.tsx: Created new profile for ${profileId}`);
+              }
+            }
+          } catch (authCheckError) {
+            console.error(`Profile.tsx: Error checking auth for ${profileId}:`, authCheckError);
+            // Silently continue - we'll try to fetch the profile again below
+          }
+        }
+        
+        // Fetch or re-fetch the profile data
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', profileId)
+          .maybeSingle();
+          
+        clearTimeout(timeoutId);
+        
+        if (profileError) {
+          console.error(`Profile.tsx: Error fetching profile for ${profileId}:`, profileError);
+          setError(`Error loading profile: ${profileError.message}`);
           setLoading(false);
           return;
         }
         
-        // Fetch profile with a timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        if (!profile) {
+          console.error(`Profile.tsx: No profile found for ${profileId}`);
+          setError("Profile not found");
+          setLoading(false);
+          return;
+        }
         
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', profileId)
-          .abortSignal(controller.signal)
-          .single();
-          
+        console.log(`Profile.tsx: Successfully loaded profile for ${profileId}:`, profile);
+        setProfile(profile);
+        
+        // Initialize followers, following, and achievements to 0 if not set
+        if (profile.followers === null || profile.followers === undefined) {
+          profile.followers = 0;
+        }
+        
+        if (profile.following === null || profile.following === undefined) {
+          profile.following = 0;
+        }
+        
+        if (profile.achievements === null || profile.achievements === undefined) {
+          profile.achievements = 0;
+        }
+        
+        queryClient.setQueryData(['profile', profileId], profile);
+        
+        // Fetch follow status if user is logged in
+        if (user && user.id !== profileId) {
+          try {
+            const { data: isFollowing, error: followError } = await supabase
+              .from('follows')
+              .select('*')
+              .eq('follower_id', user.id)
+              .eq('following_id', profileId)
+              .maybeSingle();
+              
+            if (followError) {
+              console.error(`Profile.tsx: Error checking follow status for ${profileId}:`, followError);
+            } else {
+              setUserFollows(!!isFollowing);
+              console.log(`Profile.tsx: Follow status for ${profileId}: ${!!isFollowing}`);
+            }
+          } catch (followCheckError) {
+            console.error(`Profile.tsx: Exception checking follow status:`, followCheckError);
+          }
+        }
+        
+        setLoading(false);
+      } catch (error) {
         clearTimeout(timeoutId);
-
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-          toast.error(`Error loading profile: ${profileError.message}`);
-          navigate('/');
-          return;
-        }
-
-        if (!profileData) {
-          console.error('No profile found for ID:', profileId);
-          toast.error('Profile not found');
-          navigate('/');
-          return;
-        }
-
-        console.log('Profile data fetched successfully:', profileData);
-        setProfile(profileData as ProfileType);
-        
-        // Store in cache
-        queryClient.setQueryData(['user-profile', profileId], profileData);
-      } catch (error: any) {
-        console.error('Error in fetchProfileData:', error);
-        if (error.name === 'AbortError') {
-          toast.error('Profile loading timed out. Please try again.');
-        } else {
-          toast.error(`Failed to load profile: ${error.message || 'Unknown error'}`);
-        }
-        navigate('/');
-      } finally {
+        console.error(`Profile.tsx: Exception fetching profile for ${profileId}:`, error);
+        setError(`Failed to load profile: ${(error as Error).message}`);
         setLoading(false);
       }
     };
@@ -238,6 +310,19 @@ const Profile = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <UserX className="w-16 h-16 text-gray-400" />
+        <h1 className="text-2xl font-bold text-gray-700">{error}</h1>
+        <p className="text-gray-500">This user profile doesn't exist or has been removed.</p>
+        <Button onClick={() => navigate('/')} variant="outline">
+          Go Home
+        </Button>
       </div>
     );
   }
