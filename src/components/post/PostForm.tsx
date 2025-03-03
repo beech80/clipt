@@ -564,42 +564,43 @@ export const PostForm = () => {
                 </p>
               </div>
             )}
-
-            <div className="flex gap-4">
-              <Button
-                type="button"
-                variant="default"
-                onClick={() => handleCreatePost('clipts')}
-                disabled={loading}
-                className="flex-1"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Clipt...
-                  </>
-                ) : (
-                  'Post to Clipts'
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="default"
-                onClick={() => handleCreatePost('home')}
-                disabled={loading}
-                className="flex-1"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Post...
-                  </>
-                ) : (
-                  'Post to Home'
-                )}
-              </Button>
-            </div>
           </div>
+        </div>
+      </div>
+      <div className="sticky bottom-0 bg-gray-950 py-4 mt-auto">
+        <div className="flex gap-4">
+          <Button
+            type="button"
+            variant="default"
+            onClick={() => handleCreatePost('clipts')}
+            disabled={loading}
+            className="flex-1"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Clipt...
+              </>
+            ) : (
+              'Post to Clipts'
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant="default"
+            onClick={() => handleCreatePost('home')}
+            disabled={loading}
+            className="flex-1"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Post...
+              </>
+            ) : (
+              'Post to Home'
+            )}
+          </Button>
         </div>
       </div>
     </div>

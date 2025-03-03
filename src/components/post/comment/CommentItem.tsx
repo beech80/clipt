@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Heart, Reply, Trash2, Edit, X, Check } from "lucide-react";
+import { Heart, Reply, Trash2, Edit, X, Check, MessageSquare } from "lucide-react";
 import { CommentForm } from "./CommentForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { likeComment, deleteComment, editComment } from "@/services/commentService";
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { useNavigate } from "react-router-dom";
 
 interface CommentItemProps {
   comment: {
@@ -42,6 +43,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
   const [editedContent, setEditedContent] = useState(comment.content);
   const [isDeleting, setIsDeleting] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
   const hasReplies = comment.replies && comment.replies.length > 0;
   
   // Check if the current user is the author of the comment
@@ -205,6 +207,17 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
               )}
               <div className="flex items-center">
                 <span className="text-xs text-gray-400 mr-2">{formattedDate}</span>
+                
+                {!isAuthor && user && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/messages/${comment.user_id}`)}
+                    className="text-xs p-1 hover:bg-[#1A1F2C] rounded-full"
+                  >
+                    <MessageSquare className="h-4 w-4 text-gray-400" />
+                  </Button>
+                )}
                 
                 {isAuthor && (
                   <DropdownMenu>
