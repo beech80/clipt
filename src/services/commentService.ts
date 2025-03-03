@@ -213,6 +213,53 @@ export const deleteComment = async (commentId: string, userId: string): Promise<
   }
 };
 
+export const editComment = async (commentId: string, userId: string, content: string): Promise<CommentResponse> => {
+  try {
+    if (!content.trim()) {
+      throw new Error("Comment content cannot be empty");
+    }
+
+    // Verify the comment belongs to the user
+    const { data: comment, error: checkError } = await supabase
+      .from('comments')
+      .select('id')
+      .eq('id', commentId)
+      .eq('user_id', userId)
+      .single();
+
+    if (checkError) {
+      // If not found or not authorized
+      throw new Error("Comment not found or you don't have permission to edit it");
+    }
+
+    // Update the comment
+    const { data, error: updateError } = await supabase
+      .from('comments')
+      .update({ content, updated_at: new Date().toISOString() })
+      .eq('id', commentId)
+      .select(`
+        id,
+        content,
+        created_at,
+        updated_at,
+        parent_id,
+        likes_count,
+        user_id,
+        profiles:user_id (
+          username,
+          avatar_url
+        )
+      `);
+
+    if (updateError) throw updateError;
+
+    return { data, error: null };
+  } catch (error) {
+    console.error("Error in editComment:", error);
+    return { data: null, error: error as Error };
+  }
+};
+
 export const getCommentCount = async (postId: string): Promise<number> => {
   try {
     const { count, error } = await supabase
