@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
@@ -8,9 +8,12 @@ import { Post as PostType } from "@/types/post";
 import { SEO } from "@/components/SEO";
 import { BackButton } from "@/components/ui/back-button";
 import { Calendar, MessageSquare, Share2, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CommentList } from "@/components/post/CommentList";
 
 const Post = () => {
   const { id } = useParams();
+  const location = useLocation();
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['post', id],
@@ -110,6 +113,22 @@ const Post = () => {
     day: 'numeric'
   });
 
+  const [showComments, setShowComments] = useState(false);
+  const commentsRef = useRef<HTMLDivElement>(null);
+
+  // Check if URL has #comments hash on load
+  useEffect(() => {
+    if (location.hash === '#comments') {
+      setShowComments(true);
+      // Add slight delay to ensure DOM is ready
+      setTimeout(() => {
+        if (commentsRef.current) {
+          commentsRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 300);
+    }
+  }, [location.hash]);
+
   return (
     <>
       <SEO 
@@ -136,7 +155,23 @@ const Post = () => {
           </div>
           
           <div className="gaming-card">
-            <PostItem post={post} />
+            <PostItem post={post} onCommentClick={() => setShowComments(!showComments)} />
+          </div>
+          
+          {/* Comments section */}
+          <div ref={commentsRef} id="comments" className="mt-6">
+            {showComments ? (
+              <CommentList 
+                postId={id || ''} 
+                onBack={() => setShowComments(false)}
+                key={`comments-${id}`}
+              />
+            ) : (
+              <div className="bg-[#1A1F2C] rounded-lg p-4 text-center cursor-pointer" onClick={() => setShowComments(true)}>
+                <MessageSquare className="h-6 w-6 mx-auto mb-2 text-blue-400" />
+                <p>Click to view comments</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

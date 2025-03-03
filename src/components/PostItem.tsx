@@ -19,9 +19,10 @@ import { Button } from "./ui/button";
 
 interface PostItemProps {
   post: Post;
+  onCommentClick?: () => void;
 }
 
-const PostItem = ({ post }: PostItemProps) => {
+const PostItem = ({ post, onCommentClick }: PostItemProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -79,7 +80,11 @@ const PostItem = ({ post }: PostItemProps) => {
 
   const handleCommentClick = () => {
     console.log("Comment button clicked for post:", postId);
-    setShowComments(!showComments);
+    if (onCommentClick) {
+      onCommentClick();
+    } else {
+      setShowComments(!showComments);
+    }
   };
 
   const handleProfileClick = (userId: string) => {
@@ -167,7 +172,7 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
         <Button
           variant="ghost"
-          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 p-0"
+          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 p-0 comment-btn"
           onClick={handleCommentClick}
         >
           <MessageSquare 

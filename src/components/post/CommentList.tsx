@@ -37,6 +37,14 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
     // Additional check to see the exact type and value
     console.log('PostId type:', typeof normalizedPostId);
     console.log('PostId value:', normalizedPostId);
+    
+    // Add focus to comment form when component mounts to improve UX
+    const commentTextarea = document.querySelector('.comment-textarea');
+    if (commentTextarea && commentTextarea instanceof HTMLElement) {
+      setTimeout(() => {
+        commentTextarea.focus();
+      }, 500);
+    }
   }, [normalizedPostId]);
 
   // Exit early if no postId is provided or if it's invalid

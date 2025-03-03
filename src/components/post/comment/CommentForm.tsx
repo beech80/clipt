@@ -133,7 +133,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCom
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
         disabled={!user || isSubmitting}
-        className="w-full min-h-[60px] bg-[#1e2230] text-white rounded-lg p-2 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50"
+        className="w-full min-h-[60px] bg-[#1e2230] text-white rounded-lg p-2 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50 comment-textarea"
       />
       <div className="flex justify-end mt-2 space-x-2">
         {onCancel && (
