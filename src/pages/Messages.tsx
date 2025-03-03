@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, MessageSquare, Plus, Users } from "lucide-react";
+import { Search, MessageSquare, Plus, Users, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -413,6 +413,20 @@ const Messages = () => {
           {selectedChat ? (
             <>
               <div className="p-4 border-b border-gaming-700 flex items-center">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="mr-2" 
+                  onClick={() => {
+                    setSelectedChat(null);
+                    // Clear URL parameters if they exist
+                    if (userId) {
+                      navigate('/messages');
+                    }
+                  }}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
                 <h2 className="text-xl font-semibold">
                   {selectedChat.recipient_name || 'Chat'}
                 </h2>
