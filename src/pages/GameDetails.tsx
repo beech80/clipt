@@ -8,7 +8,7 @@ import { Gamepad2 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
 const GameDetails = () => {
-  const { gameId } = useParams<{ gameId: string }>();
+  const { id } = useParams<{ id: string }>();
   const [game, setGame] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,7 @@ const GameDetails = () => {
 
   useEffect(() => {
     const fetchGameDetails = async () => {
-      if (!gameId) {
+      if (!id) {
         setError('No game ID provided');
         setLoading(false);
         return;
@@ -31,7 +31,7 @@ const GameDetails = () => {
         const { data: gameData, error: gameError } = await supabase
           .from('games')
           .select('*')
-          .eq('id', gameId)
+          .eq('id', id)
           .single();
           
         if (gameError) throw gameError;
@@ -51,7 +51,7 @@ const GameDetails = () => {
             *,
             user:profiles(*)
           `)
-          .eq('game_id', gameId)
+          .eq('game_id', id)
           .order('created_at', { ascending: false });
           
         if (postsError) throw postsError;
@@ -66,7 +66,7 @@ const GameDetails = () => {
     };
     
     fetchGameDetails();
-  }, [gameId]);
+  }, [id]);
 
   if (loading) {
     return (
@@ -170,7 +170,7 @@ const GameDetails = () => {
         
         <TabsContent value="achievements" className="mt-0">
           <h2 className="text-xl font-semibold mb-4">Achievements for {game.title}</h2>
-          <AchievementList gameId={parseInt(gameId!, 10)} />
+          <AchievementList gameId={parseInt(id, 10)} />
         </TabsContent>
       </Tabs>
     </div>
