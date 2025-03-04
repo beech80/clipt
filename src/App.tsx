@@ -78,7 +78,7 @@ function App() {
                 <Toaster richColors position="top-center" />
                 <ScrollToTop />
                 <div className="app-content-wrapper" style={{ 
-                  paddingBottom: shouldShowControls ? '150px' : '0',
+                  paddingBottom: shouldShowControls ? '70px' : '0',
                   minHeight: '100vh' 
                 }}>
                   <AppContent />
