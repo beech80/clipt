@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CommentList } from "./post/CommentList"; 
 import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
+import { Textarea } from './ui/textarea';
 
 interface PostItemProps {
   post: Post;
@@ -28,6 +30,9 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
   const [showComments, setShowComments] = useState(false);
@@ -147,6 +152,50 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       toast.error("Failed to update like status");
     } finally {
       setLikeLoading(false);
+    }
+  };
+
+  const handleComment = () => {
+    setIsDialogOpen(true);
+  };
+
+  const submitComment = async () => {
+    if (!user) {
+      toast.error('Please login to comment');
+      return;
+    }
+    
+    if (!commentText.trim()) {
+      toast.error('Comment cannot be empty');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          content: commentText.trim(),
+          created_at: new Date().toISOString()
+        })
+        .select('*, profiles:user_id(username, avatar_url, display_name)');
+      
+      if (error) throw error;
+      
+      // Update local state
+      setCommentCount(commentsCount + 1);
+      setCommentText('');
+      setIsDialogOpen(false);
+      toast.success('Comment added');
+      
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast.error('Failed to add comment');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -350,18 +399,50 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             {likesCount}
           </span>
         </div>
-        <Button
-          variant="ghost"
-          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 p-0 comment-btn"
-          onClick={handleCommentClick}
-        >
-          <MessageSquare 
-            className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90"
-          />
-          <span className="text-base font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
-            {commentsCount}
-          </span>
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 p-0 comment-btn"
+              onClick={handleComment}
+            >
+              <MessageSquare 
+                className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90"
+              />
+              <span className="text-base font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
+                {commentsCount}
+              </span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-[#1D1E2A] border-[#2C2D41] text-white p-4 max-w-md mx-auto">
+            <h3 className="text-lg font-bold mb-3">Add Comment</h3>
+            <p className="text-sm text-gray-400 mb-4">Commenting on post from {post.profiles?.username || 'user'}</p>
+            
+            <Textarea
+              placeholder="Write your comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="bg-[#252636] border-[#333442] text-white min-h-[100px] mb-4"
+            />
+            
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDialogOpen(false)}
+                className="border-[#3F4252] text-gray-300 hover:bg-[#2C2D41]"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={submitComment}
+                disabled={isSubmitting || !commentText.trim()}
+                className="bg-[#6366F1] hover:bg-[#4F46E5] text-white"
+              >
+                {isSubmitting ? 'Posting...' : 'Post Comment'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         <div 
           className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
           onClick={handleTrophyClick}

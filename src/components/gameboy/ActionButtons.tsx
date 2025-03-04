@@ -1,143 +1,316 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Heart, MessageSquare, UserPlus, Trophy } from 'lucide-react';
+import { NavigateFunction, useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { useComments } from '@/contexts/CommentContext';
-import { toast } from 'sonner';
 
 interface ActionButtonsProps {
-  postId?: string;
-  onAction?: (action: string) => void;
+  navigate: NavigateFunction;
+  currentPostId?: string;
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
+export default function ActionButtons({ navigate, currentPostId }: ActionButtonsProps) {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { openComments } = useComments();
+  const location = useLocation();
+  const [activePostId, setActivePostId] = useState<string | null>(null);
+  
+  // Find the current visible post ID from the screen
+  useEffect(() => {
+    const findVisiblePost = () => {
+      const posts = document.querySelectorAll('[data-post-id]');
+      if (!posts.length) return;
+      
+      // Find the post most in view
+      let mostVisiblePost: Element | null = null;
+      let maxVisibility = 0;
+      
+      posts.forEach(post => {
+        const rect = post.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        
+        // Calculate how much of the post is visible (0 to 1)
+        const visibility = Math.min(
+          Math.max(0, (rect.bottom - 100) / windowHeight),
+          Math.max(0, (windowHeight - rect.top) / windowHeight)
+        );
+        
+        if (visibility > maxVisibility) {
+          maxVisibility = visibility;
+          mostVisiblePost = post;
+        }
+      });
+      
+      if (mostVisiblePost) {
+        const postId = mostVisiblePost.getAttribute('data-post-id');
+        if (postId) {
+          setActivePostId(postId);
+          console.log('Detected active post:', postId);
+        }
+      }
+    };
 
+    // Run on mount and during scroll
+    findVisiblePost();
+    window.addEventListener('scroll', findVisiblePost);
+    
+    return () => {
+      window.removeEventListener('scroll', findVisiblePost);
+    };
+  }, [location.pathname]);
+  
+  // Handle like button press
   const handleLike = async () => {
     if (!user) {
-      toast.error('Please login to like posts');
+      toast.error("Please log in to like posts");
       return;
     }
     
-    if (onAction) onAction('like');
-    toast.success('Post liked!');
-  };
-  
-  const handleComment = async () => {
-    if (!user) {
-      toast.error('Please login to comment');
+    const postId = activePostId || currentPostId;
+    if (!postId) {
+      toast.error("No post selected");
       return;
     }
     
-    if (postId) {
-      openComments(postId);
-    } else {
-      toast.error('Cannot comment on this post');
+    try {
+      console.log(`Liking post ID: ${postId}`);
+      
+      // Check if already liked
+      const { data: existingLike } = await supabase
+        .from('likes')
+        .select('*')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (existingLike) {
+        // Unlike the post
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+          
+        toast.success("Unliked post");
+      } else {
+        // Like the post
+        await supabase
+          .from('likes')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            created_at: new Date().toISOString()
+          });
+          
+        toast.success("Liked post");
+      }
+      
+      // Force refresh to update UI
+      setTimeout(() => window.location.reload(), 1000);
+      
+    } catch (error) {
+      console.error("Error liking post:", error);
+      toast.error("Failed to update like status");
     }
-    
-    if (onAction) onAction('comment');
   };
   
+  // Handle comment button press
+  const handleComment = () => {
+    const postId = activePostId || currentPostId;
+    if (!postId) {
+      toast.error("No post selected");
+      return;
+    }
+    
+    console.log(`Opening comments for post ID: ${postId}`);
+    
+    // Find the post's comment button and click it
+    const post = document.querySelector(`[data-post-id="${postId}"]`);
+    if (post) {
+      const commentBtn = post.querySelector('.comment-button') as HTMLElement;
+      if (commentBtn) {
+        commentBtn.click();
+        return;
+      }
+    }
+    
+    // Fallback - navigate to post detail page
+    navigate(`/post/${postId}`);
+  };
+  
+  // Handle follow button press
   const handleFollow = async () => {
     if (!user) {
-      toast.error('Please login to follow users');
+      toast.error("Please log in to follow users");
       return;
     }
     
-    if (onAction) onAction('follow');
-    toast.success('User followed!');
+    const postId = activePostId || currentPostId;
+    if (!postId) {
+      toast.error("No post selected");
+      return;
+    }
+    
+    try {
+      // Get post to find user ID
+      const { data: post } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', postId)
+        .single();
+      
+      if (!post) {
+        toast.error("Post not found");
+        return;
+      }
+      
+      if (post.user_id === user.id) {
+        toast.error("You cannot follow yourself");
+        return;
+      }
+      
+      // Check if already following
+      const { data: existingFollow } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('follower_id', user.id)
+        .eq('following_id', post.user_id)
+        .maybeSingle();
+      
+      if (existingFollow) {
+        // Unfollow
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', post.user_id);
+          
+        toast.success("Unfollowed user");
+      } else {
+        // Follow
+        await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            following_id: post.user_id,
+            created_at: new Date().toISOString()
+          });
+          
+        toast.success("Following user");
+      }
+      
+    } catch (error) {
+      console.error("Error following user:", error);
+      toast.error("Failed to update follow status");
+    }
   };
   
-  const handleRank = async () => {
+  // Handle trophy button press
+  const handleTrophy = async () => {
     if (!user) {
-      toast.error('Please login to rank posts');
+      toast.error("Please log in to award trophies");
       return;
     }
     
-    if (onAction) onAction('rank');
-    toast.success('Post ranked!');
+    const postId = activePostId || currentPostId;
+    if (!postId) {
+      toast.error("No post selected");
+      return;
+    }
+    
+    try {
+      // Check if already voted
+      const { data: existingVote } = await supabase
+        .from('clip_votes')
+        .select('*')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (existingVote) {
+        // Remove vote
+        await supabase
+          .from('clip_votes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+          
+        toast.success("Trophy removed");
+      } else {
+        // Add vote
+        await supabase
+          .from('clip_votes')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            created_at: new Date().toISOString()
+          });
+          
+        toast.success("Trophy awarded!");
+      }
+      
+      // Force refresh to update UI
+      setTimeout(() => window.location.reload(), 1000);
+      
+    } catch (error) {
+      console.error("Error awarding trophy:", error);
+      toast.error("Failed to award trophy");
+    }
   };
 
   return (
-    <div className="relative w-[80px] h-[80px]">
-      {/* Red heart button - top position */}
-      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-        <button
+    <div className="relative w-full h-full">
+      {/* Diamond pattern buttons */}
+      <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
+        <button 
           onClick={handleLike}
-          className="w-[24px] h-[24px] rounded-full bg-red-600 shadow-[0_0_3px_rgba(220,38,38,0.5)] flex items-center justify-center"
-          aria-label="Like"
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-[#272A37] border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
+          aria-label="Like post"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
-          </svg>
+          <Heart className="h-6 w-6 text-red-500" />
         </button>
       </div>
       
-      {/* Blue message button - left position */}
-      <div className="absolute top-1/2 -left-3 -translate-y-1/2">
-        <button
+      <div className="absolute -left-1/4 top-1/2 transform -translate-y-1/2">
+        <button 
           onClick={handleComment}
-          className="w-[24px] h-[24px] rounded-full bg-blue-600 shadow-[0_0_3px_rgba(37,99,235,0.5)] flex items-center justify-center"
-          aria-label="Comment"
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-[#272A37] border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
+          aria-label="Comment on post"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
+          <MessageSquare className="h-6 w-6 text-blue-500" />
         </button>
       </div>
       
-      {/* Green follow button - right position */}
-      <div className="absolute top-1/2 -right-3 -translate-y-1/2">
-        <button
+      <div className="absolute left-1/2 transform -translate-x-1/2 top-1/4">
+        <button 
           onClick={handleFollow}
-          className="w-[24px] h-[24px] rounded-full bg-green-600 shadow-[0_0_3px_rgba(22,163,74,0.5)] flex items-center justify-center"
-          aria-label="Follow"
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-[#272A37] border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
+          aria-label="Follow user"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="8.5" cy="7" r="4"></circle>
-            <line x1="20" y1="8" x2="20" y2="14"></line>
-            <line x1="23" y1="11" x2="17" y2="11"></line>
-          </svg>
+          <UserPlus className="h-6 w-6 text-green-500" />
         </button>
       </div>
       
-      {/* Yellow trophy button - bottom position */}
-      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
-        <button
-          onClick={handleRank}
-          className="w-[24px] h-[24px] rounded-full bg-yellow-500 shadow-[0_0_3px_rgba(234,179,8,0.5)] flex items-center justify-center"
-          aria-label="Rank"
+      <div className="absolute -right-1/4 top-1/2 transform -translate-y-1/2">
+        <button 
+          onClick={handleTrophy}
+          className="w-12 h-12 rounded-full flex items-center justify-center bg-[#272A37] border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
+          aria-label="Award trophy"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-            <path d="M4 22h16"></path>
-            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-          </svg>
+          <Trophy className="h-6 w-6 text-yellow-500" />
         </button>
       </div>
       
-      {/* Purple camera POST button - below the diamond */}
-      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
-        <button
+      {/* POST button at bottom */}
+      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+        <button 
           onClick={() => navigate('/post/new')}
-          className="w-[24px] h-[24px] rounded-full bg-purple-600 shadow-[0_0_3px_rgba(147,51,234,0.5)] flex items-center justify-center"
-          aria-label="Post"
+          className="px-4 py-2 rounded-md bg-[#272A37] text-[#6366F1] font-semibold text-sm border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
+          aria-label="Create new post"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-            <circle cx="12" cy="13" r="4"></circle>
-          </svg>
+          POST
         </button>
-        <span className="absolute -bottom-4 text-[8px] font-bold text-purple-300 left-1/2 -translate-x-1/2">POST</span>
       </div>
     </div>
   );
-};
-
-export default ActionButtons;
+}

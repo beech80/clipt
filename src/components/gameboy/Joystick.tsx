@@ -1,111 +1,140 @@
-import React, { useEffect } from 'react';
-import { NavigateFunction } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface JoystickProps {
-  navigate: NavigateFunction;
-}
-
-export default function Joystick({ navigate }: JoystickProps) {
-  // Handle joystick navigation
-  const handleNavigation = (direction: string) => {
-    switch (direction) {
-      case 'up':
-        // Scroll up
-        window.scrollBy({
-          top: -300,
-          behavior: 'smooth'
-        });
-        break;
-      case 'right':
-        navigate('/discover');
-        break;
-      case 'down':
-        // Scroll down
-        window.scrollBy({
-          top: 300,
-          behavior: 'smooth'
-        });
-        break;
-      case 'left':
-        navigate('/profile');
-        break;
-      default:
-        break;
+export default function Joystick() {
+  const navigate = useNavigate();
+  const [activeDirection, setActiveDirection] = useState<string | null>(null);
+  const joystickRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
+  
+  // Function to scroll the window smoothly
+  const scrollWindow = (direction: 'up' | 'down', amount: number) => {
+    if (direction === 'up') {
+      window.scrollBy({
+        top: -amount,
+        behavior: 'smooth'
+      });
+    } else {
+      window.scrollBy({
+        top: amount,
+        behavior: 'smooth'
+      });
+    }
+  };
+  
+  // Handle joystick movement with animation
+  const handleJoystickMove = (direction: string) => {
+    setActiveDirection(direction);
+    
+    if (direction === 'up' || direction === 'down') {
+      // Cancel any existing scrolling animation
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      
+      // Start scrolling animation
+      const scrollAmount = 300; // pixels
+      scrollWindow(direction as 'up' | 'down', scrollAmount);
+      
+      // Animate the joystick
+      if (joystickRef.current) {
+        joystickRef.current.style.transition = 'transform 0.2s ease-out';
+        
+        if (direction === 'up') {
+          joystickRef.current.style.transform = 'translateY(-5px)';
+        } else if (direction === 'down') {
+          joystickRef.current.style.transform = 'translateY(5px)';
+        } else if (direction === 'left') {
+          joystickRef.current.style.transform = 'translateX(-5px)';
+        } else if (direction === 'right') {
+          joystickRef.current.style.transform = 'translateX(5px)';
+        }
+      }
+    } else if (direction === 'left') {
+      navigate('/profile');
+    } else if (direction === 'right') {
+      navigate('/discover');
+    }
+  };
+  
+  // Reset joystick position
+  const resetJoystick = () => {
+    setActiveDirection(null);
+    
+    if (joystickRef.current) {
+      joystickRef.current.style.transition = 'transform 0.2s ease-out';
+      joystickRef.current.style.transform = 'translate(0, 0)';
+    }
+    
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
   };
 
-  // Add keyboard controls for joystick
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowUp':
-          handleNavigation('up');
-          break;
-        case 'ArrowRight':
-          handleNavigation('right');
-          break;
-        case 'ArrowDown':
-          handleNavigation('down');
-          break;
-        case 'ArrowLeft':
-          handleNavigation('left');
-          break;
-        default:
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   return (
     <div className="relative w-full h-full">
-      {/* Base of the joystick - concave circular area */}
-      <div 
-        className="absolute inset-0 rounded-full bg-[#1e2029]"
-        style={{
-          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.7)',
-          border: '1px solid #2d3047'
-        }}
-      ></div>
+      {/* Base circle */}
+      <div className="absolute inset-0 rounded-full bg-[#272A37] border border-[#3f4255]"></div>
       
-      {/* Joystick analog stick */}
+      {/* Joystick button */}
       <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-full bg-[#272935]"
-        style={{ 
-          boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
-          border: '1px solid #333642',
-        }}
+        ref={joystickRef}
+        className="absolute w-[40px] h-[40px] left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#323644] border border-[#3f4255] shadow-inner"
       >
-        {/* Textured top of stick */}
-        <div className="absolute inset-0 rounded-full" style={{
-          background: 'radial-gradient(circle at center, #2a2c3a 0%, #232531 100%)',
-          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1)'
-        }}></div>
+        {/* Direction buttons */}
+        <button 
+          className={`absolute w-[20px] h-[20px] left-1/2 -top-[10px] transform -translate-x-1/2 text-gray-400 focus:outline-none ${activeDirection === 'up' ? 'text-white' : ''}`}
+          onClick={() => handleJoystickMove('up')} 
+          onTouchStart={() => handleJoystickMove('up')}
+          onMouseDown={() => handleJoystickMove('up')}
+          onMouseUp={resetJoystick}
+          onMouseLeave={resetJoystick}
+          onTouchEnd={resetJoystick}
+          aria-label="Scroll up"
+        >
+          ▲
+        </button>
+        
+        <button 
+          className={`absolute w-[20px] h-[20px] left-1/2 -bottom-[10px] transform -translate-x-1/2 text-gray-400 focus:outline-none ${activeDirection === 'down' ? 'text-white' : ''}`}
+          onClick={() => handleJoystickMove('down')}
+          onTouchStart={() => handleJoystickMove('down')}
+          onMouseDown={() => handleJoystickMove('down')}
+          onMouseUp={resetJoystick}
+          onMouseLeave={resetJoystick}
+          onTouchEnd={resetJoystick}
+          aria-label="Scroll down"
+        >
+          ▼
+        </button>
+        
+        <button 
+          className={`absolute h-[20px] w-[20px] -left-[10px] top-1/2 transform -translate-y-1/2 text-gray-400 focus:outline-none ${activeDirection === 'left' ? 'text-white' : ''}`}
+          onClick={() => handleJoystickMove('left')}
+          onTouchStart={() => handleJoystickMove('left')}
+          onMouseDown={() => handleJoystickMove('left')}
+          onMouseUp={resetJoystick}
+          onMouseLeave={resetJoystick}
+          onTouchEnd={resetJoystick}
+          aria-label="Navigate to profile"
+        >
+          ◀
+        </button>
+        
+        <button 
+          className={`absolute h-[20px] w-[20px] -right-[10px] top-1/2 transform -translate-y-1/2 text-gray-400 focus:outline-none ${activeDirection === 'right' ? 'text-white' : ''}`}
+          onClick={() => handleJoystickMove('right')}
+          onTouchStart={() => handleJoystickMove('right')}
+          onMouseDown={() => handleJoystickMove('right')}
+          onMouseUp={resetJoystick}
+          onMouseLeave={resetJoystick}
+          onTouchEnd={resetJoystick}
+          aria-label="Navigate to discover"
+        >
+          ▶
+        </button>
       </div>
-      
-      {/* Invisible hotspots for navigation */}
-      <button
-        onClick={() => handleNavigation('up')}
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[45px] h-[20px] cursor-pointer opacity-0"
-        aria-label="Navigate up"
-      ></button>
-      <button
-        onClick={() => handleNavigation('right')}
-        className="absolute top-1/2 right-0 -translate-y-1/2 w-[20px] h-[45px] cursor-pointer opacity-0"
-        aria-label="Navigate right"
-      ></button>
-      <button
-        onClick={() => handleNavigation('down')}
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[45px] h-[20px] cursor-pointer opacity-0"
-        aria-label="Navigate down"
-      ></button>
-      <button
-        onClick={() => handleNavigation('left')}
-        className="absolute top-1/2 left-0 -translate-y-1/2 w-[20px] h-[45px] cursor-pointer opacity-0"
-        aria-label="Navigate left"
-      ></button>
     </div>
   );
 }

@@ -1,250 +1,174 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Book, Users, Home, Settings, X } from 'lucide-react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { toast } from 'sonner';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Trophy, Home, Search, User } from 'lucide-react';
 import Joystick from './gameboy/Joystick';
 import ActionButtons from './gameboy/ActionButtons';
-import { handleVideoControl } from './gameboy/VideoControls';
+import { Button } from './ui/button';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
 }
 
-const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
+const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCurrentPostId }) => {
   const navigate = useNavigate();
-  const params = useParams();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
-  const [postId, setPostId] = useState('');
-  
-  // Set postId with priority: currentPostId from App > URL params > empty string
+  const [currentPath, setCurrentPath] = useState(location.pathname);
+  const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
+
+  // Keep track of current route
   useEffect(() => {
-    let newPostId = '';
-    if (currentPostId && currentPostId !== 'undefined' && currentPostId !== 'null') {
-      newPostId = currentPostId;
-    } else if (params.id && params.id !== 'undefined' && params.id !== 'null') {
-      newPostId = params.id;
+    setCurrentPath(location.pathname);
+    
+    // Update current post ID when prop changes
+    if (propCurrentPostId) {
+      setCurrentPostId(propCurrentPostId);
     }
     
-    // If we're in the post page, try to extract the ID from the URL
-    if (!newPostId && location.pathname.startsWith('/post/')) {
-      const pathSegments = location.pathname.split('/');
-      if (pathSegments[2]) {
-        newPostId = pathSegments[2];
-      }
+    // Reset the current post ID when changing routes
+    if (location.pathname !== currentPath && !propCurrentPostId) {
+      setCurrentPostId(null);
     }
-    
-    setPostId(newPostId);
-  }, [currentPostId, params, location.pathname]);
+  }, [location.pathname, propCurrentPostId, currentPath]);
   
-  // Handle keydown for controls
+  // Detect current visible post ID
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp') {
-        navigate('/');
-      } else if (e.key === 'ArrowDown') {
-        navigate('/discover');
-      } else if (e.key === 'ArrowLeft') {
-        navigate('/clipts');
-      } else if (e.key === 'ArrowRight') {
-        navigate('/discover');
-      }
+    // Skip if we already have a post ID from props
+    if (propCurrentPostId) return;
+    
+    const findVisiblePostId = () => {
+      // Find all post elements
+      const posts = document.querySelectorAll('[data-post-id]');
+      if (!posts.length) return;
       
-      // A button (key: z) - Like
-      if (e.key === 'z') {
-        const actionButtons = document.querySelector('[aria-label="Like"]') as HTMLButtonElement;
-        if (actionButtons) actionButtons.click();
-      }
+      // Find the post most visible in the viewport
+      let mostVisiblePost: Element | null = null;
+      let maxVisibleArea = 0;
       
-      // B button (key: x) - Comment
-      if (e.key === 'x') {
-        const commentButton = document.querySelector('[aria-label="Comment"]') as HTMLButtonElement;
-        if (commentButton) commentButton.click();
-      }
+      posts.forEach(post => {
+        const rect = post.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        
+        // Skip if post is not visible
+        if (rect.bottom < 100 || rect.top > viewportHeight - 100) {
+          return;
+        }
+        
+        // Calculate visible area
+        const visibleTop = Math.max(0, rect.top);
+        const visibleBottom = Math.min(viewportHeight, rect.bottom);
+        const visibleHeight = visibleBottom - visibleTop;
+        const visibleRatio = visibleHeight / rect.height;
+        
+        if (visibleRatio > maxVisibleArea) {
+          maxVisibleArea = visibleRatio;
+          mostVisiblePost = post;
+        }
+      });
       
-      // Video controls when in post view
-      if (location.pathname.includes('/post/')) {
-        handleVideoControl(e);
+      if (mostVisiblePost && maxVisibleArea > 0.3) {
+        const postId = mostVisiblePost.getAttribute('data-post-id');
+        if (postId && postId !== currentPostId) {
+          setCurrentPostId(postId);
+          console.log('Current visible post:', postId);
+        }
       }
     };
     
-    window.addEventListener('keydown', handleKeyDown);
+    // Run on scroll and resize
+    findVisiblePostId();
+    window.addEventListener('scroll', findVisiblePostId);
+    window.addEventListener('resize', findVisiblePostId);
     
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', findVisiblePostId);
+      window.removeEventListener('resize', findVisiblePostId);
     };
-  }, [navigate, location.pathname]);
+  }, [currentPostId, propCurrentPostId]);
 
-  const handleAction = (action: string) => {
-    switch(action) {
-      case 'like':
-        // Handled in ActionButtons
-        break;
-      case 'comment':
-        // Handled in ActionButtons
-        break;
-      case 'follow':
-        // Handled in ActionButtons
-        break;
-      case 'rank':
-        // Handled in ActionButtons
-        break;
-      default:
-        break;
-    }
+  // Handle navigation via GameBoy buttons
+  const handleCliptButtonClick = () => {
+    navigate('/clipts');
   };
 
-  const menuItems = [
-    {
-      name: 'Home',
-      path: '/',
-      icon: <Home className="w-4 h-4" />,
-    },
-    {
-      name: 'Discover',
-      path: '/discover',
-      icon: <Book className="w-4 h-4" />,
-    },
-    {
-      name: 'Clipts',
-      path: '/clipts',
-      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>,
-    },
-    {
-      name: 'Messages',
-      path: '/messages',
-      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>,
-    },
-    {
-      name: 'Profile',
-      path: '/profile',
-      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
-    },
-    {
-      name: 'Top Clipts',
-      path: '/top-clipts',
-      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>,
-    },
-    {
-      name: 'Streaming',
-      path: '/streaming',
-      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>,
-    },
-    {
-      name: 'Settings',
-      path: '/settings',
-      icon: <Settings className="w-4 h-4" />,
-    },
-  ];
+  // Check if a navigation item is active
+  const isActive = (paths: string[]) => {
+    return paths.some(path => location.pathname.startsWith(path));
+  };
 
   return (
-    <div className="gameboy-container h-[120px] bg-[#1A1B26] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#272A37]">
-      {/* Menu button (center bottom) */}
-      <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <button className="rounded-full w-10 h-10 bg-[#272A37] flex items-center justify-center border border-[#3f4255] hover:bg-[#2d3044] transition-colors">
-              <Menu className="h-5 w-5 text-[#6366F1]" />
-            </button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="bg-[#1A1B26] border-t border-[#272A37] p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-white">Navigation</h3>
-              <button onClick={() => setIsOpen(false)} className="p-1 rounded-full">
-                <X className="h-4 w-4 text-white" />
+    <div className="fixed bottom-0 left-0 right-0 h-[140px] z-50 pointer-events-none">
+      <div className="max-w-screen-md mx-auto relative h-full">
+        <div className="absolute inset-x-0 bottom-0 h-[120px] bg-[#1a1b26]/90 backdrop-blur-md border-t border-[#2c2d4a] rounded-t-xl pointer-events-auto">
+          {/* Top navigation menu */}
+          <div className="flex justify-center pt-1 pb-2 gap-5 border-b border-[#2c2d4a]/50">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 ${isActive(['/']) ? 'text-white' : 'text-[#6c7793]'}`}
+              onClick={() => navigate('/')}
+              aria-label="Home"
+            >
+              <Home size={20} />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 ${isActive(['/discover']) ? 'text-white' : 'text-[#6c7793]'}`}
+              onClick={() => navigate('/discover')}
+              aria-label="Discover"
+            >
+              <Search size={20} />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 ${isActive(['/topclips']) ? 'text-white' : 'text-[#6c7793]'}`}
+              onClick={() => navigate('/topclips')}
+              aria-label="Top Clips"
+            >
+              <Trophy size={20} />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 ${isActive(['/profile']) ? 'text-white' : 'text-[#6c7793]'}`}
+              onClick={() => navigate('/profile')}
+              aria-label="Profile"
+            >
+              <User size={20} />
+            </Button>
+          </div>
+          
+          {/* GameBoy Controls */}
+          <div className="flex justify-between items-center px-8 py-2 h-[80px]">
+            {/* Left joystick */}
+            <div className="w-[80px] h-[80px]">
+              <Joystick />
+            </div>
+            
+            {/* Middle CLIPT button */}
+            <div className="w-[80px] h-[80px] relative">
+              <button
+                onClick={handleCliptButtonClick}
+                className="w-full h-full rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:ring-opacity-50"
+                aria-label="Go to Clipts page"
+              >
+                <div className="absolute inset-0 w-full h-full animate-spin-slow">
+                  <div className="w-[48px] h-[48px] rounded-full animate-ring-glow" style={{ border: '1.5px solid rgba(139, 92, 246, 0.8)' }}></div>
+                </div>
+                <span className="text-md font-bold relative z-10 bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] bg-clip-text text-transparent">CLIPT</span>
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-3">
-              {menuItems.map((item) => (
-                <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    toast.success(`Navigating to ${item.name}`);
-                    setIsOpen(false);
-                  }}
-                  className="flex flex-col items-center justify-center p-3 rounded-lg bg-[#272A37]/80 hover:bg-[#272A37]
-                    active:bg-[#272A37] transition-all duration-300 text-gray-300
-                    font-medium text-sm active:scale-95"
-                >
-                  {item.icon}
-                  <span className="mt-1 text-xs">{item.name}</span>
-                </button>
-              ))}
+            
+            {/* Right action buttons */}
+            <div className="w-[80px] h-[80px]">
+              <ActionButtons navigate={navigate} currentPostId={currentPostId || undefined} />
             </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-      
-      {/* Left-side joystick - Xbox style */}
-      <div className="absolute bottom-[78px] left-[38px]">
-        <div className="w-[65px] h-[65px]">
-          <Joystick navigate={navigate} />
+          </div>
         </div>
-      </div>
-      
-      {/* CLIPT button with cooler animated ring */}
-      <div className="absolute bottom-[85px] left-1/2 -translate-x-1/2">
-        <button 
-          onClick={() => navigate('/clipts')}
-          className="relative flex items-center justify-center"
-          aria-label="Open Clipts"
-        >
-          {/* Fancy animated rings */}
-          <div className="absolute inset-0 w-full h-full animate-spin-slow">
-            <div 
-              className="w-[48px] h-[48px] rounded-full animate-ring-glow"
-              style={{
-                border: '1.5px solid rgba(139, 92, 246, 0.8)',
-                boxShadow: '0 0 8px rgba(139, 92, 246, 0.9)',
-                background: 'linear-gradient(45deg, rgba(139, 92, 246, 0.1), rgba(79, 70, 229, 0.1))',
-              }}
-            ></div>
-          </div>
-          
-          {/* Second ring rotating opposite direction */}
-          <div className="absolute inset-0 w-full h-full" style={{ animation: 'spin 7s linear infinite reverse' }}>
-            <div 
-              className="w-[44px] h-[44px] rounded-full"
-              style={{
-                border: '1px solid rgba(168, 85, 247, 0.6)',
-                boxShadow: '0 0 5px rgba(168, 85, 247, 0.7)',
-              }}
-            ></div>
-          </div>
-          
-          {/* Third floating ring */}
-          <div className="absolute inset-0 w-full h-full animate-pulse-gentle">
-            <div 
-              className="w-[50px] h-[50px] rounded-full"
-              style={{
-                border: '1px dashed rgba(139, 92, 246, 0.4)',
-              }}
-            ></div>
-          </div>
-          
-          {/* Black center button */}
-          <div className="relative z-10 flex items-center justify-center w-[35px] h-[35px] rounded-full bg-black">
-            <div className="flex flex-col items-center">
-              {/* Camera icon and CLIPT text */}
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                <circle cx="12" cy="13" r="4"></circle>
-              </svg>
-              <span className="text-[7px] font-bold text-white tracking-wide mt-0.5">CLIPT</span>
-            </div>
-          </div>
-        </button>
-      </div>
-      
-      {/* Right-side action buttons */}
-      <div className="absolute bottom-[78px] right-[38px]">
-        <ActionButtons postId={postId} onAction={handleAction} />
       </div>
     </div>
   );
