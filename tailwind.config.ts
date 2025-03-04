@@ -95,12 +95,17 @@ export default {
           "50%": { transform: "scale(1.2)", opacity: "0.5" },
           "100%": { transform: "scale(1)", opacity: "0" },
         },
+        "spin-slow": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         glow: "glow 2s ease-in-out infinite",
         "scale-up": "scale-up 0.6s ease-out",
+        "spin-slow": "spin-slow 8s linear infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
