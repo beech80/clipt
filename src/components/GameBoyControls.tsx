@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Camera, Trophy, Bot, Gamepad, MessageSquare, Users, Video, Home, Crown, Settings } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Menu, Camera, Trophy, Gamepad, MessageSquare, Users, Video, Home, Settings } from 'lucide-react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Sheet,
@@ -18,6 +18,7 @@ interface GameBoyControlsProps {
 const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   const navigate = useNavigate();
   const params = useParams();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [postId, setPostId] = useState('');
   
@@ -39,6 +40,46 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
     
     setPostId(newPostId);
   }, [currentPostId, params.id]);
+
+  // Handle keyboard navigation for gameboy controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Joystick navigation using arrow keys
+      if (e.key === 'ArrowUp') {
+        navigate('/');
+      } else if (e.key === 'ArrowDown') {
+        navigate('/profile');
+      } else if (e.key === 'ArrowLeft') {
+        navigate('/discover');
+      } else if (e.key === 'ArrowRight') {
+        navigate('/clipts');
+      }
+      
+      // Action buttons
+      if (e.key === 'a' || e.key === 'A') {
+        // Like action
+        const likeButton = document.querySelector('[data-action="like"]') as HTMLButtonElement;
+        if (likeButton) likeButton.click();
+      } else if (e.key === 'b' || e.key === 'B') {
+        // Comment action
+        const commentButton = document.querySelector('[data-action="comment"]') as HTMLButtonElement;
+        if (commentButton) commentButton.click();
+      } else if (e.key === 'x' || e.key === 'X') {
+        // Follow action
+        const followButton = document.querySelector('[data-action="follow"]') as HTMLButtonElement;
+        if (followButton) followButton.click();
+      } else if (e.key === 'y' || e.key === 'Y') {
+        // Trophy action
+        const trophyButton = document.querySelector('[data-action="trophy"]') as HTMLButtonElement;
+        if (trophyButton) trophyButton.click();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [navigate, location.pathname]);
 
   const handleAction = (action: string) => {
     switch(action) {
@@ -67,9 +108,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
     { name: 'Streaming', path: '/streaming', icon: <Video className="w-4 h-4" /> },
     { name: 'Top Clips', path: '/top-clips', icon: <Trophy className="w-4 h-4" /> },
     { name: 'Clipts', path: '/clipts', icon: <Camera className="w-4 h-4" /> },
-    { name: 'AI Assistant', path: '/ai-assistant', icon: <Bot className="w-4 h-4" /> },
-    { name: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" /> },
-    { name: 'Esports', path: '/esports', icon: <Crown className="w-4 h-4" /> }
+    { name: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" /> }
   ];
 
   return (
@@ -105,31 +144,34 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
           </SheetContent>
         </Sheet>
       </div>
-
-      {/* CLIPT button (center) */}
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
+      
+      {/* Left-side joystick */}
+      <div className="absolute bottom-2 left-4 sm:left-8 sm:bottom-4">
+        <Joystick navigate={navigate} />
+      </div>
+      
+      {/* "CLIPT" button (middle) */}
+      <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2">
         <button 
-          onClick={() => {
-            navigate('/clipts');
-            toast.success('Welcome to Clipts!');
+          onClick={() => navigate('/clipts/create')}
+          className="bg-gaming-800 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-sm sm:text-base font-bold
+            border-2 border-transparent bg-gradient-to-r from-blue-500 to-purple-600 
+            active:scale-95 transition-all duration-300
+            relative"
+          style={{
+            backgroundClip: 'padding-box',
+            WebkitBackgroundClip: 'padding-box',
           }}
-          className="clip-button active:scale-95 transition-transform"
-          aria-label="Go to Clipts"
-          style={{ width: '80px', height: '60px' }}
         >
-          <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Clipt</span>
+          <span className="bg-gaming-800 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full">
+            CLIPT
+          </span>
         </button>
       </div>
-
-      {/* Action buttons (right side) - moved down */}
-      <div className="fixed right-6 sm:right-8 bottom-16 sm:bottom-20 w-24 h-24">
-        <ActionButtons onAction={handleAction} postId={postId} />
-      </div>
-
-      {/* Joystick (left side) - moved down */}
-      <div className="fixed left-6 sm:left-8 bottom-12 sm:bottom-16 w-28 h-28">
-        <Joystick onDirectionChange={handleVideoControl} />
+      
+      {/* Right-side action buttons */}
+      <div className="absolute bottom-2 right-4 sm:right-8 sm:bottom-4">
+        <ActionButtons postId={postId} onAction={handleAction} />
       </div>
     </div>
   );

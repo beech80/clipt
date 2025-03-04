@@ -118,6 +118,133 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     }
   };
 
+  const handleLikeClick = async () => {
+    if (!user) {
+      toast.error('Please sign in to like posts');
+      return;
+    }
+
+    try {
+      const { data: existingLike, error: checkError } = await supabase
+        .from('likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingLike) {
+        // Unlike the post
+        const { error: unlikeError } = await supabase
+          .from('likes')
+          .delete()
+          .eq('id', existingLike.id);
+
+        if (unlikeError) throw unlikeError;
+        
+        toast.success('Post unliked');
+      } else {
+        // Like the post
+        const { error: likeError } = await supabase
+          .from('likes')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+          });
+
+        if (likeError) throw likeError;
+        
+        toast.success('Post liked');
+        
+        // Send notification to post owner if it's not the current user
+        if (post.user_id !== user.id) {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: post.user_id,
+              actor_id: user.id,
+              type: 'like',
+              post_id: postId,
+              read: false
+            });
+        }
+      }
+
+      // Refresh post data
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    } catch (error) {
+      console.error('Error handling like:', error);
+      toast.error('Failed to update like status');
+    }
+  };
+
+  const handleTrophyClick = async () => {
+    if (!user) {
+      toast.error('Please sign in to give a trophy');
+      return;
+    }
+
+    try {
+      const { data: existingVote, error: checkError } = await supabase
+        .from('clip_votes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingVote) {
+        // Remove trophy vote
+        const { error: removeError } = await supabase
+          .from('clip_votes')
+          .delete()
+          .eq('id', existingVote.id);
+
+        if (removeError) throw removeError;
+        
+        toast.success('Trophy removed');
+      } else {
+        // Add trophy vote
+        const { error: voteError } = await supabase
+          .from('clip_votes')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            value: 1
+          });
+
+        if (voteError) throw voteError;
+        
+        toast.success('Trophy awarded!');
+        
+        // Send notification to post owner
+        if (post.user_id !== user.id) {
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: post.user_id,
+              actor_id: user.id,
+              type: 'trophy',
+              post_id: postId,
+              read: false
+            });
+        }
+      }
+
+      // Refresh post data
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    } catch (error) {
+      console.error('Error handling trophy vote:', error);
+      toast.error('Failed to update trophy status');
+    }
+  };
+
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
@@ -197,8 +324,11 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       </div>
 
       {/* Interaction Counts */}
-      <div className="px-4 py-3 flex items-center space-x-6 border-t border-gaming-400/20">
-        <div className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95">
+      <div className="flex justify-around py-3 border-t border-gaming-400/20">
+        <div 
+          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+          onClick={handleLikeClick}
+        >
           <Heart 
             className="h-6 w-6 text-red-500 group-hover:text-red-400 transition-colors group-active:scale-90" 
             fill={post.likes_count ? "currentColor" : "none"}
@@ -219,7 +349,10 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             {commentsCount}
           </span>
         </Button>
-        <div className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95">
+        <div 
+          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+          onClick={handleTrophyClick}
+        >
           <Trophy 
             className="h-6 w-6 text-yellow-500 group-hover:text-yellow-400 transition-colors group-active:scale-90"
             fill={post.clip_votes?.[0]?.count ? "currentColor" : "none"}

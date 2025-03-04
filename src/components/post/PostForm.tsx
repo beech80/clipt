@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload, Camera, Search, Hash, AtSign } from 'lucide-react';
+import { Loader2, Upload, Camera, Search, Hash, AtSign, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Progress } from '@/components/ui/progress';
 
@@ -14,9 +14,9 @@ type PostDestination = 'clipts' | 'home';
 
 export const PostForm = () => {
   const [content, setContent] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [filePreview, setFilePreview] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
   const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
   const [gameSearch, setGameSearch] = useState('');
   const [streamRef, setStreamRef] = useState<MediaStream | null>(null);
@@ -107,9 +107,9 @@ export const PostForm = () => {
         mediaRecorder.onstop = () => {
           const blob = new Blob(chunksRef.current, { type: 'video/webm' });
           const file = new File([blob], 'recorded-video.webm', { type: 'video/webm' });
-          setFile(file);
+          setFiles([file]);
           const previewUrl = URL.createObjectURL(blob);
-          setFilePreview(previewUrl);
+          setFilePreview([previewUrl]);
           chunksRef.current = [];
         };
       }
@@ -132,27 +132,45 @@ export const PostForm = () => {
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (selectedFile) {
+    const selectedFiles = event.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+    
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+    
+    // Process each file
+    Array.from(selectedFiles).forEach(selectedFile => {
       const isVideo = selectedFile.type.startsWith('video/');
       const isImage = selectedFile.type.startsWith('image/');
-
+      
       if (!isVideo && !isImage) {
-        toast.error('Please upload a video or image file');
+        toast.error('Please upload video or image files only');
         return;
       }
-
+      
       if (selectedFile.size > 100 * 1024 * 1024) {
-        toast.error('File size must be less than 100MB');
+        toast.error('Each file must be less than 100MB');
         return;
       }
-
-      setFile(selectedFile);
-      const previewUrl = URL.createObjectURL(selectedFile);
-      setFilePreview(previewUrl);
-      stopCamera();
-      toast.success('File selected successfully');
-    }
+      
+      // For videos, only allow one file
+      if (isVideo && (newFiles.some(f => f.type.startsWith('video/')) || newFiles.length > 0)) {
+        toast.error('Only one video can be uploaded at a time');
+        return;
+      }
+      
+      // For images, allow multiple (up to 5)
+      if (isImage && newFiles.length >= 5) {
+        toast.error('Maximum of 5 images allowed');
+        return;
+      }
+      
+      newFiles.push(selectedFile);
+      newPreviews.push(URL.createObjectURL(selectedFile));
+    });
+    
+    setFiles([...newFiles]);
+    setFilePreview([...newPreviews]);
   };
 
   const handleCreatePost = async (destination: PostDestination) => {
@@ -171,8 +189,8 @@ export const PostForm = () => {
       return;
     }
     
-    if (!file) {
-      toast.error('Please upload a file');
+    if (files.length === 0) {
+      toast.error('Please upload at least one file');
       return;
     }
 
@@ -195,47 +213,64 @@ export const PostForm = () => {
         throw new Error(`Failed to process game: ${gameError.message}`);
       }
 
-      const timestamp = Date.now();
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/${timestamp}.${fileExt}`;
+      // Upload files and get URLs
+      const mediaUrls: { videoUrl: string | null, imageUrls: string[] } = {
+        videoUrl: null,
+        imageUrls: []
+      };
 
-      console.log('Starting file upload...', {
-        filePath,
-        fileType: file.type,
-        fileSize: file.size
-      });
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const timestamp = Date.now() + i; // Ensure unique timestamps
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${user.id}/${timestamp}.${fileExt}`;
 
-      const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('media')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
+        console.log(`Starting file upload ${i+1}/${files.length}...`, {
+          filePath,
+          fileType: file.type,
+          fileSize: file.size
         });
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error(`Failed to upload file: ${uploadError.message}`);
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('media')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw new Error(`Failed to upload file: ${uploadError.message}`);
+        }
+
+        console.log(`File ${i+1} uploaded successfully`, uploadData);
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(filePath);
+
+        if (file.type.startsWith('video/')) {
+          mediaUrls.videoUrl = publicUrl;
+        } else {
+          mediaUrls.imageUrls.push(publicUrl);
+        }
       }
 
-      console.log('File uploaded successfully', uploadData);
+      // Construct post data
+      const postData = {
+        content,
+        user_id: user.id,
+        game_id: gameData.id,
+        post_type: destination,
+        is_published: true,
+        video_url: mediaUrls.videoUrl,
+        image_url: mediaUrls.imageUrls.length === 1 ? mediaUrls.imageUrls[0] : null,
+        image_urls: mediaUrls.imageUrls.length > 1 ? mediaUrls.imageUrls : null
+      };
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('media')
-        .getPublicUrl(filePath);
-
-      console.log('File URL:', publicUrl);
-
-      const { data: postData, error: postError } = await supabase
+      const { data: post, error: postError } = await supabase
         .from('posts')
-        .insert([{
-          content,
-          user_id: user.id,
-          game_id: gameData.id,
-          post_type: destination,
-          is_published: true,
-          video_url: file.type.startsWith('video/') ? publicUrl : null,
-          image_url: !file.type.startsWith('video/') ? publicUrl : null,
-        }])
+        .insert([postData])
         .select()
         .single();
 
@@ -245,14 +280,13 @@ export const PostForm = () => {
       }
 
       toast.success(
-        destination === 'clipts' ? 'Clipt created successfully!' : 'Post created successfully!',
-        { id: uploadToast }
+        destination === 'clipts' ? 'Clip created successfully!' : 'Post created successfully!'
       );
       
       stopCamera();
       setContent('');
-      setFile(null);
-      setFilePreview(null);
+      setFiles([]);
+      setFilePreview([]);
       setSelectedGame(null);
       setHashtags([]);
       setMentions([]);
@@ -509,12 +543,14 @@ export const PostForm = () => {
                     </p>
                     <p className="text-xs text-gray-400">Supports video and images (max 100MB)</p>
                     <p className="text-xs text-purple-400 mt-1">Now you can post both videos and images to Clipts!</p>
+                    <p className="text-xs text-green-400 mt-1">Select multiple images to create a photo collage!</p>
                   </div>
                   <Input
                     type="file"
                     className="hidden"
                     accept="video/*,image/*"
                     onChange={handleFileChange}
+                    multiple
                   />
                 </label>
               </div>
@@ -532,21 +568,34 @@ export const PostForm = () => {
               </div>
             )}
 
-            {filePreview && (
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-                {file?.type.startsWith('video/') ? (
-                  <video
-                    src={filePreview}
-                    className="w-full h-full object-contain"
-                    controls
-                  />
-                ) : (
-                  <img
-                    src={filePreview}
-                    alt="Preview"
-                    className="w-full h-full object-contain"
-                  />
-                )}
+            {filePreview.length > 0 && (
+              <div className={`relative ${filePreview.length > 1 ? 'grid grid-cols-2 gap-2' : ''}`}>
+                {filePreview.map((preview, index) => (
+                  <div key={index} className="aspect-video rounded-lg overflow-hidden bg-black">
+                    {files[index]?.type.startsWith('video/') ? (
+                      <video
+                        src={preview}
+                        className="w-full h-full object-contain"
+                        controls
+                      />
+                    ) : (
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-full object-contain"
+                      />
+                    )}
+                    <button 
+                      className="absolute top-2 right-2 bg-gray-800 rounded-full p-1"
+                      onClick={() => {
+                        setFiles(files.filter((_, i) => i !== index));
+                        setFilePreview(filePreview.filter((_, i) => i !== index));
+                      }}
+                    >
+                      <X className="h-4 w-4 text-white" />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
 
