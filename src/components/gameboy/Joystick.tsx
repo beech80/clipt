@@ -11,36 +11,43 @@ const Joystick: React.FC<JoystickProps> = ({ navigate }) => {
   };
 
   return (
-    <div className="relative w-[68px] h-[68px] select-none">
-      {/* Main joystick circle */}
-      <div className="absolute inset-0 bg-[#1A1B26] rounded-full shadow-lg">
-        {/* Inner shadow ring */}
-        <div className="absolute inset-[6px] rounded-full bg-[#171821]"></div>
-        
-        {/* Center darker circle */}
-        <div className="absolute inset-[16px] rounded-full bg-[#12131A]"></div>
-      </div>
+    <div className="relative w-[60px] h-[60px]">
+      {/* Outer circle with subtle shadow */}
+      <div className="absolute inset-0 rounded-full bg-[#1B1C27] shadow-[0_1px_3px_rgba(0,0,0,0.5)]"></div>
       
-      {/* Directional navigation */}
-      <button onClick={() => navigateToRoute('/')} 
-              className="absolute top-2 left-1/2 -translate-x-1/2 opacity-0 w-10 h-8"
-              aria-label="Navigate Up">
-      </button>
+      {/* First inner circle */}
+      <div className="absolute inset-[5px] rounded-full bg-[#191A24]"></div>
       
-      <button onClick={() => navigateToRoute('/discover')} 
-              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 w-8 h-10"
-              aria-label="Navigate Right">
-      </button>
+      {/* Second inner circle */}
+      <div className="absolute inset-[12px] rounded-full bg-[#161722]"></div>
       
-      <button onClick={() => navigateToRoute('/collections')} 
-              className="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 w-10 h-8"
-              aria-label="Navigate Down">
-      </button>
+      {/* Center circle */}
+      <div className="absolute inset-[18px] rounded-full bg-[#11121A]"></div>
       
-      <button onClick={() => navigateToRoute('/clipts')} 
-              className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 w-8 h-10"
-              aria-label="Navigate Left">
-      </button>
+      {/* Invisible directional buttons */}
+      <button 
+        onClick={() => navigateToRoute('/')} 
+        className="absolute top-0 left-0 w-full h-1/4 opacity-0" 
+        aria-label="Navigate Up"
+      ></button>
+      
+      <button 
+        onClick={() => navigateToRoute('/discover')} 
+        className="absolute top-0 right-0 w-1/4 h-full opacity-0" 
+        aria-label="Navigate Right"
+      ></button>
+      
+      <button 
+        onClick={() => navigateToRoute('/collections')} 
+        className="absolute bottom-0 left-0 w-full h-1/4 opacity-0" 
+        aria-label="Navigate Down"
+      ></button>
+      
+      <button 
+        onClick={() => navigateToRoute('/clipts')} 
+        className="absolute top-0 left-0 w-1/4 h-full opacity-0" 
+        aria-label="Navigate Left"
+      ></button>
     </div>
   );
 };

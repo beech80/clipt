@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Camera, Book, Users, Home, Settings, X } from 'lucide-react';
+import { Menu, Book, Users, Home, Settings, X } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -109,11 +109,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   return (
     <div className="gameboy-container h-28 bg-[#151924] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#232738]">
       {/* Menu button (center bottom) */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="rounded-full w-8 h-8 bg-[#1E2235] flex items-center justify-center shadow-md">
-              <Menu className="h-5 w-5 text-[#6366F1]" />
+            <button className="rounded-full w-7 h-7 bg-[#1E2235] flex items-center justify-center shadow-md">
+              <Menu className="h-4 w-4 text-[#6366F1]" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="bg-[#151924] border-t border-[#2a2f3d] p-4">
@@ -145,44 +145,46 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </Sheet>
       </div>
       
-      {/* Left-side joystick - lifted higher */}
-      <div className="absolute bottom-6 left-12">
-        <div className="w-18 h-18">
+      {/* Left-side joystick */}
+      <div className="absolute bottom-9 left-12">
+        <div className="w-[60px] h-[60px]">
           <Joystick navigate={navigate} />
         </div>
       </div>
       
-      {/* "CLIPT" button (middle) - with animated oval */}
-      <div className="absolute bottom-16 left-1/2 -translate-x-1/2">
+      {/* "CLIPT" button (middle) - with animated oval ring */}
+      <div className="absolute bottom-14 left-1/2 -translate-x-1/2">
         <button 
           onClick={() => navigate('/clipts/create')}
-          className="flex items-center justify-center w-16 h-16 relative"
+          className="relative flex items-center justify-center"
+          aria-label="Create CLIPT"
         >
-          {/* Animated rotating oval ring */}
-          <div 
-            className="absolute inset-0 w-full h-full rounded-full animate-spin-slow"
-            style={{ 
-              background: 'conic-gradient(from 0deg, #6366F1, #3730A3, #6366F1)',
-              opacity: 0.9,
-              border: '2px solid transparent',
-              borderRadius: '100%',
-            }}
-          ></div>
+          {/* The spinning oval effect */}
+          <div className="absolute w-[55px] h-[45px] animate-spin-slow">
+            <div 
+              className="w-full h-full rounded-full"
+              style={{
+                background: 'conic-gradient(from 0deg, #8B5CF6, #3B82F6, #8B5CF6)',
+                filter: 'blur(2px)',
+              }}
+            ></div>
+          </div>
           
-          {/* Center button */}
-          <div className="relative w-[85%] h-[85%] rounded-full bg-[#151924] flex items-center justify-center z-10">
-            <div className="flex flex-col items-center justify-center">
-              <div className="text-[10px] font-bold text-white mb-0.5">
-                <Camera className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-[10px] font-bold text-white tracking-wider">CLIPT</span>
-            </div>
+          {/* The black center button */}
+          <div className="relative z-10 w-[42px] h-[42px] rounded-full bg-black flex flex-col items-center justify-center">
+            <span className="text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+                <circle cx="12" cy="13" r="3"></circle>
+              </svg>
+            </span>
+            <span className="text-[10px] font-bold text-white tracking-wide mt-1">CLIPT</span>
           </div>
         </button>
       </div>
       
-      {/* Right-side action buttons - lifted higher */}
-      <div className="absolute bottom-6 right-12">
+      {/* Right-side action buttons */}
+      <div className="absolute bottom-9 right-12">
         <ActionButtons postId={postId} onAction={handleAction} />
       </div>
     </div>
