@@ -62,6 +62,12 @@ function App() {
     }
   }, [location.pathname, queryClient]);
 
+  // Routes that should not display the GameBoyControls
+  const noControlsRoutes = ['/auth'];
+  const shouldShowControls = !noControlsRoutes.some(route => 
+    location.pathname.startsWith(route)
+  );
+
   return (
     <ErrorBoundary>
       <React.Suspense fallback={<div>Loading...</div>}>
@@ -75,7 +81,7 @@ function App() {
                   <AppContent />
                 </div>
                 <PWAInstallPrompt />
-                <GameBoyControls currentPostId={currentPostId} />
+                {shouldShowControls && <GameBoyControls currentPostId={currentPostId} />}
               </CommentsProvider>
             </ReportDialogProvider>
           </MessagesProvider>
