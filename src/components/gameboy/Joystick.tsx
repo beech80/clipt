@@ -6,11 +6,10 @@ interface JoystickProps {
 }
 
 const Joystick: React.FC<JoystickProps> = ({ navigate }) => {
-  // Modern joystick design
   return (
     <div className="relative">
       {/* Base circle */}
-      <div className="w-[80px] h-[80px] rounded-full bg-gradient-to-b from-gray-900 to-black flex items-center justify-center shadow-lg">
+      <div className="w-[80px] h-[80px] rounded-full bg-[#151924] flex items-center justify-center border border-gray-800 shadow-lg">
         {/* Center joystick */}
         <div className="w-[50px] h-[50px] rounded-full bg-black flex items-center justify-center cursor-pointer relative shadow-inner border border-gray-800" 
           style={{
@@ -49,7 +48,7 @@ const Joystick: React.FC<JoystickProps> = ({ navigate }) => {
             <div className="col-start-2 row-start-3 flex justify-center items-end mb-1"
               onClick={() => navigate('/collections')}
             >
-              <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[10px] border-t-gray-700 opacity-60 hover:opacity-100"></div>
+              <div className="w-0 h-0 border-t-[10px] border-t-gray-700 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent opacity-60 hover:opacity-100"></div>
             </div>
           </div>
         </div>

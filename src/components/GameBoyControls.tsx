@@ -111,14 +111,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   ];
 
   return (
-    <div className="gameboy-container h-20 bg-[#151924] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#2a2f3d]">
+    <div className="gameboy-container h-24 bg-[#151924] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#232738]">
       {/* Menu button (center bottom) */}
-      <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="rounded-full bg-[#242530] p-2 border border-[#2a2f3d]
-              hover:bg-[#2a2f3d] transition-all duration-300 touch-none active:scale-95">
-              <Menu className="h-5 w-5 text-gray-400" />
+            <button className="rounded-full w-8 h-8 bg-[#1E2235] flex items-center justify-center shadow-md">
+              <Menu className="h-5 w-5 text-[#6366F1]" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="bg-[#151924] border-t border-[#2a2f3d] p-4">
@@ -145,31 +144,30 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       </div>
       
       {/* Left-side joystick */}
-      <div className="absolute bottom-2.5 left-4">
+      <div className="absolute bottom-3 left-10">
         <Joystick navigate={navigate} />
       </div>
       
       {/* "CLIPT" button (middle) */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
         <button 
           onClick={() => navigate('/clipts/create')}
-          className="bg-[#151924] px-4 py-1.5 rounded-full text-sm font-bold
-            border border-transparent bg-gradient-to-r from-blue-500 to-purple-600 
-            active:scale-95 transition-all duration-200
-            relative"
-          style={{
-            backgroundClip: 'padding-box',
-            WebkitBackgroundClip: 'padding-box',
+          className="flex items-center justify-center w-16 h-16 rounded-full shadow-md"
+          style={{ 
+            background: 'linear-gradient(135deg, #6366F1 0%, #3730A3 100%)',
           }}
         >
-          <span className="bg-[#151924] px-3 py-1 rounded-full">
-            CLIPT
-          </span>
+          <div className="w-[90%] h-[90%] rounded-full bg-[#151924] flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center">
+              <Camera className="h-5 w-5 text-[#6366F1] mb-0.5" />
+              <span className="text-[10px] font-bold text-[#6366F1] tracking-wider">CLIPT</span>
+            </div>
+          </div>
         </button>
       </div>
       
       {/* Right-side action buttons */}
-      <div className="absolute bottom-2.5 right-4">
+      <div className="absolute bottom-3 right-10">
         <ActionButtons postId={postId} onAction={handleAction} />
       </div>
     </div>
