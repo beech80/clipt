@@ -95,9 +95,17 @@ export default {
           "50%": { transform: "scale(1.2)", opacity: "0.5" },
           "100%": { transform: "scale(1)", opacity: "0" },
         },
-        "spin-slow": {
-          "0%": { transform: "rotate(0deg)" },
-          "100%": { transform: "rotate(360deg)" },
+        spin: {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
+        },
+        pulse: {
+          "0%, 100%": {
+            opacity: "1",
+          },
+          "50%": {
+            opacity: "0.5",
+          },
         },
       },
       animation: {
@@ -105,7 +113,8 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         glow: "glow 2s ease-in-out infinite",
         "scale-up": "scale-up 0.6s ease-out",
-        "spin-slow": "spin-slow 8s linear infinite",
+        "spin-slow": "spin 5s linear infinite",
+        "pulse-gentle": "pulse 3s infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
