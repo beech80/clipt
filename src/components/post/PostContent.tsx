@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Gamepad2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import PhotoCollage from './PhotoCollage';
 
 interface PostContentProps {
   imageUrl?: string | null;
@@ -79,6 +80,11 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     );
   };
 
+  const handleCollageImageClick = (index: number) => {
+    setCurrentImageIndex(index);
+    setShowFullscreenGallery(true);
+  };
+
   if (!imageUrl && !videoUrl && imageUrls.length === 0) {
     return (
       <div className="w-full aspect-video bg-gray-900 flex items-center justify-center">
@@ -93,7 +99,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
       {videoUrl ? (
         <video
           src={videoUrl}
-          className="w-full object-cover"
+          className="w-full aspect-video object-cover bg-black"
           controls
           playsInline
           onLoadedData={handleMediaLoad}
@@ -141,37 +147,20 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
             </div>
           </div>
         ) : hasMultipleImages ? (
-          // Simple multiple image display
-          <div>
-            <img
-              src={imageUrls[currentImageIndex]}
-              alt="Post content"
-              className="w-full object-cover"
-              onLoad={handleMediaLoad}
-              onError={handleMediaError}
-            />
-            {imageUrls.length > 1 && (
-              <div className="flex justify-center mt-2">
-                {imageUrls.map((_, index) => (
-                  <div 
-                    key={index}
-                    className={`h-1.5 w-1.5 rounded-full mx-1 ${
-                      index === currentImageIndex ? 'bg-white' : 'bg-gray-600'
-                    }`}
-                    onClick={() => setCurrentImageIndex(index)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+          // Photo collage for multiple images
+          <PhotoCollage 
+            images={imageUrls} 
+            onImageClick={handleCollageImageClick}
+          />
         ) : (
           // Single image view
           <img
             src={imageUrls[0]}
             alt="Post content"
-            className="w-full object-cover"
+            className="w-full aspect-video object-cover bg-black"
             onLoad={handleMediaLoad}
             onError={handleMediaError}
+            onClick={() => setShowFullscreenGallery(true)}
           />
         )
       ) : null}
@@ -179,14 +168,14 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
       {/* Loading Indicator */}
       {!isMediaLoaded && !isMediaError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
         </div>
       )}
 
       {/* Error State */}
       {isMediaError && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <Badge variant="destructive" className="px-2 py-1 text-xs">Media unavailable</Badge>
+          <Badge variant="destructive" className="px-3 py-1">Media unavailable</Badge>
         </div>
       )}
     </div>
