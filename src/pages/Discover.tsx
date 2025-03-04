@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Trophy, Fire, Clock, ArrowUp, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import PostItem from '@/components/PostItem';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface StreamInfo {
   is_live: boolean;
