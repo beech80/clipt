@@ -1,13 +1,3 @@
-export interface CustomTheme {
-  primary: string;
-  secondary: string;
-}
-
-export interface JsonCustomTheme {
-  primary: string;
-  secondary: string;
-}
-
 export interface Profile {
   id: string;
   username?: string | null;
@@ -16,24 +6,24 @@ export interface Profile {
   bio?: string | null;
   website?: string | null;
   created_at?: string;
-  custom_theme: CustomTheme;
   enable_notifications: boolean;
   enable_sounds: boolean;
-  keyboard_shortcuts: boolean;
+  private_profile?: boolean;
+  last_username_change?: string;
 }
 
 export interface DatabaseProfile {
   id: string;
   username?: string | null;
   avatar_url?: string | null;
-  custom_theme: JsonCustomTheme;
   enable_notifications?: boolean;
   enable_sounds?: boolean;
   bio?: string | null;
   display_name?: string | null;
   created_at?: string;
   website?: string | null;
-  keyboard_shortcuts?: boolean;
+  private_profile?: boolean;
+  last_username_change?: string;
 }
 
 export interface Achievement {
