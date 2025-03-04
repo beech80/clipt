@@ -127,32 +127,32 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCom
   };
 
   return (
-    <form onSubmit={handleSubmitComment} className="p-4">
+    <form onSubmit={handleSubmitComment} className="space-y-2">
       <Textarea
-        placeholder={user ? "Write your comment..." : "Please login to comment"}
+        placeholder={user ? "Write a comment..." : "Please login to comment"}
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
         disabled={!user || isSubmitting}
-        className="w-full min-h-[60px] bg-[#1e2230] text-white rounded-lg p-2 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50 comment-textarea comment-form-input"
+        className="w-full min-h-[40px] bg-gray-800 text-white rounded text-xs border border-gray-700 focus:border-gray-600 resize-none placeholder:text-gray-500 comment-textarea"
       />
-      <div className="flex justify-end mt-2 space-x-2">
+      <div className="flex justify-end space-x-2">
         {onCancel && (
           <Button 
             type="button" 
             variant="ghost" 
             onClick={onCancel}
             disabled={isSubmitting}
-            className="text-sm"
+            className="text-xs h-6 py-0 px-2"
           >
             Cancel
           </Button>
         )}
         <Button 
           type="submit" 
-          disabled={!user || isSubmitting || !newComment.trim()} 
-          className={`bg-[#9b87f5] hover:bg-[#8a78d9] text-white px-4 py-2 rounded text-sm ${isSubmitting ? 'opacity-70' : ''}`}
+          disabled={!user || isSubmitting || !newComment.trim()}
+          className="text-xs h-6 py-0 px-2 bg-blue-600 hover:bg-blue-700"
         >
-          {isSubmitting ? 'Posting...' : parentId ? 'Reply' : 'Comment'}
+          {isSubmitting ? "Sending..." : "Comment"}
         </Button>
       </div>
     </form>
