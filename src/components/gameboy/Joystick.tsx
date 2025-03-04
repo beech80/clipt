@@ -11,95 +11,35 @@ const Joystick: React.FC<JoystickProps> = ({ navigate }) => {
   };
 
   return (
-    <div className="relative w-[70px] h-[70px] select-none">
-      {/* Outer circle - dark with subtle border */}
-      <div className="absolute inset-0 bg-black rounded-full border border-gray-800 shadow-lg"></div>
+    <div className="relative w-[68px] h-[68px] select-none">
+      {/* Main joystick circle */}
+      <div className="absolute inset-0 bg-[#1A1B26] rounded-full shadow-lg">
+        {/* Inner shadow ring */}
+        <div className="absolute inset-[6px] rounded-full bg-[#171821]"></div>
+        
+        {/* Center darker circle */}
+        <div className="absolute inset-[16px] rounded-full bg-[#12131A]"></div>
+      </div>
       
-      {/* Second circle */}
-      <div className="absolute inset-[5px] bg-[#131419] rounded-full border border-gray-800"></div>
-      
-      {/* Inner circle */}
-      <div className="absolute inset-[20px] bg-[#0C0D11] rounded-full border border-gray-800"></div>
-      
-      {/* Center nub */}
-      <div className="absolute inset-[28px] bg-[#0A0A0C] rounded-full"></div>
-      
-      {/* Directional buttons - positioned over the joystick */}
-      
-      {/* Up button */}
-      <button
-        onClick={() => navigateToRoute('/')}
-        aria-label="Navigate Up"
-        className="absolute top-2 left-1/2 -translate-x-1/2 w-6 h-4 text-gray-400 hover:text-white 
-                  flex items-center justify-center focus:outline-none active:scale-95"
-      >
-        <svg 
-          width="12" 
-          height="12" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-          className="transform rotate-0"
-        >
-          <path d="M12 4L4 12H9V20H15V12H20L12 4Z" fill="currentColor" />
-        </svg>
+      {/* Directional navigation */}
+      <button onClick={() => navigateToRoute('/')} 
+              className="absolute top-2 left-1/2 -translate-x-1/2 opacity-0 w-10 h-8"
+              aria-label="Navigate Up">
       </button>
       
-      {/* Right button */}
-      <button
-        onClick={() => navigateToRoute('/discover')}
-        aria-label="Navigate Right"
-        className="absolute top-1/2 right-2 -translate-y-1/2 w-4 h-6 text-gray-400 hover:text-white 
-                  flex items-center justify-center focus:outline-none active:scale-95"
-      >
-        <svg 
-          width="12" 
-          height="12" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-          className="transform rotate-90"
-        >
-          <path d="M12 4L4 12H9V20H15V12H20L12 4Z" fill="currentColor" />
-        </svg>
+      <button onClick={() => navigateToRoute('/discover')} 
+              className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 w-8 h-10"
+              aria-label="Navigate Right">
       </button>
       
-      {/* Down button */}
-      <button
-        onClick={() => navigateToRoute('/collections')}
-        aria-label="Navigate Down"
-        className="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-4 text-gray-400 hover:text-white 
-                  flex items-center justify-center focus:outline-none active:scale-95"
-      >
-        <svg 
-          width="12" 
-          height="12" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-          className="transform rotate-180"
-        >
-          <path d="M12 4L4 12H9V20H15V12H20L12 4Z" fill="currentColor" />
-        </svg>
+      <button onClick={() => navigateToRoute('/collections')} 
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 opacity-0 w-10 h-8"
+              aria-label="Navigate Down">
       </button>
       
-      {/* Left button */}
-      <button
-        onClick={() => navigateToRoute('/clipts')}
-        aria-label="Navigate Left"
-        className="absolute top-1/2 left-2 -translate-y-1/2 w-4 h-6 text-gray-400 hover:text-white 
-                  flex items-center justify-center focus:outline-none active:scale-95"
-      >
-        <svg 
-          width="12" 
-          height="12" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-          className="transform -rotate-90"
-        >
-          <path d="M12 4L4 12H9V20H15V12H20L12 4Z" fill="currentColor" />
-        </svg>
+      <button onClick={() => navigateToRoute('/clipts')} 
+              className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 w-8 h-10"
+              aria-label="Navigate Left">
       </button>
     </div>
   );
