@@ -31,51 +31,50 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       newPostId = params.id;
     }
     
-    console.log("GameBoyControls setting postId:", {
-      currentPostId,
-      paramsId: params.id,
-      finalPostId: newPostId,
-      currentPathname: window.location.pathname
-    });
+    // If we're in the post page, try to extract the ID from the URL
+    if (!newPostId && location.pathname.startsWith('/post/')) {
+      const pathSegments = location.pathname.split('/');
+      if (pathSegments[2]) {
+        newPostId = pathSegments[2];
+      }
+    }
     
     setPostId(newPostId);
-  }, [currentPostId, params.id]);
-
-  // Handle keyboard navigation for gameboy controls
+  }, [currentPostId, params, location.pathname]);
+  
+  // Handle keydown for controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Joystick navigation using arrow keys
       if (e.key === 'ArrowUp') {
         navigate('/');
       } else if (e.key === 'ArrowDown') {
-        navigate('/profile');
+        navigate('/collections');
       } else if (e.key === 'ArrowLeft') {
-        navigate('/discover');
-      } else if (e.key === 'ArrowRight') {
         navigate('/clipts');
+      } else if (e.key === 'ArrowRight') {
+        navigate('/discover');
       }
       
-      // Action buttons
-      if (e.key === 'a' || e.key === 'A') {
-        // Like action
-        const likeButton = document.querySelector('[data-action="like"]') as HTMLButtonElement;
-        if (likeButton) likeButton.click();
-      } else if (e.key === 'b' || e.key === 'B') {
-        // Comment action
-        const commentButton = document.querySelector('[data-action="comment"]') as HTMLButtonElement;
+      // A button (key: z) - Like
+      if (e.key === 'z') {
+        const actionButtons = document.querySelector('[aria-label="Like"]') as HTMLButtonElement;
+        if (actionButtons) actionButtons.click();
+      }
+      
+      // B button (key: x) - Comment
+      if (e.key === 'x') {
+        const commentButton = document.querySelector('[aria-label="Comment"]') as HTMLButtonElement;
         if (commentButton) commentButton.click();
-      } else if (e.key === 'x' || e.key === 'X') {
-        // Follow action
-        const followButton = document.querySelector('[data-action="follow"]') as HTMLButtonElement;
-        if (followButton) followButton.click();
-      } else if (e.key === 'y' || e.key === 'Y') {
-        // Trophy action
-        const trophyButton = document.querySelector('[data-action="trophy"]') as HTMLButtonElement;
-        if (trophyButton) trophyButton.click();
+      }
+      
+      // Video controls when in post view
+      if (location.pathname.includes('/post/')) {
+        handleVideoControl(e);
       }
     };
-
+    
     window.addEventListener('keydown', handleKeyDown);
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -112,29 +111,29 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   ];
 
   return (
-    <div className="gameboy-container h-[200px] sm:h-[220px] bg-gaming-900/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 z-50 touch-none border-t-2 border-gaming-400">
+    <div className="gameboy-container h-20 bg-[#151924] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#2a2f3d]">
       {/* Menu button (center bottom) */}
-      <div className="fixed bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="rounded-full bg-gaming-400/20 p-2.5 sm:p-3 backdrop-blur-sm border border-gaming-400/30 
-              hover:bg-gaming-400/30 transition-all duration-300 touch-none active:scale-95">
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gaming-400" />
+            <button className="rounded-full bg-[#242530] p-2 border border-[#2a2f3d]
+              hover:bg-[#2a2f3d] transition-all duration-300 touch-none active:scale-95">
+              <Menu className="h-5 w-5 text-gray-400" />
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="w-full max-w-xl mx-auto rounded-t-xl bg-gaming-900/95 backdrop-blur-xl border-gaming-400/30">
-            <nav className="grid grid-cols-2 gap-2 p-3">
+          <SheetContent side="bottom" className="bg-[#151924] border-t border-[#2a2f3d] p-4">
+            <nav className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
               {navigationItems.map((item) => (
                 <button
-                  key={item.path}
+                  key={item.name}
                   onClick={() => {
                     navigate(item.path);
                     toast.success(`Navigating to ${item.name}`);
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-2 p-3 sm:p-4 rounded-lg bg-gaming-400/10 hover:bg-gaming-400/20 
-                    active:bg-gaming-400/30 transition-all duration-300 text-gaming-400 
-                    font-medium text-sm sm:text-base active:scale-95"
+                  className="flex items-center gap-2 p-3 rounded-lg bg-[#1e2230]/50 hover:bg-[#1e2230]
+                    active:bg-[#1e2230] transition-all duration-300 text-gray-300
+                    font-medium text-sm active:scale-95"
                 >
                   {item.icon}
                   <span>{item.name}</span>
@@ -146,31 +145,31 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       </div>
       
       {/* Left-side joystick */}
-      <div className="absolute bottom-2 left-4 sm:left-8 sm:bottom-4">
+      <div className="absolute bottom-2.5 left-4">
         <Joystick navigate={navigate} />
       </div>
       
       {/* "CLIPT" button (middle) */}
-      <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
         <button 
           onClick={() => navigate('/clipts/create')}
-          className="bg-gaming-800 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-sm sm:text-base font-bold
-            border-2 border-transparent bg-gradient-to-r from-blue-500 to-purple-600 
-            active:scale-95 transition-all duration-300
+          className="bg-[#151924] px-4 py-1.5 rounded-full text-sm font-bold
+            border border-transparent bg-gradient-to-r from-blue-500 to-purple-600 
+            active:scale-95 transition-all duration-200
             relative"
           style={{
             backgroundClip: 'padding-box',
             WebkitBackgroundClip: 'padding-box',
           }}
         >
-          <span className="bg-gaming-800 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full">
+          <span className="bg-[#151924] px-3 py-1 rounded-full">
             CLIPT
           </span>
         </button>
       </div>
       
       {/* Right-side action buttons */}
-      <div className="absolute bottom-2 right-4 sm:right-8 sm:bottom-4">
+      <div className="absolute bottom-2.5 right-4">
         <ActionButtons postId={postId} onAction={handleAction} />
       </div>
     </div>
