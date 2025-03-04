@@ -1,171 +1,114 @@
-import React, { useEffect, useState } from 'react';
-import { Heart, MessageSquare, UserPlus, Trophy } from 'lucide-react';
-import { NavigateFunction, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavigateFunction } from 'react-router-dom';
+import { Heart, MessageCircle, UserPlus, Trophy, SendHorizontal } from 'lucide-react';
+import { useComments } from '@/contexts/CommentContext';
+import { useSupabase } from '@/lib/supabase/supabase-browser';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface ActionButtonsProps {
   navigate: NavigateFunction;
   currentPostId?: string;
 }
 
-export default function ActionButtons({ navigate, currentPostId }: ActionButtonsProps) {
-  const { user } = useAuth();
-  const location = useLocation();
-  const [activePostId, setActivePostId] = useState<string | null>(null);
-  
-  // Find the current visible post ID from the screen
-  useEffect(() => {
-    const findVisiblePost = () => {
-      const posts = document.querySelectorAll('[data-post-id]');
-      if (!posts.length) return;
-      
-      // Find the post most in view
-      let mostVisiblePost: Element | null = null;
-      let maxVisibility = 0;
-      
-      posts.forEach(post => {
-        const rect = post.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        
-        // Calculate how much of the post is visible (0 to 1)
-        const visibility = Math.min(
-          Math.max(0, (rect.bottom - 100) / windowHeight),
-          Math.max(0, (windowHeight - rect.top) / windowHeight)
-        );
-        
-        if (visibility > maxVisibility) {
-          maxVisibility = visibility;
-          mostVisiblePost = post;
-        }
-      });
-      
-      if (mostVisiblePost) {
-        const postId = mostVisiblePost.getAttribute('data-post-id');
-        if (postId) {
-          setActivePostId(postId);
-          console.log('Detected active post:', postId);
-        }
-      }
-    };
+const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }) => {
+  const { openCommentInput } = useComments();
+  const { supabase } = useSupabase();
+  const [loading, setLoading] = useState<string | null>(null);
 
-    // Run on mount and during scroll
-    findVisiblePost();
-    window.addEventListener('scroll', findVisiblePost);
-    
-    return () => {
-      window.removeEventListener('scroll', findVisiblePost);
-    };
-  }, [location.pathname]);
-  
-  // Handle like button press
+  // Handle like action
   const handleLike = async () => {
-    if (!user) {
-      toast.error("Please log in to like posts");
-      return;
-    }
-    
-    const postId = activePostId || currentPostId;
-    if (!postId) {
-      toast.error("No post selected");
-      return;
-    }
+    if (!currentPostId || loading) return;
     
     try {
-      console.log(`Liking post ID: ${postId}`);
+      setLoading('like');
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate('/auth');
+        return;
+      }
+      
+      const userId = session.session.user.id;
       
       // Check if already liked
       const { data: existingLike } = await supabase
         .from('likes')
         .select('*')
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .eq('post_id', currentPostId)
+        .eq('user_id', userId)
+        .single();
       
       if (existingLike) {
-        // Unlike the post
+        // Unlike
         await supabase
           .from('likes')
           .delete()
-          .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('post_id', currentPostId)
+          .eq('user_id', userId);
           
-        toast.success("Unliked post");
+        toast.success('Post unliked');
       } else {
-        // Like the post
+        // Like
         await supabase
           .from('likes')
           .insert({
-            post_id: postId,
-            user_id: user.id,
-            created_at: new Date().toISOString()
+            post_id: currentPostId,
+            user_id: userId
           });
           
-        toast.success("Liked post");
+        toast.success('Post liked');
       }
       
-      // Force refresh to update UI
-      setTimeout(() => window.location.reload(), 1000);
+      // Update post like count
+      await supabase.rpc('update_post_like_count', { post_id_param: currentPostId });
       
     } catch (error) {
-      console.error("Error liking post:", error);
-      toast.error("Failed to update like status");
+      console.error('Error liking post:', error);
+      toast.error('Failed to like post');
+    } finally {
+      setLoading(null);
     }
   };
-  
-  // Handle comment button press
+
+  // Handle comment action
   const handleComment = () => {
-    const postId = activePostId || currentPostId;
-    if (!postId) {
-      toast.error("No post selected");
-      return;
-    }
+    if (!currentPostId) return;
     
-    console.log(`Opening comments for post ID: ${postId}`);
-    
-    // Find the post's comment button and click it
-    const post = document.querySelector(`[data-post-id="${postId}"]`);
-    if (post) {
-      const commentBtn = post.querySelector('.comment-button') as HTMLElement;
-      if (commentBtn) {
-        commentBtn.click();
-        return;
-      }
-    }
-    
-    // Fallback - navigate to post detail page
-    navigate(`/post/${postId}`);
+    openCommentInput(currentPostId);
+    toast.info('Comment mode activated');
   };
-  
-  // Handle follow button press
+
+  // Handle follow action
   const handleFollow = async () => {
-    if (!user) {
-      toast.error("Please log in to follow users");
-      return;
-    }
-    
-    const postId = activePostId || currentPostId;
-    if (!postId) {
-      toast.error("No post selected");
-      return;
-    }
+    if (!currentPostId || loading) return;
     
     try {
-      // Get post to find user ID
+      setLoading('follow');
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate('/auth');
+        return;
+      }
+      
+      // Get post author
       const { data: post } = await supabase
         .from('posts')
         .select('user_id')
-        .eq('id', postId)
+        .eq('id', currentPostId)
         .single();
       
       if (!post) {
-        toast.error("Post not found");
+        toast.error('Post not found');
         return;
       }
       
-      if (post.user_id === user.id) {
-        toast.error("You cannot follow yourself");
+      const userId = session.session.user.id;
+      const authorId = post.user_id;
+      
+      // Don't follow yourself
+      if (userId === authorId) {
+        toast.info('Cannot follow yourself');
         return;
       }
       
@@ -173,144 +116,103 @@ export default function ActionButtons({ navigate, currentPostId }: ActionButtons
       const { data: existingFollow } = await supabase
         .from('follows')
         .select('*')
-        .eq('follower_id', user.id)
-        .eq('following_id', post.user_id)
-        .maybeSingle();
+        .eq('follower_id', userId)
+        .eq('followed_id', authorId)
+        .single();
       
       if (existingFollow) {
         // Unfollow
         await supabase
           .from('follows')
           .delete()
-          .eq('follower_id', user.id)
-          .eq('following_id', post.user_id);
+          .eq('follower_id', userId)
+          .eq('followed_id', authorId);
           
-        toast.success("Unfollowed user");
+        toast.success('User unfollowed');
       } else {
         // Follow
         await supabase
           .from('follows')
           .insert({
-            follower_id: user.id,
-            following_id: post.user_id,
-            created_at: new Date().toISOString()
+            follower_id: userId,
+            followed_id: authorId
           });
           
-        toast.success("Following user");
+        toast.success('User followed');
       }
       
     } catch (error) {
-      console.error("Error following user:", error);
-      toast.error("Failed to update follow status");
-    }
-  };
-  
-  // Handle trophy button press
-  const handleTrophy = async () => {
-    if (!user) {
-      toast.error("Please log in to award trophies");
-      return;
-    }
-    
-    const postId = activePostId || currentPostId;
-    if (!postId) {
-      toast.error("No post selected");
-      return;
-    }
-    
-    try {
-      // Check if already voted
-      const { data: existingVote } = await supabase
-        .from('clip_votes')
-        .select('*')
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (existingVote) {
-        // Remove vote
-        await supabase
-          .from('clip_votes')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', user.id);
-          
-        toast.success("Trophy removed");
-      } else {
-        // Add vote
-        await supabase
-          .from('clip_votes')
-          .insert({
-            post_id: postId,
-            user_id: user.id,
-            created_at: new Date().toISOString()
-          });
-          
-        toast.success("Trophy awarded!");
-      }
-      
-      // Force refresh to update UI
-      setTimeout(() => window.location.reload(), 1000);
-      
-    } catch (error) {
-      console.error("Error awarding trophy:", error);
-      toast.error("Failed to award trophy");
+      console.error('Error following user:', error);
+      toast.error('Failed to follow user');
+    } finally {
+      setLoading(null);
     }
   };
 
+  // Handle share/trophy action
+  const handleShare = () => {
+    if (!currentPostId) return;
+    
+    // For now, navigate to the post detail
+    navigate(`/post/${currentPostId}`);
+    toast.info('Viewing post details');
+  };
+
+  // Handle post action
+  const handlePost = () => {
+    navigate('/post/new');
+  };
+
   return (
-    <div className="relative w-full h-full">
-      {/* Diamond pattern buttons */}
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
+    <div className="w-full h-full relative">
+      {/* Diamond buttons layout */}
+      <div className="absolute w-full h-full">
+        {/* Top button - Comment */}
         <button 
-          onClick={handleLike}
-          className="w-12 h-12 rounded-full flex items-center justify-center bg-[#272A37] border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
-          aria-label="Like post"
-        >
-          <Heart className="h-6 w-6 text-red-500" />
-        </button>
-      </div>
-      
-      <div className="absolute -left-1/4 top-1/2 transform -translate-y-1/2">
-        <button 
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
           onClick={handleComment}
-          className="w-12 h-12 rounded-full flex items-center justify-center bg-[#272A37] border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
-          aria-label="Comment on post"
+          disabled={!currentPostId}
+          aria-label="Comment"
         >
-          <MessageSquare className="h-6 w-6 text-blue-500" />
+          <MessageCircle size={20} className="text-[#6366F1]" />
         </button>
-      </div>
-      
-      <div className="absolute left-1/2 transform -translate-x-1/2 top-1/4">
+        
+        {/* Right button - Share/Trophy */}
         <button 
-          onClick={handleFollow}
-          className="w-12 h-12 rounded-full flex items-center justify-center bg-[#272A37] border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
-          aria-label="Follow user"
+          className="absolute top-1/2 right-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
+          onClick={handleShare}
+          disabled={!currentPostId}
+          aria-label="Share"
         >
-          <UserPlus className="h-6 w-6 text-green-500" />
+          <Trophy size={20} className="text-[#6366F1]" />
         </button>
-      </div>
-      
-      <div className="absolute -right-1/4 top-1/2 transform -translate-y-1/2">
+        
+        {/* Bottom button - POST */}
         <button 
-          onClick={handleTrophy}
-          className="w-12 h-12 rounded-full flex items-center justify-center bg-[#272A37] border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
-          aria-label="Award trophy"
+          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-12 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] flex items-center justify-center hover:opacity-90 transition-opacity shadow-lg"
+          onClick={handlePost}
+          aria-label="Create Post"
         >
-          <Trophy className="h-6 w-6 text-yellow-500" />
+          <span className="text-xs font-bold mr-1">POST</span>
+          <SendHorizontal size={14} className="text-white" />
         </button>
-      </div>
-      
-      {/* POST button at bottom */}
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+        
+        {/* Left button - Like */}
         <button 
-          onClick={() => navigate('/post/new')}
-          className="px-4 py-2 rounded-md bg-[#272A37] text-[#6366F1] font-semibold text-sm border border-[#3f4255] hover:bg-[#2d3044] transition-colors"
-          aria-label="Create new post"
+          className="absolute top-1/2 left-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
+          onClick={handleLike}
+          disabled={loading === 'like' || !currentPostId}
+          aria-label="Like"
         >
-          POST
+          <Heart 
+            size={20} 
+            className={loading === 'like' ? 'text-gray-400 animate-pulse' : 'text-[#6366F1]'} 
+            fill={loading === 'like' ? 'none' : 'currentColor'} 
+          />
         </button>
       </div>
     </div>
   );
-}
+};
+
+export default ActionButtons;

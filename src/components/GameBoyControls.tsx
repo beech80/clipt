@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Trophy, Home, Search, User } from 'lucide-react';
+import { Home, Search, Trophy, User } from 'lucide-react';
 import Joystick from './gameboy/Joystick';
 import ActionButtons from './gameboy/ActionButtons';
 import { Button } from './ui/button';
@@ -14,6 +14,24 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
+  const [initialTouchX, setInitialTouchX] = useState<number | null>(null);
+  const [currentNavIndex, setCurrentNavIndex] = useState(0);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  const navItems = [
+    { name: 'Home', path: '/', icon: <Home size={18} /> },
+    { name: 'Discover', path: '/discover', icon: <Search size={18} /> },
+    { name: 'Top Clips', path: '/topclips', icon: <Trophy size={18} /> },
+    { name: 'Profile', path: '/profile', icon: <User size={18} /> }
+  ];
+  
+  // Set current nav index based on path
+  useEffect(() => {
+    const index = navItems.findIndex(item => location.pathname.startsWith(item.path));
+    if (index !== -1) {
+      setCurrentNavIndex(index);
+    }
+  }, [location.pathname]);
 
   // Keep track of current route
   useEffect(() => {
@@ -85,92 +103,118 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [currentPostId, propCurrentPostId]);
 
-  // Handle navigation via GameBoy buttons
-  const handleCliptButtonClick = () => {
-    navigate('/clipts');
+  // Handle touch events for sliding navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setInitialTouchX(e.touches[0].clientX);
   };
 
-  // Check if a navigation item is active
-  const isActive = (paths: string[]) => {
-    return paths.some(path => location.pathname.startsWith(path));
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (initialTouchX === null || !headerRef.current) return;
+    
+    const currentX = e.touches[0].clientX;
+    const diff = initialTouchX - currentX;
+    
+    // Prevent default to avoid scrolling the page
+    if (Math.abs(diff) > 10) {
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (initialTouchX === null) return;
+    
+    const finalX = e.changedTouches[0].clientX;
+    const diff = initialTouchX - finalX;
+    
+    // If the swipe is significant enough
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && currentNavIndex < navItems.length - 1) {
+        // Swiped left, go to next
+        navigate(navItems[currentNavIndex + 1].path);
+      } else if (diff < 0 && currentNavIndex > 0) {
+        // Swiped right, go to previous
+        navigate(navItems[currentNavIndex - 1].path);
+      }
+    }
+    
+    setInitialTouchX(null);
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[140px] z-50 pointer-events-none">
-      <div className="max-w-screen-md mx-auto relative h-full">
-        <div className="absolute inset-x-0 bottom-0 h-[120px] bg-[#1a1b26]/90 backdrop-blur-md border-t border-[#2c2d4a] rounded-t-xl pointer-events-auto">
-          {/* Top navigation menu */}
-          <div className="flex justify-center pt-1 pb-2 gap-5 border-b border-[#2c2d4a]/50">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`h-8 w-8 ${isActive(['/']) ? 'text-white' : 'text-[#6c7793]'}`}
-              onClick={() => navigate('/')}
-              aria-label="Home"
-            >
-              <Home size={20} />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`h-8 w-8 ${isActive(['/discover']) ? 'text-white' : 'text-[#6c7793]'}`}
-              onClick={() => navigate('/discover')}
-              aria-label="Discover"
-            >
-              <Search size={20} />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`h-8 w-8 ${isActive(['/topclips']) ? 'text-white' : 'text-[#6c7793]'}`}
-              onClick={() => navigate('/topclips')}
-              aria-label="Top Clips"
-            >
-              <Trophy size={20} />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`h-8 w-8 ${isActive(['/profile']) ? 'text-white' : 'text-[#6c7793]'}`}
-              onClick={() => navigate('/profile')}
-              aria-label="Profile"
-            >
-              <User size={20} />
-            </Button>
-          </div>
-          
-          {/* GameBoy Controls */}
-          <div className="flex justify-between items-center px-8 py-2 h-[80px]">
-            {/* Left joystick */}
-            <div className="w-[80px] h-[80px]">
-              <Joystick />
-            </div>
-            
-            {/* Middle CLIPT button */}
-            <div className="w-[80px] h-[80px] relative">
-              <button
-                onClick={handleCliptButtonClick}
-                className="w-full h-full rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:ring-opacity-50"
-                aria-label="Go to Clipts page"
+    <>
+      {/* Sliding Header Navigation */}
+      <div 
+        ref={headerRef}
+        className="fixed top-0 left-0 right-0 z-50 bg-[#1a1b26]/95 backdrop-blur-md border-b border-[#2c2d4a]"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="max-w-screen-md mx-auto overflow-hidden">
+          <div 
+            className="flex justify-between items-center transition-transform duration-300 px-2"
+            style={{ 
+              transform: `translateX(${-currentNavIndex * 25}%)` 
+            }}
+          >
+            {navItems.map((item, index) => (
+              <div 
+                key={item.path}
+                className={`flex-1 py-3 text-center transition-opacity ${
+                  index === currentNavIndex ? 'opacity-100' : 'opacity-60'
+                }`}
+                onClick={() => navigate(item.path)}
               >
-                <div className="absolute inset-0 w-full h-full animate-spin-slow">
-                  <div className="w-[48px] h-[48px] rounded-full animate-ring-glow" style={{ border: '1.5px solid rgba(139, 92, 246, 0.8)' }}></div>
+                <div className="flex flex-col items-center justify-center">
+                  <div className="mb-1">{item.icon}</div>
+                  <span className="text-xs font-medium">{item.name}</span>
                 </div>
-                <span className="text-md font-bold relative z-10 bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] bg-clip-text text-transparent">CLIPT</span>
-              </button>
+                {index === currentNavIndex && (
+                  <div className="h-0.5 w-12 bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] rounded-full mx-auto mt-1" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* CLIPT Logo in top header */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div className="w-16 h-16 bg-[#1a1b26] rounded-full border border-[#2c2d4a] flex items-center justify-center">
+            <div className="absolute inset-0 w-full h-full">
+              <div className="w-full h-full rounded-full" style={{ 
+                border: '2px solid transparent',
+                borderRadius: '50%',
+                background: 'linear-gradient(45deg, #8B5CF6, #6366F1) border-box',
+                WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude'
+              }}></div>
             </div>
-            
-            {/* Right action buttons */}
-            <div className="w-[80px] h-[80px]">
-              <ActionButtons navigate={navigate} currentPostId={currentPostId || undefined} />
+            <span className="text-lg font-bold relative z-10">CLIPT</span>
+          </div>
+        </div>
+      </div>
+    
+      {/* GameBoy Controls at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 h-[120px] z-50 pointer-events-none">
+        <div className="max-w-screen-md mx-auto relative h-full">
+          <div className="absolute inset-x-0 bottom-0 h-[120px] bg-[#1a1b26]/90 backdrop-blur-md border-t border-[#2c2d4a] rounded-t-xl pointer-events-auto">
+            {/* GameBoy Controls */}
+            <div className="flex justify-between items-center px-10 py-3 h-full">
+              {/* Left joystick (smaller) */}
+              <div className="w-[70px] h-[70px]">
+                <Joystick />
+              </div>
+              
+              {/* Right action buttons (bigger area) */}
+              <div className="w-[100px] h-[100px]">
+                <ActionButtons navigate={navigate} currentPostId={currentPostId || undefined} />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
