@@ -152,51 +152,33 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </div>
       </div>
       
-      {/* CLIPT button (center) with purple ring */}
+      {/* CLIPT button with glowing purple ring */}
       <div className="absolute bottom-[72px] left-1/2 -translate-x-1/2">
         <button 
           onClick={() => navigate('/clipts/create')}
           className="relative flex items-center justify-center"
           aria-label="Create CLIPT"
         >
-          {/* Purple ring */}
-          <div className="absolute w-[44px] h-[44px] animate-spin-slow">
+          {/* Purple animated ring */}
+          <div className="absolute inset-0 w-full h-full animate-spin-slow">
             <div 
-              className="w-full h-full rounded-full border border-[#8B5CF6]"
+              className="w-[45px] h-[45px] rounded-full"
               style={{
-                boxShadow: '0 0 5px rgba(139, 92, 246, 0.8)',
+                border: '1.5px solid rgba(139, 92, 246, 0.8)',
+                boxShadow: '0 0 6px rgba(139, 92, 246, 0.7)',
               }}
             ></div>
           </div>
           
           {/* Black center button */}
-          <div className="relative z-10 flex flex-col items-center justify-center w-[34px] h-[34px] rounded-full bg-black">
-            <div className="mt-[-1px]">
-              {/* CLIPT text and icon */}
-              <div className="flex items-center justify-center">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="11" 
-                  height="11" 
-                  viewBox="0 0 24 24" 
-                  className="inline-block mr-[1px]"
-                >
-                  <rect width="24" height="24" fill="none"/>
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" 
-                    fill="none" 
-                    stroke="white" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"/>
-                  <circle cx="12" cy="13" r="4" 
-                    fill="none" 
-                    stroke="white" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"/>
-                </svg>
-                <span className="text-[7px] font-bold text-white tracking-tight">CLIPT</span>
-              </div>
+          <div className="relative z-10 flex items-center justify-center w-[35px] h-[35px] rounded-full bg-black">
+            <div className="flex flex-col items-center">
+              {/* Camera icon and CLIPT text */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+              <span className="text-[7px] font-bold text-white tracking-wide mt-0.5">CLIPT</span>
             </div>
           </div>
         </button>
