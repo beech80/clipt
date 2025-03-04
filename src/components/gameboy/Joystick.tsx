@@ -5,48 +5,74 @@ interface JoystickProps {
   navigate: NavigateFunction;
 }
 
-const Joystick: React.FC<JoystickProps> = ({ navigate }) => {
-  const navigateToRoute = (route: string) => {
-    navigate(route);
+export default function Joystick({ navigate }: JoystickProps) {
+  // Handle joystick navigation
+  const handleNavigation = (direction: string) => {
+    switch (direction) {
+      case 'up':
+        navigate('/');
+        break;
+      case 'right':
+        navigate('/discover');
+        break;
+      case 'down':
+        navigate('/collections');
+        break;
+      case 'left':
+        navigate('/profile');
+        break;
+      default:
+        break;
+    }
   };
 
   return (
-    <div className="relative w-[60px] h-[60px]">
-      {/* Main outer circle */}
-      <div className="w-full h-full rounded-full bg-[#1D1E25] shadow-md"></div>
+    <div className="relative w-full h-full">
+      {/* Base of the joystick - concave circular area */}
+      <div 
+        className="absolute inset-0 rounded-full bg-[#1e2029]"
+        style={{
+          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.7)',
+          border: '1px solid #2d3047'
+        }}
+      ></div>
       
-      {/* Inner circle shadow */}
-      <div className="absolute inset-[10px] rounded-full bg-[#191A21]"></div>
+      {/* Joystick analog stick */}
+      <div 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30px] h-[30px] rounded-full bg-[#272935]"
+        style={{ 
+          boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+          border: '1px solid #333642',
+        }}
+      >
+        {/* Textured top of stick */}
+        <div className="absolute inset-0 rounded-full" style={{
+          background: 'radial-gradient(circle at center, #2a2c3a 0%, #232531 100%)',
+          boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1)'
+        }}></div>
+      </div>
       
-      {/* Center circle */}
-      <div className="absolute inset-[20px] rounded-full bg-[#16171D]"></div>
-      
-      {/* Navigation hot zones - invisible but functional */}
-      <button 
-        onClick={() => navigateToRoute('/')} 
-        className="absolute top-0 left-0 w-full h-[33%] opacity-0"
-        aria-label="Navigate Up"
+      {/* Invisible hotspots for navigation */}
+      <button
+        onClick={() => handleNavigation('up')}
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[45px] h-[20px] cursor-pointer opacity-0"
+        aria-label="Navigate up"
       ></button>
-      
-      <button 
-        onClick={() => navigateToRoute('/discover')} 
-        className="absolute top-0 right-0 h-full w-[33%] opacity-0"
-        aria-label="Navigate Right"
+      <button
+        onClick={() => handleNavigation('right')}
+        className="absolute top-1/2 right-0 -translate-y-1/2 w-[20px] h-[45px] cursor-pointer opacity-0"
+        aria-label="Navigate right"
       ></button>
-      
-      <button 
-        onClick={() => navigateToRoute('/collections')} 
-        className="absolute bottom-0 left-0 w-full h-[33%] opacity-0"
-        aria-label="Navigate Down"
+      <button
+        onClick={() => handleNavigation('down')}
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[45px] h-[20px] cursor-pointer opacity-0"
+        aria-label="Navigate down"
       ></button>
-      
-      <button 
-        onClick={() => navigateToRoute('/clipts')} 
-        className="absolute top-0 left-0 h-full w-[33%] opacity-0"
-        aria-label="Navigate Left"
+      <button
+        onClick={() => handleNavigation('left')}
+        className="absolute top-1/2 left-0 -translate-y-1/2 w-[20px] h-[45px] cursor-pointer opacity-0"
+        aria-label="Navigate left"
       ></button>
     </div>
   );
-};
-
-export default Joystick;
+}
