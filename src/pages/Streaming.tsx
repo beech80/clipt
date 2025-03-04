@@ -76,26 +76,30 @@ export default function Streaming() {
   };
 
   return (
-    <div className="container py-4 space-y-6">
-      <h1 className="text-3xl font-bold">Streaming</h1>
+    <div className="container max-w-6xl py-4 px-4 md:px-6 space-y-6">
+      <h1 className="text-2xl md:text-3xl font-bold">Streaming</h1>
       
       <Tabs defaultValue="live" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-6">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
           <TabsTrigger value="live">
             <Play className="w-4 h-4 mr-2" />
-            Live
+            <span className="hidden sm:inline">Live</span>
+            <span className="sm:hidden">Live</span>
           </TabsTrigger>
           <TabsTrigger value="setup">
             <Settings2 className="w-4 h-4 mr-2" />
-            Setup
+            <span className="hidden sm:inline">Setup</span>
+            <span className="sm:hidden">Setup</span>
           </TabsTrigger>
           <TabsTrigger value="schedule">
             <Calendar className="w-4 h-4 mr-2" />
-            Schedule
+            <span className="hidden sm:inline">Schedule</span>
+            <span className="sm:hidden">Schedule</span>
           </TabsTrigger>
           <TabsTrigger value="dashboard">
             <ChartBar className="w-4 h-4 mr-2" />
-            Dashboard
+            <span className="hidden sm:inline">Dashboard</span>
+            <span className="sm:hidden">Stats</span>
           </TabsTrigger>
         </TabsList>
         
@@ -112,9 +116,10 @@ export default function Streaming() {
                   <h3 className="text-lg font-medium">Stream Status</h3>
                   <p className="text-sm text-gray-400">Offline</p>
                 </div>
-                <Button onClick={handleInitializeStream} className="bg-purple-600 hover:bg-purple-700">
-                  <Play className="mr-2 h-4 w-4" />
-                  Initialize Stream
+                <Button onClick={handleInitializeStream} className="bg-purple-600 hover:bg-purple-700 px-2 sm:px-4">
+                  <Play className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Initialize Stream</span>
+                  <span className="sm:hidden">Start</span>
                 </Button>
               </div>
               

@@ -92,6 +92,18 @@ npx cap open android
 npx cap open ios
 ```
 
+## Recent Updates
+
+### UI/UX Improvements
+- Improved mobile UI responsiveness, especially for the streaming page
+- Added ability to click on usernames throughout the app to navigate to user profiles
+- Fixed search functionality on the discovery page
+- Fixed "Most Played Games" section to correctly show games
+
+### User Profile Updates
+- Implemented username change restriction (limited to once every two months)
+- Added visual feedback and countdown for when users can change their username again
+
 ## CI/CD
 This project uses GitHub Actions for continuous integration and deployment. The workflow automatically builds the application and deploys it to production when changes are pushed to the main branch.
 

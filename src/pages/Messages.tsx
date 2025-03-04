@@ -8,6 +8,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, createMessagesTable, checkTableExists } from "@/lib/supabase";
 import { toast } from "sonner";
+import { UserLink } from '@/components/user/UserLink';
 
 const Messages = () => {
   const { user } = useAuth();
@@ -511,7 +512,11 @@ const Messages = () => {
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-baseline justify-between">
-                            <h3 className="font-medium">{chat.recipient_name}</h3>
+                            <UserLink 
+                              username={chat.recipient_name} 
+                              displayName={chat.recipient_name} 
+                              className="text-base font-medium hover:underline cursor-pointer"
+                            />
                             <span className="text-xs text-muted-foreground">
                               {chat.last_message_time ? new Date(chat.last_message_time).toLocaleString() : ''}
                             </span>
@@ -542,7 +547,11 @@ const Messages = () => {
                   <AvatarFallback>{selectedChat.recipient_name?.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="font-medium">{selectedChat.recipient_name}</h3>
+                  <UserLink 
+                    username={selectedChat.recipient_name} 
+                    displayName={selectedChat.recipient_name} 
+                    className="font-medium hover:underline cursor-pointer"
+                  />
                 </div>
               </div>
               
@@ -629,7 +638,11 @@ const Messages = () => {
                           <span>{user.username ? user.username.slice(0, 2).toUpperCase() : 'U'}</span>
                         </div>
                       )}
-                      <span>{user.display_name || user.username || 'User'}</span>
+                      <UserLink 
+                        username={user.username} 
+                        displayName={user.display_name || user.username} 
+                        className="text-base font-medium hover:underline cursor-pointer"
+                      />
                     </div>
                   </div>
                 ))}
@@ -668,7 +681,11 @@ const Messages = () => {
                       key={user.id}
                       className="flex items-center justify-between p-2 rounded bg-gaming-800 hover:bg-gaming-700"
                     >
-                      <span>{user.username || user.display_name || 'User'}</span>
+                      <UserLink 
+                        username={user.username} 
+                        displayName={user.display_name || user.username} 
+                        className="text-base font-medium hover:underline cursor-pointer"
+                      />
                       <Button
                         size="sm"
                         variant="outline"
@@ -698,7 +715,11 @@ const Messages = () => {
                         key={userId}
                         className="flex items-center gap-2 bg-gaming-800 rounded px-2 py-1"
                       >
-                        <span>{user?.username || user?.display_name || 'User'}</span>
+                        <UserLink 
+                          username={user?.username} 
+                          displayName={user?.display_name || user?.username} 
+                          className="text-base font-medium hover:underline cursor-pointer"
+                        />
                         <button
                           onClick={() => setSelectedUsers(selectedUsers.filter(id => id !== userId))}
                           className="text-red-500 hover:text-red-400"
