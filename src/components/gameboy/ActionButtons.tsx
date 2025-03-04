@@ -62,50 +62,50 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ postId, onAction }) => {
 
   return (
     <div className="relative w-[80px] h-[80px]">
-      {/* Red heart button - top position */}
-      <div className="absolute -top-5 left-1/2 -translate-x-1/2">
+      {/* Red button - top position */}
+      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
         <button
           onClick={handleLike}
-          className="w-[28px] h-[28px] rounded-full bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.5)]"
+          className="w-[24px] h-[24px] rounded-full bg-red-600 shadow-[0_0_3px_rgba(220,38,38,0.5)]"
           aria-label="Like"
         ></button>
       </div>
       
-      {/* Blue comment button - left position */}
-      <div className="absolute top-1/2 -left-5 -translate-y-1/2">
+      {/* Blue button - left position */}
+      <div className="absolute top-1/2 -left-3 -translate-y-1/2">
         <button
           onClick={handleComment}
-          className="w-[28px] h-[28px] rounded-full bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)]"
+          className="w-[24px] h-[24px] rounded-full bg-blue-600 shadow-[0_0_3px_rgba(37,99,235,0.5)]"
           aria-label="Comment"
         ></button>
       </div>
       
-      {/* Green follow button - right position */}
-      <div className="absolute top-1/2 -right-5 -translate-y-1/2">
+      {/* Green button - right position */}
+      <div className="absolute top-1/2 -right-3 -translate-y-1/2">
         <button
           onClick={handleFollow}
-          className="w-[28px] h-[28px] rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]"
+          className="w-[24px] h-[24px] rounded-full bg-green-600 shadow-[0_0_3px_rgba(22,163,74,0.5)]"
           aria-label="Follow"
         ></button>
       </div>
       
-      {/* Yellow trophy button - bottom position */}
-      <div className="absolute -bottom-5 left-1/2 -translate-x-1/2">
+      {/* Yellow button - bottom position */}
+      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
         <button
           onClick={handleRank}
-          className="w-[28px] h-[28px] rounded-full bg-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.5)]"
+          className="w-[24px] h-[24px] rounded-full bg-yellow-500 shadow-[0_0_3px_rgba(234,179,8,0.5)]"
           aria-label="Rank"
         ></button>
       </div>
       
       {/* Purple POST button - below the diamond */}
-      <div className="absolute -bottom-16 left-1/2 -translate-x-1/2">
+      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
         <button
           onClick={() => navigate('/post/new')}
-          className="w-[28px] h-[28px] rounded-full bg-purple-500 shadow-[0_0_5px_rgba(168,85,247,0.5)] flex flex-col items-center justify-center"
+          className="w-[24px] h-[24px] rounded-full bg-purple-600 shadow-[0_0_3px_rgba(147,51,234,0.5)]"
           aria-label="Post"
         ></button>
-        <span className="absolute text-[9px] font-bold text-purple-400 mt-1 left-1/2 -translate-x-1/2">POST</span>
+        <span className="absolute -bottom-4 text-[8px] font-bold text-purple-300 left-1/2 -translate-x-1/2">POST</span>
       </div>
     </div>
   );
