@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Share2, ThumbsUp, MessageSquare, Clock, ArrowLeft } from 'lucide-react';
 import ShareButton from '@/components/shared/ShareButton';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
