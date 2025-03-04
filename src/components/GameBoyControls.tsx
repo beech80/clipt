@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Heart, MessageCircle, Trophy, Camera, Menu } from 'lucide-react';
 import Joystick from './gameboy/Joystick';
-import ActionButtons from './gameboy/ActionButtons';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -83,21 +83,68 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [currentPostId, propCurrentPostId]);
 
+  // Handler functions for each button
+  const handleLike = async () => {
+    if (!currentPostId) return;
+    console.log('Like post:', currentPostId);
+    // Like logic would go here
+  };
+
+  const handleComment = () => {
+    if (!currentPostId) return;
+    console.log('Comment on post:', currentPostId);
+    // Comment logic would go here
+  };
+
+  const handleTrophy = () => {
+    if (!currentPostId) return;
+    console.log('Trophy for post:', currentPostId);
+    // Trophy logic would go here
+  };
+
+  const handlePost = () => {
+    navigate('/post/new');
+  };
+
+  const handleMenu = () => {
+    console.log('Open menu');
+    // Menu logic would go here
+  };
+
+  const handleCameraClick = () => {
+    navigate('/');
+  };
+
   return (
-    <>
-      {/* GameBoy Controls at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 h-[120px] z-50 pointer-events-none">
-        <div className="max-w-screen-md mx-auto relative h-full">
-          <div className="absolute inset-x-0 bottom-0 h-[120px] bg-[#1a1b26]/90 backdrop-blur-md border-t border-[#2c2d4a] rounded-t-xl pointer-events-auto">
-            {/* GameBoy Controls */}
-            <div className="flex justify-between items-center px-10 py-3 h-full">
-              {/* Left joystick */}
-              <div className="w-[70px] h-[70px]">
-                <Joystick />
+    <div className="fixed bottom-0 left-0 right-0 h-[150px] z-50">
+      <div className="max-w-screen-md mx-auto relative h-full">
+        <div className="absolute inset-x-0 bottom-0 h-[150px] bg-[#1a1b26] border-t border-[#2c2d4a] pointer-events-auto">
+          {/* Top border line */}
+          <div className="h-[1px] w-full bg-blue-500/50" />
+          
+          <div className="flex justify-between items-center px-4 py-2 h-full">
+            {/* Left joystick */}
+            <div className="w-[80px] h-[80px] flex items-center justify-center">
+              <div className="w-[70px] h-[70px] rounded-full bg-gray-800 shadow-lg flex items-center justify-center" 
+                  style={{ 
+                    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.7), 0 2px 4px rgba(0,0,0,0.5)'
+                  }}>
+                <div className="w-[65px] h-[65px] rounded-full bg-gray-700 flex items-center justify-center"
+                    style={{ 
+                      boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.5)'
+                    }}>
+                  <div className="w-[50px] h-[50px] rounded-full bg-gray-800"
+                      style={{ 
+                        boxShadow: '0 3px 6px rgba(0,0,0,0.3), inset 0 -2px 5px rgba(0,0,0,0.5)'
+                      }}>
+                  </div>
+                </div>
               </div>
-              
-              {/* Middle CLIPT button */}
-              <div className="w-16 h-16 bg-[#1a1b26] rounded-full border border-[#2c2d4a] flex items-center justify-center">
+            </div>
+            
+            {/* Middle CLIPT button */}
+            <div className="flex flex-col items-center justify-center gap-5">
+              <div className="w-16 h-16 bg-[#1a1b26] rounded-full relative" onClick={handleCameraClick}>
                 <div className="absolute inset-0 w-full h-full">
                   <div className="w-full h-full rounded-full" style={{ 
                     border: '2px solid transparent',
@@ -108,18 +155,54 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                     maskComposite: 'exclude'
                   }}></div>
                 </div>
-                <span className="text-lg font-bold relative z-10">CLIPT</span>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <Camera size={20} className="text-white" />
+                    <span className="text-xs font-bold mt-0.5">CLIPT</span>
+                  </div>
+                </div>
               </div>
               
-              {/* Right action buttons */}
-              <div className="w-[100px] h-[100px]">
-                <ActionButtons navigate={navigate} currentPostId={currentPostId || undefined} />
+              {/* Menu button below CLIPT button */}
+              <div className="w-10 h-10 rounded-full bg-[#3e3e60] flex items-center justify-center cursor-pointer" onClick={handleMenu}>
+                <Menu size={20} className="text-white" />
+              </div>
+            </div>
+            
+            {/* Right action buttons */}
+            <div className="w-[120px] h-[120px] relative">
+              {/* Heart button (top) */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shadow-lg cursor-pointer" 
+                style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}
+                onClick={handleLike}>
+                <Heart size={20} className="text-white" fill="white" />
+              </div>
+              
+              {/* Message button (middle left) */}
+              <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shadow-lg cursor-pointer" 
+                style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}
+                onClick={handleComment}>
+                <MessageCircle size={20} className="text-white" />
+              </div>
+              
+              {/* Trophy button (middle right) */}
+              <div className="absolute top-1/2 right-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg cursor-pointer" 
+                style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}
+                onClick={handleTrophy}>
+                <Trophy size={20} className="text-white" />
+              </div>
+              
+              {/* POST button (bottom) */}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-12 rounded-full bg-purple-500 flex items-center justify-center shadow-lg cursor-pointer" 
+                style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}
+                onClick={handlePost}>
+                <span className="text-xs font-bold text-white">POST</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
