@@ -11,7 +11,6 @@ import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
 import { useQueryClient } from '@tanstack/react-query';
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import GameBoyControls from '@/components/GameBoyControls';
-import GameBoyNavigation from '@/components/GameBoyNavigation';
 import ScrollToTop from './components/common/ScrollToTop';
 import '@/index.css';
 import '@/styles/animations.css';
@@ -63,9 +62,9 @@ function App() {
     }
   }, [location.pathname, queryClient]);
 
-  // Routes that should not display the GameBoy UI components
-  const noUIRoutes = ['/auth'];
-  const shouldShowUI = !noUIRoutes.some(route => 
+  // Routes that should not display the GameBoy controls
+  const noControlsRoutes = ['/auth'];
+  const shouldShowControls = !noControlsRoutes.some(route => 
     location.pathname.startsWith(route)
   );
 
@@ -78,16 +77,14 @@ function App() {
               <CommentsProvider>
                 <Toaster richColors position="top-center" />
                 <ScrollToTop />
-                {shouldShowUI && <GameBoyNavigation />}
                 <div className="app-content-wrapper" style={{ 
-                  paddingTop: shouldShowUI ? '60px' : '0', 
-                  paddingBottom: shouldShowUI ? '140px' : '0',
+                  paddingBottom: shouldShowControls ? '150px' : '0',
                   minHeight: '100vh' 
                 }}>
                   <AppContent />
                 </div>
                 <PWAInstallPrompt />
-                {shouldShowUI && <GameBoyControls currentPostId={currentPostId} />}
+                {shouldShowControls && <GameBoyControls currentPostId={currentPostId} />}
               </CommentsProvider>
             </ReportDialogProvider>
           </MessagesProvider>
