@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Heart, MessageCircle, Trophy, Menu } from 'lucide-react';
+import { Heart, MessageCircle, Trophy, Menu, Camera } from 'lucide-react';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -110,7 +110,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Menu logic would go here
   };
 
-  const handleHome = () => {
+  const handleClipt = () => {
     navigate('/');
   };
 
@@ -136,9 +136,32 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
-            {/* Middle menu button */}
-            <div className="w-12 h-12 rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" onClick={handleMenu}>
-              <Menu size={22} className="text-[#6a6e85]" />
+            {/* Middle section with menu and CLIPT buttons */}
+            <div className="flex flex-col items-center space-y-2">
+              {/* CLIPT button */}
+              <div className="w-16 h-16 relative" onClick={handleClipt}>
+                <div className="absolute inset-0 w-full h-full">
+                  <div className="w-full h-full rounded-full" style={{ 
+                    border: '2px solid transparent',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #6366F1, #8B5CF6) border-box',
+                    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+                    WebkitMaskComposite: 'xor',
+                    maskComposite: 'exclude'
+                  }}></div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <Camera size={18} className="text-white mb-0.5" />
+                    <span className="text-xs font-medium text-white">CLIPT</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Menu button */}
+              <div className="w-12 h-12 rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" onClick={handleMenu}>
+                <Menu size={22} className="text-[#6a6e85]" />
+              </div>
             </div>
             
             {/* Right buttons - Xbox diamond layout */}
