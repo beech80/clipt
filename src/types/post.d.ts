@@ -1,9 +1,9 @@
-
 export interface Post {
   id: string;
   content: string;
   image_url?: string | null;
   video_url?: string | null;
+  image_urls?: string[] | null;
   user_id: string;
   created_at: string;
   profiles: {
@@ -20,5 +20,7 @@ export interface Post {
   type?: 'video' | 'image' | 'text';
   games?: {
     name: string;
+    id?: string;
   };
+  post_type?: string;
 }

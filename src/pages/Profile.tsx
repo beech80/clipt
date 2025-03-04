@@ -13,6 +13,7 @@ import { Profile as ProfileType } from "@/types/profile";
 import { followUser } from "@/lib/follow-helper";
 import styled from "styled-components";
 import { UserLink } from '@/components/user/UserLink';
+import PostItem from '@/components/PostItem'; // Add PostItem import
 
 /**
  * Profile page component - displays user profile details and allows following/unfollowing
@@ -41,6 +42,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userFollows, setUserFollows] = useState(false);
+  const [userPosts, setUserPosts] = useState<any[]>([]);
   
   // Stats for displaying counts
   const [stats, setStats] = useState({
@@ -84,74 +86,55 @@ const Profile = () => {
    * Fetch the user's profile data
    */
   const fetchProfileData = useCallback(async () => {
-    if (!profileId) {
-      setError("No profile ID provided");
-      setLoading(false);
-      return;
-    }
-
     try {
-      console.log(`Profile: Fetching profile data for: ${profileId}`);
-      
-      // First try to ensure the profile exists
-      const { ensureProfileExists } = await import('@/lib/follow-helper');
-      const profileCreated = await ensureProfileExists(profileId);
-      
-      if (!profileCreated) {
-        console.log("ensureProfileExists failed, falling back to direct query");
+      if (!profileId) {
+        setError("No profile ID specified");
+        setLoading(false);
+        return;
       }
       
-      // Query for profile data
+      console.log("Fetching profile data for ID:", profileId);
+      
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', profileId)
-        .maybeSingle();
-        
+        .single();
+      
       if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        setError("Could not load profile data");
+        // If profile doesn't exist, create it for the current user
+        if (profileError.code === 'PGRST116' && user?.id === profileId) {
+          console.log("Profile not found for current user, creating one...");
+          
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              username: user.email?.split('@')[0] || `user_${Date.now()}`,
+              avatar_url: null,
+              created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+          
+          if (createError) {
+            console.error("Error creating profile:", createError);
+            setError("Could not create profile");
+          }
+          
+          setLoading(false);
+          return;
+        }
+        
+        console.error("Profile error:", profileError);
+        setError("Profile not found");
         setLoading(false);
         return;
       }
       
       if (!profileData) {
-        console.log("No profile found, creating fallback profile");
-        
-        // Simple creation of fallback profile if missing
-        try {
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert({
-              id: profileId,
-              username: `user_${profileId.substring(0, 8)}`,
-              display_name: `User ${profileId.substring(0, 8)}`,
-              followers: 0,
-              following: 0,
-              achievements: 0,
-              created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-            
-          if (createError || !newProfile) {
-            setError("Could not create profile");
-            setLoading(false);
-            return;
-          }
-          
-          setProfile(newProfile);
-          setStats({
-            followers: 0,
-            following: 0,
-            achievements: 0
-          });
-          
-        } catch (createError) {
-          console.error("Error creating profile:", createError);
-          setError("Could not create profile");
-        }
-        
+        console.error("No profile data found");
+        setError("Profile not found");
         setLoading(false);
         return;
       }
@@ -177,6 +160,36 @@ const Profile = () => {
           .maybeSingle();
           
         setUserFollows(!!followData);
+      }
+
+      // Fetch user's posts for the clipts tab
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          content,
+          image_url,
+          video_url,
+          image_urls,
+          user_id,
+          created_at,
+          post_type,
+          games (
+            name,
+            id
+          ),
+          likes_count:likes(count),
+          comments_count:comments(count),
+          clip_votes:clip_votes(count)
+        `)
+        .eq('user_id', profileId)
+        .order('created_at', { ascending: false });
+      
+      if (postsError) {
+        console.error("Error fetching posts:", postsError);
+      } else {
+        console.log("User posts loaded:", postsData);
+        setUserPosts(postsData || []);
       }
       
     } catch (error) {
@@ -377,11 +390,17 @@ const Profile = () => {
       {/* Tab Content */}
       {activeTab === 'clips' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60">
-            <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Clips Yet</h3>
-            <p className="text-gaming-400">User hasn't posted any gaming clips</p>
-          </Card>
+          {userPosts.length > 0 ? (
+            userPosts.map(post => (
+              <PostItem key={post.id} post={post} />
+            ))
+          ) : (
+            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60">
+              <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Clips Yet</h3>
+              <p className="text-gaming-400">User hasn't posted any gaming clips</p>
+            </Card>
+          )}
         </div>
       ) : (
         <div className="gaming-card p-6">
