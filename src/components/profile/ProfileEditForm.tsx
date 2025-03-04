@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -19,10 +18,11 @@ import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Camera } from "lucide-react"
+import { Camera, AlertCircle } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import type { CustomTheme, Profile, DatabaseProfile } from "@/types/profile"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const profileFormSchema = z.object({
   username: z.string().min(3).max(50),
@@ -38,6 +38,9 @@ export function ProfileEditForm() {
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [canChangeUsername, setCanChangeUsername] = useState(true)
+  const [lastUsernameChange, setLastUsernameChange] = useState<Date | null>(null)
+  const [daysUntilNextChange, setDaysUntilNextChange] = useState(0)
   const queryClient = useQueryClient()
 
   const { data: profile, refetch } = useQuery({
@@ -60,6 +63,25 @@ export function ProfileEditForm() {
 
       // Transform database profile to frontend profile with proper typing
       const customTheme = typeof data.custom_theme === 'object' ? data.custom_theme : { primary: "#1EAEDB", secondary: "#000000" }
+
+      // Check if the user can change their username (not more than once every two months)
+      if (data.last_username_change) {
+        const lastChange = new Date(data.last_username_change);
+        const twoMonthsAgo = new Date();
+        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+        
+        setLastUsernameChange(lastChange);
+        const canChange = lastChange < twoMonthsAgo;
+        setCanChangeUsername(canChange);
+        
+        if (!canChange) {
+          // Calculate days until next allowed change
+          const nextChangeDate = new Date(lastChange);
+          nextChangeDate.setMonth(nextChangeDate.getMonth() + 2);
+          const daysLeft = Math.ceil((nextChangeDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+          setDaysUntilNextChange(daysLeft);
+        }
+      }
 
       const transformedProfile: Profile = {
         id: data.id,
@@ -162,12 +184,12 @@ export function ProfileEditForm() {
   }
 
   const onSubmit = async (data: ProfileFormValues) => {
-    if (!user?.id) {
-      toast.error("You must be logged in to update your profile")
-      return
-    }
-
     try {
+      if (data.username !== profile?.username && !canChangeUsername) {
+        toast.error("Username can only be changed once every two months");
+        return;
+      }
+
       const updateData: Partial<DatabaseProfile> = {
         username: data.username,
         display_name: data.displayName,
@@ -177,6 +199,11 @@ export function ProfileEditForm() {
           primary: "#1EAEDB",
           secondary: "#000000"
         }
+      }
+
+      // If username is being changed, update the last_username_change field
+      if (data.username !== profile?.username) {
+        updateData.last_username_change = new Date().toISOString();
       }
 
       const { error } = await supabase
@@ -229,11 +256,27 @@ export function ProfileEditForm() {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="username" {...field} />
+                <Input 
+                  placeholder="username" 
+                  {...field} 
+                  disabled={!canChangeUsername}
+                />
               </FormControl>
               <FormDescription>
-                This is your public display name.
+                {canChangeUsername 
+                  ? "This is your public display name. You can only change it once every two months."
+                  : `You can change your username again in ${daysUntilNextChange} days.`
+                }
               </FormDescription>
+              {!canChangeUsername && (
+                <Alert variant="warning" className="mt-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Username Change Restricted</AlertTitle>
+                  <AlertDescription>
+                    You can only change your username once every two months. Your last change was on {lastUsernameChange?.toLocaleDateString()}.
+                  </AlertDescription>
+                </Alert>
+              )}
               <FormMessage />
             </FormItem>
           )}

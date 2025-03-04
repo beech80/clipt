@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
 import { followUser } from "@/lib/follow-helper";
 import styled from "styled-components";
+import { UserLink } from '@/components/user/UserLink';
 
 /**
  * Profile page component - displays user profile details and allows following/unfollowing
@@ -281,7 +282,7 @@ const Profile = () => {
                 <h1 className="text-2xl font-bold text-gaming-200 mb-1">
                   {profile.display_name || profile.username || 'User'}
                 </h1>
-                <p className="text-gaming-400 mb-2">@{profile.username || 'username'}</p>
+                <UserLink username={profile.username} />
                 <p className="text-gaming-300 max-w-md mb-4">{profile.bio || 'No bio provided'}</p>
               </div>
               

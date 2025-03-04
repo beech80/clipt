@@ -65,30 +65,40 @@ class IGDBService {
   
   async getTopGames(filter: 'top_rated' | 'most_played' | 'most_watched' = 'top_rated'): Promise<IGDBGame[]> {
     try {
-      let query = '';
-
+      let sortOption = '';
+      let additionalQuery = '';
+      
       switch (filter) {
         case 'top_rated':
-          query = 'fields name,rating,cover.url; where rating != null & cover != null; sort rating desc; limit 12;';
+          sortOption = 'sort rating desc;';
+          additionalQuery = 'where rating > 70;';
           break;
         case 'most_played':
-          query = 'fields name,rating,cover.url; where follows != null & cover != null; sort follows desc; limit 12;';
+          sortOption = 'sort total_rating_count desc;';
+          additionalQuery = 'where total_rating_count > 0;';
           break;
         case 'most_watched':
-          query = 'fields name,rating,cover.url; where hypes != null & cover != null; sort hypes desc; limit 12;';
+          sortOption = 'sort hypes desc;';
+          additionalQuery = 'where hypes > 0;';
           break;
       }
-
+      
       const { data, error } = await supabase.functions.invoke('igdb', {
         body: {
           endpoint: 'games',
-          query
+          query: `
+            fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,total_rating_count,hypes;
+            where cover != null;
+            ${additionalQuery}
+            ${sortOption}
+            limit 20;
+          `
         }
       });
 
       if (error) throw error;
       
-      // Process image URLs
+      // Process image URLs to use HTTPS and proper sizes
       return (data || []).map(game => ({
         ...game,
         cover: game.cover ? {
