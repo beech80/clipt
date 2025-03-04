@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Search, Trophy, User } from 'lucide-react';
 import Joystick from './gameboy/Joystick';
 import ActionButtons from './gameboy/ActionButtons';
-import { Button } from './ui/button';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -177,9 +176,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           </div>
         </div>
         
-        {/* CLIPT Logo in top header */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="w-16 h-16 bg-[#1a1b26] rounded-full border border-[#2c2d4a] flex items-center justify-center">
+        {/* CLIPT Logo in header */}
+        <div className="absolute top-1/2 right-3 transform -translate-y-1/2">
+          <div className="w-12 h-12 bg-[#1a1b26] rounded-full border border-[#2c2d4a] flex items-center justify-center">
             <div className="absolute inset-0 w-full h-full">
               <div className="w-full h-full rounded-full" style={{ 
                 border: '2px solid transparent',
@@ -190,24 +189,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 maskComposite: 'exclude'
               }}></div>
             </div>
-            <span className="text-lg font-bold relative z-10">CLIPT</span>
+            <span className="text-sm font-bold relative z-10">CLIPT</span>
           </div>
         </div>
       </div>
     
-      {/* GameBoy Controls at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 h-[120px] z-50 pointer-events-none">
+      {/* GameBoy Controls at bottom - Simplified */}
+      <div className="fixed bottom-0 left-0 right-0 h-[110px] z-50 pointer-events-none">
         <div className="max-w-screen-md mx-auto relative h-full">
-          <div className="absolute inset-x-0 bottom-0 h-[120px] bg-[#1a1b26]/90 backdrop-blur-md border-t border-[#2c2d4a] rounded-t-xl pointer-events-auto">
-            {/* GameBoy Controls */}
-            <div className="flex justify-between items-center px-10 py-3 h-full">
+          <div className="absolute inset-x-0 bottom-0 h-[110px] bg-[#1a1b26]/90 backdrop-blur-md border-t border-[#2c2d4a] rounded-t-xl pointer-events-auto">
+            <div className="flex justify-between items-center px-6 py-3 h-full">
               {/* Left joystick (smaller) */}
-              <div className="w-[70px] h-[70px]">
+              <div className="w-[60px] h-[60px]">
                 <Joystick />
               </div>
               
-              {/* Right action buttons (bigger area) */}
-              <div className="w-[100px] h-[100px]">
+              {/* Right action buttons (larger space) */}
+              <div className="w-[130px] h-[100px]">
                 <ActionButtons navigate={navigate} currentPostId={currentPostId || undefined} />
               </div>
             </div>
