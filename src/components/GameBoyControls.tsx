@@ -99,11 +99,47 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
     }
   };
 
-  const navigationItems = [
-    { name: 'Home', path: '/', icon: <Home className="w-4 h-4" /> },
-    { name: 'Discover', path: '/discover', icon: <Book className="w-4 h-4" /> },
-    { name: 'Profile', path: '/profile', icon: <Users className="w-4 h-4" /> },
-    { name: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" /> }
+  const menuItems = [
+    {
+      name: 'Home',
+      path: '/',
+      icon: <Home className="w-4 h-4" />,
+    },
+    {
+      name: 'Discover',
+      path: '/discover',
+      icon: <Book className="w-4 h-4" />,
+    },
+    {
+      name: 'Clipts',
+      path: '/clipts',
+      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>,
+    },
+    {
+      name: 'Profile',
+      path: '/profile',
+      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+    },
+    {
+      name: 'Collections',
+      path: '/collections',
+      icon: <Users className="w-4 h-4" />,
+    },
+    {
+      name: 'Top Clipts',
+      path: '/top-clipts',
+      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>,
+    },
+    {
+      name: 'Streaming',
+      path: '/streaming',
+      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18h8"></path><path d="M3 6h18"></path><path d="M10 12H3"></path><path d="M10 12h11"></path><path d="M21 18h-8"></path></svg>,
+    },
+    {
+      name: 'Settings',
+      path: '/settings',
+      icon: <Settings className="w-4 h-4" />,
+    },
   ];
 
   return (
@@ -112,60 +148,82 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="rounded-full w-6 h-6 bg-[#272A37] flex items-center justify-center">
-              <Menu className="h-3 w-3 text-[#6366F1]" />
+            <button className="rounded-full w-8 h-8 bg-[#272A37] flex items-center justify-center">
+              <Menu className="h-4 w-4 text-[#6366F1]" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="bg-[#1A1B26] border-t border-[#272A37] p-4">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-white">Navigation</h3>
               <button onClick={() => setIsOpen(false)} className="p-1 rounded-full">
-                <X className="h-5 w-5 text-gray-400" />
+                <X className="h-4 w-4 text-white" />
               </button>
             </div>
-            <nav className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-              {navigationItems.map((item) => (
+            <div className="grid grid-cols-4 gap-3">
+              {menuItems.map((item) => (
                 <button
-                  key={item.name}
+                  key={item.path}
                   onClick={() => {
                     navigate(item.path);
                     toast.success(`Navigating to ${item.name}`);
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-2 p-3 rounded-lg bg-[#272A37]/50 hover:bg-[#272A37]
+                  className="flex flex-col items-center justify-center p-3 rounded-lg bg-[#272A37]/80 hover:bg-[#272A37]
                     active:bg-[#272A37] transition-all duration-300 text-gray-300
                     font-medium text-sm active:scale-95"
                 >
                   {item.icon}
-                  <span>{item.name}</span>
+                  <span className="mt-1 text-xs">{item.name}</span>
                 </button>
               ))}
-            </nav>
+            </div>
           </SheetContent>
         </Sheet>
       </div>
       
-      {/* Left-side joystick */}
-      <div className="absolute bottom-[58px] left-[38px]">
-        <div className="w-[60px] h-[60px]">
+      {/* Left-side joystick - Xbox style */}
+      <div className="absolute bottom-[78px] left-[38px]">
+        <div className="w-[65px] h-[65px]">
           <Joystick navigate={navigate} />
         </div>
       </div>
       
-      {/* CLIPT button with glowing purple ring */}
-      <div className="absolute bottom-[72px] left-1/2 -translate-x-1/2">
+      {/* CLIPT button with cooler animated ring */}
+      <div className="absolute bottom-[85px] left-1/2 -translate-x-1/2">
         <button 
           onClick={() => navigate('/clipts/create')}
           className="relative flex items-center justify-center"
           aria-label="Create CLIPT"
         >
-          {/* Purple animated ring */}
+          {/* Fancy animated rings */}
           <div className="absolute inset-0 w-full h-full animate-spin-slow">
             <div 
-              className="w-[45px] h-[45px] rounded-full"
+              className="w-[48px] h-[48px] rounded-full animate-ring-glow"
               style={{
                 border: '1.5px solid rgba(139, 92, 246, 0.8)',
-                boxShadow: '0 0 6px rgba(139, 92, 246, 0.7)',
+                boxShadow: '0 0 8px rgba(139, 92, 246, 0.9)',
+                background: 'linear-gradient(45deg, rgba(139, 92, 246, 0.1), rgba(79, 70, 229, 0.1))',
+              }}
+            ></div>
+          </div>
+          
+          {/* Second ring rotating opposite direction */}
+          <div className="absolute inset-0 w-full h-full" style={{ animation: 'spin 7s linear infinite reverse' }}>
+            <div 
+              className="w-[44px] h-[44px] rounded-full"
+              style={{
+                border: '1px solid rgba(168, 85, 247, 0.6)',
+                boxShadow: '0 0 5px rgba(168, 85, 247, 0.7)',
+              }}
+            ></div>
+          </div>
+          
+          {/* Third floating ring */}
+          <div className="absolute inset-0 w-full h-full animate-pulse-gentle">
+            <div 
+              className="w-[50px] h-[50px] rounded-full"
+              style={{
+                border: '1px dashed rgba(139, 92, 246, 0.4)',
               }}
             ></div>
           </div>
@@ -185,7 +243,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       </div>
       
       {/* Right-side action buttons */}
-      <div className="absolute bottom-[58px] right-[38px]">
+      <div className="absolute bottom-[78px] right-[38px]">
         <ActionButtons postId={postId} onAction={handleAction} />
       </div>
     </div>

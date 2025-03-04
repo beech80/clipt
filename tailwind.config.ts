@@ -79,11 +79,17 @@ export default {
           to: { height: "0" },
         },
         glow: {
-          "0%, 100%": {
-            boxShadow: "0 0 15px rgba(155, 135, 245, 0.5)",
+          "0%": { 
+            boxShadow: "0 0 5px rgba(139, 92, 246, 0.7)",
+            borderColor: "rgba(139, 92, 246, 0.8)" 
           },
-          "50%": {
-            boxShadow: "0 0 30px rgba(155, 135, 245, 0.8)",
+          "50%": { 
+            boxShadow: "0 0 15px rgba(139, 92, 246, 0.9)", 
+            borderColor: "rgba(168, 85, 247, 0.9)"
+          },
+          "100%": { 
+            boxShadow: "0 0 5px rgba(139, 92, 246, 0.7)",
+            borderColor: "rgba(139, 92, 246, 0.8)" 
           },
         },
         gradient: {
@@ -115,6 +121,7 @@ export default {
         "scale-up": "scale-up 0.6s ease-out",
         "spin-slow": "spin 5s linear infinite",
         "pulse-gentle": "pulse 3s infinite",
+        "ring-glow": "glow 3s ease-in-out infinite",
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

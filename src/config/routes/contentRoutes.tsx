@@ -1,10 +1,10 @@
-
 import { RouteObject } from "react-router-dom";
 import Clipts from "@/pages/Clipts";
 import Collections from "@/pages/Collections";
 import Post from "@/pages/Post";
 import Home from "@/pages/Home";
 import TopClips from "@/pages/TopClips";
+import TopClipts from "@/pages/TopClipts";
 import { AuthGuard } from "@/components/AuthGuard";
 import { PostForm } from "@/components/post/PostForm";
 
@@ -28,6 +28,10 @@ export const contentRoutes: RouteObject[] = [
   {
     path: "top-clips",
     element: <TopClips />,
+  },
+  {
+    path: "top-clipts",
+    element: <TopClipts />,
   },
   {
     path: "/",
