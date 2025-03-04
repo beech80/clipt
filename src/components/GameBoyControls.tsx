@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Camera, Trophy, Gamepad, MessageSquare, Users, Video, Home, Settings } from 'lucide-react';
+import { Menu, Camera, Book, Users, Home, Settings, X } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import Joystick from './gameboy/Joystick';
 import ActionButtons from './gameboy/ActionButtons';
-import { handleVideoControl } from './gameboy/VideoControls';
+import { handleVideoControl } from '@/lib/video-controls';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -101,12 +101,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
 
   const navigationItems = [
     { name: 'Home', path: '/', icon: <Home className="w-4 h-4" /> },
-    { name: 'Discover', path: '/discover', icon: <Gamepad className="w-4 h-4" /> },
-    { name: 'Messages', path: '/messages', icon: <MessageSquare className="w-4 h-4" /> },
+    { name: 'Discover', path: '/discover', icon: <Book className="w-4 h-4" /> },
     { name: 'Profile', path: '/profile', icon: <Users className="w-4 h-4" /> },
-    { name: 'Streaming', path: '/streaming', icon: <Video className="w-4 h-4" /> },
-    { name: 'Top Clips', path: '/top-clips', icon: <Trophy className="w-4 h-4" /> },
-    { name: 'Clipts', path: '/clipts', icon: <Camera className="w-4 h-4" /> },
     { name: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" /> }
   ];
 
@@ -121,6 +117,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="bg-[#151924] border-t border-[#2a2f3d] p-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-white">Navigation</h3>
+              <button onClick={() => setIsOpen(false)} className="p-1 rounded-full">
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </div>
             <nav className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
               {navigationItems.map((item) => (
                 <button
@@ -145,7 +147,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       
       {/* Left-side joystick */}
       <div className="absolute bottom-3 left-10">
-        <Joystick navigate={navigate} />
+        <div className="w-20 h-20">
+          <Joystick navigate={navigate} />
+        </div>
       </div>
       
       {/* "CLIPT" button (middle) */}
