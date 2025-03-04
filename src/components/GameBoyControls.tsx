@@ -107,16 +107,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   ];
 
   return (
-    <div className="gameboy-container h-28 bg-[#151924] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#232738]">
+    <div className="gameboy-container h-[120px] bg-[#1A1B26] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#272A37]">
       {/* Menu button (center bottom) */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="rounded-full w-7 h-7 bg-[#1E2235] flex items-center justify-center shadow-md">
-              <Menu className="h-4 w-4 text-[#6366F1]" />
+            <button className="rounded-full w-6 h-6 bg-[#272A37] flex items-center justify-center">
+              <Menu className="h-3 w-3 text-[#6366F1]" />
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="bg-[#151924] border-t border-[#2a2f3d] p-4">
+          <SheetContent side="bottom" className="bg-[#1A1B26] border-t border-[#272A37] p-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-white">Navigation</h3>
               <button onClick={() => setIsOpen(false)} className="p-1 rounded-full">
@@ -132,8 +132,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
                     toast.success(`Navigating to ${item.name}`);
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-2 p-3 rounded-lg bg-[#1e2230]/50 hover:bg-[#1e2230]
-                    active:bg-[#1e2230] transition-all duration-300 text-gray-300
+                  className="flex items-center gap-2 p-3 rounded-lg bg-[#272A37]/50 hover:bg-[#272A37]
+                    active:bg-[#272A37] transition-all duration-300 text-gray-300
                     font-medium text-sm active:scale-95"
                 >
                   {item.icon}
@@ -146,45 +146,64 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       </div>
       
       {/* Left-side joystick */}
-      <div className="absolute bottom-9 left-12">
+      <div className="absolute bottom-[58px] left-[38px]">
         <div className="w-[60px] h-[60px]">
           <Joystick navigate={navigate} />
         </div>
       </div>
       
-      {/* "CLIPT" button (middle) - with animated oval ring */}
-      <div className="absolute bottom-14 left-1/2 -translate-x-1/2">
+      {/* CLIPT button (center) with purple ring */}
+      <div className="absolute bottom-[72px] left-1/2 -translate-x-1/2">
         <button 
           onClick={() => navigate('/clipts/create')}
           className="relative flex items-center justify-center"
           aria-label="Create CLIPT"
         >
-          {/* The spinning oval effect */}
-          <div className="absolute w-[55px] h-[45px] animate-spin-slow">
+          {/* Purple ring */}
+          <div className="absolute w-[44px] h-[44px] animate-spin-slow">
             <div 
-              className="w-full h-full rounded-full"
+              className="w-full h-full rounded-full border border-[#8B5CF6]"
               style={{
-                background: 'conic-gradient(from 0deg, #8B5CF6, #3B82F6, #8B5CF6)',
-                filter: 'blur(2px)',
+                boxShadow: '0 0 5px rgba(139, 92, 246, 0.8)',
               }}
             ></div>
           </div>
           
-          {/* The black center button */}
-          <div className="relative z-10 w-[42px] h-[42px] rounded-full bg-black flex flex-col items-center justify-center">
-            <span className="text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
-                <circle cx="12" cy="13" r="3"></circle>
-              </svg>
-            </span>
-            <span className="text-[10px] font-bold text-white tracking-wide mt-1">CLIPT</span>
+          {/* Black center button */}
+          <div className="relative z-10 flex flex-col items-center justify-center w-[34px] h-[34px] rounded-full bg-black">
+            <div className="mt-[-1px]">
+              {/* CLIPT text and icon */}
+              <div className="flex items-center justify-center">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="11" 
+                  height="11" 
+                  viewBox="0 0 24 24" 
+                  className="inline-block mr-[1px]"
+                >
+                  <rect width="24" height="24" fill="none"/>
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" 
+                    fill="none" 
+                    stroke="white" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"/>
+                  <circle cx="12" cy="13" r="4" 
+                    fill="none" 
+                    stroke="white" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"/>
+                </svg>
+                <span className="text-[7px] font-bold text-white tracking-tight">CLIPT</span>
+              </div>
+            </div>
           </div>
         </button>
       </div>
       
       {/* Right-side action buttons */}
-      <div className="absolute bottom-9 right-12">
+      <div className="absolute bottom-[58px] right-[38px]">
         <ActionButtons postId={postId} onAction={handleAction} />
       </div>
     </div>
