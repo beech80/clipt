@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sheet";
 import Joystick from './gameboy/Joystick';
 import ActionButtons from './gameboy/ActionButtons';
-import { handleVideoControl } from '@/lib/video-controls';
+import { handleVideoControl } from './gameboy/VideoControls';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
