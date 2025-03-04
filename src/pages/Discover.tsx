@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { igdbService } from '@/services/igdbService';
 import { Input } from '@/components/ui/input';
-import { Search, Trophy, Fire, Clock, ArrowUp, X } from 'lucide-react';
+import { Search, Trophy, Flame, Clock, ArrowUp, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import PostItem from '@/components/PostItem';
 import { useAuth } from '@/contexts/AuthContext';
@@ -395,7 +395,7 @@ const Discover = () => {
                   className="flex gap-2 items-center"
                   onClick={() => setTrendingFilter('most_liked')}
                 >
-                  <Fire className="h-4 w-4" />
+                  <Flame className="h-4 w-4" />
                   <span>Most Liked</span>
                 </Button>
                 <Button 
