@@ -107,9 +107,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
   ];
 
   return (
-    <div className="gameboy-container h-24 bg-[#151924] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#232738]">
+    <div className="gameboy-container h-32 bg-[#151924] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#232738]">
       {/* Menu button (center bottom) */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
             <button className="rounded-full w-8 h-8 bg-[#1E2235] flex items-center justify-center shadow-md">
@@ -145,23 +145,30 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </Sheet>
       </div>
       
-      {/* Left-side joystick */}
-      <div className="absolute bottom-3 left-10">
-        <div className="w-20 h-20">
+      {/* Left-side joystick - lifted higher */}
+      <div className="absolute bottom-8 left-12">
+        <div className="w-18 h-18">
           <Joystick navigate={navigate} />
         </div>
       </div>
       
-      {/* "CLIPT" button (middle) */}
-      <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
+      {/* "CLIPT" button (middle) - with animated circle */}
+      <div className="absolute bottom-16 left-1/2 -translate-x-1/2">
         <button 
           onClick={() => navigate('/clipts/create')}
-          className="flex items-center justify-center w-16 h-16 rounded-full shadow-md"
-          style={{ 
-            background: 'linear-gradient(135deg, #6366F1 0%, #3730A3 100%)',
-          }}
+          className="flex items-center justify-center w-16 h-16 rounded-full shadow-md relative"
         >
-          <div className="w-[90%] h-[90%] rounded-full bg-[#151924] flex items-center justify-center">
+          {/* Animated rotating ring */}
+          <div 
+            className="absolute inset-0 w-full h-full rounded-full animate-spin-slow"
+            style={{ 
+              background: 'conic-gradient(from 0deg, #6366F1, #3730A3, #6366F1)',
+              opacity: 0.7,
+            }}
+          ></div>
+          
+          {/* Center button */}
+          <div className="relative w-[90%] h-[90%] rounded-full bg-[#151924] flex items-center justify-center z-10">
             <div className="flex flex-col items-center justify-center">
               <Camera className="h-5 w-5 text-[#6366F1] mb-0.5" />
               <span className="text-[10px] font-bold text-[#6366F1] tracking-wider">CLIPT</span>
@@ -170,8 +177,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
         </button>
       </div>
       
-      {/* Right-side action buttons */}
-      <div className="absolute bottom-3 right-10">
+      {/* Right-side action buttons - lifted higher */}
+      <div className="absolute bottom-8 right-12">
         <ActionButtons postId={postId} onAction={handleAction} />
       </div>
     </div>
