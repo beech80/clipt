@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
-import { Heart, MessageCircle, Trophy, SendHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, UserPlus, Trophy, SendHorizontal } from 'lucide-react';
 import { useComments } from '@/contexts/CommentContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -77,8 +77,79 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
     toast.info('Comment mode activated');
   };
 
-  // Handle trophy action
-  const handleTrophy = () => {
+  // Handle follow action
+  const handleFollow = async () => {
+    if (!currentPostId || loading) return;
+    
+    try {
+      setLoading('follow');
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        navigate('/auth');
+        return;
+      }
+      
+      // Get post author
+      const { data: post } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', currentPostId)
+        .single();
+      
+      if (!post) {
+        toast.error('Post not found');
+        return;
+      }
+      
+      const userId = session.session.user.id;
+      const authorId = post.user_id;
+      
+      // Don't follow yourself
+      if (userId === authorId) {
+        toast.info('Cannot follow yourself');
+        return;
+      }
+      
+      // Check if already following
+      const { data: existingFollow } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('follower_id', userId)
+        .eq('followed_id', authorId)
+        .single();
+      
+      if (existingFollow) {
+        // Unfollow
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', userId)
+          .eq('followed_id', authorId);
+          
+        toast.success('User unfollowed');
+      } else {
+        // Follow
+        await supabase
+          .from('follows')
+          .insert({
+            follower_id: userId,
+            followed_id: authorId
+          });
+          
+        toast.success('User followed');
+      }
+      
+    } catch (error) {
+      console.error('Error following user:', error);
+      toast.error('Failed to follow user');
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  // Handle share/trophy action
+  const handleShare = () => {
     if (!currentPostId) return;
     
     // For now, navigate to the post detail
@@ -97,43 +168,43 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
       <div className="absolute w-full h-full">
         {/* Top button - Comment */}
         <button 
-          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-14 h-14 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
           onClick={handleComment}
           disabled={!currentPostId}
           aria-label="Comment"
         >
-          <MessageCircle size={22} className="text-[#6366F1]" />
+          <MessageCircle size={20} className="text-[#6366F1]" />
         </button>
         
-        {/* Right button - Trophy */}
+        {/* Right button - Share/Trophy */}
         <button 
-          className="absolute top-1/2 right-0 transform -translate-y-1/2 w-14 h-14 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
-          onClick={handleTrophy}
+          className="absolute top-1/2 right-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
+          onClick={handleShare}
           disabled={!currentPostId}
-          aria-label="Trophy"
+          aria-label="Share"
         >
-          <Trophy size={22} className="text-[#6366F1]" />
+          <Trophy size={20} className="text-[#6366F1]" />
         </button>
         
         {/* Bottom button - POST */}
         <button 
-          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-14 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] flex items-center justify-center hover:opacity-90 transition-opacity shadow-lg"
+          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-12 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] flex items-center justify-center hover:opacity-90 transition-opacity shadow-lg"
           onClick={handlePost}
           aria-label="Create Post"
         >
-          <span className="text-sm font-bold mr-1">POST</span>
-          <SendHorizontal size={16} className="text-white" />
+          <span className="text-xs font-bold mr-1">POST</span>
+          <SendHorizontal size={14} className="text-white" />
         </button>
         
         {/* Left button - Like */}
         <button 
-          className="absolute top-1/2 left-0 transform -translate-y-1/2 w-14 h-14 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
+          className="absolute top-1/2 left-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
           onClick={handleLike}
           disabled={loading === 'like' || !currentPostId}
           aria-label="Like"
         >
           <Heart 
-            size={22} 
+            size={20} 
             className={loading === 'like' ? 'text-gray-400 animate-pulse' : 'text-[#6366F1]'} 
             fill={loading === 'like' ? 'none' : 'currentColor'} 
           />
