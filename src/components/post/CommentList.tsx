@@ -51,17 +51,17 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
   if (!normalizedPostId) {
     console.error("Empty postId received by CommentList");
     return (
-      <div className="bg-gray-900 p-4 flex flex-col items-center justify-center">
-        <div className="text-center py-4">
-          <p className="text-red-500 text-sm">Error: Cannot identify post</p>
-          <p className="text-red-500 text-xs mt-2">Please try refreshing the page</p>
+      <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
+        <div className="text-center py-6">
+          <p className="text-red-500 text-lg">Error: Cannot identify post</p>
+          <p className="text-red-500 text-sm mt-2">Please try refreshing the page</p>
           <Button 
             variant="outline" 
             size="sm"
-            className="mt-2 text-xs"
+            className="mt-4"
             onClick={() => window.location.reload()}
           >
-            <RefreshCw className="mr-1 h-3 w-3" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             Refresh Page
           </Button>
         </div>
@@ -141,10 +141,10 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
   // Handle loading state
   if (isLoading) {
     return (
-      <div className="bg-gray-900 p-4 flex items-center justify-center">
-        <div className="text-center py-4">
-          <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-          <p className="text-xs text-gray-400">Loading comments...</p>
+      <div className="bg-[#1A1F2C] min-h-[400px] flex items-center justify-center">
+        <div className="text-center py-6">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-sm text-gray-400">Loading comments...</p>
         </div>
       </div>
     );
@@ -154,16 +154,17 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
   if (error) {
     console.error("Error displaying comments:", error);
     return (
-      <div className="bg-gray-900 p-4 flex flex-col items-center justify-center">
-        <div className="text-center py-4">
-          <p className="text-red-500 text-sm">Error loading comments</p>
+      <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
+        <div className="text-center py-6">
+          <p className="text-red-500 text-lg">Error loading comments</p>
+          <p className="text-sm text-gray-400 mt-2">{(error as Error).message || 'An unknown error occurred'}</p>
           <Button 
             variant="outline" 
             size="sm"
-            className="mt-2 text-xs"
+            className="mt-4"
             onClick={() => refetch()}
           >
-            <RefreshCw className="mr-1 h-3 w-3" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             Try Again
           </Button>
         </div>
@@ -177,29 +178,27 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
   };
 
   return (
-    <div className="bg-gray-900 border-t border-gray-800">
-      {onBack && (
-        <div className="p-2 border-b border-gray-800 flex items-center">
-          <Button variant="ghost" size="sm" onClick={onBack} className="p-1">
-            <X className="h-4 w-4" />
-          </Button>
-          <h3 className="text-sm font-medium">Comments</h3>
-        </div>
-      )}
+    <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col">
+      <div className="sticky top-0 z-10 bg-[#1A1F2C] py-4 px-4 border-b border-[#2A2F3C] flex items-center">
+        <Button variant="ghost" size="icon" onClick={onBack} className="mr-2">
+          <X className="h-4 w-4" />
+        </Button>
+        <h2 className="text-lg font-semibold">Comments</h2>
+      </div>
 
-      <div className="p-3 space-y-3">
+      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         {comments && comments.length > 0 ? (
           comments.map((comment) => (
             <CommentItem key={comment.id} comment={comment} onReplyAdded={handleCommentAdded} postId={normalizedPostId} />
           ))
         ) : (
-          <div className="py-4 text-center">
-            <p className="text-gray-500 text-xs">No comments yet.</p>
+          <div className="py-8 text-center">
+            <p className="text-gray-500">No comments yet. Be the first to comment!</p>
           </div>
         )}
       </div>
 
-      <div className="border-t border-gray-800 p-2">
+      <div className="sticky bottom-0 border-t border-[#2A2F3C] bg-[#1A1F2C] p-4">
         <CommentForm postId={normalizedPostId} onCommentAdded={handleCommentAdded} />
       </div>
     </div>

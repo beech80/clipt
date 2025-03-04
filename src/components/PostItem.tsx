@@ -262,28 +262,44 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
 
   return (
     <article 
-      className="bg-gray-900 border border-gray-800 rounded-md mb-4"
+      className={`relative w-full gaming-card transition-opacity duration-300 ${
+        isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
+      } ${highlight ? 'ring-2 ring-primary' : ''}`}
       data-post-id={postIdAttr || post.id}
     >
       {/* User Header */}
-      <div className="flex items-center p-3">
-        <Avatar 
-          className="h-8 w-8 mr-2"
-          onClick={() => handleProfileClick(post.user_id)}
-        >
-          <AvatarImage src={avatarUrl || ''} alt={username} />
-          <AvatarFallback>{username[0]?.toUpperCase() || '?'}</AvatarFallback>
-        </Avatar>
-        <span 
-          onClick={() => handleProfileClick(post.user_id)}
-          className="font-medium text-white cursor-pointer"
-        >
-          {username}
-        </span>
+      <div className="flex items-center justify-between p-4 border-b border-gaming-400/20">
+        <div className="flex items-center space-x-3">
+          <Avatar 
+            className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
+            onClick={() => handleProfileClick(post.user_id)}
+          >
+            <AvatarImage src={avatarUrl || ''} alt={username} />
+            <AvatarFallback>{username[0]?.toUpperCase() || '?'}</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <span 
+              onClick={() => handleProfileClick(post.user_id)}
+              className="text-base font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 cursor-pointer"
+            >
+              {username}
+            </span>
+            {gameName && gameId && (
+              <div className="mb-1">
+                <span 
+                  className="text-gaming-300 hover:text-gaming-100 cursor-pointer text-sm"
+                  onClick={(e) => handleGameClick(e, gameId, gameName)} 
+                >
+                  Playing {gameName}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
         {isOwner && (
           <DropdownMenu>
-            <DropdownMenuTrigger className="ml-auto p-1">
-              <MoreVertical className="h-4 w-4 text-gray-400" />
+            <DropdownMenuTrigger className="p-2 hover:bg-gaming-800 rounded-full transition-colors">
+              <MoreVertical className="h-5 w-5 text-gaming-300" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem
@@ -298,15 +314,6 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         )}
       </div>
 
-      {/* Caption */}
-      {post.content && (
-        <div className="px-3 py-2">
-          <p className="text-sm text-white">
-            {post.content}
-          </p>
-        </div>
-      )}
-      
       {/* Post Content */}
       <div className="w-full">
         <PostContent
@@ -317,35 +324,72 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       </div>
 
       {/* Interaction Counts */}
-      <div className="flex justify-between p-3 text-sm">
-        <div className="flex items-center text-red-500">
+      <div className="flex justify-around py-3 border-t border-gaming-400/20">
+        <div 
+          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+          onClick={handleLikeClick}
+        >
           <Heart 
-            className="h-4 w-4 mr-1" 
-            fill="currentColor"
+            className="h-6 w-6 text-red-500 group-hover:text-red-400 transition-colors group-active:scale-90" 
+            fill={post.likes_count ? "currentColor" : "none"}
           />
-          <span>{post.likes_count || 0}</span>
+          <span className="text-base font-medium text-gaming-100 group-hover:text-red-400 transition-colors">
+            {post.likes_count || 0}
+          </span>
         </div>
-        
-        <div className="flex items-center text-blue-500">
+        <Button
+          variant="ghost"
+          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 p-0 comment-btn"
+          onClick={handleCommentClick}
+        >
           <MessageSquare 
-            className="h-4 w-4 mr-1"
+            className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90"
           />
-          <span>{commentsCount}</span>
-        </div>
-        
-        <div className="flex items-center text-yellow-500">
+          <span className="text-base font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
+            {commentsCount}
+          </span>
+        </Button>
+        <div 
+          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+          onClick={handleTrophyClick}
+        >
           <Trophy 
-            className="h-4 w-4 mr-1"
-            fill="currentColor"
+            className="h-6 w-6 text-yellow-500 group-hover:text-yellow-400 transition-colors group-active:scale-90"
+            fill={post.clip_votes?.[0]?.count ? "currentColor" : "none"}
           />
-          <span>{post.clip_votes?.[0]?.count || 0}</span>
+          <span className="text-base font-medium text-gaming-100 group-hover:text-yellow-400 transition-colors">
+            {post.clip_votes?.[0]?.count || 0}
+          </span>
         </div>
       </div>
+
+      {/* Caption */}
+      {post.content && (
+        <div className="px-4 py-3 border-t border-gaming-400/20">
+          <p className="text-base text-gaming-100">
+            <span className="font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
+              {username}
+            </span>
+            {' '}
+            <span className="text-gaming-200">{post.content}</span>
+          </p>
+        </div>
+      )}
 
       {/* Comments Section - Make sure postId is valid and passed correctly */}
       {showComments && (
         <div className="border-t border-gaming-400/20">
-          <CommentList postId={postId} />
+          {postId ? (
+            <CommentList 
+              postId={postId}
+              onBack={() => setShowComments(false)} 
+              key={`comments-${postId}`} // Force re-render with key
+            />
+          ) : (
+            <div className="p-4 text-center text-red-500">
+              Error: Cannot identify post
+            </div>
+          )}
         </div>
       )}
     </article>
