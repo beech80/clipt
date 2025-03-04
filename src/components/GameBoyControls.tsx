@@ -48,7 +48,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       if (e.key === 'ArrowUp') {
         navigate('/');
       } else if (e.key === 'ArrowDown') {
-        navigate('/collections');
+        navigate('/discover');
       } else if (e.key === 'ArrowLeft') {
         navigate('/clipts');
       } else if (e.key === 'ArrowRight') {
@@ -126,14 +126,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
     },
     {
-      name: 'Collections',
-      path: '/collections',
-      icon: <Users className="w-4 h-4" />,
-    },
-    {
       name: 'Top Clipts',
       path: '/top-clipts',
-      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>,
+      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>,
     },
     {
       name: 'Streaming',
@@ -196,9 +191,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       {/* CLIPT button with cooler animated ring */}
       <div className="absolute bottom-[85px] left-1/2 -translate-x-1/2">
         <button 
-          onClick={() => navigate('/clipts/create')}
+          onClick={() => navigate('/clipts')}
           className="relative flex items-center justify-center"
-          aria-label="Create CLIPT"
+          aria-label="Open Clipts"
         >
           {/* Fancy animated rings */}
           <div className="absolute inset-0 w-full h-full animate-spin-slow">

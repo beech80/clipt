@@ -25,6 +25,9 @@ interface PostItemProps {
 
 const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = false, 'data-post-id': postIdAttr }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [likeLoading, setLikeLoading] = useState(false);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
   const [showComments, setShowComments] = useState(false);
@@ -82,12 +85,85 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     }
   };
 
-  const handleCommentClick = () => {
-    console.log("Comment button clicked for post:", postId);
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error("Please log in to like posts");
+      return;
+    }
+    
+    if (!postId) {
+      console.error("Cannot like post with invalid ID");
+      toast.error("Unable to like this post");
+      return;
+    }
+
+    try {
+      setLikeLoading(true);
+      
+      // Log the action for debugging
+      console.log(`Liking post ID: ${postId}`);
+      
+      // Check if already liked
+      const { data: existingLike } = await supabase
+        .from('likes')
+        .select('*')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (existingLike) {
+        // Unlike the post
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+          
+        setLiked(false);
+        setLikesCount(prev => Math.max(0, prev - 1));
+        toast.success("Unliked post");
+      } else {
+        // Like the post
+        await supabase
+          .from('likes')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            created_at: new Date().toISOString()
+          });
+          
+        setLiked(true);
+        setLikesCount(prev => prev + 1);
+        toast.success("Liked post");
+      }
+      
+      // Invalidate cache for this post
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      
+    } catch (error) {
+      console.error("Error liking post:", error);
+      toast.error("Failed to update like status");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!postId) {
+      console.error("Cannot add comment to invalid post ID");
+      toast.error("Unable to comment on this post");
+      return;
+    }
+    
+    console.log(`Opening comments for post ID: ${postId}`);
+    setShowComments(!showComments);
+    
     if (onCommentClick) {
       onCommentClick();
-    } else {
-      setShowComments(!showComments);
     }
   };
 
@@ -115,69 +191,6 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       console.log(`Navigating to game: ${gameName} (${gameId})`);
       // Use window.location for more reliable navigation
       window.location.href = `/game/${gameId}`;
-    }
-  };
-
-  const handleLikeClick = async () => {
-    if (!user) {
-      toast.error('Please sign in to like posts');
-      return;
-    }
-
-    try {
-      const { data: existingLike, error: checkError } = await supabase
-        .from('likes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
-
-      if (existingLike) {
-        // Unlike the post
-        const { error: unlikeError } = await supabase
-          .from('likes')
-          .delete()
-          .eq('id', existingLike.id);
-
-        if (unlikeError) throw unlikeError;
-        
-        toast.success('Post unliked');
-      } else {
-        // Like the post
-        const { error: likeError } = await supabase
-          .from('likes')
-          .insert({
-            post_id: postId,
-            user_id: user.id,
-          });
-
-        if (likeError) throw likeError;
-        
-        toast.success('Post liked');
-        
-        // Send notification to post owner if it's not the current user
-        if (post.user_id !== user.id) {
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: post.user_id,
-              actor_id: user.id,
-              type: 'like',
-              post_id: postId,
-              read: false
-            });
-        }
-      }
-
-      // Refresh post data
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-    } catch (error) {
-      console.error('Error handling like:', error);
-      toast.error('Failed to update like status');
     }
   };
 
@@ -327,14 +340,14 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       <div className="flex justify-around py-3 border-t border-gaming-400/20">
         <div 
           className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
-          onClick={handleLikeClick}
+          onClick={handleLike}
         >
           <Heart 
             className="h-6 w-6 text-red-500 group-hover:text-red-400 transition-colors group-active:scale-90" 
-            fill={post.likes_count ? "currentColor" : "none"}
+            fill={liked ? "currentColor" : "none"}
           />
           <span className="text-base font-medium text-gaming-100 group-hover:text-red-400 transition-colors">
-            {post.likes_count || 0}
+            {likesCount}
           </span>
         </div>
         <Button

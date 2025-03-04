@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 
 interface JoystickProps {
@@ -10,13 +10,21 @@ export default function Joystick({ navigate }: JoystickProps) {
   const handleNavigation = (direction: string) => {
     switch (direction) {
       case 'up':
-        navigate('/');
+        // Scroll up
+        window.scrollBy({
+          top: -300,
+          behavior: 'smooth'
+        });
         break;
       case 'right':
         navigate('/discover');
         break;
       case 'down':
-        navigate('/clipts');
+        // Scroll down
+        window.scrollBy({
+          top: 300,
+          behavior: 'smooth'
+        });
         break;
       case 'left':
         navigate('/profile');
@@ -25,6 +33,31 @@ export default function Joystick({ navigate }: JoystickProps) {
         break;
     }
   };
+
+  // Add keyboard controls for joystick
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowUp':
+          handleNavigation('up');
+          break;
+        case 'ArrowRight':
+          handleNavigation('right');
+          break;
+        case 'ArrowDown':
+          handleNavigation('down');
+          break;
+        case 'ArrowLeft':
+          handleNavigation('left');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="relative w-full h-full">

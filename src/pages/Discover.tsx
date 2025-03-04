@@ -66,43 +66,69 @@ const Discover = () => {
     }
   });
 
-  // Search query for streamers
-  const { data: searchedStreamers } = useQuery({
-    queryKey: ['streamers', 'search', searchQuery, activeTab],
-    enabled: !!searchQuery && searchQuery.length > 2 && activeTab === 'streamers',
+  // Query for search results
+  const { data: searchResults, isLoading: searchLoading } = useQuery({
+    queryKey: ['search', activeTab, searchQuery],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          username,
-          avatar_url,
-          display_name,
-          streams (
-            is_live,
-            viewer_count
-          )
-        `)
-        .ilike('username', `%${searchQuery}%`)
-        .limit(10);
-
-      if (error) throw error;
+      // Only search if query is at least 2 characters
+      if (!searchQuery || searchQuery.length < 2) return [];
       
-      return (data || []).map((profile: Streamer) => ({
-        ...profile,
-        is_live: profile.streams?.[0]?.is_live || false,
-        viewer_count: profile.streams?.[0]?.viewer_count || 0
-      }));
-    }
-  });
-
-  // Search query for games
-  const { data: searchedGames } = useQuery({
-    queryKey: ['games', 'search', searchQuery, activeTab],
-    enabled: !!searchQuery && searchQuery.length > 2 && activeTab === 'games',
-    queryFn: async () => {
-      return igdbService.searchGames(searchQuery);
-    }
+      try {
+        console.log(`Searching for ${searchQuery} in ${activeTab}`);
+        
+        if (activeTab === 'games') {
+          // Search for games
+          const { data, error } = await supabase
+            .from('games')
+            .select('*')
+            .ilike('name', `%${searchQuery}%`)
+            .order('popularity', { ascending: false })
+            .limit(10);
+            
+          if (error) throw error;
+          return data || [];
+          
+        } else if (activeTab === 'streamers') {
+          // Search for streamers/users
+          const { data, error } = await supabase
+            .from('profiles')
+            .select(`
+              id,
+              username,
+              avatar_url,
+              display_name,
+              streams (is_live, viewer_count)
+            `)
+            .or(`username.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%`)
+            .limit(10);
+            
+          if (error) throw error;
+          return data || [];
+          
+        } else if (activeTab === 'trending') {
+          // Search in posts/content
+          const { data, error } = await supabase
+            .from('posts')
+            .select(`
+              *,
+              profiles:user_id (username, avatar_url, display_name),
+              games:game_id (name, id, cover_url)
+            `)
+            .or(`content.ilike.%${searchQuery}%,title.ilike.%${searchQuery}%`)
+            .order('created_at', { ascending: false })
+            .limit(15);
+            
+          if (error) throw error;
+          return data || [];
+        }
+        
+        return [];
+      } catch (err) {
+        console.error("Search error:", err);
+        return [];
+      }
+    },
+    enabled: searchQuery.length >= 2,
   });
 
   // Query for trending posts with improved algorithm
@@ -249,40 +275,56 @@ const Discover = () => {
 
         <TabsContent value="games" className="mt-6">
           {searchQuery && searchQuery.length > 2 ? (
-            /* Search results for games */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {searchedGames && searchedGames.length > 0 ? (
-                searchedGames.map((game) => (
-                  <Card 
-                    key={game.id} 
-                    className="relative overflow-hidden cursor-pointer transition duration-300 ease-in-out transform hover:scale-105"
-                    onClick={() => navigate(`/game/${game.id}`)}
-                  >
-                    <div className="aspect-video">
-                      <img 
-                        src={game.cover_url || '/placeholder-game.jpg'}
-                        alt={game.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/70 to-transparent p-4">
-                      <h3 className="font-bold text-white">{game.name}</h3>
-                      {game.rating && (
-                        <div className="flex items-center mt-1">
-                          <Badge variant="secondary" className="mr-2">
-                            {Math.round(game.rating)}%
-                          </Badge>
-                          <span className="text-xs text-white/70">
-                            {game.release_date || 'Unknown release date'}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-center text-white mb-4">
+                Search Results for "{searchQuery}"
+              </h3>
+              {searchLoading ? (
+                <div className="flex justify-center py-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                </div>
+              ) : searchResults && searchResults.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {searchResults.map((game: any) => (
+                    <Card 
+                      key={game.id} 
+                      className="overflow-hidden flex flex-col hover:bg-gaming-800 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/game/${game.id}`)}
+                    >
+                      <div className="aspect-video bg-gaming-900 overflow-hidden">
+                        {game.cover_url ? (
+                          <img 
+                            src={game.cover_url} 
+                            alt={game.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gaming-800">
+                            <span className="text-gray-400">No Image</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <h3 className="font-semibold text-white text-sm mb-1 truncate">{game.name}</h3>
+                        <div className="flex items-center text-xs text-gray-400">
+                          <span>
+                            {game.release_date ? new Date(game.release_date).getFullYear() : 'N/A'}
                           </span>
                         </div>
-                      )}
-                    </div>
-                  </Card>
-                ))
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               ) : (
-                <div className="col-span-3 text-center p-12">
-                  <p className="text-gray-400">No games found matching your search.</p>
+                <div className="text-center py-8 text-gray-400">
+                  <p className="mb-2">No games found matching "{searchQuery}"</p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSearchQuery('')}
+                    className="mt-2"
+                  >
+                    Clear Search
+                  </Button>
                 </div>
               )}
             </div>
@@ -307,44 +349,67 @@ const Discover = () => {
           )}
         </TabsContent>
 
-        <TabsContent value="streamers">
+        <TabsContent value="streamers" className="mt-6">
           {searchQuery && searchQuery.length > 2 ? (
-            /* Search results for streamers */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {searchedStreamers && searchedStreamers.length > 0 ? (
-                searchedStreamers.map((streamer: Streamer) => (
-                  <Card 
-                    key={streamer.id} 
-                    className="p-4 flex items-center gap-4 bg-gaming-800/50 backdrop-blur-sm border-gaming-700"
-                  >
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={streamer.avatar_url || ''} alt={streamer.username} />
-                      <AvatarFallback>{streamer.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{streamer.display_name || streamer.username}</h3>
-                      <div className="flex items-center gap-2">
-                        {streamer.is_live && (
-                          <>
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            <span className="text-sm text-white/60">
-                              {streamer.viewer_count} viewers
-                            </span>
-                          </>
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-center text-white mb-4">
+                Streamer Results for "{searchQuery}"
+              </h3>
+              {searchLoading ? (
+                <div className="flex justify-center py-6">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                </div>
+              ) : searchResults && searchResults.length > 0 ? (
+                <div className="space-y-4">
+                  {searchResults.map((streamer: Streamer) => (
+                    <div 
+                      key={streamer.id}
+                      className="bg-gaming-800 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:bg-gaming-700 transition-colors"
+                      onClick={() => navigate(`/profile/${streamer.id}`)}
+                    >
+                      <Avatar className="h-16 w-16 border-2 border-purple-500">
+                        <AvatarImage src={streamer.avatar_url || undefined} />
+                        <AvatarFallback className="bg-gaming-700 text-xl">
+                          {(streamer.display_name || streamer.username || '?')[0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-white">{streamer.display_name || streamer.username}</h3>
+                          {streamer.streams?.some(s => s.is_live) && (
+                            <Badge className="bg-red-500 text-white text-xs">LIVE</Badge>
+                          )}
+                        </div>
+                        <p className="text-gray-400 text-sm">@{streamer.username}</p>
+                        {streamer.streams?.some(s => s.is_live) && (
+                          <p className="text-gray-300 text-xs mt-1">
+                            {streamer.streams.find(s => s.is_live)?.viewer_count || 0} viewers
+                          </p>
                         )}
                       </div>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/profile/${streamer.id}`);
+                        }}
+                      >
+                        View
+                      </Button>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => navigate(`/user/${streamer.username}`)}
-                    >
-                      View Profile
-                    </Button>
-                  </Card>
-                ))
+                  ))}
+                </div>
               ) : (
-                <div className="col-span-3 text-center p-12">
-                  <p className="text-gray-400">No streamers found matching your search.</p>
+                <div className="text-center py-8 text-gray-400">
+                  <p className="mb-2">No streamers found matching "{searchQuery}"</p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSearchQuery('')}
+                    className="mt-2"
+                  >
+                    Clear Search
+                  </Button>
                 </div>
               )}
             </div>

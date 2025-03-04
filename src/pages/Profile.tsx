@@ -59,28 +59,38 @@ const Profile = () => {
    * Handle follow/unfollow action
    */
   const handleFollow = useCallback(async () => {
-    if (!profileId || !user) return;
+    if (!user) {
+      toast.error("You need to be logged in to follow users");
+      return;
+    }
+    
+    if (user.id === profileId) {
+      toast.error("You cannot follow yourself");
+      return;
+    }
     
     try {
-      setLoading(true);
-      const result = await followUser(profileId);
+      const result = await followUser(user.id, profileId, !userFollows);
       
-      // Update state based on follow result
-      setUserFollows(result);
-      
-      // Update follower count optimistically
-      setStats(prev => ({
-        ...prev,
-        followers: result ? prev.followers + 1 : Math.max(0, prev.followers - 1)
-      }));
-      
+      if (result.success) {
+        setUserFollows(!userFollows);
+        setStats(prev => ({
+          ...prev,
+          followers: userFollows 
+            ? Math.max(0, prev.followers - 1) 
+            : prev.followers + 1
+        }));
+        
+        toast.success(userFollows ? "Unfollowed user" : "Following user");
+        queryClient.invalidateQueries({ queryKey: ['profile', profileId] });
+      } else {
+        toast.error(result.message || "Failed to update follow status");
+      }
     } catch (error) {
-      console.error("Error following user:", error);
-      toast.error("Failed to update follow status");
-    } finally {
-      setLoading(false);
+      console.error("Follow error:", error);
+      toast.error("An error occurred");
     }
-  }, [profileId, user]);
+  }, [profileId, user, userFollows]);
 
   /**
    * Fetch the user's profile data
