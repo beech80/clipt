@@ -16,7 +16,7 @@ export default function Joystick({ navigate }: JoystickProps) {
         navigate('/discover');
         break;
       case 'down':
-        navigate('/collections');
+        navigate('/clipts');
         break;
       case 'left':
         navigate('/profile');

@@ -116,6 +116,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>,
     },
     {
+      name: 'Messages',
+      path: '/messages',
+      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>,
+    },
+    {
       name: 'Profile',
       path: '/profile',
       icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
@@ -133,7 +138,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
     {
       name: 'Streaming',
       path: '/streaming',
-      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18h8"></path><path d="M3 6h18"></path><path d="M10 12H3"></path><path d="M10 12h11"></path><path d="M21 18h-8"></path></svg>,
+      icon: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>,
     },
     {
       name: 'Settings',
@@ -148,8 +153,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
       <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50">
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild>
-            <button className="rounded-full w-8 h-8 bg-[#272A37] flex items-center justify-center">
-              <Menu className="h-4 w-4 text-[#6366F1]" />
+            <button className="rounded-full w-10 h-10 bg-[#272A37] flex items-center justify-center border border-[#3f4255] hover:bg-[#2d3044] transition-colors">
+              <Menu className="h-5 w-5 text-[#6366F1]" />
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="bg-[#1A1B26] border-t border-[#272A37] p-4">
