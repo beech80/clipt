@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import { Heart, MessageCircle, UserPlus, Trophy, SendHorizontal } from 'lucide-react';
 import { useComments } from '@/contexts/CommentContext';
-import { useSupabase } from '@/lib/supabase/supabase-browser';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 interface ActionButtonsProps {
@@ -12,7 +12,6 @@ interface ActionButtonsProps {
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }) => {
   const { openCommentInput } = useComments();
-  const { supabase } = useSupabase();
   const [loading, setLoading] = useState<string | null>(null);
 
   // Handle like action

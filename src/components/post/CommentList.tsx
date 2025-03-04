@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, X } from "lucide-react";
 import { CommentItem } from "./comment/CommentItem";
 import { CommentForm } from "./comment/CommentForm";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface Comment {
   id: string;
@@ -24,12 +24,28 @@ interface CommentListProps {
   postId: string;
   onBack?: () => void;
   onCommentAdded?: () => void;
+  autoFocus?: boolean;
 }
 
-export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps) => {
+export const CommentList = ({ 
+  postId, 
+  onBack, 
+  onCommentAdded,
+  autoFocus = false 
+}: CommentListProps) => {
   // Ensure postId is always a string
   const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
-  
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to comment form if autoFocus is true
+  useEffect(() => {
+    if (autoFocus && formRef.current) {
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 500);
+    }
+  }, [autoFocus]);
+
   // Add logging to see the postId value
   useEffect(() => {
     console.log(`CommentList component mounted with postId: ${normalizedPostId}`);
@@ -37,14 +53,6 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
     // Additional check to see the exact type and value
     console.log('PostId type:', typeof normalizedPostId);
     console.log('PostId value:', normalizedPostId);
-    
-    // Add focus to comment form when component mounts to improve UX
-    const commentTextarea = document.querySelector('.comment-textarea');
-    if (commentTextarea && commentTextarea instanceof HTMLElement) {
-      setTimeout(() => {
-        commentTextarea.focus();
-      }, 500);
-    }
   }, [normalizedPostId]);
 
   // Exit early if no postId is provided or if it's invalid
@@ -198,8 +206,12 @@ export const CommentList = ({ postId, onBack, onCommentAdded }: CommentListProps
         )}
       </div>
 
-      <div className="sticky bottom-0 border-t border-[#2A2F3C] bg-[#1A1F2C] p-4">
-        <CommentForm postId={normalizedPostId} onCommentAdded={handleCommentAdded} />
+      <div ref={formRef} className="sticky bottom-0 border-t border-[#2A2F3C] bg-[#1A1F2C] p-4">
+        <CommentForm 
+          postId={normalizedPostId} 
+          onCommentAdded={handleCommentAdded} 
+          autoFocus={autoFocus}
+        />
       </div>
     </div>
   );

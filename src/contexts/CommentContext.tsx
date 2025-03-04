@@ -6,6 +6,7 @@ interface CommentContextType {
   closeComments: () => void;
   isCommentsOpen: boolean;
   currentPostId: string | undefined;
+  openCommentInput: (postId: string) => void;
 }
 
 const CommentContext = createContext<CommentContextType | undefined>(undefined);
@@ -25,15 +26,25 @@ interface CommentsProviderProps {
 export const CommentsProvider: React.FC<CommentsProviderProps> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [postId, setPostId] = useState<string | undefined>(undefined);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const openComments = (id: string) => {
     console.log('Opening comments for post:', id);
     setPostId(id);
     setIsOpen(true);
+    setIsInputFocused(false);
   };
 
   const closeComments = () => {
     setIsOpen(false);
+    setIsInputFocused(false);
+  };
+  
+  const openCommentInput = (id: string) => {
+    console.log('Opening comment input for post:', id);
+    setPostId(id);
+    setIsOpen(true);
+    setIsInputFocused(true);
   };
 
   return (
@@ -43,6 +54,7 @@ export const CommentsProvider: React.FC<CommentsProviderProps> = ({ children }) 
         closeComments,
         isCommentsOpen: isOpen,
         currentPostId: postId,
+        openCommentInput,
       }}
     >
       {children}
@@ -50,7 +62,11 @@ export const CommentsProvider: React.FC<CommentsProviderProps> = ({ children }) 
         isOpen={isOpen} 
         onClose={closeComments} 
         postId={postId} 
+        autoFocusInput={isInputFocused}
       />
     </CommentContext.Provider>
   );
 };
+
+export type { CommentContextType };
+export default CommentContext;

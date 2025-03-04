@@ -12,14 +12,23 @@ interface CommentFormProps {
   parentId?: string | null;
   onReplyComplete?: () => void;
   onCommentAdded?: () => void;
+  autoFocus?: boolean;
 }
 
-export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCommentAdded }: CommentFormProps) => {
+export const CommentForm = ({ 
+  postId, 
+  onCancel, 
+  parentId, 
+  onReplyComplete, 
+  onCommentAdded,
+  autoFocus = false
+}: CommentFormProps) => {
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // Ensure postId is always a string
   const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
@@ -36,6 +45,15 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCom
       }
     };
   }, []);
+  
+  // Auto-focus the textarea if requested
+  useEffect(() => {
+    if (autoFocus && textareaRef.current) {
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 300);
+    }
+  }, [autoFocus]);
 
   // Log for debugging
   useEffect(() => {
@@ -129,6 +147,7 @@ export const CommentForm = ({ postId, onCancel, parentId, onReplyComplete, onCom
   return (
     <form onSubmit={handleSubmitComment} className="p-4">
       <Textarea
+        ref={textareaRef}
         placeholder={user ? "Write your comment..." : "Please login to comment"}
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
