@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { debounce } from 'lodash';
 
 const Joystick: React.FC = () => {
   const [active, setActive] = useState<string | null>(null);
@@ -82,7 +81,7 @@ const Joystick: React.FC = () => {
   return (
     <div ref={joystickRef} className="w-full h-full flex items-center justify-center relative">
       {/* Joystick base */}
-      <div className="w-14 h-14 rounded-full bg-[#171822] border border-[#2c2d4a]"></div>
+      <div className="w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a]"></div>
       
       {/* Up */}
       <button
@@ -91,10 +90,10 @@ const Joystick: React.FC = () => {
         onMouseLeave={handleRelease}
         onTouchStart={() => handlePress('up')}
         onTouchEnd={handleRelease}
-        className={`absolute top-0 left-1/2 transform -translate-x-1/2 w-10 h-5 flex items-center justify-center hover:bg-[#1e1f2b]/50 rounded-t-full transition-colors ${active === 'up' ? 'bg-[#1e1f2b]' : ''}`}
+        className={`absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-4 flex items-center justify-center hover:bg-[#1e1f2b]/50 rounded-t-full transition-colors ${active === 'up' ? 'bg-[#1e1f2b]' : ''}`}
         aria-label="Scroll up"
       >
-        <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[5px] border-b-[#6366F1]"></div>
+        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[4px] border-b-[#6366F1]"></div>
       </button>
       
       {/* Down */}
@@ -104,19 +103,11 @@ const Joystick: React.FC = () => {
         onMouseLeave={handleRelease}
         onTouchStart={() => handlePress('down')}
         onTouchEnd={handleRelease}
-        className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-5 flex items-center justify-center hover:bg-[#1e1f2b]/50 rounded-b-full transition-colors ${active === 'down' ? 'bg-[#1e1f2b]' : ''}`}
+        className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-4 flex items-center justify-center hover:bg-[#1e1f2b]/50 rounded-b-full transition-colors ${active === 'down' ? 'bg-[#1e1f2b]' : ''}`}
         aria-label="Scroll down"
       >
-        <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-[#6366F1]"></div>
+        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-[#6366F1]"></div>
       </button>
-      
-      {/* The Plus Sign in middle */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-6 h-6 flex items-center justify-center">
-          <div className="w-5 h-0.5 bg-[#2c2d4a] absolute"></div>
-          <div className="w-0.5 h-5 bg-[#2c2d4a] absolute"></div>
-        </div>
-      </div>
     </div>
   );
 };
