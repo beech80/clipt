@@ -35,7 +35,7 @@ const Discover = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Query for streamers
-  const { data: streamers, isLoading: isLoadingStreamers } = useQuery({
+  const { data: streamers, isLoading: streamersLoading } = useQuery({
     queryKey: ['streamers'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -90,14 +90,6 @@ const Discover = () => {
         is_live: profile.streams?.[0]?.is_live || false,
         viewer_count: profile.streams?.[0]?.viewer_count || 0
       }));
-    }
-  });
-
-  // Query for games based on filter
-  const { data: filteredGames } = useQuery({
-    queryKey: ['games', gameFilter],
-    queryFn: async () => {
-      return igdbService.getTopGames(gameFilter);
     }
   });
 
@@ -218,6 +210,7 @@ const Discover = () => {
               </div>
             )
           ) : (
+            // Pass the filter to the TopGames component, which will handle loading and displaying games
             <TopGames filter={gameFilter} />
           )}
         </TabsContent>

@@ -21,7 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Camera, AlertCircle } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import type { CustomTheme, Profile, DatabaseProfile } from "@/types/profile"
+import type { Profile, DatabaseProfile } from "@/types/profile"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const profileFormSchema = z.object({
@@ -61,9 +61,6 @@ export function ProfileEditForm() {
 
       if (!data) throw new Error('Profile not found')
 
-      // Transform database profile to frontend profile with proper typing
-      const customTheme = typeof data.custom_theme === 'object' ? data.custom_theme : { primary: "#1EAEDB", secondary: "#000000" }
-
       // Check if the user can change their username (not more than once every two months)
       if (data.last_username_change) {
         const lastChange = new Date(data.last_username_change);
@@ -91,13 +88,10 @@ export function ProfileEditForm() {
         bio: data.bio,
         website: data.website,
         created_at: data.created_at,
-        custom_theme: {
-          primary: customTheme.primary || "#1EAEDB",
-          secondary: customTheme.secondary || "#000000"
-        },
-        enable_notifications: data.enable_notifications ?? true,
-        enable_sounds: data.enable_sounds ?? true,
-        keyboard_shortcuts: data.keyboard_shortcuts ?? true
+        enable_notifications: data.enable_notifications,
+        enable_sounds: data.enable_sounds,
+        private_profile: data.private_profile,
+        last_username_change: data.last_username_change
       }
 
       return transformedProfile
@@ -194,11 +188,7 @@ export function ProfileEditForm() {
         username: data.username,
         display_name: data.displayName,
         bio: data.bioDescription,
-        website: data.website || null,
-        custom_theme: profile?.custom_theme || {
-          primary: "#1EAEDB",
-          secondary: "#000000"
-        }
+        website: data.website || null
       }
 
       // If username is being changed, update the last_username_change field

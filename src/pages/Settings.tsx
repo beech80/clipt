@@ -7,7 +7,6 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { AccessibilitySettings } from "@/components/accessibility/AccessibilitySettings";
 import { TwoFactorSettings } from "@/components/settings/TwoFactorSettings";
 import { DataPrivacySettings } from "@/components/settings/DataPrivacySettings";
@@ -31,7 +30,7 @@ import {
   Gauge
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Profile, CustomTheme, DatabaseProfile } from "@/types/profile";
+import { Profile, DatabaseProfile } from "@/types/profile";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Settings = () => {
@@ -51,14 +50,9 @@ const Settings = () => {
       if (error) throw error;
       
       const dbProfile = data as DatabaseProfile;
-      const customTheme = dbProfile.custom_theme as CustomTheme || {
-        primary: "#1EAEDB",
-        secondary: "#1A1F2C"
-      };
 
       return {
-        ...dbProfile,
-        custom_theme: customTheme
+        ...dbProfile
       } as Profile;
     },
     enabled: !!user?.id
@@ -283,17 +277,6 @@ const Settings = () => {
           </div>
 
           <div className="space-y-6">
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Paintbrush className="w-5 h-5 text-purple-500" />
-                <h2 className="text-xl font-semibold">Appearance</h2>
-              </div>
-              <ThemeSelector 
-                userId={profile.id} 
-                currentTheme={profile.custom_theme}
-              />
-            </Card>
-
             <Card className="p-6">
               <div className="flex items-center gap-2 mb-6">
                 <HardDrive className="w-5 h-5 text-purple-500" />

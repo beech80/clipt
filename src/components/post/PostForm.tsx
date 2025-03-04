@@ -176,13 +176,6 @@ export const PostForm = () => {
       return;
     }
 
-    const isVideo = file.type.startsWith('video/');
-
-    if (destination === 'clipts' && !isVideo) {
-      toast.error('Only video clips are allowed in Clipts');
-      return;
-    }
-
     setLoading(true);
     const uploadToast = toast.loading(
       destination === 'clipts' ? 'Creating your clip...' : 'Creating your post...'
@@ -240,8 +233,8 @@ export const PostForm = () => {
           game_id: gameData.id,
           post_type: destination,
           is_published: true,
-          video_url: isVideo ? publicUrl : null,
-          image_url: !isVideo ? publicUrl : null,
+          video_url: file.type.startsWith('video/') ? publicUrl : null,
+          image_url: !file.type.startsWith('video/') ? publicUrl : null,
         }])
         .select()
         .single();
@@ -515,6 +508,7 @@ export const PostForm = () => {
                       <span className="font-semibold">Upload from device</span>
                     </p>
                     <p className="text-xs text-gray-400">Supports video and images (max 100MB)</p>
+                    <p className="text-xs text-purple-400 mt-1">Now you can post both videos and images to Clipts!</p>
                   </div>
                   <Input
                     type="file"

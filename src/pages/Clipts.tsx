@@ -55,6 +55,7 @@ const Clipts = () => {
             <div className="text-center space-y-4">
               <p className="text-2xl font-semibold text-white/60">Ready to share a gaming moment?</p>
               <p className="text-purple-400">Click the button below to create your first clip!</p>
+              <p className="text-sm text-white/60 mt-2">Now supporting both videos and images!</p>
             </div>
           </div>
         ) : (

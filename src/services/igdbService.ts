@@ -63,10 +63,15 @@ class IGDBService {
     });
   }
   
-  async getTopGames(filter: 'top_rated' | 'most_played' | 'most_watched' = 'top_rated'): Promise<IGDBGame[]> {
+  async getTopGames(
+    filter: 'top_rated' | 'most_played' | 'most_watched' = 'top_rated', 
+    page: number = 1, 
+    pageSize: number = 20
+  ): Promise<IGDBGame[]> {
     try {
       let sortOption = '';
       let additionalQuery = '';
+      const offset = (page - 1) * pageSize;
       
       switch (filter) {
         case 'top_rated':
@@ -91,7 +96,8 @@ class IGDBService {
             where cover != null;
             ${additionalQuery}
             ${sortOption}
-            limit 20;
+            limit ${pageSize};
+            offset ${offset};
           `
         }
       });
