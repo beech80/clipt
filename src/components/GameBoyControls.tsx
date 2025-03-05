@@ -314,12 +314,26 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               />
             </div>
             
-            {/* Menu button */}
-            <div 
-              className="w-[42px] h-[42px] mx-auto rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer"
-              onClick={handleMenu}
-            >
-              <Menu size={18} className="text-white" />
+            {/* Menu and Post buttons row */}
+            <div className="flex justify-center items-center space-x-4">
+              {/* Menu button */}
+              <div 
+                className="w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer"
+                onClick={handleMenu}
+              >
+                <Menu size={18} className="text-white" />
+              </div>
+              
+              {/* POST/Camera button moved next to menu */}
+              <div 
+                className="w-[42px] h-[42px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
+                onClick={() => navigate('/post/new')}
+                style={{
+                  boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
+                }}
+              >
+                <Camera size={18} className="text-white" />
+              </div>
             </div>
           </div>
           
@@ -356,17 +370,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 onClick={handleFollow}
               >
                 <UserPlus size={18} className="text-green-500" />
-              </div>
-              
-              {/* POST/Camera button below diamond */}
-              <div 
-                className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-[42px] h-[42px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
-                onClick={() => navigate('/post/new')}
-                style={{
-                  boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
-                }}
-              >
-                <Camera size={18} className="text-white" />
               </div>
             </div>
           </div>
