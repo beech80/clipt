@@ -272,9 +272,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             </div>
           </div>
           
-          {/* Center section */}
-          <div className="flex flex-col space-y-5 -mt-1">
-            {/* Animated CLIPT button */}
+          {/* Center section - adjusted to match Xbox controller layout */}
+          <div className="flex flex-col items-center space-y-4">
+            {/* Animated CLIPT button on top like Xbox button */}
             <div 
               className={`relative w-[58px] h-[58px] rounded-full bg-[#3a2f68] border border-[#6c4dc4]/70 flex items-center justify-center cursor-pointer ${pulsating ? 'animate-pulse' : ''}`}
               onClick={handleClipt}
@@ -314,8 +314,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               />
             </div>
             
-            {/* Menu and Post buttons row */}
-            <div className="flex justify-center items-center space-x-4">
+            {/* Menu and Post buttons in a row below, like Xbox controller lower buttons */}
+            <div className="flex justify-center items-center space-x-12">
               {/* Menu button */}
               <div 
                 className="w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer"
@@ -324,7 +324,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <Menu size={18} className="text-white" />
               </div>
               
-              {/* POST/Camera button moved next to menu */}
+              {/* POST/Camera button */}
               <div 
                 className="w-[42px] h-[42px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
                 onClick={() => navigate('/post/new')}
