@@ -49,9 +49,7 @@
     background-color: var(--background-override, #1A1F2C);
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(155, 135, 245, 0.15) 0px, transparent 50%);
-    background-attachment: fixed;
-    -webkit-tap-highlight-color: transparent;
+      radial-gradient(at 0% 100%, rgba(107, 81, 201, 0.12) 0px, transparent 50%);
   }
   #root {
     height: auto;
@@ -178,6 +176,53 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-out {
+  0% {
+    transform: scale(0.2) translate(0, 0);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2) translate(
+      calc(var(--random-x, 0) * 30px),
+      calc(var(--random-y, 0) * 30px)
+    );
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0% {
+    filter: drop-shadow(0 0 5px rgba(128, 90, 213, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(128, 90, 213, 0.8));
+  }
+  100% {
+    filter: drop-shadow(0 0 5px rgba(128, 90, 213, 0.5));
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
   }
 }
 
