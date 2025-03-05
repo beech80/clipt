@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Heart, MessageCircle, Trophy, Menu, UserPlus, Camera, User, Video, Compass, MessageSquare, Settings, Home, ArrowDown } from 'lucide-react';
+import { Heart, MessageCircle, Trophy, Camera, Menu } from 'lucide-react';
+import Joystick from './gameboy/Joystick';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -11,11 +12,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [joystickActive, setJoystickActive] = useState(false);
-  const [joystickDirection, setJoystickDirection] = useState<'up' | 'down' | null>(null);
-  const joystickTimer = useRef<NodeJS.Timeout | null>(null);
-
+  
   // Keep track of current route
   useEffect(() => {
     setCurrentPath(location.pathname);
@@ -29,9 +26,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (location.pathname !== currentPath && !propCurrentPostId) {
       setCurrentPostId(null);
     }
-
-    // Close menu when changing routes
-    setMenuOpen(false);
   }, [location.pathname, propCurrentPostId, currentPath]);
   
   // Detect current visible post ID
@@ -102,12 +96,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Comment logic would go here
   };
 
-  const handleFollow = () => {
-    if (!currentPostId) return;
-    console.log('Follow user from post:', currentPostId);
-    // Follow logic would go here
-  };
-  
   const handleTrophy = () => {
     if (!currentPostId) return;
     console.log('Trophy for post:', currentPostId);
@@ -118,242 +106,103 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     navigate('/post/new');
   };
 
-  const handleClipt = () => {
-    navigate('/post/new');
-  };
-  
   const handleMenu = () => {
-    setMenuOpen(!menuOpen);
+    console.log('Open menu');
+    // Menu logic would go here
   };
 
-  const handleJoystickDown = (direction: 'up' | 'down') => {
-    setJoystickActive(true);
-    setJoystickDirection(direction);
-    
-    // Start continuous scrolling
-    if (joystickTimer.current) {
-      clearInterval(joystickTimer.current);
-    }
-    
-    joystickTimer.current = setInterval(() => {
-      if (direction === 'up') {
-        window.scrollBy(0, -30);
-      } else {
-        window.scrollBy(0, 30);
-      }
-    }, 50);
-  };
-  
-  const handleJoystickUp = () => {
-    setJoystickActive(false);
-    setJoystickDirection(null);
-    
-    if (joystickTimer.current) {
-      clearInterval(joystickTimer.current);
-      joystickTimer.current = null;
-    }
-  };
-
-  // Navigation handlers
-  const navigateTo = (path: string) => {
-    navigate(path);
-    setMenuOpen(false);
+  const handleCameraClick = () => {
+    navigate('/');
   };
 
   return (
-    <>
-      {/* Navigation Menu Overlay */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm">
-          <div className="absolute bottom-20 left-0 right-0 bg-[#161925] border-t border-blue-500/30">
-            <div className="max-w-md mx-auto p-4">
-              <h3 className="text-white text-lg font-semibold mb-4">Menu</h3>
-              <div className="grid grid-cols-2 gap-y-4">
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => navigateTo('/profile')}
-                >
-                  <User size={18} className="text-blue-400" />
-                  <span className="text-white">Profile</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => navigateTo('/streaming')}
-                >
-                  <Video size={18} className="text-red-400" />
-                  <span className="text-white">Streaming</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => navigateTo('/discovery')}
-                >
-                  <Compass size={18} className="text-green-400" />
-                  <span className="text-white">Discovery</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => navigateTo('/messages')}
-                >
-                  <MessageSquare size={18} className="text-purple-400" />
-                  <span className="text-white">Messages</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => navigateTo('/settings')}
-                >
-                  <Settings size={18} className="text-gray-400" />
-                  <span className="text-white">Settings</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => navigateTo('/')}
-                >
-                  <Home size={18} className="text-yellow-400" />
-                  <span className="text-white">Home</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => navigateTo('/clipts')}
-                >
-                  <Camera size={18} className="text-indigo-400" />
-                  <span className="text-white">Clipts</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => navigateTo('/top-clipts')}
-                >
-                  <ArrowDown size={18} className="text-orange-400" />
-                  <span className="text-white">Top Clipts</span>
+    <div className="fixed bottom-0 left-0 right-0 h-[150px] z-50">
+      <div className="max-w-screen-md mx-auto relative h-full">
+        <div className="absolute inset-x-0 bottom-0 h-[150px] bg-[#1a1b26] border-t border-[#2c2d4a] pointer-events-auto">
+          {/* Top border line */}
+          <div className="h-[1px] w-full bg-blue-500/50" />
+          
+          <div className="flex justify-between items-center px-4 py-2 h-full">
+            {/* Left joystick */}
+            <div className="w-[80px] h-[80px] flex items-center justify-center">
+              <div className="w-[70px] h-[70px] rounded-full bg-gray-800 shadow-lg flex items-center justify-center" 
+                  style={{ 
+                    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.7), 0 2px 4px rgba(0,0,0,0.5)'
+                  }}>
+                <div className="w-[65px] h-[65px] rounded-full bg-gray-700 flex items-center justify-center"
+                    style={{ 
+                      boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.5)'
+                    }}>
+                  <div className="w-[50px] h-[50px] rounded-full bg-gray-800"
+                      style={{ 
+                        boxShadow: '0 3px 6px rgba(0,0,0,0.3), inset 0 -2px 5px rgba(0,0,0,0.5)'
+                      }}>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Game Boy Controls */}
-      <div className="fixed bottom-0 left-0 right-0 h-[80px] z-50">
-        <div className="max-w-screen-md mx-auto relative h-full">
-          <div className="absolute inset-x-0 bottom-0 h-[80px] bg-[#181a29] pointer-events-auto">
-            {/* Top border line */}
-            <div className="h-[1px] w-full bg-blue-500/30" />
             
-            <div className="flex justify-between items-center px-6 h-full">
-              {/* Left joystick */}
-              <div className="relative w-[60px] h-[60px] rounded-full bg-[#0c0e1b]/90 flex items-center justify-center shadow-inner">
-                <div 
-                  className={`w-[50px] h-[50px] rounded-full bg-[#1c1e2e] flex items-center justify-center transition-transform duration-100 ${
-                    joystickActive && joystickDirection === 'up' ? 'translate-y-[-2px]' : 
-                    joystickActive && joystickDirection === 'down' ? 'translate-y-[2px]' : ''
-                  }`}
-                  style={{ 
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8)'
-                  }}
-                >
-                  {/* Joystick touch areas */}
-                  <div className="absolute inset-0">
-                    <div 
-                      className="absolute top-0 left-0 right-0 h-1/2 cursor-pointer"
-                      onMouseDown={() => handleJoystickDown('up')}
-                      onMouseUp={handleJoystickUp}
-                      onMouseLeave={handleJoystickUp}
-                      onTouchStart={() => handleJoystickDown('up')}
-                      onTouchEnd={handleJoystickUp}
-                    />
-                    <div 
-                      className="absolute bottom-0 left-0 right-0 h-1/2 cursor-pointer"
-                      onMouseDown={() => handleJoystickDown('down')}
-                      onMouseUp={handleJoystickUp}
-                      onMouseLeave={handleJoystickUp}
-                      onTouchStart={() => handleJoystickDown('down')}
-                      onTouchEnd={handleJoystickUp}
-                    />
+            {/* Middle CLIPT button */}
+            <div className="flex flex-col items-center justify-center gap-5">
+              <div className="w-16 h-16 bg-[#1a1b26] rounded-full relative" onClick={handleCameraClick}>
+                <div className="absolute inset-0 w-full h-full">
+                  <div className="w-full h-full rounded-full" style={{ 
+                    border: '2px solid transparent',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(45deg, #8B5CF6, #6366F1) border-box',
+                    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+                    WebkitMaskComposite: 'xor',
+                    maskComposite: 'exclude'
+                  }}></div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <Camera size={20} className="text-white" />
+                    <span className="text-xs font-bold mt-0.5">CLIPT</span>
                   </div>
                 </div>
               </div>
               
-              {/* Center section with CLIPT and menu buttons */}
-              <div className="flex flex-col items-center space-y-2">
-                {/* CLIPT button */}
-                <div 
-                  className="w-[50px] h-[50px] relative cursor-pointer" 
-                  onClick={handleClipt}
-                >
-                  <div 
-                    className="absolute inset-0 w-full h-full rounded-full" 
-                    style={{
-                      border: '2px solid transparent',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #4F46E5, #9333EA) border-box',
-                      WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-                      WebkitMaskComposite: 'xor',
-                      maskComposite: 'exclude',
-                    }}
-                  ></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="flex flex-col items-center justify-center">
-                      <Camera size={16} className="text-white mb-0.5" />
-                      <span className="text-[9px] font-medium text-white">CLIPT</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Menu button underneath */}
-                <div 
-                  className="w-[30px] h-[30px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
-                  onClick={handleMenu}
-                >
-                  <Menu size={15} className="text-[#8993bc]" />
-                </div>
+              {/* Menu button below CLIPT button */}
+              <div className="w-10 h-10 rounded-full bg-[#3e3e60] flex items-center justify-center cursor-pointer" onClick={handleMenu}>
+                <Menu size={20} className="text-white" />
+              </div>
+            </div>
+            
+            {/* Right action buttons */}
+            <div className="w-[120px] h-[120px] relative">
+              {/* Heart button (top) */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shadow-lg cursor-pointer" 
+                style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}
+                onClick={handleLike}>
+                <Heart size={20} className="text-white" fill="white" />
               </div>
               
-              {/* Right control pad with buttons in diamond layout */}
-              <div className="relative w-[90px] h-[90px]">
-                {/* Top button (Heart) */}
-                <div 
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[32px] h-[32px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
-                  onClick={handleLike}
-                >
-                  <Heart size={16} className="text-red-500" />
-                </div>
-                
-                {/* Left button (Message) */}
-                <div 
-                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[32px] h-[32px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
-                  onClick={handleComment}
-                >
-                  <MessageCircle size={16} className="text-blue-500" />
-                </div>
-                
-                {/* Right button (Trophy) */}
-                <div 
-                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[32px] h-[32px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
-                  onClick={handleTrophy}
-                >
-                  <Trophy size={16} className="text-yellow-500" />
-                </div>
-                
-                {/* Bottom button (Follow) */}
-                <div 
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[32px] h-[32px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
-                  onClick={handleFollow}
-                >
-                  <UserPlus size={16} className="text-green-500" />
-                </div>
-                
-                {/* POST button */}
-                <div 
-                  className="absolute -bottom-5 right-0 w-[30px] h-[20px] rounded-sm bg-[#5b258c] text-white text-[8px] font-bold flex items-center justify-center cursor-pointer"
-                  onClick={handlePost}
-                >
-                  POST
-                </div>
+              {/* Message button (middle left) */}
+              <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shadow-lg cursor-pointer" 
+                style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}
+                onClick={handleComment}>
+                <MessageCircle size={20} className="text-white" />
+              </div>
+              
+              {/* Trophy button (middle right) */}
+              <div className="absolute top-1/2 right-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center shadow-lg cursor-pointer" 
+                style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}
+                onClick={handleTrophy}>
+                <Trophy size={20} className="text-white" />
+              </div>
+              
+              {/* POST button (bottom) */}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-12 rounded-full bg-purple-500 flex items-center justify-center shadow-lg cursor-pointer" 
+                style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}
+                onClick={handlePost}>
+                <span className="text-xs font-bold text-white">POST</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
