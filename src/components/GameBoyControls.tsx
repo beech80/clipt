@@ -261,61 +261,54 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         <div className="grid grid-cols-3 items-center">
           {/* Left joystick - moved right and styled like Xbox controller */}
           <div className="flex justify-start pl-4">
-            <div className="relative w-[56px] h-[56px] flex items-center justify-center">
+            <div className="relative w-[64px] h-[64px] flex items-center justify-center">
               <div 
                 ref={joystickRef}
-                className="w-[50px] h-[50px] rounded-full border border-[#353b5a]/90 bg-[#232538] flex items-center justify-center shadow-inner"
+                className="w-[58px] h-[58px] rounded-full border-2 border-[#353b5a]/90 bg-[#232538] flex items-center justify-center shadow-inner"
                 style={{
                   transform: `translate(${joystickPos.x}px, ${joystickPos.y}px)`,
-                  boxShadow: 'inset 0 1px 8px rgba(0, 0, 0, 0.5)'
+                  boxShadow: 'inset 0 2px 10px rgba(0, 0, 0, 0.6)'
                 }}
               >
                 {/* Xbox-like joystick inner dot */}
-                <div className="w-[22px] h-[22px] rounded-full bg-[#353b5a]/80"></div>
+                <div className="w-[26px] h-[26px] rounded-full bg-[#353b5a]/80"></div>
               </div>
             </div>
           </div>
           
           {/* Center section - perfectly centered */}
           <div className="flex flex-col items-center space-y-4">
-            {/* Animated CLIPT button on top like Xbox button */}
+            {/* Game-styled CLIPT button on top */}
             <div 
-              className={`relative w-[58px] h-[58px] rounded-full bg-[#3a2f68] border border-[#6c4dc4]/70 flex items-center justify-center cursor-pointer ${pulsating ? 'animate-pulse' : ''}`}
+              className={`relative w-[62px] h-[62px] rounded-full bg-gradient-to-br from-[#3a2f68] to-[#351a5a] flex items-center justify-center cursor-pointer overflow-hidden ${pulsating ? 'animate-pulse' : ''}`}
               onClick={handleClipt}
               style={{
                 boxShadow: glowing 
-                  ? '0 0 20px 5px rgba(128, 90, 213, 0.8), 0 0 30px 10px rgba(79, 70, 229, 0.5)' 
-                  : '0 0 15px 3px rgba(128, 90, 213, 0.7)'
+                  ? '0 0 15px 4px rgba(128, 90, 213, 0.7)' 
+                  : '0 0 10px 2px rgba(128, 90, 213, 0.5)',
+                border: '2px solid rgba(147, 51, 234, 0.5)'
               }}
             >
-              <span className="text-white font-bold text-sm">CLIPT</span>
+              {/* Inner shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#6c4dc4]/20 to-transparent"></div>
               
-              {/* Animated glowing rings */}
-              <div 
-                className="absolute inset-[-4px] rounded-full border-2 border-transparent animate-spin-slow"
-                style={{ 
-                  background: 'linear-gradient(45deg, transparent, rgba(147, 51, 234, 0.3), rgba(79, 70, 229, 0.6), transparent)',
-                  zIndex: -1
-                }} 
-              />
+              {/* Game console style text */}
+              <span className="text-white font-bold text-base relative z-10">CLIPT</span>
               
+              {/* Cleaner glowing ring */}
               <div 
-                className="absolute inset-[-2px] rounded-full border-2 border-transparent animate-reverse-spin"
-                style={{ 
-                  background: 'linear-gradient(135deg, transparent, rgba(79, 70, 229, 0.4), rgba(147, 51, 234, 0.2), transparent)',
+                className="absolute inset-[-2px] rounded-full" 
+                style={{
+                  background: 'conic-gradient(from 0deg, #4f46e5, #8b5cf6, #8654dc, #6c4dc4, #4f46e5)',
+                  opacity: 0.5,
+                  filter: 'blur(4px)',
                   zIndex: -1,
-                  animation: 'spin 10s linear infinite reverse'
-                }} 
+                  animation: 'spin 8s linear infinite'
+                }}
               />
               
-              {/* Outer glow */}
-              <div className="absolute inset-0 rounded-full border-2 border-transparent bg-clip-padding" 
-                style={{ 
-                  backgroundImage: 'linear-gradient(to right, #4f46e5, #8b5cf6)',
-                  mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                  maskComposite: 'exclude',
-                }} 
-              />
+              {/* Highlight reflection */}
+              <div className="absolute top-0 left-1/4 w-1/2 h-[8px] bg-white/20 rounded-b-full"></div>
             </div>
             
             {/* Menu and Post buttons in a row below, like Xbox controller lower buttons */}
