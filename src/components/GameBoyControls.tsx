@@ -241,12 +241,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             </div>
             
             {/* Right control pad with buttons in diamond layout and POST below */}
-            <div className="relative w-[160px] h-[160px] mr-2 md:mr-8 mb-3">
+            <div className="relative w-[120px] h-[120px] mr-2 md:mr-8 mb-3">
               {/* Diamond layout container */}
               <div className="relative w-full h-full">
                 {/* Top button (Heart/Like) */}
                 <div 
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  className="absolute top-2 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                   onClick={handleLike}
                 >
                   <Heart size={17} className="text-red-500" />
@@ -254,7 +254,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 
                 {/* Left button (Message/Comment) */}
                 <div 
-                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  className="absolute top-1/2 left-4 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                   onClick={handleComment}
                 >
                   <MessageCircle size={17} className="text-blue-500" />
@@ -262,7 +262,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 
                 {/* Right button (Trophy) */}
                 <div 
-                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  className="absolute top-1/2 right-4 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                   onClick={handleTrophy}
                 >
                   <Trophy size={17} className="text-yellow-500" />
@@ -270,7 +270,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 
                 {/* Bottom button (UserPlus/Follow) */}
                 <div 
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                   onClick={handleFollow}
                 >
                   <UserPlus size={17} className="text-green-500" />
@@ -278,7 +278,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 
                 {/* POST/Camera button below diamond */}
                 <div 
-                  className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 w-[45px] h-[45px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
+                  className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 w-[45px] h-[45px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
                   onClick={() => navigate('/post/new')}
                   style={{
                     boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
