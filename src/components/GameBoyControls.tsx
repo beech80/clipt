@@ -113,14 +113,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Trophy logic would go here
   };
 
-  const handlePost = () => {
-    navigate('/post/new');
-  };
-
   const handleClipt = () => {
     navigate('/post/new');
   };
-  
+
   const handleMenu = () => {
     setMenuOpen(!menuOpen);
   };
@@ -212,8 +208,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
-            {/* Right control pad with buttons in diamond layout and CLIPT below */}
-            <div className="relative w-[90px] h-[110px]">
+            {/* Right control pad with buttons in diamond layout and CLIPT in center */}
+            <div className="relative w-[90px] h-[90px]">
               {/* Top button (Heart/Like) */}
               <div 
                 className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
@@ -240,33 +236,24 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               
               {/* Bottom button (Follow) */}
               <div 
-                className="absolute bottom-[36px] left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                 onClick={handleFollow}
               >
                 <UserPlus size={18} className="text-green-500" />
               </div>
               
-              {/* CLIPT button below Follow button */}
+              {/* CLIPT button in center with POST text below */}
               <div 
-                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[36px] h-[36px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[40px] h-[40px] rounded-full bg-[#602985] border-2 border-purple-500/50 flex items-center justify-center cursor-pointer shadow-lg" 
                 onClick={handleClipt}
                 style={{
-                  background: 'linear-gradient(135deg, #252838, #353b5a)',
-                  borderColor: 'rgba(137, 104, 255, 0.5)'
+                  boxShadow: '0 0 10px rgba(128, 90, 213, 0.5)'
                 }}
               >
                 <div className="flex flex-col items-center justify-center">
-                  <Camera size={16} className="text-white mb-0.5" />
-                  <span className="text-[8px] font-medium text-white">CLIPT</span>
+                  <Camera size={22} className="text-white" />
                 </div>
-              </div>
-              
-              {/* POST button */}
-              <div 
-                className="absolute -bottom-5 right-0 w-[48px] h-[28px] rounded-md bg-gradient-to-r from-[#4F46E5] to-[#9333EA] text-white text-[11px] font-bold flex items-center justify-center cursor-pointer shadow-lg border border-purple-600"
-                onClick={handlePost}
-              >
-                POST
+                <div className="absolute -bottom-6 text-[12px] font-bold text-white bg-[#602985] px-2 py-0.5 rounded-sm">POST</div>
               </div>
             </div>
           </div>
