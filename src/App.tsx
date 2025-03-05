@@ -10,6 +10,7 @@ import { routes } from '@/config/routes';
 import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
 import { useQueryClient } from '@tanstack/react-query';
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
+import GameBoyControls from '@/components/GameBoyControls';
 import ScrollToTop from './components/common/ScrollToTop';
 import '@/index.css';
 import '@/styles/animations.css';
@@ -32,11 +33,25 @@ function AppContent() {
 
 function App() {
   const location = useLocation();
+  const [currentPostId, setCurrentPostId] = useState<string | undefined>(undefined);
   const queryClient = useQueryClient(); 
   
   // Extract post ID from URL if on a post page
   useEffect(() => {
     const match = location.pathname.match(/\/post\/([^/?#]+)/);
+    let newPostId = undefined;
+    
+    if (match && match[1] && match[1] !== 'undefined' && match[1] !== 'null') {
+      newPostId = match[1];
+    }
+    
+    console.log("App detected post ID:", {
+      pathname: location.pathname,
+      extractedId: match?.[1] || 'none',
+      settingId: newPostId
+    });
+    
+    setCurrentPostId(newPostId);
     
     // Clear the cache when navigation occurs
     // This forces components to re-fetch fresh data
@@ -46,6 +61,12 @@ function App() {
       queryClient.clear();
     }
   }, [location.pathname, queryClient]);
+
+  // Routes that should not display the GameBoy controls
+  const noControlsRoutes = ['/auth'];
+  const shouldShowControls = !noControlsRoutes.some(route => 
+    location.pathname.startsWith(route)
+  );
 
   return (
     <ErrorBoundary>
@@ -57,11 +78,13 @@ function App() {
                 <Toaster richColors position="top-center" />
                 <ScrollToTop />
                 <div className="app-content-wrapper" style={{ 
+                  paddingBottom: shouldShowControls ? '80px' : '0',
                   minHeight: '100vh' 
                 }}>
                   <AppContent />
                 </div>
                 <PWAInstallPrompt />
+                {shouldShowControls && <GameBoyControls currentPostId={currentPostId} />}
               </CommentsProvider>
             </ReportDialogProvider>
           </MessagesProvider>
