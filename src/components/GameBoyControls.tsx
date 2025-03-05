@@ -201,33 +201,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
-            {/* Middle section with CLIPT button above menu button */}
-            <div className="flex flex-col items-center gap-2">
-              {/* CLIPT button with gradient outline */}
-              <div 
-                className="w-[54px] h-[54px] relative cursor-pointer" 
-                onClick={handleClipt}
-              >
-                <div 
-                  className="absolute inset-0 w-full h-full rounded-full" 
-                  style={{
-                    border: '2px solid transparent',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #4F46E5, #9333EA, #EC4899) border-box',
-                    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-                    WebkitMaskComposite: 'xor',
-                    maskComposite: 'exclude',
-                  }}
-                ></div>
-                <div className="absolute inset-0 flex items-center justify-center bg-[#121328] rounded-full m-[3px]">
-                  <div className="flex flex-col items-center justify-center">
-                    <Camera size={16} className="text-white mb-0.5" />
-                    <span className="text-[9px] font-medium text-white">CLIPT</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Menu button underneath */}
+            {/* Middle section with menu button */}
+            <div className="flex flex-col items-center justify-center">
+              {/* Menu button */}
               <div 
                 className="w-[36px] h-[36px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer" 
                 onClick={handleMenu}
@@ -236,8 +212,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
-            {/* Right control pad with buttons in diamond layout */}
-            <div className="relative w-[90px] h-[90px]">
+            {/* Right control pad with buttons in diamond layout and CLIPT below */}
+            <div className="relative w-[90px] h-[110px]">
               {/* Top button (Heart/Like) */}
               <div 
                 className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
@@ -264,13 +240,28 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               
               {/* Bottom button (Follow) */}
               <div 
-                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                className="absolute bottom-[36px] left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                 onClick={handleFollow}
               >
                 <UserPlus size={18} className="text-green-500" />
               </div>
               
-              {/* POST button - more visible now */}
+              {/* CLIPT button below Follow button */}
+              <div 
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[36px] h-[36px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                onClick={handleClipt}
+                style={{
+                  background: 'linear-gradient(135deg, #252838, #353b5a)',
+                  borderColor: 'rgba(137, 104, 255, 0.5)'
+                }}
+              >
+                <div className="flex flex-col items-center justify-center">
+                  <Camera size={16} className="text-white mb-0.5" />
+                  <span className="text-[8px] font-medium text-white">CLIPT</span>
+                </div>
+              </div>
+              
+              {/* POST button */}
               <div 
                 className="absolute -bottom-5 right-0 w-[48px] h-[28px] rounded-md bg-gradient-to-r from-[#4F46E5] to-[#9333EA] text-white text-[11px] font-bold flex items-center justify-center cursor-pointer shadow-lg border border-purple-600"
                 onClick={handlePost}
