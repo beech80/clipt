@@ -7,6 +7,7 @@ import { Post } from "@/types/post";
 import { useNavigate } from "react-router-dom";
 import MainNav from "@/components/MainNav";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Camera } from "lucide-react";
 
 interface User {
   id: string;
@@ -67,14 +68,14 @@ const Home = () => {
   }
 
   return (
-    <div className="pb-4 max-w-3xl mx-auto">
+    <div className="pb-4 max-w-3xl mx-auto bg-[#3d388b]">
       <MainNav currentPage="home" />
       
       {/* Feed content */}
       <div className="mt-2 space-y-4 px-3 md:px-0">
         {/* Games you might like */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2 px-1">Squads for You</h3>
+          <h3 className="text-lg font-semibold mb-2 px-1 text-white">Squads for You</h3>
           <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
             <div 
               className="flex-shrink-0 w-36 h-48 rounded-lg bg-game-card flex flex-col items-center justify-end p-3 cursor-pointer" 
@@ -142,7 +143,7 @@ const Home = () => {
           </div>
         </div>
         
-        <h3 className="text-lg font-semibold mb-2 px-1">
+        <h3 className="text-lg font-semibold mb-2 px-1 text-white">
           Squads Clipts
         </h3>
         
@@ -178,6 +179,19 @@ const Home = () => {
             )}
           </>
         )}
+      </div>
+
+      {/* Center Camera Button */}
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
+        <button 
+          onClick={() => navigate('/post/new')}
+          className="clip-button active:scale-95 transition-transform"
+          aria-label="Create Clipt"
+          style={{ width: '80px', height: '60px' }}
+        >
+          <Camera className="clip-button-icon" />
+          <span className="clip-button-text">Clipt</span>
+        </button>
       </div>
     </div>
   );
