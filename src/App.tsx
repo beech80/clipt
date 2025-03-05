@@ -52,7 +52,7 @@ function App() {
     });
     
     setCurrentPostId(newPostId);
-    
+    the look is almost there 
     // Clear the cache when navigation occurs
     // This forces components to re-fetch fresh data
     if (location.pathname.startsWith('/profile/') || 
@@ -78,7 +78,7 @@ function App() {
                 <Toaster richColors position="top-center" />
                 <ScrollToTop />
                 <div className="app-content-wrapper" style={{ 
-                  paddingBottom: shouldShowControls ? '130px' : '0',
+                  paddingBottom: shouldShowControls ? '150px' : '0',
                   minHeight: '100vh' 
                 }}>
                   <AppContent />
