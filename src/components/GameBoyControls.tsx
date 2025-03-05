@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Heart, MessageCircle, Trophy, Camera, UserPlus, Menu } from 'lucide-react';
+import { Heart, MessageCircle, Trophy, Menu, UserPlus } from 'lucide-react';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -110,10 +110,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handlePost = () => {
     navigate('/post/new');
   };
-
-  const handleClipt = () => {
-    navigate('/');
-  };
   
   const handleMenu = () => {
     console.log('Open menu');
@@ -137,38 +133,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
-            <div className="flex flex-col items-center space-y-2">
-              {/* CLIPT button matching image */}
-              <div 
-                className="w-[42px] h-[42px] relative cursor-pointer" 
-                onClick={handleClipt}
-              >
-                <div 
-                  className="absolute inset-0 w-full h-full rounded-full" 
-                  style={{
-                    border: '1.5px solid transparent',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #6366F1, #8B5CF6) border-box',
-                    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-                    WebkitMaskComposite: 'xor',
-                    maskComposite: 'exclude',
-                  }}
-                ></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex flex-col items-center justify-center">
-                    <Camera size={14} className="text-white mb-0.5" />
-                    <span className="text-[8px] font-medium text-white">CLIPT</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Menu button underneath */}
-              <div 
-                className="w-[32px] h-[32px] rounded-full bg-[#292C39] flex items-center justify-center cursor-pointer" 
-                onClick={handleMenu}
-              >
-                <Menu size={16} className="text-[#6a6e85]" />
-              </div>
+            {/* Center menu button */}
+            <div 
+              className="w-[32px] h-[32px] rounded-full bg-[#292C39] flex items-center justify-center cursor-pointer" 
+              onClick={handleMenu}
+            >
+              <Menu size={16} className="text-[#6a6e85]" />
             </div>
             
             {/* Right control pad with buttons in diamond layout exactly matching image */}
@@ -205,12 +175,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <UserPlus size={16} className="text-green-500" />
               </div>
               
-              {/* POST button to the lower right */}
+              {/* Post button below the diamond */}
               <div 
-                className="absolute bottom-[-5px] right-[-20px] w-[40px] h-[32px] rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center cursor-pointer" 
+                className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 w-[28px] h-[20px] rounded-md bg-[#252838] text-[#6a6e85] text-[8px] flex items-center justify-center cursor-pointer"
                 onClick={handlePost}
               >
-                <span className="text-[10px] font-bold text-white">POST</span>
+                POST
               </div>
             </div>
           </div>
