@@ -272,8 +272,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             </div>
           </div>
           
-          {/* Center section - adjusted to match Xbox controller layout */}
-          <div className="flex flex-col items-center space-y-4">
+          {/* Center section - moved to the right and adjusted spacing */}
+          <div className="flex flex-col items-center space-y-4 ml-8">
             {/* Animated CLIPT button on top like Xbox button */}
             <div 
               className={`relative w-[58px] h-[58px] rounded-full bg-[#3a2f68] border border-[#6c4dc4]/70 flex items-center justify-center cursor-pointer ${pulsating ? 'animate-pulse' : ''}`}
