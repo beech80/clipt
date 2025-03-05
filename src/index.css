@@ -197,10 +197,7 @@
     opacity: 0.6;
   }
   100% {
-    transform: scale(2) translate(
-      calc(var(--random-x, 0) * 30px),
-      calc(var(--random-y, 0) * 30px)
-    );
+    transform: scale(2) translate(30px, 30px);
     opacity: 0;
   }
 }
