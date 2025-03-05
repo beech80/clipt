@@ -3,204 +3,181 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
-import { cn } from "@/lib/utils";
-import GameCategories from "@/components/GameCategories";
+import { Post } from "@/types/post";
 import { useNavigate } from "react-router-dom";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Camera } from "lucide-react";
-import { Post } from '@/types/post';
-import { toast } from 'sonner';
+import MainNav from "@/components/MainNav";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Mock data for testing purposes
-const MOCK_POSTS = [
-  {
-    id: '1',
-    title: 'Amazing play in Valorant!',
-    content: 'Check out this clip where I got a pentakill with just a pistol.',
-    user_id: '123',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    game_id: '1',
-    post_type: 'home',
-    media_url: 'https://placehold.co/600x400/333/FFF?text=Gaming+Clip',
-    profiles: {
-      username: 'GamerPro99',
-      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'
-    },
-    games: {
-      name: 'Valorant'
-    },
-    likes_count: 156,
-    comments_count: 24
-  },
-  {
-    id: '2',
-    title: 'New strategy for Apex Legends',
-    content: 'This new rotation strategy is game-changing for ranked play.',
-    user_id: '456',
-    created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    updated_at: new Date(Date.now() - 86400000).toISOString(),
-    game_id: '2',
-    post_type: 'home',
-    media_url: 'https://placehold.co/600x400/333/FFF?text=Apex+Strategy',
-    profiles: {
-      username: 'ApexPredator',
-      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John'
-    },
-    games: {
-      name: 'Apex Legends'
-    },
-    likes_count: 89,
-    comments_count: 17
-  },
-  {
-    id: '3',
-    title: 'Insane Minecraft build completed!',
-    content: 'After 3 months, my medieval castle is finally complete. What do you think?',
-    user_id: '789',
-    created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-    updated_at: new Date(Date.now() - 172800000).toISOString(),
-    game_id: '3',
-    post_type: 'home',
-    media_url: 'https://placehold.co/600x400/333/FFF?text=Minecraft+Castle',
-    profiles: {
-      username: 'CreativeCrafter',
-      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria'
-    },
-    games: {
-      name: 'Minecraft'
-    },
-    likes_count: 214,
-    comments_count: 45
-  }
-];
+interface User {
+  id: string;
+  avatar_url: string;
+  username: string;
+  can_clip: boolean;
+}
 
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  const { data: posts, isLoading, error } = useQuery({
+  
+  const { data: posts, isLoading, error } = useQuery<Post[]>({
     queryKey: ['posts', 'home'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('posts')
-          .select(`
-            *,
-            profiles:user_id (
-              username,
-              avatar_url
-            ),
-            games:game_id (name),
-            likes:likes(count),
-            clip_votes:clip_votes(count)
-          `)
-          .eq('post_type', 'home')
-          .order('created_at', { ascending: false });
+      console.log("Fetching home feed...");
+      let query = supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles:user_id (
+            id,
+            username,
+            avatar_url,
+            display_name
+          )
+        `)
+        .eq('is_private', false)
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-        if (error) {
-          console.error("Error fetching posts:", error);
-          // Fall back to mock data
-          console.log("Using mock data due to error");
-          return MOCK_POSTS;
-        }
-
-        if (!data || data.length === 0) {
-          console.log("No posts found, using mock data");
-          return MOCK_POSTS;
-        }
-
-        // Ensure each post has a properly formatted id
-        const formattedPosts = data?.map(post => ({
-          ...post,
-          id: post.id.toString(), // Ensure ID is a string
-          likes_count: post.likes?.[0]?.count || 0,
-          clip_votes: post.clip_votes || []
-        })) as Post[];
-
-        console.log("Posts fetched:", formattedPosts);
-        return formattedPosts.length > 0 ? formattedPosts : MOCK_POSTS;
-      } catch (err) {
-        console.error("Exception fetching posts:", err);
-        // Fall back to mock data
-        return MOCK_POSTS;
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error("Error fetching posts:", error);
+        throw error;
       }
+      
+      console.log("Fetched posts:", data);
+      return data || [];
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Display toast if there was an error but we're showing mock data
   useEffect(() => {
-    if (error) {
-      toast.error("Could not connect to the server. Showing sample posts.", {
-        description: "We're working on fixing this issue."
+    // Track page view
+    if (window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_title: 'Home',
+        page_location: window.location.href,
       });
     }
-  }, [error]);
+  }, []);
+
+  if (error) {
+    console.error("Failed to fetch posts:", error);
+    return <div>Failed to load posts...</div>;
+  }
 
   return (
-    <div className="relative min-h-screen bg-gaming-900">
-      {/* Modern Header with Gradient and Blur */}
-      <div className="w-full py-6 px-4 bg-gradient-to-b from-gaming-800/80 to-transparent backdrop-blur-sm">
-        <h1 className="text-center text-3xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+    <div className="pb-4 max-w-3xl mx-auto">
+      <MainNav currentPage="home" />
+      
+      {/* Feed content */}
+      <div className="mt-2 space-y-4 px-3 md:px-0">
+        {/* Games you might like */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-2 px-1">Squads for You</h3>
+          <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+            <div 
+              className="flex-shrink-0 w-36 h-48 rounded-lg bg-game-card flex flex-col items-center justify-end p-3 cursor-pointer" 
+              onClick={() => navigate('/game/valorant')}
+            >
+              <img 
+                src="/games/valorant.jpg" 
+                alt="Valorant" 
+                className="w-full h-full object-cover rounded-lg absolute top-0 left-0" 
+                style={{ opacity: 0.7 }}
+              />
+              <div className="relative z-10 text-center">
+                <div className="text-lg font-bold">Valorant</div>
+                <div className="text-xs text-gray-300">2.4k members</div>
+              </div>
+            </div>
+            
+            <div 
+              className="flex-shrink-0 w-36 h-48 rounded-lg bg-game-card flex flex-col items-center justify-end p-3 cursor-pointer"
+              onClick={() => navigate('/game/minecraft')}
+            >
+              <img 
+                src="/games/minecraft.jpg" 
+                alt="Minecraft" 
+                className="w-full h-full object-cover rounded-lg absolute top-0 left-0" 
+                style={{ opacity: 0.7 }}
+              />
+              <div className="relative z-10 text-center">
+                <div className="text-lg font-bold">Minecraft</div>
+                <div className="text-xs text-gray-300">5.1k members</div>
+              </div>
+            </div>
+            
+            <div 
+              className="flex-shrink-0 w-36 h-48 rounded-lg bg-game-card flex flex-col items-center justify-end p-3 cursor-pointer"
+              onClick={() => navigate('/game/league')}
+            >
+              <img 
+                src="/games/league.jpg" 
+                alt="League of Legends" 
+                className="w-full h-full object-cover rounded-lg absolute top-0 left-0" 
+                style={{ opacity: 0.7 }}
+              />
+              <div className="relative z-10 text-center">
+                <div className="text-lg font-bold">League</div>
+                <div className="text-xs text-gray-300">3.7k members</div>
+              </div>
+            </div>
+            
+            <div 
+              className="flex-shrink-0 w-36 h-48 rounded-lg bg-game-card flex flex-col items-center justify-end p-3 cursor-pointer"
+              onClick={() => navigate('/game/fortnite')}
+            >
+              <img 
+                src="/games/fortnite.jpg" 
+                alt="Fortnite" 
+                className="w-full h-full object-cover rounded-lg absolute top-0 left-0" 
+                style={{ opacity: 0.7 }}
+              />
+              <div className="relative z-10 text-center">
+                <div className="text-lg font-bold">Fortnite</div>
+                <div className="text-xs text-gray-300">4.2k members</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <h3 className="text-lg font-semibold mb-2 px-1">
           Squads Clipts
-        </h1>
-      </div>
-
-      <div className="container mx-auto px-4 py-6 pb-32">
-        {/* Main feed */}
-        <div className="space-y-6 max-w-2xl mx-auto">
-          {isLoading ? (
-            // Loading state with multiple skeletons
-            Array(3).fill(0).map((_, index) => (
-              <div key={index} className="bg-gaming-800 rounded-xl p-4 animate-pulse">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="rounded-full bg-gaming-700 h-12 w-12"></div>
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-gaming-700 rounded w-1/4"></div>
-                    <div className="h-3 bg-gaming-700 rounded w-1/2"></div>
-                  </div>
-                </div>
-                <div className="h-4 bg-gaming-700 rounded w-3/4 mb-3"></div>
-                <div className="h-3 bg-gaming-700 rounded w-1/2 mb-3"></div>
-                <div className="h-52 bg-gaming-700 rounded w-full mb-4"></div>
-                <div className="flex justify-between">
-                  <div className="h-8 bg-gaming-700 rounded w-1/4"></div>
-                  <div className="h-8 bg-gaming-700 rounded w-1/4"></div>
-                  <div className="h-8 bg-gaming-700 rounded w-1/4"></div>
+        </h3>
+        
+        {isLoading ? (
+          // Loading skeletons for posts
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-xl bg-card p-4 space-y-3">
+              <div className="flex items-center space-x-2">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-1 flex-1">
+                  <Skeleton className="h-4 w-[30%]" />
+                  <Skeleton className="h-3 w-[20%]" />
                 </div>
               </div>
-            ))
-          ) : error && !posts ? (
-            <div className="text-center py-20 text-red-400">
-              <p>Failed to load posts. Please try again later.</p>
+              <Skeleton className="h-4 w-[90%]" />
+              <Skeleton className="h-4 w-[40%]" />
+              <Skeleton className="h-60 w-full rounded-lg" />
             </div>
-          ) : posts && posts.length > 0 ? (
-            posts.map((post) => (
-              <PostItem 
-                key={post.id} 
-                post={post} 
-                data-post-id={post.id}
-              />
-            ))
-          ) : (
-            <div className="text-center py-20 text-gray-400">
-              <p>No posts available. Create your first post!</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Center Camera Button */}
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
-        <button 
-          onClick={() => navigate('/post/new')}
-          className="clip-button active:scale-95 transition-transform"
-          aria-label="Create Clipt"
-          style={{ width: '80px', height: '60px' }}
-        >
-          <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Clipt</span>
-        </button>
+          ))
+        ) : (
+          <>
+            {posts && posts.length > 0 ? (
+              posts.map((post) => (
+                <PostItem key={post.id} post={post} showActions={true} />
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-lg">No posts found.</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Follow some users or create your own post!
+                </p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
