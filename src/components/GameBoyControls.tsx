@@ -1,191 +1,360 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, Book, Users, Home, Settings, X } from 'lucide-react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { toast } from 'sonner';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import Joystick from './gameboy/Joystick';
-import ActionButtons from './gameboy/ActionButtons';
-import { handleVideoControl } from './gameboy/VideoControls';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Heart, MessageCircle, Trophy, Camera, Menu, UserPlus, Video, Compass, MessageSquare, Settings, Home, ArrowDown } from 'lucide-react';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
 }
 
-const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId }) => {
+const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCurrentPostId }) => {
   const navigate = useNavigate();
-  const params = useParams();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
-  const [postId, setPostId] = useState('');
-  
-  // Set postId with priority: currentPostId from App > URL params > empty string
+  const [currentPath, setCurrentPath] = useState(location.pathname);
+  const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
+  const [joystickActive, setJoystickActive] = useState(false);
+  const [joystickDirection, setJoystickDirection] = useState<'up' | 'down' | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const joystickTimer = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Keep track of current route
   useEffect(() => {
-    let newPostId = '';
-    if (currentPostId && currentPostId !== 'undefined' && currentPostId !== 'null') {
-      newPostId = currentPostId;
-    } else if (params.id && params.id !== 'undefined' && params.id !== 'null') {
-      newPostId = params.id;
+    setCurrentPath(location.pathname);
+    
+    // Update current post ID when prop changes
+    if (propCurrentPostId) {
+      setCurrentPostId(propCurrentPostId);
     }
     
-    // If we're in the post page, try to extract the ID from the URL
-    if (!newPostId && location.pathname.startsWith('/post/')) {
-      const pathSegments = location.pathname.split('/');
-      if (pathSegments[2]) {
-        newPostId = pathSegments[2];
-      }
+    // Reset the current post ID when changing routes
+    if (location.pathname !== currentPath && !propCurrentPostId) {
+      setCurrentPostId(null);
     }
-    
-    setPostId(newPostId);
-  }, [currentPostId, params, location.pathname]);
+
+    // Close menu when changing routes
+    setMenuOpen(false);
+  }, [location.pathname, propCurrentPostId, currentPath]);
   
-  // Handle keydown for controls
+  // Detect current visible post ID
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp') {
-        navigate('/');
-      } else if (e.key === 'ArrowDown') {
-        navigate('/collections');
-      } else if (e.key === 'ArrowLeft') {
-        navigate('/clipts');
-      } else if (e.key === 'ArrowRight') {
-        navigate('/discover');
-      }
+    // Skip if we already have a post ID from props
+    if (propCurrentPostId) return;
+    
+    const findVisiblePostId = () => {
+      // Find all post elements
+      const posts = document.querySelectorAll('[data-post-id]');
+      if (!posts.length) return;
       
-      // A button (key: z) - Like
-      if (e.key === 'z') {
-        const actionButtons = document.querySelector('[aria-label="Like"]') as HTMLButtonElement;
-        if (actionButtons) actionButtons.click();
-      }
+      // Find the post most visible in the viewport
+      let mostVisiblePost: Element | null = null;
+      let maxVisibleArea = 0;
       
-      // B button (key: x) - Comment
-      if (e.key === 'x') {
-        const commentButton = document.querySelector('[aria-label="Comment"]') as HTMLButtonElement;
-        if (commentButton) commentButton.click();
-      }
+      posts.forEach(post => {
+        const rect = post.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        
+        // Skip if post is not visible
+        if (rect.bottom < 100 || rect.top > viewportHeight - 100) {
+          return;
+        }
+        
+        // Calculate visible area
+        const visibleTop = Math.max(0, rect.top);
+        const visibleBottom = Math.min(viewportHeight, rect.bottom);
+        const visibleHeight = visibleBottom - visibleTop;
+        const visibleRatio = visibleHeight / rect.height;
+        
+        if (visibleRatio > maxVisibleArea) {
+          maxVisibleArea = visibleRatio;
+          mostVisiblePost = post;
+        }
+      });
       
-      // Video controls when in post view
-      if (location.pathname.includes('/post/')) {
-        handleVideoControl(e);
+      if (mostVisiblePost && maxVisibleArea > 0.3) {
+        const postId = mostVisiblePost.getAttribute('data-post-id');
+        if (postId && postId !== currentPostId) {
+          setCurrentPostId(postId);
+        }
       }
     };
     
-    window.addEventListener('keydown', handleKeyDown);
+    // Run on scroll and resize
+    findVisiblePostId();
+    window.addEventListener('scroll', findVisiblePostId);
+    window.addEventListener('resize', findVisiblePostId);
     
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('scroll', findVisiblePostId);
+      window.removeEventListener('resize', findVisiblePostId);
     };
-  }, [navigate, location.pathname]);
+  }, [currentPostId, propCurrentPostId]);
 
-  const handleAction = (action: string) => {
-    switch(action) {
-      case 'like':
-        // Handled in ActionButtons
-        break;
-      case 'comment':
-        // Handled in ActionButtons
-        break;
-      case 'follow':
-        // Handled in ActionButtons
-        break;
-      case 'rank':
-        // Handled in ActionButtons
-        break;
-      default:
-        break;
+  // Handler functions for each button
+  const handleLike = async () => {
+    if (!currentPostId) return;
+    console.log('Like post:', currentPostId);
+    // Like logic would go here
+  };
+
+  const handleComment = () => {
+    if (!currentPostId) return;
+    console.log('Comment on post:', currentPostId);
+    // Comment logic would go here
+  };
+
+  const handleFollow = () => {
+    if (!currentPostId) return;
+    console.log('Follow user from post:', currentPostId);
+    // Follow logic would go here
+  };
+  
+  const handleTrophy = () => {
+    if (!currentPostId) return;
+    console.log('Trophy for post:', currentPostId);
+    // Trophy logic would go here
+  };
+
+  const handlePost = () => {
+    navigate('/post/new');
+  };
+
+  const handleClipt = () => {
+    navigate('/post/new');
+  };
+  
+  const handleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const handleJoystickDown = (direction: 'up' | 'down') => {
+    setJoystickActive(true);
+    setJoystickDirection(direction);
+    
+    // Start continuous scrolling
+    if (joystickTimer.current) {
+      clearInterval(joystickTimer.current);
+    }
+    
+    joystickTimer.current = setInterval(() => {
+      if (direction === 'up') {
+        window.scrollBy(0, -30);
+      } else {
+        window.scrollBy(0, 30);
+      }
+    }, 50);
+  };
+  
+  const handleJoystickUp = () => {
+    setJoystickActive(false);
+    setJoystickDirection(null);
+    
+    if (joystickTimer.current) {
+      clearInterval(joystickTimer.current);
+      joystickTimer.current = null;
     }
   };
 
-  const navigationItems = [
-    { name: 'Home', path: '/', icon: <Home className="w-4 h-4" /> },
-    { name: 'Discover', path: '/discover', icon: <Book className="w-4 h-4" /> },
-    { name: 'Profile', path: '/profile', icon: <Users className="w-4 h-4" /> },
-    { name: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" /> }
-  ];
-
   return (
-    <div className="gameboy-container h-28 bg-[#151924] fixed bottom-0 left-0 right-0 z-50 touch-none border-t border-[#232738]">
-      {/* Menu button (center bottom) */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <button className="rounded-full w-7 h-7 bg-[#1E2235] flex items-center justify-center shadow-md">
-              <Menu className="h-4 w-4 text-[#6366F1]" />
-            </button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="bg-[#151924] border-t border-[#2a2f3d] p-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-white">Navigation</h3>
-              <button onClick={() => setIsOpen(false)} className="p-1 rounded-full">
-                <X className="h-5 w-5 text-gray-400" />
-              </button>
+    <div className="fixed bottom-0 left-0 right-0 h-[80px] z-50">
+      <div className="max-w-screen-md mx-auto relative h-full">
+        <div className="absolute inset-x-0 bottom-0 h-[80px] bg-[#181a29] pointer-events-auto">
+          {/* Top border line */}
+          <div className="h-[1px] w-full bg-blue-500/30" />
+          
+          <div className="flex justify-between items-center px-6 h-full">
+            {/* Left joystick */}
+            <div className="relative w-[60px] h-[60px] rounded-full bg-[#0c0e1b]/90 flex items-center justify-center shadow-inner">
+              <div 
+                className={`w-[50px] h-[50px] rounded-full bg-[#1c1e2e] flex items-center justify-center transition-transform duration-100 ${
+                  joystickActive && joystickDirection === 'up' ? 'translate-y-[-2px]' : 
+                  joystickActive && joystickDirection === 'down' ? 'translate-y-[2px]' : ''
+                }`}
+                style={{ 
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8)'
+                }}
+              >
+                {/* Joystick touch areas */}
+                <div className="absolute inset-0">
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-1/2 cursor-pointer"
+                    onMouseDown={() => handleJoystickDown('up')}
+                    onMouseUp={handleJoystickUp}
+                    onMouseLeave={handleJoystickUp}
+                    onTouchStart={() => handleJoystickDown('up')}
+                    onTouchEnd={handleJoystickUp}
+                  />
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 h-1/2 cursor-pointer"
+                    onMouseDown={() => handleJoystickDown('down')}
+                    onMouseUp={handleJoystickUp}
+                    onMouseLeave={handleJoystickUp}
+                    onTouchStart={() => handleJoystickDown('down')}
+                    onTouchEnd={handleJoystickUp}
+                  />
+                </div>
+              </div>
             </div>
-            <nav className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => {
-                    navigate(item.path);
-                    toast.success(`Navigating to ${item.name}`);
-                    setIsOpen(false);
-                  }}
-                  className="flex items-center gap-2 p-3 rounded-lg bg-[#1e2230]/50 hover:bg-[#1e2230]
-                    active:bg-[#1e2230] transition-all duration-300 text-gray-300
-                    font-medium text-sm active:scale-95"
-                >
-                  {item.icon}
-                  <span>{item.name}</span>
-                </button>
-              ))}
-            </nav>
-          </SheetContent>
-        </Sheet>
-      </div>
-      
-      {/* Left-side joystick */}
-      <div className="absolute bottom-9 left-12">
-        <div className="w-[60px] h-[60px]">
-          <Joystick navigate={navigate} />
+            
+            {/* Center CLIPT button */}
+            <div 
+              className="w-[50px] h-[50px] relative cursor-pointer" 
+              onClick={handleClipt}
+            >
+              <div 
+                className="absolute inset-0 w-full h-full rounded-full" 
+                style={{
+                  border: '2px solid transparent',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #4F46E5, #9333EA) border-box',
+                  WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+                  WebkitMaskComposite: 'xor',
+                  maskComposite: 'exclude',
+                }}
+              ></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center">
+                  <Camera size={16} className="text-white mb-0.5" />
+                  <span className="text-[9px] font-medium text-white">CLIPT</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Right control pad with buttons in diamond layout */}
+            <div className="relative w-[90px] h-[90px]">
+              {/* Top button (Heart) */}
+              <div 
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[32px] h-[32px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
+                onClick={handleLike}
+              >
+                <Heart size={16} className="text-red-500" />
+              </div>
+              
+              {/* Left button (Message) */}
+              <div 
+                className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[32px] h-[32px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
+                onClick={handleComment}
+              >
+                <MessageCircle size={16} className="text-blue-500" />
+              </div>
+              
+              {/* Right button (Trophy) */}
+              <div 
+                className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[32px] h-[32px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
+                onClick={handleTrophy}
+              >
+                <Trophy size={16} className="text-yellow-500" />
+              </div>
+              
+              {/* Bottom button (Follow) */}
+              <div 
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[32px] h-[32px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
+                onClick={handleFollow}
+              >
+                <UserPlus size={16} className="text-green-500" />
+              </div>
+              
+              {/* POST button */}
+              <div 
+                className="absolute -bottom-5 right-0 w-[30px] h-[20px] rounded-sm bg-[#5b258c] text-white text-[8px] font-bold flex items-center justify-center cursor-pointer"
+                onClick={handlePost}
+              >
+                POST
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
-      {/* "CLIPT" button (middle) - with animated oval ring */}
-      <div className="absolute bottom-14 left-1/2 -translate-x-1/2">
-        <button 
-          onClick={() => navigate('/clipts/create')}
-          className="relative flex items-center justify-center"
-          aria-label="Create CLIPT"
-        >
-          {/* The spinning oval effect */}
-          <div className="absolute w-[55px] h-[45px] animate-spin-slow">
-            <div 
-              className="w-full h-full rounded-full"
-              style={{
-                background: 'conic-gradient(from 0deg, #8B5CF6, #3B82F6, #8B5CF6)',
-                filter: 'blur(2px)',
-              }}
-            ></div>
+      {/* Menu dialog */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm">
+          <div className="absolute bottom-20 left-0 right-0 bg-[#161925] border-t border-blue-500/30">
+            <div className="max-w-md mx-auto p-4">
+              <h3 className="text-white text-lg font-semibold mb-4">Menu</h3>
+              <div className="grid grid-cols-2 gap-y-4">
+                <div 
+                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
+                  onClick={() => {
+                    navigate('/profile');
+                  }}
+                >
+                  <UserPlus size={18} className="text-blue-400" />
+                  <span className="text-white">Profile</span>
+                </div>
+                <div 
+                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
+                  onClick={() => {
+                    navigate('/streaming');
+                  }}
+                >
+                  <Camera size={18} className="text-red-400" />
+                  <span className="text-white">Streaming</span>
+                </div>
+                <div 
+                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
+                  onClick={() => {
+                    navigate('/discovery');
+                  }}
+                >
+                  <MessageCircle size={18} className="text-green-400" />
+                  <span className="text-white">Discovery</span>
+                </div>
+                <div 
+                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
+                  onClick={() => {
+                    navigate('/messages');
+                  }}
+                >
+                  <Trophy size={18} className="text-purple-400" />
+                  <span className="text-white">Messages</span>
+                </div>
+                <div 
+                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
+                  onClick={() => {
+                    navigate('/settings');
+                  }}
+                >
+                  <Menu size={18} className="text-gray-400" />
+                  <span className="text-white">Settings</span>
+                </div>
+                <div 
+                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
+                  onClick={() => {
+                    navigate('/');
+                  }}
+                >
+                  <Heart size={18} className="text-yellow-400" />
+                  <span className="text-white">Home</span>
+                </div>
+                <div 
+                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
+                  onClick={() => {
+                    navigate('/clipts');
+                  }}
+                >
+                  <UserPlus size={18} className="text-indigo-400" />
+                  <span className="text-white">Clipts</span>
+                </div>
+                <div 
+                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
+                  onClick={() => {
+                    navigate('/top-clipts');
+                  }}
+                >
+                  <Trophy size={18} className="text-orange-400" />
+                  <span className="text-white">Top Clipts</span>
+                </div>
+              </div>
+            </div>
           </div>
-          
-          {/* The black center button */}
-          <div className="relative z-10 w-[42px] h-[42px] rounded-full bg-black flex flex-col items-center justify-center">
-            <span className="text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
-                <circle cx="12" cy="13" r="3"></circle>
-              </svg>
-            </span>
-            <span className="text-[10px] font-bold text-white tracking-wide mt-1">CLIPT</span>
-          </div>
-        </button>
-      </div>
+        </div>
+      )}
       
-      {/* Right-side action buttons */}
-      <div className="absolute bottom-9 right-12">
-        <ActionButtons postId={postId} onAction={handleAction} />
+      {/* Menu button underneath */}
+      <div 
+        className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[30px] h-[30px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer z-[51]" 
+        onClick={handleMenu}
+      >
+        <Menu size={15} className="text-[#8993bc]" />
       </div>
     </div>
   );
