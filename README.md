@@ -1,8 +1,10 @@
-# Clip - Social Gaming Platform
+# Clipt - Social Gaming Platform
+
+A modern social media platform for gamers.
 
 ## Overview
 
-Clip is a modern social platform for gamers to share their best gaming moments, connect with fellow gamers, and build a vibrant gaming community. The platform is available as both a web application and a progressive web app (PWA) that can be installed on mobile devices.
+Clipt is a modern social platform for gamers to share their best gaming moments, connect with fellow gamers, and build a vibrant gaming community. The platform is available as both a web application and a progressive web app (PWA) that can be installed on mobile devices.
 
 ## Features
 
@@ -11,6 +13,9 @@ Clip is a modern social platform for gamers to share their best gaming moments, 
 - **User Profiles**: Customize your profile and showcase your gaming achievements
 - **Offline Support**: PWA capabilities allow for some offline functionality
 - **Mobile Optimized**: Works on all devices with responsive design
+- GameBoy-style controller UI 
+- Modern design with responsive layout
+- Support for video clips and social interactions
 
 ## Documentation
 
@@ -65,15 +70,9 @@ This project uses Supabase for the backend. The database includes the following 
 - `follows` - for user follow relationships
 - `games` - for game information
 
-### Deployment
+## Deployment
 
-#### Web Deployment
-1. Build the project:
-```bash
-npm run build
-```
-
-2. Deploy the contents of the `dist` folder to your web hosting provider.
+The application is automatically deployed to Vercel on each push to the main branch.
 
 #### PWA Installation
 The application can be installed as a PWA on compatible devices by clicking the "Add to Home Screen" option in the browser menu.
