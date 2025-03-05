@@ -10,7 +10,7 @@ import { Post } from '@/types/post';
 const Clipts = () => {
   const navigate = useNavigate();
 
-  const { data: posts } = useQuery({
+  const { data: posts, isLoading } = useQuery({
     queryKey: ['posts', 'clipts'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -50,7 +50,22 @@ const Clipts = () => {
       </div>
 
       <div className="container mx-auto px-4 py-24 max-w-2xl">
-        {posts?.length === 0 ? (
+        {isLoading && (
+          <div className="flex justify-center my-8">
+            <div className="animate-pulse">Loading posts...</div>
+          </div>
+        )}
+
+        {posts && posts.length > 0 && (
+          <div className="space-y-6">
+            {posts.map((post) => (
+              <PostItem key={post.id} post={post} />
+            ))}
+          </div>
+        )}
+
+        {/* If no results found */}
+        {!isLoading && (!posts || posts.length === 0) && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center space-y-4">
               <p className="text-2xl font-semibold text-white/60">Ready to share a gaming moment?</p>
@@ -58,27 +73,8 @@ const Clipts = () => {
               <p className="text-sm text-white/60 mt-2">Now supporting both videos and images!</p>
             </div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {posts?.map((post) => (
-              <PostItem key={post.id} post={post} />
-            ))}
-          </div>
         )}
       </div>
-
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
-        <button 
-          onClick={() => navigate('/post/new')}
-          className="clip-button active:scale-95 transition-transform"
-          aria-label="Create Clipt"
-          style={{ width: '80px', height: '60px' }}
-        >
-          <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Clipt</span>
-        </button>
-      </div>
-
     </div>
   );
 };
