@@ -224,6 +224,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
+            {/* Ensure no duplicate CLIPT button instances */}
+            
             {/* Right control pad with buttons in diamond layout */}
             <div className="relative w-[90px] h-[90px]">
               {/* Top button (Heart/Like) */}
