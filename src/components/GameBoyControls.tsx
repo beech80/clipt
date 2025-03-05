@@ -153,6 +153,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
+  // Navigation helper
+  const navigateTo = (path: string) => {
+    navigate(path);
+    setMenuOpen(false);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 h-[80px] z-50">
       <div className="max-w-screen-md mx-auto relative h-full">
@@ -194,29 +200,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
-            {/* Center CLIPT button */}
-            <div 
-              className="w-[50px] h-[50px] relative cursor-pointer" 
-              onClick={handleClipt}
-            >
-              <div 
-                className="absolute inset-0 w-full h-full rounded-full" 
-                style={{
-                  border: '2px solid transparent',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #4F46E5, #9333EA) border-box',
-                  WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-                  WebkitMaskComposite: 'xor',
-                  maskComposite: 'exclude',
-                }}
-              ></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="flex flex-col items-center justify-center">
-                  <Camera size={16} className="text-white mb-0.5" />
-                  <span className="text-[9px] font-medium text-white">CLIPT</span>
-                </div>
-              </div>
-            </div>
+            {/* Middle space */}
+            <div className="w-[50px] h-[50px]"></div>
             
             {/* Right control pad with buttons in diamond layout */}
             <div className="relative w-[90px] h-[90px]">
@@ -274,7 +259,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <div 
                   className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
                   onClick={() => {
-                    navigate('/profile');
+                    navigateTo('/profile');
                   }}
                 >
                   <UserPlus size={18} className="text-blue-400" />
@@ -283,7 +268,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <div 
                   className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
                   onClick={() => {
-                    navigate('/streaming');
+                    navigateTo('/streaming');
                   }}
                 >
                   <Camera size={18} className="text-red-400" />
@@ -292,7 +277,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <div 
                   className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
                   onClick={() => {
-                    navigate('/discovery');
+                    navigateTo('/discovery');
                   }}
                 >
                   <MessageCircle size={18} className="text-green-400" />
@@ -301,7 +286,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <div 
                   className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
                   onClick={() => {
-                    navigate('/messages');
+                    navigateTo('/messages');
                   }}
                 >
                   <Trophy size={18} className="text-purple-400" />
@@ -310,7 +295,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <div 
                   className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
                   onClick={() => {
-                    navigate('/settings');
+                    navigateTo('/settings');
                   }}
                 >
                   <Menu size={18} className="text-gray-400" />
@@ -319,7 +304,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <div 
                   className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
                   onClick={() => {
-                    navigate('/');
+                    navigateTo('/');
                   }}
                 >
                   <Heart size={18} className="text-yellow-400" />
@@ -328,7 +313,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <div 
                   className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
                   onClick={() => {
-                    navigate('/clipts');
+                    navigateTo('/clipts');
                   }}
                 >
                   <UserPlus size={18} className="text-indigo-400" />
@@ -337,7 +322,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <div 
                   className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
                   onClick={() => {
-                    navigate('/top-clipts');
+                    navigateTo('/top-clipts');
                   }}
                 >
                   <Trophy size={18} className="text-orange-400" />
