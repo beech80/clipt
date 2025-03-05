@@ -336,7 +336,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               {/* Particles effect */}
               {particles.map((particle, index) => (
                 <div 
-                  key={index}
+                  key={particle.id}
                   className="absolute rounded-full z-20"
                   style={{
                     left: `${particle.x}%`,
@@ -346,7 +346,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                     backgroundColor: particle.color,
                     opacity: particle.opacity,
                     filter: 'blur(1px)',
-                    transform: 'scale(0.2)',
                     animation: 'float-out 2s ease-out forwards'
                   }}
                 />
