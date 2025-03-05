@@ -27,23 +27,61 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 });
   const [pulsating, setPulsating] = useState(false);
   const [glowing, setGlowing] = useState(true);
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; opacity: number; size: number; color: string }>>([]);
+  const [buttonsAnimated, setButtonsAnimated] = useState(false);
 
-  // CLIPT button animation
+  // CLIPT button animation with enhanced effects
   useEffect(() => {
+    // Pulse animation
     const pulseInterval = setInterval(() => {
       setPulsating(true);
+      
+      // Generate particles when pulsing
+      createParticles();
+      
       setTimeout(() => setPulsating(false), 1500);
-    }, 4000);
+    }, 5000);
     
+    // Glow animation with smoother transition
     const glowInterval = setInterval(() => {
       setGlowing(prev => !prev);
     }, 2000);
     
+    // Button hover animation toggle
+    const buttonAnimationInterval = setInterval(() => {
+      setButtonsAnimated(prev => !prev);
+    }, 8000);
+    
     return () => {
       clearInterval(pulseInterval);
       clearInterval(glowInterval);
+      clearInterval(buttonAnimationInterval);
     };
   }, []);
+  
+  // Particle effect system
+  const createParticles = () => {
+    const newParticles = [];
+    const colors = ['#6c4dc4', '#8654dc', '#4f46e5', '#8b5cf6', '#a78bfa'];
+    
+    for (let i = 0; i < 12; i++) {
+      newParticles.push({
+        id: Math.random(),
+        x: 50 + Math.random() * 10 - 5, // center x with slight variation
+        y: 50 + Math.random() * 10 - 5, // center y with slight variation
+        opacity: 0.8 + Math.random() * 0.2,
+        size: 3 + Math.random() * 5,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+    
+    setParticles(newParticles);
+    
+    // Animate particles fading out
+    setTimeout(() => {
+      setParticles([]);
+    }, 2000);
+  };
 
   // Handle joystick movement
   useEffect(() => {
@@ -278,29 +316,69 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           
           {/* Center section - perfectly centered */}
           <div className="flex flex-col items-center space-y-4">
-            {/* Game-styled CLIPT button on top */}
+            {/* Enhanced Game-styled CLIPT button on top */}
             <div 
-              className={`relative w-[62px] h-[62px] rounded-full bg-gradient-to-br from-[#3a2f68] to-[#351a5a] flex items-center justify-center cursor-pointer overflow-hidden ${pulsating ? 'animate-pulse' : ''}`}
-              onClick={handleClipt}
+              className={`relative w-[70px] h-[70px] rounded-full flex items-center justify-center cursor-pointer overflow-hidden transition-all duration-500 ${pulsating ? 'scale-110' : 'scale-100'}`}
+              onClick={() => {
+                createParticles();
+                handleClipt();
+              }}
               style={{
+                background: 'radial-gradient(circle at 50% 30%, #4a357a, #2d1f54)',
                 boxShadow: glowing 
-                  ? '0 0 15px 4px rgba(128, 90, 213, 0.7)' 
-                  : '0 0 10px 2px rgba(128, 90, 213, 0.5)',
-                border: '2px solid rgba(147, 51, 234, 0.5)'
+                  ? '0 0 20px 6px rgba(128, 90, 213, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.1)' 
+                  : '0 0 12px 3px rgba(128, 90, 213, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.05)',
+                border: '2px solid rgba(147, 51, 234, 0.6)',
+                transform: `rotate(${buttonsAnimated ? '5deg' : '0deg'})`,
+                transition: 'transform 0.5s ease-in-out, box-shadow 0.5s ease-in-out, background 0.5s ease-in-out'
               }}
             >
-              {/* Inner shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#6c4dc4]/20 to-transparent"></div>
+              {/* Particles effect */}
+              {particles.map(particle => (
+                <div 
+                  key={particle.id}
+                  className="absolute rounded-full z-20 animate-float"
+                  style={{
+                    left: `${particle.x}%`,
+                    top: `${particle.y}%`,
+                    width: `${particle.size}px`,
+                    height: `${particle.size}px`,
+                    backgroundColor: particle.color,
+                    opacity: particle.opacity,
+                    filter: 'blur(1px)',
+                    animation: `float-out 2s ease-out forwards`
+                  }}
+                />
+              ))}
               
-              {/* Game console style text */}
-              <span className="text-white font-bold text-base relative z-10">CLIPT</span>
+              {/* Inner shine effect - enhanced */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#6c4dc4]/30 to-transparent opacity-80"></div>
               
-              {/* Cleaner glowing ring */}
+              {/* Inner ring */}
+              <div className="absolute inset-[5px] rounded-full border-2 border-purple-500/20"></div>
+              
+              {/* Metallic text with 3D effect */}
+              <div className="relative z-10 flex items-center justify-center">
+                <span 
+                  className="font-extrabold text-base tracking-wider"
+                  style={{
+                    color: 'transparent',
+                    background: 'linear-gradient(to bottom, #ffffff, #a78bfa)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    textShadow: '0 1px 0 rgba(0,0,0,0.4), 0 2px 3px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  CLIPT
+                </span>
+              </div>
+              
+              {/* Orbital ring animation */}
               <div 
-                className="absolute inset-[-2px] rounded-full" 
+                className="absolute inset-[-4px] rounded-full" 
                 style={{
                   background: 'conic-gradient(from 0deg, #4f46e5, #8b5cf6, #8654dc, #6c4dc4, #4f46e5)',
-                  opacity: 0.5,
+                  opacity: 0.6,
                   filter: 'blur(4px)',
                   zIndex: -1,
                   animation: 'spin 8s linear infinite'
@@ -308,23 +386,32 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               />
               
               {/* Highlight reflection */}
-              <div className="absolute top-0 left-1/4 w-1/2 h-[8px] bg-white/20 rounded-b-full"></div>
+              <div className="absolute top-0 left-1/4 w-1/2 h-[10px] bg-white/30 rounded-b-full"></div>
+              
+              {/* Bottom shadow */}
+              <div className="absolute bottom-1 left-1/4 w-1/2 h-[6px] bg-black/20 rounded-t-full blur-[2px]"></div>
             </div>
             
             {/* Menu and Post buttons in a row below, like Xbox controller lower buttons */}
             <div className="flex justify-center items-center space-x-12">
               {/* Menu button */}
               <div 
-                className="w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer"
+                className={`w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer transition-all duration-300 ${buttonsAnimated ? 'hover:scale-110' : ''}`}
                 onClick={handleMenu}
+                style={{
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1)'
+                }}
               >
                 <Menu size={18} className="text-white" />
               </div>
               
               {/* POST/Camera button - styled to match hamburger button */}
               <div 
-                className="w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                className={`w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer transition-all duration-300 ${buttonsAnimated ? 'hover:scale-110' : ''}`}
                 onClick={() => navigate('/post/new')}
+                style={{
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1)'
+                }}
               >
                 <Camera size={18} className="text-white" />
               </div>
