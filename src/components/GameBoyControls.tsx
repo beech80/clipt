@@ -234,74 +234,76 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       {/* Game Boy Controls */}
       <div className="fixed bottom-0 left-0 right-0 h-[80px] z-50">
         <div className="max-w-screen-md mx-auto relative h-full">
-          <div className="absolute inset-x-0 bottom-0 h-[80px] bg-[#161925] pointer-events-auto">
+          <div className="absolute inset-x-0 bottom-0 h-[80px] bg-[#181a29] pointer-events-auto">
             {/* Top border line */}
             <div className="h-[1px] w-full bg-blue-500/30" />
             
-            <div className="flex justify-between items-center px-4 h-full">
-              {/* Left joystick with animations for scrolling up/down */}
-              <div className="w-[45px] h-[45px] flex items-center justify-center">
-                <div className="relative w-full h-full">
-                  {/* Up arrow touchpoint */}
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-1/2 cursor-pointer"
-                    onMouseDown={() => handleJoystickDown('up')}
-                    onMouseUp={handleJoystickUp}
-                    onMouseLeave={handleJoystickUp}
-                    onTouchStart={() => handleJoystickDown('up')}
-                    onTouchEnd={handleJoystickUp}
-                  />
-                  
-                  {/* Down arrow touchpoint */}
-                  <div 
-                    className="absolute bottom-0 left-0 right-0 h-1/2 cursor-pointer"
-                    onMouseDown={() => handleJoystickDown('down')}
-                    onMouseUp={handleJoystickUp}
-                    onMouseLeave={handleJoystickUp}
-                    onTouchStart={() => handleJoystickDown('down')}
-                    onTouchEnd={handleJoystickUp}
-                  />
-                  
-                  {/* Joystick visual */}
-                  <div 
-                    className={`w-[45px] h-[45px] rounded-full bg-[#1A1C25] flex items-center justify-center transition-transform duration-100 ${
-                      joystickActive && joystickDirection === 'up' ? 'translate-y-[-2px]' : 
-                      joystickActive && joystickDirection === 'down' ? 'translate-y-[2px]' : ''
-                    }`}
-                    style={{ 
-                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)'
-                    }}
-                  >
-                    {/* Optional: visual indicators for up/down */}
-                    <div className="flex flex-col items-center justify-center opacity-30">
-                      <div className="w-2 h-2 border-t-2 border-l-2 border-gray-400 transform -rotate-45 mb-1"></div>
-                      <div className="w-2 h-2 border-b-2 border-l-2 border-gray-400 transform rotate-45 mt-1"></div>
-                    </div>
+            <div className="flex justify-between items-center px-6 h-full">
+              {/* Left joystick */}
+              <div className="relative w-[60px] h-[60px] rounded-full bg-[#0c0e1b]/90 flex items-center justify-center shadow-inner">
+                <div 
+                  className={`w-[50px] h-[50px] rounded-full bg-[#1c1e2e] flex items-center justify-center transition-transform duration-100 ${
+                    joystickActive && joystickDirection === 'up' ? 'translate-y-[-2px]' : 
+                    joystickActive && joystickDirection === 'down' ? 'translate-y-[2px]' : ''
+                  }`}
+                  style={{ 
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8)'
+                  }}
+                >
+                  {/* Joystick touch areas */}
+                  <div className="absolute inset-0">
+                    <div 
+                      className="absolute top-0 left-0 right-0 h-1/2 cursor-pointer"
+                      onMouseDown={() => handleJoystickDown('up')}
+                      onMouseUp={handleJoystickUp}
+                      onMouseLeave={handleJoystickUp}
+                      onTouchStart={() => handleJoystickDown('up')}
+                      onTouchEnd={handleJoystickUp}
+                    />
+                    <div 
+                      className="absolute bottom-0 left-0 right-0 h-1/2 cursor-pointer"
+                      onMouseDown={() => handleJoystickDown('down')}
+                      onMouseUp={handleJoystickUp}
+                      onMouseLeave={handleJoystickUp}
+                      onTouchStart={() => handleJoystickDown('down')}
+                      onTouchEnd={handleJoystickUp}
+                    />
                   </div>
                 </div>
               </div>
               
-              {/* Center CLIPT button */}
-              <div 
-                className="w-[42px] h-[42px] relative cursor-pointer" 
-                onClick={handleClipt}
-              >
+              {/* Center section with CLIPT and menu buttons */}
+              <div className="flex flex-col items-center space-y-2">
+                {/* CLIPT button */}
                 <div 
-                  className="absolute inset-0 w-full h-full rounded-full" 
-                  style={{
-                    border: '1.5px solid transparent',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #6366F1, #8B5CF6) border-box',
-                    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-                    WebkitMaskComposite: 'xor',
-                    maskComposite: 'exclude',
-                  }}
-                ></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex flex-col items-center justify-center">
-                    <Camera size={14} className="text-white mb-0.5" />
-                    <span className="text-[8px] font-medium text-white">CLIPT</span>
+                  className="w-[50px] h-[50px] relative cursor-pointer" 
+                  onClick={handleClipt}
+                >
+                  <div 
+                    className="absolute inset-0 w-full h-full rounded-full" 
+                    style={{
+                      border: '2px solid transparent',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #4F46E5, #9333EA) border-box',
+                      WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+                      WebkitMaskComposite: 'xor',
+                      maskComposite: 'exclude',
+                    }}
+                  ></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <Camera size={16} className="text-white mb-0.5" />
+                      <span className="text-[9px] font-medium text-white">CLIPT</span>
+                    </div>
                   </div>
+                </div>
+                
+                {/* Menu button underneath */}
+                <div 
+                  className="w-[30px] h-[30px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer" 
+                  onClick={handleMenu}
+                >
+                  <Menu size={15} className="text-[#8993bc]" />
                 </div>
               </div>
               
@@ -339,12 +341,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   <UserPlus size={16} className="text-green-500" />
                 </div>
                 
-                {/* Menu button to open navigation */}
+                {/* POST button */}
                 <div 
-                  className="absolute -bottom-[38px] left-1/2 transform -translate-x-1/2 w-[32px] h-[28px] rounded-md bg-[#252838] flex items-center justify-center cursor-pointer"
-                  onClick={handleMenu}
+                  className="absolute -bottom-5 right-0 w-[30px] h-[20px] rounded-sm bg-[#5b258c] text-white text-[8px] font-bold flex items-center justify-center cursor-pointer"
+                  onClick={handlePost}
                 >
-                  <Menu size={14} className="text-[#6a6e85]" />
+                  POST
                 </div>
               </div>
             </div>
