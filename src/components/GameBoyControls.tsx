@@ -26,15 +26,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const joystickRef = useRef<HTMLDivElement>(null);
   const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 });
   const [pulsating, setPulsating] = useState(false);
+  const [glowing, setGlowing] = useState(true);
 
   // CLIPT button animation
   useEffect(() => {
-    const interval = setInterval(() => {
+    const pulseInterval = setInterval(() => {
       setPulsating(true);
       setTimeout(() => setPulsating(false), 1500);
-    }, 5000);
+    }, 4000);
     
-    return () => clearInterval(interval);
+    const glowInterval = setInterval(() => {
+      setGlowing(prev => !prev);
+    }, 2000);
+    
+    return () => {
+      clearInterval(pulseInterval);
+      clearInterval(glowInterval);
+    };
   }, []);
 
   // Handle joystick movement
@@ -249,13 +257,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="bg-[#161621]/95 backdrop-blur border-t border-[#353b5a]/50 pb-3 pt-2 px-2 md:px-16 lg:px-24 w-full">
+      <div className="bg-[#10101e]/95 backdrop-blur border-t border-[#353b5a]/50 pb-8 pt-8 px-2 md:px-16 lg:px-24 w-full">
         <div className="flex justify-between items-center">
           {/* Left joystick */}
-          <div className="relative w-[56px] h-[56px] flex items-center justify-center">
+          <div className="relative w-[70px] h-[70px] flex items-center justify-center">
             <div 
               ref={joystickRef}
-              className="w-[50px] h-[50px] rounded-full border border-[#353b5a]/80 bg-[#1c1e2e]/80 flex items-center justify-center"
+              className="w-[60px] h-[60px] rounded-full border border-[#353b5a]/80 bg-[#1c1e2e]/80 flex items-center justify-center"
               style={{
                 transform: `translate(${joystickPos.x}px, ${joystickPos.y}px)`
               }}
@@ -265,23 +273,34 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           </div>
           
           {/* Center section */}
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-6 -mt-3">
             {/* Animated CLIPT button */}
             <div 
-              className={`relative w-[54px] h-[54px] rounded-full bg-[#3a2f68] border border-[#6c4dc4]/70 flex items-center justify-center cursor-pointer ${pulsating ? 'animate-pulse' : ''}`}
+              className={`relative w-[62px] h-[62px] rounded-full bg-[#3a2f68] border border-[#6c4dc4]/70 flex items-center justify-center cursor-pointer ${pulsating ? 'animate-pulse' : ''}`}
               onClick={handleClipt}
               style={{
-                boxShadow: pulsating ? '0 0 15px 2px rgba(128, 90, 213, 0.8)' : '0 0 8px 1px rgba(128, 90, 213, 0.6)'
+                boxShadow: glowing 
+                  ? '0 0 20px 5px rgba(128, 90, 213, 0.8), 0 0 30px 10px rgba(79, 70, 229, 0.5)' 
+                  : '0 0 15px 3px rgba(128, 90, 213, 0.7)'
               }}
             >
-              <span className="text-white font-bold text-sm">CLIPT</span>
+              <span className="text-white font-bold text-base">CLIPT</span>
               
-              {/* Animated glowing ring */}
+              {/* Animated glowing rings */}
               <div 
-                className={`absolute inset-[-2px] rounded-full border-2 border-transparent ${pulsating ? 'animate-spin-slow' : ''}`}
+                className="absolute inset-[-4px] rounded-full border-2 border-transparent animate-spin-slow"
                 style={{ 
-                  background: 'linear-gradient(45deg, transparent, rgba(147, 51, 234, 0.2), rgba(79, 70, 229, 0.4), transparent)',
+                  background: 'linear-gradient(45deg, transparent, rgba(147, 51, 234, 0.3), rgba(79, 70, 229, 0.6), transparent)',
                   zIndex: -1
+                }} 
+              />
+              
+              <div 
+                className="absolute inset-[-2px] rounded-full border-2 border-transparent animate-reverse-spin"
+                style={{ 
+                  background: 'linear-gradient(135deg, transparent, rgba(79, 70, 229, 0.4), rgba(147, 51, 234, 0.2), transparent)',
+                  zIndex: -1,
+                  animation: 'spin 10s linear infinite reverse'
                 }} 
               />
               
@@ -297,51 +316,51 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             
             {/* Menu button */}
             <div 
-              className="w-[44px] h-[44px] mx-auto rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer"
+              className="w-[46px] h-[46px] mx-auto rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer"
               onClick={handleMenu}
             >
-              <Menu size={16} className="text-white" />
+              <Menu size={20} className="text-white" />
             </div>
           </div>
           
           {/* Right diamond buttons */}
-          <div className="flex flex-col items-center">
-            <div className="relative w-[140px] h-[140px]">
+          <div className="flex flex-col items-center -mt-3">
+            <div className="relative w-[160px] h-[160px]">
               {/* Top button (Heart/Like) */}
               <div 
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[40px] h-[40px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
                 onClick={handleLike}
               >
-                <Heart size={18} className="text-red-500" />
+                <Heart size={20} className="text-red-500" />
               </div>
               
               {/* Left button (Message/Comment) */}
               <div 
-                className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[40px] h-[40px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
                 onClick={handleComment}
               >
-                <MessageCircle size={18} className="text-blue-500" />
+                <MessageCircle size={20} className="text-blue-500" />
               </div>
               
               {/* Right button (Trophy) */}
               <div 
-                className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[40px] h-[40px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
                 onClick={handleTrophy}
               >
-                <Trophy size={18} className="text-yellow-500" />
+                <Trophy size={20} className="text-yellow-500" />
               </div>
               
               {/* Bottom button (UserPlus/Follow) */}
               <div 
-                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[40px] h-[40px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
                 onClick={handleFollow}
               >
-                <UserPlus size={18} className="text-green-500" />
+                <UserPlus size={20} className="text-green-500" />
               </div>
               
-              {/* POST/Camera button below diamond */}
+              {/* POST/Camera button below diamond - hidden in this view based on the image */}
               <div 
-                className="absolute -bottom-14 left-1/2 transform -translate-x-1/2 w-[45px] h-[45px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
+                className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 w-[45px] h-[45px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
                 onClick={() => navigate('/post/new')}
                 style={{
                   boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'

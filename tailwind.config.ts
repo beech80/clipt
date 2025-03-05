@@ -120,6 +120,7 @@ export default {
         glow: "glow 2s ease-in-out infinite",
         "scale-up": "scale-up 0.6s ease-out",
         "spin-slow": "spin 8s linear infinite",
+        "reverse-spin": "spin 10s linear infinite reverse",
         "pulse-gentle": "pulse 3s infinite",
         "ring-glow": "glow 3s ease-in-out infinite",
       },
