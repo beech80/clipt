@@ -1,184 +1,85 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
-import { Post } from "@/types/post";
+import { cn } from "@/lib/utils";
+import GameCategories from "@/components/GameCategories";
 import { useNavigate } from "react-router-dom";
-import MainNav from "@/components/MainNav";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Camera } from "lucide-react";
-
-interface User {
-  id: string;
-  avatar_url: string;
-  username: string;
-  can_clip: boolean;
-}
+import { Post } from '@/types/post';
 
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  
-  const { data: posts, isLoading, error } = useQuery<Post[]>({
+
+  const { data: posts, isLoading, error } = useQuery({
     queryKey: ['posts', 'home'],
     queryFn: async () => {
-      console.log("Fetching home feed...");
-      let query = supabase
+      const { data, error } = await supabase
         .from('posts')
         .select(`
           *,
           profiles:user_id (
-            id,
             username,
-            avatar_url,
-            display_name
-          )
+            avatar_url
+          ),
+          games:game_id (name),
+          likes:likes(count),
+          clip_votes:clip_votes(count)
         `)
-        .eq('is_private', false)
-        .order('created_at', { ascending: false })
-        .limit(20);
+        .eq('post_type', 'home')
+        .order('created_at', { ascending: false });
 
-      const { data, error } = await query;
-      
       if (error) {
         console.error("Error fetching posts:", error);
         throw error;
       }
-      
-      console.log("Fetched posts:", data);
-      return data || [];
+
+      // Ensure each post has a properly formatted id
+      const formattedPosts = data?.map(post => ({
+        ...post,
+        id: post.id.toString(), // Ensure ID is a string
+        likes_count: post.likes?.[0]?.count || 0,
+        clip_votes: post.clip_votes || []
+      })) as Post[];
+
+      console.log("Posts fetched:", formattedPosts);
+      return formattedPosts;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  useEffect(() => {
-    // Track page view
-    if (window.gtag) {
-      window.gtag('event', 'page_view', {
-        page_title: 'Home',
-        page_location: window.location.href,
-      });
-    }
-  }, []);
-
-  if (error) {
-    console.error("Failed to fetch posts:", error);
-    return <div>Failed to load posts...</div>;
-  }
-
   return (
-    <div className="pb-4 max-w-3xl mx-auto bg-[#3d388b]">
-      <MainNav currentPage="home" />
-      
-      {/* Feed content */}
-      <div className="mt-2 space-y-4 px-3 md:px-0">
-        {/* Games you might like */}
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2 px-1 text-white">Squads for You</h3>
-          <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
-            <div 
-              className="flex-shrink-0 w-36 h-48 rounded-lg bg-game-card flex flex-col items-center justify-end p-3 cursor-pointer" 
-              onClick={() => navigate('/game/valorant')}
-            >
-              <img 
-                src="/games/valorant.jpg" 
-                alt="Valorant" 
-                className="w-full h-full object-cover rounded-lg absolute top-0 left-0" 
-                style={{ opacity: 0.7 }}
-              />
-              <div className="relative z-10 text-center">
-                <div className="text-lg font-bold">Valorant</div>
-                <div className="text-xs text-gray-300">2.4k members</div>
-              </div>
-            </div>
-            
-            <div 
-              className="flex-shrink-0 w-36 h-48 rounded-lg bg-game-card flex flex-col items-center justify-end p-3 cursor-pointer"
-              onClick={() => navigate('/game/minecraft')}
-            >
-              <img 
-                src="/games/minecraft.jpg" 
-                alt="Minecraft" 
-                className="w-full h-full object-cover rounded-lg absolute top-0 left-0" 
-                style={{ opacity: 0.7 }}
-              />
-              <div className="relative z-10 text-center">
-                <div className="text-lg font-bold">Minecraft</div>
-                <div className="text-xs text-gray-300">5.1k members</div>
-              </div>
-            </div>
-            
-            <div 
-              className="flex-shrink-0 w-36 h-48 rounded-lg bg-game-card flex flex-col items-center justify-end p-3 cursor-pointer"
-              onClick={() => navigate('/game/league')}
-            >
-              <img 
-                src="/games/league.jpg" 
-                alt="League of Legends" 
-                className="w-full h-full object-cover rounded-lg absolute top-0 left-0" 
-                style={{ opacity: 0.7 }}
-              />
-              <div className="relative z-10 text-center">
-                <div className="text-lg font-bold">League</div>
-                <div className="text-xs text-gray-300">3.7k members</div>
-              </div>
-            </div>
-            
-            <div 
-              className="flex-shrink-0 w-36 h-48 rounded-lg bg-game-card flex flex-col items-center justify-end p-3 cursor-pointer"
-              onClick={() => navigate('/game/fortnite')}
-            >
-              <img 
-                src="/games/fortnite.jpg" 
-                alt="Fortnite" 
-                className="w-full h-full object-cover rounded-lg absolute top-0 left-0" 
-                style={{ opacity: 0.7 }}
-              />
-              <div className="relative z-10 text-center">
-                <div className="text-lg font-bold">Fortnite</div>
-                <div className="text-xs text-gray-300">4.2k members</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <h3 className="text-lg font-semibold mb-2 px-1 text-white">
+    <div className="relative min-h-screen bg-gaming-900">
+      {/* Modern Header with Gradient and Blur */}
+      <div className="w-full py-6 px-4 bg-gradient-to-b from-gaming-800/80 to-transparent backdrop-blur-sm">
+        <h1 className="text-center text-3xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
           Squads Clipts
-        </h3>
-        
-        {isLoading ? (
-          // Loading skeletons for posts
-          Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="rounded-xl bg-card p-4 space-y-3">
-              <div className="flex items-center space-x-2">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <div className="space-y-1 flex-1">
-                  <Skeleton className="h-4 w-[30%]" />
-                  <Skeleton className="h-3 w-[20%]" />
-                </div>
-              </div>
-              <Skeleton className="h-4 w-[90%]" />
-              <Skeleton className="h-4 w-[40%]" />
-              <Skeleton className="h-60 w-full rounded-lg" />
+        </h1>
+      </div>
+
+      <div className="container mx-auto px-4 py-6">
+        {/* Main feed */}
+        <div className="space-y-6 max-w-2xl mx-auto">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
             </div>
-          ))
-        ) : (
-          <>
-            {posts && posts.length > 0 ? (
-              posts.map((post) => (
-                <PostItem key={post.id} post={post} showActions={true} />
-              ))
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-lg">No posts found.</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Follow some users or create your own post!
-                </p>
-              </div>
-            )}
-          </>
-        )}
+          ) : error ? (
+            <div className="text-center py-20 text-red-400">
+              <p>Failed to load posts. Please try again later.</p>
+            </div>
+          ) : posts && posts.length > 0 ? (
+            posts.map((post) => (
+              <PostItem key={post.id} post={post} />
+            ))
+          ) : (
+            <div className="text-center py-20 text-gray-400">
+              <p>No posts available. Create your first post!</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Center Camera Button */}
