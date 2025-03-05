@@ -259,17 +259,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="bg-[#10101e]/95 backdrop-blur border-t border-[#353b5a]/50 pb-5 pt-5 px-2 md:px-16 lg:px-24 w-full">
         <div className="grid grid-cols-3 items-center">
-          {/* Left joystick */}
-          <div className="flex justify-start">
+          {/* Left joystick - moved right and styled like Xbox controller */}
+          <div className="flex justify-start pl-4">
             <div className="relative w-[56px] h-[56px] flex items-center justify-center">
               <div 
                 ref={joystickRef}
-                className="w-[50px] h-[50px] rounded-full border border-[#353b5a]/80 bg-[#1c1e2e]/80 flex items-center justify-center"
+                className="w-[50px] h-[50px] rounded-full border border-[#353b5a]/90 bg-[#232538] flex items-center justify-center shadow-inner"
                 style={{
-                  transform: `translate(${joystickPos.x}px, ${joystickPos.y}px)`
+                  transform: `translate(${joystickPos.x}px, ${joystickPos.y}px)`,
+                  boxShadow: 'inset 0 1px 8px rgba(0, 0, 0, 0.5)'
                 }}
               >
-                {/* Empty joystick - matches screenshot */}
+                {/* Xbox-like joystick inner dot */}
+                <div className="w-[22px] h-[22px] rounded-full bg-[#353b5a]/80"></div>
               </div>
             </div>
           </div>
@@ -326,13 +328,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <Menu size={18} className="text-white" />
               </div>
               
-              {/* POST/Camera button */}
+              {/* POST/Camera button - styled to match hamburger button */}
               <div 
-                className="w-[42px] h-[42px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
+                className="w-[42px] h-[42px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
                 onClick={() => navigate('/post/new')}
-                style={{
-                  boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
-                }}
               >
                 <Camera size={18} className="text-white" />
               </div>
