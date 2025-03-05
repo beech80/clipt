@@ -156,20 +156,20 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[120px] z-50">
+    <div className="fixed bottom-0 left-0 right-0 h-[130px] z-50">
       <div className="max-w-screen-md mx-auto relative h-full">
         {/* GameBoy UI background with border */}
-        <div className="absolute inset-x-0 bottom-0 h-[120px] bg-[#121328] shadow-lg pointer-events-auto">
+        <div className="absolute inset-x-0 bottom-0 h-[130px] bg-[#121328] shadow-lg pointer-events-auto">
           {/* Top border line with glow */}
           <div className="h-[1px] w-full bg-gradient-to-r from-blue-500/30 via-purple-500/40 to-blue-500/30" />
           
-          <div className="flex justify-between items-center h-full">
-            {/* Left side with joystick and CLIPT button */}
-            <div className="flex flex-col items-center ml-4">
+          <div className="flex justify-between items-center h-full px-6">
+            {/* Left side with joystick */}
+            <div className="flex items-center justify-center">
               {/* Joystick with enhanced design */}
-              <div className="relative w-[48px] h-[48px] rounded-full bg-[#0c0e1b]/90 flex items-center justify-center shadow-inner border border-[#222444]">
+              <div className="relative w-[60px] h-[60px] rounded-full bg-[#0c0e1b]/90 flex items-center justify-center shadow-inner border border-[#222444]">
                 <div 
-                  className={`w-[40px] h-[40px] rounded-full bg-[#1c1e2e] flex items-center justify-center transition-transform duration-100 ${
+                  className={`w-[50px] h-[50px] rounded-full bg-[#1c1e2e] flex items-center justify-center transition-transform duration-100 ${
                     joystickActive && joystickDirection === 'up' ? 'translate-y-[-2px]' : 
                     joystickActive && joystickDirection === 'down' ? 'translate-y-[2px]' : ''
                   }`}
@@ -198,10 +198,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   </div>
                 </div>
               </div>
-              
-              {/* CLIPT button */}
+            </div>
+            
+            {/* Middle section with CLIPT button and menu */}
+            <div className="flex flex-col items-center justify-center">
+              {/* CLIPT button with gradient outline */}
               <div 
-                className="w-[48px] h-[48px] relative cursor-pointer mt-3" 
+                className="w-[50px] h-[50px] relative cursor-pointer mb-3" 
                 onClick={handleClipt}
               >
                 <div 
@@ -216,14 +219,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   }}
                 ></div>
                 <div className="absolute inset-0 flex items-center justify-center bg-[#121328] rounded-full m-[3px]">
-                  <Camera size={18} className="text-white" />
+                  <Camera size={20} className="text-white" />
                 </div>
                 <span className="absolute -bottom-5 text-[10px] font-medium text-white">CLIPT</span>
               </div>
-            </div>
-            
-            {/* Menu button in center */}
-            <div className="z-10 absolute left-1/2 transform -translate-x-1/2 top-[65%] -translate-y-1/2">
+              
+              {/* Menu button */}
               <div 
                 className="w-[40px] h-[40px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer" 
                 onClick={handleMenu}
@@ -232,11 +233,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
-            {/* Right control pad with buttons in diamond layout with POST in center */}
-            <div className="relative w-[100px] h-[100px] mr-4">
+            {/* Right control pad with buttons in diamond layout and POST below */}
+            <div className="relative w-[120px] h-[120px]">
               {/* Top button (Heart/Like) */}
               <div 
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[48px] h-[48px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[42px] h-[42px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                 onClick={handleLike}
               >
                 <Heart size={20} className="text-red-500" />
@@ -244,7 +245,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               
               {/* Left button (Message/Comment) */}
               <div 
-                className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[48px] h-[48px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[42px] h-[42px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                 onClick={handleComment}
               >
                 <MessageCircle size={20} className="text-blue-500" />
@@ -252,7 +253,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               
               {/* Right button (Trophy) */}
               <div 
-                className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[48px] h-[48px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[42px] h-[42px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                 onClick={handleTrophy}
               >
                 <Trophy size={20} className="text-yellow-500" />
@@ -260,22 +261,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               
               {/* Bottom button (UserPlus/Follow) */}
               <div 
-                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[48px] h-[48px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[42px] h-[42px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                 onClick={handleFollow}
               >
                 <UserPlus size={20} className="text-green-500" />
               </div>
               
-              {/* POST button in center */}
+              {/* POST button below diamond */}
               <div 
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[60px] h-[60px] rounded-full bg-[#602985] border-[3px] border-purple-500/70 flex items-center justify-center cursor-pointer shadow-xl" 
+                className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 w-[50px] h-[28px] rounded-sm bg-[#602985] border border-purple-500/70 flex items-center justify-center cursor-pointer shadow-md" 
                 onClick={() => navigate('/post/new')}
                 style={{
-                  boxShadow: '0 0 15px rgba(128, 90, 213, 0.4)'
+                  boxShadow: '0 0 8px rgba(128, 90, 213, 0.4)'
                 }}
               >
-                <Camera size={22} className="text-white mb-4" />
-                <div className="absolute -bottom-6 text-[14px] font-bold text-white bg-[#602985] px-3 py-0.5 rounded-sm">POST</div>
+                <span className="text-[14px] font-bold text-white">POST</span>
               </div>
             </div>
           </div>
