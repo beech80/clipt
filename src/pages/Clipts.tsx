@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/ui/back-button";
-import { Camera } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import PostItem from '@/components/PostItem';
@@ -65,18 +64,6 @@ const Clipts = () => {
             ))}
           </div>
         )}
-      </div>
-
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-24 sm:bottom-28">
-        <button 
-          onClick={() => navigate('/post/new')}
-          className="clip-button active:scale-95 transition-transform"
-          aria-label="Create Clipt"
-          style={{ width: '80px', height: '60px' }}
-        >
-          <Camera className="clip-button-icon" />
-          <span className="clip-button-text">Clipt</span>
-        </button>
       </div>
 
     </div>
