@@ -52,7 +52,6 @@ function App() {
     });
     
     setCurrentPostId(newPostId);
-    the look is almost there 
     // Clear the cache when navigation occurs
     // This forces components to re-fetch fresh data
     if (location.pathname.startsWith('/profile/') || 
