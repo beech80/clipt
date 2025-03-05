@@ -162,6 +162,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   return (
     <div className="fixed bottom-0 left-0 right-0 h-[80px] z-50">
       <div className="max-w-screen-md mx-auto relative h-full">
+        {/* GameBoy UI background with border */}
         <div className="absolute inset-x-0 bottom-0 h-[80px] bg-[#121328] shadow-lg pointer-events-auto">
           {/* Top border line with glow */}
           <div className="h-[1px] w-full bg-gradient-to-r from-blue-500/30 via-purple-500/40 to-blue-500/30" />
@@ -200,27 +201,38 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
-            {/* Center CLIPT button with gradient outline matching the image */}
-            <div 
-              className="w-[54px] h-[54px] relative cursor-pointer" 
-              onClick={handleClipt}
-            >
+            {/* Middle section with CLIPT button above menu button */}
+            <div className="flex flex-col items-center gap-1">
+              {/* CLIPT button with gradient outline */}
               <div 
-                className="absolute inset-0 w-full h-full rounded-full" 
-                style={{
-                  border: '2px solid transparent',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #4F46E5, #9333EA, #EC4899) border-box',
-                  WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-                  WebkitMaskComposite: 'xor',
-                  maskComposite: 'exclude',
-                }}
-              ></div>
-              <div className="absolute inset-0 flex items-center justify-center bg-[#121328] rounded-full m-[3px]">
-                <div className="flex flex-col items-center justify-center">
-                  <Camera size={18} className="text-white mb-0.5" />
-                  <span className="text-[10px] font-medium text-white">CLIPT</span>
+                className="w-[48px] h-[48px] relative cursor-pointer" 
+                onClick={handleClipt}
+              >
+                <div 
+                  className="absolute inset-0 w-full h-full rounded-full" 
+                  style={{
+                    border: '2px solid transparent',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #4F46E5, #9333EA, #EC4899) border-box',
+                    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+                    WebkitMaskComposite: 'xor',
+                    maskComposite: 'exclude',
+                  }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center bg-[#121328] rounded-full m-[3px]">
+                  <div className="flex flex-col items-center justify-center">
+                    <Camera size={16} className="text-white mb-0.5" />
+                    <span className="text-[9px] font-medium text-white">CLIPT</span>
+                  </div>
                 </div>
+              </div>
+              
+              {/* Menu button underneath */}
+              <div 
+                className="w-[30px] h-[30px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer" 
+                onClick={handleMenu}
+              >
+                <Menu size={14} className="text-[#8993bc]" />
               </div>
             </div>
             
@@ -354,14 +366,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           </div>
         </div>
       )}
-      
-      {/* Menu button underneath */}
-      <div 
-        className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[30px] h-[30px] rounded-full bg-[#252838] flex items-center justify-center cursor-pointer z-[51]" 
-        onClick={handleMenu}
-      >
-        <Menu size={15} className="text-[#8993bc]" />
-      </div>
     </div>
   );
 };
