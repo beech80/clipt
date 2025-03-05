@@ -156,16 +156,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[140px] z-50">
+    <div className="fixed bottom-0 left-0 right-0 h-[150px] z-50">
       <div className="max-w-none mx-auto relative h-full">
         {/* GameBoy UI background with border */}
-        <div className="absolute inset-x-0 bottom-0 h-[140px] bg-[#121328] shadow-lg pointer-events-auto">
+        <div className="absolute inset-x-0 bottom-0 h-[150px] bg-[#121328] shadow-lg pointer-events-auto">
           {/* Top border line with glow */}
           <div className="h-[1px] w-full bg-gradient-to-r from-blue-500/30 via-purple-500/40 to-blue-500/30" />
           
-          <div className="flex justify-between items-center h-full px-8 md:px-16 lg:px-24">
+          <div className="flex justify-between items-center h-full px-8 md:px-16 lg:px-24 pb-4">
             {/* Left side with joystick */}
-            <div className="flex items-center justify-center ml-2 md:ml-8">
+            <div className="flex items-center justify-center ml-2 md:ml-8 mb-4">
               {/* Joystick with enhanced design */}
               <div className="relative w-[60px] h-[60px] rounded-full bg-[#0c0e1b]/90 flex items-center justify-center shadow-inner border border-[#222444]">
                 <div 
@@ -201,7 +201,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             </div>
             
             {/* Middle section with CLIPT button and menu */}
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center mb-4">
               {/* CLIPT button with gradient outline */}
               <div 
                 className="w-[52px] h-[52px] relative cursor-pointer mb-3" 
@@ -233,7 +233,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             </div>
             
             {/* Right control pad with buttons in diamond layout and POST below */}
-            <div className="relative w-[120px] h-[120px] mr-2 md:mr-8">
+            <div className="relative w-[120px] h-[120px] mr-2 md:mr-8 mb-2">
               {/* Diamond layout container */}
               <div className="relative w-full h-full">
                 {/* Top button (Heart/Like) */}
@@ -270,7 +270,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 
                 {/* POST button below diamond */}
                 <div 
-                  className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 w-[48px] h-[48px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
+                  className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-[48px] h-[48px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
                   onClick={() => navigate('/post/new')}
                   style={{
                     boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
