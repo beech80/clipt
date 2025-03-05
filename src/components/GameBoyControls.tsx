@@ -258,22 +258,24 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="bg-[#10101e]/95 backdrop-blur border-t border-[#353b5a]/50 pb-5 pt-5 px-2 md:px-16 lg:px-24 w-full">
-        <div className="flex justify-between items-center">
+        <div className="grid grid-cols-3 items-center">
           {/* Left joystick */}
-          <div className="relative w-[56px] h-[56px] flex items-center justify-center">
-            <div 
-              ref={joystickRef}
-              className="w-[50px] h-[50px] rounded-full border border-[#353b5a]/80 bg-[#1c1e2e]/80 flex items-center justify-center"
-              style={{
-                transform: `translate(${joystickPos.x}px, ${joystickPos.y}px)`
-              }}
-            >
-              {/* Empty joystick - matches screenshot */}
+          <div className="flex justify-start">
+            <div className="relative w-[56px] h-[56px] flex items-center justify-center">
+              <div 
+                ref={joystickRef}
+                className="w-[50px] h-[50px] rounded-full border border-[#353b5a]/80 bg-[#1c1e2e]/80 flex items-center justify-center"
+                style={{
+                  transform: `translate(${joystickPos.x}px, ${joystickPos.y}px)`
+                }}
+              >
+                {/* Empty joystick - matches screenshot */}
+              </div>
             </div>
           </div>
           
-          {/* Center section - moved to the right and adjusted spacing */}
-          <div className="flex flex-col items-center space-y-4 ml-8">
+          {/* Center section - perfectly centered */}
+          <div className="flex flex-col items-center space-y-4">
             {/* Animated CLIPT button on top like Xbox button */}
             <div 
               className={`relative w-[58px] h-[58px] rounded-full bg-[#3a2f68] border border-[#6c4dc4]/70 flex items-center justify-center cursor-pointer ${pulsating ? 'animate-pulse' : ''}`}
@@ -338,38 +340,40 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           </div>
           
           {/* Right diamond buttons */}
-          <div className="flex flex-col items-center -mt-1">
-            <div className="relative w-[120px] h-[120px]">
-              {/* Top button (Heart/Like) */}
-              <div 
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
-                onClick={handleLike}
-              >
-                <Heart size={18} className="text-red-500" />
-              </div>
-              
-              {/* Left button (Message/Comment) */}
-              <div 
-                className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
-                onClick={handleComment}
-              >
-                <MessageCircle size={18} className="text-blue-500" />
-              </div>
-              
-              {/* Right button (Trophy) */}
-              <div 
-                className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
-                onClick={handleTrophy}
-              >
-                <Trophy size={18} className="text-yellow-500" />
-              </div>
-              
-              {/* Bottom button (UserPlus/Follow) */}
-              <div 
-                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
-                onClick={handleFollow}
-              >
-                <UserPlus size={18} className="text-green-500" />
+          <div className="flex justify-end">
+            <div className="flex flex-col items-center -mt-1">
+              <div className="relative w-[120px] h-[120px]">
+                {/* Top button (Heart/Like) */}
+                <div 
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                  onClick={handleLike}
+                >
+                  <Heart size={18} className="text-red-500" />
+                </div>
+                
+                {/* Left button (Message/Comment) */}
+                <div 
+                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                  onClick={handleComment}
+                >
+                  <MessageCircle size={18} className="text-blue-500" />
+                </div>
+                
+                {/* Right button (Trophy) */}
+                <div 
+                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                  onClick={handleTrophy}
+                >
+                  <Trophy size={18} className="text-yellow-500" />
+                </div>
+                
+                {/* Bottom button (UserPlus/Follow) */}
+                <div 
+                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                  onClick={handleFollow}
+                >
+                  <UserPlus size={18} className="text-green-500" />
+                </div>
               </div>
             </div>
           </div>
