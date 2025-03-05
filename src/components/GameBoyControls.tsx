@@ -164,128 +164,117 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[160px] z-50">
-      <div className="max-w-none mx-auto relative h-full">
-        {/* GameBoy UI background with border */}
-        <div className="absolute inset-x-0 bottom-0 h-[160px] bg-[#121328] shadow-lg pointer-events-auto">
-          {/* Top border line with glow */}
-          <div className="h-[1px] w-full bg-gradient-to-r from-blue-500/30 via-purple-500/40 to-blue-500/30" />
-          
-          <div className="flex justify-between items-center h-full px-4 md:px-16 lg:px-24 pb-5">
-            {/* Left side with joystick */}
-            <div className="flex items-center justify-center ml-2 md:ml-8 mb-6">
-              {/* Joystick with enhanced design */}
-              <div className="relative w-[55px] h-[55px] rounded-full bg-[#0c0e1b]/90 flex items-center justify-center shadow-inner border border-[#222444]">
+    <div className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="bg-[#161621]/95 backdrop-blur border-t border-[#353b5a]/50 pb-6 pt-3 px-4 md:px-16 lg:px-24 w-full">
+        <div className="flex justify-between items-center">
+          {/* Left joystick */}
+          <div className="relative w-[55px] h-[55px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center shadow-inner ml-2 md:ml-8 mb-3">
+            {/* Joystick visual */}
+            <div 
+              className={`w-[45px] h-[45px] rounded-full bg-[#1c1e2e] border border-[#353b5a] flex items-center justify-center transition-transform duration-100 ${
+                joystickActive && joystickDirection === 'up' ? 'translate-y-[-2px]' : 
+                joystickActive && joystickDirection === 'down' ? 'translate-y-[2px]' : ''
+              }`}
+              style={{ 
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8)'
+              }}
+            >
+              {/* Joystick touch areas */}
+              <div className="absolute inset-0">
                 <div 
-                  className={`w-[45px] h-[45px] rounded-full bg-[#1c1e2e] flex items-center justify-center transition-transform duration-100 ${
-                    joystickActive && joystickDirection === 'up' ? 'translate-y-[-2px]' : 
-                    joystickActive && joystickDirection === 'down' ? 'translate-y-[2px]' : ''
-                  }`}
-                  style={{ 
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8)'
-                  }}
-                >
-                  {/* Joystick touch areas */}
-                  <div className="absolute inset-0">
-                    <div 
-                      className="absolute top-0 left-0 right-0 h-1/2 cursor-pointer"
-                      onMouseDown={() => handleJoystickDown('up')}
-                      onMouseUp={handleJoystickUp}
-                      onMouseLeave={handleJoystickUp}
-                      onTouchStart={() => handleJoystickDown('up')}
-                      onTouchEnd={handleJoystickUp}
-                    />
-                    <div 
-                      className="absolute bottom-0 left-0 right-0 h-1/2 cursor-pointer"
-                      onMouseDown={() => handleJoystickDown('down')}
-                      onMouseUp={handleJoystickUp}
-                      onMouseLeave={handleJoystickUp}
-                      onTouchStart={() => handleJoystickDown('down')}
-                      onTouchEnd={handleJoystickUp}
-                    />
-                  </div>
-                </div>
+                  className="absolute top-0 left-0 right-0 h-1/2 cursor-pointer"
+                  onMouseDown={() => handleJoystickDown('up')}
+                  onMouseUp={handleJoystickUp}
+                  onMouseLeave={handleJoystickUp}
+                  onTouchStart={() => handleJoystickDown('up')}
+                  onTouchEnd={handleJoystickUp}
+                />
+                <div 
+                  className="absolute bottom-0 left-0 right-0 h-1/2 cursor-pointer"
+                  onMouseDown={() => handleJoystickDown('down')}
+                  onMouseUp={handleJoystickUp}
+                  onMouseLeave={handleJoystickUp}
+                  onTouchStart={() => handleJoystickDown('down')}
+                  onTouchEnd={handleJoystickUp}
+                />
               </div>
             </div>
+          </div>
+          
+          {/* Center CLIPT button and menu */}
+          <div className="flex flex-col items-center space-y-3 mb-3">
+            {/* CLIPT button */}
+            <div 
+              className="w-[54px] h-[54px] relative cursor-pointer"
+              onClick={handleClipt}
+            >
+              <div className="absolute inset-0 rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center">
+                <span className="text-white font-bold text-sm">CLIPT</span>
+              </div>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 opacity-20" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-50" 
+                   style={{ 
+                     backgroundImage: 'linear-gradient(to right, #4f46e5, #8b5cf6)',
+                     mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                     maskComposite: 'exclude',
+                   }} 
+              />
+            </div>
             
-            {/* Middle section with CLIPT button and menu */}
-            <div className="flex flex-col items-center justify-center mb-6">
-              {/* CLIPT button with gradient outline */}
+            {/* Menu button */}
+            <div 
+              className="w-[44px] h-[44px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer"
+              onClick={handleMenu}
+            >
+              <Menu size={20} className="text-white" />
+            </div>
+          </div>
+          
+          {/* Right control pad with buttons in diamond layout and POST below */}
+          <div className="relative w-[140px] h-[140px] mr-2 md:mr-8 mb-3">
+            {/* Diamond layout container */}
+            <div className="relative w-full h-full">
+              {/* Top button (Heart/Like) */}
               <div 
-                className="w-[48px] h-[48px] relative cursor-pointer mb-4" 
-                onClick={handleClipt}
+                className="absolute top-1 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                onClick={handleLike}
               >
-                <div 
-                  className="absolute inset-0 w-full h-full rounded-full" 
-                  style={{
-                    border: '2px solid transparent',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #4F46E5, #9333EA, #EC4899) border-box',
-                    WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-                    WebkitMaskComposite: 'xor',
-                    maskComposite: 'exclude',
-                  }}
-                ></div>
-                <div className="absolute inset-0 flex items-center justify-center bg-[#121328] rounded-full m-[3px]">
-                  <span className="text-[12px] font-bold text-white">CLIPT</span>
-                </div>
+                <Heart size={17} className="text-red-500" />
               </div>
               
-              {/* Menu button */}
+              {/* Left button (Message/Comment) */}
               <div 
-                className="w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer" 
-                onClick={handleMenu}
+                className="absolute top-1/2 left-1 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                onClick={handleComment}
               >
-                <Menu size={16} className="text-[#8993bc]" />
+                <MessageCircle size={17} className="text-blue-500" />
               </div>
-            </div>
-            
-            {/* Right control pad with buttons in diamond layout and POST below */}
-            <div className="relative w-[120px] h-[120px] mr-2 md:mr-8 mb-3">
-              {/* Diamond layout container */}
-              <div className="relative w-full h-full">
-                {/* Top button (Heart/Like) */}
-                <div 
-                  className="absolute top-2 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
-                  onClick={handleLike}
-                >
-                  <Heart size={17} className="text-red-500" />
-                </div>
-                
-                {/* Left button (Message/Comment) */}
-                <div 
-                  className="absolute top-1/2 left-4 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
-                  onClick={handleComment}
-                >
-                  <MessageCircle size={17} className="text-blue-500" />
-                </div>
-                
-                {/* Right button (Trophy) */}
-                <div 
-                  className="absolute top-1/2 right-4 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
-                  onClick={handleTrophy}
-                >
-                  <Trophy size={17} className="text-yellow-500" />
-                </div>
-                
-                {/* Bottom button (UserPlus/Follow) */}
-                <div 
-                  className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
-                  onClick={handleFollow}
-                >
-                  <UserPlus size={17} className="text-green-500" />
-                </div>
-                
-                {/* POST/Camera button below diamond */}
-                <div 
-                  className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 w-[45px] h-[45px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
-                  onClick={() => navigate('/post/new')}
-                  style={{
-                    boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
-                  }}
-                >
-                  <Camera size={20} className="text-white" />
-                </div>
+              
+              {/* Right button (Trophy) */}
+              <div 
+                className="absolute top-1/2 right-1 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                onClick={handleTrophy}
+              >
+                <Trophy size={17} className="text-yellow-500" />
+              </div>
+              
+              {/* Bottom button (UserPlus/Follow) */}
+              <div 
+                className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                onClick={handleFollow}
+              >
+                <UserPlus size={17} className="text-green-500" />
+              </div>
+              
+              {/* POST/Camera button below diamond */}
+              <div 
+                className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 w-[45px] h-[45px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
+                onClick={() => navigate('/post/new')}
+                style={{
+                  boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
+                }}
+              >
+                <Camera size={20} className="text-white" />
               </div>
             </div>
           </div>
