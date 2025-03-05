@@ -156,20 +156,20 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[150px] z-50">
-      <div className="max-w-screen-md mx-auto relative h-full">
+    <div className="fixed bottom-0 left-0 right-0 h-[140px] z-50">
+      <div className="max-w-none mx-auto relative h-full">
         {/* GameBoy UI background with border */}
-        <div className="absolute inset-x-0 bottom-0 h-[150px] bg-[#121328] shadow-lg pointer-events-auto">
+        <div className="absolute inset-x-0 bottom-0 h-[140px] bg-[#121328] shadow-lg pointer-events-auto">
           {/* Top border line with glow */}
           <div className="h-[1px] w-full bg-gradient-to-r from-blue-500/30 via-purple-500/40 to-blue-500/30" />
           
-          <div className="flex justify-between items-center h-full px-10">
+          <div className="flex justify-between items-center h-full px-8 md:px-16 lg:px-24">
             {/* Left side with joystick */}
-            <div className="flex items-center justify-center ml-6">
+            <div className="flex items-center justify-center ml-2 md:ml-8">
               {/* Joystick with enhanced design */}
-              <div className="relative w-[70px] h-[70px] rounded-full bg-[#0c0e1b]/90 flex items-center justify-center shadow-inner border border-[#222444]">
+              <div className="relative w-[60px] h-[60px] rounded-full bg-[#0c0e1b]/90 flex items-center justify-center shadow-inner border border-[#222444]">
                 <div 
-                  className={`w-[60px] h-[60px] rounded-full bg-[#1c1e2e] flex items-center justify-center transition-transform duration-100 ${
+                  className={`w-[50px] h-[50px] rounded-full bg-[#1c1e2e] flex items-center justify-center transition-transform duration-100 ${
                     joystickActive && joystickDirection === 'up' ? 'translate-y-[-2px]' : 
                     joystickActive && joystickDirection === 'down' ? 'translate-y-[2px]' : ''
                   }`}
@@ -204,7 +204,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <div className="flex flex-col items-center justify-center">
               {/* CLIPT button with gradient outline */}
               <div 
-                className="w-[55px] h-[55px] relative cursor-pointer mb-4" 
+                className="w-[52px] h-[52px] relative cursor-pointer mb-3" 
                 onClick={handleClipt}
               >
                 <div 
@@ -221,61 +221,63 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <div className="absolute inset-0 flex items-center justify-center bg-[#121328] rounded-full m-[3px]">
                   <span className="text-[14px] font-bold text-white">CLIPT</span>
                 </div>
-                <span className="absolute -bottom-5 text-[10px] font-medium text-white opacity-0 md:opacity-100">CLIPT</span>
               </div>
               
               {/* Menu button */}
               <div 
-                className="w-[45px] h-[45px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer" 
+                className="w-[42px] h-[42px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer" 
                 onClick={handleMenu}
               >
-                <Menu size={20} className="text-[#8993bc]" />
+                <Menu size={18} className="text-[#8993bc]" />
               </div>
             </div>
             
             {/* Right control pad with buttons in diamond layout and POST below */}
-            <div className="relative w-[140px] h-[140px] mr-6">
-              {/* Top button (Heart/Like) */}
-              <div 
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[48px] h-[48px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
-                onClick={handleLike}
-              >
-                <Heart size={22} className="text-red-500" />
-              </div>
-              
-              {/* Left button (Message/Comment) */}
-              <div 
-                className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[48px] h-[48px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
-                onClick={handleComment}
-              >
-                <MessageCircle size={22} className="text-blue-500" />
-              </div>
-              
-              {/* Right button (Trophy) */}
-              <div 
-                className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[48px] h-[48px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
-                onClick={handleTrophy}
-              >
-                <Trophy size={22} className="text-yellow-500" />
-              </div>
-              
-              {/* Bottom button (UserPlus/Follow) */}
-              <div 
-                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[48px] h-[48px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
-                onClick={handleFollow}
-              >
-                <UserPlus size={22} className="text-green-500" />
-              </div>
-              
-              {/* POST button below diamond */}
-              <div 
-                className="absolute -bottom-18 left-1/2 transform -translate-x-1/2 w-[60px] h-[32px] rounded-sm bg-[#602985] border border-purple-500/70 flex items-center justify-center cursor-pointer shadow-xl" 
-                onClick={() => navigate('/post/new')}
-                style={{
-                  boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
-                }}
-              >
-                <span className="text-[16px] font-bold text-white">POST</span>
+            <div className="relative w-[120px] h-[120px] mr-2 md:mr-8">
+              {/* Diamond layout container */}
+              <div className="relative w-full h-full">
+                {/* Top button (Heart/Like) */}
+                <div 
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[44px] h-[44px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  onClick={handleLike}
+                >
+                  <Heart size={20} className="text-red-500" />
+                </div>
+                
+                {/* Left button (Message/Comment) */}
+                <div 
+                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[44px] h-[44px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  onClick={handleComment}
+                >
+                  <MessageCircle size={20} className="text-blue-500" />
+                </div>
+                
+                {/* Right button (Trophy) */}
+                <div 
+                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[44px] h-[44px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  onClick={handleTrophy}
+                >
+                  <Trophy size={20} className="text-yellow-500" />
+                </div>
+                
+                {/* Bottom button (UserPlus/Follow) */}
+                <div 
+                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[44px] h-[44px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  onClick={handleFollow}
+                >
+                  <UserPlus size={20} className="text-green-500" />
+                </div>
+                
+                {/* POST button below diamond */}
+                <div 
+                  className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 w-[48px] h-[48px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
+                  onClick={() => navigate('/post/new')}
+                  style={{
+                    boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
+                  }}
+                >
+                  <span className="text-[14px] font-bold text-white">POST</span>
+                </div>
               </div>
             </div>
           </div>
