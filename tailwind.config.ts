@@ -119,7 +119,7 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         glow: "glow 2s ease-in-out infinite",
         "scale-up": "scale-up 0.6s ease-out",
-        "spin-slow": "spin 5s linear infinite",
+        "spin-slow": "spin 8s linear infinite",
         "pulse-gentle": "pulse 3s infinite",
         "ring-glow": "glow 3s ease-in-out infinite",
       },
