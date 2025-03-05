@@ -3,30 +3,45 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
-import { MessagesProvider } from '@/contexts/MessagesContext';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { CommentsProvider } from '@/contexts/CommentContext';
-import { routes } from '@/config/routes';
-import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring';
-import { useQueryClient } from '@tanstack/react-query';
-import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import GameBoyControls from '@/components/GameBoyControls';
-import ScrollToTop from './components/common/ScrollToTop';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt';
+import ScrollToTop from '@/components/ScrollToTop';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { MessagesProvider } from '@/contexts/MessagesContext';
+import { CommentsProvider } from '@/contexts/CommentsContext';
+import { usePerformanceMonitoring } from '@/lib/performance';
+import { useQueryClient } from '@tanstack/react-query';
 import '@/index.css';
 import '@/styles/animations.css';
+
+const Home = React.lazy(() => import('./pages/Home'));
+const Auth = React.lazy(() => import('./pages/Auth'));
+const NewPost = React.lazy(() => import('./pages/NewPost'));
+const PostPage = React.lazy(() => import('./pages/PostPage'));
+const Game = React.lazy(() => import('./pages/Game'));
+const TopGames = React.lazy(() => import('./pages/TopGames'));
+const Clipts = React.lazy(() => import('./pages/Clipts'));
+const TopClipts = React.lazy(() => import('./pages/TopClipts'));
+const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+const Discovery = React.lazy(() => import('./pages/Discovery'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
   
   return (
     <Routes>
-      {routes.map((route) => (
-        <Route
-          key={route.path}
-          path={route.path}
-          element={route.element}
-        />
-      ))}
+      <Route path="/" element={<Home />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/post/new" element={<NewPost />} />
+      <Route path="/post/:id" element={<PostPage />} />
+      <Route path="/game/:id" element={<Game />} />
+      <Route path="/games" element={<TopGames />} />
+      <Route path="/clipts" element={<Clipts />} />
+      <Route path="/top-clipts" element={<TopClipts />} />
+      <Route path="/profile/:id?" element={<UserProfile />} />
+      <Route path="/discovery" element={<Discovery />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

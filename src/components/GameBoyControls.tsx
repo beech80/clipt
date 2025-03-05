@@ -252,7 +252,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   const handleClipt = () => {
-    navigate('/post/new');
+    navigate('/clipts');
   };
 
   const handleMenu = () => {
