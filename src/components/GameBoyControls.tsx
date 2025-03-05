@@ -233,50 +233,50 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             </div>
             
             {/* Right control pad with buttons in diamond layout and POST below */}
-            <div className="relative w-[120px] h-[120px] mr-2 md:mr-8 mb-2">
+            <div className="relative w-[150px] h-[150px] mr-2 md:mr-8 mb-2">
               {/* Diamond layout container */}
               <div className="relative w-full h-full">
                 {/* Top button (Heart/Like) */}
                 <div 
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[44px] h-[44px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  className="absolute top-2 left-1/2 transform -translate-x-1/2 w-[40px] h-[40px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                   onClick={handleLike}
                 >
-                  <Heart size={20} className="text-red-500" />
+                  <Heart size={18} className="text-red-500" />
                 </div>
                 
                 {/* Left button (Message/Comment) */}
                 <div 
-                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[44px] h-[44px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  className="absolute top-1/2 left-2 transform -translate-y-1/2 w-[40px] h-[40px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                   onClick={handleComment}
                 >
-                  <MessageCircle size={20} className="text-blue-500" />
+                  <MessageCircle size={18} className="text-blue-500" />
                 </div>
                 
                 {/* Right button (Trophy) */}
                 <div 
-                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[44px] h-[44px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  className="absolute top-1/2 right-2 transform -translate-y-1/2 w-[40px] h-[40px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                   onClick={handleTrophy}
                 >
-                  <Trophy size={20} className="text-yellow-500" />
+                  <Trophy size={18} className="text-yellow-500" />
                 </div>
                 
                 {/* Bottom button (UserPlus/Follow) */}
                 <div 
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[44px] h-[44px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
+                  className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-[40px] h-[40px] rounded-full bg-[#252838] border border-[#353b5a] flex items-center justify-center cursor-pointer shadow-md" 
                   onClick={handleFollow}
                 >
-                  <UserPlus size={20} className="text-green-500" />
+                  <UserPlus size={18} className="text-green-500" />
                 </div>
                 
                 {/* POST button below diamond */}
                 <div 
-                  className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-[48px] h-[48px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
+                  className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-[45px] h-[45px] rounded-full bg-[#602985] border-2 border-purple-500/70 flex items-center justify-center cursor-pointer shadow-lg" 
                   onClick={() => navigate('/post/new')}
                   style={{
                     boxShadow: '0 0 10px rgba(128, 90, 213, 0.6)'
                   }}
                 >
-                  <span className="text-[14px] font-bold text-white">POST</span>
+                  <span className="text-[13px] font-bold text-white">POST</span>
                 </div>
               </div>
             </div>
