@@ -35,6 +35,7 @@ const Admin = React.lazy(() => import('./pages/Admin'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
 const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
+const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -62,6 +63,7 @@ function AppContent() {
       <Route path="/settings" element={<Settings />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/game-streamers/:gameId" element={<GameStreamers />} />
+      <Route path="/retro-search" element={<RetroSearchPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
