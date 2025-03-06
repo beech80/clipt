@@ -227,38 +227,24 @@ class IGDBService {
   private formatImageUrl(url: string): string {
     if (!url) return '';
     
-    console.log('Original IGDB image URL:', url);
-    
     // Ensure HTTPS and convert to large image format
     let formattedUrl = url;
     
-    // Fix protocol-relative URLs
-    if (formattedUrl.startsWith('//')) {
-      formattedUrl = 'https:' + formattedUrl;
+    // Make sure we're using the right domain
+    if (formattedUrl.includes('//images.igdb.com')) {
+      // Already has the correct domain
+    } else {
+      // Fix the domain if needed
+      formattedUrl = formattedUrl.replace('//localhost', '//images.igdb.com');
     }
+    
+    // Replace image size
+    formattedUrl = formattedUrl.replace('t_thumb', 't_cover_big');
     
     // Add HTTPS protocol if missing
     if (!formattedUrl.startsWith('http')) {
-      formattedUrl = 'https://' + formattedUrl;
+      formattedUrl = 'https:' + formattedUrl;
     }
-    
-    // Make sure we're using the right domain
-    if (!formattedUrl.includes('//images.igdb.com')) {
-      // Fix the domain if needed
-      formattedUrl = formattedUrl.replace(/\/\/[^\/]+/, '//images.igdb.com');
-    }
-    
-    // Replace image size for better quality
-    formattedUrl = formattedUrl.replace('t_thumb', 't_cover_big');
-    formattedUrl = formattedUrl.replace('t_micro', 't_cover_big');
-    
-    // Add cache-busting parameter
-    const cacheBuster = Date.now();
-    formattedUrl = formattedUrl.includes('?') 
-      ? `${formattedUrl}&t=${cacheBuster}` 
-      : `${formattedUrl}?t=${cacheBuster}`;
-    
-    console.log('Formatted IGDB image URL:', formattedUrl);
     
     return formattedUrl;
   }
