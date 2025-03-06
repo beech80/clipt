@@ -86,15 +86,22 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
   if (isLoading) {
     return <div className="p-4 text-center">Loading achievements...</div>;
   }
+  
+  if (error) {
+    console.error('Achievement error:', error);
+    return <div className="p-4 text-center text-red-500">Error loading achievements</div>;
+  }
 
-  // Show demo achievements to match Xbox style but with platform-specific content
-  const mockShowXboxAchievements = true;
-  if (mockShowXboxAchievements) {
+  // Show sample Xbox-style achievements if no achievements are returned or if we want to demo them
+  const showXboxStyleAchievements = !achievements || achievements.length === 0 || true;
+  
+  if (showXboxStyleAchievements) {
     return (
       <div className="space-y-4">
         <div className="flex w-full overflow-hidden">
           <AchievementItem 
             achievement={{
+              id: '1',
               name: 'Complete 4 Daily Quests',
               description: 'Complete 4 daily quests this week',
               target_value: 4,
@@ -104,11 +111,13 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
               reward_type: 'points'
             }}
             progress={{
+              id: '1p',
               achievementId: '1',
-              userId: '1',
+              userId: userId,
               currentValue: 2,
               completed: false,
               achievement: {
+                id: '1',
                 name: 'Complete 4 Daily Quests',
                 description: 'Complete 4 daily quests this week',
                 target_value: 4,
@@ -124,6 +133,7 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
         <div className="flex w-full overflow-hidden">
           <AchievementItem 
             achievement={{
+              id: '2',
               name: 'Earn Your Way',
               description: 'Upload 3 clips or earn 3 trophies',
               target_value: 3,
@@ -133,11 +143,13 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
               reward_type: 'points'
             }}
             progress={{
+              id: '2p',
               achievementId: '2',
-              userId: '1',
+              userId: userId,
               currentValue: 1,
               completed: false,
               achievement: {
+                id: '2',
                 name: 'Earn Your Way',
                 description: 'Upload 3 clips or earn 3 trophies',
                 target_value: 3,
@@ -153,6 +165,7 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
         <div className="flex w-full overflow-hidden">
           <AchievementItem 
             achievement={{
+              id: '3',
               name: 'Trophy Collector',
               description: 'Earn your first trophy by getting into the weekly top 10',
               target_value: 1,
@@ -162,11 +175,13 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
               reward_type: 'points'
             }}
             progress={{
+              id: '3p',
               achievementId: '3',
-              userId: '1',
+              userId: userId,
               currentValue: 0,
               completed: false,
               achievement: {
+                id: '3',
                 name: 'Trophy Collector',
                 description: 'Earn your first trophy by getting into the weekly top 10',
                 target_value: 1,
@@ -182,6 +197,7 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
         <div className="flex w-full overflow-hidden">
           <AchievementItem 
             achievement={{
+              id: '4',
               name: 'Growing Community',
               description: 'Reach 10 followers on your profile',
               target_value: 10,
@@ -191,11 +207,13 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
               reward_type: 'points'
             }}
             progress={{
+              id: '4p',
               achievementId: '4',
-              userId: '1',
+              userId: userId,
               currentValue: 4,
               completed: false,
               achievement: {
+                id: '4',
                 name: 'Growing Community',
                 description: 'Reach 10 followers on your profile',
                 target_value: 10,
@@ -211,6 +229,7 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
         <div className="flex w-full overflow-hidden">
           <AchievementItem 
             achievement={{
+              id: '5',
               name: 'Content Creator',
               description: 'Upload 5 clips to your profile',
               target_value: 5,
@@ -220,11 +239,13 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
               reward_type: 'points'
             }}
             progress={{
+              id: '5p',
               achievementId: '5',
-              userId: '1',
+              userId: userId,
               currentValue: 3,
               completed: false,
               achievement: {
+                id: '5',
                 name: 'Content Creator',
                 description: 'Upload 5 clips to your profile',
                 target_value: 5,
