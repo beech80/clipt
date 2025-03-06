@@ -4,7 +4,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { Search, Trophy, Tv, Users, X } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import GameCard from '@/components/GameCard';
+import { GameCard } from '@/components/GameCard';
 import StreamerCard from '@/components/StreamerCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ const Discovery = () => {
     queryKey: ['games', 'discovery', searchTerm],
     queryFn: async () => {
       try {
+        // First, try to fetch from Supabase
         let query = supabase.from('games').select(`
           *,
           post_count:posts(count)
@@ -32,9 +33,11 @@ const Discovery = () => {
         
         const { data, error } = await query;
         
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase query error:', error);
+        }
         
-        // Transform data to fix the count object issue
+        // Transform Supabase data and ensure counts are numbers
         const transformedData = (data || []).map(game => ({
           ...game,
           post_count: typeof game.post_count === 'object' && game.post_count !== null 
@@ -42,87 +45,39 @@ const Discovery = () => {
             : (typeof game.post_count === 'number' ? game.post_count : 0)
         }));
         
-        // If no data, always return our hardcoded fallback games with proper images
-        return [
-          { 
-            id: 'fallback-1', 
-            name: 'Call of Duty', 
-            // Using direct image URL with cache buster
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-2', 
-            name: 'Call of Duty 2', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-3', 
-            name: 'Call of Duty 3', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-4', 
-            name: 'Counter-Strike', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-5', 
-            name: 'Forza Horizon 5', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-6', 
-            name: 'Halo Infinite', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg?' + Date.now(), 
-            post_count: 0 
-          }
-        ];
+        // If we have data from Supabase and not searching, enrich it with IGDB data
+        if (transformedData.length > 0) {
+          console.log('Using Supabase data for games');
+          return transformedData;
+        }
+        
+        // If no data from Supabase or user is searching, fall back to IGDB API
+        console.log('Falling back to IGDB API for games');
+        const { igdbService } = await import('@/services/igdbService');
+        const igdbGames = searchTerm 
+          ? await igdbService.searchGames(searchTerm, { limit: 12 })
+          : await igdbService.getTopGames('top_rated', 1, 12);
+        
+        // Map IGDB games to our format
+        return igdbGames.map(game => ({
+          id: `igdb-${game.id}`,
+          name: game.name,
+          cover_url: game.cover?.url,
+          post_count: 0
+        }));
       } catch (error) {
         console.error('Error in games query:', error);
-        // Return hardcoded games as a last resort with direct image URLs
-        return [
-          { 
-            id: 'fallback-1', 
-            name: 'Call of Duty', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-2', 
-            name: 'Call of Duty 2', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-3', 
-            name: 'Call of Duty 3', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-4', 
-            name: 'Counter-Strike', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-5', 
-            name: 'Forza Horizon 5', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg?' + Date.now(), 
-            post_count: 0 
-          },
-          { 
-            id: 'fallback-6', 
-            name: 'Halo Infinite', 
-            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg?' + Date.now(), 
-            post_count: 0 
-          }
-        ];
+        
+        // Use mock data from IGDB service as fallback
+        const { igdbService } = await import('@/services/igdbService');
+        const mockGames = igdbService.getMockGames();
+        
+        return mockGames.map(game => ({
+          id: `igdb-${game.id}`,
+          name: game.name,
+          cover_url: game.cover?.url,
+          post_count: 0
+        }));
       }
     },
     enabled: activeTab === 'games',
