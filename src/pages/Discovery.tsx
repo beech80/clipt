@@ -42,49 +42,86 @@ const Discovery = () => {
             : (typeof game.post_count === 'number' ? game.post_count : 0)
         }));
         
-        // If no data from database, try fetching from IGDB
-        if (transformedData.length === 0) {
-          try {
-            console.log('No games found in database, trying IGDB');
-            const { igdbService } = await import('@/services/igdbService');
-            const popularGames = await igdbService.getPopularGames(6);
-            
-            if (popularGames && popularGames.length > 0) {
-              return popularGames.map((game: any) => ({
-                id: `igdb-${game.id}`,
-                name: game.name,
-                cover_url: game.cover?.url ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}` : undefined,
-                post_count: 0
-              }));
-            }
-          } catch (igdbError) {
-            console.error('IGDB fallback failed:', igdbError);
+        // If no data, always return our hardcoded fallback games with proper images
+        return [
+          { 
+            id: 'fallback-1', 
+            name: 'Call of Duty', 
+            // Using direct image URL with cache buster
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-2', 
+            name: 'Call of Duty 2', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-3', 
+            name: 'Call of Duty 3', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-4', 
+            name: 'Counter-Strike', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-5', 
+            name: 'Forza Horizon 5', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-6', 
+            name: 'Halo Infinite', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg?' + Date.now(), 
+            post_count: 0 
           }
-        }
-        
-        // If still no data, or an error occurred, return predefined fallback games
-        if (transformedData.length === 0) {
-          return [
-            { id: 'fallback-1', name: 'Call of Duty', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', post_count: 0 },
-            { id: 'fallback-2', name: 'Call of Duty 2', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg', post_count: 0 },
-            { id: 'fallback-3', name: 'Call of Duty 3', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg', post_count: 0 },
-            { id: 'fallback-4', name: 'Counter-Strike', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg', post_count: 0 },
-            { id: 'fallback-5', name: 'Forza Horizon 5', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', post_count: 0 },
-            { id: 'fallback-6', name: 'Halo Infinite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', post_count: 0 }
-          ];
-        }
-        
-        return transformedData;
+        ];
       } catch (error) {
         console.error('Error in games query:', error);
-        // Return hardcoded games as a last resort
+        // Return hardcoded games as a last resort with direct image URLs
         return [
-          { id: 'fallback-1', name: 'Call of Duty', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', post_count: 0 },
-          { id: 'fallback-2', name: 'Call of Duty 2', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg', post_count: 0 },
-          { id: 'fallback-3', name: 'Call of Duty 3', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg', post_count: 0 },
-          { id: 'fallback-4', name: 'Counter-Strike', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg', post_count: 0 },
-          { id: 'fallback-5', name: 'Forza Horizon 5', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', post_count: 0 },
-          { id: 'fallback-6', name: 'Halo Infinite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', post_count: 0 }
+          { 
+            id: 'fallback-1', 
+            name: 'Call of Duty', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-2', 
+            name: 'Call of Duty 2', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-3', 
+            name: 'Call of Duty 3', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-4', 
+            name: 'Counter-Strike', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-5', 
+            name: 'Forza Horizon 5', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg?' + Date.now(), 
+            post_count: 0 
+          },
+          { 
+            id: 'fallback-6', 
+            name: 'Halo Infinite', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg?' + Date.now(), 
+            post_count: 0 
+          }
         ];
       }
     },
