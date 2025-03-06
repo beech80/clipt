@@ -4,7 +4,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { Search, Trophy, Tv, Users, X } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { GameCard } from '@/components/GameCard';
+import GameCard from '@/components/GameCard';
 import StreamerCard from '@/components/StreamerCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,59 +21,66 @@ const Discovery = () => {
     queryKey: ['games', 'discovery', searchTerm],
     queryFn: async () => {
       try {
-        console.log('Fetching games with search term:', searchTerm);
+        let query = supabase
+          .from('games')
+          .select(`
+            *,
+            post_count:posts(count)
+          `)
+          .order('name');
         
-        // Always use IGDB API for reliable game images
-        const { igdbService } = await import('@/services/igdbService');
-        
-        // Get games from IGDB based on search or top games
-        const igdbGames = searchTerm 
-          ? await igdbService.searchGames(searchTerm, { limit: 12 })
-          : await igdbService.getTopGames('top_rated', 1, 12);
-        
-        console.log('IGDB API returned games:', igdbGames);
-        
-        if (!igdbGames || igdbGames.length === 0) {
-          console.log('No games returned from IGDB API, using mock data');
-          
-          // Use the mock games from the IGDB service
-          const mockGames = igdbService.getMockGames();
-          
-          return mockGames.map(game => ({
-            id: `igdb-${game.id}`,
-            name: game.name,
-            cover_url: game.cover?.url,
-            post_count: 0
-          }));
+        // Apply search filter if provided
+        if (searchTerm) {
+          query = query.ilike('name', `%${searchTerm}%`);
         }
         
-        // Map IGDB games to our format
-        const mappedGames = igdbGames.map(game => ({
-          id: `igdb-${game.id}`,
-          name: game.name,
-          cover_url: game.cover?.url,
-          post_count: 0
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        // Transform data to fix the count object issue
+        const transformedData = (data || []).map(game => ({
+          ...game,
+          post_count: typeof game.post_count === 'object' && game.post_count !== null 
+            ? Number(game.post_count.count || 0) 
+            : (typeof game.post_count === 'number' ? game.post_count : 0)
         }));
         
-        console.log('Mapped games with cover URLs:', mappedGames);
-        return mappedGames;
+        // If no data from database, try fetching from IGDB
+        if (transformedData.length === 0) {
+          try {
+            console.log('No games found in database, trying IGDB');
+            const { igdbService } = await import('@/services/igdbService');
+            const popularGames = await igdbService.getPopularGames(6);
+            
+            if (popularGames && popularGames.length > 0) {
+              return popularGames.map((game: any) => ({
+                id: `igdb-${game.id}`,
+                name: game.name,
+                cover_url: game.cover?.url ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}` : undefined,
+                post_count: 0
+              }));
+            }
+          } catch (igdbError) {
+            console.error('IGDB fallback failed:', igdbError);
+          }
+        }
+        
+        return transformedData;
       } catch (error) {
-        console.error('Error fetching games:', error);
-        
-        // Use mock data as a last resort
-        const { igdbService } = await import('@/services/igdbService');
-        const mockGames = igdbService.getMockGames();
-        
-        return mockGames.map(game => ({
-          id: `igdb-${game.id}`,
-          name: game.name,
-          cover_url: game.cover?.url,
-          post_count: 0
-        }));
+        console.error('Error in games query:', error);
+        // Return hardcoded games as a last resort
+        return [
+          { id: 'fallback-1', name: 'Halo Infinite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', post_count: 0 },
+          { id: 'fallback-2', name: 'Forza Horizon 5', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', post_count: 0 },
+          { id: 'fallback-3', name: 'Call of Duty: Modern Warfare', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', post_count: 0 },
+          { id: 'fallback-4', name: 'FIFA 23', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co52l6.jpg', post_count: 0 },
+          { id: 'fallback-5', name: 'Elden Ring', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg', post_count: 0 },
+          { id: 'fallback-6', name: 'The Legend of Zelda', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5vmg.jpg', post_count: 0 }
+        ];
       }
     },
     enabled: activeTab === 'games',
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Streamers Tab
