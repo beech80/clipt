@@ -314,10 +314,10 @@ const Profile = () => {
                 <Button 
                   onClick={() => navigate('/profile/edit')} 
                   variant="outline" 
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-transparent border border-indigo-500/50 hover:bg-indigo-900/40"
-                  title="Edit Profile"
+                  className="flex items-center gap-2 border-2 border-indigo-500 bg-indigo-950/70 text-white hover:bg-indigo-900 px-4 py-2 rounded"
                 >
-                  <Settings className="w-5 h-5 text-indigo-300" />
+                  <Settings className="w-4 h-4" />
+                  <span>Settings</span>
                 </Button>
                 {!isOwnProfile && (
                   <Button
