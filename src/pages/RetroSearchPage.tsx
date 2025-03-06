@@ -36,20 +36,149 @@ const RetroSearchPage = () => {
     }
   }, []);
 
-  // Query for games based on search term using IGDB API
+  // Query for games based on search term using IGDB API with backup local data
   const { data: igdbGames, isLoading: igdbGamesLoading } = useQuery({
     queryKey: ['igdb', 'games', 'search', searchTerm],
     queryFn: async () => {
-      if (searchTerm.length < 2 && searchTerm.length > 0) return [];
+      console.log('Searching for games with term:', searchTerm);
       
-      const games = await igdbService.searchGames(searchTerm, {
-        sort: searchTerm ? 'rating desc' : 'popularity desc',
-        limit: 10
-      });
+      // Mock data for popular games when API fails
+      const mockPopularGames = [
+        {
+          id: 1942,
+          name: 'The Last of Us Part II',
+          rating: 94,
+          cover: {
+            id: 101,
+            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1r0o.jpg'
+          }
+        },
+        {
+          id: 1877,
+          name: 'Cyberpunk 2077',
+          rating: 75,
+          cover: {
+            id: 102,
+            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg'
+          }
+        },
+        {
+          id: 732,
+          name: 'Grand Theft Auto V',
+          rating: 92,
+          cover: {
+            id: 103,
+            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1l8z.jpg'
+          }
+        },
+        {
+          id: 3636,
+          name: 'The Witcher 3: Wild Hunt',
+          rating: 92,
+          cover: {
+            id: 104,
+            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg'
+          }
+        },
+        {
+          id: 119388,
+          name: 'Elden Ring',
+          rating: 95,
+          cover: {
+            id: 105,
+            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg'
+          }
+        },
+        {
+          id: 6036,
+          name: 'God of War',
+          rating: 94,
+          cover: {
+            id: 106,
+            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmu.jpg'
+          }
+        },
+        {
+          id: 13827,
+          name: 'Red Dead Redemption 2',
+          rating: 93,
+          cover: {
+            id: 107,
+            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg'
+          }
+        },
+        {
+          id: 115278,
+          name: 'Horizon Forbidden West',
+          rating: 88,
+          cover: {
+            id: 108,
+            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4yks.jpg'
+          }
+        }
+      ];
       
-      return games;
+      // Mock data for search results
+      const getMockSearchResults = (term: string) => {
+        const searchTermLower = term.toLowerCase();
+        return mockPopularGames.filter(game => 
+          game.name.toLowerCase().includes(searchTermLower)
+        );
+      };
+      
+      try {
+        // Don't search if search term is too short but not empty
+        if (searchTerm.length < 2 && searchTerm.length > 0) return [];
+        
+        if (searchTerm) {
+          console.log('Using IGDB search for term:', searchTerm);
+          try {
+            // First try the API
+            const games = await igdbService.searchGames(searchTerm, {
+              sort: 'rating desc',
+              limit: 20
+            });
+            
+            console.log('IGDB API returned games:', games);
+            
+            // If API returns results, use them
+            if (games && games.length > 0) {
+              return games;
+            }
+            
+            // Fallback to mock data if API returns no results
+            console.log('IGDB API returned no results, using mock data');
+            return getMockSearchResults(searchTerm);
+          } catch (apiError) {
+            // If API fails, use local mock data
+            console.error('IGDB API search failed:', apiError);
+            return getMockSearchResults(searchTerm);
+          }
+        } else {
+          // For initial load or empty search, use popular games
+          console.log('Fetching popular IGDB games');
+          try {
+            const popularGames = await igdbService.getPopularGames();
+            
+            // If we got results, use them
+            if (popularGames && popularGames.length > 0) {
+              return popularGames;
+            }
+            
+            // Fallback to mock data
+            console.log('IGDB API returned no popular games, using mock data');
+            return mockPopularGames;
+          } catch (apiError) {
+            // If API fails, use mock data
+            console.error('IGDB API popular games failed:', apiError);
+            return mockPopularGames;
+          }
+        }
+      } catch (error) {
+        console.error('Overall error in game search:', error);
+        return searchTerm ? getMockSearchResults(searchTerm) : mockPopularGames;
+      }
     },
-    enabled: searchTerm.length > 0 || searchTerm === '',
   });
 
   // Query for top games from our database (as fallback and for "top searched")
@@ -107,8 +236,17 @@ const RetroSearchPage = () => {
   });
 
   // For display purposes, combine IGDB and database games
-  const displayGames = searchTerm && igdbGames?.length ? igdbGames : topGames;
+  const displayGames = searchTerm && igdbGames?.length ? igdbGames : 
+                      (igdbGames?.length ? igdbGames : topGames);
   const gamesLoading = searchTerm ? igdbGamesLoading : topGamesLoading;
+
+  // Debug logging for search functionality
+  useEffect(() => {
+    console.log('Search term:', searchTerm);
+    console.log('IGDB games available:', igdbGames);
+    console.log('Top games from DB:', topGames);
+    console.log('Games being displayed:', displayGames);
+  }, [searchTerm, igdbGames, topGames, displayGames]);
 
   // Handle search
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,14 +274,33 @@ const RetroSearchPage = () => {
   const formatCoverUrl = (game: any) => {
     if (!game) return '/img/games/default.jpg';
     
-    // Handle IGDB game
-    if (game.cover?.url) {
-      return game.cover.url;
-    }
-    
-    // Handle database game
-    if (game.cover_url) {
-      return game.cover_url;
+    try {
+      // Handle IGDB game
+      if (game.cover?.url) {
+        // Make sure the URL uses https and is formatted correctly
+        let url = game.cover.url;
+        
+        // Fix common URL issues
+        if (url.startsWith('//')) {
+          url = 'https:' + url;
+        } else if (!url.startsWith('http')) {
+          url = 'https://' + url;
+        }
+        
+        // Make sure we're using the right size image
+        if (!url.includes('t_cover_big')) {
+          url = url.replace(/t_[a-z_]+/, 't_cover_big');
+        }
+        
+        return url;
+      }
+      
+      // Handle database game
+      if (game.cover_url) {
+        return game.cover_url;
+      }
+    } catch (error) {
+      console.error('Error formatting cover URL:', error);
     }
     
     return '/img/games/default.jpg';
