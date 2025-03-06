@@ -1,19 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/ui/back-button";
-import { Search, X, Filter, Gamepad, Users, TrendingUp } from "lucide-react";
+import { Search, X, TrendingUp } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import GameCard from '@/components/GameCard';
 import StreamerCard from '@/components/StreamerCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 const Discovery = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchFilter, setSearchFilter] = useState<'games' | 'streamers' | 'clips'>('clips');
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -147,31 +140,7 @@ const Discovery = () => {
         return [];
       }
     },
-    enabled: isSearchActive && searchFilter === 'games',
-  });
-
-  // Streamers Search
-  const { data: streamers, isLoading: streamersLoading } = useQuery({
-    queryKey: ['streamers', 'search', searchTerm],
-    queryFn: async () => {
-      let query = supabase
-        .from('profiles')
-        .select('*')
-        .not('streaming_url', 'is', null)
-        .order('username');
-      
-      // Apply search filter if provided
-      if (searchTerm) {
-        query = query.or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      
-      return data || [];
-    },
-    enabled: isSearchActive && searchFilter === 'streamers',
+    enabled: isSearchActive,
   });
 
   // Clip Search
@@ -196,7 +165,7 @@ const Discovery = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: isSearchActive && searchFilter === 'clips',
+    enabled: isSearchActive,
   });
 
   useEffect(() => {
@@ -262,7 +231,7 @@ const Discovery = () => {
   const renderSearchResults = () => {
     if (!isSearchActive) return null;
 
-    if (searchFilter === 'games' && games) {
+    if (games) {
       return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
           {games.map((game: any) => (
@@ -279,26 +248,7 @@ const Discovery = () => {
       );
     }
 
-    if (searchFilter === 'streamers' && streamers) {
-      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-          {streamers.map((streamer: any) => (
-            <StreamerCard
-              key={streamer.id}
-              id={streamer.id}
-              username={streamer.username}
-              displayName={streamer.display_name || streamer.username}
-              avatarUrl={streamer.avatar_url}
-              streamingUrl={streamer.streaming_url}
-              isLive={streamer.is_live}
-              onClick={() => navigate(`/profile/${streamer.username}`)}
-            />
-          ))}
-        </div>
-      );
-    }
-
-    if (searchFilter === 'clips' && searchClips) {
+    if (searchClips) {
       return renderClipGrid(searchClips);
     }
 
@@ -310,9 +260,8 @@ const Discovery = () => {
   };
 
   const isLoading = clipsLoading || 
-    (isSearchActive && searchFilter === 'games' && gamesLoading) ||
-    (isSearchActive && searchFilter === 'streamers' && streamersLoading) ||
-    (isSearchActive && searchFilter === 'clips' && searchClipsLoading);
+    (isSearchActive && gamesLoading) ||
+    (isSearchActive && searchClipsLoading);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1f3c] to-[#0d0f1e]">
@@ -381,36 +330,6 @@ const Discovery = () => {
                   </div>
                 </div>
               )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="bg-indigo-950/50 border-indigo-500/40">
-                    <Filter className="h-4 w-4 text-indigo-400" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-indigo-950 border-indigo-500/40">
-                  <DropdownMenuItem 
-                    className={`flex items-center gap-2 ${searchFilter === 'clips' ? 'bg-indigo-900/40' : ''}`}
-                    onClick={() => setSearchFilter('clips')}
-                  >
-                    <Search className="h-4 w-4" />
-                    <span>Clips</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className={`flex items-center gap-2 ${searchFilter === 'games' ? 'bg-indigo-900/40' : ''}`}
-                    onClick={() => setSearchFilter('games')}
-                  >
-                    <Gamepad className="h-4 w-4" />
-                    <span>Games</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className={`flex items-center gap-2 ${searchFilter === 'streamers' ? 'bg-indigo-900/40' : ''}`}
-                    onClick={() => setSearchFilter('streamers')}
-                  >
-                    <Users className="h-4 w-4" />
-                    <span>Streamers</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </div>
