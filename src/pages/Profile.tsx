@@ -5,7 +5,7 @@ import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark, UserX, Use
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import AchievementList from "@/components/achievements/AchievementList";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +37,7 @@ const Profile = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'clips' | 'achievements'>('clips');
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -251,7 +252,7 @@ const Profile = () => {
           <UserX className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Profile Error</h2>
           <p className="text-gray-400 mb-4">{error}</p>
-          <Button onClick={() => window.location.href = '/'}>
+          <Button onClick={() => navigate('/')}>
             Go Home
           </Button>
         </div>
@@ -267,7 +268,7 @@ const Profile = () => {
           <UserX className="w-16 h-16 text-gray-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Profile Not Found</h2>
           <p className="text-gray-400 mb-4">This profile doesn't exist or has been removed.</p>
-          <Button onClick={() => window.location.href = '/'}>
+          <Button onClick={() => navigate('/')}>
             Go Home
           </Button>
         </div>
@@ -312,7 +313,7 @@ const Profile = () => {
               <div className="flex gap-2">
                 {isOwnProfile ? (
                   <Button 
-                    onClick={() => window.location.href = '/profile/edit'} 
+                    onClick={() => navigate('/profile/edit')} 
                     variant="outline" 
                     className="flex items-center gap-2"
                   >
@@ -340,7 +341,7 @@ const Profile = () => {
                       )}
                     </Button>
                     <Button
-                      onClick={() => window.location.href = `/messages/${profileId}`}
+                      onClick={() => navigate(`/messages/${profileId}`)}
                       variant="outline"
                       className="flex items-center gap-2"
                     >
