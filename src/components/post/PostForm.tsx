@@ -279,6 +279,9 @@ export const PostForm = () => {
         throw new Error(`Failed to create post: ${postError.message}`);
       }
 
+      // Invalidate any existing posts queries to ensure fresh data
+      await supabase.rpc('invalidate_cache', { cache_key: 'posts' });
+
       toast.success(
         destination === 'clipts' ? 'Clip created successfully!' : 'Post created successfully!'
       );
@@ -293,9 +296,11 @@ export const PostForm = () => {
       setUploadProgress(0);
       
       if (destination === 'clipts') {
-        navigate('/clipts');
+        // Add timestamp to force refresh of the page
+        navigate(`/clipts?refresh=${Date.now()}`);
       } else {
-        navigate('/');
+        // Add timestamp to force refresh of the homepage
+        navigate(`/?refresh=${Date.now()}`);
       }
       
     } catch (error) {

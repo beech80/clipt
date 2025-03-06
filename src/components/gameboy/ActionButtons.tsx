@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import { Heart, MessageCircle, UserPlus, Trophy, SendHorizontal } from 'lucide-react';
 import { useComments } from '@/contexts/CommentContext';
@@ -13,6 +13,57 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }) => {
   const { openCommentInput } = useComments();
   const [loading, setLoading] = useState<string | null>(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  // Check initial like and follow status
+  useEffect(() => {
+    if (!currentPostId) return;
+    
+    const checkInitialStatus = async () => {
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session?.user) return;
+        
+        const userId = session.session.user.id;
+        
+        // Check like status
+        const { data: existingLike } = await supabase
+          .from('likes')
+          .select('*')
+          .eq('post_id', currentPostId)
+          .eq('user_id', userId)
+          .single();
+          
+        setIsLiked(!!existingLike);
+        
+        // Get post author
+        const { data: post } = await supabase
+          .from('posts')
+          .select('user_id')
+          .eq('id', currentPostId)
+          .single();
+          
+        if (post) {
+          const authorId = post.user_id;
+          
+          // Check follow status
+          const { data: existingFollow } = await supabase
+            .from('follows')
+            .select('*')
+            .eq('follower_id', userId)
+            .eq('followed_id', authorId)
+            .single();
+            
+          setIsFollowing(!!existingFollow);
+        }
+      } catch (error) {
+        console.error('Error checking initial status:', error);
+      }
+    };
+    
+    checkInitialStatus();
+  }, [currentPostId]);
 
   // Handle like action
   const handleLike = async () => {
@@ -29,15 +80,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
       
       const userId = session.session.user.id;
       
-      // Check if already liked
-      const { data: existingLike } = await supabase
-        .from('likes')
-        .select('*')
-        .eq('post_id', currentPostId)
-        .eq('user_id', userId)
-        .single();
-      
-      if (existingLike) {
+      if (isLiked) {
         // Unlike
         await supabase
           .from('likes')
@@ -46,6 +89,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
           .eq('user_id', userId);
           
         toast.success('Post unliked');
+        setIsLiked(false);
       } else {
         // Like
         await supabase
@@ -56,6 +100,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
           });
           
         toast.success('Post liked');
+        setIsLiked(true);
       }
       
       // Update post like count
@@ -111,15 +156,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
         return;
       }
       
-      // Check if already following
-      const { data: existingFollow } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', userId)
-        .eq('followed_id', authorId)
-        .single();
-      
-      if (existingFollow) {
+      if (isFollowing) {
         // Unfollow
         await supabase
           .from('follows')
@@ -128,6 +165,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
           .eq('followed_id', authorId);
           
         toast.success('User unfollowed');
+        setIsFollowing(false);
       } else {
         // Follow
         await supabase
@@ -138,6 +176,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
           });
           
         toast.success('User followed');
+        setIsFollowing(true);
       }
       
     } catch (error) {
@@ -168,7 +207,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
       <div className="absolute w-full h-full">
         {/* Top button - Comment */}
         <button 
-          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors active:scale-95"
           onClick={handleComment}
           disabled={!currentPostId}
           aria-label="Comment"
@@ -178,7 +217,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
         
         {/* Right button - Share/Trophy */}
         <button 
-          className="absolute top-1/2 right-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
+          className="absolute top-1/2 right-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors active:scale-95"
           onClick={handleShare}
           disabled={!currentPostId}
           aria-label="Share"
@@ -188,7 +227,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
         
         {/* Bottom button - POST */}
         <button 
-          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-12 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] flex items-center justify-center hover:opacity-90 transition-opacity shadow-lg"
+          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-12 rounded-full bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] flex items-center justify-center hover:opacity-90 transition-opacity shadow-lg active:scale-95"
           onClick={handlePost}
           aria-label="Create Post"
         >
@@ -198,15 +237,15 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
         
         {/* Left button - Like */}
         <button 
-          className="absolute top-1/2 left-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors"
+          className="absolute top-1/2 left-0 transform -translate-y-1/2 w-12 h-12 rounded-full bg-[#171822] border border-[#2c2d4a] flex items-center justify-center hover:bg-[#1e1f2b] transition-colors active:scale-95"
           onClick={handleLike}
           disabled={loading === 'like' || !currentPostId}
           aria-label="Like"
         >
           <Heart 
             size={20} 
-            className={loading === 'like' ? 'text-gray-400 animate-pulse' : 'text-[#6366F1]'} 
-            fill={loading === 'like' ? 'none' : 'currentColor'} 
+            className={`text-[#6366F1] ${loading === 'like' ? 'animate-pulse' : ''}`}
+            fill={isLiked ? 'currentColor' : 'none'} 
           />
         </button>
       </div>
