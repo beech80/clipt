@@ -43,7 +43,7 @@ const RetroSearchPage = () => {
     queryFn: async () => {
       console.log('Searching for games with term:', searchTerm);
       
-      // Mock data for popular games when API fails
+      // Mock data for popular games when API fails - limit to exactly 3
       const mockPopularGames = [
         {
           id: 1942,
@@ -94,9 +94,9 @@ const RetroSearchPage = () => {
             
             console.log('IGDB API returned games:', games);
             
-            // If API returns results, use them
+            // If API returns results, use them (limited to 3)
             if (games && games.length > 0) {
-              return games.map(game => ({ id: game.id, name: game.name, cover: game.cover }));
+              return games.slice(0, 3).map(game => ({ id: game.id, name: game.name, cover: game.cover }));
             }
             
             // Fallback to mock data if API returns no results
@@ -113,9 +113,9 @@ const RetroSearchPage = () => {
           try {
             const popularGames = await igdbService.getPopularGames();
             
-            // If we got results, use them
+            // If we got results, use them (limited to 3)
             if (popularGames && popularGames.length > 0) {
-              return popularGames.map(game => ({ id: game.id, name: game.name, cover: game.cover }));
+              return popularGames.slice(0, 3).map(game => ({ id: game.id, name: game.name, cover: game.cover }));
             }
             
             // Fallback to mock data
@@ -193,8 +193,9 @@ const RetroSearchPage = () => {
   });
 
   // For display purposes, combine IGDB and database games
-  const displayGames = searchTerm && igdbGames?.length ? igdbGames : 
-                      (igdbGames?.length ? igdbGames : topGames);
+  const displayGames = searchTerm && igdbGames?.length 
+    ? igdbGames.slice(0, 3) 
+    : (igdbGames?.length ? igdbGames.slice(0, 3) : topGames?.slice(0, 3) || []);
   const gamesLoading = searchTerm ? igdbGamesLoading : topGamesLoading;
 
   // Debug logging for search functionality
@@ -389,6 +390,7 @@ const RetroSearchPage = () => {
                   </div>
                 )}
                 
+                {/* Only show the first 3 games exactly */}
                 {displayGames?.slice(0, 3).map((game, index) => (
                   <div 
                     key={game.id}
