@@ -21,54 +21,46 @@ const Discovery = () => {
     queryKey: ['games', 'discovery', searchTerm],
     queryFn: async () => {
       try {
-        // First, try to fetch from Supabase
-        let query = supabase.from('games').select(`
-          *,
-          post_count:posts(count)
-        `).order('name');
+        console.log('Fetching games with search term:', searchTerm);
         
-        if (searchTerm) {
-          query = query.ilike('name', `%${searchTerm}%`);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error('Supabase query error:', error);
-        }
-        
-        // Transform Supabase data and ensure counts are numbers
-        const transformedData = (data || []).map(game => ({
-          ...game,
-          post_count: typeof game.post_count === 'object' && game.post_count !== null 
-            ? Number(game.post_count.count || 0) 
-            : (typeof game.post_count === 'number' ? game.post_count : 0)
-        }));
-        
-        // If we have data from Supabase and not searching, enrich it with IGDB data
-        if (transformedData.length > 0) {
-          console.log('Using Supabase data for games');
-          return transformedData;
-        }
-        
-        // If no data from Supabase or user is searching, fall back to IGDB API
-        console.log('Falling back to IGDB API for games');
+        // Always use IGDB API for reliable game images
         const { igdbService } = await import('@/services/igdbService');
+        
+        // Get games from IGDB based on search or top games
         const igdbGames = searchTerm 
           ? await igdbService.searchGames(searchTerm, { limit: 12 })
           : await igdbService.getTopGames('top_rated', 1, 12);
         
+        console.log('IGDB API returned games:', igdbGames);
+        
+        if (!igdbGames || igdbGames.length === 0) {
+          console.log('No games returned from IGDB API, using mock data');
+          
+          // Use the mock games from the IGDB service
+          const mockGames = igdbService.getMockGames();
+          
+          return mockGames.map(game => ({
+            id: `igdb-${game.id}`,
+            name: game.name,
+            cover_url: game.cover?.url,
+            post_count: 0
+          }));
+        }
+        
         // Map IGDB games to our format
-        return igdbGames.map(game => ({
+        const mappedGames = igdbGames.map(game => ({
           id: `igdb-${game.id}`,
           name: game.name,
           cover_url: game.cover?.url,
           post_count: 0
         }));
-      } catch (error) {
-        console.error('Error in games query:', error);
         
-        // Use mock data from IGDB service as fallback
+        console.log('Mapped games with cover URLs:', mappedGames);
+        return mappedGames;
+      } catch (error) {
+        console.error('Error fetching games:', error);
+        
+        // Use mock data as a last resort
         const { igdbService } = await import('@/services/igdbService');
         const mockGames = igdbService.getMockGames();
         
@@ -81,6 +73,7 @@ const Discovery = () => {
       }
     },
     enabled: activeTab === 'games',
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Streamers Tab
