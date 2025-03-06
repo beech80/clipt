@@ -9,6 +9,8 @@ import {
   UserPlus, 
   X 
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -230,28 +232,184 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleLike = async () => {
     if (!currentPostId) return;
     console.log('Like post:', currentPostId);
-    // Like logic would go here
+    
+    try {
+      // Check if already liked
+      const { data: existingLike } = await supabase
+        .from('likes')
+        .select('*')
+        .eq('post_id', currentPostId)
+        .eq('user_id', supabase.auth.getUser()?.data?.user?.id || '')
+        .single();
+      
+      if (existingLike) {
+        // Unlike
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('id', existingLike.id);
+          
+        // Show toast indicating successful unlike
+        toast.success('Removed like from post');
+      } else {
+        // Like
+        await supabase
+          .from('likes')
+          .insert({
+            post_id: currentPostId,
+            user_id: supabase.auth.getUser()?.data?.user?.id || '',
+            created_at: new Date().toISOString()
+          });
+          
+        // Show toast indicating successful like
+        toast.success('Liked post');
+      }
+      
+      // Trigger a refresh for the post's like count
+      document.dispatchEvent(new CustomEvent('refresh-post', {
+        detail: { postId: currentPostId }
+      }));
+    } catch (error) {
+      console.error('Error liking post:', error);
+      toast.error('Failed to like post');
+    }
   };
 
   const handleComment = () => {
     if (!currentPostId) return;
     console.log('Comment on post:', currentPostId);
-    // Comment logic would go here
+    
+    // Navigate to the post page with comment section visible
+    navigate(`/post/${currentPostId}?showComments=true`);
   };
 
   const handleFollow = () => {
     if (!currentPostId) return;
     console.log('Follow user from post:', currentPostId);
-    // Follow logic would go here
+    
+    // Get the post's user_id and follow/unfollow that user
+    (async () => {
+      try {
+        // First, get the post to find its author
+        const { data: post } = await supabase
+          .from('posts')
+          .select('user_id')
+          .eq('id', currentPostId)
+          .single();
+          
+        if (!post) {
+          toast.error('Could not find post');
+          return;
+        }
+        
+        const currentUserId = supabase.auth.getUser()?.data?.user?.id;
+        
+        if (!currentUserId) {
+          toast.error('You need to be logged in to follow users');
+          return;
+        }
+        
+        if (currentUserId === post.user_id) {
+          toast.error('You cannot follow yourself');
+          return;
+        }
+        
+        // Check if already following
+        const { data: existingFollow } = await supabase
+          .from('follows')
+          .select('*')
+          .eq('follower_id', currentUserId)
+          .eq('following_id', post.user_id)
+          .single();
+          
+        if (existingFollow) {
+          // Unfollow
+          await supabase
+            .from('follows')
+            .delete()
+            .eq('id', existingFollow.id);
+            
+          toast.success('Unfollowed user');
+        } else {
+          // Follow
+          await supabase
+            .from('follows')
+            .insert({
+              follower_id: currentUserId,
+              following_id: post.user_id,
+              created_at: new Date().toISOString()
+            });
+            
+          toast.success('Following user');
+        }
+        
+        // Trigger a refresh for the profile
+        document.dispatchEvent(new CustomEvent('refresh-profile', {
+          detail: { userId: post.user_id }
+        }));
+      } catch (error) {
+        console.error('Error following user:', error);
+        toast.error('Failed to follow user');
+      }
+    })();
   };
   
   const handleTrophy = () => {
     if (!currentPostId) return;
     console.log('Trophy for post:', currentPostId);
-    // Trophy logic would go here
+    
+    // Vote for this clip (trophy functionality)
+    (async () => {
+      try {
+        const currentUserId = supabase.auth.getUser()?.data?.user?.id;
+        
+        if (!currentUserId) {
+          toast.error('You need to be logged in to vote for clips');
+          return;
+        }
+        
+        // Check if already voted
+        const { data: existingVote } = await supabase
+          .from('clip_votes')
+          .select('*')
+          .eq('post_id', currentPostId)
+          .eq('user_id', currentUserId)
+          .single();
+          
+        if (existingVote) {
+          // Remove vote
+          await supabase
+            .from('clip_votes')
+            .delete()
+            .eq('id', existingVote.id);
+            
+          toast.success('Removed vote from clip');
+        } else {
+          // Vote
+          await supabase
+            .from('clip_votes')
+            .insert({
+              post_id: currentPostId,
+              user_id: currentUserId,
+              created_at: new Date().toISOString()
+            });
+            
+          toast.success('Voted for clip');
+        }
+        
+        // Trigger a refresh for the post's vote count
+        document.dispatchEvent(new CustomEvent('refresh-post', {
+          detail: { postId: currentPostId }
+        }));
+      } catch (error) {
+        console.error('Error voting for clip:', error);
+        toast.error('Failed to vote for clip');
+      }
+    })();
   };
 
   const handleClipt = () => {
+    // Navigate to the Clipts page
     navigate('/clipts');
   };
 

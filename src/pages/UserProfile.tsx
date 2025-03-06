@@ -92,14 +92,13 @@ const UserProfile = () => {
             </div>
             <div className="absolute top-4 right-4">
               <Button 
-                variant={userData.isFollowing ? "outline" : "default"}
+                onClick={() => navigate('/profile/edit')} 
+                variant="outline" 
                 size="sm"
-                className={userData.isFollowing 
-                  ? "border-gray-700 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-600" 
-                  : "bg-purple-600 hover:bg-purple-700 text-white"
-                }
+                className="flex items-center gap-2 bg-[#1a1b4b] border border-white/10 text-white hover:bg-[#272a5b] px-4 py-1 rounded-sm"
               >
-                {userData.isFollowing ? 'Following' : 'Follow'}
+                <Settings className="w-4 h-4" />
+                <span>Settings</span>
               </Button>
             </div>
           </div>
