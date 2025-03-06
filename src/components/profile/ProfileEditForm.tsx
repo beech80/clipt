@@ -45,6 +45,7 @@ export function ProfileEditForm() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const queryClient = useQueryClient()
+  const [submitting, setSubmitting] = useState(false)
 
   const { data: profile, refetch } = useQuery({
     queryKey: ['profile', user?.id],
@@ -124,33 +125,36 @@ export function ProfileEditForm() {
     }
   }, [profile, form])
 
-  const handleAvatarUpload = async (file: File) => {
-    if (!user?.id) return;
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !user) {
+      return;
+    }
+    
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+    
+    // Show local preview
+    setAvatarPreview(URL.createObjectURL(file));
     
     try {
       setUploading(true);
       
-      // Create a preview URL
-      const previewUrl = URL.createObjectURL(file);
-      setAvatarPreview(previewUrl);
-      
-      // Upload to storage bucket
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}_avatar_${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-      
+      // Upload the file to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('profiles')
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true });
         
       if (uploadError) throw uploadError;
       
-      // Get public URL
+      // Get the public URL
       const { data: publicUrlData } = supabase.storage
         .from('profiles')
         .getPublicUrl(filePath);
         
-      // Update profile with new avatar URL
+      if (!publicUrlData.publicUrl) throw new Error('Failed to get public URL');
+      
+      // Update the profile
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrlData.publicUrl })
@@ -158,18 +162,23 @@ export function ProfileEditForm() {
         
       if (updateError) throw updateError;
       
-      toast.success('Profile picture updated successfully');
+      toast.success('Avatar updated successfully!');
+      
+      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       refetch();
       
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      toast.error('Failed to update profile picture');
+      toast.error('Failed to upload avatar. Please try again.');
+      // Reset preview on error
+      setAvatarPreview(null);
     } finally {
       setUploading(false);
     }
   };
-  
+
   const handleBannerUpload = async (file: File) => {
     if (!user?.id) return;
     
@@ -206,6 +215,7 @@ export function ProfileEditForm() {
       
       toast.success('Banner image updated successfully');
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       refetch();
       
     } catch (error) {
@@ -232,7 +242,7 @@ export function ProfileEditForm() {
       return;
     }
     
-    handleAvatarUpload(file);
+    handleAvatarUpload(e);
   };
   
   const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -254,39 +264,52 @@ export function ProfileEditForm() {
     handleBannerUpload(file);
   };
 
-  const onSubmit = async (data: ProfileFormValues) => {
+  async function onSubmit(values: ProfileFormValues) {
+    setSubmitting(true);
+
     try {
-      if (data.username !== profile?.username && !canChangeUsername) {
-        toast.error("Username can only be changed once every two months");
+      if (!user) throw new Error('User not authenticated');
+
+      // Prepare the update payload
+      const updatePayload: Partial<DatabaseProfile> = {
+        username: values.username,
+        display_name: values.displayName,
+        bio: values.bioDescription || '',
+        website: values.website || '',
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Updating profile with:', updatePayload);
+
+      // Update the profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update(updatePayload)
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast.error('Failed to update profile: ' + error.message);
         return;
       }
 
-      const updateData: Partial<DatabaseProfile> = {
-        username: data.username,
-        display_name: data.displayName,
-        bio: data.bioDescription,
-        website: data.website || null
-      }
-
-      // If username is being changed, update the last_username_change field
-      if (data.username !== profile?.username) {
-        updateData.last_username_change = new Date().toISOString();
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', user.id)
-
-      if (error) throw error
-
-      await queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
-      await refetch() // Explicitly refetch the profile data
-      toast.success("Profile updated successfully!")
-      navigate('/profile')
+      // Success!
+      toast.success('Profile updated successfully!');
+      
+      // Invalidate the profile cache to force a refresh
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      
+      // Force a refetch of the current profile data
+      refetch();
+      
+      // Redirect to profile view
+      navigate('/profile');
     } catch (error) {
-      console.error('Error updating profile:', error)
-      toast.error("Failed to update profile")
+      console.error('Error in profile update:', error);
+      toast.error('Failed to update profile. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -459,7 +482,7 @@ export function ProfileEditForm() {
           )}
         />
 
-        <Button type="submit" disabled={uploading}>Update profile</Button>
+        <Button type="submit" disabled={uploading || submitting}>Update profile</Button>
       </form>
     </Form>
   )
