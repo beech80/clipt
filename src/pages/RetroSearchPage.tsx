@@ -47,7 +47,6 @@ const RetroSearchPage = () => {
         {
           id: 1942,
           name: 'The Last of Us Part II',
-          rating: 94,
           cover: {
             id: 101,
             url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1r0o.jpg'
@@ -56,7 +55,6 @@ const RetroSearchPage = () => {
         {
           id: 1877,
           name: 'Cyberpunk 2077',
-          rating: 75,
           cover: {
             id: 102,
             url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg'
@@ -65,55 +63,9 @@ const RetroSearchPage = () => {
         {
           id: 732,
           name: 'Grand Theft Auto V',
-          rating: 92,
           cover: {
             id: 103,
             url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1l8z.jpg'
-          }
-        },
-        {
-          id: 3636,
-          name: 'The Witcher 3: Wild Hunt',
-          rating: 92,
-          cover: {
-            id: 104,
-            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.jpg'
-          }
-        },
-        {
-          id: 119388,
-          name: 'Elden Ring',
-          rating: 95,
-          cover: {
-            id: 105,
-            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg'
-          }
-        },
-        {
-          id: 6036,
-          name: 'God of War',
-          rating: 94,
-          cover: {
-            id: 106,
-            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmu.jpg'
-          }
-        },
-        {
-          id: 13827,
-          name: 'Red Dead Redemption 2',
-          rating: 93,
-          cover: {
-            id: 107,
-            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg'
-          }
-        },
-        {
-          id: 115278,
-          name: 'Horizon Forbidden West',
-          rating: 88,
-          cover: {
-            id: 108,
-            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4yks.jpg'
           }
         }
       ];
@@ -143,7 +95,7 @@ const RetroSearchPage = () => {
             
             // If API returns results, use them
             if (games && games.length > 0) {
-              return games;
+              return games.map(game => ({ id: game.id, name: game.name, cover: game.cover }));
             }
             
             // Fallback to mock data if API returns no results
@@ -162,7 +114,7 @@ const RetroSearchPage = () => {
             
             // If we got results, use them
             if (popularGames && popularGames.length > 0) {
-              return popularGames;
+              return popularGames.map(game => ({ id: game.id, name: game.name, cover: game.cover }));
             }
             
             // Fallback to mock data
@@ -194,7 +146,7 @@ const RetroSearchPage = () => {
           post_count:posts(count)
         `)
         .order('post_count', { ascending: false })
-        .limit(10);
+        .limit(3); // Only fetch top 3
       
       if (error) throw error;
       
@@ -228,7 +180,7 @@ const RetroSearchPage = () => {
         query = query.or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`);
       }
       
-      const { data, error } = await query.order('follower_count', { ascending: false }).limit(10);
+      const { data, error } = await query.order('follower_count', { ascending: false }).limit(3); // Only fetch top 3
       
       if (error) throw error;
       return data || [];
@@ -421,10 +373,6 @@ const RetroSearchPage = () => {
                   <div className="flex-1 min-w-0">
                     <span className="text-yellow-300 text-xs block truncate">
                       {game.name}
-                    </span>
-                    <span className="text-blue-300 text-[10px] md:text-xs block">
-                      {game.rating ? `RATING: ${Math.round(game.rating)}%` : 
-                       game.post_count ? `${game.post_count} POSTS` : ''}
                     </span>
                   </div>
                   {!searchTerm && index < 3 && (

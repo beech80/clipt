@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { BackButton } from '@/components/ui/back-button';
 import { Camera, Upload, X, Video, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 const NewPost = () => {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ const NewPost = () => {
     });
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate the post
@@ -86,11 +87,83 @@ const NewPost = () => {
       }
     }
     
-    // TODO: Actually upload the files and create the post
-    
-    // Mock success for now
-    toast.success(`Post created and will appear in ${postDestination === 'home' ? 'Home' : 'Clipts'}`);
-    navigate('/');
+    try {
+      // Show loading toast
+      const uploadToast = toast.loading('Creating your post...');
+      
+      // Get user info
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
+        toast.error('You must be logged in to create a post');
+        return;
+      }
+      
+      const userId = session.session.user.id;
+      
+      // Upload files to storage
+      const uploadedUrls = [];
+      for (let i = 0; i < mediaFiles.length; i++) {
+        const file = mediaFiles[i];
+        const timestamp = Date.now() + i;
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${userId}/${timestamp}.${fileExt}`;
+        
+        // Upload file
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+          
+        if (uploadError) {
+          toast.error(`Failed to upload file: ${uploadError.message}`, { id: uploadToast });
+          return;
+        }
+        
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(filePath);
+          
+        uploadedUrls.push(publicUrl);
+      }
+      
+      // Prepare post data
+      const postData = {
+        title,
+        content: description,
+        user_id: userId,
+        post_type: postDestination,
+        is_published: true,
+        image_url: uploadedUrls.length === 1 ? uploadedUrls[0] : null,
+        image_urls: uploadedUrls.length > 1 ? uploadedUrls : null,
+        video_url: postDestination === 'clipts' ? uploadedUrls[0] : null
+      };
+      
+      // Create post in database
+      const { data: post, error: postError } = await supabase
+        .from('posts')
+        .insert([postData])
+        .select()
+        .single();
+        
+      if (postError) {
+        toast.error(`Failed to create post: ${postError.message}`, { id: uploadToast });
+        return;
+      }
+      
+      // Invalidate any existing posts queries
+      await supabase.rpc('invalidate_cache', { cache_key: 'posts' });
+      
+      toast.success(`Post created and will appear in ${postDestination === 'home' ? 'Home' : 'Clipts'}`, { id: uploadToast });
+      
+      // Navigate with refresh parameter to ensure latest posts are shown
+      navigate(`/${postDestination === 'clipts' ? 'clipts' : ''}?refresh=${Date.now()}`);
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast.error('Failed to create post. Please try again.');
+    }
   };
 
   return (
