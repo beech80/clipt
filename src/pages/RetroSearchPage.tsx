@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Search, X, Ghost, Trophy, Gamepad2, Users, Sparkles, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { igdbService } from '@/services/igdbService';
 
 const RetroSearchPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchCategory, setSearchCategory] = useState<'all' | 'games' | 'streamers'>('all');
@@ -215,9 +216,13 @@ const RetroSearchPage = () => {
   // Clear search
   const clearSearch = () => {
     setSearchTerm('');
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
+    searchInputRef.current?.focus();
+    
+    // Force re-fetch with empty search
+    // This will ensure we only show top 3 games again
+    queryClient.invalidateQueries({ queryKey: ['igdb', 'games'] });
+    queryClient.invalidateQueries({ queryKey: ['games'] });
+    queryClient.invalidateQueries({ queryKey: ['streamers'] });
   };
 
   // Handle search submission
@@ -384,14 +389,14 @@ const RetroSearchPage = () => {
               </div>
               
               <div className="space-y-2">
-                {!gamesLoading && displayGames?.length === 0 && (
+                {!gamesLoading && (!displayGames || displayGames.length === 0) && (
                   <div className="p-3 text-center text-yellow-500 text-xs md:text-sm">
                     NO GAMES FOUND
                   </div>
                 )}
                 
-                {/* Only show the first 3 games exactly */}
-                {displayGames?.slice(0, 3).map((game, index) => (
+                {/* Force limit to exactly top 3 games - no more */}
+                {(displayGames ? displayGames.slice(0, 3) : []).map((game, index) => (
                   <div 
                     key={game.id}
                     className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
@@ -455,7 +460,8 @@ const RetroSearchPage = () => {
                   </div>
                 )}
                 
-                {topStreamers?.slice(0, 3).map((streamer, index) => (
+                {/* Force limit to exactly top 3 streamers - no more */}
+                {(topStreamers ? topStreamers.slice(0, 3) : []).map((streamer, index) => (
                   <div 
                     key={streamer.id}
                     className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
