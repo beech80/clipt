@@ -30,6 +30,7 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 const Streaming = React.lazy(() => import('./pages/Streaming'));
 const Messages = React.lazy(() => import('./pages/Messages'));
 const Settings = React.lazy(() => import('./pages/Settings'));
+const EditProfile = React.lazy(() => import('./pages/EditProfile'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -48,6 +49,7 @@ function AppContent() {
       <Route path="/discovery" element={<Discovery />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/profile/edit" element={<EditProfile />} />
       <Route path="/streaming" element={<Streaming />} />
       <Route path="/messages" element={<Messages />} />
       <Route path="/messages/:userId" element={<Messages />} />
