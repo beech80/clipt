@@ -1,24 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/ui/back-button";
-import { Search, Trophy, Tv, Users, X } from "lucide-react";
+import { Search, X, Filter, Gamepad, Users } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import GameCard from '@/components/GameCard';
 import StreamerCard from '@/components/StreamerCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Skeleton } from '@/components/ui/skeleton';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const Discovery = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('games');
-  const [isSearching, setIsSearching] = useState(false);
+  const [searchFilter, setSearchFilter] = useState<'games' | 'streamers' | 'clips'>('clips');
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
-  // Games Tab
-  const { data: games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useQuery({
-    queryKey: ['games', 'discovery', searchTerm],
+  // Fetch recent clips for the explore grid
+  const { data: clips, isLoading: clipsLoading } = useQuery({
+    queryKey: ['clips', 'explore'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          title,
+          thumbnail_url,
+          view_count,
+          like_count, 
+          created_at,
+          profiles(id, username, avatar_url, display_name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(30);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !isSearchActive,
+  });
+
+  // Games Search
+  const { data: games, isLoading: gamesLoading } = useQuery({
+    queryKey: ['games', 'search', searchTerm],
     queryFn: async () => {
       try {
         let query = supabase
@@ -47,14 +79,14 @@ const Discovery = () => {
         }));
         
         // If no data from database, try fetching from IGDB
-        if (transformedData.length === 0) {
+        if (transformedData.length === 0 && searchTerm.length > 0) {
           try {
             console.log('No games found in database, trying IGDB');
             const { igdbService } = await import('@/services/igdbService');
-            const popularGames = await igdbService.getPopularGames(6);
+            const searchGames = await igdbService.searchGames(searchTerm, { limit: 10 });
             
-            if (popularGames && popularGames.length > 0) {
-              return popularGames.map((game: any) => ({
+            if (searchGames && searchGames.length > 0) {
+              return searchGames.map((game: any) => ({
                 id: `igdb-${game.id}`,
                 name: game.name,
                 cover_url: game.cover?.url ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}` : undefined,
@@ -62,30 +94,22 @@ const Discovery = () => {
               }));
             }
           } catch (igdbError) {
-            console.error('IGDB fallback failed:', igdbError);
+            console.error('IGDB search failed:', igdbError);
           }
         }
         
         return transformedData;
       } catch (error) {
         console.error('Error in games query:', error);
-        // Return hardcoded games as a last resort
-        return [
-          { id: 'fallback-1', name: 'Halo Infinite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', post_count: 0 },
-          { id: 'fallback-2', name: 'Forza Horizon 5', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', post_count: 0 },
-          { id: 'fallback-3', name: 'Call of Duty: Modern Warfare', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', post_count: 0 },
-          { id: 'fallback-4', name: 'FIFA 23', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co52l6.jpg', post_count: 0 },
-          { id: 'fallback-5', name: 'Elden Ring', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg', post_count: 0 },
-          { id: 'fallback-6', name: 'The Legend of Zelda', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5vmg.jpg', post_count: 0 }
-        ];
+        return [];
       }
     },
-    enabled: activeTab === 'games',
+    enabled: isSearchActive && searchFilter === 'games',
   });
 
-  // Streamers Tab
-  const { data: streamers, isLoading: streamersLoading, refetch: refetchStreamers } = useQuery({
-    queryKey: ['streamers', 'discovery', searchTerm],
+  // Streamers Search
+  const { data: streamers, isLoading: streamersLoading } = useQuery({
+    queryKey: ['streamers', 'search', searchTerm],
     queryFn: async () => {
       let query = supabase
         .from('profiles')
@@ -104,196 +128,236 @@ const Discovery = () => {
       
       return data || [];
     },
-    enabled: activeTab === 'streamers',
+    enabled: isSearchActive && searchFilter === 'streamers',
+  });
+
+  // Clip Search
+  const { data: searchClips, isLoading: searchClipsLoading } = useQuery({
+    queryKey: ['clips', 'search', searchTerm],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          title,
+          thumbnail_url,
+          view_count,
+          like_count,
+          created_at,
+          profiles(id, username, avatar_url, display_name)
+        `)
+        .ilike('title', `%${searchTerm}%`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isSearchActive && searchFilter === 'clips',
   });
 
   useEffect(() => {
-    // Reset searching flag after a delay when searchTerm changes
+    // Activate search mode when search term is entered
     if (searchTerm.length > 0) {
-      setIsSearching(true);
-      const timer = setTimeout(() => {
-        if (activeTab === 'games') {
-          refetchGames();
-        } else if (activeTab === 'streamers') {
-          refetchStreamers();
-        }
-      }, 500); // Debounce search for 500ms
-      
-      return () => clearTimeout(timer);
+      setIsSearchActive(true);
     } else {
-      setIsSearching(false);
+      setIsSearchActive(false);
     }
-  }, [searchTerm, activeTab, refetchGames, refetchStreamers]);
-  
-  // Enhanced search handler with debounce
+  }, [searchTerm]);
+
+  // Handle search input
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
+  // Clear search
+  const clearSearch = () => {
     setSearchTerm('');
+    setIsSearchActive(false);
   };
+
+  // Rendering helpers
+  const renderClipGrid = (clipsData: any[]) => {
+    return (
+      <div className="grid grid-cols-3 gap-1 md:gap-2">
+        {clipsData.map((clip) => (
+          <div 
+            key={clip.id} 
+            className="relative cursor-pointer overflow-hidden"
+            onClick={() => navigate(`/post/${clip.id}`)}
+          >
+            <AspectRatio ratio={1}>
+              {clip.thumbnail_url ? (
+                <img 
+                  src={clip.thumbnail_url} 
+                  alt={clip.title} 
+                  className="object-cover w-full h-full"
+                />
+              ) : (
+                <div className="w-full h-full bg-indigo-900/30 flex items-center justify-center">
+                  <span className="text-xs text-indigo-300">No thumbnail</span>
+                </div>
+              )}
+            </AspectRatio>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+              <div className="flex items-center space-x-1">
+                <Avatar className="w-5 h-5">
+                  <AvatarImage src={clip.profiles?.avatar_url} alt={clip.profiles?.username} />
+                  <AvatarFallback>{clip.profiles?.username?.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <span className="text-xs text-white truncate">
+                  {clip.profiles?.username}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderSearchResults = () => {
+    if (!isSearchActive) return null;
+
+    if (searchFilter === 'games' && games) {
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
+          {games.map((game: any) => (
+            <GameCard
+              key={game.id}
+              id={game.id}
+              name={game.name}
+              coverUrl={game.cover_url}
+              postCount={game.post_count}
+              onClick={() => navigate(`/games/${game.id}`)}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (searchFilter === 'streamers' && streamers) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+          {streamers.map((streamer: any) => (
+            <StreamerCard
+              key={streamer.id}
+              id={streamer.id}
+              username={streamer.username}
+              displayName={streamer.display_name || streamer.username}
+              avatarUrl={streamer.avatar_url}
+              streamingUrl={streamer.streaming_url}
+              isLive={streamer.is_live}
+              onClick={() => navigate(`/profile/${streamer.username}`)}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    if (searchFilter === 'clips' && searchClips) {
+      return renderClipGrid(searchClips);
+    }
+
+    return (
+      <div className="flex items-center justify-center h-40">
+        <p className="text-indigo-300">No results found</p>
+      </div>
+    );
+  };
+
+  const isLoading = clipsLoading || 
+    (isSearchActive && searchFilter === 'games' && gamesLoading) ||
+    (isSearchActive && searchFilter === 'streamers' && streamersLoading) ||
+    (isSearchActive && searchFilter === 'clips' && searchClipsLoading);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1f3c] to-[#0d0f1e]">
-      {/* Header */}
+      {/* Header with Search */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/60 backdrop-blur-lg border-b border-indigo-500/20">
-        <div className="flex items-center justify-center max-w-7xl mx-auto relative">
-          <BackButton className="absolute left-0 text-indigo-400 hover:text-indigo-300" />
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500 flex items-center gap-2">
-            <Trophy className="text-indigo-400" size={28} />
-            Discovery
-          </h1>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 pt-24 pb-32 max-w-2xl">
-        {/* Main Tabs */}
-        <Tabs defaultValue="games" value={activeTab} onValueChange={handleTabChange} className="w-full mb-6">
-          <TabsList className="grid grid-cols-2 w-full rounded-xl p-1 bg-indigo-950/40 backdrop-blur-sm border border-indigo-500/20">
-            <TabsTrigger 
-              value="games" 
-              className="data-[state=active]:bg-gradient-to-r from-indigo-600 to-purple-600 data-[state=active]:text-white rounded-lg"
-            >
-              <Trophy className="w-4 h-4 mr-2" />
-              Games
-            </TabsTrigger>
-            <TabsTrigger 
-              value="streamers" 
-              className="data-[state=active]:bg-gradient-to-r from-indigo-600 to-purple-600 data-[state=active]:text-white rounded-lg"
-            >
-              <Tv className="w-4 h-4 mr-2" />
-              Streamers
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Search UI */}
-          <div className="mb-6 mt-6 space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400" size={18} />
-              <Input 
-                className="bg-indigo-950/30 border-indigo-500/30 pl-10 text-white placeholder:text-indigo-300/50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 h-12 rounded-xl"
-                placeholder={activeTab === 'games' ? "Search for games..." : "Search for streamers..."}
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-2">
+            <BackButton className="text-indigo-400 hover:text-indigo-300" />
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-indigo-400" />
+              </div>
+              <Input
+                type="text"
+                placeholder="Search clips, games, or streamers..."
+                className="pl-10 pr-10 py-2 bg-indigo-950/50 border-indigo-500/40 text-indigo-100 placeholder:text-indigo-400/60 w-full"
                 value={searchTerm}
                 onChange={handleSearch}
               />
-              {searchTerm.length > 0 && (
+              {searchTerm && (
                 <button
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-indigo-400 hover:text-indigo-300"
-                  onClick={() => setSearchTerm('')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={clearSearch}
                 >
-                  <X size={18} />
+                  <X className="h-4 w-4 text-indigo-400" />
                 </button>
               )}
             </div>
-            {searchTerm.length > 0 && (
-              <p className="text-sm text-indigo-300">
-                Searching for: <span className="font-semibold">{searchTerm}</span>
-              </p>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="bg-indigo-950/50 border-indigo-500/40">
+                  <Filter className="h-4 w-4 text-indigo-400" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-indigo-950 border-indigo-500/40">
+                <DropdownMenuItem 
+                  className={`flex items-center gap-2 ${searchFilter === 'clips' ? 'bg-indigo-900/40' : ''}`}
+                  onClick={() => setSearchFilter('clips')}
+                >
+                  <Search className="h-4 w-4" />
+                  <span>Clips</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className={`flex items-center gap-2 ${searchFilter === 'games' ? 'bg-indigo-900/40' : ''}`}
+                  onClick={() => setSearchFilter('games')}
+                >
+                  <Gamepad className="h-4 w-4" />
+                  <span>Games</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className={`flex items-center gap-2 ${searchFilter === 'streamers' ? 'bg-indigo-900/40' : ''}`}
+                  onClick={() => setSearchFilter('streamers')}
+                >
+                  <Users className="h-4 w-4" />
+                  <span>Streamers</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-
-          {/* Tab Content */}
-          <TabsContent value="games" className="mt-2">
-            {activeTab === 'games' && (
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="pt-20 pb-24 max-w-4xl mx-auto">
+        {isLoading ? (
+          // Loading grid skeleton
+          <div className="grid grid-cols-3 gap-1 md:gap-2 p-2">
+            {Array(12).fill(0).map((_, i) => (
+              <Skeleton key={i} className="aspect-square w-full bg-indigo-950/60" />
+            ))}
+          </div>
+        ) : (
+          <>
+            {isSearchActive ? (
+              renderSearchResults()
+            ) : (
+              // Instagram-style Explore grid
               <>
-                {gamesLoading && (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="mt-4 text-indigo-300">Loading games...</p>
-                  </div>
-                )}
-                
-                {!gamesLoading && games && games.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {games.map((game) => (
-                      <GameCard
-                        key={game.id}
-                        id={game.id}
-                        name={game.name}
-                        coverUrl={game.cover_url}
-                        postCount={game.post_count || 0}
-                        onClick={() => navigate(`/game/${game.id}`)}
-                      />
-                    ))}
-                  </div>
-                )}
-                
-                {!gamesLoading && (!games || games.length === 0) && (
-                  <div className="flex flex-col items-center justify-center text-center py-20 px-4 bg-indigo-950/20 rounded-2xl border border-indigo-500/20">
-                    <div className="bg-indigo-900/30 p-5 rounded-full mb-4">
-                      <Trophy className="h-12 w-12 text-indigo-400" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">No games found</h3>
-                    <p className="text-indigo-300 mb-6">Try a different search term</p>
-                    
-                    <Button 
-                      className="bg-indigo-600 hover:bg-indigo-700"
-                      onClick={() => setSearchTerm('')}
-                    >
-                      Clear search
-                    </Button>
+                <h2 className="text-lg font-semibold text-indigo-300 px-4 pb-2">Explore</h2>
+                {clips && clips.length > 0 ? renderClipGrid(clips) : (
+                  <div className="flex items-center justify-center h-40">
+                    <p className="text-indigo-300">No clips found</p>
                   </div>
                 )}
               </>
             )}
-          </TabsContent>
-
-          <TabsContent value="streamers" className="mt-2">
-            {streamersLoading && (
-              <div className="flex justify-center my-12">
-                <div className="flex flex-col items-center">
-                  <div className="animate-pulse flex space-x-2 items-center">
-                    <div className="w-3 h-3 bg-indigo-400 rounded-full animate-bounce"></div>
-                    <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce delay-75"></div>
-                    <div className="w-3 h-3 bg-indigo-400 rounded-full animate-bounce delay-150"></div>
-                  </div>
-                  <div className="mt-3 text-indigo-300/70">Loading streamers...</div>
-                </div>
-              </div>
-            )}
-
-            {!streamersLoading && streamers && streamers.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {streamers.map((streamer) => (
-                  <StreamerCard 
-                    key={streamer.id}
-                    id={streamer.id}
-                    username={streamer.username}
-                    displayName={streamer.display_name}
-                    avatarUrl={streamer.avatar_url}
-                    streamingUrl={streamer.streaming_url}
-                    game={streamer.current_game}
-                    isLive={streamer.is_live}
-                    onClick={() => navigate(`/profile/${streamer.id}`)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {!streamersLoading && (!streamers || streamers.length === 0) && (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center space-y-4 bg-indigo-950/30 p-8 rounded-2xl border border-indigo-500/20 backdrop-blur-sm">
-                  <div className="inline-block p-4 bg-indigo-900/30 rounded-full mb-4">
-                    <Users className="h-10 w-10 text-indigo-400" />
-                  </div>
-                  <p className="text-2xl font-semibold text-white">No streamers found</p>
-                  <p className="text-indigo-300">Try a different search term</p>
-                  <Button
-                    className="mt-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 px-6 py-2"
-                    onClick={() => {
-                      setSearchTerm('');
-                    }}
-                  >
-                    Clear search
-                  </Button>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          </>
+        )}
       </div>
     </div>
   );
