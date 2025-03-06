@@ -65,6 +65,7 @@ export const TrendingGamesSection = () => {
           });
 
           if (igdbResponse && Array.isArray(igdbResponse)) {
+            console.log('IGDB API Response:', igdbResponse);
             trendingIGDBGames = igdbResponse
               .map((game: IGDBGame) => ({
                 id: `igdb-${game.id}`,
@@ -74,6 +75,7 @@ export const TrendingGamesSection = () => {
                   : undefined,
                 post_count: Math.round((game.popularity || 0) / 10), // Convert popularity to a reasonable number
               }));
+            console.log('Formatted trending games from IGDB:', trendingIGDBGames);
           }
         } catch (igdbError) {
           console.error('IGDB API error:', igdbError);
