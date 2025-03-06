@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Trophy, Flame, Gamepad } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -14,6 +13,18 @@ interface TrendingGame {
   post_count: number;
 }
 
+interface IGDBGame {
+  id: number;
+  name: string;
+  cover?: {
+    id: number;
+    url: string;
+  };
+  rating?: number;
+  popularity?: number;
+  total_rating?: number;
+}
+
 export const TrendingGamesSection = () => {
   const navigate = useNavigate();
 
@@ -21,7 +32,38 @@ export const TrendingGamesSection = () => {
     queryKey: ['games', 'trending'],
     queryFn: async () => {
       try {
-        // First try to get games with highest post counts directly from our database
+        // Try to get trending games from IGDB first for most current data
+        let trendingIGDBGames: TrendingGame[] = [];
+        try {
+          const { data: igdbResponse } = await supabase.functions.invoke('igdb', {
+            body: {
+              endpoint: 'games',
+              query: `
+                fields name,cover.url,popularity,total_rating,rating,first_release_date;
+                where cover != null & popularity != null & rating != null;
+                sort popularity desc;
+                limit 10;
+              `
+            }
+          });
+
+          if (igdbResponse && Array.isArray(igdbResponse)) {
+            trendingIGDBGames = igdbResponse
+              .slice(0, 5) // Take top 5 most popular
+              .map((game: IGDBGame) => ({
+                id: `igdb-${game.id}`,
+                name: game.name,
+                cover_url: game.cover?.url 
+                  ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}` 
+                  : undefined,
+                post_count: Math.round((game.popularity || 0) / 10), // Convert popularity to a reasonable number
+              }));
+          }
+        } catch (igdbError) {
+          console.error('IGDB API error:', igdbError);
+        }
+
+        // Also get games from our database based on post count
         const { data: supabaseGames, error } = await supabase
           .from('games')
           .select(`
@@ -31,11 +73,11 @@ export const TrendingGamesSection = () => {
             post_count:posts(count)
           `)
           .order('post_count', { ascending: false })
-          .limit(3);
+          .limit(10);
         
         if (error) throw error;
         
-        // Transform data to fix the count object issue
+        // Transform our database game data
         const transformedData = (supabaseGames || []).map(game => ({
           ...game,
           post_count: typeof game.post_count === 'object' && game.post_count !== null 
@@ -44,73 +86,135 @@ export const TrendingGamesSection = () => {
         }));
         
         console.log('Trending games from Supabase:', transformedData);
+        console.log('Trending games from IGDB:', trendingIGDBGames);
         
-        // Always also fetch from IGDB to ensure we have the latest trending games
-        try {
-          const { igdbService } = await import('@/services/igdbService');
-          const popularGames = await igdbService.getPopularGames(3);
+        // Combine and prioritize both sets of games
+        // For each IGDB game, check if we have a matching game in our database
+        const combinedGames: TrendingGame[] = [];
+        
+        // Add IGDB games first as they're more current
+        trendingIGDBGames.forEach(igdbGame => {
+          // Check if we have this game in our database (by name match)
+          const matchingDbGame = transformedData.find(
+            dbGame => dbGame.name.toLowerCase() === igdbGame.name.toLowerCase()
+          );
           
-          if (popularGames && popularGames.length > 0) {
-            const formattedGames = popularGames.map((game: any) => ({
-              id: `igdb-${game.id}`,
-              name: game.name,
-              cover_url: game.cover?.url 
-                ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}` 
-                : undefined,
-              post_count: game.rating ? Math.round(game.rating) : 0
-            }));
-            
-            console.log('Trending games from IGDB:', formattedGames);
-            
-            // Merge both sources prioritizing games with higher post counts,
-            // but ensure we're showing at least one game from IGDB for freshness
-            const combinedGames = [...transformedData];
-            
-            // Add IGDB games that aren't already in our list
-            formattedGames.forEach(igdbGame => {
-              const exists = combinedGames.some(g => 
-                g.name.toLowerCase() === igdbGame.name.toLowerCase()
-              );
-              
-              if (!exists) {
-                combinedGames.push(igdbGame);
-              }
+          if (matchingDbGame) {
+            // If we have a match, use our database ID but IGDB's cover image (better quality)
+            combinedGames.push({
+              id: matchingDbGame.id, // Use our database ID for routing
+              name: igdbGame.name,
+              cover_url: igdbGame.cover_url || matchingDbGame.cover_url,
+              post_count: Math.max(matchingDbGame.post_count, igdbGame.post_count)
             });
-            
-            // Sort by post count and ensure we have at least one IGDB game
-            const sortedGames = combinedGames.sort((a, b) => b.post_count - a.post_count);
-            const hasIgdbGame = sortedGames.slice(0, 3).some(g => g.id.startsWith('igdb-'));
-            
-            if (!hasIgdbGame && formattedGames.length > 0) {
-              sortedGames.pop(); // Remove the lowest popularity game
-              sortedGames.push(formattedGames[0]); // Add the highest rated IGDB game
-              return sortedGames.sort((a, b) => b.post_count - a.post_count).slice(0, 3);
+          } else {
+            // If no match, just add the IGDB game
+            combinedGames.push(igdbGame);
+          }
+        });
+        
+        // Add remaining high-post-count games from our database that aren't already in the list
+        transformedData.forEach(dbGame => {
+          const alreadyAdded = combinedGames.some(
+            game => game.name.toLowerCase() === dbGame.name.toLowerCase()
+          );
+          
+          if (!alreadyAdded && dbGame.post_count > 0) {
+            combinedGames.push(dbGame);
+          }
+        });
+        
+        // Only ensure high-quality images for top games
+        const finalTrendingGames = combinedGames
+          .sort((a, b) => b.post_count - a.post_count)
+          .slice(0, 3)
+          .map(game => {
+            // If no cover URL or it's a poor quality URL, replace with a fixed high-quality image
+            // based on game name pattern matching
+            if (!game.cover_url || game.cover_url.includes('nocover')) {
+              const gameName = game.name.toLowerCase();
+              
+              if (gameName.includes('fortnite')) {
+                game.cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4ixjb.jpg';
+              } else if (gameName.includes('call of duty') || gameName.includes('cod')) {
+                game.cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5hno.jpg';
+              } else if (gameName.includes('halo')) {
+                game.cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2nkk.jpg';
+              } else if (gameName.includes('minecraft')) {
+                game.cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co49x5.jpg';
+              } else if (gameName.includes('league of legends') || gameName.includes('lol')) {
+                game.cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co76yw.jpg';
+              } else if (gameName.includes('valorant')) {
+                game.cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvt.jpg';
+              } else if (gameName.includes('elden ring')) {
+                game.cover_url = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg';
+              }
             }
             
-            return sortedGames.slice(0, 3);
-          }
-        } catch (igdbError) {
-          console.error('IGDB fetch failed:', igdbError);
-        }
+            return game;
+          });
         
-        // Fallback games if no results from anywhere
-        if (transformedData.length === 0) {
-          return [
-            { id: 'fallback-1', name: 'Halo Infinite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', post_count: 0 },
-            { id: 'fallback-2', name: 'Fortnite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', post_count: 0 },
-            { id: 'fallback-3', name: 'Call of Duty', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', post_count: 0 }
+        if (finalTrendingGames.length < 3) {
+          // Hardcoded fallback games with guaranteed correct images
+          const fallbackGames = [
+            { 
+              id: 'fallback-fortnite', 
+              name: 'Fortnite', 
+              cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4ixjb.jpg', 
+              post_count: 5000 
+            },
+            { 
+              id: 'fallback-cod', 
+              name: 'Call of Duty', 
+              cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5hno.jpg', 
+              post_count: 4000 
+            },
+            { 
+              id: 'fallback-halo', 
+              name: 'Halo Infinite', 
+              cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2nkk.jpg', 
+              post_count: 3000 
+            }
           ];
+          
+          // Add fallback games not already in the list
+          for (const fallback of fallbackGames) {
+            if (finalTrendingGames.length >= 3) break;
+            
+            const exists = finalTrendingGames.some(
+              game => game.name.toLowerCase() === fallback.name.toLowerCase()
+            );
+            
+            if (!exists) {
+              finalTrendingGames.push(fallback);
+            }
+          }
         }
         
-        return transformedData;
+        return finalTrendingGames.slice(0, 3);
       } catch (error) {
         console.error('Error fetching trending games:', error);
         
-        // Return hardcoded games as a last resort
+        // Return hardcoded games with guaranteed correct images as a last resort
         return [
-          { id: 'fallback-1', name: 'Halo Infinite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', post_count: 0 },
-          { id: 'fallback-2', name: 'Fortnite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', post_count: 0 },
-          { id: 'fallback-3', name: 'Call of Duty', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', post_count: 0 }
+          { 
+            id: 'fallback-fortnite', 
+            name: 'Fortnite', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4ixjb.jpg', 
+            post_count: 5000 
+          },
+          { 
+            id: 'fallback-cod', 
+            name: 'Call of Duty', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5hno.jpg', 
+            post_count: 4000 
+          },
+          { 
+            id: 'fallback-halo', 
+            name: 'Halo Infinite', 
+            cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2nkk.jpg', 
+            post_count: 3000 
+          }
         ];
       }
     },
@@ -157,7 +261,18 @@ export const TrendingGamesSection = () => {
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.onerror = null;
-                    target.src = '/img/games/default.jpg';
+                    
+                    // Fallback based on game name
+                    const gameName = game.name.toLowerCase();
+                    if (gameName.includes('fortnite')) {
+                      target.src = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4ixjb.jpg';
+                    } else if (gameName.includes('call of duty') || gameName.includes('cod')) {
+                      target.src = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5hno.jpg';
+                    } else if (gameName.includes('halo')) {
+                      target.src = 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2nkk.jpg';
+                    } else {
+                      target.src = '/img/games/default.jpg';
+                    }
                   }}
                 />
               ) : (
