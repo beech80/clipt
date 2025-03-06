@@ -206,6 +206,14 @@ const Settings = () => {
                 </div>
                 <Separator className="my-4" />
                 <Button 
+                  variant="default" 
+                  onClick={() => navigate('/profile/edit')}
+                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 mb-4"
+                >
+                  <UserCog className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Button>
+                <Button 
                   variant="destructive" 
                   onClick={handleSignOut}
                   className="w-full"
