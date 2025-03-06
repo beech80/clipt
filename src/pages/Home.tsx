@@ -49,7 +49,8 @@ const Home = () => {
             ))
           ) : (
             <div className="text-center py-20 text-gray-400">
-              <p>No posts available. Create your first post!</p>
+              <p className="text-xl font-semibold mb-2">No posts available. Create your first post!</p>
+              <p className="text-sm text-gray-500">Share both videos and images in your squad feed.</p>
             </div>
           )}
         </div>
