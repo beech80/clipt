@@ -1,0 +1,17 @@
+{
+  "games": [
+    { "id": "domino-earning-world", "name": "Domino Earning World" },
+    { "id": "san-andreas-multiplayer", "name": "San Andreas Multiplayer" },
+    { "id": "imperium-galactica", "name": "Imperium Galactica" },
+    { "id": "pixadom", "name": "Pixadom" },
+    { "id": "lizards-must-die", "name": "Lizards Must Die" },
+    { "id": "chrono-trigger", "name": "Chrono Trigger" },
+    { "id": "halo", "name": "Halo" },
+    { "id": "call-of-duty", "name": "Call of Duty" },
+    { "id": "minecraft", "name": "Minecraft" },
+    { "id": "fortnite", "name": "Fortnite" },
+    { "id": "grand-theft-auto", "name": "Grand Theft Auto" },
+    { "id": "league-of-legends", "name": "League of Legends" },
+    { "id": "elden-ring", "name": "Elden Ring" }
+  ]
+}
