@@ -25,6 +25,11 @@ const TopClipts = React.lazy(() => import('./pages/TopClipts'));
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
 const Discovery = React.lazy(() => import('./pages/Discovery'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
+const Menu = React.lazy(() => import('./pages/Menu'));
+const Profile = React.lazy(() => import('./pages/Profile'));
+const Streaming = React.lazy(() => import('./pages/Streaming'));
+const Messages = React.lazy(() => import('./pages/Messages'));
+const Settings = React.lazy(() => import('./pages/Settings'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -41,6 +46,12 @@ function AppContent() {
       <Route path="/top-clipts" element={<TopClipts />} />
       <Route path="/profile/:id?" element={<UserProfile />} />
       <Route path="/discovery" element={<Discovery />} />
+      <Route path="/menu" element={<Menu />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/streaming" element={<Streaming />} />
+      <Route path="/messages" element={<Messages />} />
+      <Route path="/messages/:userId" element={<Messages />} />
+      <Route path="/settings" element={<Settings />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
