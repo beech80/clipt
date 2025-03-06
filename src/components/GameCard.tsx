@@ -1,31 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useEffect, useState } from 'react';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
-// Define image fallbacks for specific games by name (in lowercase for easy matching)
-const IMAGE_FALLBACKS: Record<string, string> = {
-  'call of duty': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg',
-  'call of duty 2': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg',
-  'call of duty 3': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg',
-  'counter-strike': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg',
-  'forza horizon 5': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg',
-  'halo infinite': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg',
-  'fallout 3': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2uoh.jpg',
-  'fortnite': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2326.jpg',
-  'minecraft': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2dnx.jpg',
-  'the legend of zelda': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wkh.jpg',
-  'red dead redemption 2': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg',
-  'grand theft auto v': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2ldp.jpg',
-  'elden ring': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg',
-  'fifa 23': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co52l6.jpg',
-  'cyberpunk 2077': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg',
+// Define a set of reliable fallback images for games
+const GAME_IMAGES: Record<string, string> = {
+  // Popular games with reliable image URLs
+  'halo': 'https://i.imgur.com/7FkYnBH.jpg',
+  'call of duty': 'https://i.imgur.com/s9BU4jj.jpg',
+  'minecraft': 'https://i.imgur.com/l5uxOhk.jpg',
+  'fortnite': 'https://i.imgur.com/KjiOy5G.jpg',
+  'league of legends': 'https://i.imgur.com/lttQS5f.jpg',
+  'grand theft auto': 'https://i.imgur.com/i0Qldng.jpg',
+  'fifa': 'https://i.imgur.com/JLxULpV.jpg',
+  'overwatch': 'https://i.imgur.com/zd0Qdwg.jpg',
+  'fallout': 'https://i.imgur.com/6TLNWB8.jpg',
+  'zelda': 'https://i.imgur.com/gIeqbwj.jpg',
+  'cyberpunk': 'https://i.imgur.com/ixoZFmH.jpg',
+  'elden ring': 'https://i.imgur.com/UcApkXd.jpg',
+  
+  // Specific games from the screenshot
+  'domino earning world': 'https://i.imgur.com/Z3bPhDC.jpg',
+  'san andreas multiplayer': 'https://i.imgur.com/byeONkq.jpg',
+  'imperium galactica': 'https://i.imgur.com/4rKpkJA.jpg',
+  'pixadom': 'https://i.imgur.com/OD5zEcn.jpg',
+  'lizards must die': 'https://i.imgur.com/H2wVLsD.jpg',
+  'chrono trigger': 'https://i.imgur.com/ZE3MuaV.jpg'
 };
 
-// Default fallback URL if specific game fallback isn't found
-const DEFAULT_IMAGE = 'https://placehold.co/600x900/1E293B/FFFFFF?text=Game';
+// Default fallback image if no match is found
+const DEFAULT_IMAGE = 'https://i.imgur.com/Y3VEZII.jpg';
 
 export interface GameCardProps {
   id: string;
@@ -37,51 +42,42 @@ export interface GameCardProps {
 
 export const GameCard = ({ id, name, cover_url, post_count, className }: GameCardProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
 
-  // Format and validate the image URL on mount and when cover_url changes
   useEffect(() => {
-    let url = cover_url || '';
-    console.log(`GameCard initial URL for ${name}:`, url);
-    
-    // If no URL or previous error, use fallbacks
-    if (!url || imageError) {
-      const lowercaseName = name.toLowerCase();
+    // Function to find the best matching image for this game
+    const findBestMatchImage = (gameName: string): string => {
+      const lowerName = gameName.toLowerCase();
       
-      // Find a matching fallback by checking if the game name contains any fallback key
-      const fallbackEntry = Object.entries(IMAGE_FALLBACKS).find(
-        ([key]) => lowercaseName.includes(key)
+      // First try exact match
+      if (GAME_IMAGES[lowerName]) {
+        return GAME_IMAGES[lowerName];
+      }
+      
+      // Then try partial match
+      const partialMatch = Object.keys(GAME_IMAGES).find(key => 
+        lowerName.includes(key) || key.includes(lowerName)
       );
       
-      if (fallbackEntry) {
-        url = fallbackEntry[1];
-        console.log(`Using fallback for ${name}:`, url);
-      } else {
-        url = DEFAULT_IMAGE;
-        console.log(`Using default image for ${name}`);
+      if (partialMatch) {
+        return GAME_IMAGES[partialMatch];
       }
+      
+      // If all else fails, use default
+      return DEFAULT_IMAGE;
+    };
+    
+    // First try the cover_url from API if available
+    if (cover_url && cover_url.startsWith('http')) {
+      console.log(`Using API image URL for ${name}:`, cover_url);
+      setImageUrl(cover_url);
+    } else {
+      // Otherwise use our reliable local images
+      const matchedImage = findBestMatchImage(name);
+      console.log(`Using fallback image for ${name}:`, matchedImage);
+      setImageUrl(matchedImage);
     }
-    
-    // Fix URL protocol and formatting
-    if (url.startsWith('//')) {
-      url = 'https:' + url;
-    } else if (!url.startsWith('http')) {
-      url = 'https://' + url;
-    }
-    
-    // Ensure IGDB images use t_cover_big format
-    if (url.includes('igdb.com')) {
-      url = url.replace('t_thumb', 't_cover_big').replace('t_micro', 't_cover_big');
-    }
-    
-    // Add cache buster
-    const timestamp = Date.now();
-    url = url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
-    
-    console.log(`Final image URL for ${name}:`, url);
-    setImageUrl(url);
-  }, [cover_url, name, imageError]);
+  }, [name, cover_url]);
 
   const handleClick = () => {
     navigate(`/games/${id}`);
@@ -101,12 +97,9 @@ export const GameCard = ({ id, name, cover_url, post_count, className }: GameCar
             src={imageUrl}
             alt={name}
             className="object-cover w-full h-full rounded-t-md group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              console.error(`Image error for ${name}:`, e);
-              // Only reset if we haven't already tried a fallback
-              if (!imageError) {
-                setImageError(true);
-              }
+            onError={() => {
+              console.error(`Error loading image for ${name}, falling back to default`);
+              setImageUrl(DEFAULT_IMAGE);
             }}
           />
         )}
