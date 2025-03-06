@@ -39,17 +39,15 @@ export const TrendingGamesSection = () => {
             body: {
               endpoint: 'games',
               query: `
-                fields name,cover.url,popularity,total_rating,rating,first_release_date;
-                where cover != null & popularity != null & rating != null;
+                fields name, popularity, cover.url;
                 sort popularity desc;
-                limit 10;
+                limit 3;
               `
             }
           });
 
           if (igdbResponse && Array.isArray(igdbResponse)) {
             trendingIGDBGames = igdbResponse
-              .slice(0, 5) // Take top 5 most popular
               .map((game: IGDBGame) => ({
                 id: `igdb-${game.id}`,
                 name: game.name,
