@@ -21,15 +21,11 @@ const Discovery = () => {
     queryKey: ['games', 'discovery', searchTerm],
     queryFn: async () => {
       try {
-        let query = supabase
-          .from('games')
-          .select(`
-            *,
-            post_count:posts(count)
-          `)
-          .order('name');
+        let query = supabase.from('games').select(`
+          *,
+          post_count:posts(count)
+        `).order('name');
         
-        // Apply search filter if provided
         if (searchTerm) {
           query = query.ilike('name', `%${searchTerm}%`);
         }
@@ -66,17 +62,29 @@ const Discovery = () => {
           }
         }
         
+        // If still no data, or an error occurred, return predefined fallback games
+        if (transformedData.length === 0) {
+          return [
+            { id: 'fallback-1', name: 'Call of Duty', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', post_count: 0 },
+            { id: 'fallback-2', name: 'Call of Duty 2', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg', post_count: 0 },
+            { id: 'fallback-3', name: 'Call of Duty 3', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg', post_count: 0 },
+            { id: 'fallback-4', name: 'Counter-Strike', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg', post_count: 0 },
+            { id: 'fallback-5', name: 'Forza Horizon 5', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', post_count: 0 },
+            { id: 'fallback-6', name: 'Halo Infinite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', post_count: 0 }
+          ];
+        }
+        
         return transformedData;
       } catch (error) {
         console.error('Error in games query:', error);
         // Return hardcoded games as a last resort
         return [
-          { id: 'fallback-1', name: 'Halo Infinite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', post_count: 0 },
-          { id: 'fallback-2', name: 'Forza Horizon 5', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', post_count: 0 },
-          { id: 'fallback-3', name: 'Call of Duty: Modern Warfare', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', post_count: 0 },
-          { id: 'fallback-4', name: 'FIFA 23', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co52l6.jpg', post_count: 0 },
-          { id: 'fallback-5', name: 'Elden Ring', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg', post_count: 0 },
-          { id: 'fallback-6', name: 'The Legend of Zelda', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co5vmg.jpg', post_count: 0 }
+          { id: 'fallback-1', name: 'Call of Duty', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', post_count: 0 },
+          { id: 'fallback-2', name: 'Call of Duty 2', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg', post_count: 0 },
+          { id: 'fallback-3', name: 'Call of Duty 3', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg', post_count: 0 },
+          { id: 'fallback-4', name: 'Counter-Strike', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg', post_count: 0 },
+          { id: 'fallback-5', name: 'Forza Horizon 5', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', post_count: 0 },
+          { id: 'fallback-6', name: 'Halo Infinite', cover_url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', post_count: 0 }
         ];
       }
     },
