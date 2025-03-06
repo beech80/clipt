@@ -1,36 +1,55 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Gamepad2 } from 'lucide-react';
 
-// Define a set of reliable fallback images for games
-const GAME_IMAGES: Record<string, string> = {
-  // Popular games with reliable image URLs
-  'halo': 'https://i.imgur.com/7FkYnBH.jpg',
-  'call of duty': 'https://i.imgur.com/s9BU4jj.jpg',
-  'minecraft': 'https://i.imgur.com/l5uxOhk.jpg',
-  'fortnite': 'https://i.imgur.com/KjiOy5G.jpg',
-  'league of legends': 'https://i.imgur.com/lttQS5f.jpg',
-  'grand theft auto': 'https://i.imgur.com/i0Qldng.jpg',
-  'fifa': 'https://i.imgur.com/JLxULpV.jpg',
-  'overwatch': 'https://i.imgur.com/zd0Qdwg.jpg',
-  'fallout': 'https://i.imgur.com/6TLNWB8.jpg',
-  'zelda': 'https://i.imgur.com/gIeqbwj.jpg',
-  'cyberpunk': 'https://i.imgur.com/ixoZFmH.jpg',
-  'elden ring': 'https://i.imgur.com/UcApkXd.jpg',
+// Default game image - using a local placeholder that's guaranteed to exist
+const DEFAULT_GAME_IMAGE = '/placeholder.svg';
+
+// Map game names to their respective image assets in public
+const getGameImageUrl = (gameName: string): string => {
+  // Normalize the game name to lowercase for case-insensitive matching
+  const name = gameName.toLowerCase();
   
-  // Specific games from the screenshot
-  'domino earning world': 'https://i.imgur.com/Z3bPhDC.jpg',
-  'san andreas multiplayer': 'https://i.imgur.com/byeONkq.jpg',
-  'imperium galactica': 'https://i.imgur.com/4rKpkJA.jpg',
-  'pixadom': 'https://i.imgur.com/OD5zEcn.jpg',
-  'lizards must die': 'https://i.imgur.com/H2wVLsD.jpg',
-  'chrono trigger': 'https://i.imgur.com/ZE3MuaV.jpg'
+  // Specific popular game image matches (add more as needed)
+  if (name.includes('call of duty')) return '/img/games/cod.jpg';
+  if (name.includes('halo')) return '/img/games/halo.jpg';
+  if (name.includes('fortnite')) return '/img/games/fortnite.jpg';
+  if (name.includes('minecraft')) return '/img/games/minecraft.jpg';
+  if (name.includes('gta') || name.includes('grand theft auto') || name.includes('san andreas')) 
+    return '/img/games/gta.jpg';
+  if (name.includes('fifa')) return '/img/games/fifa.jpg';
+  if (name.includes('fallout')) return '/img/games/fallout.jpg';
+  if (name.includes('assassin')) return '/img/games/assassins-creed.jpg';
+  if (name.includes('zelda')) return '/img/games/zelda.jpg';
+  if (name.includes('elder scrolls') || name.includes('skyrim')) return '/img/games/skyrim.jpg';
+  if (name.includes('witcher')) return '/img/games/witcher.jpg';
+  if (name.includes('overwatch')) return '/img/games/overwatch.jpg';
+  if (name.includes('league of legends')) return '/img/games/lol.jpg';
+  if (name.includes('dota')) return '/img/games/dota.jpg';
+  if (name.includes('cyberpunk')) return '/img/games/cyberpunk.jpg';
+  if (name.includes('elden ring')) return '/img/games/elden-ring.jpg';
+  
+  // Add game-specific matches for games shown in the screenshots
+  if (name.includes('domino')) return '/img/games/domino.jpg';
+  if (name.includes('pixadom')) return '/img/games/pixadom.jpg';
+  if (name.includes('lizard')) return '/img/games/lizards.jpg';
+  if (name.includes('chrono')) return '/img/games/chrono.jpg';
+  if (name.includes('imperium') || name.includes('galactica')) return '/img/games/imperium.jpg';
+  
+  // Generic fallbacks by game genre/theme
+  if (name.includes('war') || name.includes('combat') || name.includes('battlefield')) 
+    return '/img/games/shooter.jpg';
+  if (name.includes('rpg') || name.includes('role')) return '/img/games/rpg.jpg';
+  if (name.includes('strategy')) return '/img/games/strategy.jpg';
+  if (name.includes('sports')) return '/img/games/sports.jpg';
+  if (name.includes('racing')) return '/img/games/racing.jpg';
+  
+  // Default placeholder for games with no match
+  return DEFAULT_GAME_IMAGE;
 };
-
-// Default fallback image if no match is found
-const DEFAULT_IMAGE = 'https://i.imgur.com/Y3VEZII.jpg';
 
 export interface GameCardProps {
   id: string;
@@ -41,43 +60,9 @@ export interface GameCardProps {
 }
 
 export const GameCard = ({ id, name, cover_url, post_count, className }: GameCardProps) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  // True by default to show consistent styling without flickering
+  const [imageError, setImageError] = useState(true);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Function to find the best matching image for this game
-    const findBestMatchImage = (gameName: string): string => {
-      const lowerName = gameName.toLowerCase();
-      
-      // First try exact match
-      if (GAME_IMAGES[lowerName]) {
-        return GAME_IMAGES[lowerName];
-      }
-      
-      // Then try partial match
-      const partialMatch = Object.keys(GAME_IMAGES).find(key => 
-        lowerName.includes(key) || key.includes(lowerName)
-      );
-      
-      if (partialMatch) {
-        return GAME_IMAGES[partialMatch];
-      }
-      
-      // If all else fails, use default
-      return DEFAULT_IMAGE;
-    };
-    
-    // First try the cover_url from API if available
-    if (cover_url && cover_url.startsWith('http')) {
-      console.log(`Using API image URL for ${name}:`, cover_url);
-      setImageUrl(cover_url);
-    } else {
-      // Otherwise use our reliable local images
-      const matchedImage = findBestMatchImage(name);
-      console.log(`Using fallback image for ${name}:`, matchedImage);
-      setImageUrl(matchedImage);
-    }
-  }, [name, cover_url]);
 
   const handleClick = () => {
     navigate(`/games/${id}`);
@@ -92,17 +77,26 @@ export const GameCard = ({ id, name, cover_url, post_count, className }: GameCar
       onClick={handleClick}
     >
       <AspectRatio ratio={3/4}>
-        {imageUrl && (
+        {!imageError && cover_url ? (
           <img
-            src={imageUrl}
+            src={cover_url}
             alt={name}
-            className="object-cover w-full h-full rounded-t-md group-hover:scale-105 transition-transform duration-300"
-            onError={() => {
-              console.error(`Error loading image for ${name}, falling back to default`);
-              setImageUrl(DEFAULT_IMAGE);
-            }}
+            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+            onError={() => setImageError(true)}
           />
+        ) : (
+          // Xbox-style game card fallback design
+          <div className="w-full h-full bg-gradient-to-b from-indigo-900/60 to-indigo-950/90 flex flex-col items-center justify-center p-4">
+            <Gamepad2 size={48} className="text-indigo-400 mb-4" />
+            <div className="text-center">
+              <div className="bg-indigo-500/20 rounded-sm w-12 h-2 mx-auto mb-3"></div>
+              <div className="bg-indigo-500/20 rounded-sm w-20 h-2 mx-auto mb-3"></div>
+              <div className="bg-indigo-500/20 rounded-sm w-16 h-2 mx-auto"></div>
+            </div>
+          </div>
         )}
+        
+        {/* Game info overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         <div className="absolute bottom-0 left-0 p-3">
           <h3 className="text-md font-bold text-white truncate max-w-full">{name}</h3>
