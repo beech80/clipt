@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/ui/back-button";
-import { Search, Trophy, Tv, Users } from "lucide-react";
+import { Search, Trophy, Tv, Users, X } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import GameCard from '@/components/GameCard';
@@ -14,6 +14,7 @@ const Discovery = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('games');
+  const [isSearching, setIsSearching] = useState(false);
 
   // Games Tab
   const { data: games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useQuery({
@@ -111,12 +112,27 @@ const Discovery = () => {
   });
 
   useEffect(() => {
-    if (activeTab === 'games') {
-      refetchGames();
-    } else if (activeTab === 'streamers') {
-      refetchStreamers();
+    // Reset searching flag after a delay when searchTerm changes
+    if (searchTerm.length > 0) {
+      setIsSearching(true);
+      const timer = setTimeout(() => {
+        if (activeTab === 'games') {
+          refetchGames();
+        } else if (activeTab === 'streamers') {
+          refetchStreamers();
+        }
+      }, 500); // Debounce search for 500ms
+      
+      return () => clearTimeout(timer);
+    } else {
+      setIsSearching(false);
     }
   }, [searchTerm, activeTab, refetchGames, refetchStreamers]);
+  
+  // Enhanced search handler with debounce
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -165,9 +181,22 @@ const Discovery = () => {
                 className="bg-indigo-950/30 border-indigo-500/30 pl-10 text-white placeholder:text-indigo-300/50 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 h-12 rounded-xl"
                 placeholder={activeTab === 'games' ? "Search for games..." : "Search for streamers..."}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearch}
               />
+              {searchTerm.length > 0 && (
+                <button
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-indigo-400 hover:text-indigo-300"
+                  onClick={() => setSearchTerm('')}
+                >
+                  <X size={18} />
+                </button>
+              )}
             </div>
+            {searchTerm.length > 0 && (
+              <p className="text-sm text-indigo-300">
+                Searching for: <span className="font-semibold">{searchTerm}</span>
+              </p>
+            )}
           </div>
 
           {/* Tab Content */}
