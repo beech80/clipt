@@ -67,6 +67,13 @@ const Profile = () => {
       
       console.log("Fetching profile data for ID:", profileId);
       
+      // First check if the user exists in auth
+      const { data: authUser, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error("Auth error:", authError);
+      }
+      
+      // Get the profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -84,6 +91,9 @@ const Profile = () => {
               id: user.id,
               username: user.email?.split('@')[0] || `user_${Date.now()}`,
               avatar_url: null,
+              followers: 0,
+              following: 0,
+              achievements: 0,
               created_at: new Date().toISOString()
             })
             .select()
@@ -92,6 +102,26 @@ const Profile = () => {
           if (createError) {
             console.error("Error creating profile:", createError);
             setError("Could not create profile");
+            setLoading(false);
+            return;
+          }
+          
+          setProfile(newProfile);
+          
+          // Set default stats for a new profile
+          setStats({
+            followers: 0,
+            following: 0,
+            achievements: 0
+          });
+          
+          // Initialize default achievements for the new user
+          try {
+            const { achievementService } = await import('@/services/achievementService');
+            await achievementService.createDefaultAchievementsForUser(user.id);
+            console.log("Created default achievements for new user");
+          } catch (err) {
+            console.error("Failed to create default achievements:", err);
           }
           
           setLoading(false);
@@ -115,7 +145,7 @@ const Profile = () => {
       console.log("Profile data loaded successfully:", profileData);
       setProfile(profileData);
       
-      // Set default stats
+      // Set default stats if they're missing
       setStats({
         followers: profileData.followers || 0,
         following: profileData.following || 0,
@@ -260,14 +290,16 @@ const Profile = () => {
               </div>
               
               <div className="flex gap-2">
-                <Button 
-                  onClick={() => navigate('/profile/edit')} 
-                  variant="outline" 
-                  className="flex items-center gap-2 bg-[#1a1b4b] border border-white/10 text-white hover:bg-[#272a5b] px-4 py-1 rounded-sm"
-                >
-                  <Settings className="w-4 h-4" />
-                  <span>Settings</span>
-                </Button>
+                {isOwnProfile && (
+                  <Button 
+                    onClick={() => navigate('/profile/edit')} 
+                    variant="outline" 
+                    className="flex items-center gap-2 bg-[#1a1b4b] border border-white/10 text-white hover:bg-[#272a5b] px-4 py-1 rounded-sm"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Settings</span>
+                  </Button>
+                )}
                 {!isOwnProfile && (
                   <Button
                     onClick={() => navigate(`/messages/${profileId}`)}

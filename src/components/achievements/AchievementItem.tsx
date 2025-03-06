@@ -17,7 +17,6 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
 }) => {
   // If this is a game achievement, use its properties
   if (gameAchievement) {
-    // Always set progress to 0% as requested
     return (
       <div className="flex w-full overflow-hidden mb-3">
         <div className="h-24 w-24 flex-shrink-0 relative">
@@ -32,7 +31,9 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
         </div>
         <div className="flex-1 p-3 bg-[#222222]">
           <h3 className="text-white font-semibold text-lg">{gameAchievement.name}</h3>
-          <p className="text-gray-400 text-sm mb-2">{gameAchievement.description} - 0/{gameAchievement.targetValue}</p>
+          <p className="text-gray-400 text-sm mb-2">
+            {gameAchievement.description} - 0/{gameAchievement.targetValue}
+          </p>
           <div className="flex justify-between text-sm mb-1">
             <div>
               <Progress 
@@ -50,6 +51,11 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
 
   // For regular user achievements
   if (!achievement || !progress) return null;
+  
+  // Calculate the progress percentage correctly
+  const currentValue = progress.currentValue || 0;
+  const targetValue = achievement.target_value || 1;
+  const percentComplete = Math.min(100, Math.round((currentValue / targetValue) * 100));
 
   return (
     <div className="flex w-full overflow-hidden mb-3">
@@ -65,16 +71,18 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
       </div>
       <div className="flex-1 p-3 bg-[#222222]">
         <h3 className="text-white font-semibold text-lg">{achievement.name}</h3>
-        <p className="text-gray-400 text-sm mb-2">{achievement.description} - 0/{achievement.target_value}</p>
+        <p className="text-gray-400 text-sm mb-2">
+          {achievement.description} - {currentValue}/{targetValue}
+        </p>
         <div className="flex justify-between text-sm mb-1">
           <div>
             <Progress 
-              value={0} 
+              value={percentComplete} 
               className="h-2 w-[200px] bg-gray-700" 
               indicatorClassName="bg-[#0078d7]"
             />
           </div>
-          <span className="text-white font-medium">0%</span>
+          <span className="text-white font-medium">{percentComplete}%</span>
         </div>
       </div>
     </div>
