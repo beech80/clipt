@@ -14,39 +14,12 @@ const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Modified to always return empty array
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['posts', 'home'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            avatar_url
-          ),
-          games:game_id (name),
-          likes:likes(count),
-          clip_votes:clip_votes(count)
-        `)
-        .eq('post_type', 'home')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Error fetching posts:", error);
-        throw error;
-      }
-
-      // Ensure each post has a properly formatted id
-      const formattedPosts = data?.map(post => ({
-        ...post,
-        id: post.id.toString(), // Ensure ID is a string
-        likes_count: post.likes?.[0]?.count || 0,
-        clip_votes: post.clip_votes || []
-      })) as Post[];
-
-      console.log("Posts fetched:", formattedPosts);
-      return formattedPosts;
+      // Force return empty array - no posts
+      return [] as Post[];
     },
   });
 

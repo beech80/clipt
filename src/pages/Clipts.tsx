@@ -10,31 +10,12 @@ import { Post } from '@/types/post';
 const Clipts = () => {
   const navigate = useNavigate();
 
+  // Modified to always return empty array
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts', 'clipts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          profiles:user_id (
-            username,
-            avatar_url
-          ),
-          games:game_id (name),
-          likes:likes(count),
-          clip_votes:clip_votes(count)
-        `)
-        .eq('post_type', 'clipts')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      return data?.map(post => ({
-        ...post,
-        likes_count: post.likes?.[0]?.count || 0,
-        clip_votes: post.clip_votes || []
-      })) as Post[];
+      // Force return empty array - no posts
+      return [] as Post[];
     },
   });
 
