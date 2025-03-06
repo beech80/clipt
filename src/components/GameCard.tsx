@@ -1,108 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from "@/components/ui/card";
-import { Trophy } from 'lucide-react';
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+
+// Define image fallbacks for specific games by name
+const IMAGE_FALLBACKS: Record<string, string> = {
+  'Call of Duty': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg',
+  'Call of Duty 2': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg',
+  'Call of Duty 3': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg',
+  'Counter-Strike': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg',
+  'Forza Horizon 5': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg',
+  'Halo Infinite': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg',
+  'Fallout 3': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2uoh.jpg',
+  'Fortnite': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2326.jpg',
+  'Minecraft': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2dnx.jpg',
+  'The Legend of Zelda': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wkh.jpg',
+  'Red Dead Redemption 2': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg',
+  'Grand Theft Auto V': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2ldp.jpg',
+};
+
+// Default fallback URL if specific game fallback isn't found
+const DEFAULT_IMAGE = 'https://placehold.co/600x900/1E293B/FFFFFF?text=Game';
 
 interface GameCardProps {
   id: string;
   name: string;
   coverUrl?: string;
-  postCount?: number;
-  onClick?: () => void;
+  postCount: number;
+  className?: string;
 }
 
-// Game-specific fallback images
-const GAME_FALLBACKS: Record<string, string> = {
-  'call of duty': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg',
-  'call of duty 2': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3s.jpg',
-  'call of duty 3': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1y3t.jpg',
-  'counter-strike': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg',
-  'forza horizon 5': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg',
-  'halo infinite': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg',
-  'fifa': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co52l6.jpg',
-  'elden ring': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg',
-};
+const GameCard = ({ id, name, coverUrl, postCount, className }: GameCardProps) => {
+  const [imageError, setImageError] = useState(false);
+  const navigate = useNavigate();
 
-// Generic fallback covers for other games
-const GENERIC_FALLBACKS = [
-  'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg', // Halo
-  'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wk8.jpg', // Forza
-  'https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkb.jpg', // COD
-  'https://images.igdb.com/igdb/image/upload/t_cover_big/co52l6.jpg', // FIFA
-  'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg', // Elden Ring
-];
+  const handleClick = () => {
+    navigate(`/games/${id}`);
+  };
 
-const GameCard = ({ id, name, coverUrl, postCount = 0, onClick }: GameCardProps) => {
-  const [showFallback, setShowFallback] = useState(!coverUrl);
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-  
-  useEffect(() => {
-    if (!coverUrl || showFallback) {
-      const lowerName = name.toLowerCase();
-      
-      // First try exact matches for specific games
-      for (const [gameName, fallbackUrl] of Object.entries(GAME_FALLBACKS)) {
-        if (lowerName.includes(gameName)) {
-          setImageUrl(fallbackUrl);
-          return;
-        }
-      }
-      
-      // If no match, use a generic fallback based on first letter
-      const firstChar = name.charAt(0).toLowerCase();
-      const charCode = firstChar.charCodeAt(0);
-      const fallbackIndex = charCode % GENERIC_FALLBACKS.length;
-      setImageUrl(GENERIC_FALLBACKS[fallbackIndex]);
-    } else {
-      // Handle provided coverUrl
-      let url = coverUrl;
-      
-      // Fix protocol-relative URLs
-      if (url.startsWith('//')) {
-        url = `https:${url}`;
-      } 
-      // Add protocol if missing
-      else if (!url.includes('://') && !url.startsWith('/')) {
-        url = `https://${url}`;
-      }
-      
-      // Force https for igdb images
-      if (url.includes('igdb.com')) {
-        url = url.replace('http://', 'https://');
-      }
-      
-      // Add a cache-busting timestamp
-      const timestamp = new Date().getTime();
-      url = url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
-      
-      setImageUrl(url);
+  // Get the appropriate image URL with fallbacks
+  const getImageUrl = (): string => {
+    // If we already tried the original and got an error, go straight to fallbacks
+    if (imageError || !coverUrl) {
+      // Use specific fallback for this game if available
+      return IMAGE_FALLBACKS[name] ? 
+        `${IMAGE_FALLBACKS[name]}?t=${Date.now()}` : 
+        `${DEFAULT_IMAGE}&t=${Date.now()}`;
     }
-  }, [coverUrl, name, showFallback]);
+
+    // Ensure URL has https protocol
+    let url = coverUrl;
+    if (url.startsWith('//')) {
+      url = 'https:' + url;
+    } else if (!url.startsWith('http')) {
+      url = 'https://' + url;
+    }
+
+    // Add cache buster
+    return `${url}?t=${Date.now()}`;
+  };
+
+  // Log all image attempts for debugging
+  const imageUrl = getImageUrl();
+  console.log(`GameCard ${name} using image: ${imageUrl}`);
 
   return (
     <Card 
-      className="group overflow-hidden bg-indigo-950/40 border-indigo-500/30 hover:border-indigo-400 transition-all cursor-pointer relative" 
-      onClick={onClick}
+      className={cn(
+        "cursor-pointer overflow-hidden shadow-md transition-all hover:shadow-lg",
+        className
+      )}
+      onClick={handleClick}
     >
-      <div className="relative">
-        <AspectRatio ratio={3/4}>
-          <img 
-            src={imageUrl} 
-            alt={name}
-            className="object-cover w-full h-full rounded-t-md group-hover:scale-105 transition-transform duration-300"
-            onError={() => {
-              console.log(`Image failed to load for game "${name}", URL: ${imageUrl}`);
-              setShowFallback(true);
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        </AspectRatio>
-        
-        <div className="absolute bottom-0 left-0 p-3">
-          <h3 className="text-md font-bold text-white truncate max-w-full">{name}</h3>
-          <p className="text-xs text-indigo-300">
-            {postCount === 1 ? '1 clipt' : `${postCount} clipts`}
-          </p>
+      <div className="relative pb-[150%] overflow-hidden">
+        <img
+          src={imageUrl}
+          alt={name}
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={() => {
+            console.log(`Error loading image for ${name}`);
+            setImageError(true);
+          }}
+        />
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+          <h3 className="text-white font-bold truncate">{name}</h3>
+          <Badge variant="outline" className="mt-1 bg-primary/20 text-primary-foreground">
+            {postCount} clips
+          </Badge>
         </div>
       </div>
     </Card>
