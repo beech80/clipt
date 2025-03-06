@@ -10,12 +10,54 @@ import { Post } from '@/types/post';
 const Clipts = () => {
   const navigate = useNavigate();
 
-  // Modified to always return empty array
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts', 'clipts'],
     queryFn: async () => {
-      // Force return empty array - no posts
-      return [] as Post[];
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) throw new Error('Not authenticated');
+        
+        const { data, error } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            content,
+            image_url,
+            video_url,
+            image_urls,
+            user_id,
+            created_at,
+            post_type,
+            games (
+              name,
+              id
+            ),
+            profiles (
+              username,
+              display_name,
+              avatar_url
+            ),
+            likes: likes_count(count),
+            comments: comments_count(count),
+            clip_votes: clip_votes(count)
+          `)
+          .eq('post_type', 'clip')
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        // Transform data to make sure count properties are numbers, not objects
+        return (data || []).map(post => ({
+          ...post,
+          likes: typeof post.likes === 'object' && post.likes !== null ? Number(post.likes.count || 0) : 0,
+          comments: typeof post.comments === 'object' && post.comments !== null ? Number(post.comments.count || 0) : 0,
+          clip_votes: typeof post.clip_votes === 'object' && post.clip_votes !== null ? Number(post.clip_votes.count || 0) : 0
+        })) as Post[];
+      } catch (error) {
+        console.error('Error fetching clips:', error);
+        return [] as Post[];
+      }
     },
   });
 
