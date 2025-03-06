@@ -16,7 +16,7 @@ const Discovery = () => {
   const [activeTab, setActiveTab] = useState('games');
 
   // Games Tab
-  const { data: games, isLoading: gamesLoading, error: gamesError } = useQuery({
+  const { data: games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useQuery({
     queryKey: ['games', 'discovery', searchTerm],
     queryFn: async () => {
       try {
