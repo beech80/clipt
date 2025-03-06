@@ -127,27 +127,37 @@ const Profile = () => {
     setLoading(true);
     setError(null);
     
-    const loadProfileData = async () => {
+    // Add a delay to ensure auth context is fully loaded
+    const timer = setTimeout(() => {
+      loadProfileData();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [profileId, user]);
+
+  const loadProfileData = async () => {
+    try {
+      // Fetch profile data
+      const profileData = await fetchProfileData(profileId);
+      
+      if (!profileData) {
+        setError("Profile not found");
+        setLoading(false);
+        return;
+      }
+      
+      setProfile(profileData);
+      console.log("Successfully loaded profile:", profileData);
+      
+      // Always ensure we have stats, even if they're zeroed out
+      setStats({
+        followers: profileData.followers || 0,
+        following: profileData.following || 0,
+        achievements: profileData.achievements || 0
+      });
+      
+      // Fetch user's posts for the clips tab
       try {
-        // Fetch profile data
-        const profileData = await fetchProfileData(profileId);
-        
-        if (!profileData) {
-          setError("Profile not found");
-          setLoading(false);
-          return;
-        }
-        
-        setProfile(profileData);
-        
-        // Set default stats if they're missing
-        setStats({
-          followers: profileData.followers || 0,
-          following: profileData.following || 0,
-          achievements: profileData.achievements || 0
-        });
-        
-        // Fetch user's posts for the clips tab
         const { data: postsData, error: postsError } = await supabase
           .from('posts')
           .select(`
@@ -176,27 +186,58 @@ const Profile = () => {
           console.log("User posts loaded:", postsData);
           setUserPosts(postsData || []);
         }
-        
-        // Initialize default achievements for the new user if needed
-        if (profileData.id === user?.id && (!profileData.achievements || profileData.achievements === 0)) {
-          try {
-            const { achievementService } = await import('@/services/achievementService');
-            await achievementService.createDefaultAchievementsForUser(user.id);
-            console.log("Created default achievements for user");
-          } catch (err) {
-            console.error("Failed to create default achievements:", err);
-          }
-        }
-      } catch (error) {
-        console.error("Error in profile data loading:", error);
-        setError("Failed to load profile data");
-      } finally {
-        setLoading(false);
+      } catch (postError) {
+        console.error("Error fetching user posts:", postError);
+        // Continue execution even if posts fail to load
       }
-    };
-    
-    loadProfileData();
-  }, [profileId, user]);
+      
+      // Initialize default achievements for the new user if needed
+      if (profileData.id === user?.id && (!profileData.achievements || profileData.achievements === 0)) {
+        try {
+          const { achievementService } = await import('@/services/achievementService');
+          await achievementService.createDefaultAchievementsForUser(user.id);
+          console.log("Created default achievements for user");
+        } catch (err) {
+          console.error("Failed to create default achievements:", err);
+          // Continue execution even if achievement creation fails
+        }
+      }
+      
+      // Success - clear any errors
+      setError(null);
+    } catch (error) {
+      console.error("Error in profile data loading:", error);
+      
+      // Create a fallback profile if this is the current user
+      if (profileId === user?.id) {
+        console.log("Creating fallback profile for current user");
+        const fallbackProfile = {
+          id: user.id,
+          username: user.email?.split('@')[0] || `user_${user.id.substring(0, 8)}`,
+          display_name: user.user_metadata?.name || 'Your Profile',
+          bio: 'Welcome to your Clipt profile!',
+          avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.id}`,
+          created_at: new Date().toISOString(),
+          followers: 0,
+          following: 0,
+          achievements: 0
+        };
+        
+        setProfile(fallbackProfile);
+        setStats({
+          followers: 0,
+          following: 0,
+          achievements: 0
+        });
+        setUserPosts([]);
+        setError(null); // Use fallback, don't show error
+      } else {
+        setError("Failed to load profile data");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Render loading state
   if (loading) {
