@@ -34,6 +34,7 @@ const EditProfile = React.lazy(() => import('./pages/EditProfile'));
 const Admin = React.lazy(() => import('./pages/Admin'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
+const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -60,6 +61,7 @@ function AppContent() {
       <Route path="/messages/:userId" element={<Messages />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/game-streamers/:gameId" element={<GameStreamers />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
