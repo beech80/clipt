@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 // Define image fallbacks for specific games by name (in lowercase for easy matching)
 const IMAGE_FALLBACKS: Record<string, string> = {
@@ -18,6 +19,9 @@ const IMAGE_FALLBACKS: Record<string, string> = {
   'the legend of zelda': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wkh.jpg',
   'red dead redemption 2': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg',
   'grand theft auto v': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2ldp.jpg',
+  'elden ring': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg',
+  'fifa 23': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co52l6.jpg',
+  'cyberpunk 2077': 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg',
 };
 
 // Default fallback URL if specific game fallback isn't found
@@ -26,78 +30,94 @@ const DEFAULT_IMAGE = 'https://placehold.co/600x900/1E293B/FFFFFF?text=Game';
 export interface GameCardProps {
   id: string;
   name: string;
-  cover_url?: string;  // Changed from coverUrl to cover_url to match API
-  post_count: number;  // Changed from postCount to post_count to match API
+  cover_url?: string;
+  post_count: number;
   className?: string;
 }
 
 export const GameCard = ({ id, name, cover_url, post_count, className }: GameCardProps) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    navigate(`/games/${id}`);
-  };
-
-  // Get the appropriate image URL with fallbacks
-  const getImageUrl = (): string => {
-    // If we already tried the original and got an error, go straight to fallbacks
-    if (imageError || !cover_url) {
-      // Check for fallback by converting name to lowercase
+  // Format and validate the image URL on mount and when cover_url changes
+  useEffect(() => {
+    let url = cover_url || '';
+    console.log(`GameCard initial URL for ${name}:`, url);
+    
+    // If no URL or previous error, use fallbacks
+    if (!url || imageError) {
       const lowercaseName = name.toLowerCase();
-      const fallbackUrl = Object.entries(IMAGE_FALLBACKS).find(
-        ([key]) => lowercaseName.includes(key)
-      )?.[1];
       
-      // Use specific fallback or default with cache buster
-      return fallbackUrl ? 
-        `${fallbackUrl}?t=${Date.now()}` : 
-        `${DEFAULT_IMAGE}&t=${Date.now()}`;
+      // Find a matching fallback by checking if the game name contains any fallback key
+      const fallbackEntry = Object.entries(IMAGE_FALLBACKS).find(
+        ([key]) => lowercaseName.includes(key)
+      );
+      
+      if (fallbackEntry) {
+        url = fallbackEntry[1];
+        console.log(`Using fallback for ${name}:`, url);
+      } else {
+        url = DEFAULT_IMAGE;
+        console.log(`Using default image for ${name}`);
+      }
     }
-
-    // Ensure URL has https protocol
-    let url = cover_url;
+    
+    // Fix URL protocol and formatting
     if (url.startsWith('//')) {
       url = 'https:' + url;
     } else if (!url.startsWith('http')) {
       url = 'https://' + url;
     }
-
+    
+    // Ensure IGDB images use t_cover_big format
+    if (url.includes('igdb.com')) {
+      url = url.replace('t_thumb', 't_cover_big').replace('t_micro', 't_cover_big');
+    }
+    
     // Add cache buster
-    return `${url}?t=${Date.now()}`;
-  };
+    const timestamp = Date.now();
+    url = url.includes('?') ? `${url}&t=${timestamp}` : `${url}?t=${timestamp}`;
+    
+    console.log(`Final image URL for ${name}:`, url);
+    setImageUrl(url);
+  }, [cover_url, name, imageError]);
 
-  // Get image URL
-  const imageUrl = getImageUrl();
-  
-  // Log image URL for debugging
-  console.log(`GameCard ${name} using image: ${imageUrl}`);
+  const handleClick = () => {
+    navigate(`/games/${id}`);
+  };
 
   return (
     <Card 
       className={cn(
-        "cursor-pointer overflow-hidden shadow-md transition-all hover:shadow-lg bg-indigo-950/40 border-indigo-500/30 hover:border-indigo-400",
+        "group overflow-hidden bg-indigo-950/40 border-indigo-500/30 hover:border-indigo-400 transition-all cursor-pointer",
         className
       )}
       onClick={handleClick}
     >
-      <div className="relative pb-[150%] overflow-hidden">
-        <img
-          src={imageUrl}
-          alt={name}
-          className="absolute inset-0 w-full h-full object-cover"
-          onError={() => {
-            console.log(`Error loading image for ${name}: ${imageUrl}`);
-            setImageError(true);
-          }}
-        />
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-          <h3 className="text-white font-bold truncate">{name}</h3>
-          <Badge variant="outline" className="mt-1 bg-primary/20 text-primary-foreground">
-            {post_count} clips
-          </Badge>
+      <AspectRatio ratio={3/4}>
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="object-cover w-full h-full rounded-t-md group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              console.error(`Image error for ${name}:`, e);
+              // Only reset if we haven't already tried a fallback
+              if (!imageError) {
+                setImageError(true);
+              }
+            }}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="absolute bottom-0 left-0 p-3">
+          <h3 className="text-md font-bold text-white truncate max-w-full">{name}</h3>
+          <p className="text-xs text-indigo-300">
+            {post_count === 1 ? '1 clip' : `${post_count} clips`}
+          </p>
         </div>
-      </div>
+      </AspectRatio>
     </Card>
   );
 };
