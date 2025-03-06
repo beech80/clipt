@@ -1,6 +1,6 @@
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
 import { ThemeSelector } from "@/components/profile/ThemeSelector";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -9,11 +9,18 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Profile } from "@/types/profile";
+import { useEffect } from "react";
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
-  const { data: profile } = useQuery<Profile>({
+  // Force refetch on component mount
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['profile'] });
+  }, [queryClient]);
+  
+  const { data: profile, isLoading, error, refetch } = useQuery<Profile>({
     queryKey: ['profile'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -25,13 +32,28 @@ const EditProfile = () => {
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+      }
+      
+      console.log('Profile data loaded:', data);
+      
       return {
         ...data,
         custom_theme: data.custom_theme || { primary: "#1EAEDB", secondary: "#000000" }
       } as Profile;
     },
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
+
+  // Handle errors
+  if (error) {
+    console.error('Profile query error:', error);
+    toast.error('Failed to load profile. Please try again.');
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8 pb-40">

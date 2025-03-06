@@ -125,143 +125,181 @@ export function ProfileEditForm() {
     }
   }, [profile, form])
 
-  // Handle avatar upload with fixes to ensure it uploads correctly
+  // Fixed avatar upload function - completely rewritten
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
     }
     
     const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `avatar_${user.id}_${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
     
-    // Show local preview
+    // Validate file
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+    
+    // Show preview immediately for better user experience
     setAvatarPreview(URL.createObjectURL(file));
     
     try {
       setUploading(true);
+      toast.loading('Uploading profile picture...');
       
-      // Upload the file to Supabase Storage
+      // Create unique file path to avoid caching issues
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar_${user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+      
+      console.log('Uploading avatar to path:', filePath);
+      
+      // Direct upload to storage bucket
       const { error: uploadError, data: uploadData } = await supabase.storage
         .from('profiles')
-        .upload(filePath, file, { upsert: true, cacheControl: '0' });
+        .upload(filePath, file, { 
+          upsert: true,
+          cacheControl: '0'
+        });
         
       if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
+        console.error('Avatar upload error:', uploadError);
+        toast.error('Failed to upload image: ' + uploadError.message);
+        return;
       }
       
-      // Get the public URL with a timestamp to prevent caching
-      const timestamp = new Date().getTime();
+      console.log('Avatar uploaded successfully, getting public URL');
+      
+      // Get public URL without cache
       const { data: publicUrlData } = supabase.storage
         .from('profiles')
-        .getPublicUrl(`${filePath}?t=${timestamp}`);
+        .getPublicUrl(filePath);
         
-      if (!publicUrlData.publicUrl) {
-        throw new Error('Failed to get public URL');
+      if (!publicUrlData?.publicUrl) {
+        toast.error('Failed to get image URL');
+        return;
       }
       
-      console.log('Avatar public URL:', publicUrlData.publicUrl);
+      const avatarUrl = publicUrlData.publicUrl + '?t=' + Date.now();
+      console.log('Avatar public URL:', avatarUrl);
       
-      // Update the profile
+      // Update profile in database
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
-          avatar_url: publicUrlData.publicUrl,
-          updated_at: new Date().toISOString() 
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
         
       if (updateError) {
         console.error('Profile update error:', updateError);
-        throw updateError;
+        toast.error('Failed to update profile with new image');
+        return;
       }
       
-      toast.success('Avatar updated successfully!');
+      // Success
+      toast.dismiss();
+      toast.success('Profile picture updated successfully!');
       
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      // Clear and refresh caches
+      queryClient.removeQueries({ queryKey: ['profile'] });
       await refetch();
       
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload avatar. Please try again.');
-      // Reset preview on error
-      setAvatarPreview(null);
+    } catch (error: any) {
+      console.error('Avatar upload/update error:', error);
+      toast.error('Error: ' + (error.message || 'Failed to update profile picture'));
     } finally {
       setUploading(false);
+      toast.dismiss();
     }
   };
-
-  // Handle banner upload with fixes to ensure it uploads correctly
+  
+  // Fixed banner upload function - completely rewritten
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
     }
     
     const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `banner_${user.id}_${Date.now()}.${fileExt}`;
-    const filePath = `banners/${fileName}`;
     
-    // Show local preview
+    // Validate file
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Banner image must be less than 10MB');
+      return;
+    }
+    
+    // Show preview immediately for better user experience
     setBannerPreview(URL.createObjectURL(file));
     
     try {
       setUploading(true);
+      toast.loading('Uploading banner image...');
       
-      // Upload the file to Supabase Storage
+      // Create unique file path to avoid caching issues
+      const fileExt = file.name.split('.').pop();
+      const fileName = `banner_${user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `banners/${fileName}`;
+      
+      console.log('Uploading banner to path:', filePath);
+      
+      // Direct upload to storage bucket
       const { error: uploadError } = await supabase.storage
         .from('profiles')
-        .upload(filePath, file, { upsert: true, cacheControl: '0' });
+        .upload(filePath, file, { 
+          upsert: true,
+          cacheControl: '0'
+        });
         
       if (uploadError) {
         console.error('Banner upload error:', uploadError);
-        throw uploadError;
+        toast.error('Failed to upload banner: ' + uploadError.message);
+        return;
       }
       
-      // Get the public URL with a timestamp to prevent caching
-      const timestamp = new Date().getTime();
+      console.log('Banner uploaded successfully, getting public URL');
+      
+      // Get public URL without cache
       const { data: publicUrlData } = supabase.storage
         .from('profiles')
-        .getPublicUrl(`${filePath}?t=${timestamp}`);
+        .getPublicUrl(filePath);
         
-      if (!publicUrlData.publicUrl) {
-        throw new Error('Failed to get public URL for banner');
+      if (!publicUrlData?.publicUrl) {
+        toast.error('Failed to get banner URL');
+        return;
       }
       
-      console.log('Banner public URL:', publicUrlData.publicUrl);
+      const bannerUrl = publicUrlData.publicUrl + '?t=' + Date.now();
+      console.log('Banner public URL:', bannerUrl);
       
-      // Update the profile
+      // Update profile in database
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ 
-          banner_url: publicUrlData.publicUrl,
-          updated_at: new Date().toISOString() 
+          banner_url: bannerUrl,
+          updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
         
       if (updateError) {
         console.error('Profile update error for banner:', updateError);
-        throw updateError;
+        toast.error('Failed to update profile with new banner');
+        return;
       }
       
-      toast.success('Banner updated successfully!');
+      // Success
+      toast.dismiss();
+      toast.success('Banner image updated successfully!');
       
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+      // Clear and refresh caches
+      queryClient.removeQueries({ queryKey: ['profile'] });
       await refetch();
       
-    } catch (error) {
-      console.error('Error uploading banner:', error);
-      toast.error('Failed to upload banner. Please try again.');
-      // Reset preview on error
-      setBannerPreview(null);
+    } catch (error: any) {
+      console.error('Banner upload/update error:', error);
+      toast.error('Error: ' + (error.message || 'Failed to update banner image'));
     } finally {
       setUploading(false);
+      toast.dismiss();
     }
   };
 
@@ -282,29 +320,36 @@ export function ProfileEditForm() {
     handleBannerUpload(e);
   };
 
+  // Handle form submission with improved error handling and data saving
   async function onSubmit(values: ProfileFormValues) {
+    if (submitting) return;
+    
     setSubmitting(true);
 
     try {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) {
+        toast.error('You must be logged in to update your profile');
+        return;
+      }
 
       // Prepare the update payload
       const updatePayload: Partial<DatabaseProfile> = {
         username: values.username,
         display_name: values.displayName,
-        bio: values.bioDescription || '',
-        website: values.website || '',
+        bio: values.bioDescription || null,
+        website: values.website || null,
         updated_at: new Date().toISOString()
       };
 
       console.log('Updating profile with:', updatePayload);
 
-      // Update the profile in Supabase
-      const { error, data } = await supabase
+      // Update the profile in Supabase with direct return
+      const { data, error } = await supabase
         .from('profiles')
         .update(updatePayload)
         .eq('id', user.id)
-        .select();
+        .select('*')
+        .single();
 
       if (error) {
         console.error('Error updating profile:', error);
@@ -312,23 +357,26 @@ export function ProfileEditForm() {
         return;
       }
 
-      console.log('Profile updated successfully:', data);
+      console.log('Profile updated successfully with data:', data);
       
       // Success!
       toast.success('Profile updated successfully!');
       
-      // Invalidate the profile cache to force a refresh
+      // Clear all profile caches
+      queryClient.removeQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
       
-      // Force a refetch of the current profile data
+      // Wait a brief moment for the database to settle
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Force a manual refetch
       await refetch();
       
       // Redirect to profile view
       navigate('/profile');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in profile update:', error);
-      toast.error('Failed to update profile. Please try again.');
+      toast.error(`Failed to update profile: ${error?.message || 'Unknown error'}`);
     } finally {
       setSubmitting(false);
     }
