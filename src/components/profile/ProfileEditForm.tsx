@@ -36,11 +36,14 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 export function ProfileEditForm() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const avatarFileInputRef = useRef<HTMLInputElement>(null)
+  const bannerFileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [canChangeUsername, setCanChangeUsername] = useState(true)
   const [lastUsernameChange, setLastUsernameChange] = useState<Date | null>(null)
   const [daysUntilNextChange, setDaysUntilNextChange] = useState(0)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const { data: profile, refetch } = useQuery({
@@ -91,7 +94,8 @@ export function ProfileEditForm() {
         enable_notifications: data.enable_notifications,
         enable_sounds: data.enable_sounds,
         private_profile: data.private_profile,
-        last_username_change: data.last_username_change
+        last_username_change: data.last_username_change,
+        banner_url: data.banner_url
       }
 
       return transformedProfile
@@ -120,62 +124,135 @@ export function ProfileEditForm() {
     }
   }, [profile, form])
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (file: File) => {
+    if (!user?.id) return;
+    
     try {
-      if (!event.target.files || event.target.files.length === 0 || !user?.id) {
-        return
-      }
-
-      setUploading(true)
-      const file = event.target.files[0]
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${Math.random().toString(36).slice(2)}.${fileExt}`
-
-      // Upload file to storage
-      const { error: uploadError, data } = await supabase.storage
-        .from('avatars')
-        .upload(`public/${fileName}`, file, { 
-          upsert: true,
-          contentType: file.type
-        })
-
-      if (uploadError) {
-        console.error('Error uploading file:', uploadError)
-        throw new Error('Error uploading file')
-      }
-
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(`public/${fileName}`)
-
+      setUploading(true);
+      
+      // Create a preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarPreview(previewUrl);
+      
+      // Upload to storage bucket
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}_avatar_${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+        
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ 
-          avatar_url: publicUrl
-        })
-        .eq('id', user.id)
-
-      if (updateError) {
-        console.error('Error updating profile:', updateError)
-        throw new Error('Error updating profile')
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
-      await refetch() // Explicitly refetch to ensure UI updates
-      toast.success("Profile picture updated successfully!")
+        .update({ avatar_url: publicUrlData.publicUrl })
+        .eq('id', user.id);
+        
+      if (updateError) throw updateError;
+      
+      toast.success('Profile picture updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      refetch();
+      
     } catch (error) {
-      console.error('Error updating avatar:', error)
-      toast.error(error instanceof Error ? error.message : "Error updating profile picture")
+      console.error('Error uploading avatar:', error);
+      toast.error('Failed to update profile picture');
     } finally {
-      setUploading(false)
+      setUploading(false);
     }
-  }
+  };
+  
+  const handleBannerUpload = async (file: File) => {
+    if (!user?.id) return;
+    
+    try {
+      setUploading(true);
+      
+      // Create a preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setBannerPreview(previewUrl);
+      
+      // Upload to storage bucket
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}_banner_${Date.now()}.${fileExt}`;
+      const filePath = `banners/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+        
+      // Update profile with new banner URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ banner_url: publicUrlData.publicUrl })
+        .eq('id', user.id);
+        
+      if (updateError) throw updateError;
+      
+      toast.success('Banner image updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      refetch();
+      
+    } catch (error) {
+      console.error('Error uploading banner:', error);
+      toast.error('Failed to update banner image');
+    } finally {
+      setUploading(false);
+    }
+  };
+  
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type and size
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload an image file (JPEG, PNG, or GIF)');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+    
+    handleAvatarUpload(file);
+  };
+  
+  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type and size
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload an image file (JPEG, PNG, or GIF)');
+      return;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) { // 10MB
+      toast.error('Image must be less than 10MB');
+      return;
+    }
+    
+    handleBannerUpload(file);
+  };
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
@@ -215,30 +292,94 @@ export function ProfileEditForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="relative">
-            <Avatar className="w-24 h-24 cursor-pointer hover:opacity-90 transition-opacity" onClick={handleAvatarClick}>
-              <AvatarImage src={profile?.avatar_url || ''} />
-              <AvatarFallback className="bg-primary/10">
-                {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || '?'}
-              </AvatarFallback>
-              <div className="absolute bottom-0 right-0 p-1 bg-primary rounded-full">
-                <Camera className="w-4 h-4 text-white" />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        
+        {/* Profile Images Section */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-medium">Profile Images</h3>
+            <p className="text-sm text-muted-foreground">
+              Customize how your profile looks to others
+            </p>
+          </div>
+          
+          {/* Banner Image Upload */}
+          <div className="space-y-2">
+            <FormLabel>Banner Image</FormLabel>
+            <div 
+              className="h-40 rounded-lg overflow-hidden relative cursor-pointer group"
+              onClick={() => bannerFileInputRef.current?.click()}
+            >
+              <div className={`absolute inset-0 flex items-center justify-center bg-black/50 text-white 
+                transition-opacity ${bannerPreview || profile?.banner_url ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                <div className="text-center">
+                  <Camera className="h-8 w-8 mx-auto mb-2" />
+                  <p className="text-sm">Click to upload a banner image</p>
+                  <p className="text-xs text-gray-300">Recommended: 1200 x 400px</p>
+                </div>
               </div>
-            </Avatar>
+              
+              {bannerPreview ? (
+                <img 
+                  src={bannerPreview} 
+                  alt="Banner preview" 
+                  className="w-full h-full object-cover"
+                />
+              ) : profile?.banner_url ? (
+                <img 
+                  src={profile.banner_url} 
+                  alt="Banner" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-r from-indigo-500/30 to-purple-500/30"></div>
+              )}
+            </div>
             <input
               type="file"
-              ref={fileInputRef}
-              onChange={handleAvatarChange}
+              ref={bannerFileInputRef}
               className="hidden"
               accept="image/*"
+              onChange={handleBannerFileChange}
               disabled={uploading}
             />
           </div>
-          {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
+          
+          {/* Avatar Upload */}
+          <div className="space-y-2">
+            <FormLabel>Profile Picture</FormLabel>
+            <div className="flex items-center gap-4">
+              <div 
+                className="relative group cursor-pointer"
+                onClick={() => avatarFileInputRef.current?.click()}
+              >
+                <Avatar className="w-24 h-24 border-4 border-background">
+                  <AvatarImage src={avatarPreview || profile?.avatar_url || ''} />
+                  <AvatarFallback className="bg-purple-600 text-xl">
+                    {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || '?'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Choose a profile picture</p>
+                <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max 5MB.</p>
+              </div>
+            </div>
+            <input
+              type="file"
+              ref={avatarFileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleAvatarFileChange}
+              disabled={uploading}
+            />
+          </div>
         </div>
-
+        
+        {/* Basic Information Section */}
         <FormField
           control={form.control}
           name="username"

@@ -2,6 +2,7 @@ export interface Profile {
   id: string;
   username?: string | null;
   avatar_url?: string | null;
+  banner_url?: string | null;
   display_name?: string | null;
   bio?: string | null;
   website?: string | null;
@@ -16,6 +17,7 @@ export interface DatabaseProfile {
   id: string;
   username?: string | null;
   avatar_url?: string | null;
+  banner_url?: string | null;
   enable_notifications?: boolean;
   enable_sounds?: boolean;
   bio?: string | null;
