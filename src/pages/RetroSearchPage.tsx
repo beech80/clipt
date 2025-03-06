@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Search, X, Ghost, Trophy, Gamepad2, Users } from 'lucide-react';
+import { Search, X, Ghost, Trophy, Gamepad2, Users, Sparkles, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { BackButton } from '@/components/ui/back-button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,6 +12,7 @@ const RetroSearchPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchCategory, setSearchCategory] = useState<'all' | 'games' | 'streamers'>('all');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -172,8 +173,12 @@ const RetroSearchPage = () => {
           display_name,
           avatar_url,
           follower_count
-        `)
-        .not('streaming_url', 'is', null);
+        `);
+      
+      // Only filter for streamers if not searching for users
+      if (!searchTerm) {
+        query = query.not('streaming_url', 'is', null);
+      }
       
       // Apply search filter if provided
       if (searchTerm) {
@@ -288,6 +293,40 @@ const RetroSearchPage = () => {
         </div>
       </div>
 
+      {/* Cool Explore Header */}
+      <div className="pt-8 pb-4 bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 border-b-4 border-yellow-500">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h1 className="text-3xl md:text-5xl font-bold text-yellow-300 mb-2 tracking-wider flex items-center justify-center gap-3">
+            <Star className="h-6 w-6 md:h-8 md:w-8 text-yellow-300 animate-pulse" />
+            EXPLORE
+            <Star className="h-6 w-6 md:h-8 md:w-8 text-yellow-300 animate-pulse" />
+          </h1>
+          <p className="text-sm md:text-base text-blue-300 mt-2 tracking-wide">DISCOVER AMAZING GAMES & STREAMERS</p>
+          
+          {/* Category selector */}
+          <div className="flex justify-center gap-4 mt-4">
+            <button 
+              className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'all' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
+              onClick={() => setSearchCategory('all')}
+            >
+              ALL
+            </button>
+            <button 
+              className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'games' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
+              onClick={() => setSearchCategory('games')}
+            >
+              GAMES
+            </button>
+            <button 
+              className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'streamers' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
+              onClick={() => setSearchCategory('streamers')}
+            >
+              STREAMERS
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Search header */}
       <div className="sticky top-0 z-50 p-4 bg-black/80 backdrop-blur-lg border-b-4 border-blue-600">
         <div className="max-w-4xl mx-auto">
@@ -299,7 +338,7 @@ const RetroSearchPage = () => {
               </div>
               <Input
                 type="text"
-                placeholder="SEARCH GAMES OR STREAMERS..."
+                placeholder={`SEARCH ${searchCategory === 'games' ? 'GAMES' : searchCategory === 'streamers' ? 'STREAMERS' : 'GAMES OR STREAMERS'}...`}
                 className="pl-10 pr-10 py-3 bg-blue-950/50 border-4 border-blue-600 text-yellow-300 placeholder:text-yellow-500/60 w-full font-['Press_Start_2P',monospace] text-xs md:text-sm"
                 value={searchTerm}
                 onChange={handleSearch}
@@ -325,7 +364,7 @@ const RetroSearchPage = () => {
       <div className="pt-6 pb-16 max-w-4xl mx-auto px-4 md:px-8">
         <div className="flex justify-center mb-6">
           <h1 className="text-xl md:text-3xl text-yellow-300 font-['Press_Start_2P',monospace] text-center relative">
-            {searchTerm ? "SEARCH RESULTS" : "HIGH SCORES"}
+            {searchTerm ? "SEARCH RESULTS" : "TOP CHARTS"}
             <span className="absolute -top-6 -right-8 hidden md:block">
               <Ghost className="h-6 w-6 text-pink-500" />
             </span>
@@ -333,126 +372,130 @@ const RetroSearchPage = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-          {/* Top Games Leaderboard */}
-          <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
-            <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
-              <Gamepad2 className="h-5 w-5 text-yellow-300" />
-              <h2 className="text-sm md:text-lg text-yellow-300">
-                {searchTerm ? "GAMES" : "TOP GAMES"}
-              </h2>
-            </div>
-            
-            <div className="space-y-2">
-              {!gamesLoading && displayGames?.length === 0 && (
-                <div className="p-3 text-center text-yellow-500 text-xs md:text-sm">
-                  NO GAMES FOUND
-                </div>
-              )}
+          {/* Only show Games if category is All or Games */}
+          {(searchCategory === 'all' || searchCategory === 'games') && (
+            <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
+              <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
+                <Gamepad2 className="h-5 w-5 text-yellow-300" />
+                <h2 className="text-sm md:text-lg text-yellow-300">
+                  {searchTerm ? "GAMES" : "TOP GAMES"}
+                </h2>
+              </div>
               
-              {displayGames?.map((game, index) => (
-                <div 
-                  key={game.id}
-                  className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                  onClick={() => handleGameClick(game)}
-                >
-                  <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                    {index + 1}
+              <div className="space-y-2">
+                {!gamesLoading && displayGames?.length === 0 && (
+                  <div className="p-3 text-center text-yellow-500 text-xs md:text-sm">
+                    NO GAMES FOUND
                   </div>
-                  <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
-                    <div className="absolute inset-0 border-2 border-yellow-300"></div>
-                    <img 
-                      src={formatCoverUrl(game)} 
-                      alt={game.name} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/img/games/default.jpg';
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-yellow-300 text-xs block truncate">
-                      {game.name}
-                    </span>
-                  </div>
-                  {!searchTerm && index < 3 && (
-                    <div className="text-yellow-300 hidden md:block">
-                      <Trophy className="h-5 w-5" />
+                )}
+                
+                {displayGames?.slice(0, 3).map((game, index) => (
+                  <div 
+                    key={game.id}
+                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
+                    onClick={() => handleGameClick(game)}
+                  >
+                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                      {index + 1}
                     </div>
-                  )}
-                </div>
-              ))}
-              
-              {gamesLoading && (
-                Array(5).fill(0).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse"></div>
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse"></div>
-                    <div className="flex-1 h-6 bg-blue-600/50 animate-pulse"></div>
+                    <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
+                      <div className="absolute inset-0 border-2 border-yellow-300"></div>
+                      <img 
+                        src={formatCoverUrl(game)} 
+                        alt={game.name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/img/games/default.jpg';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-yellow-300 text-xs block truncate">
+                        {game.name}
+                      </span>
+                    </div>
+                    {!searchTerm && index < 3 && (
+                      <div className="text-yellow-300 hidden md:block">
+                        <Trophy className="h-5 w-5" />
+                      </div>
+                    )}
                   </div>
-                ))
-              )}
+                ))}
+                
+                {gamesLoading && (
+                  Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse"></div>
+                      <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse"></div>
+                      <div className="flex-1 h-6 bg-blue-600/50 animate-pulse"></div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          )}
           
-          {/* Top Streamers Leaderboard */}
-          <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
-            <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
-              <Users className="h-5 w-5 text-red-500" />
-              <h2 className="text-sm md:text-lg text-yellow-300">
-                {searchTerm ? "STREAMERS" : "TOP STREAMERS"}
-              </h2>
-            </div>
-            
-            <div className="space-y-2">
-              {!streamersLoading && topStreamers?.length === 0 && (
-                <div className="p-3 text-center text-yellow-500 text-xs md:text-sm">
-                  NO STREAMERS FOUND
-                </div>
-              )}
+          {/* Only show Streamers if category is All or Streamers */}
+          {(searchCategory === 'all' || searchCategory === 'streamers') && (
+            <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
+              <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
+                <Users className="h-5 w-5 text-red-500" />
+                <h2 className="text-sm md:text-lg text-yellow-300">
+                  {searchTerm ? "STREAMERS" : "TOP STREAMERS"}
+                </h2>
+              </div>
               
-              {topStreamers?.map((streamer, index) => (
-                <div 
-                  key={streamer.id}
-                  className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                  onClick={() => navigate(`/profile/${streamer.username}`)}
-                >
-                  <div className="w-6 h-6 md:w-8 md:h-8 bg-red-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                    {index + 1}
+              <div className="space-y-2">
+                {!streamersLoading && topStreamers?.length === 0 && (
+                  <div className="p-3 text-center text-yellow-500 text-xs md:text-sm">
+                    NO STREAMERS FOUND
                   </div>
-                  <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
-                    <AvatarImage src={streamer.avatar_url} />
-                    <AvatarFallback className="bg-red-800 text-yellow-300">
-                      {streamer.display_name?.[0] || streamer.username?.[0] || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-yellow-300 text-xs block truncate">
-                      {streamer.display_name || streamer.username}
-                    </span>
-                    <span className="text-blue-300 text-[10px] md:text-xs block">
-                      {streamer.follower_count || 0} FOLLOWERS
-                    </span>
-                  </div>
-                  {!searchTerm && index < 3 && (
-                    <div className="text-yellow-300 hidden md:block">
-                      <Trophy className="h-5 w-5" />
+                )}
+                
+                {topStreamers?.slice(0, 3).map((streamer, index) => (
+                  <div 
+                    key={streamer.id}
+                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
+                    onClick={() => navigate(`/profile/${streamer.username}`)}
+                  >
+                    <div className="w-6 h-6 md:w-8 md:h-8 bg-red-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                      {index + 1}
                     </div>
-                  )}
-                </div>
-              ))}
-              
-              {streamersLoading && (
-                Array(5).fill(0).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-red-600/50 animate-pulse"></div>
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-600/50 animate-pulse"></div>
-                    <div className="flex-1 h-6 bg-red-600/50 animate-pulse"></div>
+                    <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
+                      <AvatarImage src={streamer.avatar_url} />
+                      <AvatarFallback className="bg-red-800 text-yellow-300">
+                        {streamer.display_name?.[0] || streamer.username?.[0] || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-yellow-300 text-xs block truncate">
+                        {streamer.display_name || streamer.username}
+                      </span>
+                      <span className="text-blue-300 text-[10px] md:text-xs block">
+                        {streamer.follower_count || 0} FOLLOWERS
+                      </span>
+                    </div>
+                    {!searchTerm && index < 3 && (
+                      <div className="text-yellow-300 hidden md:block">
+                        <Trophy className="h-5 w-5" />
+                      </div>
+                    )}
                   </div>
-                ))
-              )}
+                ))}
+                
+                {streamersLoading && (
+                  Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-red-600/50 animate-pulse"></div>
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-600/50 animate-pulse"></div>
+                      <div className="flex-1 h-6 bg-red-600/50 animate-pulse"></div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Pixel Pac-Man Animation - Hide on smaller screens */}
