@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, UserPlus, Pencil, Bookmark, UserX, UserMinus } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, Settings, UserX, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -13,7 +13,7 @@ import { Profile as ProfileType } from "@/types/profile";
 import { followUser } from "@/lib/follow-helper";
 import styled from "styled-components";
 import { UserLink } from '@/components/user/UserLink';
-import PostItem from '@/components/PostItem'; // Add PostItem import
+import PostItem from '@/components/PostItem';
 
 /**
  * Profile page component - displays user profile details and allows following/unfollowing
@@ -313,11 +313,11 @@ const Profile = () => {
               <div className="flex gap-2">
                 <Button 
                   onClick={() => navigate('/profile/edit')} 
-                  variant="default" 
-                  className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                  variant="outline" 
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-transparent border border-indigo-500/50 hover:bg-indigo-900/40"
+                  title="Edit Profile"
                 >
-                  <Pencil className="w-4 h-4" />
-                  <span>Edit Profile</span>
+                  <Settings className="w-5 h-5 text-indigo-300" />
                 </Button>
                 {!isOwnProfile && (
                   <Button
