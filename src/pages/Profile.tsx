@@ -289,7 +289,7 @@ const Profile = () => {
                 <p className="text-gaming-300 max-w-md mb-4">{profile.bio || 'No bio provided'}</p>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex justify-end gap-2">
                 {isOwnProfile && (
                   <Button 
                     onClick={() => navigate('/profile/edit')} 
