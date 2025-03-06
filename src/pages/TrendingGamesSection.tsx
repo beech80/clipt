@@ -6,6 +6,24 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Trophy, Flame, Gamepad } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
+// Helper function to properly format IGDB image URLs
+const formatIGDBImageUrl = (url: string): string => {
+  if (!url) return '';
+  
+  // Ensure HTTPS and convert to large image format
+  let formattedUrl = url;
+  
+  // Replace image size
+  formattedUrl = formattedUrl.replace('t_thumb', 't_cover_big');
+  
+  // Add HTTPS protocol if missing
+  if (!formattedUrl.startsWith('http')) {
+    formattedUrl = 'https:' + formattedUrl;
+  }
+  
+  return formattedUrl;
+};
+
 interface TrendingGame {
   id: string;
   name: string;
@@ -52,7 +70,7 @@ export const TrendingGamesSection = () => {
                 id: `igdb-${game.id}`,
                 name: game.name,
                 cover_url: game.cover?.url 
-                  ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}` 
+                  ? formatIGDBImageUrl(game.cover.url) 
                   : undefined,
                 post_count: Math.round((game.popularity || 0) / 10), // Convert popularity to a reasonable number
               }));
