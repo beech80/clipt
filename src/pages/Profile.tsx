@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, Settings, UserX, UserMinus } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, Settings, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -10,13 +10,12 @@ import AchievementList from "@/components/achievements/AchievementList";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
-import { followUser } from "@/lib/follow-helper";
 import styled from "styled-components";
 import { UserLink } from '@/components/user/UserLink';
 import PostItem from '@/components/PostItem';
 
 /**
- * Profile page component - displays user profile details and allows following/unfollowing
+ * Profile page component - displays user profile details
  */
 const ProfileContent = styled.div`
   max-height: none; /* Remove any height restrictions */
@@ -42,7 +41,6 @@ const Profile = () => {
   const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userFollows, setUserFollows] = useState(false);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   
   // Stats for displaying counts
@@ -55,43 +53,6 @@ const Profile = () => {
   // Safe profile ID handling
   const profileId = id || user?.id;
   const isOwnProfile = user?.id === profileId;
-
-  /**
-   * Handle follow/unfollow action
-   */
-  const handleFollow = useCallback(async () => {
-    if (!user) {
-      toast.error("You need to be logged in to follow users");
-      return;
-    }
-    
-    if (user.id === profileId) {
-      toast.error("You cannot follow yourself");
-      return;
-    }
-    
-    try {
-      const result = await followUser(user.id, profileId, !userFollows);
-      
-      if (result.success) {
-        setUserFollows(!userFollows);
-        setStats(prev => ({
-          ...prev,
-          followers: userFollows 
-            ? Math.max(0, prev.followers - 1) 
-            : prev.followers + 1
-        }));
-        
-        toast.success(userFollows ? "Unfollowed user" : "Following user");
-        queryClient.invalidateQueries({ queryKey: ['profile', profileId] });
-      } else {
-        toast.error(result.message || "Failed to update follow status");
-      }
-    } catch (error) {
-      console.error("Follow error:", error);
-      toast.error("An error occurred");
-    }
-  }, [profileId, user, userFollows]);
 
   /**
    * Fetch the user's profile data
@@ -160,18 +121,6 @@ const Profile = () => {
         following: profileData.following || 0,
         achievements: profileData.achievements || 0
       });
-      
-      // Check if the current user follows this profile
-      if (user && user.id !== profileId) {
-        const { data: followData } = await supabase
-          .from('follows')
-          .select('*')
-          .eq('follower_id', user.id)
-          .eq('following_id', profileId)
-          .maybeSingle();
-          
-        setUserFollows(!!followData);
-      }
 
       // Fetch user's posts for the clipts tab
       const { data: postsData, error: postsError } = await supabase
