@@ -57,155 +57,146 @@ const Profile = () => {
   /**
    * Fetch the user's profile data
    */
-  const fetchProfileData = useCallback(async () => {
+  const fetchProfileData = async (userId: string) => {
     try {
-      if (!profileId) {
-        setError("No profile ID specified");
-        setLoading(false);
-        return;
-      }
-      
-      console.log("Fetching profile data for ID:", profileId);
-      
-      // First check if the user exists in auth
-      const { data: authUser, error: authError } = await supabase.auth.getUser();
-      if (authError) {
-        console.error("Auth error:", authError);
-      }
-      
-      // Get the profile data
-      const { data: profileData, error: profileError } = await supabase
+      // Try to get the profile by ID
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', profileId)
+        .select()
+        .eq('id', userId)
         .single();
       
-      if (profileError) {
-        // If profile doesn't exist, create it for the current user
-        if (profileError.code === 'PGRST116' && user?.id === profileId) {
-          console.log("Profile not found for current user, creating one...");
+      // If there's an error or no profile for current user, create one
+      if (error || !profile) {
+        if (userId === user?.id) {
+          console.log("No profile found for current user, creating one");
+          
+          // Create a default profile for the current user
+          const defaultProfile = {
+            id: userId,
+            username: `user_${userId.substring(0, 8)}`,
+            display_name: user?.user_metadata?.name || 'New User',
+            bio: 'Welcome to my Clipt profile!',
+            avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
+            created_at: new Date().toISOString(),
+          };
           
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
-            .insert({
-              id: user.id,
-              username: user.email?.split('@')[0] || `user_${Date.now()}`,
-              avatar_url: null,
-              followers: 0,
-              following: 0,
-              achievements: 0,
-              created_at: new Date().toISOString()
-            })
+            .upsert(defaultProfile)
             .select()
             .single();
           
           if (createError) {
             console.error("Error creating profile:", createError);
-            setError("Could not create profile");
-            setLoading(false);
-            return;
+            throw new Error('Failed to create profile');
           }
           
-          setProfile(newProfile);
-          
-          // Set default stats for a new profile
-          setStats({
-            followers: 0,
-            following: 0,
-            achievements: 0
-          });
-          
-          // Initialize default achievements for the new user
-          try {
-            const { achievementService } = await import('@/services/achievementService');
-            await achievementService.createDefaultAchievementsForUser(user.id);
-            console.log("Created default achievements for new user");
-          } catch (err) {
-            console.error("Failed to create default achievements:", err);
-          }
-          
+          return newProfile;
+        } else {
+          // Profile doesn't exist and it's not the current user
+          console.error("Profile not found for user:", userId);
+          return null;
+        }
+      }
+      
+      return profile;
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      
+      // Return a fallback profile for UI display when fetch fails
+      // This prevents the UI from showing errors to the user
+      if (userId === user?.id) {
+        return {
+          id: userId,
+          username: user?.email?.split('@')[0] || 'user',
+          display_name: user?.user_metadata?.name || 'Your Profile',
+          bio: 'Profile information temporarily unavailable',
+          avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
+          created_at: new Date().toISOString(),
+        };
+      }
+      return null;
+    }
+  };
+
+  // Load profile data when component mounts or profile ID changes
+  useEffect(() => {
+    if (!profileId) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    const loadProfileData = async () => {
+      try {
+        // Fetch profile data
+        const profileData = await fetchProfileData(profileId);
+        
+        if (!profileData) {
+          setError("Profile not found");
           setLoading(false);
           return;
         }
         
-        console.error("Profile error:", profileError);
-        setError("Profile not found");
+        setProfile(profileData);
+        
+        // Set default stats if they're missing
+        setStats({
+          followers: profileData.followers || 0,
+          following: profileData.following || 0,
+          achievements: profileData.achievements || 0
+        });
+        
+        // Fetch user's posts for the clips tab
+        const { data: postsData, error: postsError } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            content,
+            image_url,
+            video_url,
+            image_urls,
+            user_id,
+            created_at,
+            post_type,
+            games (
+              name,
+              id
+            ),
+            likes_count:likes(count),
+            comments_count:comments(count),
+            clip_votes:clip_votes(count)
+          `)
+          .eq('user_id', profileId)
+          .order('created_at', { ascending: false });
+        
+        if (postsError) {
+          console.error("Error fetching posts:", postsError);
+        } else {
+          console.log("User posts loaded:", postsData);
+          setUserPosts(postsData || []);
+        }
+        
+        // Initialize default achievements for the new user if needed
+        if (profileData.id === user?.id && (!profileData.achievements || profileData.achievements === 0)) {
+          try {
+            const { achievementService } = await import('@/services/achievementService');
+            await achievementService.createDefaultAchievementsForUser(user.id);
+            console.log("Created default achievements for user");
+          } catch (err) {
+            console.error("Failed to create default achievements:", err);
+          }
+        }
+      } catch (error) {
+        console.error("Error in profile data loading:", error);
+        setError("Failed to load profile data");
+      } finally {
         setLoading(false);
-        return;
       }
-      
-      if (!profileData) {
-        console.error("No profile data found");
-        setError("Profile not found");
-        setLoading(false);
-        return;
-      }
-      
-      // Process the profile data
-      console.log("Profile data loaded successfully:", profileData);
-      setProfile(profileData);
-      
-      // Set default stats if they're missing
-      setStats({
-        followers: profileData.followers || 0,
-        following: profileData.following || 0,
-        achievements: profileData.achievements || 0
-      });
-
-      // Fetch user's posts for the clipts tab
-      const { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          image_url,
-          video_url,
-          image_urls,
-          user_id,
-          created_at,
-          post_type,
-          games (
-            name,
-            id
-          ),
-          likes_count:likes(count),
-          comments_count:comments(count),
-          clip_votes:clip_votes(count)
-        `)
-        .eq('user_id', profileId)
-        .order('created_at', { ascending: false });
-      
-      if (postsError) {
-        console.error("Error fetching posts:", postsError);
-      } else {
-        console.log("User posts loaded:", postsData);
-        setUserPosts(postsData || []);
-      }
-      
-    } catch (error) {
-      console.error("Error in profile data fetch:", error);
-      setError("An error occurred while loading profile");
-    } finally {
-      setLoading(false);
-    }
+    };
+    
+    loadProfileData();
   }, [profileId, user]);
-
-  // Load profile data when component mounts or profile ID changes
-  useEffect(() => {
-    console.log("Profile component initial load for ID:", profileId);
-    setLoading(true);
-    setError(null);
-    
-    // No timeout - let the user wait as long as needed
-    
-    fetchProfileData().catch(err => {
-      console.error("Fetch profile error:", err);
-      setError("Failed to load profile data");
-      setLoading(false);
-    });
-    
-    // No cleanup for timeout since we're not using one
-  }, [profileId]); // Only depend on profileId, not fetchProfileData
 
   // Render loading state
   if (loading) {
