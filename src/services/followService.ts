@@ -13,7 +13,7 @@ interface FollowResponse {
  * @param targetUserId The user ID to follow/unfollow
  * @returns Object with success status and whether user is now following or not
  */
-export const toggleFollow = async (followerUserId: string, targetUserId: string): Promise<FollowResponse> => {
+const toggleFollow = async (followerUserId: string, targetUserId: string): Promise<FollowResponse> => {
   try {
     if (!followerUserId || !targetUserId) {
       console.error("Missing IDs:", { follower: followerUserId, target: targetUserId });
@@ -106,7 +106,7 @@ export const toggleFollow = async (followerUserId: string, targetUserId: string)
  * @param userId User ID to get follower count for
  * @returns Number of followers
  */
-export const getFollowerCount = async (userId: string): Promise<number> => {
+const getFollowersCount = async (userId: string): Promise<number> => {
   try {
     if (!userId) return 0;
     
@@ -132,7 +132,7 @@ export const getFollowerCount = async (userId: string): Promise<number> => {
  * @param userId User ID to get following count for
  * @returns Number of users being followed
  */
-export const getFollowingCount = async (userId: string): Promise<number> => {
+const getFollowingCount = async (userId: string): Promise<number> => {
   try {
     if (!userId) return 0;
     
@@ -159,7 +159,7 @@ export const getFollowingCount = async (userId: string): Promise<number> => {
  * @param targetUserId The user ID who might be followed
  * @returns Boolean indicating if following
  */
-export const isFollowing = async (followerUserId: string, targetUserId: string): Promise<boolean> => {
+const isFollowing = async (followerUserId: string, targetUserId: string): Promise<boolean> => {
   try {
     if (!followerUserId || !targetUserId) return false;
     
@@ -180,4 +180,80 @@ export const isFollowing = async (followerUserId: string, targetUserId: string):
     console.error("Error in isFollowing:", error);
     return false;
   }
+};
+
+/**
+ * Follow a user
+ * @param followerUserId The user ID who is following
+ * @param targetUserId The user ID to follow
+ */
+const follow = async (followerUserId: string, targetUserId: string): Promise<boolean> => {
+  try {
+    if (!followerUserId || !targetUserId) {
+      throw new Error("Both follower and target user IDs are required");
+    }
+    
+    // Don't allow users to follow themselves
+    if (followerUserId === targetUserId) {
+      throw new Error("You cannot follow yourself");
+    }
+
+    // Insert the follow record
+    const { data, error } = await supabase
+      .from('follows')
+      .insert({
+        follower_id: followerUserId,
+        following_id: targetUserId
+      });
+      
+    if (error) {
+      console.error("Error following user:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in follow function:", error);
+    return false;
+  }
+};
+
+/**
+ * Unfollow a user
+ * @param followerUserId The user ID who is unfollowing
+ * @param targetUserId The user ID to unfollow
+ */
+const unfollow = async (followerUserId: string, targetUserId: string): Promise<boolean> => {
+  try {
+    if (!followerUserId || !targetUserId) {
+      throw new Error("Both follower and target user IDs are required");
+    }
+    
+    // Delete the follow record
+    const { error } = await supabase
+      .from('follows')
+      .delete()
+      .eq('follower_id', followerUserId)
+      .eq('following_id', targetUserId);
+      
+    if (error) {
+      console.error("Error unfollowing user:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in unfollow function:", error);
+    return false;
+  }
+};
+
+// Export all functions as a service object
+export const followService = {
+  toggleFollow,
+  getFollowersCount,
+  getFollowingCount,
+  isFollowing,
+  follow,
+  unfollow
 };
