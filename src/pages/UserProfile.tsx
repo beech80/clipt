@@ -75,9 +75,6 @@ const UserProfile = () => {
             <User className="text-purple-400" size={24} />
             Profile
           </h1>
-          <button className="absolute right-0 text-gray-300 hover:text-white">
-            <Settings size={20} />
-          </button>
         </div>
       </div>
 
