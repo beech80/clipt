@@ -314,7 +314,7 @@ const Profile = () => {
                 <Button 
                   onClick={() => navigate('/profile/edit')} 
                   variant="outline" 
-                  className="flex items-center gap-2 border-2 border-indigo-500 bg-indigo-950/70 text-white hover:bg-indigo-900 px-4 py-2 rounded"
+                  className="flex items-center gap-2 bg-[#1a1b4b] border border-white/10 text-white hover:bg-[#272a5b] px-4 py-1 rounded-sm"
                 >
                   <Settings className="w-4 h-4" />
                   <span>Settings</span>
