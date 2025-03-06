@@ -10,12 +10,13 @@ Clipt is a modern social platform for gamers to share their best gaming moments,
 
 - **Social Gaming Feed**: Discover and engage with gaming content
 - **Clip Uploads**: Share your best gaming moments with the community
-- **User Profiles**: Customize your profile and showcase your gaming achievements
+- **User Profiles**: Customize your profile with banner images and avatars
+- **Follow System**: Follow your favorite content creators
+- **GameBoy Controls**: Interactive joystick for scrolling with animations
+- **Interactive UI**: Like, comment, follow, and trophy buttons for engagement
 - **Offline Support**: PWA capabilities allow for some offline functionality
 - **Mobile Optimized**: Works on all devices with responsive design
-- GameBoy-style controller UI 
-- Modern design with responsive layout
-- Support for video clips and social interactions
+- **Multiple Media Types**: Support for both videos and images in posts
 
 ## Documentation
 
