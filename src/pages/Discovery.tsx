@@ -17,6 +17,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { TrendingGamesSection } from './TrendingGamesSection';
 
 const Discovery = () => {
   const navigate = useNavigate();
@@ -343,6 +344,8 @@ const Discovery = () => {
           </div>
         ) : (
           <>
+            {!isSearchActive && <TrendingGamesSection />}
+            
             {isSearchActive ? (
               renderSearchResults()
             ) : (
