@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/ui/back-button";
-import { Search, X, Filter, Gamepad, Users } from "lucide-react";
+import { Search, X, Filter, Gamepad, Users, TrendingUp } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import GameCard from '@/components/GameCard';
@@ -17,13 +17,28 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { TrendingGamesSection } from './TrendingGamesSection';
 
 const Discovery = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchFilter, setSearchFilter] = useState<'games' | 'streamers' | 'clips'>('clips');
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch recent clips for the explore grid
   const { data: clips, isLoading: clipsLoading } = useQuery({
@@ -47,6 +62,33 @@ const Discovery = () => {
       return data || [];
     },
     enabled: !isSearchActive,
+  });
+
+  // Fetch top searched games
+  const { data: topSearchedGames } = useQuery({
+    queryKey: ['games', 'top-searched'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('games')
+        .select(`
+          id,
+          name,
+          cover_url,
+          post_count:posts(count)
+        `)
+        .order('post_count', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      
+      // Transform data to fix the count object issue
+      return (data || []).map(game => ({
+        ...game,
+        post_count: typeof game.post_count === 'object' && game.post_count !== null 
+          ? Number(game.post_count.count || 0) 
+          : (typeof game.post_count === 'number' ? game.post_count : 0)
+      }));
+    },
   });
 
   // Games Search
@@ -279,7 +321,7 @@ const Discovery = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-2">
             <BackButton className="text-indigo-400 hover:text-indigo-300" />
-            <div className="relative flex-1">
+            <div className="relative flex-1" ref={searchContainerRef}>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-indigo-400" />
               </div>
@@ -289,6 +331,9 @@ const Discovery = () => {
                 className="pl-10 pr-10 py-2 bg-indigo-950/50 border-indigo-500/40 text-indigo-100 placeholder:text-indigo-400/60 w-full"
                 value={searchTerm}
                 onChange={handleSearch}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                ref={searchInputRef}
               />
               {searchTerm && (
                 <button
@@ -298,37 +343,75 @@ const Discovery = () => {
                   <X className="h-4 w-4 text-indigo-400" />
                 </button>
               )}
+              {isSearchFocused && !searchTerm && topSearchedGames && topSearchedGames.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-indigo-950 border border-indigo-500/40 rounded-md shadow-lg z-50">
+                  <div className="p-2 border-b border-indigo-500/20">
+                    <div className="flex items-center gap-2 text-indigo-300 text-sm">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>Top Searched Games</span>
+                    </div>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {topSearchedGames.map((game: any) => (
+                      <div 
+                        key={game.id}
+                        className="flex items-center gap-3 p-2 hover:bg-indigo-900/40 cursor-pointer"
+                        onClick={() => {
+                          navigate(`/games/${game.id}`);
+                          setIsSearchFocused(false);
+                        }}
+                      >
+                        <div className="w-10 h-10 flex-shrink-0">
+                          <img 
+                            src={game.cover_url || '/img/games/default.jpg'} 
+                            alt={game.name} 
+                            className="w-full h-full object-cover rounded"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/img/games/default.jpg';
+                            }}
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-indigo-100 text-sm font-medium">{game.name}</span>
+                          <span className="text-indigo-400 text-xs">{game.post_count} posts</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="bg-indigo-950/50 border-indigo-500/40">
+                    <Filter className="h-4 w-4 text-indigo-400" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-indigo-950 border-indigo-500/40">
+                  <DropdownMenuItem 
+                    className={`flex items-center gap-2 ${searchFilter === 'clips' ? 'bg-indigo-900/40' : ''}`}
+                    onClick={() => setSearchFilter('clips')}
+                  >
+                    <Search className="h-4 w-4" />
+                    <span>Clips</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className={`flex items-center gap-2 ${searchFilter === 'games' ? 'bg-indigo-900/40' : ''}`}
+                    onClick={() => setSearchFilter('games')}
+                  >
+                    <Gamepad className="h-4 w-4" />
+                    <span>Games</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className={`flex items-center gap-2 ${searchFilter === 'streamers' ? 'bg-indigo-900/40' : ''}`}
+                    onClick={() => setSearchFilter('streamers')}
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Streamers</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="bg-indigo-950/50 border-indigo-500/40">
-                  <Filter className="h-4 w-4 text-indigo-400" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-indigo-950 border-indigo-500/40">
-                <DropdownMenuItem 
-                  className={`flex items-center gap-2 ${searchFilter === 'clips' ? 'bg-indigo-900/40' : ''}`}
-                  onClick={() => setSearchFilter('clips')}
-                >
-                  <Search className="h-4 w-4" />
-                  <span>Clips</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className={`flex items-center gap-2 ${searchFilter === 'games' ? 'bg-indigo-900/40' : ''}`}
-                  onClick={() => setSearchFilter('games')}
-                >
-                  <Gamepad className="h-4 w-4" />
-                  <span>Games</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className={`flex items-center gap-2 ${searchFilter === 'streamers' ? 'bg-indigo-900/40' : ''}`}
-                  onClick={() => setSearchFilter('streamers')}
-                >
-                  <Users className="h-4 w-4" />
-                  <span>Streamers</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -344,8 +427,6 @@ const Discovery = () => {
           </div>
         ) : (
           <>
-            {!isSearchActive && <TrendingGamesSection />}
-            
             {isSearchActive ? (
               renderSearchResults()
             ) : (
