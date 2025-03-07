@@ -389,27 +389,41 @@ const RetroSearchPage = () => {
               </div>
               
               <div className="space-y-2">
+                {/* Show loading skeleton */}
+                {gamesLoading && (
+                  <>
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
+                        <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse"></div>
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse"></div>
+                        <div className="flex-1 h-6 bg-blue-600/50 animate-pulse"></div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* No games found state */}
                 {!gamesLoading && (!displayGames || displayGames.length === 0) && (
                   <div className="p-3 text-center text-yellow-500 text-xs md:text-sm">
                     NO GAMES FOUND
                   </div>
                 )}
                 
-                {/* Force limit to exactly top 3 games - no more */}
-                {(displayGames ? displayGames.slice(0, 3) : []).map((game, index) => (
+                {/* First game (index 0) */}
+                {!gamesLoading && displayGames && displayGames.length > 0 && (
                   <div 
-                    key={game.id}
+                    key={displayGames[0].id}
                     className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                    onClick={() => handleGameClick(game)}
+                    onClick={() => handleGameClick(displayGames[0])}
                   >
                     <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                      {index + 1}
+                      1
                     </div>
                     <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
                       <div className="absolute inset-0 border-2 border-yellow-300"></div>
                       <img 
-                        src={formatCoverUrl(game)} 
-                        alt={game.name} 
+                        src={formatCoverUrl(displayGames[0])} 
+                        alt={displayGames[0].name} 
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -419,25 +433,85 @@ const RetroSearchPage = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="text-yellow-300 text-xs block truncate">
-                        {game.name}
+                        {displayGames[0].name}
                       </span>
                     </div>
-                    {!searchTerm && index < 3 && (
+                    {!searchTerm && (
                       <div className="text-yellow-300 hidden md:block">
                         <Trophy className="h-5 w-5" />
                       </div>
                     )}
                   </div>
-                ))}
+                )}
                 
-                {gamesLoading && (
-                  Array(3).fill(0).map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
-                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse"></div>
-                      <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse"></div>
-                      <div className="flex-1 h-6 bg-blue-600/50 animate-pulse"></div>
+                {/* Second game (index 1) */}
+                {!gamesLoading && displayGames && displayGames.length > 1 && (
+                  <div 
+                    key={displayGames[1].id}
+                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
+                    onClick={() => handleGameClick(displayGames[1])}
+                  >
+                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                      2
                     </div>
-                  ))
+                    <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
+                      <div className="absolute inset-0 border-2 border-yellow-300"></div>
+                      <img 
+                        src={formatCoverUrl(displayGames[1])} 
+                        alt={displayGames[1].name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/img/games/default.jpg';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-yellow-300 text-xs block truncate">
+                        {displayGames[1].name}
+                      </span>
+                    </div>
+                    {!searchTerm && (
+                      <div className="text-yellow-300 hidden md:block">
+                        <Trophy className="h-5 w-5" />
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Third game (index 2) */}
+                {!gamesLoading && displayGames && displayGames.length > 2 && (
+                  <div 
+                    key={displayGames[2].id}
+                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
+                    onClick={() => handleGameClick(displayGames[2])}
+                  >
+                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                      3
+                    </div>
+                    <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
+                      <div className="absolute inset-0 border-2 border-yellow-300"></div>
+                      <img 
+                        src={formatCoverUrl(displayGames[2])} 
+                        alt={displayGames[2].name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/img/games/default.jpg';
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-yellow-300 text-xs block truncate">
+                        {displayGames[2].name}
+                      </span>
+                    </div>
+                    {!searchTerm && (
+                      <div className="text-yellow-300 hidden md:block">
+                        <Trophy className="h-5 w-5" />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -447,59 +521,142 @@ const RetroSearchPage = () => {
           {(searchCategory === 'all' || searchCategory === 'streamers') && (
             <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
               <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
-                <Users className="h-5 w-5 text-red-500" />
+                <Users className="h-5 w-5 text-yellow-300" />
                 <h2 className="text-sm md:text-lg text-yellow-300">
                   {searchTerm ? "STREAMERS" : "TOP STREAMERS"}
                 </h2>
               </div>
               
               <div className="space-y-2">
-                {!streamersLoading && topStreamers?.length === 0 && (
+                {/* Loading skeleton */}
+                {streamersLoading && (
+                  <>
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
+                        <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse rounded-full"></div>
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-blue-600/50 animate-pulse w-24"></div>
+                          <div className="h-3 mt-1 bg-blue-600/50 animate-pulse w-16"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* No streamers found */}
+                {!streamersLoading && (!topStreamers || topStreamers.length === 0) && (
                   <div className="p-3 text-center text-yellow-500 text-xs md:text-sm">
                     NO STREAMERS FOUND
                   </div>
                 )}
                 
-                {/* Force limit to exactly top 3 streamers - no more */}
-                {(topStreamers ? topStreamers.slice(0, 3) : []).map((streamer, index) => (
+                {/* First streamer (index 0) */}
+                {!streamersLoading && topStreamers && topStreamers.length > 0 && (
                   <div 
-                    key={streamer.id}
+                    key={topStreamers[0].id}
                     className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                    onClick={() => navigate(`/profile/${streamer.username}`)}
+                    onClick={() => navigate(`/profile/${topStreamers[0].username}`)}
                   >
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-red-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                      {index + 1}
+                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                      1
                     </div>
                     <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
-                      <AvatarImage src={streamer.avatar_url} />
-                      <AvatarFallback className="bg-red-800 text-yellow-300">
-                        {streamer.display_name?.[0] || streamer.username?.[0] || '?'}
+                      <AvatarImage 
+                        src={topStreamers[0].avatar_url || ''} 
+                        alt={topStreamers[0].display_name || topStreamers[0].username} 
+                      />
+                      <AvatarFallback className="bg-blue-800 text-blue-300">
+                        {topStreamers[0].display_name?.[0]?.toUpperCase() || 
+                         topStreamers[0].username?.[0]?.toUpperCase() || '?'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <span className="text-yellow-300 text-xs block truncate">
-                        {streamer.display_name || streamer.username}
+                        {topStreamers[0].display_name || topStreamers[0].username}
                       </span>
-                      <span className="text-blue-300 text-[10px] md:text-xs block">
-                        {streamer.follower_count || 0} FOLLOWERS
+                      <span className="text-blue-300 text-xs opacity-70 block truncate">
+                        @{topStreamers[0].username}
                       </span>
                     </div>
-                    {!searchTerm && index < 3 && (
+                    {!searchTerm && (
                       <div className="text-yellow-300 hidden md:block">
                         <Trophy className="h-5 w-5" />
                       </div>
                     )}
                   </div>
-                ))}
+                )}
                 
-                {streamersLoading && (
-                  Array(3).fill(0).map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
-                      <div className="w-6 h-6 md:w-8 md:h-8 bg-red-600/50 animate-pulse"></div>
-                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-600/50 animate-pulse"></div>
-                      <div className="flex-1 h-6 bg-red-600/50 animate-pulse"></div>
+                {/* Second streamer (index 1) */}
+                {!streamersLoading && topStreamers && topStreamers.length > 1 && (
+                  <div 
+                    key={topStreamers[1].id}
+                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
+                    onClick={() => navigate(`/profile/${topStreamers[1].username}`)}
+                  >
+                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                      2
                     </div>
-                  ))
+                    <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
+                      <AvatarImage 
+                        src={topStreamers[1].avatar_url || ''} 
+                        alt={topStreamers[1].display_name || topStreamers[1].username} 
+                      />
+                      <AvatarFallback className="bg-blue-800 text-blue-300">
+                        {topStreamers[1].display_name?.[0]?.toUpperCase() || 
+                         topStreamers[1].username?.[0]?.toUpperCase() || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-yellow-300 text-xs block truncate">
+                        {topStreamers[1].display_name || topStreamers[1].username}
+                      </span>
+                      <span className="text-blue-300 text-xs opacity-70 block truncate">
+                        @{topStreamers[1].username}
+                      </span>
+                    </div>
+                    {!searchTerm && (
+                      <div className="text-yellow-300 hidden md:block">
+                        <Trophy className="h-5 w-5" />
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Third streamer (index 2) */}
+                {!streamersLoading && topStreamers && topStreamers.length > 2 && (
+                  <div 
+                    key={topStreamers[2].id}
+                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
+                    onClick={() => navigate(`/profile/${topStreamers[2].username}`)}
+                  >
+                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                      3
+                    </div>
+                    <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
+                      <AvatarImage 
+                        src={topStreamers[2].avatar_url || ''} 
+                        alt={topStreamers[2].display_name || topStreamers[2].username} 
+                      />
+                      <AvatarFallback className="bg-blue-800 text-blue-300">
+                        {topStreamers[2].display_name?.[0]?.toUpperCase() || 
+                         topStreamers[2].username?.[0]?.toUpperCase() || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-yellow-300 text-xs block truncate">
+                        {topStreamers[2].display_name || topStreamers[2].username}
+                      </span>
+                      <span className="text-blue-300 text-xs opacity-70 block truncate">
+                        @{topStreamers[2].username}
+                      </span>
+                    </div>
+                    {!searchTerm && (
+                      <div className="text-yellow-300 hidden md:block">
+                        <Trophy className="h-5 w-5" />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
