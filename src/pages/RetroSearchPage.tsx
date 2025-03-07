@@ -7,6 +7,7 @@ import { igdbService } from '@/services/igdbService';
 import { BackButton } from '@/components/ui/back-button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 const RetroSearchPage = () => {
   const navigate = useNavigate();
@@ -41,58 +42,31 @@ const RetroSearchPage = () => {
   }, []);
 
   // Query for IGDB games with fixed implementation
-  const { data: igdbGames, isLoading: igdbGamesLoading } = useQuery({
+  const { data: igdbGames, isLoading: igdbGamesLoading, error: igdbGamesError, refetch: refetchIgdbGames } = useQuery({
     queryKey: ['igdb', 'games', 'search', searchTerm || ''],
     queryFn: async () => {
       console.log('IGDB Query executing for search term:', searchTerm);
       
-      // Don't search if search term is too short but not empty
-      if (searchTerm && searchTerm.length < 2) {
-        console.log('Search term too short, returning empty results');
+      try {
+        // Call the improved IGDB service directly
+        const games = await igdbService.searchGames(searchTerm, {
+          sort: 'popularity desc',
+          limit: 10
+        });
+        
+        console.log('IGDB API returned games:', games?.length || 0);
+        return games || [];
+      } catch (error) {
+        console.error('IGDB search error:', error);
         return [];
       }
-
-      if (searchTerm) {
-        try {
-          console.log('Calling IGDB API for search term:', searchTerm);
-          const games = await igdbService.searchGames(searchTerm, {
-            sort: 'rating desc',
-            limit: 20
-          });
-          
-          console.log('IGDB API returned games:', games.length);
-          
-          if (games && games.length > 0) {
-            return games.slice(0, 3);
-          }
-          
-          return [];
-        } catch (error) {
-          console.error('IGDB search error:', error);
-          return [];
-        }
-      } else {
-        try {
-          console.log('Fetching popular IGDB games for empty search');
-          const popularGames = await igdbService.getPopularGames();
-          
-          if (popularGames && popularGames.length > 0) {
-            return popularGames.slice(0, 3);
-          }
-          
-          return [];
-        } catch (error) {
-          console.error('IGDB popular games error:', error);
-          return [];
-        }
-      }
     },
-    enabled: true,
-    staleTime: 30000, // Cache for 30 seconds
+    enabled: true, // Always enabled to show trending games
+    staleTime: 10 * 1000, // 10 seconds
   });
 
   // Query for top games from our database (as fallback and for "top searched")
-  const { data: topGames, isLoading: topGamesLoading } = useQuery({
+  const { data: topGames, isLoading: topGamesLoading, error: topGamesError } = useQuery({
     queryKey: ['games', 'top-searched'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -119,7 +93,7 @@ const RetroSearchPage = () => {
   });
 
   // Query for streamers with search term
-  const { data: streamersSearchData, isLoading: streamersSearchLoading } = useQuery<any[]>({
+  const { data: streamersSearchData, isLoading: streamersSearchLoading, error: streamersSearchError, refetch: refetchStreamers } = useQuery<any[]>({
     queryKey: ['streamers', 'search', searchTerm || ''],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) {
@@ -162,7 +136,7 @@ const RetroSearchPage = () => {
   });
   
   // Separate query for top streamers (not search-dependent)
-  const { data: topStreamersData, isLoading: topStreamersLoading } = useQuery<any[]>({
+  const { data: topStreamersData, isLoading: topStreamersLoading, error: topStreamersError, refetch: refetchTopStreamers } = useQuery<any[]>({
     queryKey: ['streamers', 'top'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -188,23 +162,22 @@ const RetroSearchPage = () => {
     enabled: !searchTerm, // Keep as is as this should evaluate to boolean
   });
 
-  // Get filtered games based on search term and loading state
+  // Better filtering for games that prioritizes search results
   const getFilteredGames = () => {
-    console.log('getFilteredGames called - igdbGames:', igdbGames?.length, 'topGames:', topGames?.length);
-    
-    // If we have search results, return them (limited to 3)
-    if (searchTerm && igdbGames?.length) {
-      console.log('Returning search results:', igdbGames.slice(0, 3));
-      return igdbGames.slice(0, 3);
+    // If search term is entered, prioritize IGDB search results
+    if (searchTerm && searchTerm.trim().length > 0) {
+      if (igdbGames?.length) {
+        console.log('Returning IGDB search results:', igdbGames.slice(0, 3));
+        return igdbGames.slice(0, 3);
+      } else {
+        // If no IGDB results but we have a search term, return empty
+        console.log('No IGDB results found for search term');
+        return [];
+      }
     } 
-    // If not searching but we have IGDB games, return those
-    else if (igdbGames?.length) {
-      console.log('Returning IGDB games:', igdbGames.slice(0, 3));
-      return igdbGames.slice(0, 3);
-    } 
-    // Fall back to top games from our database
+    // If no search term, show top games
     else if (topGames?.length) {
-      console.log('Returning top games:', topGames.slice(0, 3));
+      console.log('Returning top games from database:', topGames.slice(0, 3));
       return topGames.slice(0, 3);
     }
     
@@ -287,6 +260,25 @@ const RetroSearchPage = () => {
         setStreamersLoading(false);
       }, 300);
     }, 300); // Debounce for 300ms
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim().length > 0) {
+      console.log('Search submitted:', searchTerm);
+      // Invalidate queries to force a refresh
+      queryClient.invalidateQueries({ 
+        queryKey: ['igdb', 'games', 'search'], 
+        refetchType: 'all'
+      });
+      // Trigger loading state
+      setGamesLoading(true);
+      
+      // Reset loading state after a short delay
+      setTimeout(() => {
+        setGamesLoading(false);
+      }, 1000);
+    }
   };
 
   const clearSearch = () => {
@@ -394,7 +386,7 @@ const RetroSearchPage = () => {
 
         {/* Search form with refined UI */}
         <div className="mb-8">
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-2" ref={searchContainerRef}>
+          <form onSubmit={handleSearchSubmit} className="space-y-2" ref={searchContainerRef}>
             <div
               className={`bg-blue-950/60 rounded-md flex items-center px-4 py-3 gap-2 transition-all duration-300 border-2 ${
                 isSearchFocused
@@ -453,54 +445,70 @@ const RetroSearchPage = () => {
                 </div>
               )}
               
-              {/* Error or empty state */}
+              {/* Error state with retry button */}
               {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length === 0 && (
                 <div className="bg-blue-950/60 rounded-md p-8 text-center">
                   <SearchX className="h-12 w-12 mx-auto text-blue-500 mb-3" />
-                  <p className="text-blue-300 text-sm">No games found.</p>
-                  <p className="text-blue-400 text-xs mt-2">Try a different search term or category.</p>
+                  <p className="text-blue-300 text-sm">
+                    {(igdbGamesError || topGamesError) 
+                      ? "An error occurred while fetching games." 
+                      : searchTerm 
+                        ? `No games found matching "${searchTerm}"`
+                        : "No trending games available right now."}
+                  </p>
+                  <p className="text-blue-400 text-xs mt-2">
+                    {(igdbGamesError || topGamesError)
+                      ? "Please try again later."
+                      : searchTerm 
+                        ? "Try a different search term or category."
+                        : "Check back later for the latest games."}
+                  </p>
+                  
+                  {/* Retry button */}
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refetchIgdbGames()}
+                    className="mt-4 bg-blue-900/50 border-blue-700 hover:bg-blue-800/60"
+                  >
+                    Refresh
+                  </Button>
                 </div>
               )}
               
-              {/* Games grid in cube format - as mentioned in memory */}
+              {/* Games list in simplified leaderboard format - names only */}
               {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-blue-950/60 rounded-lg overflow-hidden border-2 border-blue-800">
+                  {/* Leaderboard header */}
+                  <div className="grid grid-cols-6 bg-blue-900/80 p-2 border-b-2 border-blue-700">
+                    <div className="col-span-1 text-blue-300 text-xs font-bold text-center">#</div>
+                    <div className="col-span-5 text-blue-300 text-xs font-bold">Name</div>
+                  </div>
+                  
+                  {/* Games rows - simplified with only rank and name */}
                   {getFilteredGames().map((game, index) => (
                     <div 
                       key={game.id}
                       onClick={() => handleGameClick(game)}
-                      className="bg-blue-950/60 rounded-md overflow-hidden hover:bg-blue-900/60 transition-all cursor-pointer group border-2 border-blue-800 hover:border-yellow-300 shadow-lg hover:shadow-yellow-900/20"
+                      className={`grid grid-cols-6 items-center p-3 cursor-pointer hover:bg-blue-900/40 transition-all ${
+                        index < getFilteredGames().length - 1 ? 'border-b border-blue-800/50' : ''
+                      }`}
                     >
-                      <div className="aspect-square relative overflow-hidden">
-                        {/* Game cover */}
-                        {game.cover?.url ? (
-                          <img
-                            src={formatCoverUrl(game.cover.url)}
-                            alt={game.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-blue-800/30">
-                            <Ghost className="h-12 w-12 text-blue-500" />
-                          </div>
-                        )}
-                        
-                        {/* Rank indicator for top games */}
-                        {!searchTerm && (
-                          <div className="absolute top-2 left-2 bg-blue-800/80 backdrop-blur text-yellow-300 p-1 rounded-md text-xs font-bold">
-                            #{index + 1}
-                          </div>
-                        )}
+                      {/* Rank */}
+                      <div className="col-span-1 text-center">
+                        <div className={`
+                          w-7 h-7 flex items-center justify-center rounded-full mx-auto
+                          ${index === 0 ? 'bg-yellow-500 text-black' : 
+                            index === 1 ? 'bg-gray-300 text-black' : 
+                            index === 2 ? 'bg-amber-700 text-white' : 'bg-blue-800 text-blue-300'}
+                        `}>
+                          <span className="text-xs font-bold">{index + 1}</span>
+                        </div>
                       </div>
                       
-                      <div className="p-3">
-                        <h3 className="font-semibold text-sm truncate group-hover:text-yellow-300">{game.name}</h3>
-                        <div className="flex items-center gap-1 mt-1">
-                          <Trophy className="h-3 w-3 text-blue-500" />
-                          <span className="text-[10px] text-blue-400">
-                            {game.rating ? `${Math.round(game.rating)}%` : 'Unrated'}
-                          </span>
-                        </div>
+                      {/* Game name */}
+                      <div className="col-span-5 overflow-hidden">
+                        <h3 className="text-sm text-yellow-300 truncate font-semibold">{game.name}</h3>
                       </div>
                     </div>
                   ))}
@@ -512,7 +520,7 @@ const RetroSearchPage = () => {
             <div className="mb-10">
               <h2 className="flex items-center text-lg text-yellow-300 font-bold mb-4 gap-2">
                 <Trophy className="h-5 w-5" />
-                {searchTerm ? 'STREAMER RESULTS' : 'TOP STREAMERS LEADERBOARD'}
+                {searchTerm ? 'STREAMER RESULTS' : 'TOP STREAMERS'}
               </h2>
               
               {/* Loading state */}
@@ -526,28 +534,48 @@ const RetroSearchPage = () => {
               {!streamersLoading && !topStreamersLoading && displayStreamers.length === 0 && (
                 <div className="bg-blue-950/60 rounded-md p-8 text-center">
                   <SearchX className="h-12 w-12 mx-auto text-blue-500 mb-3" />
-                  <p className="text-blue-300 text-sm">No streamers found.</p>
-                  <p className="text-blue-400 text-xs mt-2">Try a different search term or category.</p>
+                  <p className="text-blue-300 text-sm">
+                    {(streamersSearchError || topStreamersError) 
+                      ? "An error occurred while fetching streamers." 
+                      : searchTerm 
+                        ? `No streamers found matching "${searchTerm}"`
+                        : "No streamers available right now."}
+                  </p>
+                  <p className="text-blue-400 text-xs mt-2">
+                    {(streamersSearchError || topStreamersError)
+                      ? "Please try again later."
+                      : searchTerm 
+                        ? "Try a different search term or category."
+                        : "Check back later for the latest streamers."}
+                  </p>
+                  
+                  {/* Retry button */}
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => refetchStreamers()}
+                    className="mt-4 bg-blue-900/50 border-blue-700 hover:bg-blue-800/60"
+                  >
+                    Refresh
+                  </Button>
                 </div>
               )}
               
-              {/* Streamers list with leaderboard styling */}
+              {/* Streamers list with simplified leaderboard styling - names only */}
               {!streamersLoading && !topStreamersLoading && displayStreamers.length > 0 && (
                 <div className="bg-blue-950/60 rounded-lg overflow-hidden border-2 border-blue-800">
                   {/* Leaderboard header */}
-                  <div className="grid grid-cols-8 bg-blue-900/80 p-2 border-b-2 border-blue-700">
+                  <div className="grid grid-cols-6 bg-blue-900/80 p-2 border-b-2 border-blue-700">
                     <div className="col-span-1 text-blue-300 text-xs font-bold text-center">#</div>
-                    <div className="col-span-2 text-blue-300 text-xs font-bold text-center">Avatar</div>
-                    <div className="col-span-4 text-blue-300 text-xs font-bold">Streamer Name</div>
-                    <div className="col-span-1 text-blue-300 text-xs font-bold text-center">Fans</div>
+                    <div className="col-span-5 text-blue-300 text-xs font-bold">Name</div>
                   </div>
                   
-                  {/* Leaderboard rows */}
+                  {/* Leaderboard rows - simplified with only rank and name */}
                   {displayStreamers.map((streamer, index) => (
                     <div 
                       key={streamer.id}
                       onClick={() => handleStreamerClick(streamer.username)}
-                      className={`grid grid-cols-8 items-center p-2 cursor-pointer hover:bg-blue-900/40 transition-all ${
+                      className={`grid grid-cols-6 items-center p-3 cursor-pointer hover:bg-blue-900/40 transition-all ${
                         index < displayStreamers.length - 1 ? 'border-b border-blue-800/50' : ''
                       }`}
                     >
@@ -563,26 +591,9 @@ const RetroSearchPage = () => {
                         </div>
                       </div>
                       
-                      {/* Streamer avatar */}
-                      <div className="col-span-2 flex justify-center">
-                        <Avatar className="w-10 h-10 border-2 border-blue-700">
-                          <AvatarImage src={streamer.avatar_url} alt={streamer.username} />
-                          <AvatarFallback className="bg-blue-800 text-white">
-                            {streamer.username?.substring(0, 2).toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-                      
                       {/* Streamer name */}
-                      <div className="col-span-4 overflow-hidden">
-                        <h3 className="text-sm text-yellow-300 truncate">{streamer.username || streamer.display_name}</h3>
-                      </div>
-                      
-                      {/* Fans/Followers */}
-                      <div className="col-span-1 text-center">
-                        <div className="text-xs font-mono bg-blue-800/50 rounded py-1 px-2 inline-block">
-                          {index + 1}
-                        </div>
+                      <div className="col-span-5 overflow-hidden">
+                        <h3 className="text-sm text-yellow-300 truncate font-semibold">{streamer.username || streamer.display_name}</h3>
                       </div>
                     </div>
                   ))}

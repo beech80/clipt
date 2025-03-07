@@ -54,6 +54,7 @@ export function ProfileEditForm() {
 
       console.log('Fetching profile for user:', user.id);
       
+      // First check if profile exists
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -61,13 +62,53 @@ export function ProfileEditForm() {
         .single()
 
       if (error) {
-        console.error('Error fetching profile:', error)
-        throw error
+        console.error('Error fetching profile:', error);
+        
+        // If the profile doesn't exist, try to create one
+        if (error.code === 'PGRST116') { // PostgreSQL error for no rows returned
+          console.log('Profile not found, attempting to create one');
+          
+          try {
+            // Create a default profile
+            const username = user.email 
+              ? user.email.split('@')[0] 
+              : `user_${Math.random().toString(36).substring(2, 10)}`;
+            
+            const newProfile = {
+              id: user.id,
+              username,
+              display_name: user.user_metadata?.name || username,
+              bio: 'Welcome to my Clipt profile!',
+              avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.id}`,
+              created_at: new Date().toISOString()
+            };
+            
+            // Insert new profile
+            const { data: newData, error: createError } = await supabase
+              .from('profiles')
+              .insert(newProfile)
+              .select('*')
+              .single();
+              
+            if (createError) {
+              console.error('Error creating profile:', createError);
+              throw new Error('Could not create profile');
+            }
+            
+            console.log('Created new profile:', newData);
+            return newData as Profile;
+          } catch (createErr) {
+            console.error('Error in profile creation process:', createErr);
+            throw new Error('Failed to create profile');
+          }
+        }
+        
+        throw new Error('Could not load profile data');
       }
 
       if (!data) {
-        console.error('Profile not found for user:', user.id)
-        throw new Error('Profile not found')
+        console.error('Profile not found for user:', user.id);
+        throw new Error('Profile not found');
       }
 
       console.log('Profile data retrieved:', data);
@@ -111,7 +152,8 @@ export function ProfileEditForm() {
     },
     enabled: !!user?.id,
     retry: 3,
-    retryDelay: 1000
+    retryDelay: 1000,
+    staleTime: 30000 // Cache for 30 seconds
   })
 
   const form = useForm<ProfileFormValues>({
@@ -426,22 +468,35 @@ export function ProfileEditForm() {
 
   return (
     <Form {...form}>
-      {profileError && (
-        <Alert variant="destructive" className="mb-4">
+      {/* Display profile loading state */}
+      {profileLoading && (
+        <div className="flex flex-col items-center justify-center p-8">
+          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-blue-800 rounded-full mb-4"></div>
+          <p className="text-blue-300 text-sm font-medium">Loading your profile...</p>
+        </div>
+      )}
+
+      {/* Display profile error with retry button */}
+      {profileError && !profileLoading && (
+        <Alert variant="destructive" className="mb-6 bg-red-950/40 border-red-800 text-red-300">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error loading profile</AlertTitle>
-          <AlertDescription>
-            We couldn't load your profile information. Please try refreshing the page.
+          <AlertDescription className="mt-2">
+            <p className="mb-2">There was a problem loading your profile data.</p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => refetch()}
+              className="bg-red-950/60 border-red-800 hover:bg-red-900/60 text-white"
+            >
+              Try Again
+            </Button>
           </AlertDescription>
         </Alert>
       )}
-      
-      {profileLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-          <span className="ml-3 text-blue-500">Loading your profile...</span>
-        </div>
-      ) : (
+
+      {/* Only show form when profile is loaded */}
+      {!profileLoading && !profileError && profile && (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         
           {/* Profile Images Section */}
