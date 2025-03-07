@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Search, X, Ghost, Trophy, Gamepad2, Users, Sparkles, Star, SearchX } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { BackButton } from '@/components/ui/back-button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { igdbService } from '@/services/igdbService';
+import { BackButton } from '@/components/ui/back-button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const RetroSearchPage = () => {
   const navigate = useNavigate();
@@ -41,13 +41,13 @@ const RetroSearchPage = () => {
     }
   }, []);
 
-  // Query for games based on search term using IGDB API with backup local data
+  // Query for IGDB games
   const { data: igdbGames, isLoading: igdbGamesLoading } = useQuery({
     queryKey: ['igdb', 'games', 'search', searchTerm || ''],
     queryFn: async () => {
       console.log('Searching for games with term:', searchTerm);
       
-      // Mock data for popular games when API fails - limit to exactly 3
+      // Use mock data for initial setup and testing
       const mockPopularGames = [
         {
           id: 1942,
@@ -85,7 +85,7 @@ const RetroSearchPage = () => {
       
       try {
         // Don't search if search term is too short but not empty
-        if (searchTerm.length < 2 && searchTerm.length > 0) return [];
+        if (searchTerm && searchTerm.length < 2) return [];
         
         if (searchTerm) {
           console.log('Using IGDB search for term:', searchTerm);
@@ -137,6 +137,7 @@ const RetroSearchPage = () => {
       }
     },
     enabled: searchCategory === 'all' || searchCategory === 'games', // Ensure this is a boolean
+    staleTime: 30000, // Cache for 30 seconds
   });
 
   // Query for top games from our database (as fallback and for "top searched")
@@ -485,25 +486,17 @@ const RetroSearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-yellow-300 font-['Press_Start_2P',monospace] overflow-hidden">
-      {/* Pac-Man maze border */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 right-0 h-4 bg-blue-600 flex">
-          <div className="w-full h-full border-b-8 border-dotted border-white opacity-70"></div>
+    <main className="min-h-screen bg-gradient-to-b from-blue-950 to-blue-900 text-white">
+      {/* Hero section with animated gradient and search bar */}
+      <div className="relative bg-gradient-to-b from-blue-950 via-blue-900 to-blue-800 py-12 px-4">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[length:32px_32px]"></div>
+        
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-gradient-radial from-blue-500/20 to-transparent blur-xl"></div>
+          <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-gradient-radial from-blue-400/10 to-transparent blur-xl"></div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-4 bg-blue-600 flex">
-          <div className="w-full h-full border-t-8 border-dotted border-white opacity-70"></div>
-        </div>
-        <div className="absolute top-4 left-0 bottom-4 w-4 bg-blue-600 flex">
-          <div className="w-full h-full border-r-8 border-dotted border-white opacity-70"></div>
-        </div>
-        <div className="absolute top-4 right-0 bottom-4 w-4 bg-blue-600 flex">
-          <div className="w-full h-full border-l-8 border-dotted border-white opacity-70"></div>
-        </div>
-      </div>
-
-      {/* Cool Explore Header */}
-      <div className="pt-8 pb-4 bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 border-b-4 border-yellow-500">
+        
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-5xl font-bold text-yellow-300 mb-2 tracking-wider flex items-center justify-center gap-3">
             <Star className="h-6 w-6 md:h-8 md:w-8 text-yellow-300 animate-pulse" />
@@ -536,32 +529,9 @@ const RetroSearchPage = () => {
         </div>
       </div>
 
-      {/* Search header */}
-      <div className="container px-4 pt-16 pb-20 mx-auto relative z-10">
+      {/* Main content area */}
+      <div className="container px-4 pt-6 pb-20 mx-auto relative z-10">
         <BackButton className="mb-4" />
-
-        {/* Stylish Explore header with animated stars */}
-        <div className="mb-6 text-center relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg opacity-40"></div>
-          <div className="absolute -top-2 -left-2 animate-pulse">
-            <Star className="h-5 w-5 text-yellow-300" />
-          </div>
-          <div className="absolute -top-1 -right-2 animate-pulse delay-75">
-            <Star className="h-4 w-4 text-yellow-300" />
-          </div>
-          <div className="absolute bottom-0 left-1/4 animate-pulse delay-150">
-            <Star className="h-3 w-3 text-yellow-300" />
-          </div>
-          <div className="absolute bottom-2 right-1/4 animate-pulse delay-300">
-            <Sparkles className="h-4 w-4 text-yellow-300" />
-          </div>
-          <div className="py-4 px-2 relative">
-            <h1 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-100">
-              EXPLORE
-            </h1>
-            <p className="text-xs text-blue-300 mt-1">Discover games & streamers</p>
-          </div>
-        </div>
 
         {/* Search form with refined UI */}
         <div className="mb-8">
@@ -594,46 +564,6 @@ const RetroSearchPage = () => {
                   <X className="h-4 w-4" />
                 </button>
               ) : null}
-            </div>
-
-            {/* Updated category tabs with better visual feedback */}
-            <div className="flex justify-center gap-2 mt-3 bg-blue-950/50 p-2 rounded-md border border-blue-800">
-              <button
-                type="button"
-                className={`flex items-center gap-1 text-[10px] px-3 py-1.5 rounded-md transition-all duration-200 ${
-                  searchCategory === 'all'
-                    ? 'bg-blue-700 text-yellow-300 shadow-[0_0_8px_rgba(29,78,216,0.3)]'
-                    : 'hover:bg-blue-800/70 text-blue-400'
-                }`}
-                onClick={() => handleTabClick('all')}
-              >
-                <Gamepad2 className="h-3 w-3" />
-                ALL
-              </button>
-              <button
-                type="button"
-                className={`flex items-center gap-1 text-[10px] px-3 py-1.5 rounded-md transition-all duration-200 ${
-                  searchCategory === 'games'
-                    ? 'bg-blue-700 text-yellow-300 shadow-[0_0_8px_rgba(29,78,216,0.3)]'
-                    : 'hover:bg-blue-800/70 text-blue-400'
-                }`}
-                onClick={() => handleTabClick('games')}
-              >
-                <Gamepad2 className="h-3 w-3" />
-                GAMES
-              </button>
-              <button
-                type="button"
-                className={`flex items-center gap-1 text-[10px] px-3 py-1.5 rounded-md transition-all duration-200 ${
-                  searchCategory === 'streamers'
-                    ? 'bg-blue-700 text-yellow-300 shadow-[0_0_8px_rgba(29,78,216,0.3)]'
-                    : 'hover:bg-blue-800/70 text-blue-400'
-                }`}
-                onClick={() => handleTabClick('streamers')}
-              >
-                <Users className="h-3 w-3" />
-                STREAMERS
-              </button>
             </div>
           </form>
         </div>
@@ -968,7 +898,7 @@ const RetroSearchPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
