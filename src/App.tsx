@@ -27,10 +27,21 @@ const Discovery = React.lazy(() => import('./pages/Discovery'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Menu = React.lazy(() => import('./pages/Menu'));
 const Profile = React.lazy(() => import('./pages/Profile'));
-const Streaming = React.lazy(() => import('./pages/Streaming'));
+// Fix the problematic imports with more reliable patterns
+const Streaming = React.lazy(() => 
+  import('./pages/Streaming').catch(error => {
+    console.error('Error loading Streaming module:', error);
+    return { default: () => <div>Failed to load streaming page. Please refresh.</div> };
+  })
+);
 const Messages = React.lazy(() => import('./pages/Messages'));
 const Settings = React.lazy(() => import('./pages/Settings'));
-const EditProfile = React.lazy(() => import('./pages/EditProfile'));
+const EditProfile = React.lazy(() => 
+  import('./pages/EditProfile').catch(error => {
+    console.error('Error loading EditProfile module:', error);
+    return { default: () => <div>Failed to load profile editor. Please refresh.</div> };
+  })
+);
 const Admin = React.lazy(() => import('./pages/Admin'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
