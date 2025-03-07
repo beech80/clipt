@@ -41,102 +41,54 @@ const RetroSearchPage = () => {
     }
   }, []);
 
-  // Query for IGDB games
+  // Query for IGDB games with fixed implementation
   const { data: igdbGames, isLoading: igdbGamesLoading } = useQuery({
     queryKey: ['igdb', 'games', 'search', searchTerm || ''],
     queryFn: async () => {
-      console.log('Searching for games with term:', searchTerm);
+      console.log('IGDB Query executing for search term:', searchTerm);
       
-      // Use mock data for initial setup and testing
-      const mockPopularGames = [
-        {
-          id: 1942,
-          name: 'The Last of Us Part II',
-          cover: {
-            id: 101,
-            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1r0o.jpg'
+      // Don't search if search term is too short but not empty
+      if (searchTerm && searchTerm.length < 2) {
+        console.log('Search term too short, returning empty results');
+        return [];
+      }
+
+      if (searchTerm) {
+        try {
+          console.log('Calling IGDB API for search term:', searchTerm);
+          const games = await igdbService.searchGames(searchTerm, {
+            sort: 'rating desc',
+            limit: 20
+          });
+          
+          console.log('IGDB API returned games:', games.length);
+          
+          if (games && games.length > 0) {
+            return games.slice(0, 3);
           }
-        },
-        {
-          id: 1877,
-          name: 'Cyberpunk 2077',
-          cover: {
-            id: 102,
-            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co4hk8.jpg'
-          }
-        },
-        {
-          id: 732,
-          name: 'Grand Theft Auto V',
-          cover: {
-            id: 103,
-            url: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1l8z.jpg'
-          }
+          
+          return [];
+        } catch (error) {
+          console.error('IGDB search error:', error);
+          return [];
         }
-      ];
-      
-      // Mock data for search results
-      const getMockSearchResults = (term: string) => {
-        const searchTermLower = term.toLowerCase();
-        return mockPopularGames.filter(game => 
-          game.name.toLowerCase().includes(searchTermLower)
-        );
-      };
-      
-      try {
-        // Don't search if search term is too short but not empty
-        if (searchTerm && searchTerm.length < 2) return [];
-        
-        if (searchTerm) {
-          console.log('Using IGDB search for term:', searchTerm);
-          try {
-            // First try the API
-            const games = await igdbService.searchGames(searchTerm, {
-              sort: 'rating desc',
-              limit: 20
-            });
-            
-            console.log('IGDB API returned games:', games);
-            
-            // If API returns results, use them (limited to 3)
-            if (games && games.length > 0) {
-              return games.slice(0, 3).map(game => ({ id: game.id, name: game.name, cover: game.cover }));
-            }
-            
-            // Fallback to mock data if API returns no results
-            console.log('IGDB API returned no results, using mock data');
-            return getMockSearchResults(searchTerm);
-          } catch (apiError) {
-            // If API fails, use local mock data
-            console.error('IGDB API search failed:', apiError);
-            return getMockSearchResults(searchTerm);
+      } else {
+        try {
+          console.log('Fetching popular IGDB games for empty search');
+          const popularGames = await igdbService.getPopularGames();
+          
+          if (popularGames && popularGames.length > 0) {
+            return popularGames.slice(0, 3);
           }
-        } else {
-          // For initial load or empty search, use popular games
-          console.log('Fetching popular IGDB games');
-          try {
-            const popularGames = await igdbService.getPopularGames();
-            
-            // If we got results, use them (limited to 3)
-            if (popularGames && popularGames.length > 0) {
-              return popularGames.slice(0, 3).map(game => ({ id: game.id, name: game.name, cover: game.cover }));
-            }
-            
-            // Fallback to mock data
-            console.log('IGDB API returned no popular games, using mock data');
-            return mockPopularGames;
-          } catch (apiError) {
-            // If API fails, use mock data
-            console.error('IGDB API popular games failed:', apiError);
-            return mockPopularGames;
-          }
+          
+          return [];
+        } catch (error) {
+          console.error('IGDB popular games error:', error);
+          return [];
         }
-      } catch (error) {
-        console.error('Overall error in game search:', error);
-        return searchTerm ? getMockSearchResults(searchTerm) : mockPopularGames;
       }
     },
-    enabled: searchCategory === 'all' || searchCategory === 'games', // Ensure this is a boolean
+    enabled: searchCategory === 'all' || searchCategory === 'games',
     staleTime: 30000, // Cache for 30 seconds
   });
 
@@ -234,19 +186,27 @@ const RetroSearchPage = () => {
     enabled: !searchTerm || (searchCategory !== 'all' && searchCategory !== 'streamers'), // Keep as is as this should evaluate to boolean
   });
 
-  // Process the search results with better handling
+  // Get filtered games based on search term and loading state
   const getFilteredGames = () => {
+    console.log('getFilteredGames called - igdbGames:', igdbGames?.length, 'topGames:', topGames?.length);
+    
+    // If we have search results, return them (limited to 3)
     if (searchTerm && igdbGames?.length) {
-      // When searching, use IGDB results - strictly limit to 3
-      return (igdbGames || []).slice(0, 3);
-    } else if (igdbGames?.length) {
-      // When not searching but have IGDB results - strictly limit to 3
-      return (igdbGames || []).slice(0, 3);
-    } else if (topGames?.length) {
-      // Fallback to top games - strictly limit to 3
-      return (topGames || []).slice(0, 3);
+      console.log('Returning search results:', igdbGames.slice(0, 3));
+      return igdbGames.slice(0, 3);
+    } 
+    // If not searching but we have IGDB games, return those
+    else if (igdbGames?.length) {
+      console.log('Returning IGDB games:', igdbGames.slice(0, 3));
+      return igdbGames.slice(0, 3);
+    } 
+    // Fall back to top games from our database
+    else if (topGames?.length) {
+      console.log('Returning top games:', topGames.slice(0, 3));
+      return topGames.slice(0, 3);
     }
-    // Default empty array
+    
+    // Return empty array if no games available
     return [];
   };
 
@@ -283,6 +243,7 @@ const RetroSearchPage = () => {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
+    console.log('Search input changed:', value);
     
     // Immediately start showing loading state for better UX
     if (value.trim().length > 0) {
@@ -307,19 +268,14 @@ const RetroSearchPage = () => {
     searchTimeoutRef.current = setTimeout(() => {
       if (value.trim().length > 0) {
         console.log('Invalidating queries for search:', value);
-        // If search term is not empty, invalidate queries to refresh data
-        if (searchCategory === 'games' || searchCategory === 'all') {
-          // Use the correct query keys that match the ones defined above
-          queryClient.invalidateQueries(['igdb', 'games', 'search', value.trim()]);
-        }
-        if (searchCategory === 'streamers' || searchCategory === 'all') {
-          queryClient.invalidateQueries(['streamers', 'search', value.trim()]);
-        }
+        // Force a refetch by invalidating the queries
+        queryClient.invalidateQueries({ queryKey: ['igdb', 'games', 'search'] });
+        queryClient.invalidateQueries({ queryKey: ['streamers', 'search'] });
       } else {
         // If search term is empty, invalidate the top games and streamers queries
         console.log('Invalidating top queries for empty search');
-        queryClient.invalidateQueries(['games', 'top-searched']);
-        queryClient.invalidateQueries(['streamers', 'top']);
+        queryClient.invalidateQueries({ queryKey: ['games', 'top-searched'] });
+        queryClient.invalidateQueries({ queryKey: ['streamers', 'top'] });
       }
       
       // Reset loading states after a short delay
@@ -378,34 +334,31 @@ const RetroSearchPage = () => {
 
   const handleSubmitSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Search submitted with term:', searchTerm);
     
-    if (searchTerm.trim().length === 0) {
-      return;
-    }
-    
-    // Create a smooth transition by showing loading state
-    if (searchCategory === 'games' || searchCategory === 'all') {
-      setGamesLoading(true);
-    }
-    if (searchCategory === 'streamers' || searchCategory === 'all') {
-      setStreamersLoading(true);
-    }
-    
-    // Invalidate queries to force refresh
-    if (searchCategory === 'games' || searchCategory === 'all') {
-      queryClient.invalidateQueries(['igdb', 'games', 'search', searchTerm.trim()]);
-    }
-    if (searchCategory === 'streamers' || searchCategory === 'all') {
-      queryClient.invalidateQueries(['streamers', 'search', searchTerm.trim()]);
-    }
-    
-    // Small delay before navigating to improve perceived UX
-    setTimeout(() => {
-      // Blur the search input to hide keyboard on mobile
+    // Explicitly trigger the search by invalidating queries
+    if (searchTerm.trim().length > 0) {
+      console.log('Invalidating query caches to force refetch');
+      
+      if (searchCategory === 'games' || searchCategory === 'all') {
+        queryClient.invalidateQueries({ 
+          queryKey: ['igdb', 'games', 'search'],
+          refetchType: 'all'
+        });
+      }
+      
+      if (searchCategory === 'streamers' || searchCategory === 'all') {
+        queryClient.invalidateQueries({ 
+          queryKey: ['streamers', 'search'],
+          refetchType: 'all'
+        });
+      }
+      
+      // Blur input to hide keyboard on mobile
       if (searchInputRef.current) {
         searchInputRef.current.blur();
       }
-    }, 200);
+    }
   };
 
   // Format cover URL for IGDB games
@@ -444,28 +397,13 @@ const RetroSearchPage = () => {
     return '/img/games/default.jpg';
   };
 
-  // Update game click handler to improve user experience
+  // Navigate to game page when a game is clicked
   const handleGameClick = (game: any) => {
-    // Create a smooth transition by animating the click
-    const gameElement = document.getElementById(`game-${game.id}`);
-    if (gameElement) {
-      gameElement.classList.add('scale-95', 'opacity-75');
-      setTimeout(() => {
-        gameElement.classList.remove('scale-95', 'opacity-75');
-      }, 150);
+    console.log('Game clicked:', game);
+    if (game && game.id) {
+      // Navigate to the Game Streamers page for the selected game
+      navigate(`/game/${game.id}?name=${encodeURIComponent(game.name || '')}`);
     }
-    
-    // Navigate after a short delay for better UX
-    setTimeout(() => {
-      // For IGDB games, first check if we have this game in our database
-      if (game.id && typeof game.id === 'number') {
-        // This is an IGDB game, we should navigate using the IGDB ID
-        navigate(`/game/${game.id}`);
-      } else {
-        // This is a database game
-        navigate(`/games/${game.id}`);
-      }
-    }, 200);
   };
 
   // Update streamer click handler with animation
@@ -582,151 +520,72 @@ const RetroSearchPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             {/* Only show Games if category is All or Games */}
             {(searchCategory === 'all' || searchCategory === 'games') && (
-              <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
-                <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
-                  <Gamepad2 className="h-5 w-5 text-yellow-300" />
-                  <h2 className="text-sm md:text-lg text-yellow-300">
-                    {searchTerm ? "GAMES" : "TOP GAMES"}
-                  </h2>
-                </div>
+              <div className="mb-10">
+                <h2 className="flex items-center text-lg text-yellow-300 font-bold mb-4 gap-2">
+                  <Gamepad2 className="h-5 w-5" />
+                  {searchTerm ? 'SEARCH RESULTS' : 'TRENDING GAMES'}
+                </h2>
                 
-                <div className="space-y-2">
-                  {/* Show loading skeleton */}
-                  {isGamesLoading && (
-                    <>
-                      {[0, 1, 2].map((i) => (
-                        <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
-                          <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse"></div>
-                          <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse"></div>
-                          <div className="flex-1 h-6 bg-blue-600/50 animate-pulse"></div>
+                {/* Loading state */}
+                {(gamesLoading || igdbGamesLoading || topGamesLoading) && (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-yellow-300 rounded-full"></div>
+                  </div>
+                )}
+                
+                {/* Error or empty state */}
+                {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length === 0 && (
+                  <div className="bg-blue-950/60 rounded-md p-8 text-center">
+                    <SearchX className="h-12 w-12 mx-auto text-blue-500 mb-3" />
+                    <p className="text-blue-300 text-sm">No games found.</p>
+                    <p className="text-blue-400 text-xs mt-2">Try a different search term or category.</p>
+                  </div>
+                )}
+                
+                {/* Games grid in cube format */}
+                {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {getFilteredGames().map((game, index) => (
+                      <div 
+                        key={game.id}
+                        onClick={() => handleGameClick(game)}
+                        className="bg-blue-950/60 rounded-md overflow-hidden hover:bg-blue-900/60 transition-all cursor-pointer group border-2 border-blue-800 hover:border-yellow-300 shadow-lg hover:shadow-yellow-900/20"
+                      >
+                        <div className="aspect-square relative overflow-hidden">
+                          {/* Game cover */}
+                          {game.cover?.url ? (
+                            <img
+                              src={formatCoverUrl(game.cover.url)}
+                              alt={game.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-blue-800/30">
+                              <Ghost className="h-12 w-12 text-blue-500" />
+                            </div>
+                          )}
+                          
+                          {/* Rank indicator for top games */}
+                          {!searchTerm && (
+                            <div className="absolute top-2 left-2 bg-blue-800/80 backdrop-blur text-yellow-300 p-1 rounded-md text-xs font-bold">
+                              #{index + 1}
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </>
-                  )}
-
-                  {/* No games found state with improved styling */}
-                  {!isGamesLoading && (!displayGames || displayGames.length === 0) && (
-                    <div className="py-8 px-4 text-center">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-900/50 mb-4">
-                        <SearchX className="h-6 w-6 text-yellow-300" />
-                      </div>
-                      <p className="text-yellow-500 text-xs md:text-sm font-bold mb-1">NO GAMES FOUND</p>
-                      <p className="text-blue-400 text-xs">
-                        {searchTerm 
-                          ? "Try a different search term or category"
-                          : "Check back later for top games"}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* First game (index 0) */}
-                  {!isGamesLoading && displayGames && displayGames.length > 0 && (
-                    <div 
-                      id={`game-${displayGames[0].id}`}
-                      key={displayGames[0].id}
-                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
-                      onClick={() => handleGameClick(displayGames[0])}
-                    >
-                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                        1
-                      </div>
-                      <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
-                        <div className="absolute inset-0 border-2 border-yellow-300"></div>
-                        <img 
-                          src={formatCoverUrl(displayGames[0])} 
-                          alt={displayGames[0].name} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/img/games/default.jpg';
-                          }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-yellow-300 text-xs block truncate">
-                          {displayGames[0].name}
-                        </span>
-                      </div>
-                      {!searchTerm && (
-                        <div className="text-yellow-300 hidden md:block">
-                          <Trophy className="h-5 w-5" />
+                        
+                        <div className="p-3">
+                          <h3 className="font-semibold text-sm truncate group-hover:text-yellow-300">{game.name}</h3>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Trophy className="h-3 w-3 text-blue-500" />
+                            <span className="text-[10px] text-blue-400">
+                              {game.rating ? `${Math.round(game.rating)}%` : 'Unrated'}
+                            </span>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Second game (index 1) */}
-                  {!isGamesLoading && displayGames && displayGames.length > 1 && (
-                    <div 
-                      id={`game-${displayGames[1].id}`}
-                      key={displayGames[1].id}
-                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
-                      onClick={() => handleGameClick(displayGames[1])}
-                    >
-                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                        2
                       </div>
-                      <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
-                        <div className="absolute inset-0 border-2 border-yellow-300"></div>
-                        <img 
-                          src={formatCoverUrl(displayGames[1])} 
-                          alt={displayGames[1].name} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/img/games/default.jpg';
-                          }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-yellow-300 text-xs block truncate">
-                          {displayGames[1].name}
-                        </span>
-                      </div>
-                      {!searchTerm && (
-                        <div className="text-yellow-300 hidden md:block">
-                          <Trophy className="h-5 w-5" />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Third game (index 2) */}
-                  {!isGamesLoading && displayGames && displayGames.length > 2 && (
-                    <div 
-                      id={`game-${displayGames[2].id}`}
-                      key={displayGames[2].id}
-                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
-                      onClick={() => handleGameClick(displayGames[2])}
-                    >
-                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                        3
-                      </div>
-                      <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
-                        <div className="absolute inset-0 border-2 border-yellow-300"></div>
-                        <img 
-                          src={formatCoverUrl(displayGames[2])} 
-                          alt={displayGames[2].name} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/img/games/default.jpg';
-                          }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-yellow-300 text-xs block truncate">
-                          {displayGames[2].name}
-                        </span>
-                      </div>
-                      {!searchTerm && (
-                        <div className="text-yellow-300 hidden md:block">
-                          <Trophy className="h-5 w-5" />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             
