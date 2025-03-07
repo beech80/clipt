@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Search, X, Ghost, Trophy, Gamepad2, Users, Sparkles, Star } from 'lucide-react';
+import { Search, X, Ghost, Trophy, Gamepad2, Users, Sparkles, Star, SearchX } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { BackButton } from '@/components/ui/back-button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,8 +14,11 @@ const RetroSearchPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchCategory, setSearchCategory] = useState<'all' | 'games' | 'streamers'>('all');
+  const [gamesLoading, setGamesLoading] = useState(false);
+  const [streamersLoading, setStreamersLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Handle clicks outside of search container
   useEffect(() => {
@@ -163,7 +166,7 @@ const RetroSearchPage = () => {
   });
 
   // Query for top streamers
-  const { data: topStreamers, isLoading: streamersLoading } = useQuery({
+  const { data: topStreamers, isLoading: streamersSearchLoading } = useQuery({
     queryKey: ['streamers', 'search', searchTerm],
     queryFn: async () => {
       let query = supabase
@@ -181,23 +184,47 @@ const RetroSearchPage = () => {
         query = query.not('streaming_url', 'is', null);
       }
       
-      // Apply search filter if provided
+      // Apply search filter if provided - search across username and display_name
       if (searchTerm) {
-        query = query.or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`);
+        const formattedSearchTerm = searchTerm.trim().toLowerCase();
+        query = query.or(`username.ilike.%${formattedSearchTerm}%,display_name.ilike.%${formattedSearchTerm}%`);
       }
       
       const { data, error } = await query.order('follower_count', { ascending: false }).limit(3); // Only fetch top 3
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching streamers:', error);
+        throw error;
+      }
+      
+      console.log('Found streamers for search:', searchTerm, data?.length || 0);
       return data || [];
     },
+    staleTime: searchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
   });
 
-  // For display purposes, combine IGDB and database games
-  const displayGames = searchTerm && igdbGames?.length 
-    ? igdbGames.slice(0, 3) 
-    : (igdbGames?.length ? igdbGames.slice(0, 3) : topGames?.slice(0, 3) || []);
-  const gamesLoading = searchTerm ? igdbGamesLoading : topGamesLoading;
+  // Process the search results with better handling
+  const getFilteredGames = () => {
+    if (searchTerm && igdbGames?.length) {
+      // When searching, use IGDB results
+      return igdbGames.slice(0, 3);
+    } else if (igdbGames?.length) {
+      // When not searching but have IGDB results
+      return igdbGames.slice(0, 3);
+    } else if (topGames?.length) {
+      // Fallback to top games
+      return topGames.slice(0, 3);
+    }
+    // Default empty array
+    return [];
+  };
+
+  // Define displayable games with proper empty handling
+  const displayGames = getFilteredGames();
+  
+  // Combine loading states for better UI feedback
+  const isGamesLoading = gamesLoading || (searchTerm ? igdbGamesLoading : topGamesLoading);
+  const isStreamersLoading = streamersLoading || (searchTerm ? streamersSearchLoading : topStreamersLoading);
 
   // Debug logging for search functionality
   useEffect(() => {
@@ -207,30 +234,108 @@ const RetroSearchPage = () => {
     console.log('Games being displayed:', displayGames);
   }, [searchTerm, igdbGames, topGames, displayGames]);
 
-  // Handle search
+  // Search functions
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
+    
+    // Immediately start showing loading state for better UX
+    if (value.trim().length > 0) {
+      if (searchCategory === 'games' || searchCategory === 'all') {
+        setGamesLoading(true);
+      }
+      if (searchCategory === 'streamers' || searchCategory === 'all') {
+        setStreamersLoading(true);
+      }
+    }
+    
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set a new timeout for debounce
+    searchTimeoutRef.current = setTimeout(() => {
+      if (value.trim().length > 0) {
+        // If search term is not empty, invalidate queries to refresh data
+        if (searchCategory === 'games' || searchCategory === 'all') {
+          queryClient.invalidateQueries(['games', value.trim().toLowerCase()]);
+        }
+        if (searchCategory === 'streamers' || searchCategory === 'all') {
+          queryClient.invalidateQueries(['streamers', value.trim().toLowerCase()]);
+        }
+      } else {
+        // If search term is empty, invalidate the top games and streamers queries
+        queryClient.invalidateQueries(['topGames']);
+        queryClient.invalidateQueries(['topStreamers']);
+        setGamesLoading(false);
+        setStreamersLoading(false);
+      }
+    }, 300);
   };
 
-  // Clear search
   const clearSearch = () => {
     setSearchTerm('');
-    searchInputRef.current?.focus();
+    queryClient.invalidateQueries(['topGames']);
+    queryClient.invalidateQueries(['topStreamers']);
     
-    // Force re-fetch with empty search
-    // This will ensure we only show top 3 games again
-    queryClient.invalidateQueries({ queryKey: ['igdb', 'games'] });
-    queryClient.invalidateQueries({ queryKey: ['games'] });
-    queryClient.invalidateQueries({ queryKey: ['streamers'] });
+    // Focus the search input after clearing
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+    
+    // Reset loading states
+    setGamesLoading(false);
+    setStreamersLoading(false);
   };
 
-  // Handle search submission
+  // Category switch handler with improved transitions
+  const handleCategoryChange = (category: 'all' | 'games' | 'streamers') => {
+    setSearchCategory(category);
+    
+    if (searchTerm.trim().length > 0) {
+      // Set appropriate loading states based on new category
+      if (category === 'games' || category === 'all') {
+        setGamesLoading(true);
+        queryClient.invalidateQueries(['games', searchTerm.trim().toLowerCase()]);
+      }
+      if (category === 'streamers' || category === 'all') {
+        setStreamersLoading(true);
+        queryClient.invalidateQueries(['streamers', searchTerm.trim().toLowerCase()]);
+      }
+    }
+  };
+
   const handleSubmitSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/discovery?q=${encodeURIComponent(searchTerm)}`);
+    
+    if (searchTerm.trim().length === 0) {
+      return;
     }
+    
+    // Create a smooth transition by showing loading state
+    if (searchCategory === 'games' || searchCategory === 'all') {
+      setGamesLoading(true);
+    }
+    if (searchCategory === 'streamers' || searchCategory === 'all') {
+      setStreamersLoading(true);
+    }
+    
+    // Invalidate queries to force refresh
+    if (searchCategory === 'games' || searchCategory === 'all') {
+      queryClient.invalidateQueries(['games', searchTerm.trim().toLowerCase()]);
+    }
+    if (searchCategory === 'streamers' || searchCategory === 'all') {
+      queryClient.invalidateQueries(['streamers', searchTerm.trim().toLowerCase()]);
+    }
+    
+    // Small delay before navigating to improve perceived UX
+    setTimeout(() => {
+      // Blur the search input to hide keyboard on mobile
+      if (searchInputRef.current) {
+        searchInputRef.current.blur();
+      }
+    }, 200);
   };
 
   // Format cover URL for IGDB games
@@ -269,16 +374,45 @@ const RetroSearchPage = () => {
     return '/img/games/default.jpg';
   };
 
-  // Handle game click
+  // Update game click handler to improve user experience
   const handleGameClick = (game: any) => {
-    // For IGDB games, first check if we have this game in our database
-    if (game.id && typeof game.id === 'number') {
-      // This is an IGDB game, we should navigate using the IGDB ID
-      navigate(`/game/${game.id}`);
-    } else {
-      // This is a database game
-      navigate(`/games/${game.id}`);
+    // Create a smooth transition by animating the click
+    const gameElement = document.getElementById(`game-${game.id}`);
+    if (gameElement) {
+      gameElement.classList.add('scale-95', 'opacity-75');
+      setTimeout(() => {
+        gameElement.classList.remove('scale-95', 'opacity-75');
+      }, 150);
     }
+    
+    // Navigate after a short delay for better UX
+    setTimeout(() => {
+      // For IGDB games, first check if we have this game in our database
+      if (game.id && typeof game.id === 'number') {
+        // This is an IGDB game, we should navigate using the IGDB ID
+        navigate(`/game/${game.id}`);
+      } else {
+        // This is a database game
+        navigate(`/games/${game.id}`);
+      }
+    }, 200);
+  };
+
+  // Update streamer click handler with animation
+  const handleStreamerClick = (username: string) => {
+    // Create a smooth transition by animating the click
+    const streamerElement = document.getElementById(`streamer-${username}`);
+    if (streamerElement) {
+      streamerElement.classList.add('scale-95', 'opacity-75');
+      setTimeout(() => {
+        streamerElement.classList.remove('scale-95', 'opacity-75');
+      }, 150);
+    }
+    
+    // Navigate after a short delay for better UX
+    setTimeout(() => {
+      navigate(`/profile/${username}`);
+    }, 200);
   };
 
   return (
@@ -313,19 +447,19 @@ const RetroSearchPage = () => {
           <div className="flex justify-center gap-4 mt-4">
             <button 
               className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'all' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
-              onClick={() => setSearchCategory('all')}
+              onClick={() => handleCategoryChange('all')}
             >
               ALL
             </button>
             <button 
               className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'games' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
-              onClick={() => setSearchCategory('games')}
+              onClick={() => handleCategoryChange('games')}
             >
               GAMES
             </button>
             <button 
               className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'streamers' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
-              onClick={() => setSearchCategory('streamers')}
+              onClick={() => handleCategoryChange('streamers')}
             >
               STREAMERS
             </button>
@@ -334,342 +468,434 @@ const RetroSearchPage = () => {
       </div>
 
       {/* Search header */}
-      <div className="sticky top-0 z-50 p-4 bg-black/80 backdrop-blur-lg border-b-4 border-blue-600">
-        <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSubmitSearch} className="flex items-center gap-2">
-            <BackButton className="text-yellow-300 hover:text-yellow-100" onClick={() => navigate('/discovery')} />
-            <div className="relative flex-1" ref={searchContainerRef}>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-yellow-300" />
-              </div>
-              <Input
+      <div className="container px-4 pt-16 pb-20 mx-auto relative z-10">
+        <BackButton className="mb-4" />
+
+        {/* Stylish Explore header with animated stars */}
+        <div className="mb-6 text-center relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg opacity-40"></div>
+          <div className="absolute -top-2 -left-2 animate-pulse">
+            <Star className="h-5 w-5 text-yellow-300" />
+          </div>
+          <div className="absolute -top-1 -right-2 animate-pulse delay-75">
+            <Star className="h-4 w-4 text-yellow-300" />
+          </div>
+          <div className="absolute bottom-0 left-1/4 animate-pulse delay-150">
+            <Star className="h-3 w-3 text-yellow-300" />
+          </div>
+          <div className="absolute bottom-2 right-1/4 animate-pulse delay-300">
+            <Sparkles className="h-4 w-4 text-yellow-300" />
+          </div>
+          <div className="py-4 px-2 relative">
+            <h1 className="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-100">
+              EXPLORE
+            </h1>
+            <p className="text-xs text-blue-300 mt-1">Discover games & streamers</p>
+          </div>
+        </div>
+
+        {/* Search form with refined UI */}
+        <div className="mb-8">
+          <form onSubmit={handleSubmitSearch} className="space-y-2" ref={searchContainerRef}>
+            <div
+              className={`bg-blue-950/60 rounded-md flex items-center px-4 py-3 gap-2 transition-all duration-300 border-2 ${
+                isSearchFocused
+                  ? searchTerm.trim() 
+                    ? 'border-yellow-300 shadow-[0_0_12px_rgba(234,179,8,0.3)]' 
+                    : 'border-blue-500'
+                  : 'border-blue-800'
+              }`}
+            >
+              <Search className={`h-5 w-5 ${isSearchFocused ? 'text-yellow-300' : 'text-blue-500'} transition-colors duration-300`} />
+              <input
+                ref={searchInputRef}
                 type="text"
-                placeholder={`SEARCH ${searchCategory === 'games' ? 'GAMES' : searchCategory === 'streamers' ? 'STREAMERS' : 'GAMES OR STREAMERS'}...`}
-                className="pl-10 pr-10 py-3 bg-blue-950/50 border-4 border-blue-600 text-yellow-300 placeholder:text-yellow-500/60 w-full font-['Press_Start_2P',monospace] text-xs md:text-sm"
+                placeholder="Search games & streamers..."
+                className="flex-1 bg-transparent outline-none border-none focus:ring-0 text-sm text-yellow-300 placeholder:text-blue-500"
                 value={searchTerm}
                 onChange={handleSearch}
                 onFocus={() => setIsSearchFocused(true)}
-                ref={searchInputRef}
-                autoFocus
               />
-              {searchTerm && (
+              {searchTerm ? (
                 <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="text-blue-400 hover:text-yellow-300 transition-colors"
                   onClick={clearSearch}
+                  aria-label="Clear search"
                 >
-                  <X className="h-4 w-4 text-yellow-300" />
+                  <X className="h-4 w-4" />
                 </button>
-              )}
+              ) : null}
+            </div>
+
+            {/* Updated category tabs with better visual feedback */}
+            <div className="flex justify-center gap-2 mt-3 bg-blue-950/50 p-2 rounded-md border border-blue-800">
+              <button
+                type="button"
+                className={`flex items-center gap-1 text-[10px] px-3 py-1.5 rounded-md transition-all duration-200 ${
+                  searchCategory === 'all'
+                    ? 'bg-blue-700 text-yellow-300 shadow-[0_0_8px_rgba(29,78,216,0.3)]'
+                    : 'hover:bg-blue-800/70 text-blue-400'
+                }`}
+                onClick={() => handleCategoryChange('all')}
+              >
+                <Gamepad2 className="h-3 w-3" />
+                ALL
+              </button>
+              <button
+                type="button"
+                className={`flex items-center gap-1 text-[10px] px-3 py-1.5 rounded-md transition-all duration-200 ${
+                  searchCategory === 'games'
+                    ? 'bg-blue-700 text-yellow-300 shadow-[0_0_8px_rgba(29,78,216,0.3)]'
+                    : 'hover:bg-blue-800/70 text-blue-400'
+                }`}
+                onClick={() => handleCategoryChange('games')}
+              >
+                <Gamepad2 className="h-3 w-3" />
+                GAMES
+              </button>
+              <button
+                type="button"
+                className={`flex items-center gap-1 text-[10px] px-3 py-1.5 rounded-md transition-all duration-200 ${
+                  searchCategory === 'streamers'
+                    ? 'bg-blue-700 text-yellow-300 shadow-[0_0_8px_rgba(29,78,216,0.3)]'
+                    : 'hover:bg-blue-800/70 text-blue-400'
+                }`}
+                onClick={() => handleCategoryChange('streamers')}
+              >
+                <Users className="h-3 w-3" />
+                STREAMERS
+              </button>
             </div>
           </form>
         </div>
-      </div>
-      
-      {/* Content */}
-      <div className="pt-6 pb-16 max-w-4xl mx-auto px-4 md:px-8">
-        <div className="flex justify-center mb-6">
-          <h1 className="text-xl md:text-3xl text-yellow-300 font-['Press_Start_2P',monospace] text-center relative">
-            {searchTerm ? "SEARCH RESULTS" : "TOP CHARTS"}
-            <span className="absolute -top-6 -right-8 hidden md:block">
-              <Ghost className="h-6 w-6 text-pink-500" />
-            </span>
-          </h1>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-          {/* Only show Games if category is All or Games */}
-          {(searchCategory === 'all' || searchCategory === 'games') && (
-            <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
-              <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
-                <Gamepad2 className="h-5 w-5 text-yellow-300" />
-                <h2 className="text-sm md:text-lg text-yellow-300">
-                  {searchTerm ? "GAMES" : "TOP GAMES"}
-                </h2>
-              </div>
-              
-              <div className="space-y-2">
-                {/* Show loading skeleton */}
-                {gamesLoading && (
-                  <>
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
-                        <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse"></div>
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse"></div>
-                        <div className="flex-1 h-6 bg-blue-600/50 animate-pulse"></div>
-                      </div>
-                    ))}
-                  </>
-                )}
 
-                {/* No games found state */}
-                {!gamesLoading && (!displayGames || displayGames.length === 0) && (
-                  <div className="p-3 text-center text-yellow-500 text-xs md:text-sm">
-                    NO GAMES FOUND
-                  </div>
-                )}
-                
-                {/* First game (index 0) */}
-                {!gamesLoading && displayGames && displayGames.length > 0 && (
-                  <div 
-                    key={displayGames[0].id}
-                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                    onClick={() => handleGameClick(displayGames[0])}
-                  >
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                      1
-                    </div>
-                    <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
-                      <div className="absolute inset-0 border-2 border-yellow-300"></div>
-                      <img 
-                        src={formatCoverUrl(displayGames[0])} 
-                        alt={displayGames[0].name} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/img/games/default.jpg';
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-yellow-300 text-xs block truncate">
-                        {displayGames[0].name}
-                      </span>
-                    </div>
-                    {!searchTerm && (
-                      <div className="text-yellow-300 hidden md:block">
-                        <Trophy className="h-5 w-5" />
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Second game (index 1) */}
-                {!gamesLoading && displayGames && displayGames.length > 1 && (
-                  <div 
-                    key={displayGames[1].id}
-                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                    onClick={() => handleGameClick(displayGames[1])}
-                  >
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                      2
-                    </div>
-                    <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
-                      <div className="absolute inset-0 border-2 border-yellow-300"></div>
-                      <img 
-                        src={formatCoverUrl(displayGames[1])} 
-                        alt={displayGames[1].name} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/img/games/default.jpg';
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-yellow-300 text-xs block truncate">
-                        {displayGames[1].name}
-                      </span>
-                    </div>
-                    {!searchTerm && (
-                      <div className="text-yellow-300 hidden md:block">
-                        <Trophy className="h-5 w-5" />
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Third game (index 2) */}
-                {!gamesLoading && displayGames && displayGames.length > 2 && (
-                  <div 
-                    key={displayGames[2].id}
-                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                    onClick={() => handleGameClick(displayGames[2])}
-                  >
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                      3
-                    </div>
-                    <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
-                      <div className="absolute inset-0 border-2 border-yellow-300"></div>
-                      <img 
-                        src={formatCoverUrl(displayGames[2])} 
-                        alt={displayGames[2].name} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/img/games/default.jpg';
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-yellow-300 text-xs block truncate">
-                        {displayGames[2].name}
-                      </span>
-                    </div>
-                    {!searchTerm && (
-                      <div className="text-yellow-300 hidden md:block">
-                        <Trophy className="h-5 w-5" />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+        {/* Content */}
+        <div className="pt-6 pb-16 max-w-4xl mx-auto px-4 md:px-8">
+          <div className="flex justify-center mb-6">
+            <h1 className="text-xl md:text-3xl text-yellow-300 font-['Press_Start_2P',monospace] text-center relative">
+              {searchTerm ? "SEARCH RESULTS" : "TOP CHARTS"}
+              <span className="absolute -top-6 -right-8 hidden md:block">
+                <Ghost className="h-6 w-6 text-pink-500" />
+              </span>
+            </h1>
+          </div>
           
-          {/* Only show Streamers if category is All or Streamers */}
-          {(searchCategory === 'all' || searchCategory === 'streamers') && (
-            <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
-              <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
-                <Users className="h-5 w-5 text-yellow-300" />
-                <h2 className="text-sm md:text-lg text-yellow-300">
-                  {searchTerm ? "STREAMERS" : "TOP STREAMERS"}
-                </h2>
-              </div>
-              
-              <div className="space-y-2">
-                {/* Loading skeleton */}
-                {streamersLoading && (
-                  <>
-                    {[0, 1, 2].map((i) => (
-                      <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
-                        <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse rounded-full"></div>
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse rounded-full"></div>
-                        <div className="flex-1">
-                          <div className="h-4 bg-blue-600/50 animate-pulse w-24"></div>
-                          <div className="h-3 mt-1 bg-blue-600/50 animate-pulse w-16"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+            {/* Only show Games if category is All or Games */}
+            {(searchCategory === 'all' || searchCategory === 'games') && (
+              <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
+                <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
+                  <Gamepad2 className="h-5 w-5 text-yellow-300" />
+                  <h2 className="text-sm md:text-lg text-yellow-300">
+                    {searchTerm ? "GAMES" : "TOP GAMES"}
+                  </h2>
+                </div>
+                
+                <div className="space-y-2">
+                  {/* Show loading skeleton */}
+                  {isGamesLoading && (
+                    <>
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
+                          <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse"></div>
+                          <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse"></div>
+                          <div className="flex-1 h-6 bg-blue-600/50 animate-pulse"></div>
                         </div>
-                      </div>
-                    ))}
-                  </>
-                )}
+                      ))}
+                    </>
+                  )}
 
-                {/* No streamers found */}
-                {!streamersLoading && (!topStreamers || topStreamers.length === 0) && (
-                  <div className="p-3 text-center text-yellow-500 text-xs md:text-sm">
-                    NO STREAMERS FOUND
-                  </div>
-                )}
-                
-                {/* First streamer (index 0) */}
-                {!streamersLoading && topStreamers && topStreamers.length > 0 && (
-                  <div 
-                    key={topStreamers[0].id}
-                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                    onClick={() => navigate(`/profile/${topStreamers[0].username}`)}
-                  >
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                      1
-                    </div>
-                    <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
-                      <AvatarImage 
-                        src={topStreamers[0].avatar_url || ''} 
-                        alt={topStreamers[0].display_name || topStreamers[0].username} 
-                      />
-                      <AvatarFallback className="bg-blue-800 text-blue-300">
-                        {topStreamers[0].display_name?.[0]?.toUpperCase() || 
-                         topStreamers[0].username?.[0]?.toUpperCase() || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-yellow-300 text-xs block truncate">
-                        {topStreamers[0].display_name || topStreamers[0].username}
-                      </span>
-                      <span className="text-blue-300 text-xs opacity-70 block truncate">
-                        @{topStreamers[0].username}
-                      </span>
-                    </div>
-                    {!searchTerm && (
-                      <div className="text-yellow-300 hidden md:block">
-                        <Trophy className="h-5 w-5" />
+                  {/* No games found state with improved styling */}
+                  {!isGamesLoading && (!displayGames || displayGames.length === 0) && (
+                    <div className="py-8 px-4 text-center">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-900/50 mb-4">
+                        <SearchX className="h-6 w-6 text-yellow-300" />
                       </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Second streamer (index 1) */}
-                {!streamersLoading && topStreamers && topStreamers.length > 1 && (
-                  <div 
-                    key={topStreamers[1].id}
-                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                    onClick={() => navigate(`/profile/${topStreamers[1].username}`)}
-                  >
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                      2
+                      <p className="text-yellow-500 text-xs md:text-sm font-bold mb-1">NO GAMES FOUND</p>
+                      <p className="text-blue-400 text-xs">
+                        {searchTerm 
+                          ? "Try a different search term or category"
+                          : "Check back later for top games"}
+                      </p>
                     </div>
-                    <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
-                      <AvatarImage 
-                        src={topStreamers[1].avatar_url || ''} 
-                        alt={topStreamers[1].display_name || topStreamers[1].username} 
-                      />
-                      <AvatarFallback className="bg-blue-800 text-blue-300">
-                        {topStreamers[1].display_name?.[0]?.toUpperCase() || 
-                         topStreamers[1].username?.[0]?.toUpperCase() || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-yellow-300 text-xs block truncate">
-                        {topStreamers[1].display_name || topStreamers[1].username}
-                      </span>
-                      <span className="text-blue-300 text-xs opacity-70 block truncate">
-                        @{topStreamers[1].username}
-                      </span>
-                    </div>
-                    {!searchTerm && (
-                      <div className="text-yellow-300 hidden md:block">
-                        <Trophy className="h-5 w-5" />
+                  )}
+                  
+                  {/* First game (index 0) */}
+                  {!isGamesLoading && displayGames && displayGames.length > 0 && (
+                    <div 
+                      id={`game-${displayGames[0].id}`}
+                      key={displayGames[0].id}
+                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
+                      onClick={() => handleGameClick(displayGames[0])}
+                    >
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                        1
                       </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Third streamer (index 2) */}
-                {!streamersLoading && topStreamers && topStreamers.length > 2 && (
-                  <div 
-                    key={topStreamers[2].id}
-                    className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50"
-                    onClick={() => navigate(`/profile/${topStreamers[2].username}`)}
-                  >
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                      3
-                    </div>
-                    <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
-                      <AvatarImage 
-                        src={topStreamers[2].avatar_url || ''} 
-                        alt={topStreamers[2].display_name || topStreamers[2].username} 
-                      />
-                      <AvatarFallback className="bg-blue-800 text-blue-300">
-                        {topStreamers[2].display_name?.[0]?.toUpperCase() || 
-                         topStreamers[2].username?.[0]?.toUpperCase() || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-yellow-300 text-xs block truncate">
-                        {topStreamers[2].display_name || topStreamers[2].username}
-                      </span>
-                      <span className="text-blue-300 text-xs opacity-70 block truncate">
-                        @{topStreamers[2].username}
-                      </span>
-                    </div>
-                    {!searchTerm && (
-                      <div className="text-yellow-300 hidden md:block">
-                        <Trophy className="h-5 w-5" />
+                      <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
+                        <div className="absolute inset-0 border-2 border-yellow-300"></div>
+                        <img 
+                          src={formatCoverUrl(displayGames[0])} 
+                          alt={displayGames[0].name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/img/games/default.jpg';
+                          }}
+                        />
                       </div>
-                    )}
-                  </div>
-                )}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-yellow-300 text-xs block truncate">
+                          {displayGames[0].name}
+                        </span>
+                      </div>
+                      {!searchTerm && (
+                        <div className="text-yellow-300 hidden md:block">
+                          <Trophy className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Second game (index 1) */}
+                  {!isGamesLoading && displayGames && displayGames.length > 1 && (
+                    <div 
+                      id={`game-${displayGames[1].id}`}
+                      key={displayGames[1].id}
+                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
+                      onClick={() => handleGameClick(displayGames[1])}
+                    >
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                        2
+                      </div>
+                      <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
+                        <div className="absolute inset-0 border-2 border-yellow-300"></div>
+                        <img 
+                          src={formatCoverUrl(displayGames[1])} 
+                          alt={displayGames[1].name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/img/games/default.jpg';
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-yellow-300 text-xs block truncate">
+                          {displayGames[1].name}
+                        </span>
+                      </div>
+                      {!searchTerm && (
+                        <div className="text-yellow-300 hidden md:block">
+                          <Trophy className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Third game (index 2) */}
+                  {!isGamesLoading && displayGames && displayGames.length > 2 && (
+                    <div 
+                      id={`game-${displayGames[2].id}`}
+                      key={displayGames[2].id}
+                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
+                      onClick={() => handleGameClick(displayGames[2])}
+                    >
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                        3
+                      </div>
+                      <div className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0 relative">
+                        <div className="absolute inset-0 border-2 border-yellow-300"></div>
+                        <img 
+                          src={formatCoverUrl(displayGames[2])} 
+                          alt={displayGames[2].name} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/img/games/default.jpg';
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-yellow-300 text-xs block truncate">
+                          {displayGames[2].name}
+                        </span>
+                      </div>
+                      {!searchTerm && (
+                        <div className="text-yellow-300 hidden md:block">
+                          <Trophy className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+            
+            {/* Only show Streamers if category is All or Streamers */}
+            {(searchCategory === 'all' || searchCategory === 'streamers') && (
+              <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
+                <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
+                  <Users className="h-5 w-5 text-yellow-300" />
+                  <h2 className="text-sm md:text-lg text-yellow-300">
+                    {searchTerm ? "STREAMERS" : "TOP STREAMERS"}
+                  </h2>
+                </div>
+                
+                <div className="space-y-2">
+                  {/* Loading skeleton */}
+                  {isStreamersLoading && (
+                    <>
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
+                          <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse rounded-full"></div>
+                          <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse rounded-full"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-blue-600/50 animate-pulse w-24"></div>
+                            <div className="h-3 mt-1 bg-blue-600/50 animate-pulse w-16"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
 
-        {/* Pixel Pac-Man Animation - Hide on smaller screens */}
-        <div className="mt-16 flex justify-center hidden md:flex">
-          <div className="relative w-24 h-24">
-            <div className="absolute top-0 left-0 w-12 h-12 bg-yellow-300 rounded-full animate-bounce"></div>
-            <div className="absolute bottom-0 right-0 w-8 h-8 bg-red-500 rounded-full animate-pulse"></div>
-            <div className="absolute bottom-0 left-0 w-8 h-8 bg-blue-500 rounded-full animate-ping"></div>
-            <div className="absolute top-0 right-0 w-8 h-8 bg-pink-500 rounded-full animate-pulse"></div>
+                  {/* No streamers found with improved styling */}
+                  {!isStreamersLoading && (!topStreamers || topStreamers.length === 0) && (
+                    <div className="py-8 px-4 text-center">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-900/50 mb-4">
+                        <SearchX className="h-6 w-6 text-yellow-300" />
+                      </div>
+                      <p className="text-yellow-500 text-xs md:text-sm font-bold mb-1">NO STREAMERS FOUND</p>
+                      <p className="text-blue-400 text-xs">
+                        {searchTerm 
+                          ? "Try a different search term or category"
+                          : "Check back later for top streamers"}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* First streamer (index 0) */}
+                  {!isStreamersLoading && topStreamers && topStreamers.length > 0 && (
+                    <div 
+                      id={`streamer-${topStreamers[0].username}`}
+                      key={topStreamers[0].id}
+                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
+                      onClick={() => handleStreamerClick(topStreamers[0].username)}
+                    >
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                        1
+                      </div>
+                      <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
+                        <AvatarImage 
+                          src={topStreamers[0].avatar_url || ''} 
+                          alt={topStreamers[0].display_name || topStreamers[0].username} 
+                        />
+                        <AvatarFallback className="bg-blue-800 text-blue-300">
+                          {topStreamers[0].display_name?.[0]?.toUpperCase() || 
+                           topStreamers[0].username?.[0]?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-yellow-300 text-xs block truncate">
+                          {topStreamers[0].display_name || topStreamers[0].username}
+                        </span>
+                        <span className="text-blue-300 text-xs opacity-70 block truncate">
+                          @{topStreamers[0].username}
+                        </span>
+                      </div>
+                      {!searchTerm && (
+                        <div className="text-yellow-300 hidden md:block">
+                          <Trophy className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Second streamer (index 1) */}
+                  {!isStreamersLoading && topStreamers && topStreamers.length > 1 && (
+                    <div 
+                      id={`streamer-${topStreamers[1].username}`}
+                      key={topStreamers[1].id}
+                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
+                      onClick={() => handleStreamerClick(topStreamers[1].username)}
+                    >
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                        2
+                      </div>
+                      <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
+                        <AvatarImage 
+                          src={topStreamers[1].avatar_url || ''} 
+                          alt={topStreamers[1].display_name || topStreamers[1].username} 
+                        />
+                        <AvatarFallback className="bg-blue-800 text-blue-300">
+                          {topStreamers[1].display_name?.[0]?.toUpperCase() || 
+                           topStreamers[1].username?.[0]?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-yellow-300 text-xs block truncate">
+                          {topStreamers[1].display_name || topStreamers[1].username}
+                        </span>
+                        <span className="text-blue-300 text-xs opacity-70 block truncate">
+                          @{topStreamers[1].username}
+                        </span>
+                      </div>
+                      {!searchTerm && (
+                        <div className="text-yellow-300 hidden md:block">
+                          <Trophy className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Third streamer (index 2) */}
+                  {!isStreamersLoading && topStreamers && topStreamers.length > 2 && (
+                    <div 
+                      id={`streamer-${topStreamers[2].username}`}
+                      key={topStreamers[2].id}
+                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
+                      onClick={() => handleStreamerClick(topStreamers[2].username)}
+                    >
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
+                        3
+                      </div>
+                      <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
+                        <AvatarImage 
+                          src={topStreamers[2].avatar_url || ''} 
+                          alt={topStreamers[2].display_name || topStreamers[2].username} 
+                        />
+                        <AvatarFallback className="bg-blue-800 text-blue-300">
+                          {topStreamers[2].display_name?.[0]?.toUpperCase() || 
+                           topStreamers[2].username?.[0]?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-yellow-300 text-xs block truncate">
+                          {topStreamers[2].display_name || topStreamers[2].username}
+                        </span>
+                        <span className="text-blue-300 text-xs opacity-70 block truncate">
+                          @{topStreamers[2].username}
+                        </span>
+                      </div>
+                      {!searchTerm && (
+                        <div className="text-yellow-300 hidden md:block">
+                          <Trophy className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Pixel Pac-Man Animation - Hide on smaller screens */}
+          <div className="mt-16 flex justify-center hidden md:flex">
+            <div className="relative w-24 h-24">
+              <div className="absolute top-0 left-0 w-12 h-12 bg-yellow-300 rounded-full animate-bounce"></div>
+              <div className="absolute bottom-0 right-0 w-8 h-8 bg-red-500 rounded-full animate-pulse"></div>
+              <div className="absolute bottom-0 left-0 w-8 h-8 bg-blue-500 rounded-full animate-ping"></div>
+              <div className="absolute top-0 right-0 w-8 h-8 bg-pink-500 rounded-full animate-pulse"></div>
+            </div>
           </div>
         </div>
       </div>
