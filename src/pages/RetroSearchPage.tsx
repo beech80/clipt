@@ -43,7 +43,7 @@ const RetroSearchPage = () => {
 
   // Query for games based on search term using IGDB API with backup local data
   const { data: igdbGames, isLoading: igdbGamesLoading } = useQuery({
-    queryKey: ['igdb', 'games', 'search', searchTerm],
+    queryKey: ['igdb', 'games', 'search', searchTerm || ''],
     queryFn: async () => {
       console.log('Searching for games with term:', searchTerm);
       
@@ -136,6 +136,7 @@ const RetroSearchPage = () => {
         return searchTerm ? getMockSearchResults(searchTerm) : mockPopularGames;
       }
     },
+    enabled: searchCategory === 'all' || searchCategory === 'games', // Ensure this is a boolean
   });
 
   // Query for top games from our database (as fallback and for "top searched")
@@ -201,7 +202,7 @@ const RetroSearchPage = () => {
       return data || [];
     },
     staleTime: searchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
-    enabled: searchTerm && (searchCategory === 'all' || searchCategory === 'streamers'), // Only enabled for appropriate categories
+    enabled: Boolean(searchTerm) && (searchCategory === 'all' || searchCategory === 'streamers'), // Fixed boolean conversion
   });
   
   // Separate query for top streamers (not search-dependent)
@@ -229,7 +230,7 @@ const RetroSearchPage = () => {
       return data || [];
     },
     staleTime: 60000, // Cache results for 60s
-    enabled: !searchTerm || (searchCategory !== 'all' && searchCategory !== 'streamers'), // Only run when not searching or when not in the correct category
+    enabled: !searchTerm || (searchCategory !== 'all' && searchCategory !== 'streamers'), // Keep as is as this should evaluate to boolean
   });
 
   // Process the search results with better handling
