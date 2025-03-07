@@ -67,8 +67,16 @@ function AppContent() {
       <Route path="/discovery" element={<Discovery />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/profile" element={<Profile />} />
-      <Route path="/profile/edit" element={<EditProfile />} />
-      <Route path="/streaming" element={<Streaming />} />
+      <Route path="/profile/edit" element={
+        <ErrorBoundary fallback={<div className="p-4 text-center">Error loading profile editor. Try refreshing the page.</div>}>
+          <EditProfile />
+        </ErrorBoundary>
+      } />
+      <Route path="/streaming" element={
+        <ErrorBoundary fallback={<div className="p-4 text-center">Error loading streaming page. Try refreshing the page.</div>}>
+          <Streaming />
+        </ErrorBoundary>
+      } />
       <Route path="/messages" element={<Messages />} />
       <Route path="/messages/:userId" element={<Messages />} />
       <Route path="/settings" element={<Settings />} />
@@ -118,7 +126,14 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <React.Suspense fallback={<div>Loading...</div>}>
+      <React.Suspense fallback={
+        <div className="flex items-center justify-center h-screen bg-blue-950">
+          <div className="text-center p-4">
+            <div className="animate-pulse text-blue-300 mb-2">Loading...</div>
+            <div className="text-sm text-blue-400">Please wait while we get things ready</div>
+          </div>
+        </div>
+      }>
         <AuthProvider>
           <MessagesProvider>
             <ReportDialogProvider>

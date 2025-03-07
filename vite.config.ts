@@ -72,23 +72,77 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
-    chunkSizeWarningLimit: 1000,
+    sourcemap: mode === 'development',
+    chunkSizeWarningLimit: 1600,
+    assetsInlineLimit: 4096,
+    cssCodeSplit: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false,
+        drop_debugger: true
+      }
+    },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui': [
-            '@/components/ui/button',
-            '@/components/ui/card',
-            '@/components/ui/input',
-            '@/components/ui/tabs',
-            '@/components/ui/separator'
-          ],
-        },
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]',
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || 
+                id.includes('react-dom') || 
+                id.includes('react-router')) {
+              return 'vendor-react';
+            }
+            
+            if (id.includes('@radix-ui') || 
+                id.includes('lucide-react') || 
+                id.includes('class-variance-authority')) {
+              return 'vendor-ui';
+            }
+            
+            if (id.includes('@tanstack') || 
+                id.includes('zustand') || 
+                id.includes('dayjs')) {
+              return 'vendor-utils';
+            }
+            
+            return 'vendor-other';
+          }
+          
+          if (id.includes('/src/pages/')) {
+            if (id.includes('Streaming') || 
+                id.includes('StreamSetup') ||
+                id.includes('GameStreamers')) {
+              return 'page-streaming';
+            }
+            
+            if (id.includes('Profile') || 
+                id.includes('EditProfile') || 
+                id.includes('UserProfile')) {
+              return 'page-profile';
+            }
+            
+            if (id.includes('Discovery') || 
+                id.includes('RetroSearchPage') ||
+                id.includes('Search')) {
+              return 'page-discovery';
+            }
+          }
+          
+          if (id.includes('/src/components/')) {
+            if (id.includes('/components/ui/')) {
+              return 'comp-ui';
+            }
+            if (id.includes('/components/streaming/')) {
+              return 'comp-streaming';
+            }
+            if (id.includes('/components/profile/')) {
+              return 'comp-profile';
+            }
+          }
+        }
       }
     }
   },
