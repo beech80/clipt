@@ -118,39 +118,43 @@ const RetroSearchPage = () => {
     },
   });
 
-  // Query for streamers when searching
-  const { data: topStreamers, isLoading: streamersSearchLoading } = useQuery({
-    queryKey: ['streamers', 'search', searchTerm],
+  // Query for streamers with search term
+  const { data: streamersSearchData, isLoading: streamersSearchLoading } = useQuery<any[]>({
+    queryKey: ['streamers', 'search', searchTerm || ''],
     queryFn: async () => {
+      if (!searchTerm || searchTerm.length < 2) {
+        return [];
+      }
+
+      const formattedSearchTerm = searchTerm.trim();
+      
+      console.log('Searching streamers for term:', formattedSearchTerm);
+      
       let query = supabase
         .from('profiles')
         .select(`
           id,
           username,
           display_name,
-          avatar_url,
-          followers
+          avatar_url
         `);
       
       // Only filter for streamers if not searching for users
-      if (!searchTerm) {
+      if (!formattedSearchTerm.startsWith('@')) {
         query = query.not('streaming_url', 'is', null);
       }
       
-      // Apply search filter if provided - search across username and display_name
-      if (searchTerm) {
-        const formattedSearchTerm = searchTerm.trim().toLowerCase();
+      if (formattedSearchTerm) {
         query = query.or(`username.ilike.%${formattedSearchTerm}%,display_name.ilike.%${formattedSearchTerm}%`);
       }
       
-      const { data, error } = await query.order('followers', { ascending: false }).limit(3); // Only fetch top 3
+      const { data, error } = await query.order('created_at', { ascending: false }).limit(3); // Only fetch top 3
       
       if (error) {
         console.error('Error fetching streamers:', error);
-        throw error;
+        return [];
       }
       
-      console.log('Found streamers for search:', searchTerm, data?.length || 0);
       return data || [];
     },
     staleTime: searchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
@@ -158,7 +162,7 @@ const RetroSearchPage = () => {
   });
   
   // Separate query for top streamers (not search-dependent)
-  const { data: topStreamersData, isLoading: topStreamersLoading } = useQuery({
+  const { data: topStreamersData, isLoading: topStreamersLoading } = useQuery<any[]>({
     queryKey: ['streamers', 'top'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -167,16 +171,15 @@ const RetroSearchPage = () => {
           id,
           username,
           display_name,
-          avatar_url,
-          followers
+          avatar_url
         `)
         .not('streaming_url', 'is', null)
-        .order('followers', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(3); // Only fetch top 3
       
       if (error) {
         console.error('Error fetching top streamers:', error);
-        throw error;
+        return [];
       }
       
       return data || [];
@@ -214,7 +217,7 @@ const RetroSearchPage = () => {
   
   // Get the appropriate streamers data based on search state
   const displayStreamers = searchTerm 
-    ? (topStreamers || []).slice(0, 3) 
+    ? (streamersSearchData || []).slice(0, 3) 
     : (topStreamersData || []).slice(0, 3);
   
   // Combine loading states for better UI feedback
@@ -572,13 +575,13 @@ const RetroSearchPage = () => {
                       
                       {/* Streamer name */}
                       <div className="col-span-4 overflow-hidden">
-                        <h3 className="text-sm text-yellow-300 truncate">{streamer.username || streamer.full_name}</h3>
+                        <h3 className="text-sm text-yellow-300 truncate">{streamer.username || streamer.display_name}</h3>
                       </div>
                       
                       {/* Fans/Followers */}
                       <div className="col-span-1 text-center">
                         <div className="text-xs font-mono bg-blue-800/50 rounded py-1 px-2 inline-block">
-                          {streamer.followers || '??'}
+                          {index + 1}
                         </div>
                       </div>
                     </div>
