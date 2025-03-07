@@ -13,7 +13,6 @@ const RetroSearchPage = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [searchCategory, setSearchCategory] = useState<'all' | 'games' | 'streamers'>('all');
   const [gamesLoading, setGamesLoading] = useState(false);
   const [streamersLoading, setStreamersLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +87,7 @@ const RetroSearchPage = () => {
         }
       }
     },
-    enabled: searchCategory === 'all' || searchCategory === 'games',
+    enabled: true,
     staleTime: 30000, // Cache for 30 seconds
   });
 
@@ -130,7 +129,7 @@ const RetroSearchPage = () => {
           username,
           display_name,
           avatar_url,
-          follower_count
+          followers
         `);
       
       // Only filter for streamers if not searching for users
@@ -144,7 +143,7 @@ const RetroSearchPage = () => {
         query = query.or(`username.ilike.%${formattedSearchTerm}%,display_name.ilike.%${formattedSearchTerm}%`);
       }
       
-      const { data, error } = await query.order('follower_count', { ascending: false }).limit(3); // Only fetch top 3
+      const { data, error } = await query.order('followers', { ascending: false }).limit(3); // Only fetch top 3
       
       if (error) {
         console.error('Error fetching streamers:', error);
@@ -155,7 +154,7 @@ const RetroSearchPage = () => {
       return data || [];
     },
     staleTime: searchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
-    enabled: Boolean(searchTerm) && (searchCategory === 'all' || searchCategory === 'streamers'), // Fixed boolean conversion
+    enabled: Boolean(searchTerm), // Fixed boolean conversion
   });
   
   // Separate query for top streamers (not search-dependent)
@@ -169,10 +168,10 @@ const RetroSearchPage = () => {
           username,
           display_name,
           avatar_url,
-          follower_count
+          followers
         `)
         .not('streaming_url', 'is', null)
-        .order('follower_count', { ascending: false })
+        .order('followers', { ascending: false })
         .limit(3); // Only fetch top 3
       
       if (error) {
@@ -183,7 +182,7 @@ const RetroSearchPage = () => {
       return data || [];
     },
     staleTime: 60000, // Cache results for 60s
-    enabled: !searchTerm || (searchCategory !== 'all' && searchCategory !== 'streamers'), // Keep as is as this should evaluate to boolean
+    enabled: !searchTerm, // Keep as is as this should evaluate to boolean
   });
 
   // Get filtered games based on search term and loading state
@@ -219,14 +218,13 @@ const RetroSearchPage = () => {
     : (topStreamersData || []).slice(0, 3);
   
   // Combine loading states for better UI feedback
-  const isGamesLoading = gamesLoading || (searchTerm ? (igdbGamesLoading && (searchCategory === 'all' || searchCategory === 'games')) : topGamesLoading);
-  const isStreamersLoading = streamersLoading || (searchTerm ? (streamersSearchLoading && (searchCategory === 'all' || searchCategory === 'streamers')) : topStreamersLoading);
+  const isGamesLoading = gamesLoading || (searchTerm ? (igdbGamesLoading) : topGamesLoading);
+  const isStreamersLoading = streamersLoading || (searchTerm ? (streamersSearchLoading) : topStreamersLoading);
 
   // Debug logging for search functionality
   useEffect(() => {
     console.log('Search state:', { 
       term: searchTerm, 
-      category: searchCategory,
       igdbGamesCount: igdbGames?.length || 0,
       topGamesCount: topGames?.length || 0,
       displayGamesCount: displayGames?.length || 0,
@@ -237,7 +235,7 @@ const RetroSearchPage = () => {
       isGamesLoading,
       isStreamersLoading
     });
-  }, [searchTerm, searchCategory, igdbGames, topGames, displayGames, igdbGamesLoading, topGamesLoading, streamersSearchLoading, topStreamersLoading, isGamesLoading, isStreamersLoading]);
+  }, [searchTerm, igdbGames, topGames, displayGames, igdbGamesLoading, topGamesLoading, streamersSearchLoading, topStreamersLoading, isGamesLoading, isStreamersLoading]);
 
   // Search functions
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,12 +245,8 @@ const RetroSearchPage = () => {
     
     // Immediately start showing loading state for better UX
     if (value.trim().length > 0) {
-      if (searchCategory === 'games' || searchCategory === 'all') {
-        setGamesLoading(true);
-      }
-      if (searchCategory === 'streamers' || searchCategory === 'all') {
-        setStreamersLoading(true);
-      }
+      setGamesLoading(true);
+      setStreamersLoading(true);
     } else {
       // Reset loading states if search is cleared
       setGamesLoading(false);
@@ -269,8 +263,14 @@ const RetroSearchPage = () => {
       if (value.trim().length > 0) {
         console.log('Invalidating queries for search:', value);
         // Force a refetch by invalidating the queries
-        queryClient.invalidateQueries({ queryKey: ['igdb', 'games', 'search'] });
-        queryClient.invalidateQueries({ queryKey: ['streamers', 'search'] });
+        queryClient.invalidateQueries({ 
+          queryKey: ['igdb', 'games', 'search'],
+          refetchType: 'all'
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ['streamers', 'search'],
+          refetchType: 'all'
+        });
       } else {
         // If search term is empty, invalidate the top games and streamers queries
         console.log('Invalidating top queries for empty search');
@@ -299,66 +299,6 @@ const RetroSearchPage = () => {
     // Reset loading states
     setGamesLoading(false);
     setStreamersLoading(false);
-  };
-
-  // Tab click handler for search categories
-  const handleTabClick = (category: 'all' | 'games' | 'streamers') => {
-    setSearchCategory(category);
-    
-    // Update loading states based on the new category
-    if (searchTerm.trim().length > 0) {
-      if (category === 'games' || category === 'all') {
-        setGamesLoading(true);
-      }
-      if (category === 'streamers' || category === 'all') {
-        setStreamersLoading(true);
-      }
-      
-      // Invalidate the appropriate queries for the new category
-      setTimeout(() => {
-        if (category === 'games' || category === 'all') {
-          queryClient.invalidateQueries(['igdb', 'games', 'search', searchTerm.trim()]);
-        }
-        if (category === 'streamers' || category === 'all') {
-          queryClient.invalidateQueries(['streamers', 'search', searchTerm.trim()]);
-        }
-        
-        // Reset loading states after a short delay
-        setTimeout(() => {
-          setGamesLoading(false);
-          setStreamersLoading(false);
-        }, 300);
-      }, 0);
-    }
-  };
-
-  const handleSubmitSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Search submitted with term:', searchTerm);
-    
-    // Explicitly trigger the search by invalidating queries
-    if (searchTerm.trim().length > 0) {
-      console.log('Invalidating query caches to force refetch');
-      
-      if (searchCategory === 'games' || searchCategory === 'all') {
-        queryClient.invalidateQueries({ 
-          queryKey: ['igdb', 'games', 'search'],
-          refetchType: 'all'
-        });
-      }
-      
-      if (searchCategory === 'streamers' || searchCategory === 'all') {
-        queryClient.invalidateQueries({ 
-          queryKey: ['streamers', 'search'],
-          refetchType: 'all'
-        });
-      }
-      
-      // Blur input to hide keyboard on mobile
-      if (searchInputRef.current) {
-        searchInputRef.current.blur();
-      }
-    }
   };
 
   // Format cover URL for IGDB games
@@ -442,28 +382,6 @@ const RetroSearchPage = () => {
             <Star className="h-6 w-6 md:h-8 md:w-8 text-yellow-300 animate-pulse" />
           </h1>
           <p className="text-sm md:text-base text-blue-300 mt-2 tracking-wide">DISCOVER AMAZING GAMES & STREAMERS</p>
-          
-          {/* Category selector */}
-          <div className="flex justify-center gap-4 mt-4">
-            <button 
-              className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'all' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
-              onClick={() => handleTabClick('all')}
-            >
-              ALL
-            </button>
-            <button 
-              className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'games' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
-              onClick={() => handleTabClick('games')}
-            >
-              GAMES
-            </button>
-            <button 
-              className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'streamers' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
-              onClick={() => handleTabClick('streamers')}
-            >
-              STREAMERS
-            </button>
-          </div>
         </div>
       </div>
 
@@ -473,7 +391,7 @@ const RetroSearchPage = () => {
 
         {/* Search form with refined UI */}
         <div className="mb-8">
-          <form onSubmit={handleSubmitSearch} className="space-y-2" ref={searchContainerRef}>
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-2" ref={searchContainerRef}>
             <div
               className={`bg-blue-950/60 rounded-md flex items-center px-4 py-3 gap-2 transition-all duration-300 border-2 ${
                 isSearchFocused
@@ -519,159 +437,155 @@ const RetroSearchPage = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             {/* Only show Games if category is All or Games */}
-            {(searchCategory === 'all' || searchCategory === 'games') && (
-              <div className="mb-10">
-                <h2 className="flex items-center text-lg text-yellow-300 font-bold mb-4 gap-2">
-                  <Gamepad2 className="h-5 w-5" />
-                  {searchTerm ? 'GAME RESULTS' : 'TRENDING GAMES'}
-                </h2>
-                
-                {/* Loading state */}
-                {(gamesLoading || igdbGamesLoading || topGamesLoading) && (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-yellow-300 rounded-full"></div>
-                  </div>
-                )}
-                
-                {/* Error or empty state */}
-                {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length === 0 && (
-                  <div className="bg-blue-950/60 rounded-md p-8 text-center">
-                    <SearchX className="h-12 w-12 mx-auto text-blue-500 mb-3" />
-                    <p className="text-blue-300 text-sm">No games found.</p>
-                    <p className="text-blue-400 text-xs mt-2">Try a different search term or category.</p>
-                  </div>
-                )}
-                
-                {/* Games grid in cube format - as mentioned in memory */}
-                {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {getFilteredGames().map((game, index) => (
-                      <div 
-                        key={game.id}
-                        onClick={() => handleGameClick(game)}
-                        className="bg-blue-950/60 rounded-md overflow-hidden hover:bg-blue-900/60 transition-all cursor-pointer group border-2 border-blue-800 hover:border-yellow-300 shadow-lg hover:shadow-yellow-900/20"
-                      >
-                        <div className="aspect-square relative overflow-hidden">
-                          {/* Game cover */}
-                          {game.cover?.url ? (
-                            <img
-                              src={formatCoverUrl(game.cover.url)}
-                              alt={game.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-blue-800/30">
-                              <Ghost className="h-12 w-12 text-blue-500" />
-                            </div>
-                          )}
-                          
-                          {/* Rank indicator for top games */}
-                          {!searchTerm && (
-                            <div className="absolute top-2 left-2 bg-blue-800/80 backdrop-blur text-yellow-300 p-1 rounded-md text-xs font-bold">
-                              #{index + 1}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="p-3">
-                          <h3 className="font-semibold text-sm truncate group-hover:text-yellow-300">{game.name}</h3>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Trophy className="h-3 w-3 text-blue-500" />
-                            <span className="text-[10px] text-blue-400">
-                              {game.rating ? `${Math.round(game.rating)}%` : 'Unrated'}
-                            </span>
+            <div className="mb-10">
+              <h2 className="flex items-center text-lg text-yellow-300 font-bold mb-4 gap-2">
+                <Gamepad2 className="h-5 w-5" />
+                {searchTerm ? 'GAME RESULTS' : 'TRENDING GAMES'}
+              </h2>
+              
+              {/* Loading state */}
+              {(gamesLoading || igdbGamesLoading || topGamesLoading) && (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-yellow-300 rounded-full"></div>
+                </div>
+              )}
+              
+              {/* Error or empty state */}
+              {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length === 0 && (
+                <div className="bg-blue-950/60 rounded-md p-8 text-center">
+                  <SearchX className="h-12 w-12 mx-auto text-blue-500 mb-3" />
+                  <p className="text-blue-300 text-sm">No games found.</p>
+                  <p className="text-blue-400 text-xs mt-2">Try a different search term or category.</p>
+                </div>
+              )}
+              
+              {/* Games grid in cube format - as mentioned in memory */}
+              {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {getFilteredGames().map((game, index) => (
+                    <div 
+                      key={game.id}
+                      onClick={() => handleGameClick(game)}
+                      className="bg-blue-950/60 rounded-md overflow-hidden hover:bg-blue-900/60 transition-all cursor-pointer group border-2 border-blue-800 hover:border-yellow-300 shadow-lg hover:shadow-yellow-900/20"
+                    >
+                      <div className="aspect-square relative overflow-hidden">
+                        {/* Game cover */}
+                        {game.cover?.url ? (
+                          <img
+                            src={formatCoverUrl(game.cover.url)}
+                            alt={game.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-blue-800/30">
+                            <Ghost className="h-12 w-12 text-blue-500" />
                           </div>
+                        )}
+                        
+                        {/* Rank indicator for top games */}
+                        {!searchTerm && (
+                          <div className="absolute top-2 left-2 bg-blue-800/80 backdrop-blur text-yellow-300 p-1 rounded-md text-xs font-bold">
+                            #{index + 1}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="p-3">
+                        <h3 className="font-semibold text-sm truncate group-hover:text-yellow-300">{game.name}</h3>
+                        <div className="flex items-center gap-1 mt-1">
+                          <Trophy className="h-3 w-3 text-blue-500" />
+                          <span className="text-[10px] text-blue-400">
+                            {game.rating ? `${Math.round(game.rating)}%` : 'Unrated'}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             
             {/* Only show Streamers if category is All or Streamers */}
-            {(searchCategory === 'all' || searchCategory === 'streamers') && (
-              <div className="mb-10">
-                <h2 className="flex items-center text-lg text-yellow-300 font-bold mb-4 gap-2">
-                  <Trophy className="h-5 w-5" />
-                  {searchTerm ? 'STREAMER RESULTS' : 'TOP STREAMERS LEADERBOARD'}
-                </h2>
-                
-                {/* Loading state */}
-                {(streamersLoading || topStreamersLoading) && (
-                  <div className="flex justify-center items-center py-8">
-                    <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-yellow-300 rounded-full"></div>
+            <div className="mb-10">
+              <h2 className="flex items-center text-lg text-yellow-300 font-bold mb-4 gap-2">
+                <Trophy className="h-5 w-5" />
+                {searchTerm ? 'STREAMER RESULTS' : 'TOP STREAMERS LEADERBOARD'}
+              </h2>
+              
+              {/* Loading state */}
+              {(streamersLoading || topStreamersLoading) && (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-yellow-300 rounded-full"></div>
+                </div>
+              )}
+              
+              {/* Error or empty state */}
+              {!streamersLoading && !topStreamersLoading && displayStreamers.length === 0 && (
+                <div className="bg-blue-950/60 rounded-md p-8 text-center">
+                  <SearchX className="h-12 w-12 mx-auto text-blue-500 mb-3" />
+                  <p className="text-blue-300 text-sm">No streamers found.</p>
+                  <p className="text-blue-400 text-xs mt-2">Try a different search term or category.</p>
+                </div>
+              )}
+              
+              {/* Streamers list with leaderboard styling */}
+              {!streamersLoading && !topStreamersLoading && displayStreamers.length > 0 && (
+                <div className="bg-blue-950/60 rounded-lg overflow-hidden border-2 border-blue-800">
+                  {/* Leaderboard header */}
+                  <div className="grid grid-cols-8 bg-blue-900/80 p-2 border-b-2 border-blue-700">
+                    <div className="col-span-1 text-blue-300 text-xs font-bold text-center">#</div>
+                    <div className="col-span-2 text-blue-300 text-xs font-bold text-center">Avatar</div>
+                    <div className="col-span-4 text-blue-300 text-xs font-bold">Streamer Name</div>
+                    <div className="col-span-1 text-blue-300 text-xs font-bold text-center">Fans</div>
                   </div>
-                )}
-                
-                {/* Error or empty state */}
-                {!streamersLoading && !topStreamersLoading && displayStreamers.length === 0 && (
-                  <div className="bg-blue-950/60 rounded-md p-8 text-center">
-                    <SearchX className="h-12 w-12 mx-auto text-blue-500 mb-3" />
-                    <p className="text-blue-300 text-sm">No streamers found.</p>
-                    <p className="text-blue-400 text-xs mt-2">Try a different search term or category.</p>
-                  </div>
-                )}
-                
-                {/* Streamers list with leaderboard styling */}
-                {!streamersLoading && !topStreamersLoading && displayStreamers.length > 0 && (
-                  <div className="bg-blue-950/60 rounded-lg overflow-hidden border-2 border-blue-800">
-                    {/* Leaderboard header */}
-                    <div className="grid grid-cols-8 bg-blue-900/80 p-2 border-b-2 border-blue-700">
-                      <div className="col-span-1 text-blue-300 text-xs font-bold text-center">#</div>
-                      <div className="col-span-2 text-blue-300 text-xs font-bold text-center">Avatar</div>
-                      <div className="col-span-4 text-blue-300 text-xs font-bold">Streamer Name</div>
-                      <div className="col-span-1 text-blue-300 text-xs font-bold text-center">Fans</div>
-                    </div>
-                    
-                    {/* Leaderboard rows */}
-                    {displayStreamers.map((streamer, index) => (
-                      <div 
-                        key={streamer.id}
-                        onClick={() => handleStreamerClick(streamer.username)}
-                        className={`grid grid-cols-8 items-center p-2 cursor-pointer hover:bg-blue-900/40 transition-all ${
-                          index < displayStreamers.length - 1 ? 'border-b border-blue-800/50' : ''
-                        }`}
-                      >
-                        {/* Rank */}
-                        <div className="col-span-1 text-center">
-                          <div className={`
-                            w-7 h-7 flex items-center justify-center rounded-full mx-auto
-                            ${index === 0 ? 'bg-yellow-500 text-black' : 
-                              index === 1 ? 'bg-gray-300 text-black' : 
-                              index === 2 ? 'bg-amber-700 text-white' : 'bg-blue-800 text-blue-300'}
-                          `}>
-                            <span className="text-xs font-bold">{index + 1}</span>
-                          </div>
-                        </div>
-                        
-                        {/* Streamer avatar */}
-                        <div className="col-span-2 flex justify-center">
-                          <Avatar className="w-10 h-10 border-2 border-blue-700">
-                            <AvatarImage src={streamer.avatar_url} alt={streamer.username} />
-                            <AvatarFallback className="bg-blue-800 text-white">
-                              {streamer.username?.substring(0, 2).toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        
-                        {/* Streamer name */}
-                        <div className="col-span-4 overflow-hidden">
-                          <h3 className="text-sm text-yellow-300 truncate">{streamer.username || streamer.full_name}</h3>
-                        </div>
-                        
-                        {/* Fans/Followers */}
-                        <div className="col-span-1 text-center">
-                          <div className="text-xs font-mono bg-blue-800/50 rounded py-1 px-2 inline-block">
-                            {streamer.followers_count || '??'}
-                          </div>
+                  
+                  {/* Leaderboard rows */}
+                  {displayStreamers.map((streamer, index) => (
+                    <div 
+                      key={streamer.id}
+                      onClick={() => handleStreamerClick(streamer.username)}
+                      className={`grid grid-cols-8 items-center p-2 cursor-pointer hover:bg-blue-900/40 transition-all ${
+                        index < displayStreamers.length - 1 ? 'border-b border-blue-800/50' : ''
+                      }`}
+                    >
+                      {/* Rank */}
+                      <div className="col-span-1 text-center">
+                        <div className={`
+                          w-7 h-7 flex items-center justify-center rounded-full mx-auto
+                          ${index === 0 ? 'bg-yellow-500 text-black' : 
+                            index === 1 ? 'bg-gray-300 text-black' : 
+                            index === 2 ? 'bg-amber-700 text-white' : 'bg-blue-800 text-blue-300'}
+                        `}>
+                          <span className="text-xs font-bold">{index + 1}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                      
+                      {/* Streamer avatar */}
+                      <div className="col-span-2 flex justify-center">
+                        <Avatar className="w-10 h-10 border-2 border-blue-700">
+                          <AvatarImage src={streamer.avatar_url} alt={streamer.username} />
+                          <AvatarFallback className="bg-blue-800 text-white">
+                            {streamer.username?.substring(0, 2).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                      
+                      {/* Streamer name */}
+                      <div className="col-span-4 overflow-hidden">
+                        <h3 className="text-sm text-yellow-300 truncate">{streamer.username || streamer.full_name}</h3>
+                      </div>
+                      
+                      {/* Fans/Followers */}
+                      <div className="col-span-1 text-center">
+                        <div className="text-xs font-mono bg-blue-800/50 rounded py-1 px-2 inline-block">
+                          {streamer.followers || '??'}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Pixel Pac-Man Animation - Hide on smaller screens */}
