@@ -161,7 +161,7 @@ const RetroSearchPage = () => {
         post_count: typeof game.post_count === 'object' && game.post_count !== null 
           ? Number(game.post_count.count || 0) 
           : (typeof game.post_count === 'number' ? game.post_count : 0)
-      }));
+      })).slice(0, 3); // Ensure we only return 3 games maximum
     },
   });
 
@@ -235,14 +235,14 @@ const RetroSearchPage = () => {
   // Process the search results with better handling
   const getFilteredGames = () => {
     if (searchTerm && igdbGames?.length) {
-      // When searching, use IGDB results
-      return igdbGames.slice(0, 3);
+      // When searching, use IGDB results - strictly limit to 3
+      return (igdbGames || []).slice(0, 3);
     } else if (igdbGames?.length) {
-      // When not searching but have IGDB results
-      return igdbGames.slice(0, 3);
+      // When not searching but have IGDB results - strictly limit to 3
+      return (igdbGames || []).slice(0, 3);
     } else if (topGames?.length) {
-      // Fallback to top games
-      return topGames.slice(0, 3);
+      // Fallback to top games - strictly limit to 3
+      return (topGames || []).slice(0, 3);
     }
     // Default empty array
     return [];
@@ -252,7 +252,9 @@ const RetroSearchPage = () => {
   const displayGames = getFilteredGames();
   
   // Get the appropriate streamers data based on search state
-  const displayStreamers = searchTerm ? topStreamers : topStreamersData;
+  const displayStreamers = searchTerm 
+    ? (topStreamers || []).slice(0, 3) 
+    : (topStreamersData || []).slice(0, 3);
   
   // Combine loading states for better UI feedback
   const isGamesLoading = gamesLoading || (searchTerm ? (igdbGamesLoading && (searchCategory === 'all' || searchCategory === 'games')) : topGamesLoading);
@@ -263,6 +265,9 @@ const RetroSearchPage = () => {
     console.log('Search state:', { 
       term: searchTerm, 
       category: searchCategory,
+      igdbGamesCount: igdbGames?.length || 0,
+      topGamesCount: topGames?.length || 0,
+      displayGamesCount: displayGames?.length || 0,
       igdbGamesLoading,
       topGamesLoading,
       streamersSearchLoading,
@@ -270,7 +275,7 @@ const RetroSearchPage = () => {
       isGamesLoading,
       isStreamersLoading
     });
-  }, [searchTerm, searchCategory, igdbGamesLoading, topGamesLoading, streamersSearchLoading, topStreamersLoading, isGamesLoading, isStreamersLoading]);
+  }, [searchTerm, searchCategory, igdbGames, topGames, displayGames, igdbGamesLoading, topGamesLoading, streamersSearchLoading, topStreamersLoading, isGamesLoading, isStreamersLoading]);
 
   // Search functions
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
