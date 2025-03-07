@@ -23,27 +23,58 @@ interface SearchOptions {
 class IGDBService {
   async searchGames(query: string, options: SearchOptions = {}): Promise<IGDBGame[]> {
     try {
-      const searchTerm = query ? `search "${query}";` : '';
-      const sortOption = options.sort ? `sort ${options.sort};` : 'sort rating desc;';
-      const limitOption = `limit ${options.limit || 10};`;
+      console.log('IGDB searchGames called with query:', query);
+      
+      // Handle search query - properly escape it to prevent injection and query errors
+      const cleanQuery = query?.trim().replace(/"/g, '\\"') || '';
+      
+      // For empty queries, return popular games
+      if (!cleanQuery) {
+        console.log('Empty query, returning popular games');
+        return this.getPopularGames();
+      }
+      
+      // Build search query - use a more lenient search to ensure results
+      // Use the cleanQuery in a more fuzzy search to get better results
+      const searchTerm = `where name ~ "${cleanQuery}"* & cover != null;`;
+      
+      // Set up sorting with proper defaults
+      const sortOption = options.sort ? `sort ${options.sort};` : 'sort popularity desc;';
+      
+      // Set reasonable limit
+      const limitOption = `limit ${options.limit || 20};`;
+      
+      // Create a well-formed IGDB query with proper formatting
+      const igdbQuery = `
+        fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity;
+        ${searchTerm}
+        ${sortOption}
+        ${limitOption}
+      `;
+      
+      console.log('IGDB query:', igdbQuery);
       
       const { data, error } = await supabase.functions.invoke('igdb', {
         body: {
           endpoint: 'games',
-          query: `
-            ${searchTerm}
-            fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary;
-            where cover != null;
-            ${sortOption}
-            ${limitOption}
-          `
+          query: igdbQuery
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('IGDB API error:', error);
+        throw error;
+      }
+      
+      if (!data || !Array.isArray(data)) {
+        console.warn('Invalid data returned from IGDB API:', data);
+        return [];
+      }
+      
+      console.log(`IGDB returned ${data.length} results for "${cleanQuery}"`);
       
       // Process image URLs to use HTTPS and proper sizes
-      return (data || []).map(game => ({
+      return data.map(game => ({
         ...game,
         cover: game.cover ? {
           ...game.cover,
@@ -51,16 +82,52 @@ class IGDBService {
         } : undefined
       }));
     } catch (error) {
-      console.error('Error fetching games:', error);
+      console.error('Error fetching games from IGDB:', error);
       return [];
     }
   }
 
-  async getPopularGames(): Promise<IGDBGame[]> {
-    return this.searchGames('', {
-      sort: 'rating desc',
-      limit: 12
-    });
+  async getPopularGames(limit: number = 10): Promise<IGDBGame[]> {
+    try {
+      console.log('Getting popular games from IGDB');
+      
+      const { data, error } = await supabase.functions.invoke('igdb', {
+        body: {
+          endpoint: 'games',
+          query: `
+            fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity;
+            where cover != null;
+            sort popularity desc;
+            limit ${limit};
+          `
+        }
+      });
+
+      if (error) {
+        console.error('IGDB popular games error:', error);
+        throw error;
+      }
+      
+      if (!data || !Array.isArray(data)) {
+        console.warn('Invalid data returned from IGDB API for popular games');
+        return [];
+      }
+
+      console.log(`IGDB returned ${data.length} popular games`);
+      
+      // Format image URLs and return data
+      return data.map(game => ({
+        ...game,
+        cover: game.cover ? {
+          ...game.cover,
+          url: this.formatImageUrl(game.cover.url)
+        } : undefined
+      }));
+    } catch (error) {
+      console.error('Error fetching popular games from IGDB:', error);
+      // Return empty array on error instead of throwing to avoid breaking the UI
+      return [];
+    }
   }
   
   async getTopGames(
@@ -223,30 +290,30 @@ class IGDBService {
     }
   }
   
-  // Helper to format IGDB image URLs correctly
+  // Improve the image URL formatting to handle all possible cases
   private formatImageUrl(url: string): string {
-    if (!url) return '';
+    if (!url) return '/img/games/default.jpg';
     
-    // Ensure HTTPS and convert to large image format
-    let formattedUrl = url;
-    
-    // Make sure we're using the right domain
-    if (formattedUrl.includes('//images.igdb.com')) {
-      // Already has the correct domain
-    } else {
-      // Fix the domain if needed
-      formattedUrl = formattedUrl.replace('//localhost', '//images.igdb.com');
+    try {
+      // Fix protocol issues
+      let formattedUrl = url;
+      
+      if (formattedUrl.startsWith('//')) {
+        formattedUrl = 'https:' + formattedUrl;
+      } else if (!formattedUrl.startsWith('http')) {
+        formattedUrl = 'https://' + formattedUrl;
+      }
+      
+      // Make sure we're using the right size image (t_cover_big)
+      if (!formattedUrl.includes('t_cover_big')) {
+        formattedUrl = formattedUrl.replace(/t_[a-z_]+/, 't_cover_big');
+      }
+      
+      return formattedUrl;
+    } catch (error) {
+      console.error('Error formatting image URL:', error);
+      return '/img/games/default.jpg';
     }
-    
-    // Replace image size
-    formattedUrl = formattedUrl.replace('t_thumb', 't_cover_big');
-    
-    // Add HTTPS protocol if missing
-    if (!formattedUrl.startsWith('http')) {
-      formattedUrl = 'https:' + formattedUrl;
-    }
-    
-    return formattedUrl;
   }
 }
 
