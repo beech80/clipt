@@ -201,7 +201,7 @@ const RetroSearchPage = () => {
       return data || [];
     },
     staleTime: searchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
-    enabled: searchTerm ? true : false, // Only run this query when searching
+    enabled: searchTerm && (searchCategory === 'all' || searchCategory === 'streamers'), // Only enabled for appropriate categories
   });
   
   // Separate query for top streamers (not search-dependent)
@@ -229,7 +229,7 @@ const RetroSearchPage = () => {
       return data || [];
     },
     staleTime: 60000, // Cache results for 60s
-    enabled: !searchTerm, // Only run this query when not searching
+    enabled: !searchTerm || (searchCategory !== 'all' && searchCategory !== 'streamers'), // Only run when not searching or when not in the correct category
   });
 
   // Process the search results with better handling
@@ -255,16 +255,22 @@ const RetroSearchPage = () => {
   const displayStreamers = searchTerm ? topStreamers : topStreamersData;
   
   // Combine loading states for better UI feedback
-  const isGamesLoading = gamesLoading || (searchTerm ? igdbGamesLoading : topGamesLoading);
-  const isStreamersLoading = streamersLoading || (searchTerm ? streamersSearchLoading : topStreamersLoading);
+  const isGamesLoading = gamesLoading || (searchTerm ? (igdbGamesLoading && (searchCategory === 'all' || searchCategory === 'games')) : topGamesLoading);
+  const isStreamersLoading = streamersLoading || (searchTerm ? (streamersSearchLoading && (searchCategory === 'all' || searchCategory === 'streamers')) : topStreamersLoading);
 
   // Debug logging for search functionality
   useEffect(() => {
-    console.log('Search term:', searchTerm);
-    console.log('IGDB games available:', igdbGames);
-    console.log('Top games from DB:', topGames);
-    console.log('Games being displayed:', displayGames);
-  }, [searchTerm, igdbGames, topGames, displayGames]);
+    console.log('Search state:', { 
+      term: searchTerm, 
+      category: searchCategory,
+      igdbGamesLoading,
+      topGamesLoading,
+      streamersSearchLoading,
+      topStreamersLoading,
+      isGamesLoading,
+      isStreamersLoading
+    });
+  }, [searchTerm, searchCategory, igdbGamesLoading, topGamesLoading, streamersSearchLoading, topStreamersLoading, isGamesLoading, isStreamersLoading]);
 
   // Search functions
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,6 +285,10 @@ const RetroSearchPage = () => {
       if (searchCategory === 'streamers' || searchCategory === 'all') {
         setStreamersLoading(true);
       }
+    } else {
+      // Reset loading states if search is cleared
+      setGamesLoading(false);
+      setStreamersLoading(false);
     }
     
     // Clear previous timeout
@@ -289,21 +299,28 @@ const RetroSearchPage = () => {
     // Set a new timeout for debounce
     searchTimeoutRef.current = setTimeout(() => {
       if (value.trim().length > 0) {
+        console.log('Invalidating queries for search:', value);
         // If search term is not empty, invalidate queries to refresh data
         if (searchCategory === 'games' || searchCategory === 'all') {
-          queryClient.invalidateQueries(['games', value.trim().toLowerCase()]);
+          // Use the correct query keys that match the ones defined above
+          queryClient.invalidateQueries(['igdb', 'games', 'search', value.trim()]);
         }
         if (searchCategory === 'streamers' || searchCategory === 'all') {
-          queryClient.invalidateQueries(['streamers', value.trim().toLowerCase()]);
+          queryClient.invalidateQueries(['streamers', 'search', value.trim()]);
         }
       } else {
         // If search term is empty, invalidate the top games and streamers queries
-        queryClient.invalidateQueries(['topGames']);
-        queryClient.invalidateQueries(['topStreamers']);
+        console.log('Invalidating top queries for empty search');
+        queryClient.invalidateQueries(['games', 'top-searched']);
+        queryClient.invalidateQueries(['streamers', 'top']);
+      }
+      
+      // Reset loading states after a short delay
+      setTimeout(() => {
         setGamesLoading(false);
         setStreamersLoading(false);
-      }
-    }, 300);
+      }, 300);
+    }, 300); // Debounce for 300ms
   };
 
   const clearSearch = () => {
@@ -321,20 +338,34 @@ const RetroSearchPage = () => {
     setStreamersLoading(false);
   };
 
-  // Category switch handler with improved transitions
-  const handleCategoryChange = (category: 'all' | 'games' | 'streamers') => {
+  // Tab click handler for search categories
+  const handleTabClick = (category: 'all' | 'games' | 'streamers') => {
     setSearchCategory(category);
     
+    // Update loading states based on the new category
     if (searchTerm.trim().length > 0) {
-      // Set appropriate loading states based on new category
       if (category === 'games' || category === 'all') {
         setGamesLoading(true);
-        queryClient.invalidateQueries(['games', searchTerm.trim().toLowerCase()]);
       }
       if (category === 'streamers' || category === 'all') {
         setStreamersLoading(true);
-        queryClient.invalidateQueries(['streamers', searchTerm.trim().toLowerCase()]);
       }
+      
+      // Invalidate the appropriate queries for the new category
+      setTimeout(() => {
+        if (category === 'games' || category === 'all') {
+          queryClient.invalidateQueries(['igdb', 'games', 'search', searchTerm.trim()]);
+        }
+        if (category === 'streamers' || category === 'all') {
+          queryClient.invalidateQueries(['streamers', 'search', searchTerm.trim()]);
+        }
+        
+        // Reset loading states after a short delay
+        setTimeout(() => {
+          setGamesLoading(false);
+          setStreamersLoading(false);
+        }, 300);
+      }, 0);
     }
   };
 
@@ -355,10 +386,10 @@ const RetroSearchPage = () => {
     
     // Invalidate queries to force refresh
     if (searchCategory === 'games' || searchCategory === 'all') {
-      queryClient.invalidateQueries(['games', searchTerm.trim().toLowerCase()]);
+      queryClient.invalidateQueries(['igdb', 'games', 'search', searchTerm.trim()]);
     }
     if (searchCategory === 'streamers' || searchCategory === 'all') {
-      queryClient.invalidateQueries(['streamers', searchTerm.trim().toLowerCase()]);
+      queryClient.invalidateQueries(['streamers', 'search', searchTerm.trim()]);
     }
     
     // Small delay before navigating to improve perceived UX
@@ -479,19 +510,19 @@ const RetroSearchPage = () => {
           <div className="flex justify-center gap-4 mt-4">
             <button 
               className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'all' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
-              onClick={() => handleCategoryChange('all')}
+              onClick={() => handleTabClick('all')}
             >
               ALL
             </button>
             <button 
               className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'games' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
-              onClick={() => handleCategoryChange('games')}
+              onClick={() => handleTabClick('games')}
             >
               GAMES
             </button>
             <button 
               className={`px-3 py-1 text-xs rounded-sm border ${searchCategory === 'streamers' ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-transparent text-yellow-300 border-blue-600'}`}
-              onClick={() => handleCategoryChange('streamers')}
+              onClick={() => handleTabClick('streamers')}
             >
               STREAMERS
             </button>
@@ -568,7 +599,7 @@ const RetroSearchPage = () => {
                     ? 'bg-blue-700 text-yellow-300 shadow-[0_0_8px_rgba(29,78,216,0.3)]'
                     : 'hover:bg-blue-800/70 text-blue-400'
                 }`}
-                onClick={() => handleCategoryChange('all')}
+                onClick={() => handleTabClick('all')}
               >
                 <Gamepad2 className="h-3 w-3" />
                 ALL
@@ -580,7 +611,7 @@ const RetroSearchPage = () => {
                     ? 'bg-blue-700 text-yellow-300 shadow-[0_0_8px_rgba(29,78,216,0.3)]'
                     : 'hover:bg-blue-800/70 text-blue-400'
                 }`}
-                onClick={() => handleCategoryChange('games')}
+                onClick={() => handleTabClick('games')}
               >
                 <Gamepad2 className="h-3 w-3" />
                 GAMES
@@ -592,7 +623,7 @@ const RetroSearchPage = () => {
                     ? 'bg-blue-700 text-yellow-300 shadow-[0_0_8px_rgba(29,78,216,0.3)]'
                     : 'hover:bg-blue-800/70 text-blue-400'
                 }`}
-                onClick={() => handleCategoryChange('streamers')}
+                onClick={() => handleTabClick('streamers')}
               >
                 <Users className="h-3 w-3" />
                 STREAMERS
