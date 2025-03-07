@@ -523,7 +523,7 @@ const RetroSearchPage = () => {
               <div className="mb-10">
                 <h2 className="flex items-center text-lg text-yellow-300 font-bold mb-4 gap-2">
                   <Gamepad2 className="h-5 w-5" />
-                  {searchTerm ? 'SEARCH RESULTS' : 'TRENDING GAMES'}
+                  {searchTerm ? 'GAME RESULTS' : 'TRENDING GAMES'}
                 </h2>
                 
                 {/* Loading state */}
@@ -542,7 +542,7 @@ const RetroSearchPage = () => {
                   </div>
                 )}
                 
-                {/* Games grid in cube format */}
+                {/* Games grid in cube format - as mentioned in memory */}
                 {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {getFilteredGames().map((game, index) => (
@@ -591,157 +591,85 @@ const RetroSearchPage = () => {
             
             {/* Only show Streamers if category is All or Streamers */}
             {(searchCategory === 'all' || searchCategory === 'streamers') && (
-              <div className="bg-blue-950/30 border-4 border-blue-600 p-4">
-                <div className="flex items-center gap-2 mb-4 border-b-4 border-blue-600 pb-2">
-                  <Users className="h-5 w-5 text-yellow-300" />
-                  <h2 className="text-sm md:text-lg text-yellow-300">
-                    {searchTerm ? "STREAMERS" : "TOP STREAMERS"}
-                  </h2>
-                </div>
+              <div className="mb-10">
+                <h2 className="flex items-center text-lg text-yellow-300 font-bold mb-4 gap-2">
+                  <Trophy className="h-5 w-5" />
+                  {searchTerm ? 'STREAMER RESULTS' : 'TOP STREAMERS LEADERBOARD'}
+                </h2>
                 
-                <div className="space-y-2">
-                  {/* Loading skeleton */}
-                  {isStreamersLoading && (
-                    <>
-                      {[0, 1, 2].map((i) => (
-                        <div key={i} className="flex items-center gap-3 p-2 border-b border-dotted border-blue-600/50">
-                          <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600/50 animate-pulse rounded-full"></div>
-                          <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-600/50 animate-pulse rounded-full"></div>
-                          <div className="flex-1">
-                            <div className="h-4 bg-blue-600/50 animate-pulse w-24"></div>
-                            <div className="h-3 mt-1 bg-blue-600/50 animate-pulse w-16"></div>
+                {/* Loading state */}
+                {(streamersLoading || topStreamersLoading) && (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-yellow-300 rounded-full"></div>
+                  </div>
+                )}
+                
+                {/* Error or empty state */}
+                {!streamersLoading && !topStreamersLoading && displayStreamers.length === 0 && (
+                  <div className="bg-blue-950/60 rounded-md p-8 text-center">
+                    <SearchX className="h-12 w-12 mx-auto text-blue-500 mb-3" />
+                    <p className="text-blue-300 text-sm">No streamers found.</p>
+                    <p className="text-blue-400 text-xs mt-2">Try a different search term or category.</p>
+                  </div>
+                )}
+                
+                {/* Streamers list with leaderboard styling */}
+                {!streamersLoading && !topStreamersLoading && displayStreamers.length > 0 && (
+                  <div className="bg-blue-950/60 rounded-lg overflow-hidden border-2 border-blue-800">
+                    {/* Leaderboard header */}
+                    <div className="grid grid-cols-8 bg-blue-900/80 p-2 border-b-2 border-blue-700">
+                      <div className="col-span-1 text-blue-300 text-xs font-bold text-center">#</div>
+                      <div className="col-span-2 text-blue-300 text-xs font-bold text-center">Avatar</div>
+                      <div className="col-span-4 text-blue-300 text-xs font-bold">Streamer Name</div>
+                      <div className="col-span-1 text-blue-300 text-xs font-bold text-center">Fans</div>
+                    </div>
+                    
+                    {/* Leaderboard rows */}
+                    {displayStreamers.map((streamer, index) => (
+                      <div 
+                        key={streamer.id}
+                        onClick={() => handleStreamerClick(streamer.username)}
+                        className={`grid grid-cols-8 items-center p-2 cursor-pointer hover:bg-blue-900/40 transition-all ${
+                          index < displayStreamers.length - 1 ? 'border-b border-blue-800/50' : ''
+                        }`}
+                      >
+                        {/* Rank */}
+                        <div className="col-span-1 text-center">
+                          <div className={`
+                            w-7 h-7 flex items-center justify-center rounded-full mx-auto
+                            ${index === 0 ? 'bg-yellow-500 text-black' : 
+                              index === 1 ? 'bg-gray-300 text-black' : 
+                              index === 2 ? 'bg-amber-700 text-white' : 'bg-blue-800 text-blue-300'}
+                          `}>
+                            <span className="text-xs font-bold">{index + 1}</span>
                           </div>
                         </div>
-                      ))}
-                    </>
-                  )}
-
-                  {/* No streamers found with improved styling */}
-                  {!isStreamersLoading && (!displayStreamers || displayStreamers.length === 0) && (
-                    <div className="py-8 px-4 text-center">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-900/50 mb-4">
-                        <SearchX className="h-6 w-6 text-yellow-300" />
-                      </div>
-                      <p className="text-yellow-500 text-xs md:text-sm font-bold mb-1">NO STREAMERS FOUND</p>
-                      <p className="text-blue-400 text-xs">
-                        {searchTerm 
-                          ? "Try a different search term or category"
-                          : "Check back later for top streamers"}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {/* First streamer (index 0) */}
-                  {!isStreamersLoading && displayStreamers && displayStreamers.length > 0 && (
-                    <div 
-                      id={`streamer-${displayStreamers[0].username}`}
-                      key={displayStreamers[0].id}
-                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
-                      onClick={() => handleStreamerClick(displayStreamers[0].username)}
-                    >
-                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                        1
-                      </div>
-                      <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
-                        <AvatarImage 
-                          src={displayStreamers[0].avatar_url || ''} 
-                          alt={displayStreamers[0].display_name || displayStreamers[0].username} 
-                        />
-                        <AvatarFallback className="bg-blue-800 text-blue-300">
-                          {displayStreamers[0].display_name?.[0]?.toUpperCase() || 
-                           displayStreamers[0].username?.[0]?.toUpperCase() || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-yellow-300 text-xs block truncate">
-                          {displayStreamers[0].display_name || displayStreamers[0].username}
-                        </span>
-                        <span className="text-blue-300 text-xs opacity-70 block truncate">
-                          @{displayStreamers[0].username}
-                        </span>
-                      </div>
-                      {!searchTerm && (
-                        <div className="text-yellow-300 hidden md:block">
-                          <Trophy className="h-5 w-5" />
+                        
+                        {/* Streamer avatar */}
+                        <div className="col-span-2 flex justify-center">
+                          <Avatar className="w-10 h-10 border-2 border-blue-700">
+                            <AvatarImage src={streamer.avatar_url} alt={streamer.username} />
+                            <AvatarFallback className="bg-blue-800 text-white">
+                              {streamer.username?.substring(0, 2).toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
                         </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Second streamer (index 1) */}
-                  {!isStreamersLoading && displayStreamers && displayStreamers.length > 1 && (
-                    <div 
-                      id={`streamer-${displayStreamers[1].username}`}
-                      key={displayStreamers[1].id}
-                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
-                      onClick={() => handleStreamerClick(displayStreamers[1].username)}
-                    >
-                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                        2
-                      </div>
-                      <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
-                        <AvatarImage 
-                          src={displayStreamers[1].avatar_url || ''} 
-                          alt={displayStreamers[1].display_name || displayStreamers[1].username} 
-                        />
-                        <AvatarFallback className="bg-blue-800 text-blue-300">
-                          {displayStreamers[1].display_name?.[0]?.toUpperCase() || 
-                           displayStreamers[1].username?.[0]?.toUpperCase() || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-yellow-300 text-xs block truncate">
-                          {displayStreamers[1].display_name || displayStreamers[1].username}
-                        </span>
-                        <span className="text-blue-300 text-xs opacity-70 block truncate">
-                          @{displayStreamers[1].username}
-                        </span>
-                      </div>
-                      {!searchTerm && (
-                        <div className="text-yellow-300 hidden md:block">
-                          <Trophy className="h-5 w-5" />
+                        
+                        {/* Streamer name */}
+                        <div className="col-span-4 overflow-hidden">
+                          <h3 className="text-sm text-yellow-300 truncate">{streamer.username || streamer.full_name}</h3>
                         </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Third streamer (index 2) */}
-                  {!isStreamersLoading && displayStreamers && displayStreamers.length > 2 && (
-                    <div 
-                      id={`streamer-${displayStreamers[2].username}`}
-                      key={displayStreamers[2].id}
-                      className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
-                      onClick={() => handleStreamerClick(displayStreamers[2].username)}
-                    >
-                      <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
-                        3
-                      </div>
-                      <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
-                        <AvatarImage 
-                          src={displayStreamers[2].avatar_url || ''} 
-                          alt={displayStreamers[2].display_name || displayStreamers[2].username} 
-                        />
-                        <AvatarFallback className="bg-blue-800 text-blue-300">
-                          {displayStreamers[2].display_name?.[0]?.toUpperCase() || 
-                           displayStreamers[2].username?.[0]?.toUpperCase() || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-yellow-300 text-xs block truncate">
-                          {displayStreamers[2].display_name || displayStreamers[2].username}
-                        </span>
-                        <span className="text-blue-300 text-xs opacity-70 block truncate">
-                          @{displayStreamers[2].username}
-                        </span>
-                      </div>
-                      {!searchTerm && (
-                        <div className="text-yellow-300 hidden md:block">
-                          <Trophy className="h-5 w-5" />
+                        
+                        {/* Fans/Followers */}
+                        <div className="col-span-1 text-center">
+                          <div className="text-xs font-mono bg-blue-800/50 rounded py-1 px-2 inline-block">
+                            {streamer.followers_count || '??'}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
