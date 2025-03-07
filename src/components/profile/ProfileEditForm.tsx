@@ -47,11 +47,13 @@ export function ProfileEditForm() {
   const queryClient = useQueryClient()
   const [submitting, setSubmitting] = useState(false)
 
-  const { data: profile, refetch } = useQuery({
+  const { data: profile, refetch, isLoading: profileLoading, isError: profileError } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not found')
 
+      console.log('Fetching profile for user:', user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -63,7 +65,12 @@ export function ProfileEditForm() {
         throw error
       }
 
-      if (!data) throw new Error('Profile not found')
+      if (!data) {
+        console.error('Profile not found for user:', user.id)
+        throw new Error('Profile not found')
+      }
+
+      console.log('Profile data retrieved:', data);
 
       // Check if the user can change their username (not more than once every two months)
       if (data.last_username_change) {
@@ -84,13 +91,14 @@ export function ProfileEditForm() {
         }
       }
 
+      // Handle any field mapping issues
       const transformedProfile: Profile = {
         id: data.id,
         username: data.username,
         avatar_url: data.avatar_url,
-        display_name: data.display_name,
-        bio: data.bio,
-        website: data.website,
+        display_name: data.display_name || data.displayName || data.username,
+        bio: data.bio || data.bioDescription || "",
+        website: data.website || "",
         created_at: data.created_at,
         enable_notifications: data.enable_notifications,
         enable_sounds: data.enable_sounds,
@@ -101,7 +109,9 @@ export function ProfileEditForm() {
 
       return transformedProfile
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    retry: 3,
+    retryDelay: 1000
   })
 
   const form = useForm<ProfileFormValues>({
@@ -325,6 +335,7 @@ export function ProfileEditForm() {
     if (submitting) return;
     
     setSubmitting(true);
+    toast.loading('Updating your profile...');
 
     try {
       if (!user) {
@@ -332,8 +343,8 @@ export function ProfileEditForm() {
         return;
       }
 
-      // Prepare the update payload
-      const updatePayload: Partial<DatabaseProfile> = {
+      // Prepare the update payload with correct field names
+      const updatePayload = {
         username: values.username,
         display_name: values.displayName,
         bio: values.bioDescription || null,
@@ -343,23 +354,53 @@ export function ProfileEditForm() {
 
       console.log('Updating profile with:', updatePayload);
 
-      // Update the profile in Supabase with direct return
-      const { data, error } = await supabase
+      // First verify if the user exists
+      const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
-        .update(updatePayload)
+        .select('id')
         .eq('id', user.id)
-        .select('*')
         .single();
-
-      if (error) {
-        console.error('Error updating profile:', error);
-        toast.error('Failed to update profile: ' + error.message);
-        return;
+        
+      if (checkError) {
+        console.error('Error checking profile existence:', checkError);
+        if (checkError.code === 'PGRST116') {
+          // Profile doesn't exist, create one
+          console.log('Profile not found, creating new profile');
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              ...updatePayload
+            });
+            
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+            toast.error('Failed to create profile: ' + insertError.message);
+            return;
+          }
+        } else {
+          toast.error('Failed to check profile: ' + checkError.message);
+          return;
+        }
+      } else {
+        // Profile exists, update it
+        console.log('Profile exists, updating');
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update(updatePayload)
+          .eq('id', user.id);
+          
+        if (updateError) {
+          console.error('Error updating profile:', updateError);
+          toast.error('Failed to update profile: ' + updateError.message);
+          return;
+        }
       }
 
-      console.log('Profile updated successfully with data:', data);
+      console.log('Profile updated successfully');
       
       // Success!
+      toast.dismiss();
       toast.success('Profile updated successfully!');
       
       // Clear all profile caches
@@ -376,6 +417,7 @@ export function ProfileEditForm() {
       navigate('/profile');
     } catch (error: any) {
       console.error('Error in profile update:', error);
+      toast.dismiss();
       toast.error(`Failed to update profile: ${error?.message || 'Unknown error'}`);
     } finally {
       setSubmitting(false);
@@ -384,175 +426,192 @@ export function ProfileEditForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        
-        {/* Profile Images Section */}
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium">Profile Images</h3>
-            <p className="text-sm text-muted-foreground">
-              Customize how your profile looks to others
-            </p>
-          </div>
-          
-          {/* Banner Image Upload */}
-          <div className="space-y-2">
-            <FormLabel>Banner Image</FormLabel>
-            <div 
-              className="h-40 rounded-lg overflow-hidden relative cursor-pointer group"
-              onClick={() => bannerFileInputRef.current?.click()}
-            >
-              <div className={`absolute inset-0 flex items-center justify-center bg-black/50 text-white 
-                transition-opacity ${bannerPreview || profile?.banner_url ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
-                <div className="text-center">
-                  <Camera className="h-8 w-8 mx-auto mb-2" />
-                  <p className="text-sm">Click to upload a banner image</p>
-                  <p className="text-xs text-gray-300">Recommended: 1200 x 400px</p>
-                </div>
-              </div>
-              
-              {bannerPreview ? (
-                <img 
-                  src={bannerPreview} 
-                  alt="Banner preview" 
-                  className="w-full h-full object-cover"
-                />
-              ) : profile?.banner_url ? (
-                <img 
-                  src={profile.banner_url} 
-                  alt="Banner" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-r from-indigo-500/30 to-purple-500/30"></div>
-              )}
-            </div>
-            <input
-              type="file"
-              ref={bannerFileInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleBannerFileChange}
-              disabled={uploading}
-            />
-          </div>
-          
-          {/* Avatar Upload */}
-          <div className="space-y-2">
-            <FormLabel>Profile Picture</FormLabel>
-            <div className="flex items-center gap-4">
-              <div 
-                className="relative group cursor-pointer"
-                onClick={() => avatarFileInputRef.current?.click()}
-              >
-                <Avatar className="w-24 h-24 border-4 border-background">
-                  <AvatarImage src={avatarPreview || profile?.avatar_url || ''} />
-                  <AvatarFallback className="bg-purple-600 text-xl">
-                    {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || '?'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Camera className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Choose a profile picture</p>
-                <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max 5MB.</p>
-              </div>
-            </div>
-            <input
-              type="file"
-              ref={avatarFileInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleAvatarFileChange}
-              disabled={uploading}
-            />
-          </div>
+      {profileError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error loading profile</AlertTitle>
+          <AlertDescription>
+            We couldn't load your profile information. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {profileLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+          <span className="ml-3 text-blue-500">Loading your profile...</span>
         </div>
+      ) : (
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         
-        {/* Basic Information Section */}
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="username" 
-                  {...field} 
-                  disabled={!canChangeUsername}
-                />
-              </FormControl>
-              <FormDescription>
-                {canChangeUsername 
-                  ? "This is your public display name. You can only change it once every two months."
-                  : `You can change your username again in ${daysUntilNextChange} days.`
-                }
-              </FormDescription>
-              {!canChangeUsername && (
-                <Alert variant="warning" className="mt-2">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Username Change Restricted</AlertTitle>
-                  <AlertDescription>
-                    You can only change your username once every two months. Your last change was on {lastUsernameChange?.toLocaleDateString()}.
-                  </AlertDescription>
-                </Alert>
-              )}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Profile Images Section */}
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium">Profile Images</h3>
+              <p className="text-sm text-muted-foreground">
+                Customize how your profile looks to others
+              </p>
+            </div>
+            
+            {/* Banner Image Upload */}
+            <div className="space-y-2">
+              <FormLabel>Banner Image</FormLabel>
+              <div 
+                className="h-40 rounded-lg overflow-hidden relative cursor-pointer group"
+                onClick={() => bannerFileInputRef.current?.click()}
+              >
+                <div className={`absolute inset-0 flex items-center justify-center bg-black/50 text-white 
+                  transition-opacity ${bannerPreview || profile?.banner_url ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                  <div className="text-center">
+                    <Camera className="h-8 w-8 mx-auto mb-2" />
+                    <p className="text-sm">Click to upload a banner image</p>
+                    <p className="text-xs text-gray-300">Recommended: 1200 x 400px</p>
+                  </div>
+                </div>
+                
+                {bannerPreview ? (
+                  <img 
+                    src={bannerPreview} 
+                    alt="Banner preview" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : profile?.banner_url ? (
+                  <img 
+                    src={profile.banner_url} 
+                    alt="Banner" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-indigo-500/30 to-purple-500/30"></div>
+                )}
+              </div>
+              <input
+                type="file"
+                ref={bannerFileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleBannerFileChange}
+                disabled={uploading}
+              />
+            </div>
+            
+            {/* Avatar Upload */}
+            <div className="space-y-2">
+              <FormLabel>Profile Picture</FormLabel>
+              <div className="flex items-center gap-4">
+                <div 
+                  className="relative group cursor-pointer"
+                  onClick={() => avatarFileInputRef.current?.click()}
+                >
+                  <Avatar className="w-24 h-24 border-4 border-background">
+                    <AvatarImage src={avatarPreview || profile?.avatar_url || ''} />
+                    <AvatarFallback className="bg-purple-600 text-xl">
+                      {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Choose a profile picture</p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max 5MB.</p>
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={avatarFileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleAvatarFileChange}
+                disabled={uploading}
+              />
+            </div>
+          </div>
+          
+          {/* Basic Information Section */}
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="username" 
+                    {...field} 
+                    disabled={!canChangeUsername}
+                  />
+                </FormControl>
+                <FormDescription>
+                  {canChangeUsername 
+                    ? "This is your public display name. You can only change it once every two months."
+                    : `You can change your username again in ${daysUntilNextChange} days.`
+                  }
+                </FormDescription>
+                {!canChangeUsername && (
+                  <Alert variant="warning" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Username Change Restricted</AlertTitle>
+                    <AlertDescription>
+                      You can only change your username once every two months. Your last change was on {lastUsernameChange?.toLocaleDateString()}.
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="displayName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Display Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Display Name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="displayName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Display Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Display Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="bioDescription"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bio</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Tell us about yourself"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="bioDescription"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bio</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Tell us about yourself"
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="website"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Website</FormLabel>
-              <FormControl>
-                <Input placeholder="https://your-website.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="website"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Website</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://your-website.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Button type="submit" disabled={uploading || submitting}>Update profile</Button>
-      </form>
+          <Button type="submit" disabled={uploading || submitting}>Update profile</Button>
+        </form>
+      )}
     </Form>
   )
 }
