@@ -165,7 +165,7 @@ const RetroSearchPage = () => {
     },
   });
 
-  // Query for top streamers
+  // Query for streamers when searching
   const { data: topStreamers, isLoading: streamersSearchLoading } = useQuery({
     queryKey: ['streamers', 'search', searchTerm],
     queryFn: async () => {
@@ -201,6 +201,35 @@ const RetroSearchPage = () => {
       return data || [];
     },
     staleTime: searchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
+    enabled: searchTerm ? true : false, // Only run this query when searching
+  });
+  
+  // Separate query for top streamers (not search-dependent)
+  const { data: topStreamersData, isLoading: topStreamersLoading } = useQuery({
+    queryKey: ['streamers', 'top'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          username,
+          display_name,
+          avatar_url,
+          follower_count
+        `)
+        .not('streaming_url', 'is', null)
+        .order('follower_count', { ascending: false })
+        .limit(3); // Only fetch top 3
+      
+      if (error) {
+        console.error('Error fetching top streamers:', error);
+        throw error;
+      }
+      
+      return data || [];
+    },
+    staleTime: 60000, // Cache results for 60s
+    enabled: !searchTerm, // Only run this query when not searching
   });
 
   // Process the search results with better handling
@@ -221,6 +250,9 @@ const RetroSearchPage = () => {
 
   // Define displayable games with proper empty handling
   const displayGames = getFilteredGames();
+  
+  // Get the appropriate streamers data based on search state
+  const displayStreamers = searchTerm ? topStreamers : topStreamersData;
   
   // Combine loading states for better UI feedback
   const isGamesLoading = gamesLoading || (searchTerm ? igdbGamesLoading : topGamesLoading);
@@ -759,7 +791,7 @@ const RetroSearchPage = () => {
                   )}
 
                   {/* No streamers found with improved styling */}
-                  {!isStreamersLoading && (!topStreamers || topStreamers.length === 0) && (
+                  {!isStreamersLoading && (!displayStreamers || displayStreamers.length === 0) && (
                     <div className="py-8 px-4 text-center">
                       <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-900/50 mb-4">
                         <SearchX className="h-6 w-6 text-yellow-300" />
@@ -774,32 +806,32 @@ const RetroSearchPage = () => {
                   )}
                   
                   {/* First streamer (index 0) */}
-                  {!isStreamersLoading && topStreamers && topStreamers.length > 0 && (
+                  {!isStreamersLoading && displayStreamers && displayStreamers.length > 0 && (
                     <div 
-                      id={`streamer-${topStreamers[0].username}`}
-                      key={topStreamers[0].id}
+                      id={`streamer-${displayStreamers[0].username}`}
+                      key={displayStreamers[0].id}
                       className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
-                      onClick={() => handleStreamerClick(topStreamers[0].username)}
+                      onClick={() => handleStreamerClick(displayStreamers[0].username)}
                     >
                       <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
                         1
                       </div>
                       <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
                         <AvatarImage 
-                          src={topStreamers[0].avatar_url || ''} 
-                          alt={topStreamers[0].display_name || topStreamers[0].username} 
+                          src={displayStreamers[0].avatar_url || ''} 
+                          alt={displayStreamers[0].display_name || displayStreamers[0].username} 
                         />
                         <AvatarFallback className="bg-blue-800 text-blue-300">
-                          {topStreamers[0].display_name?.[0]?.toUpperCase() || 
-                           topStreamers[0].username?.[0]?.toUpperCase() || '?'}
+                          {displayStreamers[0].display_name?.[0]?.toUpperCase() || 
+                           displayStreamers[0].username?.[0]?.toUpperCase() || '?'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <span className="text-yellow-300 text-xs block truncate">
-                          {topStreamers[0].display_name || topStreamers[0].username}
+                          {displayStreamers[0].display_name || displayStreamers[0].username}
                         </span>
                         <span className="text-blue-300 text-xs opacity-70 block truncate">
-                          @{topStreamers[0].username}
+                          @{displayStreamers[0].username}
                         </span>
                       </div>
                       {!searchTerm && (
@@ -811,32 +843,32 @@ const RetroSearchPage = () => {
                   )}
                   
                   {/* Second streamer (index 1) */}
-                  {!isStreamersLoading && topStreamers && topStreamers.length > 1 && (
+                  {!isStreamersLoading && displayStreamers && displayStreamers.length > 1 && (
                     <div 
-                      id={`streamer-${topStreamers[1].username}`}
-                      key={topStreamers[1].id}
+                      id={`streamer-${displayStreamers[1].username}`}
+                      key={displayStreamers[1].id}
                       className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
-                      onClick={() => handleStreamerClick(topStreamers[1].username)}
+                      onClick={() => handleStreamerClick(displayStreamers[1].username)}
                     >
                       <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
                         2
                       </div>
                       <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
                         <AvatarImage 
-                          src={topStreamers[1].avatar_url || ''} 
-                          alt={topStreamers[1].display_name || topStreamers[1].username} 
+                          src={displayStreamers[1].avatar_url || ''} 
+                          alt={displayStreamers[1].display_name || displayStreamers[1].username} 
                         />
                         <AvatarFallback className="bg-blue-800 text-blue-300">
-                          {topStreamers[1].display_name?.[0]?.toUpperCase() || 
-                           topStreamers[1].username?.[0]?.toUpperCase() || '?'}
+                          {displayStreamers[1].display_name?.[0]?.toUpperCase() || 
+                           displayStreamers[1].username?.[0]?.toUpperCase() || '?'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <span className="text-yellow-300 text-xs block truncate">
-                          {topStreamers[1].display_name || topStreamers[1].username}
+                          {displayStreamers[1].display_name || displayStreamers[1].username}
                         </span>
                         <span className="text-blue-300 text-xs opacity-70 block truncate">
-                          @{topStreamers[1].username}
+                          @{displayStreamers[1].username}
                         </span>
                       </div>
                       {!searchTerm && (
@@ -848,32 +880,32 @@ const RetroSearchPage = () => {
                   )}
                   
                   {/* Third streamer (index 2) */}
-                  {!isStreamersLoading && topStreamers && topStreamers.length > 2 && (
+                  {!isStreamersLoading && displayStreamers && displayStreamers.length > 2 && (
                     <div 
-                      id={`streamer-${topStreamers[2].username}`}
-                      key={topStreamers[2].id}
+                      id={`streamer-${displayStreamers[2].username}`}
+                      key={displayStreamers[2].id}
                       className="flex items-center gap-3 p-2 hover:bg-blue-900/40 cursor-pointer border-b border-dotted border-blue-600/50 transition-all duration-150"
-                      onClick={() => handleStreamerClick(topStreamers[2].username)}
+                      onClick={() => handleStreamerClick(displayStreamers[2].username)}
                     >
                       <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-yellow-300 font-bold text-xs md:text-sm">
                         3
                       </div>
                       <Avatar className="w-8 h-8 md:w-10 md:h-10 border-2 border-yellow-300">
                         <AvatarImage 
-                          src={topStreamers[2].avatar_url || ''} 
-                          alt={topStreamers[2].display_name || topStreamers[2].username} 
+                          src={displayStreamers[2].avatar_url || ''} 
+                          alt={displayStreamers[2].display_name || displayStreamers[2].username} 
                         />
                         <AvatarFallback className="bg-blue-800 text-blue-300">
-                          {topStreamers[2].display_name?.[0]?.toUpperCase() || 
-                           topStreamers[2].username?.[0]?.toUpperCase() || '?'}
+                          {displayStreamers[2].display_name?.[0]?.toUpperCase() || 
+                           displayStreamers[2].username?.[0]?.toUpperCase() || '?'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <span className="text-yellow-300 text-xs block truncate">
-                          {topStreamers[2].display_name || topStreamers[2].username}
+                          {displayStreamers[2].display_name || displayStreamers[2].username}
                         </span>
                         <span className="text-blue-300 text-xs opacity-70 block truncate">
-                          @{topStreamers[2].username}
+                          @{displayStreamers[2].username}
                         </span>
                       </div>
                       {!searchTerm && (
