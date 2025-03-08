@@ -37,13 +37,11 @@ export function ProfileEditForm() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const avatarFileInputRef = useRef<HTMLInputElement>(null)
-  const bannerFileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [canChangeUsername, setCanChangeUsername] = useState(true)
   const [lastUsernameChange, setLastUsernameChange] = useState<Date | null>(null)
   const [daysUntilNextChange, setDaysUntilNextChange] = useState(0)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const [submitting, setSubmitting] = useState(false)
 
@@ -295,75 +293,6 @@ export function ProfileEditForm() {
       toast.dismiss();
     }
   };
-  
-  // Simplified banner upload function - for diagnostic purposes only
-  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !user) {
-      return;
-    }
-    
-    const file = e.target.files[0];
-    
-    // Validate file
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Banner image must be less than 10MB');
-      return;
-    }
-    
-    // Show preview immediately for better user experience
-    setBannerPreview(URL.createObjectURL(file));
-    
-    try {
-      setUploading(true);
-      toast.loading('Uploading banner image...');
-      
-      // Diagnostic information
-      console.log('Banner upload starting, file size:', file.size, 'bytes');
-      
-      // Show a banner notification during form submission
-      toast.info('Banner preview shown. To finalize, just save your profile with the "Update Profile" button.');
-      setUploading(false);
-      toast.dismiss();
-      return;
-      
-      // The code below is commented out to diagnose the issue
-      /*
-      // Upload to Imgur instead of Supabase
-      console.log('Starting Imgur upload...');
-      const imageUrl = await uploadImageToImgur(file);
-      console.log('Imgur upload successful, URL:', imageUrl);
-      
-      // Update profile with imgur URL
-      console.log('Updating profile with banner URL...');
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ banner_url: imageUrl })
-        .eq('id', user.id);
-      
-      console.log('Profile update response:', updateError ? 'Error' : 'Success');
-        
-      if (updateError) {
-        console.error('Profile update error for banner:', updateError);
-        toast.error('Failed to update profile with new banner: ' + updateError.message);
-        return;
-      }
-      
-      toast.dismiss();
-      toast.success('Banner image updated successfully!');
-      
-      // Clear and refresh caches
-      queryClient.removeQueries({ queryKey: ['profile'] });
-      await refetch();
-      */
-      
-    } catch (error: any) {
-      console.error('Banner upload/update error:', error);
-      toast.error('Error: ' + (error.message || 'Failed to update banner image'));
-    } finally {
-      setUploading(false);
-      toast.dismiss();
-    }
-  };
 
   // File input handling
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -372,14 +301,6 @@ export function ProfileEditForm() {
     }
     
     handleAvatarUpload(e);
-  };
-  
-  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      return;
-    }
-    
-    handleBannerUpload(e);
   };
 
   return (
@@ -416,92 +337,59 @@ export function ProfileEditForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="bg-amber-100 dark:bg-amber-900 dark:text-amber-200 p-3 rounded-md mb-4">
             <p className="text-sm font-medium">
-              Note: Currently banner upload isn't working as expected. Please just update your basic info and avatar for now. Banner upload will be fixed soon.
+              Note: Banner uploads are temporarily disabled while we make improvements. Please just update your basic info and avatar for now.
             </p>
           </div>
         
           {/* Profile Images Section */}
           <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium">Profile Images</h3>
-              <p className="text-sm text-muted-foreground">
-                Customize how your profile looks to others
-              </p>
-            </div>
-            
-            {/* Banner Image Upload */}
-            <div className="space-y-2">
-              <FormLabel>Banner Image</FormLabel>
-              <div 
-                className="h-40 rounded-lg overflow-hidden relative cursor-pointer group"
-                onClick={() => bannerFileInputRef.current?.click()}
-              >
-                <div className={`absolute inset-0 flex items-center justify-center bg-black/50 text-white 
-                  transition-opacity ${bannerPreview || profile?.banner_url ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
-                  <div className="text-center">
-                    <Camera className="h-8 w-8 mx-auto mb-2" />
-                    <p className="text-sm">Click to upload a banner image</p>
-                    <p className="text-xs text-gray-300">Recommended: 1200 x 400px</p>
-                  </div>
+            {/* Avatar Section */}
+            <div className="flex flex-col items-center sm:flex-row sm:space-x-6">
+              {/* Avatar Preview */}
+              <div className="relative mb-4 sm:mb-0">
+                <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-purple-500">
+                  <img 
+                    src={avatarPreview || profile?.avatar_url || 'https://static-cdn.jtvnw.net/user-default-pictures-uv/998f01ae-def8-11e9-b95c-784f43822e80-profile_image-300x300.png'} 
+                    alt="Avatar Preview" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-                
-                {bannerPreview ? (
-                  <img 
-                    src={bannerPreview} 
-                    alt="Banner preview" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : profile?.banner_url ? (
-                  <img 
-                    src={profile.banner_url} 
-                    alt="Banner" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-r from-indigo-500/30 to-purple-500/30"></div>
-                )}
-              </div>
-              <input
-                type="file"
-                ref={bannerFileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleBannerFileChange}
-                disabled={uploading}
-              />
-            </div>
-            
-            {/* Avatar Upload */}
-            <div className="space-y-2">
-              <FormLabel>Profile Picture</FormLabel>
-              <div className="flex items-center gap-4">
-                <div 
-                  className="relative group cursor-pointer"
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0"
+                  disabled={uploading}
                   onClick={() => avatarFileInputRef.current?.click()}
                 >
-                  <Avatar className="w-24 h-24 border-4 border-background">
-                    <AvatarImage src={avatarPreview || profile?.avatar_url || ''} />
-                    <AvatarFallback className="bg-purple-600 text-xl">
-                      {profile?.display_name?.charAt(0) || profile?.username?.charAt(0) || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Camera className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Choose a profile picture</p>
-                  <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max 5MB.</p>
-                </div>
+                  <Camera className="w-4 h-4" />
+                </Button>
+                <input 
+                  type="file" 
+                  ref={avatarFileInputRef}
+                  accept="image/*" 
+                  onChange={handleAvatarFileChange} 
+                  hidden 
+                />
               </div>
-              <input
-                type="file"
-                ref={avatarFileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleAvatarFileChange}
-                disabled={uploading}
-              />
+              
+              {/* Avatar Info */}
+              <div className="flex-1">
+                <h3 className="font-medium text-lg mb-1">Profile Picture</h3>
+                <p className="text-muted-foreground text-sm mb-2">
+                  Recommended size: 400x400 pixels <br />
+                  Maximum size: 5MB
+                </p>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="text-sm" 
+                  disabled={uploading}
+                  onClick={() => avatarFileInputRef.current?.click()}
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Upload New Picture
+                </Button>
+              </div>
             </div>
           </div>
           
