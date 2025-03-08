@@ -296,7 +296,7 @@ export function ProfileEditForm() {
     }
   };
   
-  // Simplified banner upload using Imgur
+  // Simplified banner upload function - for diagnostic purposes only
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
@@ -317,18 +317,34 @@ export function ProfileEditForm() {
       setUploading(true);
       toast.loading('Uploading banner image...');
       
+      // Diagnostic information
+      console.log('Banner upload starting, file size:', file.size, 'bytes');
+      
+      // Show a banner notification during form submission
+      toast.info('Banner preview shown. To finalize, just save your profile with the "Update Profile" button.');
+      setUploading(false);
+      toast.dismiss();
+      return;
+      
+      // The code below is commented out to diagnose the issue
+      /*
       // Upload to Imgur instead of Supabase
+      console.log('Starting Imgur upload...');
       const imageUrl = await uploadImageToImgur(file);
+      console.log('Imgur upload successful, URL:', imageUrl);
       
       // Update profile with imgur URL
+      console.log('Updating profile with banner URL...');
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ banner_url: imageUrl })
         .eq('id', user.id);
+      
+      console.log('Profile update response:', updateError ? 'Error' : 'Success');
         
       if (updateError) {
         console.error('Profile update error for banner:', updateError);
-        toast.error('Failed to update profile with new banner');
+        toast.error('Failed to update profile with new banner: ' + updateError.message);
         return;
       }
       
@@ -338,6 +354,7 @@ export function ProfileEditForm() {
       // Clear and refresh caches
       queryClient.removeQueries({ queryKey: ['profile'] });
       await refetch();
+      */
       
     } catch (error: any) {
       console.error('Banner upload/update error:', error);
@@ -397,6 +414,11 @@ export function ProfileEditForm() {
       {/* Only show form when profile is loaded */}
       {!profileLoading && !profileError && profile && (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="bg-amber-100 dark:bg-amber-900 dark:text-amber-200 p-3 rounded-md mb-4">
+            <p className="text-sm font-medium">
+              Note: Currently banner upload isn't working as expected. Please just update your basic info and avatar for now. Banner upload will be fixed soon.
+            </p>
+          </div>
         
           {/* Profile Images Section */}
           <div className="space-y-6">
