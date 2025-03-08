@@ -11,7 +11,6 @@ import { supabase } from '@/lib/supabase';
 const NewPost = () => {
   const navigate = useNavigate();
   const [postDestination, setPostDestination] = useState('home');
-  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
@@ -69,8 +68,8 @@ const NewPost = () => {
     e.preventDefault();
     
     // Validate the post
-    if (!title.trim()) {
-      toast.error('Please add a title');
+    if (!description.trim()) {
+      toast.error('Please add a description');
       return;
     }
     
@@ -131,7 +130,6 @@ const NewPost = () => {
       
       // Prepare post data
       const postData = {
-        title,
         content: description,
         user_id: userId,
         post_type: postDestination,
@@ -214,15 +212,6 @@ const NewPost = () => {
           </div>
           
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <Input 
-                placeholder="Title" 
-                className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-400"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-              />
-            </div>
-            
             <div>
               <Textarea 
                 placeholder="Share your gaming moment..." 
