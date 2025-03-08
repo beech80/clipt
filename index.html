@@ -2,17 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Clip - Share your gaming moments" />
-    <meta property="og:title" content="Clip" />
-    <meta property="og:description" content="Share your gaming moments" />
-    <meta property="og:image" content="/og-image.png" />
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#1A1F2C" />
-    <link rel="apple-touch-icon" href="/logo192.png" />
-    <title>Clip</title>
-
+    <meta name="description" content="Clipt - Your gaming highlight platform" />
+    <title>Clipt</title>
+    <!-- For SEO and social sharing -->
+    <meta property="og:title" content="Clipt - Gaming Highlights Platform" />
+    <meta property="og:description" content="Share and discover amazing gaming moments" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/logo512.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Clipt - Gaming Highlights Platform" />
+    <meta name="twitter:description" content="Share and discover amazing gaming moments" />
+    <meta name="twitter:image" content="/logo512.png" />
+    
     <!-- Lovable Script -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
 
@@ -53,68 +56,46 @@
       }
     </script>
 
-    <!-- Structured Data for Organization -->
+    <!-- Service worker registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(registration => {
+            console.log('SW registered: ', registration);
+          }).catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
+    
+    <!-- Application JSON-LD -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Clip",
-        "description": "Share your gaming moments",
-        "url": "https://clip.gaming",
+        "@type": "WebApplication",
+        "name": "Clipt",
+        "description": "Gaming highlight platform for sharing and discovering gaming moments",
+        "applicationCategory": "Entertainment",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "screenshot": "/screenshot.png",
+        "featureList": "Share clips, Discover content, Connect with gamers",
+        "softwareVersion": "1.0.0",
         "logo": "/logo192.png"
       }
     </script>
-
+    
     <!-- Preconnect to Supabase -->
     <link rel="preconnect" href="https://slnjliheyiiummxhrgmk.supabase.co" />
-    <script>
-      // Inject environment variables at runtime for Vercel deployment
-      window.env = {
-        VITE_SUPABASE_URL: "https://slnjliheyiiummxhrgmk.supabase.co",
-        VITE_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsbmpsaWhleWlpdW1teGhyZ21rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4MDI2MTEsImV4cCI6MjA1MjM3ODYxMX0.0O3AhsGPFIoHQPY329lM0HA1JdFZoSodIK6uFz6DLyM"
-      };
-    </script>
     <base href="/" />
   </head>
   <body class="bg-background font-sans antialiased">
     <div id="root"></div>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', async () => {
-          try {
-            const registration = await navigator.serviceWorker.register('/service-worker.js', {
-              scope: '/'
-            });
-            
-            // Handle service worker updates
-            registration.addEventListener('updatefound', () => {
-              const newWorker = registration.installing;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New content is available, show refresh prompt to user
-                  if (window.confirm('New content is available! Click OK to refresh.')) {
-                    window.location.reload();
-                  }
-                }
-              });
-            });
-
-            console.log('ServiceWorker registration successful');
-          } catch (err) {
-            console.error('ServiceWorker registration failed: ', err);
-          }
-        });
-
-        // Handle offline/online status
-        window.addEventListener('online', () => {
-          document.body.classList.remove('offline');
-        });
-        
-        window.addEventListener('offline', () => {
-          document.body.classList.add('offline');
-        });
-      }
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
