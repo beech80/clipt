@@ -264,8 +264,12 @@ export const PostForm = () => {
         post_type: destination,
         is_published: true,
         video_url: mediaUrls.videoUrl,
-        image_url: mediaUrls.imageUrls.length === 1 ? mediaUrls.imageUrls[0] : null,
-        image_urls: mediaUrls.imageUrls.length > 1 ? mediaUrls.imageUrls : null
+        // Store first image in image_url or concatenate multiple images with comma separation
+        image_url: mediaUrls.imageUrls.length > 0 ? 
+          (mediaUrls.imageUrls.length === 1 ? 
+            mediaUrls.imageUrls[0] : 
+            mediaUrls.imageUrls.join(',')
+          ) : null
       };
 
       const { data: post, error: postError } = await supabase
