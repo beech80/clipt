@@ -177,7 +177,74 @@ export function ProfileEditForm() {
     }
   }, [profile, form])
 
-  // Fixed avatar upload function - greatly simplified to avoid all bucket issues
+  const onSubmit = async (values: ProfileFormValues) => {
+    if (!user) return;
+    
+    try {
+      setSubmitting(true);
+      toast.loading('Updating profile...');
+      
+      // Simple update with just basic text fields - no images
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: values.username,
+          display_name: values.displayName,
+          bio: values.bioDescription || null,
+          website: values.website || null,
+        })
+        .eq('id', user.id);
+        
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast.error('Failed to update profile: ' + error.message);
+        return;
+      }
+      
+      toast.dismiss();
+      toast.success('Profile updated successfully!');
+      
+      // Clear and refresh caches
+      queryClient.removeQueries({ queryKey: ['profile'] });
+      await refetch();
+      
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      toast.error('Error: ' + (error.message || 'Failed to update profile'));
+    } finally {
+      setSubmitting(false);
+      toast.dismiss();
+    }
+  };
+
+  // Image upload using Imgur API - reliable and free approach
+  const uploadImageToImgur = async (file: File): Promise<string> => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch('https://api.imgur.com/3/image', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Client-ID 546c25a59c58ad7'  // Public Imgur client ID for demo purposes
+        },
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.data.error || 'Failed to upload image');
+      }
+      
+      return result.data.link;
+    } catch (error: any) {
+      console.error('Imgur upload error:', error);
+      throw new Error('Image upload failed: ' + (error.message || 'Unknown error'));
+    }
+  };
+
+  // Simplified avatar upload using Imgur
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
@@ -198,54 +265,38 @@ export function ProfileEditForm() {
       setUploading(true);
       toast.loading('Uploading profile picture...');
       
-      // Simplified approach - use Base64 encoding instead of storage bucket
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const base64 = reader.result as string;
-        
-        // Update profile directly with base64 data
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            avatar_url: base64
-          })
-          .eq('id', user.id);
-          
-        if (updateError) {
-          console.error('Profile update error:', updateError);
-          toast.error('Failed to update profile with new image');
-          setUploading(false);
-          toast.dismiss();
-          return;
-        }
-        
-        // Success
-        toast.dismiss();
-        toast.success('Profile picture updated successfully!');
-        
-        // Clear and refresh caches
-        queryClient.removeQueries({ queryKey: ['profile'] });
-        await refetch();
-        setUploading(false);
-      };
+      // Upload to Imgur instead of Supabase
+      const imageUrl = await uploadImageToImgur(file);
       
-      reader.onerror = (error) => {
-        console.error('Error reading file:', error);
-        toast.error('Error processing image file');
-        setUploading(false);
-        toast.dismiss();
-      };
+      // Update profile with imgur URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: imageUrl })
+        .eq('id', user.id);
+        
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        toast.error('Failed to update profile with new image');
+        return;
+      }
+      
+      toast.dismiss();
+      toast.success('Profile picture updated successfully!');
+      
+      // Clear and refresh caches
+      queryClient.removeQueries({ queryKey: ['profile'] });
+      await refetch();
       
     } catch (error: any) {
       console.error('Avatar upload/update error:', error);
       toast.error('Error: ' + (error.message || 'Failed to update profile picture'));
+    } finally {
       setUploading(false);
       toast.dismiss();
     }
   };
   
-  // Fixed banner upload function - greatly simplified to avoid all bucket issues
+  // Simplified banner upload using Imgur
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
@@ -266,48 +317,32 @@ export function ProfileEditForm() {
       setUploading(true);
       toast.loading('Uploading banner image...');
       
-      // Simplified approach - use Base64 encoding instead of storage bucket
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const base64 = reader.result as string;
-        
-        // Update profile directly with base64 data
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            banner_url: base64
-          })
-          .eq('id', user.id);
-          
-        if (updateError) {
-          console.error('Profile update error for banner:', updateError);
-          toast.error('Failed to update profile with new banner');
-          setUploading(false);
-          toast.dismiss();
-          return;
-        }
-        
-        // Success
-        toast.dismiss();
-        toast.success('Banner image updated successfully!');
-        
-        // Clear and refresh caches
-        queryClient.removeQueries({ queryKey: ['profile'] });
-        await refetch();
-        setUploading(false);
-      };
+      // Upload to Imgur instead of Supabase
+      const imageUrl = await uploadImageToImgur(file);
       
-      reader.onerror = (error) => {
-        console.error('Error reading file:', error);
-        toast.error('Error processing image file');
-        setUploading(false);
-        toast.dismiss();
-      };
+      // Update profile with imgur URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ banner_url: imageUrl })
+        .eq('id', user.id);
+        
+      if (updateError) {
+        console.error('Profile update error for banner:', updateError);
+        toast.error('Failed to update profile with new banner');
+        return;
+      }
+      
+      toast.dismiss();
+      toast.success('Banner image updated successfully!');
+      
+      // Clear and refresh caches
+      queryClient.removeQueries({ queryKey: ['profile'] });
+      await refetch();
       
     } catch (error: any) {
       console.error('Banner upload/update error:', error);
       toast.error('Error: ' + (error.message || 'Failed to update banner image'));
+    } finally {
       setUploading(false);
       toast.dismiss();
     }
@@ -329,99 +364,6 @@ export function ProfileEditForm() {
     
     handleBannerUpload(e);
   };
-
-  // Handle form submission with improved error handling and data saving
-  async function onSubmit(values: ProfileFormValues) {
-    if (submitting) return;
-    
-    setSubmitting(true);
-    toast.loading('Updating your profile...');
-
-    try {
-      if (!user) {
-        toast.error('You must be logged in to update your profile');
-        return;
-      }
-
-      // Prepare the update payload with correct field names
-      const updatePayload = {
-        username: values.username,
-        display_name: values.displayName,
-        bio: values.bioDescription || null,
-        website: values.website || null,
-      };
-
-      console.log('Updating profile with:', updatePayload);
-
-      // First verify if the user exists
-      const { data: existingProfile, error: checkError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-        
-      if (checkError) {
-        console.error('Error checking profile existence:', checkError);
-        if (checkError.code === 'PGRST116') {
-          // Profile doesn't exist, create one
-          console.log('Profile not found, creating new profile');
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              ...updatePayload
-            });
-            
-          if (insertError) {
-            console.error('Error creating profile:', insertError);
-            toast.error('Failed to create profile: ' + insertError.message);
-            return;
-          }
-        } else {
-          toast.error('Failed to check profile: ' + checkError.message);
-          return;
-        }
-      } else {
-        // Profile exists, update it
-        console.log('Profile exists, updating');
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update(updatePayload)
-          .eq('id', user.id);
-          
-        if (updateError) {
-          console.error('Error updating profile:', updateError);
-          toast.error('Failed to update profile: ' + updateError.message);
-          return;
-        }
-      }
-
-      console.log('Profile updated successfully');
-      
-      // Success!
-      toast.dismiss();
-      toast.success('Profile updated successfully!');
-      
-      // Clear all profile caches
-      queryClient.removeQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      
-      // Wait a brief moment for the database to settle
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Force a manual refetch
-      await refetch();
-      
-      // Redirect to profile view
-      navigate('/profile');
-    } catch (error: any) {
-      console.error('Error in profile update:', error);
-      toast.dismiss();
-      toast.error(`Failed to update profile: ${error?.message || 'Unknown error'}`);
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   return (
     <Form {...form}>
