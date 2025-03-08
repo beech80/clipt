@@ -179,8 +179,8 @@ export const PostForm = () => {
       return;
     }
     
-    if (!content.trim()) {
-      toast.error('Please add some content to your post');
+    if (!content.trim() && files.length === 0) {
+      toast.error('Please add some content or media to your post');
       return;
     }
 
@@ -189,20 +189,17 @@ export const PostForm = () => {
       return;
     }
     
-    if (files.length === 0) {
-      toast.error('Please upload at least one file');
-      return;
-    }
-
     setLoading(true);
     const uploadToast = toast.loading(
       destination === 'clipts' ? 'Creating your clip...' : 'Creating your post...'
     );
 
     try {
+      // First, handle the game reference
       const { data: gameData, error: gameError } = await supabase
         .from('games')
         .upsert({
+          id: selectedGame.id,
           name: selectedGame.name,
           cover_url: selectedGame.id.toString()
         })
@@ -210,8 +207,11 @@ export const PostForm = () => {
         .single();
 
       if (gameError) {
+        console.error('Game error:', gameError);
         throw new Error(`Failed to process game: ${gameError.message}`);
       }
+
+      console.log('Game data saved successfully:', gameData);
 
       // Upload files and get URLs
       const mediaUrls: { videoUrl: string | null, imageUrls: string[] } = {
@@ -219,58 +219,71 @@ export const PostForm = () => {
         imageUrls: []
       };
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const timestamp = Date.now() + i; // Ensure unique timestamps
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${user.id}/${timestamp}.${fileExt}`;
+      // Only try to upload files if there are any
+      if (files.length > 0) {
+        // Show progress indicator
+        setUploadProgress(10);
+        
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const timestamp = Date.now() + i; // Ensure unique timestamps
+          const fileExt = file.name.split('.').pop();
+          const filePath = `${user.id}/${timestamp}.${fileExt}`;
 
-        console.log(`Starting file upload ${i+1}/${files.length}...`, {
-          filePath,
-          fileType: file.type,
-          fileSize: file.size
-        });
-
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from('media')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false,
+          console.log(`Starting file upload ${i+1}/${files.length}...`, {
+            filePath,
+            fileType: file.type,
+            fileSize: file.size
           });
 
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          throw new Error(`Failed to upload file: ${uploadError.message}`);
+          // Update progress
+          setUploadProgress(10 + Math.round((i / files.length) * 70));
+
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from('media')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: true, // Changed to true to overwrite existing files
+            });
+
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            throw new Error(`Failed to upload file: ${uploadError.message}`);
+          }
+
+          console.log(`File ${i+1} uploaded successfully`, uploadData);
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('media')
+            .getPublicUrl(filePath);
+
+          if (file.type.startsWith('video/')) {
+            mediaUrls.videoUrl = publicUrl;
+          } else {
+            mediaUrls.imageUrls.push(publicUrl);
+          }
         }
-
-        console.log(`File ${i+1} uploaded successfully`, uploadData);
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('media')
-          .getPublicUrl(filePath);
-
-        if (file.type.startsWith('video/')) {
-          mediaUrls.videoUrl = publicUrl;
-        } else {
-          mediaUrls.imageUrls.push(publicUrl);
-        }
+        
+        setUploadProgress(80);
       }
 
-      // Construct post data
+      // Final progress update before database operation
+      setUploadProgress(90);
+
+      // Construct post data with proper handling for multiple images
       const postData = {
-        content,
+        content: content.trim(),
         user_id: user.id,
         game_id: gameData.id,
         post_type: destination,
         is_published: true,
         video_url: mediaUrls.videoUrl,
-        // Store first image in image_url or concatenate multiple images with comma separation
+        // Store image URLs in a single field with comma separation
         image_url: mediaUrls.imageUrls.length > 0 ? 
-          (mediaUrls.imageUrls.length === 1 ? 
-            mediaUrls.imageUrls[0] : 
-            mediaUrls.imageUrls.join(',')
-          ) : null
+          mediaUrls.imageUrls.join(',') : null
       };
+
+      console.log('Creating post with data:', postData);
 
       const { data: post, error: postError } = await supabase
         .from('posts')
@@ -283,6 +296,11 @@ export const PostForm = () => {
         throw new Error(`Failed to create post: ${postError.message}`);
       }
 
+      console.log('Post created successfully:', post);
+
+      // Complete progress indicator
+      setUploadProgress(100);
+
       // Invalidate any existing posts queries to ensure fresh data
       await supabase.rpc('invalidate_cache', { cache_key: 'posts' });
 
@@ -290,6 +308,7 @@ export const PostForm = () => {
         destination === 'clipts' ? 'Clip created successfully!' : 'Post created successfully!'
       );
       
+      // Reset form
       stopCamera();
       setContent('');
       setFiles([]);
@@ -299,23 +318,25 @@ export const PostForm = () => {
       setMentions([]);
       setUploadProgress(0);
       
+      // Navigate based on destination
       if (destination === 'clipts') {
         // Add timestamp to force refresh of the page
         navigate(`/clipts?refresh=${Date.now()}`);
       } else {
-        // Add timestamp to force refresh of the homepage
+        // Navigate to home feed with refresh parameter
         navigate(`/?refresh=${Date.now()}`);
       }
       
-    } catch (error) {
-      console.error('Error creating post:', error);
+    } catch (error: any) {
+      console.error('Post creation error:', error);
       toast.error(
         error instanceof Error ? error.message : 'Failed to create post. Please try again.',
         { id: uploadToast }
       );
+      setUploadProgress(0);
     } finally {
       setLoading(false);
-      setUploadProgress(0);
+      toast.dismiss(uploadToast);
     }
   };
 
