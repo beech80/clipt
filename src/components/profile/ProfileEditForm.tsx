@@ -177,7 +177,7 @@ export function ProfileEditForm() {
     }
   }, [profile, form])
 
-  // Fixed avatar upload function - completely rewritten
+  // Fixed avatar upload function with simplified approach using just the public bucket
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
@@ -205,67 +205,17 @@ export function ProfileEditForm() {
       
       console.log('Uploading avatar to path:', filePath);
       
-      // Upload directly to profiles bucket
+      // Upload to public bucket - this exists in all Supabase projects by default
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(`public/${filePath}`, file, { 
+        .from('public')
+        .upload(filePath, file, { 
           upsert: true,
           cacheControl: '3600'
         });
         
       if (uploadError) {
         console.error('Avatar upload error:', uploadError);
-        
-        // Fall back to uploading to default public bucket if 'profiles' bucket doesn't exist
-        const { error: fallbackError, data: fallbackData } = await supabase.storage
-          .from('public')
-          .upload(filePath, file, { 
-            upsert: true,
-            cacheControl: '3600'
-          });
-          
-        if (fallbackError) {
-          console.error('Fallback avatar upload error:', fallbackError);
-          toast.error('Failed to upload image: ' + fallbackError.message);
-          return;
-        }
-        
-        console.log('Avatar uploaded to fallback bucket successfully');
-        
-        // Get public URL without cache
-        const { data: publicUrlData } = supabase.storage
-          .from('public')
-          .getPublicUrl(filePath);
-          
-        if (!publicUrlData?.publicUrl) {
-          toast.error('Failed to get image URL');
-          return;
-        }
-        
-        const avatarUrl = publicUrlData.publicUrl + '?t=' + Date.now();
-        
-        // Update profile in database
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            avatar_url: avatarUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-          
-        if (updateError) {
-          console.error('Profile update error:', updateError);
-          toast.error('Failed to update profile with new image');
-          return;
-        }
-        
-        // Success with fallback
-        toast.dismiss();
-        toast.success('Profile picture updated successfully!');
-        
-        // Clear and refresh caches
-        queryClient.removeQueries({ queryKey: ['profile'] });
-        await refetch();
+        toast.error('Failed to upload image: ' + uploadError.message);
         return;
       }
       
@@ -273,8 +223,8 @@ export function ProfileEditForm() {
       
       // Get public URL without cache
       const { data: publicUrlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(`public/${filePath}`);
+        .from('public')
+        .getPublicUrl(filePath);
         
       if (!publicUrlData?.publicUrl) {
         toast.error('Failed to get image URL');
@@ -316,7 +266,7 @@ export function ProfileEditForm() {
     }
   };
   
-  // Fixed banner upload function - completely rewritten
+  // Fixed banner upload function with simplified approach using just the public bucket
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
@@ -344,67 +294,17 @@ export function ProfileEditForm() {
       
       console.log('Uploading banner to path:', filePath);
       
-      // Upload directly to banners bucket
+      // Upload to public bucket - this exists in all Supabase projects by default
       const { error: uploadError } = await supabase.storage
-        .from('banners')
-        .upload(`public/${filePath}`, file, { 
+        .from('public')
+        .upload(filePath, file, { 
           upsert: true,
           cacheControl: '3600'
         });
         
       if (uploadError) {
         console.error('Banner upload error:', uploadError);
-        
-        // Fall back to uploading to default public bucket if 'banners' bucket doesn't exist
-        const { error: fallbackError } = await supabase.storage
-          .from('public')
-          .upload(filePath, file, { 
-            upsert: true,
-            cacheControl: '3600'
-          });
-          
-        if (fallbackError) {
-          console.error('Fallback banner upload error:', fallbackError);
-          toast.error('Failed to upload banner: ' + fallbackError.message);
-          return;
-        }
-        
-        console.log('Banner uploaded to fallback bucket successfully');
-        
-        // Get public URL without cache
-        const { data: publicUrlData } = supabase.storage
-          .from('public')
-          .getPublicUrl(filePath);
-          
-        if (!publicUrlData?.publicUrl) {
-          toast.error('Failed to get banner URL');
-          return;
-        }
-        
-        const bannerUrl = publicUrlData.publicUrl + '?t=' + Date.now();
-        
-        // Update profile in database
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            banner_url: bannerUrl,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-          
-        if (updateError) {
-          console.error('Profile update error for banner:', updateError);
-          toast.error('Failed to update profile with new banner');
-          return;
-        }
-        
-        // Success with fallback
-        toast.dismiss();
-        toast.success('Banner image updated successfully!');
-        
-        // Clear and refresh caches
-        queryClient.removeQueries({ queryKey: ['profile'] });
-        await refetch();
+        toast.error('Failed to upload banner: ' + uploadError.message);
         return;
       }
       
@@ -412,8 +312,8 @@ export function ProfileEditForm() {
       
       // Get public URL without cache
       const { data: publicUrlData } = supabase.storage
-        .from('banners')
-        .getPublicUrl(`public/${filePath}`);
+        .from('public')
+        .getPublicUrl(filePath);
         
       if (!publicUrlData?.publicUrl) {
         toast.error('Failed to get banner URL');
