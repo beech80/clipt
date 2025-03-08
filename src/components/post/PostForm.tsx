@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload, Camera, Search, Hash, AtSign, X } from 'lucide-react';
+import { Loader2, Upload, Camera, Search, Hash, AtSign, X, Film, Home } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Progress } from '@/components/ui/progress';
 
@@ -640,14 +640,14 @@ export const PostForm = () => {
           </div>
         </div>
       </div>
-      <div className="sticky bottom-0 bg-gray-950 py-4 mt-auto">
-        <div className="flex gap-4">
+      <div className="sticky bottom-0 bg-gray-950 py-4 mt-auto border-t border-gray-800">
+        <div className="flex gap-4 px-2">
           <Button
             type="button"
             variant="default"
             onClick={() => handleCreatePost('clipts')}
             disabled={loading}
-            className="flex-1"
+            className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transform transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
           >
             {loading ? (
               <>
@@ -655,15 +655,18 @@ export const PostForm = () => {
                 Creating Clipt...
               </>
             ) : (
-              'Post to Clipts'
+              <>
+                <Film className="mr-2 h-4 w-4" />
+                Post to Clipts
+              </>
             )}
           </Button>
           <Button
             type="button"
-            variant="default"
+            variant="secondary"
             onClick={() => handleCreatePost('home')}
             disabled={loading}
-            className="flex-1"
+            className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transform transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
           >
             {loading ? (
               <>
@@ -671,7 +674,10 @@ export const PostForm = () => {
                 Creating Post...
               </>
             ) : (
-              'Post to Home'
+              <>
+                <Home className="mr-2 h-4 w-4" />
+                Post to Home
+              </>
             )}
           </Button>
         </div>
