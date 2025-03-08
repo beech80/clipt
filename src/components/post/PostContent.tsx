@@ -25,7 +25,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
       if (postId) {
         const { data, error } = await supabase
           .from('posts')
-          .select('image_urls')
+          .select('image_url')
           .eq('id', postId)
           .single();
         
@@ -34,11 +34,19 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
           return;
         }
         
-        if (data && data.image_urls && Array.isArray(data.image_urls)) {
-          setImageUrls(data.image_urls);
-          setHasMultipleImages(data.image_urls.length > 1);
+        if (data && data.image_url) {
+          // Check if it's a comma-separated string
+          if (data.image_url.includes(',')) {
+            const urls = data.image_url.split(',');
+            setImageUrls(urls);
+            setHasMultipleImages(urls.length > 1);
+          } else {
+            // Single image
+            setImageUrls([data.image_url]);
+            setHasMultipleImages(false);
+          }
         } else if (imageUrl) {
-          // Fallback to single image
+          // Fallback to passed prop
           setImageUrls([imageUrl]);
           setHasMultipleImages(false);
         }

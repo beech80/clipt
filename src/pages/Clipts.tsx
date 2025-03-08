@@ -25,7 +25,6 @@ const Clipts = () => {
             content,
             image_url,
             video_url,
-            image_urls,
             user_id,
             created_at,
             post_type,

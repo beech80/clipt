@@ -136,8 +136,9 @@ const NewPost = () => {
         user_id: userId,
         post_type: postDestination,
         is_published: true,
-        image_url: uploadedUrls.length === 1 ? uploadedUrls[0] : null,
-        image_urls: uploadedUrls.length > 1 ? uploadedUrls : null,
+        // Store all image URLs in image_url field using comma separation for multiple images
+        image_url: uploadedUrls.length > 0 ? 
+          (postDestination === 'clipts' ? null : uploadedUrls.join(',')) : null,
         video_url: postDestination === 'clipts' ? uploadedUrls[0] : null
       };
       

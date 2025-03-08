@@ -1,9 +1,8 @@
 export interface Post {
   id: string;
   content: string;
-  image_url?: string | null;
+  image_url?: string | null; // May contain multiple URLs separated by commas
   video_url?: string | null;
-  image_urls?: string[] | null;
   user_id: string;
   created_at: string;
   profiles: {
