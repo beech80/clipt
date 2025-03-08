@@ -1,15 +1,15 @@
 import { ProfileEditForm } from "@/components/profile/ProfileEditForm";
-import { ThemeSelector } from "@/components/profile/ThemeSelector";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { UserCog, Paintbrush, ArrowLeft } from "lucide-react";
+import { UserCog, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Profile } from "@/types/profile";
 import { useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -55,6 +55,8 @@ const EditProfile = () => {
     toast.error('Failed to load profile. Please try again.');
   }
 
+  const userId = profile?.id;
+
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-8 pb-40">
       {/* Header */}
@@ -89,24 +91,30 @@ const EditProfile = () => {
               <UserCog className="w-5 h-5 text-purple-500" />
               <h2 className="text-xl font-semibold">Basic Information</h2>
             </div>
-            <ProfileEditForm />
+            <Tabs defaultValue="account">
+              <TabsList className="mb-4 dark:bg-slate-800">
+                <TabsTrigger value="account">Account</TabsTrigger>
+                <TabsTrigger value="preferences">Preferences</TabsTrigger>
+                <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              </TabsList>
+              <TabsContent value="account">
+                <ProfileEditForm userId={userId} />
+              </TabsContent>
+              <TabsContent value="preferences">
+                <div className="space-y-4">
+                  {/* Theme customization temporarily removed - will be added back in future update */}
+                  <div className="rounded-md border dark:border-slate-800 p-4">
+                    <h3 className="text-lg font-medium mb-2">Preferences</h3>
+                    <p className="text-muted-foreground">Configure your app preferences here. Theme customization is coming soon!</p>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </Card>
         </div>
 
         {/* Right Column */}
         <div className="space-y-6">
-          {profile && (
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Paintbrush className="w-5 h-5 text-purple-500" />
-                <h2 className="text-xl font-semibold">Theme Customization</h2>
-              </div>
-              <ThemeSelector 
-                userId={profile.id} 
-                currentTheme={profile.custom_theme}
-              />
-            </Card>
-          )}
         </div>
       </div>
     </div>

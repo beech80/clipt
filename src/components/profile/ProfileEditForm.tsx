@@ -177,7 +177,7 @@ export function ProfileEditForm() {
     }
   }, [profile, form])
 
-  // Fixed avatar upload function with simplified approach using just the public bucket
+  // Fixed avatar upload function - greatly simplified to avoid all bucket issues
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
@@ -198,75 +198,54 @@ export function ProfileEditForm() {
       setUploading(true);
       toast.loading('Uploading profile picture...');
       
-      // Create unique file path to avoid caching issues
-      const fileExt = file.name.split('.').pop();
-      const fileName = `avatar_${user.id}_${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-      
-      console.log('Uploading avatar to path:', filePath);
-      
-      // Upload to public bucket - this exists in all Supabase projects by default
-      const { error: uploadError } = await supabase.storage
-        .from('public')
-        .upload(filePath, file, { 
-          upsert: true,
-          cacheControl: '3600'
-        });
+      // Simplified approach - use Base64 encoding instead of storage bucket
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64 = reader.result as string;
         
-      if (uploadError) {
-        console.error('Avatar upload error:', uploadError);
-        toast.error('Failed to upload image: ' + uploadError.message);
-        return;
-      }
-      
-      console.log('Avatar uploaded successfully, getting public URL');
-      
-      // Get public URL without cache
-      const { data: publicUrlData } = supabase.storage
-        .from('public')
-        .getPublicUrl(filePath);
+        // Update profile directly with base64 data
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            avatar_url: base64
+          })
+          .eq('id', user.id);
+          
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+          toast.error('Failed to update profile with new image');
+          setUploading(false);
+          toast.dismiss();
+          return;
+        }
         
-      if (!publicUrlData?.publicUrl) {
-        toast.error('Failed to get image URL');
-        return;
-      }
-      
-      const avatarUrl = publicUrlData.publicUrl + '?t=' + Date.now();
-      console.log('Avatar public URL:', avatarUrl);
-      
-      // Update profile in database
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          avatar_url: avatarUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+        // Success
+        toast.dismiss();
+        toast.success('Profile picture updated successfully!');
         
-      if (updateError) {
-        console.error('Profile update error:', updateError);
-        toast.error('Failed to update profile with new image');
-        return;
-      }
+        // Clear and refresh caches
+        queryClient.removeQueries({ queryKey: ['profile'] });
+        await refetch();
+        setUploading(false);
+      };
       
-      // Success
-      toast.dismiss();
-      toast.success('Profile picture updated successfully!');
-      
-      // Clear and refresh caches
-      queryClient.removeQueries({ queryKey: ['profile'] });
-      await refetch();
+      reader.onerror = (error) => {
+        console.error('Error reading file:', error);
+        toast.error('Error processing image file');
+        setUploading(false);
+        toast.dismiss();
+      };
       
     } catch (error: any) {
       console.error('Avatar upload/update error:', error);
       toast.error('Error: ' + (error.message || 'Failed to update profile picture'));
-    } finally {
       setUploading(false);
       toast.dismiss();
     }
   };
   
-  // Fixed banner upload function with simplified approach using just the public bucket
+  // Fixed banner upload function - greatly simplified to avoid all bucket issues
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !user) {
       return;
@@ -287,69 +266,48 @@ export function ProfileEditForm() {
       setUploading(true);
       toast.loading('Uploading banner image...');
       
-      // Create unique file path to avoid caching issues
-      const fileExt = file.name.split('.').pop();
-      const fileName = `banner_${user.id}_${Date.now()}.${fileExt}`;
-      const filePath = `banners/${fileName}`;
-      
-      console.log('Uploading banner to path:', filePath);
-      
-      // Upload to public bucket - this exists in all Supabase projects by default
-      const { error: uploadError } = await supabase.storage
-        .from('public')
-        .upload(filePath, file, { 
-          upsert: true,
-          cacheControl: '3600'
-        });
+      // Simplified approach - use Base64 encoding instead of storage bucket
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64 = reader.result as string;
         
-      if (uploadError) {
-        console.error('Banner upload error:', uploadError);
-        toast.error('Failed to upload banner: ' + uploadError.message);
-        return;
-      }
-      
-      console.log('Banner uploaded successfully, getting public URL');
-      
-      // Get public URL without cache
-      const { data: publicUrlData } = supabase.storage
-        .from('public')
-        .getPublicUrl(filePath);
+        // Update profile directly with base64 data
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            banner_url: base64
+          })
+          .eq('id', user.id);
+          
+        if (updateError) {
+          console.error('Profile update error for banner:', updateError);
+          toast.error('Failed to update profile with new banner');
+          setUploading(false);
+          toast.dismiss();
+          return;
+        }
         
-      if (!publicUrlData?.publicUrl) {
-        toast.error('Failed to get banner URL');
-        return;
-      }
-      
-      const bannerUrl = publicUrlData.publicUrl + '?t=' + Date.now();
-      console.log('Banner public URL:', bannerUrl);
-      
-      // Update profile in database
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          banner_url: bannerUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
+        // Success
+        toast.dismiss();
+        toast.success('Banner image updated successfully!');
         
-      if (updateError) {
-        console.error('Profile update error for banner:', updateError);
-        toast.error('Failed to update profile with new banner');
-        return;
-      }
+        // Clear and refresh caches
+        queryClient.removeQueries({ queryKey: ['profile'] });
+        await refetch();
+        setUploading(false);
+      };
       
-      // Success
-      toast.dismiss();
-      toast.success('Banner image updated successfully!');
-      
-      // Clear and refresh caches
-      queryClient.removeQueries({ queryKey: ['profile'] });
-      await refetch();
+      reader.onerror = (error) => {
+        console.error('Error reading file:', error);
+        toast.error('Error processing image file');
+        setUploading(false);
+        toast.dismiss();
+      };
       
     } catch (error: any) {
       console.error('Banner upload/update error:', error);
       toast.error('Error: ' + (error.message || 'Failed to update banner image'));
-    } finally {
       setUploading(false);
       toast.dismiss();
     }
@@ -391,7 +349,6 @@ export function ProfileEditForm() {
         display_name: values.displayName,
         bio: values.bioDescription || null,
         website: values.website || null,
-        updated_at: new Date().toISOString()
       };
 
       console.log('Updating profile with:', updatePayload);
