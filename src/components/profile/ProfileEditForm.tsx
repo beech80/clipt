@@ -335,11 +335,6 @@ export function ProfileEditForm() {
       {/* Only show form when profile is loaded */}
       {!profileLoading && !profileError && profile && (
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="bg-amber-100 dark:bg-amber-900 dark:text-amber-200 p-3 rounded-md mb-4">
-            <p className="text-sm font-medium">
-              Note: Banner uploads are temporarily disabled while we make improvements. Please just update your basic info and avatar for now.
-            </p>
-          </div>
         
           {/* Profile Images Section */}
           <div className="space-y-6">
