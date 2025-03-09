@@ -37,7 +37,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; opacity: number; size: number; color: string }>>([]);
   const [buttonsAnimated, setButtonsAnimated] = useState(false);
   const lastScrollTime = useRef<number>(0);
-
+  
+  // Snow particles for snowglobe effect
+  const [snowflakes, setSnowflakes] = useState<Array<{ id: number; x: number; y: number; size: number; speed: number; opacity: number }>>([]);
+  const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
+  const [shakeIntensity, setShakeIntensity] = useState(0);
+  const snowglobeRef = useRef<HTMLDivElement>(null);
+  const shakeTimeout = useRef<NodeJS.Timeout | null>(null);
+  
   // CLIPT button animation with enhanced effects
   useEffect(() => {
     // Pulse animation
@@ -729,55 +736,139 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
-  // Add CSS for button press animation
+  // Snow animation and text floating effect
   useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .button-press {
-        transform: scale(0.9) !important;
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
-        filter: brightness(1.2) !important;
+    // Generate initial snowflakes
+    generateSnowflakes(15);
+    
+    // Animate snowflakes falling
+    const snowInterval = setInterval(() => {
+      setSnowflakes(prev => {
+        return prev.map(flake => {
+          // Move snowflake down and slightly to the side
+          const newY = (flake.y + flake.speed) % 100;
+          const newX = flake.x + (Math.sin(newY / 10) * 0.5);
+          
+          // Keep x within bounds
+          const boundedX = ((newX % 100) + 100) % 100;
+          
+          return {
+            ...flake,
+            x: boundedX,
+            y: newY
+          };
+        });
+      });
+    }, 50);
+    
+    // Text floating animation
+    const textInterval = setInterval(() => {
+      if (shakeIntensity > 0) {
+        // More erratic movement during shake
+        setTextPosition({
+          x: Math.sin(Date.now() / 500) * 10 * shakeIntensity,
+          y: Math.cos(Date.now() / 500) * 10 * shakeIntensity
+        });
+      } else {
+        // Gentle floating when not shaking
+        setTextPosition({
+          x: Math.sin(Date.now() / 1000) * 5,
+          y: Math.cos(Date.now() / 1200) * 5
+        });
       }
+    }, 16);
+    
+    // Set up device motion detection for shake
+    const handleDeviceMotion = (event: DeviceMotionEvent) => {
+      const acceleration = event.accelerationIncludingGravity;
+      if (!acceleration) return;
       
-      .pulse-highlight {
-        animation: pulse-border 1s ease-out;
-      }
+      const x = acceleration.x || 0;
+      const y = acceleration.y || 0;
+      const z = acceleration.z || 0;
       
-      .currently-selected-post {
-        position: relative;
-      }
+      const magnitude = Math.sqrt(x * x + y * y + z * z);
       
-      .currently-selected-post::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        border: 2px solid rgba(99, 102, 241, 0.5);
-        border-radius: 8px;
-        pointer-events: none;
-        z-index: 1;
+      // Detect shake
+      if (magnitude > 15) {
+        // Generate more snowflakes on shake
+        generateSnowflakes(5);
+        setShakeIntensity(Math.min(1.5, magnitude / 15));
+        
+        // Reset shake intensity after a delay
+        if (shakeTimeout.current) {
+          clearTimeout(shakeTimeout.current);
+        }
+        
+        shakeTimeout.current = setTimeout(() => {
+          setShakeIntensity(0);
+        }, 500);
       }
-      
-      @keyframes pulse-border {
-        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
-        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-      }
-    `;
-    document.head.appendChild(style);
+    };
+    
+    // Request permission for device motion events on iOS 13+
+    if (typeof DeviceMotionEvent !== 'undefined' && 
+        typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+      (DeviceMotionEvent as any).requestPermission()
+        .then((permissionState: string) => {
+          if (permissionState === 'granted') {
+            window.addEventListener('devicemotion', handleDeviceMotion);
+          }
+        })
+        .catch(console.error);
+    } else {
+      // Android and other devices don't need permission
+      window.addEventListener('devicemotion', handleDeviceMotion);
+    }
     
     return () => {
-      document.head.removeChild(style);
+      clearInterval(snowInterval);
+      clearInterval(textInterval);
+      window.removeEventListener('devicemotion', handleDeviceMotion);
+      if (shakeTimeout.current) {
+        clearTimeout(shakeTimeout.current);
+      }
     };
-  }, []);
-
-  const handleCliptButtonClick = () => {
-    // Navigate to the Clipts page
-    navigate('/clipts');
+  }, [shakeIntensity]);
+  
+  // Generate snowflakes for the snowglobe
+  const generateSnowflakes = (count: number) => {
+    const newSnowflakes = [...snowflakes];
+    
+    for (let i = 0; i < count; i++) {
+      newSnowflakes.push({
+        id: Math.random(),
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: 1 + Math.random() * 3,
+        speed: 0.2 + Math.random() * 0.8,
+        opacity: 0.4 + Math.random() * 0.6
+      });
+    }
+    
+    // Keep a maximum number of snowflakes to prevent performance issues
+    if (newSnowflakes.length > 40) {
+      newSnowflakes.splice(0, newSnowflakes.length - 40);
+    }
+    
+    setSnowflakes(newSnowflakes);
+  };
+  
+  // Manual shake function for button click
+  const handleShakeClick = () => {
+    generateSnowflakes(10);
+    setShakeIntensity(1);
+    
+    if (shakeTimeout.current) {
+      clearTimeout(shakeTimeout.current);
+    }
+    
+    shakeTimeout.current = setTimeout(() => {
+      setShakeIntensity(0);
+    }, 500);
   };
 
+  // Handler for like button with improved triggering of post actions
   const handleLikeClick = async () => {
     if (!currentPostId) {
       toast.error('No post selected');
@@ -1156,6 +1247,101 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, []);
 
+  // Add CSS for button press animation
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .button-press {
+        transform: scale(0.9) !important;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
+        filter: brightness(1.2) !important;
+      }
+      
+      .pulse-highlight {
+        animation: pulse-border 1s ease-out;
+      }
+      
+      .currently-selected-post {
+        position: relative;
+      }
+      
+      .currently-selected-post::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        border: 2px solid rgba(99, 102, 241, 0.5);
+        border-radius: 8px;
+        pointer-events: none;
+        z-index: 1;
+      }
+      
+      @keyframes pulse-border {
+        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  const handleCliptButtonClick = () => {
+    // Navigate to the Clipts page
+    navigate('/clipts');
+  };
+
+  // Add custom CSS for snow animations and shake effect
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes float-away {
+        0% {
+          transform: translate(0, 0);
+          opacity: 1;
+        }
+        100% {
+          transform: translate(var(--direction-x, 0), var(--direction-y, -50px));
+          opacity: 0;
+        }
+      }
+      
+      @keyframes shake {
+        0% { transform: translateX(0); }
+        10% { transform: translateX(-5px) rotate(-5deg); }
+        20% { transform: translateX(5px) rotate(5deg); }
+        30% { transform: translateX(-5px) rotate(-5deg); }
+        40% { transform: translateX(5px) rotate(5deg); }
+        50% { transform: translateX(-5px) rotate(-5deg); }
+        60% { transform: translateX(5px) rotate(5deg); }
+        70% { transform: translateX(-5px) rotate(-5deg); }
+        80% { transform: translateX(5px) rotate(5deg); }
+        90% { transform: translateX(-5px) rotate(-5deg); }
+        100% { transform: translateX(0); }
+      }
+      
+      .font-pixelated {
+        font-family: 'Press Start 2P', 'Courier New', monospace;
+        font-size: 12px;
+        letter-spacing: 1px;
+      }
+      
+      .animate-shake {
+        animation: shake 0.5s ease-in-out;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return (
     <div className={`fixed bottom-0 left-0 right-0 z-50 py-2 px-4 bg-[#1a1c2a]/95 backdrop-blur-lg border-t border-[#2e3149] shadow-xl w-full flex items-center justify-between ${menuOpen ? 'menu-open' : ''}`}>
       {/* Current post display */}
@@ -1212,35 +1398,49 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         </div>
       </div>
 
-      {/* Center CLIPT button */}
-      <div className="relative">
+      {/* Center CLIPT button as Snowglobe */}
+      <div 
+        className="relative" 
+        onClick={handleShakeClick}
+        ref={snowglobeRef}
+      >
         <button 
           onClick={handleCliptButtonClick}
-          className={`p-2 px-4 font-bold text-indigo-300 relative z-10 bg-[#1D1E2A] border-2 ${
-            pulsating ? 'animate-pulse' : ''
-          } ${
-            glowing ? 'border-[#6c4dc4] shadow-[0_0_15px_rgba(108,77,196,0.5)]' : 'border-[#4f46e5] shadow-[0_0_5px_rgba(79,70,229,0.3)]'
-          } rounded-md uppercase transition-all duration-300 hover:scale-105 active:scale-95`}
+          className={`p-3 px-5 font-bold relative z-10 bg-white border-2 
+            ${glowing ? 'border-[#6c4dc4] shadow-[0_0_15px_rgba(108,77,196,0.5)]' : 'border-[#4f46e5] shadow-[0_0_5px_rgba(79,70,229,0.3)]'}
+            rounded-lg uppercase transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden
+            ${shakeIntensity > 0 ? 'animate-shake' : ''}
+          `}
+          style={{
+            animation: shakeIntensity > 0 ? `shake ${0.5/shakeIntensity}s ease-in-out` : undefined
+          }}
         >
-          CLIPT
-          
-          {/* Particles for CLIPT button effect */}
-          {particles.map(particle => (
+          {/* Snow particles inside the snowglobe */}
+          {snowflakes.map(flake => (
             <div
-              key={particle.id}
-              className="absolute pointer-events-none"
+              key={flake.id}
+              className="absolute rounded-full bg-white pointer-events-none"
               style={{
-                left: `${particle.x}%`,
-                top: `${particle.y}%`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                backgroundColor: particle.color,
-                borderRadius: '50%',
-                opacity: particle.opacity,
-                animation: 'float-away 2s linear forwards',
+                left: `${flake.x}%`,
+                top: `${flake.y}%`,
+                width: `${flake.size}px`,
+                height: `${flake.size}px`,
+                opacity: flake.opacity,
+                filter: 'blur(0.5px)',
               }}
             />
           ))}
+          
+          {/* Floating CLIPT text */}
+          <div 
+            className={`relative text-indigo-600 font-pixelated transition-transform pointer-events-none tracking-wide z-20 ${pulsating ? 'animate-pulse' : ''}`}
+            style={{
+              transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
+              textShadow: '0 0 5px rgba(108, 77, 196, 0.5)'
+            }}
+          >
+            CLIPT
+          </div>
         </button>
       </div>
 
