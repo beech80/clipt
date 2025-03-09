@@ -37,65 +37,54 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; opacity: number; size: number; color: string }>>([]);
   const [buttonsAnimated, setButtonsAnimated] = useState(false);
   const lastScrollTime = useRef<number>(0);
-  
-  // Snow particles for snowglobe effect
-  const [snowflakes, setSnowflakes] = useState<Array<{ id: number; x: number; y: number; size: number; speed: number; opacity: number }>>([]);
-  const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
-  const [shakeIntensity, setShakeIntensity] = useState(0);
-  const snowglobeRef = useRef<HTMLDivElement>(null);
-  const shakeTimeout = useRef<NodeJS.Timeout | null>(null);
-  
+
   // CLIPT button animation with enhanced effects
   useEffect(() => {
     // Pulse animation
     const pulseInterval = setInterval(() => {
-      setPulsating(true);
-      
-      // Generate particles when pulsing
-      createParticles();
-      
-      setTimeout(() => setPulsating(false), 1500);
-    }, 5000);
+      setPulsating(prev => !prev);
+    }, 3000);
     
-    // Glow animation with smoother transition
+    // Glow effect
     const glowInterval = setInterval(() => {
       setGlowing(prev => !prev);
-    }, 2000);
+    }, 5000);
     
-    // Button hover animation toggle
-    const buttonAnimationInterval = setInterval(() => {
-      setButtonsAnimated(prev => !prev);
-    }, 8000);
+    // Generate particles
+    const particleInterval = setInterval(() => {
+      if (Math.random() > 0.7) {
+        generateParticles(1);
+      }
+    }, 500);
     
     return () => {
       clearInterval(pulseInterval);
       clearInterval(glowInterval);
-      clearInterval(buttonAnimationInterval);
+      clearInterval(particleInterval);
     };
   }, []);
   
-  // Particle effect system
-  const createParticles = () => {
-    const newParticles = [];
-    const colors = ['#6c4dc4', '#8654dc', '#4f46e5', '#8b5cf6', '#a78bfa'];
+  // Generate particles function
+  const generateParticles = (count: number) => {
+    const newParticles = [...particles];
     
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < count; i++) {
       newParticles.push({
         id: Math.random(),
-        x: 50 + Math.random() * 10 - 5, // center x with slight variation
-        y: 50 + Math.random() * 10 - 5, // center y with slight variation
-        opacity: 0.8 + Math.random() * 0.2,
-        size: 3 + Math.random() * 5,
-        color: colors[Math.floor(Math.random() * colors.length)]
+        x: 40 + Math.random() * 20,
+        y: 40 + Math.random() * 20,
+        opacity: 0.5 + Math.random() * 0.5,
+        size: 2 + Math.random() * 3,
+        color: `rgb(${Math.floor(100 + Math.random() * 100)}, ${Math.floor(50 + Math.random() * 100)}, ${Math.floor(200 + Math.random() * 55)})`
       });
     }
     
-    setParticles(newParticles);
+    // Keep max 20 particles
+    if (newParticles.length > 20) {
+      newParticles.splice(0, newParticles.length - 20);
+    }
     
-    // Animate particles fading out
-    setTimeout(() => {
-      setParticles([]);
-    }, 2000);
+    setParticles(newParticles);
   };
 
   // For smooth scrolling
@@ -736,138 +725,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
-  // Snow animation and text floating effect
-  useEffect(() => {
-    // Generate initial snowflakes
-    generateSnowflakes(15);
-    
-    // Animate snowflakes falling
-    const snowInterval = setInterval(() => {
-      setSnowflakes(prev => {
-        return prev.map(flake => {
-          // Move snowflake down and slightly to the side
-          const newY = (flake.y + flake.speed) % 100;
-          const newX = flake.x + (Math.sin(newY / 10) * 0.5);
-          
-          // Keep x within bounds
-          const boundedX = ((newX % 100) + 100) % 100;
-          
-          return {
-            ...flake,
-            x: boundedX,
-            y: newY
-          };
-        });
-      });
-    }, 50);
-    
-    // Text floating animation
-    const textInterval = setInterval(() => {
-      if (shakeIntensity > 0) {
-        // More erratic movement during shake
-        setTextPosition({
-          x: Math.sin(Date.now() / 500) * 10 * shakeIntensity,
-          y: Math.cos(Date.now() / 500) * 10 * shakeIntensity
-        });
-      } else {
-        // Gentle floating when not shaking
-        setTextPosition({
-          x: Math.sin(Date.now() / 1000) * 5,
-          y: Math.cos(Date.now() / 1200) * 5
-        });
-      }
-    }, 16);
-    
-    // Set up device motion detection for shake
-    const handleDeviceMotion = (event: DeviceMotionEvent) => {
-      const acceleration = event.accelerationIncludingGravity;
-      if (!acceleration) return;
-      
-      const x = acceleration.x || 0;
-      const y = acceleration.y || 0;
-      const z = acceleration.z || 0;
-      
-      const magnitude = Math.sqrt(x * x + y * y + z * z);
-      
-      // Detect shake
-      if (magnitude > 15) {
-        // Generate more snowflakes on shake
-        generateSnowflakes(5);
-        setShakeIntensity(Math.min(1.5, magnitude / 15));
-        
-        // Reset shake intensity after a delay
-        if (shakeTimeout.current) {
-          clearTimeout(shakeTimeout.current);
-        }
-        
-        shakeTimeout.current = setTimeout(() => {
-          setShakeIntensity(0);
-        }, 500);
-      }
-    };
-    
-    // Request permission for device motion events on iOS 13+
-    if (typeof DeviceMotionEvent !== 'undefined' && 
-        typeof (DeviceMotionEvent as any).requestPermission === 'function') {
-      (DeviceMotionEvent as any).requestPermission()
-        .then((permissionState: string) => {
-          if (permissionState === 'granted') {
-            window.addEventListener('devicemotion', handleDeviceMotion);
-          }
-        })
-        .catch(console.error);
-    } else {
-      // Android and other devices don't need permission
-      window.addEventListener('devicemotion', handleDeviceMotion);
-    }
-    
-    return () => {
-      clearInterval(snowInterval);
-      clearInterval(textInterval);
-      window.removeEventListener('devicemotion', handleDeviceMotion);
-      if (shakeTimeout.current) {
-        clearTimeout(shakeTimeout.current);
-      }
-    };
-  }, [shakeIntensity]);
-  
-  // Generate snowflakes for the snowglobe
-  const generateSnowflakes = (count: number) => {
-    const newSnowflakes = [...snowflakes];
-    
-    for (let i = 0; i < count; i++) {
-      newSnowflakes.push({
-        id: Math.random(),
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: 1 + Math.random() * 3,
-        speed: 0.2 + Math.random() * 0.8,
-        opacity: 0.4 + Math.random() * 0.6
-      });
-    }
-    
-    // Keep a maximum number of snowflakes to prevent performance issues
-    if (newSnowflakes.length > 40) {
-      newSnowflakes.splice(0, newSnowflakes.length - 40);
-    }
-    
-    setSnowflakes(newSnowflakes);
-  };
-  
-  // Manual shake function for button click
-  const handleShakeClick = () => {
-    generateSnowflakes(10);
-    setShakeIntensity(1);
-    
-    if (shakeTimeout.current) {
-      clearTimeout(shakeTimeout.current);
-    }
-    
-    shakeTimeout.current = setTimeout(() => {
-      setShakeIntensity(0);
-    }, 500);
-  };
-
   // Handler for like button with improved triggering of post actions
   const handleLikeClick = async () => {
     if (!currentPostId) {
@@ -1296,7 +1153,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     navigate('/clipts');
   };
 
-  // Add custom CSS for snow animations and shake effect
+  // Add custom CSS for particle animation
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -1309,30 +1166,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           transform: translate(var(--direction-x, 0), var(--direction-y, -50px));
           opacity: 0;
         }
-      }
-      
-      @keyframes shake {
-        0% { transform: translateX(0); }
-        10% { transform: translateX(-5px) rotate(-5deg); }
-        20% { transform: translateX(5px) rotate(5deg); }
-        30% { transform: translateX(-5px) rotate(-5deg); }
-        40% { transform: translateX(5px) rotate(5deg); }
-        50% { transform: translateX(-5px) rotate(-5deg); }
-        60% { transform: translateX(5px) rotate(5deg); }
-        70% { transform: translateX(-5px) rotate(-5deg); }
-        80% { transform: translateX(5px) rotate(5deg); }
-        90% { transform: translateX(-5px) rotate(-5deg); }
-        100% { transform: translateX(0); }
-      }
-      
-      .font-pixelated {
-        font-family: 'Press Start 2P', 'Courier New', monospace;
-        font-size: 12px;
-        letter-spacing: 1px;
-      }
-      
-      .animate-shake {
-        animation: shake 0.5s ease-in-out;
       }
     `;
     document.head.appendChild(style);
@@ -1398,49 +1231,34 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         </div>
       </div>
 
-      {/* Center CLIPT button as Snowglobe */}
-      <div 
-        className="relative" 
-        onClick={handleShakeClick}
-        ref={snowglobeRef}
-      >
+      {/* Center CLIPT button */}
+      <div className="relative">
         <button 
           onClick={handleCliptButtonClick}
-          className={`p-3 px-5 font-bold relative z-10 bg-white border-2 
-            ${glowing ? 'border-[#6c4dc4] shadow-[0_0_15px_rgba(108,77,196,0.5)]' : 'border-[#4f46e5] shadow-[0_0_5px_rgba(79,70,229,0.3)]'}
-            rounded-lg uppercase transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden
-            ${shakeIntensity > 0 ? 'animate-shake' : ''}
-          `}
-          style={{
-            animation: shakeIntensity > 0 ? `shake ${0.5/shakeIntensity}s ease-in-out` : undefined
-          }}
+          className={`relative flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/90 
+            ${pulsating ? 'animate-pulse' : ''} 
+            transition-all duration-300 hover:scale-105 active:scale-95 z-10 
+            ${glowing ? 'shadow-[0_0_15px_rgba(139,92,246,0.8)]' : 'shadow-[0_0_5px_rgba(139,92,246,0.4)]'}`}
         >
-          {/* Snow particles inside the snowglobe */}
-          {snowflakes.map(flake => (
+          <span className="text-white text-sm font-bold">CLIPT</span>
+          
+          {/* Particles for CLIPT button effect */}
+          {particles.map(particle => (
             <div
-              key={flake.id}
-              className="absolute rounded-full bg-white pointer-events-none"
+              key={particle.id}
+              className="absolute pointer-events-none"
               style={{
-                left: `${flake.x}%`,
-                top: `${flake.y}%`,
-                width: `${flake.size}px`,
-                height: `${flake.size}px`,
-                opacity: flake.opacity,
-                filter: 'blur(0.5px)',
+                left: `${particle.x}%`,
+                top: `${particle.y}%`,
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
+                backgroundColor: particle.color,
+                borderRadius: '50%',
+                opacity: particle.opacity,
+                animation: 'float-away 2s linear forwards',
               }}
             />
           ))}
-          
-          {/* Floating CLIPT text */}
-          <div 
-            className={`relative text-indigo-600 font-pixelated transition-transform pointer-events-none tracking-wide z-20 ${pulsating ? 'animate-pulse' : ''}`}
-            style={{
-              transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
-              textShadow: '0 0 5px rgba(108, 77, 196, 0.5)'
-            }}
-          >
-            CLIPT
-          </div>
         </button>
       </div>
 
