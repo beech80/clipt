@@ -141,7 +141,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       newY = (dy / distance) * maxDistance;
     }
     
-    // Apply the position to the knob
+    // Apply the position to the knob with smoother transition
+    knob.style.transition = distance > 5 ? 'transform 0.1s ease-out' : '';
     knob.style.transform = `translate(${newX}px, ${newY}px)`;
     
     // Determine direction
@@ -149,7 +150,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     let direction: 'up' | 'down' | 'left' | 'right' | null = null;
     
     // Only register direction if joystick is moved significantly
-    if (distance > maxDistance * 0.5) {
+    // Lower threshold to make it more responsive
+    if (distance > maxDistance * 0.35) {
       if (angle > -45 && angle <= 45) {
         direction = 'right';
       } else if (angle > 45 && angle <= 135) {
@@ -159,14 +161,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       } else {
         direction = 'up';
       }
+      
+      // Add visual feedback based on direction
+      knob.className = `w-[26px] h-[26px] rounded-full bg-[#353b5a]/80 direction-${direction}`;
+    } else {
+      knob.className = 'w-[26px] h-[26px] rounded-full bg-[#353b5a]/80';
     }
     
     // Only update if direction changed or we've waited long enough since last scroll
     const now = Date.now();
-    if (direction !== joystickDirection || (direction && now - lastScrollTime.current > 200)) {
+    if (direction !== joystickDirection || (direction && (direction === 'up' || direction === 'down') && now - lastScrollTime.current > 150)) {
       setJoystickDirection(direction);
       
-      // Scroll based on direction
+      // Scroll based on direction - make up/down more responsive
       if (direction === 'up') {
         smoothScroll(-scrollDistance);
         lastScrollTime.current = now;
@@ -328,6 +335,24 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [currentPostId, propCurrentPostId]);
 
+  // Handle comment completion and refresh
+  const handleCommentComplete = () => {
+    // Trigger a refresh for the comments
+    document.dispatchEvent(new CustomEvent('refresh-post', {
+      detail: { postId: currentPostId }
+    }));
+  };
+
+  // Add listener for comment updates
+  useEffect(() => {
+    const listener = () => handleCommentComplete();
+    document.addEventListener('comment-added', listener);
+    
+    return () => {
+      document.removeEventListener('comment-added', listener);
+    };
+  }, []);
+
   // Handler functions for each button
   const handleLike = async () => {
     if (!currentPostId) return;
@@ -335,11 +360,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     try {
       // Check if already liked
+      const { data: currentUser } = await supabase.auth.getUser();
+      const userId = currentUser?.user?.id;
+      
+      if (!userId) {
+        toast.error('You need to be logged in to like posts');
+        return;
+      }
+      
       const { data: existingLike } = await supabase
         .from('likes')
         .select('*')
         .eq('post_id', currentPostId)
-        .eq('user_id', supabase.auth.getUser()?.data?.user?.id || '')
+        .eq('user_id', userId)
         .single();
       
       if (existingLike) {
@@ -357,7 +390,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           .from('likes')
           .insert({
             post_id: currentPostId,
-            user_id: supabase.auth.getUser()?.data?.user?.id || '',
+            user_id: userId,
             created_at: new Date().toISOString()
           });
           
@@ -379,133 +412,194 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (!currentPostId) return;
     console.log('Comment on post:', currentPostId);
     
-    // Navigate to the post page with comment section visible
-    navigate(`/post/${currentPostId}?showComments=true`);
+    // Show a modal or dialog with the comments
+    const commentModal = document.createElement('div');
+    commentModal.id = 'comment-modal-container';
+    commentModal.style.position = 'fixed';
+    commentModal.style.top = '0';
+    commentModal.style.left = '0';
+    commentModal.style.width = '100%';
+    commentModal.style.height = '100%';
+    commentModal.style.zIndex = '9999';
+    commentModal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    commentModal.style.display = 'flex';
+    commentModal.style.justifyContent = 'center';
+    commentModal.style.alignItems = 'center';
+    
+    // Create the content
+    const modalContent = document.createElement('div');
+    modalContent.style.width = '90%';
+    modalContent.style.maxWidth = '600px';
+    modalContent.style.maxHeight = '80vh';
+    modalContent.style.backgroundColor = '#1A1F2C';
+    modalContent.style.borderRadius = '8px';
+    modalContent.style.overflow = 'hidden';
+    modalContent.style.display = 'flex';
+    modalContent.style.flexDirection = 'column';
+    
+    // Add a close button
+    const headerDiv = document.createElement('div');
+    headerDiv.style.padding = '16px';
+    headerDiv.style.borderBottom = '1px solid #2A2F3C';
+    headerDiv.style.display = 'flex';
+    headerDiv.style.justifyContent = 'space-between';
+    headerDiv.style.alignItems = 'center';
+    
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = 'Comments';
+    titleSpan.style.fontWeight = 'bold';
+    titleSpan.style.fontSize = '18px';
+    titleSpan.style.color = 'white';
+    
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '×';
+    closeButton.style.background = 'none';
+    closeButton.style.border = 'none';
+    closeButton.style.color = 'white';
+    closeButton.style.fontSize = '24px';
+    closeButton.style.cursor = 'pointer';
+    closeButton.onclick = () => {
+      document.body.removeChild(commentModal);
+    };
+    
+    headerDiv.appendChild(titleSpan);
+    headerDiv.appendChild(closeButton);
+    modalContent.appendChild(headerDiv);
+    
+    // Create an iframe to load the comments
+    const commentsIframe = document.createElement('iframe');
+    commentsIframe.style.width = '100%';
+    commentsIframe.style.flex = '1';
+    commentsIframe.style.border = 'none';
+    commentsIframe.src = `/post/${currentPostId}?showComments=true&embed=true`;
+    
+    modalContent.appendChild(commentsIframe);
+    commentModal.appendChild(modalContent);
+    document.body.appendChild(commentModal);
   };
 
-  const handleFollow = () => {
+  const handleFollow = async () => {
     if (!currentPostId) return;
     console.log('Follow user from post:', currentPostId);
     
     // Get the post's user_id and follow/unfollow that user
-    (async () => {
-      try {
-        // First, get the post to find its author
-        const { data: post } = await supabase
-          .from('posts')
-          .select('user_id')
-          .eq('id', currentPostId)
-          .single();
-          
-        if (!post) {
-          toast.error('Could not find post');
-          return;
-        }
+    try {
+      // First, get the post to find its author
+      const { data: post } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', currentPostId)
+        .single();
         
-        const currentUserId = supabase.auth.getUser()?.data?.user?.id;
-        
-        if (!currentUserId) {
-          toast.error('You need to be logged in to follow users');
-          return;
-        }
-        
-        if (currentUserId === post.user_id) {
-          toast.error('You cannot follow yourself');
-          return;
-        }
-        
-        // Check if already following
-        const { data: existingFollow } = await supabase
-          .from('follows')
-          .select('*')
-          .eq('follower_id', currentUserId)
-          .eq('following_id', post.user_id)
-          .single();
-          
-        if (existingFollow) {
-          // Unfollow
-          await supabase
-            .from('follows')
-            .delete()
-            .eq('id', existingFollow.id);
-            
-          toast.success('Unfollowed user');
-        } else {
-          // Follow
-          await supabase
-            .from('follows')
-            .insert({
-              follower_id: currentUserId,
-              following_id: post.user_id,
-              created_at: new Date().toISOString()
-            });
-            
-          toast.success('Following user');
-        }
-        
-        // Trigger a refresh for the profile
-        document.dispatchEvent(new CustomEvent('refresh-profile', {
-          detail: { userId: post.user_id }
-        }));
-      } catch (error) {
-        console.error('Error following user:', error);
-        toast.error('Failed to follow user');
+      if (!post) {
+        toast.error('Could not find post');
+        return;
       }
-    })();
+      
+      const { data: currentUser } = await supabase.auth.getUser();
+      const currentUserId = currentUser?.user?.id;
+      
+      if (!currentUserId) {
+        toast.error('You need to be logged in to follow users');
+        return;
+      }
+      
+      if (currentUserId === post.user_id) {
+        toast.error('You cannot follow yourself');
+        return;
+      }
+      
+      // Check if already following
+      const { data: existingFollow, error: followError } = await supabase
+        .from('follows')
+        .select()
+        .eq('follower_id', currentUserId)
+        .eq('following_id', post.user_id)
+        .maybeSingle();
+        
+      if (existingFollow) {
+        // Unfollow
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', currentUserId)
+          .eq('following_id', post.user_id);
+          
+        toast.success('Unfollowed user');
+      } else {
+        // Follow
+        await supabase
+          .from('follows')
+          .insert({
+            follower_id: currentUserId,
+            following_id: post.user_id,
+            created_at: new Date().toISOString()
+          });
+          
+        toast.success('Following user');
+      }
+      
+      // Trigger a refresh for the profile
+      document.dispatchEvent(new CustomEvent('refresh-profile', {
+        detail: { userId: post.user_id }
+      }));
+    } catch (error) {
+      console.error('Error following user:', error);
+      toast.error('Failed to follow user');
+    }
   };
   
-  const handleTrophy = () => {
+  const handleTrophy = async () => {
     if (!currentPostId) return;
     console.log('Trophy for post:', currentPostId);
     
     // Vote for this clip (trophy functionality)
-    (async () => {
-      try {
-        const currentUserId = supabase.auth.getUser()?.data?.user?.id;
-        
-        if (!currentUserId) {
-          toast.error('You need to be logged in to vote for clips');
-          return;
-        }
-        
-        // Check if already voted
-        const { data: existingVote } = await supabase
-          .from('clip_votes')
-          .select('*')
-          .eq('post_id', currentPostId)
-          .eq('user_id', currentUserId)
-          .single();
-          
-        if (existingVote) {
-          // Remove vote
-          await supabase
-            .from('clip_votes')
-            .delete()
-            .eq('id', existingVote.id);
-            
-          toast.success('Removed vote from clip');
-        } else {
-          // Vote
-          await supabase
-            .from('clip_votes')
-            .insert({
-              post_id: currentPostId,
-              user_id: currentUserId,
-              created_at: new Date().toISOString()
-            });
-            
-          toast.success('Voted for clip');
-        }
-        
-        // Trigger a refresh for the post's vote count
-        document.dispatchEvent(new CustomEvent('refresh-post', {
-          detail: { postId: currentPostId }
-        }));
-      } catch (error) {
-        console.error('Error voting for clip:', error);
-        toast.error('Failed to vote for clip');
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      const currentUserId = currentUser?.user?.id;
+      
+      if (!currentUserId) {
+        toast.error('You need to be logged in to vote for clips');
+        return;
       }
-    })();
+      
+      // Check if already voted
+      const { data: existingVote } = await supabase
+        .from('clip_votes')
+        .select('id')
+        .eq('post_id', currentPostId)
+        .eq('user_id', currentUserId)
+        .single();
+        
+      if (existingVote) {
+        // Remove vote
+        await supabase
+          .from('clip_votes')
+          .delete()
+          .eq('id', existingVote.id);
+          
+        toast.success('Removed vote from clip');
+      } else {
+        // Vote
+        await supabase
+          .from('clip_votes')
+          .insert({
+            post_id: currentPostId,
+            user_id: currentUserId,
+            created_at: new Date().toISOString()
+          });
+          
+        toast.success('Voted for clip');
+      }
+      
+      // Trigger a refresh for the post's vote count
+      document.dispatchEvent(new CustomEvent('refresh-post', {
+        detail: { postId: currentPostId }
+      }));
+    } catch (error) {
+      console.error('Error voting for clip:', error);
+      toast.error('Failed to vote for clip');
+    }
   };
 
   const handleClipt = () => {
@@ -533,6 +627,22 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setMenuOpen(false);
   };
 
+  // Add CSS classes for direction indicators
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .direction-up { box-shadow: 0 -4px 6px rgba(49, 130, 206, 0.6); }
+      .direction-down { box-shadow: 0 4px 6px rgba(49, 130, 206, 0.6); }
+      .direction-left { box-shadow: -4px 0 6px rgba(49, 130, 206, 0.6); }
+      .direction-right { box-shadow: 4px 0 6px rgba(49, 130, 206, 0.6); }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="bg-[#10101e]/95 backdrop-blur border-t border-[#353b5a]/50 pb-5 pt-5 px-2 md:px-16 lg:px-24 w-full">
@@ -544,16 +654,36 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 ref={joystickRef}
                 className="w-[58px] h-[58px] rounded-full border-2 border-[#353b5a]/90 bg-[#232538] flex items-center justify-center shadow-inner"
                 style={{
-                  boxShadow: 'inset 0 2px 10px rgba(0, 0, 0, 0.6)'
+                  boxShadow: 'inset 0 2px 10px rgba(0, 0, 0, 0.6), 0 0 5px rgba(76, 136, 239, 0.3)',
+                  cursor: 'pointer'
                 }}
               >
                 {/* Xbox-like joystick inner dot */}
                 <div 
                   ref={joystickKnobRef}
-                  className="w-[26px] h-[26px] rounded-full bg-[#353b5a]/80"
+                  className="w-[26px] h-[26px] rounded-full bg-[#353b5a]/80 transition-all duration-150 hover:bg-[#4c88ef]/40"
                   onMouseDown={handleMouseDown}
                   onTouchStart={handleTouchStart}
                 />
+                
+                {/* Add mobile-friendly directional buttons */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/4 opacity-50 hover:opacity-100 cursor-pointer transition-all duration-200 hover:scale-110"
+                     onClick={() => {
+                       handleJoystickDown('up');
+                       smoothScroll(-scrollDistance);
+                       setTimeout(handleJoystickUp, 200);
+                     }}>
+                  <div className="w-4 h-4 border-t-2 border-l-2 border-[#4c88ef] transform -rotate-45"></div>
+                </div>
+                
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/4 opacity-50 hover:opacity-100 cursor-pointer transition-all duration-200 hover:scale-110"
+                     onClick={() => {
+                       handleJoystickDown('down');
+                       smoothScroll(scrollDistance);
+                       setTimeout(handleJoystickUp, 200);
+                     }}>
+                  <div className="w-4 h-4 border-b-2 border-r-2 border-[#4c88ef] transform -rotate-45"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -668,34 +798,34 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               <div className="relative w-[120px] h-[120px]">
                 {/* Top button (Heart/Like) */}
                 <div 
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-[0_0_10px_rgba(239,68,68,0.5)]" 
                   onClick={handleLike}
                 >
-                  <Heart size={18} className="text-red-500" />
+                  <Heart size={18} className="text-red-500 transition-transform duration-200 hover:scale-110" />
                 </div>
                 
                 {/* Left button (Message/Comment) */}
                 <div 
-                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
                   onClick={handleComment}
                 >
-                  <MessageCircle size={18} className="text-blue-500" />
+                  <MessageCircle size={18} className="text-blue-500 transition-transform duration-200 hover:scale-110" />
                 </div>
                 
                 {/* Right button (Trophy) */}
                 <div 
-                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-[0_0_10px_rgba(234,179,8,0.5)]" 
                   onClick={handleTrophy}
                 >
-                  <Trophy size={18} className="text-yellow-500" />
+                  <Trophy size={18} className="text-yellow-500 transition-transform duration-200 hover:scale-110" />
                 </div>
                 
                 {/* Bottom button (UserPlus/Follow) */}
                 <div 
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer" 
+                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[38px] h-[38px] rounded-full bg-[#232538] border border-[#353b5a]/80 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-[0_0_10px_rgba(34,197,94,0.5)]" 
                   onClick={handleFollow}
                 >
-                  <UserPlus size={18} className="text-green-500" />
+                  <UserPlus size={18} className="text-green-500 transition-transform duration-200 hover:scale-110" />
                 </div>
               </div>
             </div>
