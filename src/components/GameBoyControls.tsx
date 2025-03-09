@@ -117,96 +117,110 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     requestAnimationFrame(animateScroll);
   };
 
+  // Add animation keyframes
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes pulse-glow {
+        0% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
+        50% { box-shadow: 0 0 25px rgba(147, 51, 234, 0.8); }
+        100% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
+      }
+      
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0px); }
+      }
+      
+      .joystick-active {
+        transition: all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+      
+      .clipt-button-hover:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(147, 51, 234, 0.9);
+      }
+      
+      .clipt-button-active:active {
+        transform: scale(0.95);
+        box-shadow: 0 0 10px rgba(102, 47, 161, 0.5);
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Joystick smooth movement
   const handleJoystickMove = (x: number, y: number) => {
-    const joystick = joystickRef.current;
-    const knob = joystickKnobRef.current;
-    if (!joystick || !knob) return;
+    if (!joystickRef.current || !joystickKnobRef.current) return;
     
-    const joystickRect = joystick.getBoundingClientRect();
-    const knobRect = knob.getBoundingClientRect();
-    
-    // Calculate joystick center
+    const joystickRect = joystickRef.current.getBoundingClientRect();
     const centerX = joystickRect.width / 2;
     const centerY = joystickRect.height / 2;
     
     // Calculate distance from center
-    const dx = x - centerX;
-    const dy = y - centerY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const deltaX = x - centerX;
+    const deltaY = y - centerY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     
-    // Max distance the knob can travel
-    const maxDistance = joystickRect.width / 2 - knobRect.width / 2;
+    // Max distance the joystick knob can move (radius of the base minus radius of the knob)
+    const maxDistance = (joystickRect.width / 2) - (joystickKnobRef.current.offsetWidth / 2) - 2;
     
-    // Normalize coordinates if outside the max distance
-    let newX = dx;
-    let newY = dy;
+    // Normalize distance if it exceeds the max
+    let normDeltaX = deltaX;
+    let normDeltaY = deltaY;
     
     if (distance > maxDistance) {
-      newX = (dx / distance) * maxDistance;
-      newY = (dy / distance) * maxDistance;
+      const scale = maxDistance / distance;
+      normDeltaX = deltaX * scale;
+      normDeltaY = deltaY * scale;
     }
     
-    // Apply the position to the knob with smoother transition
-    knob.style.transition = distance > 5 ? 'transform 0.1s ease-out' : '';
-    knob.style.transform = `translate(${newX}px, ${newY}px)`;
+    // Apply smooth spring effect
+    joystickKnobRef.current.style.transition = 'transform 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    joystickKnobRef.current.style.transform = `translate(${normDeltaX}px, ${normDeltaY}px)`;
     
-    // Determine direction
-    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-    let direction: 'up' | 'down' | 'left' | 'right' | null = null;
-    
-    // Only register direction if joystick is moved significantly
-    // Lower threshold to make it more responsive
-    if (distance > maxDistance * 0.35) {
-      if (angle > -45 && angle <= 45) {
-        direction = 'right';
-      } else if (angle > 45 && angle <= 135) {
-        direction = 'down';
-      } else if (angle > 135 || angle <= -135) {
-        direction = 'left';
-      } else {
-        direction = 'up';
+    // Determine joystick direction for UI feedback
+    if (Math.abs(normDeltaX) > Math.abs(normDeltaY)) {
+      if (normDeltaX > 10) {
+        joystickRef.current.classList.add('direction-right');
+        joystickRef.current.classList.remove('direction-left', 'direction-up', 'direction-down');
+        if (normDeltaX > maxDistance * 0.6) handleJoystickAction('right');
+      } else if (normDeltaX < -10) {
+        joystickRef.current.classList.add('direction-left');
+        joystickRef.current.classList.remove('direction-right', 'direction-up', 'direction-down');
+        if (normDeltaX < -maxDistance * 0.6) handleJoystickAction('left');
       }
-      
-      // Add visual feedback based on direction
-      knob.className = `w-[30px] h-[30px] rounded-full bg-[#2A2A40] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 direction-${direction}`;
     } else {
-      knob.className = 'w-[30px] h-[30px] rounded-full bg-[#2A2A40] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
-    }
-    
-    // Only update if direction changed or we've waited long enough since last scroll
-    const now = Date.now();
-    if (direction !== joystickDirection || (direction && (direction === 'up' || direction === 'down') && now - lastScrollTime.current > 150)) {
-      setJoystickDirection(direction);
-      
-      // Scroll based on direction - make up/down more responsive
-      if (direction === 'up') {
-        smoothScroll(-scrollDistance);
-        lastScrollTime.current = now;
-      } else if (direction === 'down') {
-        smoothScroll(scrollDistance);
-        lastScrollTime.current = now;
+      if (normDeltaY > 10) {
+        joystickRef.current.classList.add('direction-down');
+        joystickRef.current.classList.remove('direction-up', 'direction-left', 'direction-right');
+        if (normDeltaY > maxDistance * 0.6) handleJoystickAction('down');
+      } else if (normDeltaY < -10) {
+        joystickRef.current.classList.add('direction-up');
+        joystickRef.current.classList.remove('direction-down', 'direction-left', 'direction-right');
+        if (normDeltaY < -maxDistance * 0.6) handleJoystickAction('up');
       }
     }
   };
 
+  // Joystick release with smooth spring back animation
   const handleJoystickRelease = () => {
-    const knob = joystickKnobRef.current;
-    if (knob) {
-      // Add transition for smooth return to center
-      knob.style.transition = 'transform 0.2s ease-out';
-      knob.style.transform = 'translate(0, 0)';
-      
-      // Remove transition after animation completes
-      setTimeout(() => {
-        if (knob) knob.style.transition = '';
-      }, 200);
-    }
+    if (!joystickRef.current || !joystickKnobRef.current) return;
     
     setJoystickActive(false);
     setJoystickDirection(null);
+    
+    joystickKnobRef.current.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    joystickKnobRef.current.style.transform = 'translate(0, 0)';
+    
+    joystickRef.current.classList.remove('direction-up', 'direction-down', 'direction-left', 'direction-right');
   };
 
-  // Mouse/touch event handlers for joystick
   const handleMouseDown = (e: React.MouseEvent) => {
     const joystick = joystickRef.current;
     if (!joystick) return;
@@ -1170,33 +1184,53 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           <div className="flex justify-center">
             <div 
               ref={joystickRef}
-              className="w-[50px] h-[50px] rounded-full bg-[#1E1E30] border border-[#2E2E40]/50 touch-none relative"
+              className="w-[55px] h-[55px] rounded-full bg-[#1E1E30] border border-[#2E2E40]/50 touch-none relative shadow-inner overflow-hidden"
               onMouseDown={handleMouseDown}
               onTouchStart={handleTouchStart}
               onMouseUp={() => handleJoystickRelease()}
               onTouchEnd={() => handleJoystickRelease()}
             >
+              {/* Subtle joystick guides */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-[1px] h-full bg-[#3A3A50]/20"></div>
+                <div className="h-[1px] w-full bg-[#3A3A50]/20"></div>
+              </div>
+              
+              {/* Joystick handle with improved styling */}
               <div 
                 ref={joystickKnobRef} 
-                className="w-[30px] h-[30px] rounded-full bg-[#2A2A40] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              ></div>
+                className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#353b5a] to-[#252a40] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border border-[#4c4f64]/50 shadow-md z-10 joystick-active"
+              >
+                <div className="absolute inset-2 rounded-full bg-[#20233A]/40"></div>
+              </div>
             </div>
           </div>
           
           {/* Center - CLIPT button and controls */}
           <div className="flex flex-col items-center justify-center space-y-4">
-            {/* Main CLIPT button - matching the exact image */}
+            {/* Main CLIPT button with enhanced effects */}
             <button 
               onClick={handleCliptButtonClick}
-              className="relative w-[60px] h-[60px] rounded-full flex items-center justify-center transform hover:scale-105 transition-all duration-300 active:scale-95"
+              className="relative w-[65px] h-[65px] rounded-full flex items-center justify-center clipt-button-hover clipt-button-active transform transition-all duration-300"
               style={{
-                background: '#662FA1',
-                boxShadow: '0 0 20px rgba(102, 47, 161, 0.8)'
+                background: 'linear-gradient(135deg, #7A3BC0, #561D99)',
+                boxShadow: '0 0 20px rgba(122, 59, 192, 0.7)',
+                animation: 'pulse-glow 3s infinite, float 6s ease-in-out infinite'
               }}
             >
+              {/* Inner glow effect */}
+              <div className="absolute inset-1 rounded-full bg-gradient-to-b from-[#8241CF]/30 to-transparent"></div>
+              
+              {/* Subtle ring */}
+              <div className="absolute inset-0 rounded-full border border-[#9A5FE6]/20"></div>
+              
+              {/* Text */}
               <span 
-                className="font-bold text-sm"
-                style={{ color: '#D9C7FF' }}
+                className="font-bold text-base relative z-10"
+                style={{ 
+                  color: '#E9DAFF',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}
               >
                 CLIPT
               </span>
@@ -1206,14 +1240,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <div className="flex space-x-10">
               <button 
                 onClick={handleMenu}
-                className="w-[30px] h-[30px] rounded-full bg-[#20203A] flex items-center justify-center"
+                className="w-[30px] h-[30px] rounded-full bg-[#20203A] flex items-center justify-center hover:bg-[#252545] transition-colors duration-200 shadow-inner"
               >
                 <Menu size={14} className="text-gray-400" />
               </button>
               
               <button 
                 onClick={() => navigate('/upload')}
-                className="w-[30px] h-[30px] rounded-full bg-[#20203A] flex items-center justify-center"
+                className="w-[30px] h-[30px] rounded-full bg-[#20203A] flex items-center justify-center hover:bg-[#252545] transition-colors duration-200 shadow-inner"
               >
                 <Camera size={14} className="text-gray-400" />
               </button>
@@ -1224,7 +1258,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           <div className="relative w-[100px] h-[100px]">
             {/* Like button */}
             <button 
-              className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-red-500/30 flex items-center justify-center"
+              className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-red-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-red-500/60 active:scale-95 transition-all duration-200"
               onClick={handleLikeClick}
             >
               <Heart size={16} className="text-red-500" />
@@ -1232,7 +1266,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             
             {/* Comment button */}
             <button 
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-blue-500/30 flex items-center justify-center"
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-blue-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-blue-500/60 active:scale-95 transition-all duration-200"
               onClick={handleCommentClick}
             >
               <MessageCircle size={16} className="text-blue-400" />
@@ -1240,7 +1274,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             
             {/* Trophy button */}
             <button 
-              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-yellow-500/30 flex items-center justify-center"
+              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-yellow-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-yellow-500/60 active:scale-95 transition-all duration-200"
               onClick={handleTrophyClick}
             >
               <Trophy size={16} className="text-yellow-400" />
@@ -1248,7 +1282,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             
             {/* Follow button */}
             <button 
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-green-500/30 flex items-center justify-center"
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-green-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-green-500/60 active:scale-95 transition-all duration-200"
               onClick={handleFollowClick}
             >
               <UserPlus size={16} className="text-green-500" />
