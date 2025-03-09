@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { cn } from "@/lib/utils";
-import GameCategories from "@/components/GameCategories";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Camera } from "lucide-react";
@@ -14,12 +13,34 @@ const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Modified to always return empty array
+  // Fetch posts with post_type 'home'
   const { data: posts, isLoading, error } = useQuery({
     queryKey: ['posts', 'home'],
     queryFn: async () => {
-      // Force return empty array - no posts
-      return [] as Post[];
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          content,
+          created_at,
+          user_id,
+          image_url,
+          video_url,
+          game_id,
+          post_type,
+          profiles(id, username, display_name, avatar_url)
+        `)
+        .eq('post_type', 'home')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) {
+        console.error('Error fetching home posts:', error);
+        throw error;
+      }
+      
+      return data as Post[];
     },
   });
 
