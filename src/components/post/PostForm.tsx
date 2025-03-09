@@ -640,25 +640,30 @@ export const PostForm = () => {
           </div>
         </div>
       </div>
-      <div className="sticky bottom-0 bg-gray-950 py-4 mt-auto border-t border-gray-800">
-        <div className="flex gap-4 px-2">
+      <div className="sticky bottom-0 bg-gray-950 py-4 mt-auto border-t border-gray-800 backdrop-blur-sm">
+        <div className="flex flex-col sm:flex-row gap-4 px-2">
           <Button
             type="button"
             variant="default"
             onClick={() => handleCreatePost('clipts')}
             disabled={loading}
-            className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transform transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+            className="flex-1 relative overflow-hidden group border-2 border-indigo-500 bg-gradient-to-r from-violet-600/80 to-indigo-700/80 text-white font-gaming py-3 px-6 rounded-md shadow-[0_0_15px_rgba(99,102,241,0.5)] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(124,58,237,0.6)] before:absolute before:inset-0 before:bg-gradient-to-r before:from-indigo-500/20 before:to-purple-600/20 before:opacity-0 before:transition-opacity hover:before:opacity-100"
           >
             {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Clipt...
-              </>
+              <div className="flex items-center justify-center">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <span className="text-base">Creating Clipt...</span>
+              </div>
             ) : (
-              <>
-                <Film className="mr-2 h-4 w-4" />
-                Post to Clipts
-              </>
+              <div className="flex items-center justify-center">
+                <div className="relative mr-3 w-6 h-6 bg-indigo-900/50 rounded-md flex items-center justify-center border border-indigo-400/30 shadow-inner">
+                  <Film className="h-4 w-4 text-indigo-200 group-hover:text-white transition-colors duration-300" />
+                </div>
+                <span className="text-base tracking-wide group-hover:tracking-wider transition-all duration-300 relative">
+                  POST TO CLIPTS
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-transparent via-purple-300 to-transparent group-hover:w-full transition-all duration-300"></span>
+                </span>
+              </div>
             )}
           </Button>
           <Button
@@ -666,18 +671,23 @@ export const PostForm = () => {
             variant="secondary"
             onClick={() => handleCreatePost('home')}
             disabled={loading}
-            className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-2 px-4 rounded-lg shadow-lg transform transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+            className="flex-1 relative overflow-hidden group border-2 border-cyan-500 bg-gradient-to-r from-blue-600/80 to-cyan-700/80 text-white font-gaming py-3 px-6 rounded-md shadow-[0_0_15px_rgba(6,182,212,0.5)] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(14,165,233,0.6)] before:absolute before:inset-0 before:bg-gradient-to-r before:from-cyan-500/20 before:to-blue-600/20 before:opacity-0 before:transition-opacity hover:before:opacity-100"
           >
             {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Post...
-              </>
+              <div className="flex items-center justify-center">
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <span className="text-base">Creating Post...</span>
+              </div>
             ) : (
-              <>
-                <Home className="mr-2 h-4 w-4" />
-                Post to Home
-              </>
+              <div className="flex items-center justify-center">
+                <div className="relative mr-3 w-6 h-6 bg-blue-900/50 rounded-md flex items-center justify-center border border-blue-400/30 shadow-inner">
+                  <Home className="h-4 w-4 text-blue-200 group-hover:text-white transition-colors duration-300" />
+                </div>
+                <span className="text-base tracking-wide group-hover:tracking-wider transition-all duration-300 relative">
+                  POST TO HOME
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-300 to-transparent group-hover:w-full transition-all duration-300"></span>
+                </span>
+              </div>
             )}
           </Button>
         </div>
