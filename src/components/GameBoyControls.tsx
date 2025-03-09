@@ -42,49 +42,53 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   useEffect(() => {
     // Pulse animation
     const pulseInterval = setInterval(() => {
-      setPulsating(prev => !prev);
-    }, 3000);
-    
-    // Glow effect
-    const glowInterval = setInterval(() => {
-      setGlowing(prev => !prev);
+      setPulsating(true);
+      
+      // Generate particles when pulsing
+      createParticles();
+      
+      setTimeout(() => setPulsating(false), 1500);
     }, 5000);
     
-    // Generate particles
-    const particleInterval = setInterval(() => {
-      if (Math.random() > 0.7) {
-        generateParticles(1);
-      }
-    }, 500);
+    // Glow animation with smoother transition
+    const glowInterval = setInterval(() => {
+      setGlowing(prev => !prev);
+    }, 2000);
+    
+    // Button hover animation toggle
+    const buttonAnimationInterval = setInterval(() => {
+      setButtonsAnimated(prev => !prev);
+    }, 8000);
     
     return () => {
       clearInterval(pulseInterval);
       clearInterval(glowInterval);
-      clearInterval(particleInterval);
+      clearInterval(buttonAnimationInterval);
     };
   }, []);
   
-  // Generate particles function
-  const generateParticles = (count: number) => {
-    const newParticles = [...particles];
+  // Particle effect system
+  const createParticles = () => {
+    const newParticles = [];
+    const colors = ['#6c4dc4', '#8654dc', '#4f46e5', '#8b5cf6', '#a78bfa'];
     
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < 12; i++) {
       newParticles.push({
         id: Math.random(),
-        x: 40 + Math.random() * 20,
-        y: 40 + Math.random() * 20,
-        opacity: 0.5 + Math.random() * 0.5,
-        size: 2 + Math.random() * 3,
-        color: `rgb(${Math.floor(100 + Math.random() * 100)}, ${Math.floor(50 + Math.random() * 100)}, ${Math.floor(200 + Math.random() * 55)})`
+        x: 50 + Math.random() * 10 - 5, // center x with slight variation
+        y: 50 + Math.random() * 10 - 5, // center y with slight variation
+        opacity: 0.8 + Math.random() * 0.2,
+        size: 3 + Math.random() * 5,
+        color: colors[Math.floor(Math.random() * colors.length)]
       });
     }
     
-    // Keep max 20 particles
-    if (newParticles.length > 20) {
-      newParticles.splice(0, newParticles.length - 20);
-    }
-    
     setParticles(newParticles);
+    
+    // Animate particles fading out
+    setTimeout(() => {
+      setParticles([]);
+    }, 2000);
   };
 
   // For smooth scrolling
@@ -164,9 +168,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       // Add visual feedback based on direction
-      knob.className = `w-[26px] h-[26px] rounded-full bg-[#353b5a]/80 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 direction-${direction}`;
+      knob.className = `w-[30px] h-[30px] rounded-full bg-[#2A2A40] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 direction-${direction}`;
     } else {
-      knob.className = 'w-[26px] h-[26px] rounded-full bg-[#353b5a]/80 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
+      knob.className = 'w-[30px] h-[30px] rounded-full bg-[#2A2A40] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2';
     }
     
     // Only update if direction changed or we've waited long enough since last scroll
@@ -725,7 +729,55 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
-  // Handler for like button with improved triggering of post actions
+  // Add CSS for button press animation
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .button-press {
+        transform: scale(0.9) !important;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
+        filter: brightness(1.2) !important;
+      }
+      
+      .pulse-highlight {
+        animation: pulse-border 1s ease-out;
+      }
+      
+      .currently-selected-post {
+        position: relative;
+      }
+      
+      .currently-selected-post::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        border: 2px solid rgba(99, 102, 241, 0.5);
+        border-radius: 8px;
+        pointer-events: none;
+        z-index: 1;
+      }
+      
+      @keyframes pulse-border {
+        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  const handleCliptButtonClick = () => {
+    // Navigate to the Clipts page
+    navigate('/clipts');
+  };
+
   const handleLikeClick = async () => {
     if (!currentPostId) {
       toast.error('No post selected');
@@ -1104,282 +1156,192 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, []);
 
-  // Add CSS for button press animation
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .button-press {
-        transform: scale(0.9) !important;
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
-        filter: brightness(1.2) !important;
-      }
-      
-      .pulse-highlight {
-        animation: pulse-border 1s ease-out;
-      }
-      
-      .currently-selected-post {
-        position: relative;
-      }
-      
-      .currently-selected-post::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        border: 2px solid rgba(99, 102, 241, 0.5);
-        border-radius: 8px;
-        pointer-events: none;
-        z-index: 1;
-      }
-      
-      @keyframes pulse-border {
-        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
-        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  const handleCliptButtonClick = () => {
-    // Navigate to the Clipts page
-    navigate('/clipts');
-  };
-
-  // Add custom CSS for particle animation
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes float-away {
-        0% {
-          transform: translate(0, 0);
-          opacity: 1;
-        }
-        100% {
-          transform: translate(var(--direction-x, 0), var(--direction-y, -50px));
-          opacity: 0;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-50 py-2 px-4 bg-[#1a1c2a]/95 backdrop-blur-lg border-t border-[#2e3149] shadow-xl w-full flex items-center justify-between ${menuOpen ? 'menu-open' : ''}`}>
-      {/* Current post display */}
-      {currentPostId && (
-        <div className="absolute top-0 left-0 right-0 transform -translate-y-full bg-[#1a1c2a]/90 border-t border-[#2e3149] px-4 py-1 text-xs text-gray-400 truncate text-center">
-          Active: Post #{currentPostId.substring(0, 8)}-{currentPostId.substring(9, 13)}-{currentPostId.substring(14, 18)}-{currentPostId.substring(19, 23)}-{currentPostId.substring(24, 36)}
-        </div>
-      )}
-
-      {/* Left section with joystick */}
-      <div className="relative">
-        <div 
-          ref={joystickRef}
-          className="w-[70px] h-[70px] rounded-full bg-[#252736] border border-[#383c4b] touch-none relative"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            setJoystickActive(true);
-            const rect = e.currentTarget.getBoundingClientRect();
-            handleJoystickMove(e.clientX - rect.left, e.clientY - rect.top);
-          }}
-          onMouseMove={(e) => {
-            if (!joystickActive) return;
-            e.preventDefault();
-            const rect = e.currentTarget.getBoundingClientRect();
-            handleJoystickMove(e.clientX - rect.left, e.clientY - rect.top);
-          }}
-          onMouseUp={() => handleJoystickRelease()}
-          onMouseLeave={() => handleJoystickRelease()}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            setJoystickActive(true);
-            const rect = e.currentTarget.getBoundingClientRect();
-            const touch = e.touches[0];
-            handleJoystickMove(touch.clientX - rect.left, touch.clientY - rect.top);
-          }}
-          onTouchMove={(e) => {
-            if (!joystickActive) return;
-            e.preventDefault();
-            const rect = e.currentTarget.getBoundingClientRect();
-            const touch = e.touches[0];
-            handleJoystickMove(touch.clientX - rect.left, touch.clientY - rect.top);
-          }}
-          onTouchEnd={() => handleJoystickRelease()}
-        >
-          {/* Joystick base lines */}
-          <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-[#383c4b]/50"></div>
-          <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-[#383c4b]/50"></div>
-          
-          {/* Joystick handle/knob */}
-          <div 
-            ref={joystickKnobRef} 
-            className="w-[26px] h-[26px] rounded-full bg-[#353b5a]/80 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border border-[#4c4f64]/50"
-          ></div>
-        </div>
-      </div>
-
-      {/* Center CLIPT button */}
-      <div className="relative">
-        <button 
-          onClick={handleCliptButtonClick}
-          className={`relative flex items-center justify-center w-16 h-16 rounded-full bg-purple-500/90 
-            ${pulsating ? 'animate-pulse' : ''} 
-            transition-all duration-300 hover:scale-105 active:scale-95 z-10 
-            ${glowing ? 'shadow-[0_0_15px_rgba(139,92,246,0.8)]' : 'shadow-[0_0_5px_rgba(139,92,246,0.4)]'}`}
-        >
-          <span className="text-white text-sm font-bold">CLIPT</span>
-          
-          {/* Particles for CLIPT button effect */}
-          {particles.map(particle => (
-            <div
-              key={particle.id}
-              className="absolute pointer-events-none"
-              style={{
-                left: `${particle.x}%`,
-                top: `${particle.y}%`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                backgroundColor: particle.color,
-                borderRadius: '50%',
-                opacity: particle.opacity,
-                animation: 'float-away 2s linear forwards',
+    <div className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="bg-[#10101e]/95 backdrop-blur-lg pb-3 pt-3 px-2 md:px-16 lg:px-24 w-full">
+        {currentPostId && (
+          <div className="absolute top-0 left-0 right-0 transform -translate-y-full bg-[#10101e]/90 px-2 py-1 text-[10px] text-gray-400 truncate text-center">
+            Active: Post #{currentPostId.substring(0, 8)}
+          </div>
+        )}
+        
+        <div className="grid grid-cols-3 items-center">
+          {/* Left joystick */}
+          <div className="flex justify-start pl-4">
+            <div 
+              ref={joystickRef}
+              className="w-[50px] h-[50px] rounded-full bg-[#1E1E30] border border-[#2E2E40]/50 touch-none relative"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setJoystickActive(true);
+                const rect = e.currentTarget.getBoundingClientRect();
+                handleJoystickMove(e.clientX - rect.left, e.clientY - rect.top);
               }}
-            />
-          ))}
-        </button>
-      </div>
-
-      {/* Right controls - Diamond pattern buttons */}
-      <div className="relative w-[90px] h-[90px]">
-        {/* Top button - Like */}
-        <button 
-          className={`absolute top-0 left-1/2 transform -translate-x-1/2 w-[35px] h-[35px] rounded-full bg-[#252736] border border-red-500/70 flex items-center justify-center transition-all ${
-            buttonsAnimated ? 'animate-pulse border-red-400' : ''
-          } active:scale-90 hover:shadow-[0_0_10px_rgba(239,68,68,0.5)]`}
-          onClick={handleLikeClick}
-        >
-          <Heart size={17} className="text-red-500" />
-        </button>
-        
-        {/* Right button - Comment */}
-        <button 
-          className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-[35px] h-[35px] rounded-full bg-[#252736] border border-blue-500/70 flex items-center justify-center transition-all ${
-            buttonsAnimated ? 'animate-pulse border-blue-400 delay-75' : ''
-          } active:scale-90 hover:shadow-[0_0_10px_rgba(59,130,246,0.5)]`}
-          onClick={handleCommentClick}
-        >
-          <MessageCircle size={17} className="text-blue-500" />
-        </button>
-        
-        {/* Bottom button - Trophy */}
-        <button 
-          className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[35px] h-[35px] rounded-full bg-[#252736] border border-yellow-500/70 flex items-center justify-center transition-all ${
-            buttonsAnimated ? 'animate-pulse border-yellow-400 delay-150' : ''
-          } active:scale-90 hover:shadow-[0_0_10px_rgba(234,179,8,0.5)]`}
-          onClick={handleTrophyClick}
-        >
-          <Trophy size={17} className="text-yellow-500" />
-        </button>
-        
-        {/* Left button - Follow */}
-        <button 
-          className={`absolute left-0 top-1/2 transform -translate-y-1/2 w-[35px] h-[35px] rounded-full bg-[#252736] border border-green-500/70 flex items-center justify-center transition-all ${
-            buttonsAnimated ? 'animate-pulse border-green-400 delay-200' : ''
-          } active:scale-90 hover:shadow-[0_0_10px_rgba(34,197,94,0.5)]`}
-          onClick={handleFollowClick}
-        >
-          <UserPlus size={17} className="text-green-500" />
-        </button>
+              onMouseMove={(e) => {
+                if (!joystickActive) return;
+                e.preventDefault();
+                const rect = e.currentTarget.getBoundingClientRect();
+                handleJoystickMove(e.clientX - rect.left, e.clientY - rect.top);
+              }}
+              onMouseUp={() => handleJoystickRelease()}
+              onMouseLeave={() => handleJoystickRelease()}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                setJoystickActive(true);
+                const rect = e.currentTarget.getBoundingClientRect();
+                const touch = e.touches[0];
+                handleJoystickMove(touch.clientX - rect.left, touch.clientY - rect.top);
+              }}
+              onTouchMove={(e) => {
+                if (!joystickActive) return;
+                e.preventDefault();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const touch = e.touches[0];
+                handleJoystickMove(touch.clientX - rect.left, touch.clientY - rect.top);
+              }}
+              onTouchEnd={() => handleJoystickRelease()}
+            >
+              <div 
+                ref={joystickKnobRef} 
+                className="w-[30px] h-[30px] rounded-full bg-[#2A2A40] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+              ></div>
+            </div>
+          </div>
+          
+          {/* Center - CLIPT button and controls */}
+          <div className="flex flex-col items-center justify-center space-y-3">
+            {/* Main CLIPT button - circular and purple */}
+            <button 
+              onClick={handleCliptButtonClick}
+              className="w-[60px] h-[60px] rounded-full bg-purple-700 shadow-[0_0_20px_rgba(147,51,234,0.7)] flex items-center justify-center transform hover:scale-105 transition-all duration-300 active:scale-95 mb-1"
+            >
+              <span className="font-bold text-sm text-white">CLIPT</span>
+            </button>
+            
+            {/* Sub controls row */}
+            <div className="flex space-x-6">
+              <button 
+                onClick={handleMenu}
+                className="w-[30px] h-[30px] rounded-full bg-[#20203A] flex items-center justify-center"
+              >
+                <Menu size={14} className="text-gray-400" />
+              </button>
+              
+              <button 
+                onClick={() => navigate('/upload')}
+                className="w-[30px] h-[30px] rounded-full bg-[#20203A] flex items-center justify-center"
+              >
+                <Camera size={14} className="text-gray-400" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Right - Action buttons in diamond pattern */}
+          <div className="flex justify-end pr-4">
+            <div className="relative w-[90px] h-[90px]">
+              {/* Like button */}
+              <button 
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[32px] h-[32px] rounded-full bg-[#20203A] flex items-center justify-center active:scale-90 transition-transform"
+                onClick={handleLikeClick}
+              >
+                <Heart size={16} className="text-red-500" />
+              </button>
+              
+              {/* Comment button */}
+              <button 
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 w-[32px] h-[32px] rounded-full bg-[#20203A] flex items-center justify-center active:scale-90 transition-transform"
+                onClick={handleCommentClick}
+              >
+                <MessageCircle size={16} className="text-blue-400" />
+              </button>
+              
+              {/* Trophy button */}
+              <button 
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[32px] h-[32px] rounded-full bg-[#20203A] flex items-center justify-center active:scale-90 transition-transform"
+                onClick={handleTrophyClick}
+              >
+                <Trophy size={16} className="text-yellow-400" />
+              </button>
+              
+              {/* Follow button */}
+              <button 
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[32px] h-[32px] rounded-full bg-[#20203A] flex items-center justify-center active:scale-90 transition-transform"
+                onClick={handleFollowClick}
+              >
+                <UserPlus size={16} className="text-green-500" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       
-      {/* When the menu is open */}
+      {/* Menu dialog */}
       {menuOpen && (
-        <div className="absolute inset-0 bg-[#1a1c2a]/95 backdrop-blur-lg flex flex-col items-center justify-center z-20">
-          <button 
-            className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            onClick={() => setMenuOpen(false)}
-          >
-            <X size={24} />
-          </button>
-          
-          <div className="flex flex-col gap-4 w-full max-w-xs">
-            <button 
-              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
-              onClick={() => {
-                navigate('/');
-                setMenuOpen(false);
-              }}
-            >
-              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-600">
-                <Home size={18} className="text-white" />
-              </span>
-              <span>Home</span>
-            </button>
-            
-            <button 
-              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
-              onClick={() => {
-                navigate('/discover');
-                setMenuOpen(false);
-              }}
-            >
-              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-violet-600">
-                <Search size={18} className="text-white" />
-              </span>
-              <span>Discover</span>
-            </button>
-            
-            <button 
-              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
-              onClick={() => {
-                navigate('/notifications');
-                setMenuOpen(false);
-              }}
-            >
-              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-red-600">
-                <Bell size={18} className="text-white" />
-              </span>
-              <span>Notifications</span>
-            </button>
-            
-            <button 
-              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
-              onClick={() => {
-                navigate('/upload');
-                setMenuOpen(false);
-              }}
-            >
-              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-green-600">
-                <Upload size={18} className="text-white" />
-              </span>
-              <span>Upload</span>
-            </button>
-            
-            <button 
-              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
-              onClick={() => {
-                navigate('/profile');
-                setMenuOpen(false);
-              }}
-            >
-              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600">
-                <User size={18} className="text-white" />
-              </span>
-              <span>Profile</span>
-            </button>
+        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm">
+          <div className="absolute bottom-20 left-0 right-0 bg-[#161925] border-t border-blue-500/30">
+            <div className="max-w-md mx-auto p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-white text-lg font-semibold">Menu</h3>
+                <button 
+                  className="text-gray-400 hover:text-white" 
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  onClick={() => {
+                    navigate('/profile');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <User size={18} className="text-blue-400" />
+                  <span className="text-white">Profile</span>
+                </button>
+                <button 
+                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  onClick={() => {
+                    navigate('/upload');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Camera size={18} className="text-red-400" />
+                  <span className="text-white">Upload</span>
+                </button>
+                <button 
+                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  onClick={() => {
+                    navigate('/discover');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Search size={18} className="text-green-400" />
+                  <span className="text-white">Discover</span>
+                </button>
+                <button 
+                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  onClick={() => {
+                    navigate('/notifications');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Bell size={18} className="text-purple-400" />
+                  <span className="text-white">Notifications</span>
+                </button>
+                <button 
+                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  onClick={() => {
+                    navigate('/');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Home size={18} className="text-yellow-400" />
+                  <span className="text-white">Home</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
