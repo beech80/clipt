@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
-import { Heart, MessageSquare, Trophy, Trash2, MoreVertical } from "lucide-react";
+import { Heart, MessageSquare, Trophy, Trash2, MoreVertical, UserCheck, UserPlus } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,9 +33,11 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
-  const [showComments, setShowComments] = useState(false);
   const queryClient = useQueryClient();
 
   // Ensure we have a valid string post ID
@@ -51,8 +53,31 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     setIsLoading(false);
   }, [postId, post]);
 
+  // Fetch and update comments count
+  const fetchCommentsCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('comments')
+        .select('*', { count: 'exact', head: true})
+        .eq('post_id', postId);
+        
+      if (error) {
+        console.error('Error fetching comments count:', error);
+        return;
+      }
+      
+      setCommentsCount(count || 0);
+    } catch (error) {
+      console.error('Error in fetchCommentsCount:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCommentsCount();
+  }, [postId]);
+
   // Fetch comment count
-  const { data: commentsCount = 0 } = useQuery({
+  const { data: commentsCountQuery = 0 } = useQuery({
     queryKey: ['comments-count', postId],
     queryFn: async () => {
       if (!postId) return 0;
@@ -186,7 +211,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       if (error) throw error;
       
       // Update local state
-      setCommentCount(commentsCount + 1);
+      setCommentsCount(commentsCount + 1);
       setCommentText('');
       setIsDialogOpen(false);
       toast.success('Comment added');
@@ -287,15 +312,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         
         // Send notification to post owner
         if (post.user_id !== user.id) {
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: post.user_id,
-              actor_id: user.id,
-              type: 'trophy',
-              post_id: postId,
-              read: false
-            });
+          await createTrophyNotification(post.user_id);
         }
       }
 
@@ -306,6 +323,103 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       toast.error('Failed to update trophy status');
     }
   };
+
+  const createTrophyNotification = async (postOwnerId: string) => {
+    try {
+      if (!user) return;
+      
+      // Don't notify for your own actions
+      if (user.id === postOwnerId) return;
+      
+      await supabase
+        .from('notifications')
+        .insert({
+          type: 'like', // Changed to 'like' as it's one of the allowed types
+          user_id: postOwnerId,
+          actor_id: user.id,
+          resource_id: postId,
+          resource_type: 'post',
+          content: 'gave a trophy to your post',
+          created_at: new Date().toISOString(),
+          read: false
+        });
+    } catch (error) {
+      console.error('Error creating trophy notification:', error);
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!user) {
+      toast.error('Please sign in to follow');
+      return;
+    }
+
+    try {
+      const { data: existingFollow, error: checkError } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('follower_id', user.id)
+        .eq('following_id', post.user_id)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingFollow) {
+        // Unfollow the user
+        const { error: removeError } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', post.user_id);
+
+        if (removeError) throw removeError;
+        
+        setIsFollowing(false);
+        toast.success('Unfollowed user');
+      } else {
+        // Follow the user
+        const { error: followError } = await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            following_id: post.user_id,
+            created_at: new Date().toISOString()
+          });
+
+        if (followError) throw followError;
+        
+        setIsFollowing(true);
+        toast.success('Followed user');
+      }
+    } catch (error) {
+      console.error('Error handling follow:', error);
+      toast.error('Failed to update follow status');
+    }
+  };
+
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!user || !post.user_id) return;
+      
+      const { data: existingFollow, error } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('follower_id', user.id)
+        .eq('following_id', post.user_id)
+        .maybeSingle();
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking follow status:', error);
+        return;
+      }
+      
+      setIsFollowing(!!existingFollow);
+    };
+    
+    checkFollowStatus();
+  }, [user, post.user_id]);
 
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
@@ -326,8 +440,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     <article 
       className={`relative w-full gaming-card transition-opacity duration-300 ${
         isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
-      } ${highlight ? 'ring-2 ring-primary' : ''}`}
-      data-post-id={postIdAttr || post.id}
+      } ${highlight ? 'ring-2 ring-primary' : ''} post-interaction`}
+      data-post-id={postId}
     >
       {/* User Header */}
       <div className="flex items-center justify-between p-4 border-b border-gaming-400/20">
@@ -387,32 +501,31 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
 
       {/* Interaction Counts */}
       <div className="flex justify-around py-3 border-t border-gaming-400/20">
-        <div 
-          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+        <button 
+          className="like-button flex items-center text-sm font-medium transition-all duration-200 group"
           onClick={handleLike}
         >
           <Heart 
-            className="h-6 w-6 text-red-500 group-hover:text-red-400 transition-colors group-active:scale-90" 
+            className={`h-6 w-6 ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
             fill={liked ? "currentColor" : "none"}
           />
-          <span className="text-base font-medium text-gaming-100 group-hover:text-red-400 transition-colors">
+          <span className={`text-base font-medium ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'}`}>
             {likesCount}
           </span>
-        </div>
+        </button>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button
-              variant="ghost"
-              className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 p-0 comment-btn"
+            <button 
+              className="comment-button flex items-center text-sm font-medium text-gray-400 hover:text-blue-500 transition-all duration-200 group"
               onClick={handleComment}
             >
               <MessageSquare 
-                className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90"
+                className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90"
               />
-              <span className="text-base font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
+              <span className="text-base font-medium text-gray-400 group-hover:text-blue-300">
                 {commentsCount}
               </span>
-            </Button>
+            </button>
           </DialogTrigger>
           <DialogContent className="bg-[#1D1E2A] border-[#2C2D41] text-white p-4 max-w-md mx-auto">
             <h3 className="text-lg font-bold mb-3">Add Comment</h3>
@@ -443,18 +556,39 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             </div>
           </DialogContent>
         </Dialog>
-        <div 
-          className="flex items-center space-x-2 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+        <button 
+          className="trophy-button flex items-center text-sm font-medium text-gray-400 hover:text-yellow-500 transition-all duration-200 group"
           onClick={handleTrophyClick}
         >
           <Trophy 
-            className="h-6 w-6 text-yellow-500 group-hover:text-yellow-400 transition-colors group-active:scale-90"
+            className={`h-6 w-6 ${post.clip_votes?.[0]?.count ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
             fill={post.clip_votes?.[0]?.count ? "currentColor" : "none"}
           />
-          <span className="text-base font-medium text-gaming-100 group-hover:text-yellow-400 transition-colors">
+          <span className={`text-base font-medium ${post.clip_votes?.[0]?.count ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
             {post.clip_votes?.[0]?.count || 0}
           </span>
-        </div>
+        </button>
+        
+        {/* Adding the follow button with proper controller detection class */}
+        {user && user.id !== post.user_id && (
+          <button 
+            className="follow-button flex items-center text-sm font-medium text-gray-400 hover:text-green-500 transition-all duration-200 group"
+            onClick={handleFollow}
+          >
+            {isFollowing ? (
+              <UserCheck 
+                className="h-6 w-6 text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
+              />
+            ) : (
+              <UserPlus 
+                className="h-6 w-6 text-gray-400 group-hover:text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
+              />
+            )}
+            <span className={`text-base font-medium ${isFollowing ? 'text-green-500' : 'text-gray-400 group-hover:text-green-500'}`}>
+              {isFollowing ? 'Following' : 'Follow'}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Caption */}
