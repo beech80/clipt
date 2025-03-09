@@ -1213,9 +1213,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             {/* Main CLIPT button - circular and purple */}
             <button 
               onClick={handleCliptButtonClick}
-              className="w-[60px] h-[60px] rounded-full bg-purple-700 shadow-[0_0_20px_rgba(147,51,234,0.7)] flex items-center justify-center transform hover:scale-105 transition-all duration-300 active:scale-95 mb-1"
+              className="w-[60px] h-[60px] rounded-full bg-purple-600 shadow-[0_0_15px_rgba(147,51,234,0.7)] flex items-center justify-center transform hover:scale-105 transition-all duration-300 active:scale-95 mb-1"
             >
-              <span className="font-bold text-sm text-white">CLIPT</span>
+              <span className="font-bold text-sm text-white opacity-80">CLIPT</span>
             </button>
             
             {/* Sub controls row */}
