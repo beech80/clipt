@@ -7,7 +7,12 @@ import {
   MessageCircle, 
   Trophy, 
   UserPlus, 
-  X 
+  X, 
+  Home, 
+  Search, 
+  Bell, 
+  Upload, 
+  User 
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -163,9 +168,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       // Add visual feedback based on direction
-      knob.className = `w-[30px] h-[30px] rounded-full bg-[#4a4d5e] border-[1px] border-[#4c4f64] direction-${direction}`;
+      knob.className = `w-[26px] h-[26px] rounded-full bg-[#353b5a]/80 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border border-[#4c4f64]/50 direction-${direction}`;
     } else {
-      knob.className = 'w-[30px] h-[30px] rounded-full bg-[#4a4d5e] border-[1px] border-[#4c4f64]';
+      knob.className = 'w-[26px] h-[26px] rounded-full bg-[#353b5a]/80 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border border-[#4c4f64]/50';
     }
     
     // Only update if direction changed or we've waited long enough since last scroll
@@ -768,9 +773,351 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, []);
 
-  const handleClipt = () => {
+  const handleCliptButtonClick = () => {
     // Navigate to the Clipts page
     navigate('/clipts');
+  };
+
+  const handleLikeClick = async () => {
+    if (!currentPostId) {
+      toast.error('No post selected');
+      return;
+    }
+    
+    console.log('Liking post:', currentPostId);
+    
+    // Find the actual like button on the post and click it to trigger all the necessary logic
+    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
+    if (targetPost) {
+      const likeButton = targetPost.querySelector('.like-button');
+      if (likeButton) {
+        // Visual feedback on controller button
+        const controllerLikeButton = document.querySelector(`.diamond-buttons [data-action="like"]`);
+        if (controllerLikeButton) {
+          controllerLikeButton.classList.add('button-press');
+          setTimeout(() => {
+            controllerLikeButton.classList.remove('button-press');
+          }, 300);
+        }
+        
+        // Actually trigger the like button's click event
+        likeButton.dispatchEvent(new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        }));
+        return;
+      }
+    }
+    
+    // Fallback if direct button interaction doesn't work
+    try {
+      // Check if already liked
+      const { data: currentUser } = await supabase.auth.getUser();
+      const userId = currentUser?.user?.id;
+      
+      if (!userId) {
+        toast.error('You need to be logged in to like posts');
+        return;
+      }
+      
+      const { data: existingLike, error: likeError } = await supabase
+        .from('likes')
+        .select('*')
+        .eq('post_id', currentPostId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (likeError) {
+        console.error('Error checking like status:', likeError);
+      }
+      
+      if (existingLike) {
+        // Unlike
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('post_id', currentPostId)
+          .eq('user_id', userId);
+          
+        toast.success('Removed like from post');
+      } else {
+        // Like
+        await supabase
+          .from('likes')
+          .insert({
+            post_id: currentPostId,
+            user_id: userId,
+            created_at: new Date().toISOString()
+          });
+          
+        toast.success('Liked post');
+      }
+      
+      // Trigger a refresh for the post's like count
+      document.dispatchEvent(new CustomEvent('refresh-post', {
+        detail: { postId: currentPostId }
+      }));
+    } catch (error) {
+      console.error('Error liking post:', error);
+      toast.error('Failed to like post');
+    }
+  };
+
+  const handleCommentClick = async () => {
+    if (!currentPostId) {
+      toast.error('No post selected');
+      return;
+    }
+    
+    console.log('Comment on post:', currentPostId);
+    
+    // Visual feedback on controller button
+    const commentButton = document.querySelector(`.diamond-buttons [data-action="comment"]`);
+    if (commentButton) {
+      commentButton.classList.add('button-press');
+      setTimeout(() => {
+        commentButton.classList.remove('button-press');
+      }, 300);
+    }
+    
+    // Find the actual comment button on the post and click it
+    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
+    if (targetPost) {
+      const postCommentButton = targetPost.querySelector('.comment-button');
+      if (postCommentButton) {
+        postCommentButton.dispatchEvent(new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        }));
+        return;
+      }
+    }
+    
+    // Fallback: use the existing global state to trigger the comment modal
+    setCommentModalOpen(true);
+  };
+
+  const handleTrophyClick = async () => {
+    if (!currentPostId) {
+      toast.error('No post selected');
+      return;
+    }
+    
+    console.log('Trophy for post:', currentPostId);
+    
+    // Visual feedback on controller button
+    const trophyButton = document.querySelector(`.diamond-buttons [data-action="trophy"]`);
+    if (trophyButton) {
+      trophyButton.classList.add('button-press');
+      setTimeout(() => {
+        trophyButton.classList.remove('button-press');
+      }, 300);
+    }
+    
+    // Find the trophy button on the post and click it
+    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
+    if (targetPost) {
+      const postTrophyButton = targetPost.querySelector('.trophy-button');
+      if (postTrophyButton) {
+        postTrophyButton.dispatchEvent(new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        }));
+        return;
+      }
+    }
+    
+    // Fallback if direct button interaction doesn't work
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      const userId = currentUser?.user?.id;
+      
+      if (!userId) {
+        toast.error('You need to be logged in to vote for posts');
+        return;
+      }
+      
+      // Get post owner ID for notification
+      const { data: post } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', currentPostId)
+        .single();
+      
+      if (!post) {
+        toast.error('Post not found');
+        return;
+      }
+      
+      const authorId = post.user_id;
+      
+      // Check if already voted
+      const { data: existingVote } = await supabase
+        .from('post_votes')
+        .select('*')
+        .eq('post_id', currentPostId)
+        .eq('user_id', userId)
+        .single();
+      
+      if (existingVote) {
+        // Remove vote
+        await supabase
+          .from('post_votes')
+          .delete()
+          .eq('post_id', currentPostId)
+          .eq('user_id', userId);
+          
+        toast.success('Removed vote from post');
+      } else {
+        // Add vote
+        await supabase
+          .from('post_votes')
+          .insert({
+            post_id: currentPostId,
+            user_id: userId,
+            created_at: new Date().toISOString()
+          });
+          
+        // Create notification
+        if (authorId !== userId) {
+          await supabase
+            .from('notifications')
+            .insert({
+              type: 'like',
+              user_id: authorId,
+              actor_id: userId,
+              resource_id: currentPostId,
+              resource_type: 'post',
+              content: 'gave a trophy to your post',
+              created_at: new Date().toISOString(),
+              read: false
+            });
+        }
+        
+        toast.success('Voted for post');
+      }
+      
+      // Trigger a refresh
+      document.dispatchEvent(new CustomEvent('refresh-post', {
+        detail: { postId: currentPostId }
+      }));
+    } catch (error) {
+      console.error('Error voting for post:', error);
+      toast.error('Failed to vote for post');
+    }
+  };
+
+  const handleFollowClick = async () => {
+    if (!currentPostId) {
+      toast.error('No post selected');
+      return;
+    }
+    
+    console.log('Follow user of post:', currentPostId);
+    
+    // Visual feedback on controller button
+    const followButton = document.querySelector(`.diamond-buttons [data-action="follow"]`);
+    if (followButton) {
+      followButton.classList.add('button-press');
+      setTimeout(() => {
+        followButton.classList.remove('button-press');
+      }, 300);
+    }
+    
+    // Find the follow button on the post and click it
+    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
+    if (targetPost) {
+      const postFollowButton = targetPost.querySelector('.follow-button');
+      if (postFollowButton) {
+        postFollowButton.dispatchEvent(new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        }));
+        return;
+      }
+    }
+    
+    // Fallback if direct button interaction doesn't work
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      const userId = currentUser?.user?.id;
+      
+      if (!userId) {
+        toast.error('You need to be logged in to follow users');
+        return;
+      }
+      
+      // Get post author info
+      const { data: post } = await supabase
+        .from('posts')
+        .select('user_id, users:user_id(username)')
+        .eq('id', currentPostId)
+        .single();
+      
+      if (!post) {
+        toast.error('Post not found');
+        return;
+      }
+      
+      const authorId = post.user_id;
+      const authorUsername = post.users?.username;
+      
+      if (authorId === userId) {
+        toast.error('You cannot follow yourself');
+        return;
+      }
+      
+      // Check if already following
+      const { data: existingFollow } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('follower_id', userId)
+        .eq('following_id', authorId)
+        .maybeSingle();
+      
+      if (existingFollow) {
+        // Unfollow
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', userId)
+          .eq('following_id', authorId);
+          
+        toast.success(`Unfollowed ${authorUsername || 'user'}`);
+      } else {
+        // Follow
+        await supabase
+          .from('follows')
+          .insert({
+            follower_id: userId,
+            following_id: authorId,
+            created_at: new Date().toISOString()
+          });
+          
+        // Create notification
+        await supabase
+          .from('notifications')
+          .insert({
+            type: 'follow',
+            user_id: authorId,
+            actor_id: userId,
+            resource_id: currentPostId,
+            resource_type: 'post',
+            content: 'started following you',
+            created_at: new Date().toISOString(),
+            read: false
+          });
+          
+        toast.success(`Followed ${authorUsername || 'user'}`);
+      }
+    } catch (error) {
+      console.error('Error following user:', error);
+      toast.error('Failed to follow user');
+    }
   };
 
   const handleMenu = () => {
@@ -809,278 +1156,212 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, []);
 
-  const joystickBaseStyle = {
-    background: 'radial-gradient(circle at center, #2a2d3e 0%, #1a1c2c 70%)',
-    boxShadow: 'inset 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 5px rgba(76, 136, 239, 0.4)',
-    border: '2px solid #353b5a',
-  };
-  
-  const joystickKnobStyle = {
-    background: 'radial-gradient(circle at center, #4a4d5e 0%, #353b5a 100%)',
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3), 0 0 3px rgba(255, 255, 255, 0.1)',
-    border: '1px solid #4c4f64',
-  };
-
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="bg-[#10101e]/95 backdrop-blur border-t border-[#353b5a]/50 pb-5 pt-5 px-2 md:px-16 lg:px-24 w-full">
-        <div className="grid grid-cols-3 items-center">
-          {/* Left joystick - redesigned for retro look */}
-          <div className="flex justify-start pl-4">
-            <div className="relative w-[68px] h-[68px] flex items-center justify-center">
-              {/* Joystick base with retro styling */}
-              <div 
-                ref={joystickRef}
-                className="w-[64px] h-[64px] rounded-full flex items-center justify-center"
-                style={joystickBaseStyle}
-              >
-                {/* Circular directional guides - D-pad style overlay */}
-                <div className="absolute w-full h-full pointer-events-none">
-                  <div className="absolute top-[3px] left-1/2 transform -translate-x-1/2 w-[12px] h-[12px] bg-[#232538]/50 rounded-sm"></div>
-                  <div className="absolute bottom-[3px] left-1/2 transform -translate-x-1/2 w-[12px] h-[12px] bg-[#232538]/50 rounded-sm"></div>
-                  <div className="absolute left-[3px] top-1/2 transform -translate-y-1/2 w-[12px] h-[12px] bg-[#232538]/50 rounded-sm"></div>
-                  <div className="absolute right-[3px] top-1/2 transform -translate-y-1/2 w-[12px] h-[12px] bg-[#232538]/50 rounded-sm"></div>
-                </div>
-                
-                {/* Retro-modern joystick knob */}
-                <div 
-                  ref={joystickKnobRef}
-                  className="w-[30px] h-[30px] rounded-full transition-all duration-150 z-10"
-                  style={joystickKnobStyle}
-                  onMouseDown={handleMouseDown}
-                  onTouchStart={handleTouchStart}
-                >
-                  {/* Inner detail for knob */}
-                  <div className="w-full h-full rounded-full flex items-center justify-center">
-                    <div className="w-[14px] h-[14px] rounded-full bg-[#232538]/30"></div>
-                  </div>
-                </div>
-                
-                {/* Add directional indicators with retro look */}
-                <div 
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/4 opacity-70 hover:opacity-100 cursor-pointer transition-all duration-200 hover:scale-110"
-                  onClick={() => {
-                    handleJoystickDown('up');
-                    smoothScroll(-scrollDistance);
-                    setTimeout(handleJoystickUp, 200);
-                  }}
-                >
-                  <div className="w-5 h-5 flex items-center justify-center">
-                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[8px] border-l-transparent border-r-transparent border-b-[#4c88ef]"></div>
-                  </div>
-                </div>
-                
-                <div 
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/4 opacity-70 hover:opacity-100 cursor-pointer transition-all duration-200 hover:scale-110"
-                  onClick={() => {
-                    handleJoystickDown('down');
-                    smoothScroll(scrollDistance);
-                    setTimeout(handleJoystickUp, 200);
-                  }}
-                >
-                  <div className="w-5 h-5 flex items-center justify-center">
-                    <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-[#4c88ef]"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div className={`fixed bottom-0 left-0 right-0 z-50 py-2 px-4 bg-[#1a1c2a]/95 backdrop-blur-lg border-t border-[#2e3149] shadow-xl w-full flex items-center justify-between ${menuOpen ? 'menu-open' : ''}`}>
+      {/* Current post display */}
+      {currentPostId && (
+        <div className="absolute top-0 left-0 right-0 transform -translate-y-full bg-[#1a1c2a]/90 border-t border-[#2e3149] px-4 py-1 text-xs text-gray-400 truncate text-center">
+          Active: Post #{currentPostId.substring(0, 8)}-{currentPostId.substring(9, 13)}-{currentPostId.substring(14, 18)}-{currentPostId.substring(19, 23)}-{currentPostId.substring(24, 36)}
+        </div>
+      )}
+
+      {/* Left section with joystick */}
+      <div className="relative">
+        <div 
+          ref={joystickRef}
+          className="w-[70px] h-[70px] rounded-full bg-[#252736] border border-[#383c4b] touch-none relative"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setJoystickActive(true);
+            const rect = e.currentTarget.getBoundingClientRect();
+            handleJoystickMove(e.clientX - rect.left, e.clientY - rect.top);
+          }}
+          onMouseMove={(e) => {
+            if (!joystickActive) return;
+            e.preventDefault();
+            const rect = e.currentTarget.getBoundingClientRect();
+            handleJoystickMove(e.clientX - rect.left, e.clientY - rect.top);
+          }}
+          onMouseUp={() => handleJoystickRelease()}
+          onMouseLeave={() => handleJoystickRelease()}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            setJoystickActive(true);
+            const rect = e.currentTarget.getBoundingClientRect();
+            const touch = e.touches[0];
+            handleJoystickMove(touch.clientX - rect.left, touch.clientY - rect.top);
+          }}
+          onTouchMove={(e) => {
+            if (!joystickActive) return;
+            e.preventDefault();
+            const rect = e.currentTarget.getBoundingClientRect();
+            const touch = e.touches[0];
+            handleJoystickMove(touch.clientX - rect.left, touch.clientY - rect.top);
+          }}
+          onTouchEnd={() => handleJoystickRelease()}
+        >
+          {/* Joystick base lines */}
+          <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-[#383c4b]/50"></div>
+          <div className="absolute top-0 bottom-0 left-1/2 w-[1px] bg-[#383c4b]/50"></div>
           
-          {/* Center - CLIPT button and post indicator */}
-          <div className="flex flex-col items-center justify-center">
-            <button 
-              onClick={handleClipt}
-              className={`relative w-[100px] h-[40px] rounded-full bg-[#1d1e2d] border-2 ${pulsating ? 'animate-pulse-border' : ''} flex items-center justify-center z-10 transform hover:scale-105 transition-all duration-300 active:scale-95 group`}
-              style={{
-                borderImage: 'linear-gradient(90deg, #6366F1, #EC4899) 1',
-                boxShadow: glowing ? '0 0 15px rgba(124, 58, 237, 0.5)' : 'none',
-              }}
-            >
-              <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-pink-500 group-hover:from-indigo-400 group-hover:to-pink-400">CLIPT</span>
-              
-              {/* Particle effects */}
-              <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
-                {particles.map(particle => (
-                  <div 
-                    key={particle.id}
-                    className="absolute rounded-full animate-float-away"
-                    style={{
-                      left: `${particle.x}%`,
-                      top: `${particle.y}%`,
-                      width: `${particle.size}px`,
-                      height: `${particle.size}px`,
-                      backgroundColor: particle.color,
-                      opacity: particle.opacity
-                    }}
-                  />
-                ))}
-              </div>
-            </button>
-            
-            {/* Current post indicator */}
-            <div id="current-post-indicator" className="text-[10px] text-gray-400 mt-1 opacity-50 transition-opacity duration-500">
-              {currentPostId ? `Post #${currentPostId}` : 'No post selected'}
-            </div>
-          </div>
-          
-          {/* Right diamond buttons */}
-          <div className="flex justify-end">
-            <div className="flex flex-col items-center -mt-1">
-              <div className="relative">
-                {/* Diamond button layout - retro style */}
-                <div className="relative diamond-buttons w-[130px] h-[130px]">
-                  {/* Top button (Heart/Like) */}
-                  <div 
-                    className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[42px] h-[42px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-[0_0_10px_rgba(239,68,68,0.5)]" 
-                    onClick={handleLike}
-                    data-tooltip={`Like Post ${currentPostId ? `#${currentPostId}` : ''}`}
-                    data-action="like"
-                    style={{
-                      background: 'radial-gradient(circle at center, #3a2d3a 0%, #2a1d2a 100%)',
-                      border: '2px solid rgba(239, 68, 68, 0.5)',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.1)'
-                    }}
-                  >
-                    <Heart size={20} className="text-red-500 filter drop-shadow-sm" />
-                  </div>
-                  
-                  {/* Left button (Message/Comment) */}
-                  <div 
-                    className="absolute top-1/2 left-0 transform -translate-y-1/2 w-[42px] h-[42px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
-                    onClick={handleComment}
-                    data-tooltip={`Comment on Post ${currentPostId ? `#${currentPostId}` : ''}`}
-                    data-action="comment"
-                    style={{
-                      background: 'radial-gradient(circle at center, #2a3a4a 0%, #1a2a3a 100%)',
-                      border: '2px solid rgba(59, 130, 246, 0.5)',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.1)'
-                    }}
-                  >
-                    <MessageCircle size={20} className="text-blue-500 filter drop-shadow-sm" />
-                  </div>
-                  
-                  {/* Right button (Trophy) */}
-                  <div 
-                    className="absolute top-1/2 right-0 transform -translate-y-1/2 w-[42px] h-[42px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-[0_0_10px_rgba(234,179,8,0.5)]" 
-                    onClick={handleTrophy}
-                    data-tooltip={`Vote for Post ${currentPostId ? `#${currentPostId}` : ''}`}
-                    data-action="trophy"
-                    style={{
-                      background: 'radial-gradient(circle at center, #4a4a2a 0%, #3a3a1a 100%)',
-                      border: '2px solid rgba(234, 179, 8, 0.5)',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.1)'
-                    }}
-                  >
-                    <Trophy size={20} className="text-yellow-500 filter drop-shadow-sm" />
-                  </div>
-                  
-                  {/* Bottom button (UserPlus/Follow) */}
-                  <div 
-                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[42px] h-[42px] rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-[0_0_10px_rgba(34,197,94,0.5)]" 
-                    onClick={handleFollow}
-                    data-tooltip={`Follow Author of Post ${currentPostId ? `#${currentPostId}` : ''}`}
-                    data-action="follow"
-                    style={{
-                      background: 'radial-gradient(circle at center, #2a4a3a 0%, #1a3a2a 100%)',
-                      border: '2px solid rgba(34, 197, 94, 0.5)',
-                      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.1)'
-                    }}
-                  >
-                    <UserPlus size={20} className="text-green-500 filter drop-shadow-sm" />
-                  </div>
-                </div>
-                
-                {/* Add a post indicator label */}
-                <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-[10px] text-gray-400 w-full text-center">
-                  {currentPostId ? `Active: Post #${currentPostId}` : 'No post selected'}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Joystick handle/knob */}
+          <div 
+            ref={joystickKnobRef} 
+            className="w-[26px] h-[26px] rounded-full bg-[#353b5a]/80 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border border-[#4c4f64]/50"
+          ></div>
         </div>
       </div>
+
+      {/* Center CLIPT button */}
+      <div className="relative">
+        <button 
+          onClick={handleCliptButtonClick}
+          className={`p-2 px-4 font-bold text-indigo-300 relative z-10 bg-[#1D1E2A] border-2 ${
+            pulsating ? 'animate-pulse' : ''
+          } ${
+            glowing ? 'border-[#6c4dc4] shadow-[0_0_15px_rgba(108,77,196,0.5)]' : 'border-[#4f46e5] shadow-[0_0_5px_rgba(79,70,229,0.3)]'
+          } rounded-md uppercase transition-all duration-300 hover:scale-105 active:scale-95`}
+        >
+          CLIPT
+          
+          {/* Particles for CLIPT button effect */}
+          {particles.map(particle => (
+            <div
+              key={particle.id}
+              className="absolute pointer-events-none"
+              style={{
+                left: `${particle.x}%`,
+                top: `${particle.y}%`,
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
+                backgroundColor: particle.color,
+                borderRadius: '50%',
+                opacity: particle.opacity,
+                animation: 'float-away 2s linear forwards',
+              }}
+            />
+          ))}
+        </button>
+      </div>
+
+      {/* Right controls - Diamond pattern buttons */}
+      <div className="relative w-[90px] h-[90px]">
+        {/* Top button - Like */}
+        <button 
+          className={`absolute top-0 left-1/2 transform -translate-x-1/2 w-[35px] h-[35px] rounded-full bg-[#252736] border border-red-500/70 flex items-center justify-center transition-all ${
+            buttonsAnimated ? 'animate-pulse border-red-400' : ''
+          } active:scale-90 hover:shadow-[0_0_10px_rgba(239,68,68,0.5)]`}
+          onClick={handleLikeClick}
+        >
+          <Heart size={17} className="text-red-500" />
+        </button>
+        
+        {/* Right button - Comment */}
+        <button 
+          className={`absolute right-0 top-1/2 transform -translate-y-1/2 w-[35px] h-[35px] rounded-full bg-[#252736] border border-blue-500/70 flex items-center justify-center transition-all ${
+            buttonsAnimated ? 'animate-pulse border-blue-400 delay-75' : ''
+          } active:scale-90 hover:shadow-[0_0_10px_rgba(59,130,246,0.5)]`}
+          onClick={handleCommentClick}
+        >
+          <MessageCircle size={17} className="text-blue-500" />
+        </button>
+        
+        {/* Bottom button - Trophy */}
+        <button 
+          className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[35px] h-[35px] rounded-full bg-[#252736] border border-yellow-500/70 flex items-center justify-center transition-all ${
+            buttonsAnimated ? 'animate-pulse border-yellow-400 delay-150' : ''
+          } active:scale-90 hover:shadow-[0_0_10px_rgba(234,179,8,0.5)]`}
+          onClick={handleTrophyClick}
+        >
+          <Trophy size={17} className="text-yellow-500" />
+        </button>
+        
+        {/* Left button - Follow */}
+        <button 
+          className={`absolute left-0 top-1/2 transform -translate-y-1/2 w-[35px] h-[35px] rounded-full bg-[#252736] border border-green-500/70 flex items-center justify-center transition-all ${
+            buttonsAnimated ? 'animate-pulse border-green-400 delay-200' : ''
+          } active:scale-90 hover:shadow-[0_0_10px_rgba(34,197,94,0.5)]`}
+          onClick={handleFollowClick}
+        >
+          <UserPlus size={17} className="text-green-500" />
+        </button>
+      </div>
       
-      {/* Menu dialog */}
+      {/* When the menu is open */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm">
-          <div className="absolute bottom-20 left-0 right-0 bg-[#161925] border-t border-blue-500/30">
-            <div className="max-w-md mx-auto p-4">
-              <h3 className="text-white text-lg font-semibold mb-4">Menu</h3>
-              <div className="grid grid-cols-2 gap-y-4">
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => {
-                    navigateTo('/profile');
-                  }}
-                >
-                  <UserPlus size={18} className="text-blue-400" />
-                  <span className="text-white">Profile</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => {
-                    navigateTo('/streaming');
-                  }}
-                >
-                  <Camera size={18} className="text-red-400" />
-                  <span className="text-white">Streaming</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => {
-                    navigateTo('/discovery');
-                  }}
-                >
-                  <MessageCircle size={18} className="text-green-400" />
-                  <span className="text-white">Discovery</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => {
-                    navigateTo('/messages');
-                  }}
-                >
-                  <Trophy size={18} className="text-purple-400" />
-                  <span className="text-white">Messages</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => {
-                    navigateTo('/settings');
-                  }}
-                >
-                  <Menu size={18} className="text-gray-400" />
-                  <span className="text-white">Settings</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => {
-                    navigateTo('/');
-                  }}
-                >
-                  <Heart size={18} className="text-yellow-400" />
-                  <span className="text-white">Home</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => {
-                    navigateTo('/clipts');
-                  }}
-                >
-                  <UserPlus size={18} className="text-indigo-400" />
-                  <span className="text-white">Clipts</span>
-                </div>
-                <div 
-                  className="flex items-center space-x-3 p-2 rounded hover:bg-blue-500/10 cursor-pointer"
-                  onClick={() => {
-                    navigateTo('/top-clipts');
-                  }}
-                >
-                  <Trophy size={18} className="text-orange-400" />
-                  <span className="text-white">Top Clipts</span>
-                </div>
-              </div>
-            </div>
+        <div className="absolute inset-0 bg-[#1a1c2a]/95 backdrop-blur-lg flex flex-col items-center justify-center z-20">
+          <button 
+            className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            onClick={() => setMenuOpen(false)}
+          >
+            <X size={24} />
+          </button>
+          
+          <div className="flex flex-col gap-4 w-full max-w-xs">
+            <button 
+              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
+              onClick={() => {
+                navigate('/');
+                setMenuOpen(false);
+              }}
+            >
+              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-600">
+                <Home size={18} className="text-white" />
+              </span>
+              <span>Home</span>
+            </button>
+            
+            <button 
+              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
+              onClick={() => {
+                navigate('/discover');
+                setMenuOpen(false);
+              }}
+            >
+              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-violet-600">
+                <Search size={18} className="text-white" />
+              </span>
+              <span>Discover</span>
+            </button>
+            
+            <button 
+              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
+              onClick={() => {
+                navigate('/notifications');
+                setMenuOpen(false);
+              }}
+            >
+              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-red-600">
+                <Bell size={18} className="text-white" />
+              </span>
+              <span>Notifications</span>
+            </button>
+            
+            <button 
+              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
+              onClick={() => {
+                navigate('/upload');
+                setMenuOpen(false);
+              }}
+            >
+              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-green-600">
+                <Upload size={18} className="text-white" />
+              </span>
+              <span>Upload</span>
+            </button>
+            
+            <button 
+              className="flex items-center gap-3 px-6 py-3 rounded-lg bg-[#252736] border border-[#383c4b] text-white hover:bg-[#292b3b] transition-all"
+              onClick={() => {
+                navigate('/profile');
+                setMenuOpen(false);
+              }}
+            >
+              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600">
+                <User size={18} className="text-white" />
+              </span>
+              <span>Profile</span>
+            </button>
           </div>
         </div>
       )}
