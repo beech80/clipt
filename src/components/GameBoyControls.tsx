@@ -1210,18 +1210,18 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           
           {/* Center - CLIPT button and controls */}
           <div className="flex flex-col items-center justify-center space-y-3">
-            {/* Main CLIPT button - exact match to image */}
+            {/* Main CLIPT button - matching the exact image */}
             <button 
               onClick={handleCliptButtonClick}
-              className="relative w-[62px] h-[62px] rounded-full flex items-center justify-center transform hover:scale-105 transition-all duration-300 active:scale-95 mb-1"
+              className="relative w-[60px] h-[60px] rounded-full flex items-center justify-center transform hover:scale-105 transition-all duration-300 active:scale-95 mb-1"
               style={{
-                background: '#662fa1',
-                boxShadow: '0 0 8px rgba(147, 51, 234, 0.5)'
+                background: '#662FA1',
+                boxShadow: '0 0 15px rgba(102, 47, 161, 0.6)'
               }}
             >
               <span 
-                className="relative font-bold text-center uppercase text-sm tracking-wide" 
-                style={{ color: '#d9c7ff' }}
+                className="font-bold text-sm"
+                style={{ color: '#D9C7FF' }}
               >
                 CLIPT
               </span>
