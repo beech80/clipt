@@ -428,6 +428,137 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     checkFollowStatus();
   }, [user, post.user_id]);
 
+  // Load initial trophy status
+  useEffect(() => {
+    const loadTrophyStatus = async () => {
+      if (!user || !postId) return;
+      
+      try {
+        // First check clip_votes table
+        let { data: existingVote, error: voteError } = await supabase
+          .from('clip_votes')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (voteError && voteError.code !== 'PGRST116') {
+          console.error('Error checking clip_votes:', voteError);
+        }
+        
+        // If not found, check post_votes table
+        if (!existingVote) {
+          const { data: postVote, error: postVoteError } = await supabase
+            .from('post_votes')
+            .select('id')
+            .eq('post_id', postId)
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          if (!postVoteError) {
+            existingVote = postVote;
+          }
+        }
+        
+        setHasTrophy(!!existingVote);
+        
+        // Get trophy count (aggregated across both tables)
+        const { data: trophyData, error: countError } = await supabase.rpc(
+          'get_post_trophy_count',
+          { post_id_param: postId }
+        );
+        
+        if (countError) {
+          console.error('Error getting trophy count:', countError);
+          // Fallback to direct count
+          const { count: clipCount } = await supabase
+            .from('clip_votes')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', postId);
+            
+          const { count: voteCount } = await supabase
+            .from('post_votes')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', postId);
+            
+          setTrophyCount((clipCount || 0) + (voteCount || 0));
+        } else {
+          setTrophyCount(trophyData || 0);
+        }
+      } catch (error) {
+        console.error('Error loading trophy status:', error);
+      }
+    };
+    
+    loadTrophyStatus();
+  }, [user, postId]);
+
+  // Listen for trophy updates
+  useEffect(() => {
+    if (!postId) return;
+    
+    const handleTrophyUpdate = () => {
+      console.log('Trophy refresh triggered for post:', postId);
+      
+      // Reload trophy status
+      if (user) {
+        // Check if user has voted
+        Promise.all([
+          // Check clip_votes
+          supabase
+            .from('clip_votes')
+            .select('id')
+            .eq('post_id', postId)
+            .eq('user_id', user.id)
+            .maybeSingle(),
+            
+          // Check post_votes
+          supabase
+            .from('post_votes')
+            .select('id')
+            .eq('post_id', postId)
+            .eq('user_id', user.id)
+            .maybeSingle(),
+            
+          // Get counts from both tables
+          supabase
+            .from('clip_votes')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', postId),
+            
+          supabase
+            .from('post_votes')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', postId)
+        ]).then(([clipVote, postVote, clipCount, voteCount]) => {
+          // Update has trophy state
+          setHasTrophy(!!(clipVote.data || postVote.data));
+          
+          // Update trophy count
+          setTrophyCount((clipCount.count || 0) + (voteCount.count || 0));
+        }).catch(error => {
+          console.error('Error refreshing trophy state:', error);
+        });
+      }
+    };
+    
+    // Listen for global trophy updates
+    const handleRefreshEvent = (e: Event) => {
+      handleTrophyUpdate();
+    };
+    
+    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+    if (postElement) {
+      postElement.addEventListener('refresh-post-data', handleRefreshEvent);
+    }
+    
+    return () => {
+      if (postElement) {
+        postElement.removeEventListener('refresh-post-data', handleRefreshEvent);
+      }
+    };
+  }, [postId, user]);
+
   useEffect(() => {
     const handleTrophyUpdate = (e: CustomEvent) => {
       if (e.detail.postId === postId) {
