@@ -1200,7 +1200,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   const handleMenu = () => {
-    setMenuOpen(!menuOpen);
+    setMenuOpen(true);
   };
 
   const handleJoystickDown = (direction: 'up' | 'down') => {
@@ -1418,10 +1418,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         </div>
       </div>
       
-      {/* Enhanced Menu dialog with exactly the requested pages */}
+      {/* Fixed and enhanced Menu dialog with all requested pages */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm">
-          <div className="absolute bottom-20 left-0 right-0 bg-[#161925] border-t border-blue-500/30">
+        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="absolute inset-x-0 bottom-20 bg-[#161925] border-t border-blue-500/30">
             <div className="max-w-md mx-auto p-4">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-white text-lg font-semibold">Menu</h3>
@@ -1433,83 +1433,83 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 </button>
               </div>
               
-              {/* Grid layout with only the requested navigation pages */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Clear and visible grid layout with exactly the requested navigation pages */}
+              <div className="grid grid-cols-2 gap-4">
                 <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
                   onClick={() => {
                     navigate('/');
                     setMenuOpen(false);
                   }}
                 >
-                  <Home size={18} className="text-yellow-400" />
-                  <span className="text-white">Home</span>
+                  <Home size={20} className="text-yellow-400" />
+                  <span className="text-white font-medium">Home</span>
                 </button>
                 
                 <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
                   onClick={() => {
-                    navigate('/discover');
+                    navigate('/discovery');
                     setMenuOpen(false);
                   }}
                 >
-                  <Search size={18} className="text-green-400" />
-                  <span className="text-white">Discovery</span>
+                  <Search size={20} className="text-green-400" />
+                  <span className="text-white font-medium">Discovery</span>
                 </button>
                 
                 <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
                   onClick={() => {
                     navigate('/profile');
                     setMenuOpen(false);
                   }}
                 >
-                  <User size={18} className="text-blue-400" />
-                  <span className="text-white">Profile</span>
+                  <User size={20} className="text-blue-400" />
+                  <span className="text-white font-medium">Profile</span>
                 </button>
                 
                 <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
                   onClick={() => {
                     navigate('/settings');
                     setMenuOpen(false);
                   }}
                 >
-                  <Settings size={18} className="text-gray-400" />
-                  <span className="text-white">Settings</span>
+                  <Settings size={20} className="text-gray-400" />
+                  <span className="text-white font-medium">Settings</span>
                 </button>
                 
                 <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
                   onClick={() => {
                     navigate('/clipts');
                     setMenuOpen(false);
                   }}
                 >
-                  <Video size={18} className="text-purple-400" />
-                  <span className="text-white">Clipts</span>
+                  <Video size={20} className="text-purple-400" />
+                  <span className="text-white font-medium">Clipts</span>
                 </button>
                 
                 <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
                   onClick={() => {
                     navigate('/top-clipts');
                     setMenuOpen(false);
                   }}
                 >
-                  <Award size={18} className="text-amber-400" />
-                  <span className="text-white">Top Clipts</span>
+                  <Award size={20} className="text-amber-400" />
+                  <span className="text-white font-medium">Top Clipts</span>
                 </button>
                 
                 <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors bg-opacity-100"
                   onClick={() => {
                     navigate('/streaming');
                     setMenuOpen(false);
                   }}
                 >
-                  <Monitor size={18} className="text-red-400" />
-                  <span className="text-white">Streaming</span>
+                  <Monitor size={20} className="text-red-400" />
+                  <span className="text-white font-medium">Streaming</span>
                 </button>
               </div>
             </div>
