@@ -15,7 +15,10 @@ import {
   User,
   TrendingUp,
   Settings,
-  Bookmark
+  Bookmark,
+  Video,
+  Award,
+  Monitor
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -120,27 +123,28 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     requestAnimationFrame(animateScroll);
   };
 
-  // Add animation keyframes with enhanced effects
+  // Add animation keyframes with even more enhanced effects
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
       @keyframes pulse-glow {
         0% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
-        50% { box-shadow: 0 0 30px rgba(147, 51, 234, 0.9); }
+        33% { box-shadow: 0 0 25px rgba(102, 47, 161, 0.8); }
+        66% { box-shadow: 0 0 35px rgba(147, 51, 234, 0.9); }
         100% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
       }
       
       @keyframes float {
-        0% { transform: translateY(0px) rotate(0deg); }
-        25% { transform: translateY(-4px) rotate(-1deg); }
-        75% { transform: translateY(2px) rotate(1deg); }
-        100% { transform: translateY(0px) rotate(0deg); }
+        0% { transform: translateY(0px) rotate(0deg) scale(1); }
+        25% { transform: translateY(-4px) rotate(-1deg) scale(1.02); }
+        75% { transform: translateY(2px) rotate(1deg) scale(0.98); }
+        100% { transform: translateY(0px) rotate(0deg) scale(1); }
       }
       
       @keyframes textGlow {
-        0% { text-shadow: 0 0 4px rgba(233, 218, 255, 0.7); }
-        50% { text-shadow: 0 0 10px rgba(233, 218, 255, 0.9), 0 0 20px rgba(147, 51, 234, 0.5); }
-        100% { text-shadow: 0 0 4px rgba(233, 218, 255, 0.7); }
+        0% { text-shadow: 0 0 5px rgba(233, 218, 255, 0.7); }
+        50% { text-shadow: 0 0 12px rgba(233, 218, 255, 0.9), 0 0 25px rgba(147, 51, 234, 0.6); }
+        100% { text-shadow: 0 0 5px rgba(233, 218, 255, 0.7); }
       }
       
       @keyframes rotate {
@@ -149,8 +153,35 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       @keyframes ripple {
-        0% { transform: scale(0.8); opacity: 1; }
-        100% { transform: scale(2.5); opacity: 0; }
+        0% { transform: scale(0.8); opacity: 1; border-width: 1px; }
+        100% { transform: scale(2.8); opacity: 0; border-width: 0.5px; }
+      }
+      
+      @keyframes bgShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      
+      @keyframes borderPulse {
+        0% { border-color: rgba(154, 95, 230, 0.2); }
+        50% { border-color: rgba(154, 95, 230, 0.6); }
+        100% { border-color: rgba(154, 95, 230, 0.2); }
+      }
+      
+      @keyframes hue-rotate {
+        0% { filter: hue-rotate(0deg); }
+        50% { filter: hue-rotate(20deg); }
+        100% { filter: hue-rotate(0deg); }
+      }
+      
+      @keyframes clipt-warp {
+        0% { transform: scale(1) skew(0deg, 0deg); }
+        20% { transform: scale(1.05) skew(-1deg, 0.5deg); }
+        40% { transform: scale(0.98) skew(0.5deg, -0.5deg); }
+        60% { transform: scale(1.02) skew(-0.5deg, 0.25deg); }
+        80% { transform: scale(0.99) skew(0.25deg, -0.25deg); }
+        100% { transform: scale(1) skew(0deg, 0deg); }
       }
       
       .joystick-active {
@@ -159,15 +190,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       .clipt-button-hover:hover {
         transform: scale(1.05);
-        box-shadow: 0 0 35px rgba(147, 51, 234, 0.9), 0 0 50px rgba(102, 47, 161, 0.4);
+        box-shadow: 0 0 40px rgba(147, 51, 234, 0.9), 0 0 60px rgba(102, 47, 161, 0.5);
       }
       
       .clipt-button-hover:hover .clipt-text {
-        animation: textGlow 1.5s infinite;
+        animation: textGlow 1.5s infinite, clipt-warp 8s infinite ease-in-out;
+        transform: translateZ(0);
+        letter-spacing: 0.5px;
       }
       
       .clipt-button-hover:hover .clipt-particles {
         opacity: 1;
+      }
+      
+      .clipt-button-hover:hover .clipt-inner-circle {
+        animation: borderPulse 2s infinite, hue-rotate 5s infinite;
       }
       
       .clipt-button-active:active {
@@ -1236,51 +1273,64 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           
           {/* Center - CLIPT button and controls */}
           <div className="flex flex-col items-center justify-center space-y-4">
-            {/* Super enhanced CLIPT button with advanced effects */}
+            {/* Ultra enhanced CLIPT button with advanced effects */}
             <button 
               onClick={handleCliptButtonClick}
-              className="relative w-[70px] h-[70px] rounded-full flex items-center justify-center clipt-button-hover clipt-button-active transform transition-all duration-300 overflow-hidden"
+              className="relative w-[72px] h-[72px] rounded-full flex items-center justify-center clipt-button-hover clipt-button-active transform transition-all duration-300 overflow-hidden"
               style={{
-                background: 'radial-gradient(circle at center, #8241CF 0%, #662FA1 40%, #561D99 80%)',
-                boxShadow: '0 0 20px rgba(122, 59, 192, 0.7), inset 0 0 15px rgba(255, 255, 255, 0.2)',
-                animation: 'pulse-glow 3s infinite, float 8s ease-in-out infinite'
+                background: 'radial-gradient(circle at center, #9A5FE6 0%, #7840C0 35%, #662FA1 60%, #561D99 85%)',
+                boxShadow: '0 0 25px rgba(122, 59, 192, 0.7), inset 0 0 18px rgba(255, 255, 255, 0.25)',
+                animation: 'pulse-glow 4s infinite, float 8s ease-in-out infinite'
               }}
             >
-              {/* Animated particle overlay */}
+              {/* Animated particle overlay with more particles */}
               <div className="clipt-particles absolute inset-0 opacity-0 transition-opacity duration-300" style={{ perspective: '800px' }}>
-                {[...Array(12)].map((_, i) => (
+                {[...Array(15)].map((_, i) => (
                   <div 
                     key={i}
                     className="absolute rounded-full"
                     style={{
-                      width: `${Math.random() * 8 + 2}px`,
-                      height: `${Math.random() * 8 + 2}px`,
-                      background: `rgba(${147 + Math.random() * 30}, ${51 + Math.random() * 30}, ${234 + Math.random() * 20}, ${0.5 + Math.random() * 0.5})`,
+                      width: `${Math.random() * 10 + 2}px`,
+                      height: `${Math.random() * 10 + 2}px`,
+                      background: `rgba(${147 + Math.random() * 50}, ${51 + Math.random() * 40}, ${234 + Math.random() * 20}, ${0.5 + Math.random() * 0.5})`,
                       top: `${Math.random() * 100}%`,
                       left: `${Math.random() * 100}%`,
+                      filter: 'blur(0.5px)',
                       animation: `float ${3 + Math.random() * 5}s infinite ease-in-out, rotate ${8 + Math.random() * 10}s infinite linear`
                     }}
                   />
                 ))}
               </div>
               
-              {/* Interactive ripple effect */}
-              {Array.from({ length: 2 }, (_, i) => (
+              {/* Interactive multi-layer ripple effect */}
+              {Array.from({ length: 3 }, (_, i) => (
                 <div 
                   key={i}
                   className="absolute w-full h-full rounded-full opacity-0 pointer-events-none"
                   style={{
-                    border: '2px solid rgba(147, 51, 234, 0.3)',
-                    animation: `ripple ${2 + i * 0.5}s linear infinite`,
-                    animationDelay: `${i * 0.5}s`
+                    border: `${1 + i * 0.5}px solid rgba(${147 + i * 10}, ${51 + i * 5}, ${234 - i * 10}, ${0.3 - i * 0.05})`,
+                    animation: `ripple ${2 + i * 0.7}s linear infinite`,
+                    animationDelay: `${i * 0.4}s`
                   }}
                 />
               ))}
               
-              {/* Inner glow effect with animated highlight */}
-              <div className="absolute inset-1 rounded-full bg-gradient-to-b from-[#9A5FE6]/20 to-transparent overflow-hidden">
+              {/* Animated gradient overlay */}
+              <div className="absolute inset-0 rounded-full overflow-hidden opacity-50" style={{ mixBlendMode: 'overlay' }}>
                 <div 
-                  className="absolute w-full h-[30%] bg-gradient-to-b from-white/10 to-transparent"
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(120deg, rgba(154, 95, 230, 0) 20%, rgba(154, 95, 230, 0.4) 50%, rgba(154, 95, 230, 0) 80%)',
+                    backgroundSize: '200% 200%',
+                    animation: 'bgShift 5s ease infinite'
+                  }}
+                />
+              </div>
+              
+              {/* Inner glow effect with animated highlight */}
+              <div className="absolute inset-1 rounded-full bg-gradient-to-b from-[#9A5FE6]/30 to-transparent overflow-hidden">
+                <div 
+                  className="absolute w-full h-[35%] bg-gradient-to-b from-white/15 to-transparent"
                   style={{
                     top: '-15%',
                     transform: 'rotate(35deg) translateZ(0)',
@@ -1289,18 +1339,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 />
               </div>
               
-              {/* Subtle holographic ring */}
-              <div className="absolute inset-0 rounded-full border border-[#9A5FE6]/20">
-                <div className="absolute inset-[-1px] rounded-full border border-[#9A5FE6]/5"></div>
-                <div className="absolute inset-[-2px] rounded-full border border-[#9A5FE6]/2"></div>
+              {/* Pulsing inner circle */}
+              <div className="clipt-inner-circle absolute inset-[3px] rounded-full border-2 border-[#9A5FE6]/20"></div>
+              
+              {/* Multi-layer holographic ring */}
+              <div className="absolute inset-0 rounded-full border border-[#9A5FE6]/30">
+                <div className="absolute inset-[-1px] rounded-full border border-[#9A5FE6]/10"></div>
+                <div className="absolute inset-[-2px] rounded-full border border-[#9A5FE6]/5"></div>
+                <div className="absolute inset-[-3px] rounded-full border border-[#9A5FE6]/2"></div>
               </div>
               
-              {/* Text with enhanced effect */}
+              {/* Ultra fancy text with enhanced effect */}
               <span 
                 className="clipt-text font-bold text-base relative z-10"
                 style={{ 
-                  color: '#E9DAFF',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  color: '#F0E6FF',
+                  textShadow: '0 2px 5px rgba(0,0,0,0.3)',
+                  letterSpacing: '0.3px'
                 }}
               >
                 CLIPT
@@ -1362,7 +1417,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         </div>
       </div>
       
-      {/* Enhanced Menu dialog with all navigation pages */}
+      {/* Enhanced Menu dialog with exactly the requested pages */}
       {menuOpen && (
         <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm">
           <div className="absolute bottom-20 left-0 right-0 bg-[#161925] border-t border-blue-500/30">
@@ -1377,52 +1432,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 </button>
               </div>
               
-              {/* Grid layout with all navigation pages */}
+              {/* Grid layout with only the requested navigation pages */}
               <div className="grid grid-cols-2 gap-3">
-                <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/profile');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <User size={18} className="text-blue-400" />
-                  <span className="text-white">Profile</span>
-                </button>
-                
-                <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/upload');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Upload size={18} className="text-red-400" />
-                  <span className="text-white">Upload</span>
-                </button>
-                
-                <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/discover');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Search size={18} className="text-green-400" />
-                  <span className="text-white">Discover</span>
-                </button>
-                
-                <button 
-                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/notifications');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Bell size={18} className="text-purple-400" />
-                  <span className="text-white">Notifications</span>
-                </button>
-                
                 <button 
                   className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
                   onClick={() => {
@@ -1437,12 +1448,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <button 
                   className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
                   onClick={() => {
-                    navigate('/trending');
+                    navigate('/discover');
                     setMenuOpen(false);
                   }}
                 >
-                  <TrendingUp size={18} className="text-orange-400" />
-                  <span className="text-white">Trending</span>
+                  <Search size={18} className="text-green-400" />
+                  <span className="text-white">Discovery</span>
+                </button>
+                
+                <button 
+                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  onClick={() => {
+                    navigate('/profile');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <User size={18} className="text-blue-400" />
+                  <span className="text-white">Profile</span>
                 </button>
                 
                 <button 
@@ -1459,12 +1481,34 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 <button 
                   className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
                   onClick={() => {
-                    navigate('/bookmarks');
+                    navigate('/clipts');
                     setMenuOpen(false);
                   }}
                 >
-                  <Bookmark size={18} className="text-indigo-400" />
-                  <span className="text-white">Bookmarks</span>
+                  <Video size={18} className="text-purple-400" />
+                  <span className="text-white">Clipts</span>
+                </button>
+                
+                <button 
+                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  onClick={() => {
+                    navigate('/top-clipts');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Award size={18} className="text-amber-400" />
+                  <span className="text-white">Top Clipts</span>
+                </button>
+                
+                <button 
+                  className="flex items-center space-x-3 p-2 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
+                  onClick={() => {
+                    navigate('/streaming');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Monitor size={18} className="text-red-400" />
+                  <span className="text-white">Streaming</span>
                 </button>
               </div>
             </div>
