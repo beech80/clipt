@@ -8,6 +8,12 @@ interface UploadMediaResult {
 
 const FALLBACK_TO_STORAGE = true; // Set to true to fallback to Supabase Storage if Cloudinary fails
 
+// Helper function to get public URL from Supabase Storage
+const getPublicUrl = (bucket: string, path: string): string => {
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+};
+
 export const uploadImage = async (
   file: File,
   setProgress: (progress: number) => void
@@ -54,39 +60,41 @@ export const uploadVideo = async (
   setProgress: (progress: number) => void
 ): Promise<UploadMediaResult> => {
   try {
-    setProgress(10);
-    
-    // Try Cloudinary upload first
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('resourceType', 'video');
-      formData.append('folder', 'videos');
+    console.log('Starting video upload: ', file.name, file.type, file.size);
+    setProgress(1);
 
-      setProgress(30);
-      console.log('Uploading video to Cloudinary...');
-      
-      const { data, error } = await supabase.functions.invoke('cloudinary-upload', {
-        body: formData,
+    // Create a unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+    const filePath = `videos/${fileName}`;
+    
+    console.log('Uploading to path: ', filePath);
+
+    const { error, data } = await supabase.storage
+      .from('media')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
       });
 
-      if (error) throw error;
-      
-      setProgress(100);
-      console.log('Successfully uploaded video to Cloudinary:', data.url);
-      return { url: data.url, error: null };
-    } catch (cloudinaryError) {
-      console.warn('Cloudinary upload failed, falling back to Supabase Storage:', cloudinaryError);
-      
-      // If configured to fallback, try Supabase Storage
-      if (!FALLBACK_TO_STORAGE) throw cloudinaryError;
-      
-      return await uploadToSupabaseStorage(file, 'videos', setProgress);
+    // Log progress manually since we can't use onUploadProgress
+    console.log('Upload complete');
+
+    if (error) {
+      console.error('Video upload error:', error);
+      setProgress(0);
+      return { url: null, error };
     }
-  } catch (error) {
-    console.error('Error uploading video:', error);
+
+    setProgress(100);
+    const fileUrl = getPublicUrl('media', filePath);
+    console.log('Video upload complete, URL:', fileUrl);
+    
+    return { url: fileUrl, error: null };
+  } catch (err) {
+    console.error('Unexpected error during video upload:', err);
     setProgress(0);
-    return { url: null, error: error as Error };
+    return { url: null, error: err as Error };
   }
 };
 
