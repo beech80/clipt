@@ -20,6 +20,7 @@ import { createPost } from "@/services/postService";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -40,6 +41,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const checkContentSafety = async (text: string): Promise<boolean> => {
@@ -101,6 +103,9 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
     try {
       let imageUrl = null;
       let videoUrl = null;
+      const isClip = !!selectedVideo;
+      
+      console.log("Creating post with video:", !!selectedVideo);
 
       if (selectedImage) {
         const result = await uploadImage(selectedImage, setImageProgress);
@@ -109,27 +114,35 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
       }
 
       if (selectedVideo) {
+        console.log("Uploading video...");
         const result = await uploadVideo(selectedVideo, setVideoProgress);
         if (result.error) throw result.error;
         videoUrl = result.url;
+        console.log("Video uploaded successfully:", videoUrl);
       }
 
       const scheduledPublishTime = scheduledDate && scheduledTime
         ? new Date(`${format(scheduledDate, 'yyyy-MM-dd')}T${scheduledTime}`)
         : null;
 
-      const { data: post, error: postError } = await createPost({
+      const postData = {
         content,
         userId: user.id,
         imageUrl,
         videoUrl,
         scheduledPublishTime: scheduledPublishTime?.toISOString(),
         isPublished: !scheduledPublishTime,
-        postType: selectedVideo ? 'clip' : 'regular'
-      });
+        postType: selectedVideo ? 'clip' : 'regular' as 'clip' | 'regular'
+      };
+      
+      console.log("Creating post with data:", postData);
+
+      const { data: post, error: postError } = await createPost(postData);
 
       if (postError) throw postError;
       if (!post) throw new Error("Failed to create post");
+      
+      console.log("Post created successfully:", post);
 
       const mentions = extractMentions(content);
       for (const username of mentions) {
@@ -143,9 +156,21 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         { id: toastId }
       );
       
-      resetForm();
+      // Force invalidate all post-related queries 
       queryClient.invalidateQueries({ queryKey: ['posts'] });
-      if (onPostCreated) onPostCreated();
+      
+      // Specifically invalidate clipts query
+      if (isClip) {
+        console.log("Invalidating clipts query cache");
+        queryClient.invalidateQueries({ queryKey: ['posts', 'clipts'] });
+        
+        // After a short delay, navigate to the Clipts page to see the new post
+        setTimeout(() => {
+          navigate('/clipts');
+        }, 500);
+      }
+      
+      resetForm();
     } catch (error) {
       console.error("Error creating post:", error);
       toast.error("Failed to create post", { id: toastId });

@@ -14,9 +14,7 @@ const Clipts = () => {
     queryKey: ['posts', 'clipts'],
     queryFn: async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) throw new Error('Not authenticated');
+        console.log('Fetching clips...');
         
         const { data, error } = await supabase
           .from('posts')
@@ -44,7 +42,13 @@ const Clipts = () => {
           .eq('post_type', 'clip')
           .order('created_at', { ascending: false });
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching clips:', error);
+          throw error;
+        }
+        
+        console.log('Clips returned:', data?.length, 'Items found');
+        console.log('Clip data sample:', data?.[0]);
         
         // Transform data to make sure count properties are numbers, not objects
         return (data || []).map(post => ({
@@ -58,6 +62,7 @@ const Clipts = () => {
         return [] as Post[];
       }
     },
+    refetchInterval: 5000, // Add automatic refetch every 5 seconds for testing
   });
 
   return (
