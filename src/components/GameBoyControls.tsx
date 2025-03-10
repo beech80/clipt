@@ -795,55 +795,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
-  // Add CSS for button press animation
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .button-press {
-        transform: scale(0.9) !important;
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
-        filter: brightness(1.2) !important;
-      }
-      
-      .pulse-highlight {
-        animation: pulse-border 1s ease-out;
-      }
-      
-      .currently-selected-post {
-        position: relative;
-      }
-      
-      .currently-selected-post::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        border: 2px solid rgba(99, 102, 241, 0.5);
-        border-radius: 8px;
-        pointer-events: none;
-        z-index: 1;
-      }
-      
-      @keyframes pulse-border {
-        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
-        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  const handleCliptButtonClick = () => {
-    // Navigate to the Clipts page
-    navigate('/clipts');
-  };
-
+  // Handler for like button click
   const handleLikeClick = async () => {
     if (!currentPostId) {
       toast.error('No post selected');
@@ -930,6 +882,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
+  // Handler for comment button click
   const handleCommentClick = async () => {
     if (!currentPostId) {
       toast.error('No post selected');
@@ -965,6 +918,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setCommentModalOpen(true);
   };
 
+  // Handler for trophy button click
   const handleTrophyClick = async () => {
     if (!currentPostId) {
       toast.error('No post selected');
@@ -1076,6 +1030,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
+  // Handler for follow button click
   const handleFollowClick = async () => {
     if (!currentPostId) {
       toast.error('No post selected');
@@ -1184,6 +1139,62 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       console.error('Error following user:', error);
       toast.error('Failed to follow user');
     }
+  };
+
+  // Handle post button click
+  const handlePost = () => {
+    console.log('Navigating to post creation page');
+    navigate('/post/new');
+    toast.info('Create a new post');
+  };
+
+  // Add CSS for button press animation
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .button-press {
+        transform: scale(0.9) !important;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
+        filter: brightness(1.2) !important;
+      }
+      
+      .pulse-highlight {
+        animation: pulse-border 1s ease-out;
+      }
+      
+      .currently-selected-post {
+        position: relative;
+      }
+      
+      .currently-selected-post::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        border: 2px solid rgba(99, 102, 241, 0.5);
+        border-radius: 8px;
+        pointer-events: none;
+        z-index: 1;
+      }
+      
+      @keyframes pulse-border {
+        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  const handleCliptButtonClick = () => {
+    // Navigate to the Clipts page
+    navigate('/clipts');
   };
 
   const handleMenu = () => {
@@ -1370,37 +1381,53 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           
           {/* Right - Action buttons in diamond pattern */}
           <div className="relative w-[100px] h-[100px]">
-            {/* Like button */}
-            <button 
-              className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-red-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-red-500/60 active:scale-95 transition-all duration-200"
-              onClick={handleLikeClick}
-            >
-              <Heart size={16} className="text-red-500" />
-            </button>
-            
-            {/* Comment button */}
-            <button 
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-blue-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-blue-500/60 active:scale-95 transition-all duration-200"
-              onClick={handleCommentClick}
-            >
-              <MessageCircle size={16} className="text-blue-400" />
-            </button>
-            
-            {/* Trophy button */}
-            <button 
-              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-yellow-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-yellow-500/60 active:scale-95 transition-all duration-200"
-              onClick={handleTrophyClick}
-            >
-              <Trophy size={16} className="text-yellow-400" />
-            </button>
-            
-            {/* Follow button */}
-            <button 
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-green-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-green-500/60 active:scale-95 transition-all duration-200"
-              onClick={handleFollowClick}
-            >
-              <UserPlus size={16} className="text-green-500" />
-            </button>
+            {/* Action Buttons (Diamond Formation) */}
+            <div className="diamond-buttons relative flex flex-col items-center transition-opacity duration-200">
+              <div className="flex justify-center">
+                <button
+                  className="action-button"
+                  data-action="like"
+                  onClick={handleLikeClick}
+                >
+                  <Heart size={16} className="text-red-500" />
+                </button>
+              </div>
+              <div className="flex justify-between w-20">
+                <button
+                  className="action-button"
+                  data-action="comment"
+                  onClick={handleCommentClick}
+                >
+                  <MessageCircle size={16} className="text-blue-500" />
+                </button>
+                <button
+                  className="action-button"
+                  data-action="trophy"
+                  onClick={handleTrophyClick}
+                >
+                  <Trophy size={16} className="text-yellow-500" />
+                </button>
+              </div>
+              <div className="flex justify-center">
+                <button
+                  className="action-button"
+                  data-action="follow"
+                  onClick={handleFollowClick}
+                >
+                  <UserPlus size={16} className="text-green-500" />
+                </button>
+              </div>
+              
+              {/* POST button underneath the diamond */}
+              <div className="mt-3 flex justify-center">
+                <button 
+                  className="post-button w-[50px] h-[24px] rounded-md bg-gradient-to-r from-purple-600 to-blue-500 flex items-center justify-center text-white text-xs font-bold hover:from-purple-700 hover:to-blue-600 active:scale-95 transition-all duration-200"
+                  onClick={handlePost}
+                >
+                  POST
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
