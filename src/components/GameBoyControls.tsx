@@ -616,15 +616,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       console.log(`Attempting to update trophy for post ${currentPostId} by user ${userId}`);
       
       // Check if the user has already voted using likes table
-      const { data: existingLike, error: likeCheckError } = await supabase
+      const { data: existingLike, error: likeError } = await supabase
         .from('likes')
-        .select('id')
+        .select('*')
         .eq('post_id', currentPostId)
         .eq('user_id', userId)
         .maybeSingle();
       
-      if (likeCheckError) {
-        console.error('Error checking like status:', likeCheckError);
+      if (likeError) {
+        console.error('Error checking like status:', likeError);
       }
       
       let success = false;
@@ -634,7 +634,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         const { error: unlikeError } = await supabase
           .from('likes')
           .delete()
-          .eq('id', existingLike.id);
+          .eq('post_id', currentPostId)
+          .eq('user_id', userId);
         
         if (unlikeError) {
           console.error('Error removing trophy:', unlikeError);
@@ -1144,7 +1145,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Handle post button click
   const handlePost = () => {
     console.log('Navigating to post creation page');
-    navigate('/post/new');
+    // Force a hard navigation to ensure the page loads completely
+    window.location.href = '/post/new';
     toast.info('Create a new post');
   };
 
