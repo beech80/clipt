@@ -630,7 +630,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Get post owner ID for notification
       const { data: post } = await supabase
         .from('posts')
-        .select('user_id')
+        .select('user_id, trophy_count')
         .eq('id', currentPostId)
         .single();
       
@@ -640,6 +640,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       const authorId = post.user_id;
+      let newTrophyCount = post.trophy_count || 0;
       
       // Check if already voted
       const { data: existingVote } = await supabase
@@ -649,6 +650,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         .eq('user_id', userId)
         .single();
       
+      let voteAdded = false;
+      
       if (existingVote) {
         // Remove vote
         await supabase
@@ -656,8 +659,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           .delete()
           .eq('post_id', currentPostId)
           .eq('user_id', userId);
-          
-        toast.success('Removed vote from post');
+        
+        // Decrement trophy count
+        newTrophyCount = Math.max(0, newTrophyCount - 1);
+        
+        toast.success('Removed trophy from post');
       } else {
         // Add vote
         await supabase
@@ -668,12 +674,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             created_at: new Date().toISOString()
           });
           
+        // Increment trophy count  
+        newTrophyCount += 1;
+        voteAdded = true;
+        
         // Create notification
         if (authorId !== userId) {
           await supabase
             .from('notifications')
             .insert({
-              type: 'like',
+              type: 'trophy',
               user_id: authorId,
               actor_id: userId,
               resource_id: currentPostId,
@@ -684,16 +694,54 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             });
         }
         
-        toast.success('Voted for post');
+        toast.success('Added trophy to post');
       }
       
-      // Trigger a refresh
+      // Update the post's trophy count in the database
+      await supabase
+        .from('posts')
+        .update({ trophy_count: newTrophyCount })
+        .eq('id', currentPostId);
+      
+      // Update trophy count in the UI directly
+      if (targetPost) {
+        const trophyCountElement = targetPost.querySelector('.trophy-count');
+        if (trophyCountElement) {
+          trophyCountElement.textContent = newTrophyCount.toString();
+        }
+        
+        // Update trophy button visual state
+        const trophyButtonUI = targetPost.querySelector('.trophy-button');
+        if (trophyButtonUI) {
+          if (voteAdded) {
+            trophyButtonUI.classList.add('active');
+          } else {
+            trophyButtonUI.classList.remove('active');
+          }
+        }
+      }
+      
+      // Trigger a refresh event for components that listen to it
       document.dispatchEvent(new CustomEvent('refresh-post', {
-        detail: { postId: currentPostId }
+        detail: { 
+          postId: currentPostId,
+          trophyCount: newTrophyCount,
+          trophyAdded: voteAdded
+        }
       }));
+      
+      // Global state update to refresh trophy UI across components
+      window.dispatchEvent(new CustomEvent('trophy-update', {
+        detail: {
+          postId: currentPostId,
+          count: newTrophyCount,
+          active: voteAdded
+        }
+      }));
+      
     } catch (error) {
-      console.error('Error voting for post:', error);
-      toast.error('Failed to vote for post');
+      console.error('Error updating trophy for post:', error);
+      toast.error('Failed to update trophy');
     }
   };
 
