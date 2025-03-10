@@ -608,7 +608,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (targetPost) {
       const postTrophyButton = targetPost.querySelector('.trophy-button');
       if (postTrophyButton) {
-        console.log('Clicking post trophy button directly');
+        console.log('Found trophy button on post, clicking directly');
         postTrophyButton.dispatchEvent(new MouseEvent('click', {
           view: window,
           bubbles: true,
@@ -644,16 +644,18 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       const authorId = post.user_id;
       let newTrophyCount = post.trophy_count || 0;
       
-      // Check if already voted
+      // Check if already voted using clip_votes table
       const { data: existingVote, error: voteError } = await supabase
-        .from('post_votes')
-        .select('*')
+        .from('clip_votes')
+        .select('id')
         .eq('post_id', currentPostId)
         .eq('user_id', userId)
         .maybeSingle();
       
-      if (voteError) {
+      if (voteError && voteError.code !== 'PGRST116') {
         console.error('Error checking existing vote:', voteError);
+        toast.error('Failed to check trophy status');
+        return;
       }
       
       let voteAdded = false;
@@ -662,10 +664,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         if (existingVote) {
           // Remove vote
           const { error: deleteError } = await supabase
-            .from('post_votes')
+            .from('clip_votes')
             .delete()
-            .eq('post_id', currentPostId)
-            .eq('user_id', userId);
+            .eq('id', existingVote.id);
             
           if (deleteError) {
             console.error('Error removing vote:', deleteError);
@@ -679,11 +680,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         } else {
           // Add vote
           const { error: insertError } = await supabase
-            .from('post_votes')
+            .from('clip_votes')
             .insert({
               post_id: currentPostId,
               user_id: userId,
-              created_at: new Date().toISOString()
+              value: 1
             });
             
           if (insertError) {
@@ -743,15 +744,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           }
         }
         
-        // Trigger a refresh event for components that listen to it
-        document.dispatchEvent(new CustomEvent('refresh-post', {
-          detail: { 
-            postId: currentPostId,
-            trophyCount: newTrophyCount,
-            trophyAdded: voteAdded
-          }
-        }));
-        
         // Global state update to refresh trophy UI across components
         window.dispatchEvent(new CustomEvent('trophy-update', {
           detail: {
@@ -759,6 +751,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             count: newTrophyCount,
             active: voteAdded
           }
+        }));
+        
+        // Refresh post data via query invalidation
+        document.dispatchEvent(new CustomEvent('refresh-post', { 
+          detail: { postId: currentPostId }
         }));
         
       } catch (actionError) {

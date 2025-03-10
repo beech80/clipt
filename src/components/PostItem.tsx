@@ -36,6 +36,9 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   const [showComments, setShowComments] = useState(false);
   const [commentsCount, setCommentsCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [trophyCount, setTrophyCount] = useState(0);
+  const [hasTrophy, setHasTrophy] = useState(false);
+  const [trophyLoading, setTrophyLoading] = useState(false);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
   const queryClient = useQueryClient();
@@ -275,6 +278,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     }
 
     try {
+      setTrophyLoading(true);
+      
       const { data: existingVote, error: checkError } = await supabase
         .from('clip_votes')
         .select('id')
@@ -321,6 +326,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     } catch (error) {
       console.error('Error handling trophy vote:', error);
       toast.error('Failed to update trophy status');
+    } finally {
+      setTrophyLoading(false);
     }
   };
 
@@ -421,6 +428,24 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     checkFollowStatus();
   }, [user, post.user_id]);
 
+  useEffect(() => {
+    const handleTrophyUpdate = (e: CustomEvent) => {
+      if (e.detail.postId === postId) {
+        console.log('Trophy update event received for this post:', e.detail);
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+        // Update the UI immediately
+        setTrophyCount(e.detail.count);
+        setHasTrophy(e.detail.active);
+      }
+    };
+
+    window.addEventListener('trophy-update', handleTrophyUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('trophy-update', handleTrophyUpdate as EventListener);
+    };
+  }, [postId, queryClient]);
+
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
@@ -440,7 +465,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     <article 
       className={`relative w-full gaming-card transition-opacity duration-300 ${
         isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
-      } ${highlight ? 'ring-2 ring-primary' : ''} post-interaction`}
+      } ${highlight ? 'ring-2 ring-blue-500' : ''}`}
       data-post-id={postId}
     >
       {/* User Header */}
@@ -520,7 +545,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
               onClick={handleComment}
             >
               <MessageSquare 
-                className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90"
+                className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
               />
               <span className="text-base font-medium text-gray-400 group-hover:text-blue-300">
                 {commentsCount}
@@ -561,11 +586,10 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
           onClick={handleTrophyClick}
         >
           <Trophy 
-            className={`h-6 w-6 ${post.clip_votes?.[0]?.count ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
-            fill={post.clip_votes?.[0]?.count ? "currentColor" : "none"}
+            className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all`}
           />
-          <span className={`text-base font-medium ${post.clip_votes?.[0]?.count ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
-            {post.clip_votes?.[0]?.count || 0}
+          <span className={`text-base font-medium ${hasTrophy ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
+            {trophyCount}
           </span>
         </button>
         
