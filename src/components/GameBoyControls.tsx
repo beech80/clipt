@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -30,11 +31,13 @@ interface GameBoyControlsProps {
 const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCurrentPostId }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
   const [joystickActive, setJoystickActive] = useState(false);
   const [joystickDirection, setJoystickDirection] = useState<'up' | 'down' | 'left' | 'right' | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
   const joystickRef = useRef<HTMLDivElement>(null);
   const joystickKnobRef = useRef<HTMLDivElement>(null);
   const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 });
@@ -227,8 +230,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     toast.info('Create a new post');
   };
 
-  // Handler for CLIPT button click (now acts as post button)
-  const handleCliptButtonClick = handlePost;
+  // Handler for CLIPT button click
+  const handleCliptButtonClick = () => {
+    // Navigate to the Clipts page (restore original functionality)
+    navigate('/clipts');
+    toast.info('View Clipts');
+  };
 
   // Joystick smooth movement
   const handleJoystickMove = (x: number, y: number) => {
@@ -356,6 +363,45 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
     
     handleJoystickRelease();
+  };
+
+  // Joystick direction action handler
+  const handleJoystickAction = (direction: 'up' | 'down' | 'left' | 'right') => {
+    setJoystickDirection(direction);
+    
+    // Handle navigation or actions based on joystick direction
+    if (direction === 'up') {
+      handleJoystickDown('up');
+      window.scrollBy(0, -scrollDistance);
+    } else if (direction === 'down') {
+      handleJoystickDown('down');
+      window.scrollBy(0, scrollDistance);
+    } else if (direction === 'left') {
+      // Handle left action
+      if (location.pathname.includes('/post/') && location.pathname !== '/post/new') {
+        // Navigate to previous post if on a post page
+        navigate(-1);
+      }
+    } else if (direction === 'right') {
+      // Handle right action
+      if (location.pathname === '/') {
+        // Navigate to next post on home page
+        const posts = document.querySelectorAll('[data-post-id]');
+        if (posts.length > 0 && currentPostId) {
+          const currentIndex = Array.from(posts).findIndex(
+            post => post.getAttribute('data-post-id') === currentPostId
+          );
+          if (currentIndex < posts.length - 1) {
+            const nextPost = posts[currentIndex + 1];
+            const nextPostId = nextPost.getAttribute('data-post-id');
+            if (nextPostId) {
+              setCurrentPostId(nextPostId);
+              nextPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        }
+      }
+    }
   };
 
   // Keep track of current route
@@ -833,7 +879,49 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setMenuOpen(false);
   };
 
-  // Add CSS classes for direction indicators
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .button-press {
+        transform: scale(0.9) !important;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
+        filter: brightness(1.2) !important;
+      }
+      
+      .pulse-highlight {
+        animation: pulse-border 1s ease-out;
+      }
+      
+      .currently-selected-post {
+        position: relative;
+      }
+      
+      .currently-selected-post::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        border: 2px solid rgba(99, 102, 241, 0.5);
+        border-radius: 8px;
+        pointer-events: none;
+        z-index: 1;
+      }
+      
+      @keyframes pulse-border {
+        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -841,6 +929,49 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       .direction-down { box-shadow: 0 4px 6px rgba(49, 130, 206, 0.6); }
       .direction-left { box-shadow: -4px 0 6px rgba(49, 130, 206, 0.6); }
       .direction-right { box-shadow: 4px 0 6px rgba(49, 130, 206, 0.6); }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .button-press {
+        transform: scale(0.9) !important;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
+        filter: brightness(1.2) !important;
+      }
+      
+      .pulse-highlight {
+        animation: pulse-border 1s ease-out;
+      }
+      
+      .currently-selected-post {
+        position: relative;
+      }
+      
+      .currently-selected-post::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        border: 2px solid rgba(99, 102, 241, 0.5);
+        border-radius: 8px;
+        pointer-events: none;
+        z-index: 1;
+      }
+      
+      @keyframes pulse-border {
+        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
+        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+      }
     `;
     document.head.appendChild(style);
     
@@ -987,7 +1118,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </button>
               
               <button 
-                onClick={() => navigate('/upload')}
+                onClick={handlePost}
                 className="w-[30px] h-[30px] rounded-full bg-[#20203A] flex items-center justify-center hover:bg-[#252545] transition-colors duration-200 shadow-inner"
               >
                 <Camera size={14} className="text-gray-400" />
