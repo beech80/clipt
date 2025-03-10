@@ -608,6 +608,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (targetPost) {
       const postTrophyButton = targetPost.querySelector('.trophy-button');
       if (postTrophyButton) {
+        console.log('Clicking post trophy button directly');
         postTrophyButton.dispatchEvent(new MouseEvent('click', {
           view: window,
           bubbles: true,
@@ -627,14 +628,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         return;
       }
       
-      // Get post owner ID for notification
-      const { data: post } = await supabase
+      // Get post details
+      const { data: post, error: postError } = await supabase
         .from('posts')
-        .select('user_id, trophy_count')
+        .select('id, user_id, trophy_count')
         .eq('id', currentPostId)
         .single();
       
-      if (!post) {
+      if (postError || !post) {
+        console.error('Error fetching post:', postError);
         toast.error('Post not found');
         return;
       }
@@ -643,105 +645,130 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       let newTrophyCount = post.trophy_count || 0;
       
       // Check if already voted
-      const { data: existingVote } = await supabase
+      const { data: existingVote, error: voteError } = await supabase
         .from('post_votes')
         .select('*')
         .eq('post_id', currentPostId)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
+      
+      if (voteError) {
+        console.error('Error checking existing vote:', voteError);
+      }
       
       let voteAdded = false;
       
-      if (existingVote) {
-        // Remove vote
-        await supabase
-          .from('post_votes')
-          .delete()
-          .eq('post_id', currentPostId)
-          .eq('user_id', userId);
-        
-        // Decrement trophy count
-        newTrophyCount = Math.max(0, newTrophyCount - 1);
-        
-        toast.success('Removed trophy from post');
-      } else {
-        // Add vote
-        await supabase
-          .from('post_votes')
-          .insert({
-            post_id: currentPostId,
-            user_id: userId,
-            created_at: new Date().toISOString()
-          });
+      try {
+        if (existingVote) {
+          // Remove vote
+          const { error: deleteError } = await supabase
+            .from('post_votes')
+            .delete()
+            .eq('post_id', currentPostId)
+            .eq('user_id', userId);
+            
+          if (deleteError) {
+            console.error('Error removing vote:', deleteError);
+            throw new Error('Failed to remove trophy');
+          }
           
-        // Increment trophy count  
-        newTrophyCount += 1;
-        voteAdded = true;
-        
-        // Create notification
-        if (authorId !== userId) {
-          await supabase
-            .from('notifications')
+          // Decrement trophy count
+          newTrophyCount = Math.max(0, newTrophyCount - 1);
+          
+          toast.success('Removed trophy from post');
+        } else {
+          // Add vote
+          const { error: insertError } = await supabase
+            .from('post_votes')
             .insert({
-              type: 'trophy',
-              user_id: authorId,
-              actor_id: userId,
-              resource_id: currentPostId,
-              resource_type: 'post',
-              content: 'gave a trophy to your post',
-              created_at: new Date().toISOString(),
-              read: false
+              post_id: currentPostId,
+              user_id: userId,
+              created_at: new Date().toISOString()
             });
+            
+          if (insertError) {
+            console.error('Error adding vote:', insertError);
+            throw new Error('Failed to add trophy');
+          }
+            
+          // Increment trophy count  
+          newTrophyCount += 1;
+          voteAdded = true;
+          
+          // Create notification
+          if (authorId !== userId) {
+            await supabase
+              .from('notifications')
+              .insert({
+                type: 'trophy',
+                user_id: authorId,
+                actor_id: userId,
+                resource_id: currentPostId,
+                resource_type: 'post',
+                content: 'gave a trophy to your post',
+                created_at: new Date().toISOString(),
+                read: false
+              });
+          }
+          
+          toast.success('Added trophy to post');
         }
         
-        toast.success('Added trophy to post');
-      }
-      
-      // Update the post's trophy count in the database
-      await supabase
-        .from('posts')
-        .update({ trophy_count: newTrophyCount })
-        .eq('id', currentPostId);
-      
-      // Update trophy count in the UI directly
-      if (targetPost) {
-        const trophyCountElement = targetPost.querySelector('.trophy-count');
-        if (trophyCountElement) {
-          trophyCountElement.textContent = newTrophyCount.toString();
+        // Update the post's trophy count in the database
+        const { error: updateError } = await supabase
+          .from('posts')
+          .update({ trophy_count: newTrophyCount })
+          .eq('id', currentPostId);
+          
+        if (updateError) {
+          console.error('Error updating trophy count:', updateError);
+          throw new Error('Failed to update trophy count');
         }
         
-        // Update trophy button visual state
-        const trophyButtonUI = targetPost.querySelector('.trophy-button');
-        if (trophyButtonUI) {
-          if (voteAdded) {
-            trophyButtonUI.classList.add('active');
-          } else {
-            trophyButtonUI.classList.remove('active');
+        // Update trophy count in the UI directly
+        if (targetPost) {
+          const trophyCountElement = targetPost.querySelector('.trophy-count');
+          if (trophyCountElement) {
+            trophyCountElement.textContent = newTrophyCount.toString();
+          }
+          
+          // Update trophy button visual state
+          const trophyButtonUI = targetPost.querySelector('.trophy-button');
+          if (trophyButtonUI) {
+            if (voteAdded) {
+              trophyButtonUI.classList.add('active');
+            } else {
+              trophyButtonUI.classList.remove('active');
+            }
           }
         }
+        
+        // Trigger a refresh event for components that listen to it
+        document.dispatchEvent(new CustomEvent('refresh-post', {
+          detail: { 
+            postId: currentPostId,
+            trophyCount: newTrophyCount,
+            trophyAdded: voteAdded
+          }
+        }));
+        
+        // Global state update to refresh trophy UI across components
+        window.dispatchEvent(new CustomEvent('trophy-update', {
+          detail: {
+            postId: currentPostId,
+            count: newTrophyCount,
+            active: voteAdded
+          }
+        }));
+        
+      } catch (actionError) {
+        console.error('Error in trophy action:', actionError);
+        toast.error(actionError.message || 'Failed to update trophy');
       }
-      
-      // Trigger a refresh event for components that listen to it
-      document.dispatchEvent(new CustomEvent('refresh-post', {
-        detail: { 
-          postId: currentPostId,
-          trophyCount: newTrophyCount,
-          trophyAdded: voteAdded
-        }
-      }));
-      
-      // Global state update to refresh trophy UI across components
-      window.dispatchEvent(new CustomEvent('trophy-update', {
-        detail: {
-          postId: currentPostId,
-          count: newTrophyCount,
-          active: voteAdded
-        }
-      }));
       
     } catch (error) {
       console.error('Error updating trophy for post:', error);
-      toast.error('Failed to update trophy');
+      toast.error('Trophy update failed. Please try again.');
     }
   };
 
