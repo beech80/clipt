@@ -10,6 +10,7 @@ interface CreatePostParams {
   scheduledPublishTime?: string | null;
   isPublished?: boolean;
   gameId?: string | number | null;
+  postType?: 'regular' | 'clip' | null;
 }
 
 interface CreatePostResponse {
@@ -25,7 +26,7 @@ interface CreatePostResponse {
   error: Error | null;
 }
 
-export const createPost = async ({ content, userId, imageUrl, videoUrl, scheduledPublishTime, isPublished, gameId }: CreatePostParams): Promise<CreatePostResponse> => {
+export const createPost = async ({ content, userId, imageUrl, videoUrl, scheduledPublishTime, isPublished, gameId, postType }: CreatePostParams): Promise<CreatePostResponse> => {
   try {
     // Convert numeric gameId to UUID-compatible format if provided
     const formattedGameId = gameId ? gameIdToUuid(gameId) : null;
@@ -40,7 +41,8 @@ export const createPost = async ({ content, userId, imageUrl, videoUrl, schedule
         video_url: videoUrl,
         scheduled_publish_time: scheduledPublishTime,
         is_published: isPublished,
-        game_id: formattedGameId
+        game_id: formattedGameId,
+        post_type: postType || 'regular'
       })
       .select()
       .single();

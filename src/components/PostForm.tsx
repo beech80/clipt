@@ -124,7 +124,8 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         imageUrl,
         videoUrl,
         scheduledPublishTime: scheduledPublishTime?.toISOString(),
-        isPublished: !scheduledPublishTime
+        isPublished: !scheduledPublishTime,
+        postType: selectedVideo ? 'clip' : 'regular'
       });
 
       if (postError) throw postError;
