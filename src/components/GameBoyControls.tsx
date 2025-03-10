@@ -1145,8 +1145,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Handle post button click
   const handlePost = () => {
     console.log('Navigating to post creation page');
-    // Force a hard navigation to ensure the page loads completely
-    window.location.href = '/post/new';
+    // Use absolute path with leading slash
+    navigate('/post/new');
     toast.info('Create a new post');
   };
 
@@ -1383,52 +1383,50 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           
           {/* Right - Action buttons in diamond pattern */}
           <div className="relative w-[100px] h-[100px]">
-            {/* Action Buttons (Diamond Formation) */}
-            <div className="diamond-buttons relative flex flex-col items-center transition-opacity duration-200">
-              <div className="flex justify-center">
-                <button
-                  className="action-button"
-                  data-action="like"
-                  onClick={handleLikeClick}
-                >
-                  <Heart size={16} className="text-red-500" />
-                </button>
-              </div>
-              <div className="flex justify-between w-20">
-                <button
-                  className="action-button"
-                  data-action="comment"
-                  onClick={handleCommentClick}
-                >
-                  <MessageCircle size={16} className="text-blue-500" />
-                </button>
-                <button
-                  className="action-button"
-                  data-action="trophy"
-                  onClick={handleTrophyClick}
-                >
-                  <Trophy size={16} className="text-yellow-500" />
-                </button>
-              </div>
-              <div className="flex justify-center">
-                <button
-                  className="action-button"
-                  data-action="follow"
-                  onClick={handleFollowClick}
-                >
-                  <UserPlus size={16} className="text-green-500" />
-                </button>
-              </div>
-              
-              {/* POST button underneath the diamond */}
-              <div className="mt-3 flex justify-center">
-                <button 
-                  className="post-button w-[50px] h-[24px] rounded-md bg-gradient-to-r from-purple-600 to-blue-500 flex items-center justify-center text-white text-xs font-bold hover:from-purple-700 hover:to-blue-600 active:scale-95 transition-all duration-200"
-                  onClick={handlePost}
-                >
-                  POST
-                </button>
-              </div>
+            {/* Like button */}
+            <button 
+              className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-red-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-red-500/60 active:scale-95 transition-all duration-200"
+              data-action="like"
+              onClick={handleLikeClick}
+            >
+              <Heart size={16} className="text-red-500" />
+            </button>
+            
+            {/* Comment button */}
+            <button 
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-blue-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-blue-500/60 active:scale-95 transition-all duration-200"
+              data-action="comment"
+              onClick={handleCommentClick}
+            >
+              <MessageCircle size={16} className="text-blue-400" />
+            </button>
+            
+            {/* Trophy button */}
+            <button 
+              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-yellow-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-yellow-500/60 active:scale-95 transition-all duration-200"
+              data-action="trophy"
+              onClick={handleTrophyClick}
+            >
+              <Trophy size={16} className="text-yellow-400" />
+            </button>
+            
+            {/* Follow button */}
+            <button 
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-green-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-green-500/60 active:scale-95 transition-all duration-200"
+              data-action="follow"
+              onClick={handleFollowClick}
+            >
+              <UserPlus size={16} className="text-green-500" />
+            </button>
+            
+            {/* POST button underneath the diamond */}
+            <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2">
+              <button 
+                className="post-button w-[50px] h-[24px] rounded-md bg-gradient-to-r from-purple-600 to-blue-500 flex items-center justify-center text-white text-xs font-bold hover:from-purple-700 hover:to-blue-600 active:scale-95 transition-all duration-200"
+                onClick={handlePost}
+              >
+                POST
+              </button>
             </div>
           </div>
         </div>
