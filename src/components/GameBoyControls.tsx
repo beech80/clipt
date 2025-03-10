@@ -1238,8 +1238,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="bg-[#10101e]/95 backdrop-blur-lg pb-6 pt-4 px-6 md:px-16 lg:px-24 w-full">
+        {/* Keep currentPostId tracking but make it invisible by setting opacity to 0 */}
         {currentPostId && (
-          <div className="absolute top-0 left-0 right-0 transform -translate-y-full bg-[#10101e]/90 px-2 py-1 text-[10px] text-gray-400 truncate text-center">
+          <div className="absolute top-0 left-0 right-0 transform -translate-y-full opacity-0 pointer-events-none">
             Active: Post #{currentPostId.substring(0, 8)}
           </div>
         )}
