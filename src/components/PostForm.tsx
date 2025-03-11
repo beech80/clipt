@@ -147,12 +147,12 @@ const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
       if (postError) throw postError;
       if (!post) throw new Error("Failed to create post");
       
-      console.log("Post created successfully:", post);
+      console.log("Post creation complete", post, "Has video:", !!videoUrl, "Post type:", postType);
 
       // Invalidate the posts queries to refresh the Clipts page
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts', 'clipts'] });
-
+      
       const mentions = extractMentions(content);
       for (const username of mentions) {
         await createMention(username, post.id);
@@ -183,16 +183,7 @@ const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
         if (onPostCreated) onPostCreated();
         
         // Force redirect to Clipts page
-        setTimeout(() => {
-          console.log("Navigating to Clipts page now");
-          navigate('/clipts');
-          
-          // Force a refresh of the Clipts page data after arrival
-          setTimeout(() => {
-            console.log("Refreshing Clipts page data");
-            queryClient.invalidateQueries({ queryKey: ['posts', 'clipts'] });
-          }, 500);
-        }, 1000);
+        window.location.href = '/clipts'; // Use direct location change to force full page reload
       } else {
         // For non-video posts, just do the normal close/callback
         if (onPostCreated) onPostCreated();
