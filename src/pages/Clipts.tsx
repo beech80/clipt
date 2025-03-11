@@ -70,7 +70,7 @@ const Clipts = () => {
       setIsLoading(true);
       setError(null);
       
-      // Query for ALL posts without any video filtering
+      // Query for ALL posts to ensure we get content
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -104,48 +104,12 @@ const Clipts = () => {
       }
       
       if (!data || data.length === 0) {
-        // If no posts found, create dummy posts with working videos for testing
-        const dummyPosts: ExtendedPost[] = [
-          {
-            id: "dummy1",
-            content: "Sample video post 1",
-            image_url: null,
-            video_url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
-            user_id: "system",
-            created_at: new Date().toISOString(),
-            profiles: {
-              username: "system",
-              display_name: "System",
-              avatar_url: null
-            },
-            is_published: true,
-            clip_votes: [{ count: 0 }],
-            trophy_count: 0
-          },
-          {
-            id: "dummy2",
-            content: "Sample video post 2",
-            image_url: null,
-            video_url: "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4",
-            user_id: "system",
-            created_at: new Date().toISOString(),
-            profiles: {
-              username: "system",
-              display_name: "System",
-              avatar_url: null
-            },
-            is_published: true,
-            clip_votes: [{ count: 0 }],
-            trophy_count: 0
-          }
-        ];
-        
-        setRawPosts(dummyPosts);
+        setRawPosts([]);
         setIsLoading(false);
         return;
       }
       
-      // Process ALL posts without filtering for videos
+      // Process posts
       const processedPosts = data.map(post => {
         const formattedPost: ExtendedPost = {
           id: post.id,
@@ -163,29 +127,8 @@ const Clipts = () => {
           
         return formattedPost;
       });
-
-      // Add sample videos to ensure we have something to display
-      const sampleVideoPosts: ExtendedPost[] = [
-        {
-          id: "sample1",
-          content: "Sample video post from MDN",
-          image_url: null,
-          video_url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
-          user_id: "system",
-          created_at: new Date().toISOString(),
-          profiles: {
-            username: "system",
-            display_name: "Sample",
-            avatar_url: null
-          },
-          is_published: true,
-          clip_votes: [{ count: 0 }],
-          trophy_count: 0
-        }
-      ];
       
-      // Combine actual posts with sample posts
-      setRawPosts([...sampleVideoPosts, ...processedPosts]);
+      setRawPosts(processedPosts);
       setIsLoading(false);
     } catch (err) {
       console.error('Exception fetching posts:', err);
@@ -270,7 +213,7 @@ const Clipts = () => {
       <div className="container mx-auto px-4 py-24 max-w-2xl">
         {isLoading && (
           <div className="flex justify-center my-8">
-            <div className="animate-pulse">Loading content...</div>
+            <div className="animate-pulse">Loading posts...</div>
           </div>
         )}
 
@@ -281,30 +224,11 @@ const Clipts = () => {
           </div>
         )}
 
-        {/* Sample embedded video to verify player works */}
-        <div className="mb-8 pb-4 border-b border-gray-800">
-          <h2 className="text-lg font-bold mb-2 text-white">Sample Video</h2>
-          <video 
-            src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm"
-            controls
-            className="w-full aspect-video rounded"
-            poster="https://interactive-examples.mdn.mozilla.net/media/examples/flower.jpg"
-          ></video>
-        </div>
-
         {/* All posts */}
         {!isLoading && rawPosts.length > 0 && (
           <div className="space-y-6">
-            <h2 className="text-lg font-bold mb-2 text-white">All Posts</h2>
             {rawPosts.map((post) => (
-              <div key={post.id} className="border border-gray-800 rounded overflow-hidden">
-                <div className="p-2 bg-gray-900">
-                  <p className="text-xs text-gray-400">
-                    {post.video_url ? '🎬 Has video' : '📷 No video'}
-                  </p>
-                </div>
-                <PostItem key={post.id} post={post} />
-              </div>
+              <PostItem key={post.id} post={post} />
             ))}
           </div>
         )}
@@ -313,7 +237,7 @@ const Clipts = () => {
         {!isLoading && rawPosts.length === 0 && !error && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <p className="text-white/60">No content found</p>
+              <p className="text-white/60">No posts found</p>
             </div>
           </div>
         )}
