@@ -1,43 +1,24 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import { RefreshCw } from "lucide-react";
 import PostItem from "@/components/PostItem";
-import { Post } from "@/types/post";
+import { Post } from "@/types/post"; 
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
 
-interface Post {
-  id: string;
-  content?: string;
-  image_url?: string;
-  video_url?: string;
-  user_id: string;
-  created_at: string;
-  post_type?: string;
-  is_published?: boolean;
-  profiles?: {
-    id: string;
-    username?: string;
-    avatar_url?: string;
-    display_name?: string;
-  };
-  games?: {
-    id: string;
-    name?: string;
-  };
-  likes: { count: number; data?: any[] };
-  comments: { count: number; data?: any[] };
-  clip_votes: { count: number; data?: any[] };
+// Define an extended type that includes our runtime properties
+// This allows us to match the expected structure while adding our own properties
+type ExtendedPost = Post & {
   trophy_count?: number;
-}
+};
 
 const Clipts = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [refreshKey, setRefreshKey] = useState(0);
-  const [rawPosts, setRawPosts] = useState<Post[]>([]);
+  const [rawPosts, setRawPosts] = useState<ExtendedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,48 +69,103 @@ const Clipts = () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('🔍 Directly fetching ALL posts with minimum filtering...');
+      console.log('🔍 Fetching video posts...');
       
-      // Super simple query with minimal filtering to get ANY posts
+      // Query to get video posts
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          *,
-          profiles (*)
+          id,
+          content,
+          image_url,
+          video_url,
+          user_id,
+          created_at,
+          post_type,
+          is_published,
+          profiles (
+            username,
+            display_name,
+            avatar_url
+          ),
+          games (
+            id,
+            name
+          )
         `)
+        .not('video_url', 'is', null)  // Only get posts with videos
+        .neq('video_url', '')         // Make sure video URL is not empty
         .eq('is_published', true)
         .order('created_at', { ascending: false })
-        .limit(20); // Limit to latest 20 posts for performance
+        .limit(20);
         
       if (error) {
-        console.error('❌ Error fetching posts directly:', error);
+        console.error('❌ Error fetching posts:', error);
         setError(error.message);
         setIsLoading(false);
         return;
       }
       
-      console.log(`📊 Raw query returned ${data?.length || 0} total posts:`, data);
+      console.log(`📊 Query returned ${data?.length || 0} video posts`);
       
       if (!data || data.length === 0) {
-        console.log('❌ No posts returned from database query!');
-        setError('No posts found in database.');
+        console.log('No video posts found');
+        setRawPosts([]);
         setIsLoading(false);
         return;
       }
       
-      // Process ALL posts with minimal transformation to see what we're getting
-      const processedPosts = data.map(post => ({
-        ...post,
-        likes: { count: 0 },
-        comments: { count: 0 },
-        clip_votes: { count: 0 },
-        trophy_count: 0
-      }));
+      // Process posts with minimal transformation to match the Post type
+      const processedPosts = data.map(post => {
+        // Create a properly formatted Post object
+        const formattedPost: ExtendedPost = {
+          id: post.id,
+          content: post.content || "", // Make sure content exists
+          image_url: post.image_url,
+          video_url: post.video_url,
+          user_id: post.user_id,
+          created_at: post.created_at,
+          profiles: post.profiles,
+          games: post.games,
+          // clip_votes needs to be an array according to the Post type
+          clip_votes: [{ count: 0 }],
+          // Add other optional fields
+          is_published: post.is_published,
+          trophy_count: 0 // Our custom property
+        };
+          
+        return formattedPost;
+      });
       
-      console.log('✅ All processed posts:', processedPosts);
+      console.log('✅ Processed video posts:', processedPosts.length);
       
-      // Set posts without any filtering at all
-      setRawPosts(processedPosts);
+      // Get trophy counts for all posts
+      const postIds = processedPosts.map(post => post.id);
+      
+      if (postIds.length > 0) {
+        try {
+          const trophyCountMap = await refreshTrophyCounts(postIds);
+          
+          // Update trophy counts
+          const updatedPosts = processedPosts.map(post => {
+            const trophyCount = trophyCountMap[post.id] || 0;
+            return {
+              ...post,
+              // Update clip_votes to have the correct count in the array format
+              clip_votes: [{ count: trophyCount }],
+              trophy_count: trophyCount
+            };
+          });
+          
+          setRawPosts(updatedPosts);
+        } catch (countError) {
+          console.error('Error updating trophy counts:', countError);
+          setRawPosts(processedPosts);
+        }
+      } else {
+        setRawPosts([]);
+      }
+      
       setIsLoading(false);
     } catch (err) {
       console.error('❌ Exception fetching posts:', err);
@@ -168,10 +204,7 @@ const Clipts = () => {
             
             return {
               ...post,
-              clip_votes: { 
-                count: trophyCount,
-                data: [] 
-              },
+              clip_votes: [{ count: trophyCount }],
               trophy_count: trophyCount
             };
           });
@@ -215,13 +248,6 @@ const Clipts = () => {
       </div>
 
       <div className="container mx-auto px-4 py-24 max-w-2xl">
-        {/* Debug info section */}
-        <div className="mb-4 p-2 bg-yellow-500/20 text-yellow-200 text-xs rounded">
-          <div>Debug: Loading state = {isLoading ? 'TRUE' : 'FALSE'}</div>
-          <div>Debug: Error = {error || 'NONE'}</div>
-          <div>Debug: Posts count = {rawPosts.length}</div>
-        </div>
-
         {isLoading && (
           <div className="flex justify-center my-8">
             <div className="animate-pulse">Loading videos...</div>
@@ -235,7 +261,7 @@ const Clipts = () => {
           </div>
         )}
 
-        {/* Display all posts - removed video filtering */}
+        {/* Display video posts */}
         {!isLoading && rawPosts.length > 0 && (
           <div className="space-y-6">
             {rawPosts.map((post) => (
@@ -245,14 +271,11 @@ const Clipts = () => {
         )}
 
         {/* If no results found */}
-        {!isLoading && rawPosts.length === 0 && (
+        {!isLoading && rawPosts.length === 0 && !error && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center space-y-4">
-              <p className="text-2xl font-semibold text-white/60">No posts found</p>
-              <p className="text-white/40">Check your database connection or create new posts!</p>
-              <div className="mt-4 p-2 bg-gray-800 rounded text-xs text-left">
-                <pre className="whitespace-pre-wrap">Error: {error || 'No specific error'}</pre>
-              </div>
+              <p className="text-2xl font-semibold text-white/60">Ready to share a video clip?</p>
+              <p className="text-white/40">No video clips found. Create a new one!</p>
             </div>
           </div>
         )}
