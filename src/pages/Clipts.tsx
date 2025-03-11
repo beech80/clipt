@@ -54,7 +54,7 @@ const Clipts = () => {
         const timestamp = new Date().getTime();
         const { count, error } = await supabase
           .from('clip_votes')
-          .select('*', { count: 'exact', head: true })
+          .select('*', { count: 'exact', head: true})
           .eq('post_id', postId)
           .eq('value', 1);
           
@@ -88,106 +88,52 @@ const Clipts = () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('🔍 Directly fetching all video posts...');
+      console.log('🔍 Directly fetching ALL posts with minimum filtering...');
       
-      // Simplified query that focuses on getting ALL published posts first
+      // Super simple query with minimal filtering to get ANY posts
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          id,
-          content,
-          image_url,
-          video_url,
-          user_id,
-          post_type,
-          is_published,
-          created_at,
-          profiles (
-            username,
-            display_name,
-            avatar_url
-          ),
-          games (
-            id,
-            name
-          )
+          *,
+          profiles (*)
         `)
         .eq('is_published', true)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(20); // Limit to latest 20 posts for performance
         
       if (error) {
         console.error('❌ Error fetching posts directly:', error);
         setError(error.message);
+        setIsLoading(false);
         return;
       }
       
-      console.log(`📊 Raw query returned ${data.length} total posts`);
+      console.log(`📊 Raw query returned ${data?.length || 0} total posts:`, data);
       
-      // Process posts - include ALL posts for now to see what we're getting
-      const allPosts = data.map(post => ({
-        id: post.id,
-        content: post.content,
-        image_url: post.image_url,
-        video_url: post.video_url,
-        user_id: post.user_id,
-        created_at: post.created_at,
-        post_type: post.post_type,
-        profiles: post.profiles,
-        games: post.games,
+      if (!data || data.length === 0) {
+        console.log('❌ No posts returned from database query!');
+        setError('No posts found in database.');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Process ALL posts with minimal transformation to see what we're getting
+      const processedPosts = data.map(post => ({
+        ...post,
         likes: { count: 0 },
         comments: { count: 0 },
-        clip_votes: { count: 0 }
+        clip_votes: { count: 0 },
+        trophy_count: 0
       }));
       
-      console.log('⚠️ All posts before filtering:', allPosts);
+      console.log('✅ All processed posts:', processedPosts);
       
-      // Now filter to only get video posts AFTER we've processed them
-      let processedPosts = allPosts.filter(post => {
-        // Check if this post has a video_url that's not null, undefined, or empty
-        const hasVideo = post.video_url && post.video_url.trim() !== '';
-        if (!hasVideo) {
-          console.log(`🔎 Post ${post.id} filtered out - no video URL`);
-        }
-        return hasVideo;
-      });
-      
-      console.log(`🎬 After filtering, found ${processedPosts.length} video posts`);
-      
-      // Get trophy counts for all posts in a single batch
-      const postIds = processedPosts.map(post => post.id);
-      
-      // Get initial trophy counts
-      if (postIds.length > 0) {
-        const trophyCountMap = await refreshTrophyCounts(postIds);
-        
-        // Update the processed posts with the trophy counts
-        processedPosts = processedPosts.map(post => {
-          const trophyCount = trophyCountMap[post.id] || 0;
-          
-          return {
-            ...post,
-            clip_votes: { 
-              count: trophyCount,
-              data: [] // Add empty array to match structure expected by components
-            },
-            trophy_count: trophyCount
-          };
-        });
-        
-        console.log('Updated posts with trophy counts:', processedPosts.map(p => ({ id: p.id, count: p.trophy_count })));
-      }
-      
-      if (processedPosts.length === 0) {
-        console.log('⚠️ No video posts found after processing');
-      } else {
-        console.log('✅ Final processed posts data:', processedPosts);
-      }
-      
-      setRawPosts(processedPosts || []);
+      // Set posts without any filtering at all
+      setRawPosts(processedPosts);
+      setIsLoading(false);
     } catch (err) {
       console.error('❌ Exception fetching posts:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
       setIsLoading(false);
     }
   }, []);
@@ -269,6 +215,13 @@ const Clipts = () => {
       </div>
 
       <div className="container mx-auto px-4 py-24 max-w-2xl">
+        {/* Debug info section */}
+        <div className="mb-4 p-2 bg-yellow-500/20 text-yellow-200 text-xs rounded">
+          <div>Debug: Loading state = {isLoading ? 'TRUE' : 'FALSE'}</div>
+          <div>Debug: Error = {error || 'NONE'}</div>
+          <div>Debug: Posts count = {rawPosts.length}</div>
+        </div>
+
         {isLoading && (
           <div className="flex justify-center my-8">
             <div className="animate-pulse">Loading videos...</div>
@@ -282,7 +235,7 @@ const Clipts = () => {
           </div>
         )}
 
-        {/* Display all video posts */}
+        {/* Display all posts - removed video filtering */}
         {!isLoading && rawPosts.length > 0 && (
           <div className="space-y-6">
             {rawPosts.map((post) => (
@@ -295,9 +248,11 @@ const Clipts = () => {
         {!isLoading && rawPosts.length === 0 && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center space-y-4">
-              <p className="text-2xl font-semibold text-white/60">Ready to share a video clip?</p>
-              <p className="text-white/40">No video clips found. Create a new one!</p>
-              <p className="text-white/40 text-sm">Only video posts will appear here.</p>
+              <p className="text-2xl font-semibold text-white/60">No posts found</p>
+              <p className="text-white/40">Check your database connection or create new posts!</p>
+              <div className="mt-4 p-2 bg-gray-800 rounded text-xs text-left">
+                <pre className="whitespace-pre-wrap">Error: {error || 'No specific error'}</pre>
+              </div>
             </div>
           </div>
         )}
