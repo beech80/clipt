@@ -524,73 +524,49 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
 
   // Load initial trophy status
   useEffect(() => {
-    const loadTrophyStatus = async () => {
-      if (!user || !postId) return;
-      
+    const showTrophyCount = async () => {
+      if (!postId) return;
+
       try {
-        // First check clip_votes table
-        let { data: existingVote, error: voteError } = await supabase
+        // Only get count from clip_votes since we've consolidated trophy voting to a single table
+        const { count: clipCount, error: clipCountError } = await supabase
           .from('clip_votes')
-          .select('id')
-          .eq('post_id', postId)
-          .eq('user_id', user.id)
-          .maybeSingle();
-          
-        if (voteError && voteError.code !== 'PGRST116') {
-          console.error('Error checking clip_votes:', voteError);
+          .select('*', { count: 'exact', head: true})
+          .eq('post_id', postId);
+        
+        if (clipCountError) {
+          console.error('Error getting trophy count:', clipCountError);
+          return;
         }
         
-        // If not found, check post_votes table
-        if (!existingVote) {
-          const { data: postVote, error: postVoteError } = await supabase
-            .from('post_votes')
+        const totalCount = clipCount || 0;
+        console.log(`Trophy count for post ${postId}:`, totalCount);
+        setTrophyCount(totalCount);
+        
+        // Check if the user has voted for this post
+        if (user) {
+          const { data: userVote, error: voteError } = await supabase
+            .from('clip_votes')
             .select('id')
             .eq('post_id', postId)
-            .eq('user_id', user.id)
-            .maybeSingle();
+            .eq('user_id', user.id);
             
-          if (!postVoteError) {
-            existingVote = postVote;
+          if (voteError) {
+            console.error('Error checking user vote:', voteError);
+            return;
           }
-        }
-        
-        setHasTrophy(!!existingVote);
-        
-        // Get trophy count (aggregated across both tables)
-        const { data: trophyData, error: countError } = await supabase.rpc(
-          'get_post_trophy_count',
-          { post_id_param: postId }
-        );
-        
-        if (countError) {
-          console.error('Error getting trophy count:', countError);
-          // Fallback to direct count
-          const { count: clipCount } = await supabase
-            .from('clip_votes')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', postId);
-            
-          const { count: voteCount } = await supabase
-            .from('post_votes')
-            .select('*', { count: 'exact', head: true })
-            .eq('post_id', postId);
-            
-          setTrophyCount((clipCount || 0) + (voteCount || 0));
-        } else {
-          setTrophyCount(trophyData || 0);
+          
+          setHasTrophy(userVote && userVote.length > 0);
         }
       } catch (error) {
-        console.error('Error loading trophy status:', error);
+        console.error('Error in showTrophyCount:', error);
       }
     };
-    
-    loadTrophyStatus();
-  }, [user, postId]);
 
-  // Listen for trophy updates
+    showTrophyCount();
+  }, [postId, user]);
+
   useEffect(() => {
-    if (!postId) return;
-    
     const handleTrophyUpdate = (e: CustomEvent) => {
       if (e.detail.postId === postId) {
         console.log('Trophy update event received for this post:', e.detail);
@@ -601,31 +577,17 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         // Get trophy count directly from the database for accuracy
         const updateTrophyCount = async () => {
           try {
-            // Try using the RPC function first
-            const { data: trophyData, error: countError } = await supabase.rpc(
-              'get_post_trophy_count',
-              { post_id_param: postId }
-            );
+            const { count, error: countError } = await supabase
+              .from('clip_votes')
+              .select('*', { count: 'exact', head: true})
+              .eq('post_id', postId);
             
-            if (!countError && trophyData !== null) {
-              console.log('Trophy count from RPC:', trophyData);
-              setTrophyCount(trophyData);
-            } else {
-              // Fallback to direct count
-              const { count: clipCount } = await supabase
-                .from('clip_votes')
-                .select('*', { count: 'exact', head: true})
-                .eq('post_id', postId);
-                
-              const { count: voteCount } = await supabase
-                .from('post_votes')
-                .select('*', { count: 'exact', head: true})
-                .eq('post_id', postId);
-              
-              const totalCount = (clipCount || 0) + (voteCount || 0);
-              console.log('Trophy count from direct count:', totalCount);
-              setTrophyCount(totalCount);
+            if (countError) {
+              console.error('Error updating trophy count:', countError);
+              return;
             }
+            
+            setTrophyCount(count || 0);
             
             // Update the trophy status
             setHasTrophy(e.detail.active);
@@ -662,30 +624,17 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
               .eq('user_id', user.id)
               .maybeSingle(),
             
-            // Check post_votes
-            supabase
-              .from('post_votes')
-              .select('id')
-              .eq('post_id', postId)
-              .eq('user_id', user.id)
-              .maybeSingle(),
-            
             // Get counts from both tables
             supabase
               .from('clip_votes')
               .select('*', { count: 'exact', head: true })
               .eq('post_id', postId),
-            
-            supabase
-              .from('post_votes')
-              .select('*', { count: 'exact', head: true })
-              .eq('post_id', postId)
-          ]).then(([clipVote, postVote, clipCount, voteCount]) => {
+          ]).then(([clipVote, clipCount]) => {
             // Update has trophy state
-            setHasTrophy(!!(clipVote.data || postVote.data));
+            setHasTrophy(!!(clipVote.data));
             
             // Update trophy count
-            setTrophyCount((clipCount.count || 0) + (voteCount.count || 0));
+            setTrophyCount(clipCount.count || 0);
           }).catch(error => {
             console.error('Error refreshing trophy state:', error);
           });

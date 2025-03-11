@@ -78,7 +78,7 @@ const Clipts = () => {
       
       if (postIds.length > 0) {
         try {
-          // Get clip_votes counts
+          // Get clip_votes counts - only use clip_votes table since we've consolidated trophy voting
           const { data: clipVotesData, error: clipVotesError } = await supabase
             .from('clip_votes')
             .select('post_id, count(*)')
@@ -94,42 +94,19 @@ const Clipts = () => {
               return acc;
             }, {});
             
-            // Get post_votes counts
-            const { data: postVotesData, error: postVotesError } = await supabase
-              .from('post_votes')
-              .select('post_id, count(*)')
-              .in('post_id', postIds)
-              .group('post_id');
+            // Update the processed posts with the actual counts
+            processedPosts = processedPosts.map(post => {
+              const trophyCount = clipVotesMap[post.id] || 0;
               
-            if (postVotesError) {
-              console.error('Error fetching post votes counts:', postVotesError);
-            } else if (postVotesData) {
-              // Create a map of post_id to count
-              const postVotesMap = postVotesData.reduce((acc, item) => {
-                acc[item.post_id] = parseInt(item.count);
-                return acc;
-              }, {});
-              
-              // Update the processed posts with the actual counts
-              processedPosts = processedPosts.map(post => {
-                const clipVotesCount = clipVotesMap[post.id] || 0;
-                const postVotesCount = postVotesMap[post.id] || 0;
-                const totalTrophyCount = clipVotesCount + postVotesCount;
-                
-                return {
-                  ...post,
-                  clip_votes: { 
-                    count: clipVotesCount,
-                    data: [] // Add empty array to match structure expected by components
-                  },
-                  post_votes: {
-                    count: postVotesCount,
-                    data: [] // Add empty array to match structure expected by components
-                  },
-                  trophy_count: totalTrophyCount
-                };
-              });
-            }
+              return {
+                ...post,
+                clip_votes: { 
+                  count: trophyCount,
+                  data: [] // Add empty array to match structure expected by components
+                },
+                trophy_count: trophyCount
+              };
+            });
           }
         } catch (countError) {
           console.error('Error processing trophy counts:', countError);
