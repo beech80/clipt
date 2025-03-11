@@ -661,6 +661,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }, 300);
     }
     
+    // Disable double-clicking
+    trophyButton?.setAttribute('disabled', 'true');
+    setTimeout(() => {
+      trophyButton?.removeAttribute('disabled');
+    }, 1000);
+    
     try {
       // Get current user
       const { data: session } = await supabase.auth.getSession();
@@ -1378,3 +1384,5 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 };
 
 export default GameBoyControls;
+
+
