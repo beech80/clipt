@@ -755,16 +755,56 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       if (success) {
+        // Get current trophy count for more accurate updates
+        const getTrophyCount = async () => {
+          try {
+            // Try using the RPC function first
+            const { data: trophyData, error: countError } = await supabase.rpc(
+              'get_post_trophy_count',
+              { post_id_param: currentPostId }
+            );
+            
+            let currentCount = 0;
+            
+            if (!countError && trophyData !== null) {
+              console.log('Trophy count from RPC:', trophyData);
+              currentCount = trophyData;
+            } else {
+              // Fallback to direct count
+              const { count: clipCount } = await supabase
+                .from('clip_votes')
+                .select('*', { count: 'exact', head: true })
+                .eq('post_id', currentPostId);
+                
+              const { count: voteCount } = await supabase
+                .from('post_votes')
+                .select('*', { count: 'exact', head: true })
+                .eq('post_id', currentPostId);
+              
+              currentCount = (clipCount || 0) + (voteCount || 0);
+              console.log('Trophy count from direct count:', currentCount);
+            }
+            
+            // Now dispatch event with accurate count
+            const trophyUpdateEvent = new CustomEvent('trophy-update', {
+              detail: {
+                postId: currentPostId,
+                count: currentCount,
+                active: !hasExistingVote
+              }
+            });
+            window.dispatchEvent(trophyUpdateEvent);
+          } catch (error) {
+            console.error('Error getting accurate trophy count:', error);
+          }
+        };
+        
+        // Call the function to get and dispatch accurate count
+        getTrophyCount();
+        
         // Update the UI immediately
         // Dispatch a custom event to notify other components
-        const trophyUpdateEvent = new CustomEvent('trophy-update', {
-          detail: {
-            postId: currentPostId,
-            count: hasExistingVote ? -1 : 1, // -1 if removing, +1 if adding
-            active: !hasExistingVote
-          }
-        });
-        window.dispatchEvent(trophyUpdateEvent);
+        // The count will be updated with accurate values from getTrophyCount
         
         // Refresh all post data
         setTimeout(() => {
