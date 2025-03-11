@@ -271,48 +271,94 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     }
   };
 
-  const handleTrophyClick = async () => {
+  const handleTrophyVote = async () => {
     if (!user) {
-      toast.error('Please sign in to give a trophy');
+      toast.error('Please sign in to vote');
       return;
     }
 
     try {
       setTrophyLoading(true);
-      
-      const { data: existingVote, error: checkError } = await supabase
+      console.log("Trophy vote attempt for post:", postId, "Current status:", hasTrophy);
+
+      // Check if the user has already voted in either table
+      const { data: existingClipVote, error: clipVoteError } = await supabase
         .from('clip_votes')
         .select('id')
         .eq('post_id', postId)
         .eq('user_id', user.id)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
-
-      if (existingVote) {
-        // Remove trophy vote
-        const { error: removeError } = await supabase
-          .from('clip_votes')
-          .delete()
-          .eq('id', existingVote.id);
-
-        if (removeError) throw removeError;
+        .maybeSingle();
         
+      if (clipVoteError && clipVoteError.code !== 'PGRST116') {
+        console.error("Error checking clip votes:", clipVoteError);
+      }
+      
+      const { data: existingPostVote, error: postVoteError } = await supabase
+        .from('post_votes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (postVoteError && postVoteError.code !== 'PGRST116') {
+        console.error("Error checking post votes:", postVoteError);
+      }
+      
+      const hasExistingVote = existingClipVote || existingPostVote;
+      console.log("Existing votes check:", { clipVote: !!existingClipVote, postVote: !!existingPostVote });
+
+      if (hasExistingVote) {
+        // Remove vote from wherever it exists
+        if (existingClipVote) {
+          const { error: removeError } = await supabase
+            .from('clip_votes')
+            .delete()
+            .eq('id', existingClipVote.id);
+
+          if (removeError) {
+            console.error("Error removing clip vote:", removeError);
+            throw removeError;
+          }
+          console.log("Removed clip vote successfully");
+        }
+        
+        if (existingPostVote) {
+          const { error: removeError } = await supabase
+            .from('post_votes')
+            .delete()
+            .eq('id', existingPostVote.id);
+
+          if (removeError) {
+            console.error("Error removing post vote:", removeError);
+            throw removeError;
+          }
+          console.log("Removed post vote successfully");
+        }
+        
+        setHasTrophy(false);
+        setTrophyCount(prev => Math.max(0, prev - 1));
         toast.success('Trophy removed');
       } else {
-        // Add trophy vote
-        const { error: voteError } = await supabase
+        // Add trophy vote - always to clip_votes for consistency
+        console.log("Adding new trophy vote to post:", postId);
+        const { data: newVote, error: voteError } = await supabase
           .from('clip_votes')
           .insert({
             post_id: postId,
             user_id: user.id,
             value: 1
-          });
+          })
+          .select()
+          .single();
 
-        if (voteError) throw voteError;
+        if (voteError) {
+          console.error("Error adding trophy vote:", voteError);
+          throw voteError;
+        }
         
+        console.log("Added trophy vote successfully:", newVote);
+        setHasTrophy(true);
+        setTrophyCount(prev => prev + 1);
         toast.success('Trophy awarded!');
         
         // Send notification to post owner
@@ -323,6 +369,17 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
 
       // Refresh post data
       queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
+      // Dispatch a custom event to notify other components
+      const trophyUpdateEvent = new CustomEvent('trophy-update', {
+        detail: {
+          postId,
+          count: hasTrophy ? trophyCount - 1 : trophyCount + 1,
+          active: !hasTrophy
+        }
+      });
+      window.dispatchEvent(trophyUpdateEvent);
+      
     } catch (error) {
       console.error('Error handling trophy vote:', error);
       toast.error('Failed to update trophy status');
@@ -714,7 +771,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         </Dialog>
         <button 
           className="trophy-button flex items-center text-sm font-medium text-gray-400 hover:text-yellow-500 transition-all duration-200 group"
-          onClick={handleTrophyClick}
+          onClick={handleTrophyVote}
         >
           <Trophy 
             className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all`}
