@@ -100,23 +100,34 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }, 2000);
   };
 
-  // For smooth scrolling
+  // For smooth scrolling with enhanced physics
   const scrollDistance = 300; // pixels to scroll per movement
-  const scrollDuration = 300; // ms for animation duration
+  const scrollDuration = 400; // ms for animation duration - increased for smoother animation
+  const scrollCooldown = 500; // ms cooldown between scroll actions
 
-  // Animation for smooth scrolling
+  // Enhanced animation for smooth scrolling with momentum effect
   const smoothScroll = (distance: number) => {
+    const now = Date.now();
+    // Add cooldown to prevent rapid scrolling
+    if (now - lastScrollTime.current < scrollCooldown) return;
+    lastScrollTime.current = now;
+    
     const startPosition = window.scrollY;
     const startTime = performance.now();
     
     const animateScroll = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / scrollDuration, 1);
-      const easeInOut = progress < 0.5 
-        ? 2 * progress * progress 
-        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-        
-      window.scrollTo(0, startPosition + distance * easeInOut);
+      
+      // Enhanced easing function for more natural motion
+      const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+      const easeOutQuint = 1 - Math.pow(1 - progress, 5);
+      const momentum = progress < 0.8 ? easeOutCubic : easeOutQuint;
+      
+      window.scrollTo({
+        top: startPosition + distance * momentum,
+        behavior: 'auto' // We're handling the smoothness ourselves
+      });
       
       if (progress < 1) {
         requestAnimationFrame(animateScroll);
@@ -126,7 +137,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     requestAnimationFrame(animateScroll);
   };
 
-  // Add animation keyframes with even more enhanced effects
+  // Add animation keyframes with enhanced visual effects
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -187,8 +198,61 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         100% { transform: scale(1) skew(0deg, 0deg); }
       }
       
+      @keyframes joystick-pulse {
+        0% { box-shadow: 0 0 5px rgba(102, 47, 161, 0.3); }
+        50% { box-shadow: 0 0 15px rgba(147, 51, 234, 0.5); }
+        100% { box-shadow: 0 0 5px rgba(102, 47, 161, 0.3); }
+      }
+      
+      @keyframes joystick-trail {
+        0% { opacity: 0.7; transform: scale(0.9); }
+        100% { opacity: 0; transform: scale(1.5); }
+      }
+      
+      @keyframes direction-indicator {
+        0% { opacity: 0; transform: scale(0.8); }
+        50% { opacity: 0.8; transform: scale(1.1); }
+        100% { opacity: 0; transform: scale(0.8); }
+      }
+      
       .joystick-active {
-        transition: all 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        animation: joystick-pulse 1.5s infinite ease-in-out;
+        transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      }
+      
+      .direction-up:after, .direction-down:after, .direction-left:after, .direction-right:after {
+        content: '';
+        position: absolute;
+        width: 40%;
+        height: 40%;
+        border-radius: 50%;
+        background: rgba(154, 95, 230, 0.3);
+        animation: direction-indicator 0.8s infinite ease-in-out;
+        z-index: -1;
+      }
+      
+      .direction-up:after {
+        top: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      
+      .direction-down:after {
+        bottom: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      
+      .direction-left:after {
+        left: 5%;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      
+      .direction-right:after {
+        right: 5%;
+        top: 50%;
+        transform: translateY(-50%);
       }
       
       .clipt-button-hover:hover {
@@ -237,7 +301,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     toast.info('View Clipts');
   };
 
-  // Joystick smooth movement
+  // Joystick smooth movement with enhanced physics and visual feedback
   const handleJoystickMove = (x: number, y: number) => {
     if (!joystickRef.current || !joystickKnobRef.current) return;
     
@@ -263,45 +327,86 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       normDeltaY = deltaY * scale;
     }
     
-    // Apply smooth spring effect
-    joystickKnobRef.current.style.transition = 'transform 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    joystickKnobRef.current.style.transform = `translate(${normDeltaX}px, ${normDeltaY}px)`;
+    // Store position for trail effect
+    setJoystickPos({ x: normDeltaX, y: normDeltaY });
     
-    // Determine joystick direction for UI feedback
+    // Apply smooth spring effect with enhanced physics
+    joystickKnobRef.current.style.transition = distance > maxDistance * 0.8 
+      ? 'transform 0.08s cubic-bezier(0.34, 1.56, 0.64, 1)' 
+      : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    joystickKnobRef.current.style.transform = `translate3d(${normDeltaX}px, ${normDeltaY}px, 0) scale(${1 + distance/maxDistance*0.15})`;
+    
+    // Add trail effect (create a visual echo)
+    const createTrail = () => {
+      if (!joystickRef.current) return;
+      
+      const trail = document.createElement('div');
+      trail.style.position = 'absolute';
+      trail.style.width = '20px';
+      trail.style.height = '20px';
+      trail.style.borderRadius = '50%';
+      trail.style.backgroundColor = 'rgba(154, 95, 230, 0.3)';
+      trail.style.left = `calc(50% + ${normDeltaX - 10}px)`;
+      trail.style.top = `calc(50% + ${normDeltaY - 10}px)`;
+      trail.style.animation = 'joystick-trail 0.4s forwards';
+      trail.style.pointerEvents = 'none';
+      
+      joystickRef.current.appendChild(trail);
+      
+      // Clean up trail after animation
+      setTimeout(() => {
+        if (joystickRef.current && joystickRef.current.contains(trail)) {
+          joystickRef.current.removeChild(trail);
+        }
+      }, 400);
+    };
+    
+    // Create trail only for significant movements
+    if (distance > maxDistance * 0.5) {
+      createTrail();
+    }
+    
+    // Determine joystick direction for UI feedback with enhanced sensitivity
+    const thresholdRelative = maxDistance * 0.3; // More sensitive threshold
+    
+    // Add the joystick-active class for glow effect
+    joystickRef.current.classList.add('joystick-active');
+    
     if (Math.abs(normDeltaX) > Math.abs(normDeltaY)) {
-      if (normDeltaX > 10) {
+      if (normDeltaX > thresholdRelative) {
         joystickRef.current.classList.add('direction-right');
         joystickRef.current.classList.remove('direction-left', 'direction-up', 'direction-down');
-        if (normDeltaX > maxDistance * 0.6) handleJoystickAction('right');
-      } else if (normDeltaX < -10) {
+        if (normDeltaX > maxDistance * 0.6 && joystickDirection !== 'right') handleJoystickAction('right');
+      } else if (normDeltaX < -thresholdRelative) {
         joystickRef.current.classList.add('direction-left');
         joystickRef.current.classList.remove('direction-right', 'direction-up', 'direction-down');
-        if (normDeltaX < -maxDistance * 0.6) handleJoystickAction('left');
+        if (normDeltaX < -maxDistance * 0.6 && joystickDirection !== 'left') handleJoystickAction('left');
       }
     } else {
-      if (normDeltaY > 10) {
+      if (normDeltaY > thresholdRelative) {
         joystickRef.current.classList.add('direction-down');
         joystickRef.current.classList.remove('direction-up', 'direction-left', 'direction-right');
-        if (normDeltaY > maxDistance * 0.6) handleJoystickAction('down');
-      } else if (normDeltaY < -10) {
+        if (normDeltaY > maxDistance * 0.6 && joystickDirection !== 'down') handleJoystickAction('down');
+      } else if (normDeltaY < -thresholdRelative) {
         joystickRef.current.classList.add('direction-up');
         joystickRef.current.classList.remove('direction-down', 'direction-left', 'direction-right');
-        if (normDeltaY < -maxDistance * 0.6) handleJoystickAction('up');
+        if (normDeltaY < -maxDistance * 0.6 && joystickDirection !== 'up') handleJoystickAction('up');
       }
     }
   };
 
-  // Joystick release with smooth spring back animation
+  // Joystick release with enhanced spring back animation
   const handleJoystickRelease = () => {
     if (!joystickRef.current || !joystickKnobRef.current) return;
     
     setJoystickActive(false);
     setJoystickDirection(null);
     
-    joystickKnobRef.current.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    joystickKnobRef.current.style.transform = 'translate(0, 0)';
+    // Enhanced spring-back effect
+    joystickKnobRef.current.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    joystickKnobRef.current.style.transform = 'translate3d(0, 0, 0) scale(1)';
     
-    joystickRef.current.classList.remove('direction-up', 'direction-down', 'direction-left', 'direction-right');
+    joystickRef.current.classList.remove('joystick-active', 'direction-up', 'direction-down', 'direction-left', 'direction-right');
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -365,22 +470,30 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     handleJoystickRelease();
   };
 
-  // Joystick direction action handler
+  // Joystick direction action handler with enhanced scrolling
   const handleJoystickAction = (direction: 'up' | 'down' | 'left' | 'right') => {
     setJoystickDirection(direction);
     
-    // Handle navigation or actions based on joystick direction
+    // Enhanced scroll behavior based on direction
     if (direction === 'up') {
       handleJoystickDown('up');
-      window.scrollBy(0, -scrollDistance);
+      smoothScroll(-scrollDistance);
+      // Visual feedback for scroll action
+      toast.info('Scrolling up', { duration: 500, position: 'top-center', icon: '⬆️' });
     } else if (direction === 'down') {
       handleJoystickDown('down');
-      window.scrollBy(0, scrollDistance);
+      smoothScroll(scrollDistance);
+      // Visual feedback for scroll action
+      toast.info('Scrolling down', { duration: 500, position: 'top-center', icon: '⬇️' });
     } else if (direction === 'left') {
       // Handle left action
       if (location.pathname.includes('/post/') && location.pathname !== '/post/new') {
         // Navigate to previous post if on a post page
         navigate(-1);
+        toast.info('Previous post', { duration: 1000, position: 'top-center' });
+      } else {
+        // Provide feedback
+        toast.info('Swipe left', { duration: 500, position: 'top-center', icon: '⬅️' });
       }
     } else if (direction === 'right') {
       // Handle right action
