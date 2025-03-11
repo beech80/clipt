@@ -61,7 +61,16 @@ export const uploadVideo = async (
 ): Promise<UploadMediaResult> => {
   try {
     console.log('Starting video upload: ', file.name, file.type, file.size);
-    setProgress(1);
+    setProgress(10);
+
+    // Validate MIME type to ensure it's a video
+    if (!file.type.startsWith('video/')) {
+      console.error('Invalid file type:', file.type);
+      return { 
+        url: null, 
+        error: new Error(`Invalid file type: ${file.type}. Expected video/*`) 
+      };
+    }
 
     // Create a unique filename
     const fileExt = file.name.split('.').pop();
@@ -69,26 +78,35 @@ export const uploadVideo = async (
     const filePath = `videos/${fileName}`;
     
     console.log('Uploading to path: ', filePath);
+    setProgress(20);
 
-    const { error, data } = await supabase.storage
+    // Upload the file to Supabase storage
+    const { error: uploadError } = await supabase.storage
       .from('media')
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: false,
+        contentType: file.type // Explicitly set the content type
       });
 
-    // Log progress manually since we can't use onUploadProgress
-    console.log('Upload complete');
-
-    if (error) {
-      console.error('Video upload error:', error);
+    if (uploadError) {
+      console.error('Video upload error:', uploadError);
       setProgress(0);
-      return { url: null, error };
+      return { url: null, error: uploadError };
     }
 
-    setProgress(100);
-    const fileUrl = getPublicUrl('media', filePath);
+    setProgress(70);
+
+    // Get the public URL
+    const { data } = supabase.storage.from('media').getPublicUrl(filePath);
+    if (!data || !data.publicUrl) {
+      console.error('Failed to get public URL');
+      return { url: null, error: new Error('Failed to get public URL for uploaded video') };
+    }
+
+    const fileUrl = data.publicUrl;
     console.log('Video upload complete, URL:', fileUrl);
+    setProgress(100);
     
     return { url: fileUrl, error: null };
   } catch (err) {
