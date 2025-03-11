@@ -12,21 +12,55 @@ const Clipts = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [rawPosts, setRawPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Function to fetch posts directly without React Query
+  const fetchPostsDirectly = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      console.log('Directly fetching all posts...');
+      
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('is_published', true) // Check is_published instead of is_visible
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Error fetching posts directly:', error);
+        setError(error.message);
+        return;
+      }
+      
+      console.log('Raw posts data:', data);
+      setRawPosts(data || []);
+    } catch (err) {
+      console.error('Exception fetching posts:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Function to manually refresh posts
   const refreshPosts = useCallback(() => {
     console.log("Manually refreshing posts...");
     setRefreshKey(prev => prev + 1);
     queryClient.invalidateQueries({ queryKey: ['posts', 'clipts'] });
-  }, [queryClient]);
+    fetchPostsDirectly();
+  }, [queryClient, fetchPostsDirectly]);
 
   // Auto-refresh effect on mount
   useEffect(() => {
-    console.log("Clipts page mounted - refreshing posts");
-    refreshPosts();
-  }, [refreshPosts]);
+    console.log("Clipts page mounted - fetching posts directly");
+    fetchPostsDirectly();
+  }, [fetchPostsDirectly]);
 
-  const { data: posts, isLoading } = useQuery({
+  // Regular React Query for posts - keep this for comparison
+  const { data: posts, isLoading: isPostsLoading } = useQuery({
     queryKey: ['posts', 'clipts', refreshKey],
     queryFn: async () => {
       try {
@@ -57,6 +91,7 @@ const Clipts = () => {
             clip_votes: clip_votes(count)
           `)
           // Remove all filters to show everything for debugging
+          .eq('is_published', true) // Check is_published instead of is_visible
           .order('created_at', { ascending: false });
           
         if (error) {
@@ -106,12 +141,43 @@ const Clipts = () => {
       </div>
 
       <div className="container mx-auto px-4 py-24 max-w-2xl">
-        {isLoading && (
+        {(isLoading || isPostsLoading) && (
           <div className="flex justify-center my-8">
             <div className="animate-pulse">Loading posts...</div>
           </div>
         )}
 
+        {error && (
+          <div className="bg-red-500/20 border border-red-500 text-white p-4 rounded-lg mb-6">
+            <h3 className="font-bold">Error loading posts:</h3>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {/* Simple Debug View of All Posts */}
+        <div className="bg-black/50 border border-purple-500/30 p-4 rounded-lg mb-6">
+          <h2 className="text-xl font-bold text-white mb-4">Raw Posts from Database ({rawPosts.length})</h2>
+          
+          {rawPosts.length === 0 ? (
+            <p className="text-white/70">No posts found in the database</p>
+          ) : (
+            <div className="space-y-4">
+              {rawPosts.map((post) => (
+                <div key={post.id} className="bg-black/30 p-3 rounded border border-white/10">
+                  <p className="text-sm text-white/70">ID: {post.id}</p>
+                  <p className="text-sm text-white/70">Type: <span className={post.post_type === 'clip' ? 'text-green-500' : 'text-yellow-500'}>{post.post_type || 'undefined'}</span></p>
+                  <p className="text-sm text-white/70">Has Video: {post.video_url ? 'Yes ✓' : 'No ✗'}</p>
+                  <p className="text-sm text-white/70 truncate">Content: {post.content}</p>
+                  <p className="text-sm text-white/70">Created: {new Date(post.created_at).toLocaleString()}</p>
+                  <p className="text-sm text-white/70">User ID: {post.user_id}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Regular Posts Display */}
+        <h2 className="text-xl font-bold text-white mb-4">Posts from React Query ({posts?.length || 0})</h2>
         {posts && posts.length > 0 && (
           <div className="space-y-6">
             {posts.map((post) => (
@@ -121,7 +187,7 @@ const Clipts = () => {
         )}
 
         {/* If no results found */}
-        {!isLoading && (!posts || posts.length === 0) && (
+        {!isLoading && !isPostsLoading && (!posts || posts.length === 0) && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center space-y-4">
               <p className="text-2xl font-semibold text-white/60">Ready to share a gaming moment?</p>
