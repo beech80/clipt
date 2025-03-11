@@ -36,9 +36,9 @@ const Clipts = () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Fetching posts directly - simplified approach');
+      console.log('Fetching video posts only');
       
-      // Use the most basic query possible, matching previous working version
+      // Query for ONLY posts with videos
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -60,6 +60,8 @@ const Clipts = () => {
             name
           )
         `)
+        .not('video_url', 'is', null)
+        .not('video_url', 'eq', '')
         .eq('is_published', true)
         .limit(50);
         
@@ -68,49 +70,59 @@ const Clipts = () => {
         setError(`Database error: ${error.message}`);
         setIsLoading(false);
         
-        // Add fallback posts for testing UI
-        setRawPosts(getSamplePosts());
+        // Add fallback posts for testing UI - video only
+        setRawPosts([getSamplePosts()[1]]); // Only use the video sample
         return;
       }
       
-      console.log(`Query returned ${data?.length || 0} posts`);
+      console.log(`Query returned ${data?.length || 0} video posts`);
       
       if (!data || data.length === 0) {
-        console.log('No posts found, using sample posts');
-        setRawPosts(getSamplePosts());
+        console.log('No video posts found, using sample video');
+        setRawPosts([getSamplePosts()[1]]); // Only use the video sample
         setIsLoading(false);
         return;
       }
       
-      // Very simple post processing - just make sure they're formatted correctly
-      const processedPosts = data.map(post => ({
-        id: post.id,
-        content: post.content || "",
-        image_url: post.image_url,
-        video_url: post.video_url,
-        user_id: post.user_id,
-        created_at: post.created_at,
-        profiles: post.profiles || {
-          username: "unknown",
-          display_name: "Unknown User",
-          avatar_url: null
-        },
-        games: post.games || [],
-        clip_votes: [{ count: 0 }],
-        is_published: true,
-        trophy_count: 0
-      }));
+      // Process only posts with videos
+      const processedPosts = data
+        .filter(post => post.video_url && post.video_url.trim() !== '')
+        .map(post => ({
+          id: post.id,
+          content: post.content || "",
+          image_url: post.image_url,
+          video_url: post.video_url,
+          user_id: post.user_id,
+          created_at: post.created_at,
+          profiles: post.profiles || {
+            username: "unknown",
+            display_name: "Unknown User",
+            avatar_url: null
+          },
+          games: post.games || [],
+          clip_votes: [{ count: 0 }],
+          is_published: true,
+          trophy_count: 0
+        }));
       
-      console.log('Posts processed successfully');
-      setRawPosts(processedPosts);
+      console.log('Video posts processed:', processedPosts.length);
+      
+      // Only update state if we still have posts after filtering
+      if (processedPosts.length > 0) {
+        setRawPosts(processedPosts);
+      } else {
+        console.log('No valid video posts after filtering, using sample');
+        setRawPosts([getSamplePosts()[1]]); // Only use the video sample
+      }
+      
       setIsLoading(false);
     } catch (err) {
       console.error('Exception fetching posts:', err);
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setIsLoading(false);
       
-      // Always show something, even on error
-      setRawPosts(getSamplePosts());
+      // Always show a video sample on error
+      setRawPosts([getSamplePosts()[1]]); // Only use the video sample
     }
   }, []);
 
@@ -212,7 +224,7 @@ const Clipts = () => {
       <div className="container mx-auto px-4 py-24 max-w-2xl">
         {isLoading && (
           <div className="flex justify-center my-8">
-            <div className="animate-pulse">Loading posts...</div>
+            <div className="animate-pulse">Loading videos...</div>
           </div>
         )}
 
@@ -229,11 +241,14 @@ const Clipts = () => {
           </div>
         )}
 
-        {/* All posts */}
+        {/* Video posts */}
         {!isLoading && rawPosts.length > 0 && (
           <div className="space-y-6">
+            <h1 className="text-xl font-bold mb-4 text-primary">Videos</h1>
             {rawPosts.map((post) => (
-              <PostItem key={post.id} post={post} />
+              <div key={`post-${post.id}-${Date.now()}`} className="mb-6 bg-card rounded-lg overflow-hidden">
+                <PostItem key={post.id} post={post} />
+              </div>
             ))}
           </div>
         )}
@@ -242,7 +257,7 @@ const Clipts = () => {
         {!isLoading && rawPosts.length === 0 && !error && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <p className="text-white/60">No posts found</p>
+              <p className="text-white/60">No videos found</p>
               <button 
                 onClick={() => fetchPostsDirectly()} 
                 className="mt-3 px-3 py-1 bg-purple-700 rounded text-white text-xs"

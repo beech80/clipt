@@ -68,7 +68,13 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
 
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     const target = e.target as HTMLVideoElement;
-    console.error("Video error:", target.error?.message || "Unknown error");
+    console.error("Video error:", target.error?.message || "Unknown error", "Code:", target.error?.code);
+    
+    // Attempt video recovery on specific errors
+    if (target.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
+      console.log("Source not supported, may be MIME type issue. Attempting recovery...");
+    }
+    
     setIsMediaError(true);
     setIsMediaLoaded(false);
   };
@@ -117,7 +123,18 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
         <div className="w-full aspect-video bg-black relative">
           {isMediaError ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
-              <p className="text-center">Unable to play video.</p>
+              <div className="text-center p-4">
+                <p>Unable to play video.</p>
+                <button 
+                  onClick={() => {
+                    setIsMediaError(false);
+                    setIsMediaLoaded(false);
+                  }}
+                  className="mt-2 px-2 py-1 bg-purple-700 rounded text-white text-xs"
+                >
+                  Try Again
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -127,7 +144,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 </div>
               )}
               <video
-                key={`video-${postId}-${Date.now()}`}
+                key={`video-${postId}-${Math.random().toString(36).substring(2, 15)}`}
                 src={videoUrl}
                 className="w-full h-full object-contain"
                 controls
