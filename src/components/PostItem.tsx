@@ -394,6 +394,11 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       });
       window.dispatchEvent(trophyUpdateEvent);
       
+      // Dispatch a global update event to refresh all posts displays
+      setTimeout(() => {
+        window.dispatchEvent(new Event('trophy-count-update'));
+      }, 500);
+      
     } catch (error) {
       console.error('Error handling trophy vote:', error);
       toast.error('Failed to update trophy status');

@@ -758,8 +758,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       window.dispatchEvent(trophyUpdateEvent);
       
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       
+      // Force update the UI on all pages that show posts
+      setTimeout(() => {
+        window.dispatchEvent(new Event('trophy-count-update'));
+      }, 500);
     } catch (error) {
       console.error('Error handling trophy vote:', error);
       toast.error('Failed to update trophy status');

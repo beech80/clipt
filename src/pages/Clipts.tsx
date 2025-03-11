@@ -78,36 +78,44 @@ const Clipts = () => {
       
       if (postIds.length > 0) {
         try {
-          // Get clip_votes counts - only use clip_votes table since we've consolidated trophy voting
-          const { data: clipVotesData, error: clipVotesError } = await supabase
-            .from('clip_votes')
-            .select('post_id, count(*)')
-            .in('post_id', postIds)
-            .group('post_id');
-            
-          if (clipVotesError) {
-            console.error('Error fetching clip votes counts:', clipVotesError);
-          } else if (clipVotesData) {
-            // Create a map of post_id to count
-            const clipVotesMap = clipVotesData.reduce((acc, item) => {
-              acc[item.post_id] = parseInt(item.count);
-              return acc;
-            }, {});
-            
-            // Update the processed posts with the actual counts
-            processedPosts = processedPosts.map(post => {
-              const trophyCount = clipVotesMap[post.id] || 0;
+          // Get trophy counts one by one - simpler but more reliable approach
+          const trophyCountPromises = postIds.map(async (postId) => {
+            const { count, error } = await supabase
+              .from('clip_votes')
+              .select('*', { count: 'exact', head: true })
+              .eq('post_id', postId);
               
-              return {
-                ...post,
-                clip_votes: { 
-                  count: trophyCount,
-                  data: [] // Add empty array to match structure expected by components
-                },
-                trophy_count: trophyCount
-              };
-            });
-          }
+            if (error) {
+              console.error(`Error getting trophy count for post ${postId}:`, error);
+              return { postId, count: 0 };
+            }
+            
+            return { postId, count: count || 0 };
+          });
+          
+          const trophyCounts = await Promise.all(trophyCountPromises);
+          
+          // Create a map of post_id to count
+          const trophyCountMap = trophyCounts.reduce((acc, item) => {
+            acc[item.postId] = item.count;
+            return acc;
+          }, {});
+          
+          // Update the processed posts with the actual counts
+          processedPosts = processedPosts.map(post => {
+            const trophyCount = trophyCountMap[post.id] || 0;
+            
+            return {
+              ...post,
+              clip_votes: { 
+                count: trophyCount,
+                data: [] // Add empty array to match structure expected by components
+              },
+              trophy_count: trophyCount
+            };
+          });
+          
+          console.log('Updated posts with trophy counts:', processedPosts);
         } catch (countError) {
           console.error('Error processing trophy counts:', countError);
         }
@@ -135,6 +143,20 @@ const Clipts = () => {
     console.log("🚀 Clipts page mounted - fetching posts directly");
     fetchPostsDirectly();
     
+    // Listen for trophy count updates from GameBoyControls or PostItem 
+    const handleTrophyCountUpdate = () => {
+      console.log('🔄 Trophy count update detected - refreshing posts data');
+      fetchPostsDirectly();
+    };
+    
+    window.addEventListener('trophy-count-update', handleTrophyCountUpdate);
+    
+    return () => {
+      window.removeEventListener('trophy-count-update', handleTrophyCountUpdate);
+    };
+  }, [fetchPostsDirectly, refreshKey]);
+
+  useEffect(() => {
     // Set up an interval to refresh posts every 5 seconds
     const refreshInterval = setInterval(() => {
       console.log("⏰ Auto-refreshing posts");
