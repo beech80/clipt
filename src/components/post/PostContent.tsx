@@ -62,12 +62,21 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
   }, [postId]);
 
   const handleMediaLoad = () => {
+    console.log("Media loaded successfully");
     setIsMediaLoaded(true);
   };
 
-  const handleMediaError = () => {
+  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    const target = e.target as HTMLVideoElement;
+    console.error("Video error:", target.error?.message || "Unknown error");
     setIsMediaError(true);
-    toast.error("Failed to load media");
+    toast.error("Failed to load video");
+  };
+
+  const handleImageError = () => {
+    console.error("Image failed to load");
+    setIsMediaError(true);
+    toast.error("Failed to load image");
   };
 
   const handlePlayError = (error: any) => {
@@ -124,10 +133,12 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 className={`w-full h-full object-cover ${!isMediaLoaded ? 'opacity-0' : 'opacity-100'}`}
                 controls
                 playsInline
+                autoPlay
+                muted
                 preload="metadata"
                 controlsList="nodownload"
                 onLoadedData={handleMediaLoad}
-                onError={handleMediaError}
+                onError={handleVideoError}
                 onClick={(e) => e.stopPropagation()}
               />
             </>
@@ -150,7 +161,9 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
               <img
                 src={imageUrls[currentImageIndex]}
                 alt="Post content fullscreen"
-                className="w-full h-full object-contain"
+                className="max-h-[80vh] max-w-full object-contain mx-auto"
+                onLoad={handleMediaLoad}
+                onError={handleImageError}
               />
               
               {imageUrls.length > 1 && (
@@ -185,7 +198,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
             alt="Post content"
             className="w-full aspect-video object-cover bg-black"
             onLoad={handleMediaLoad}
-            onError={handleMediaError}
+            onError={handleImageError}
             onClick={() => setShowFullscreenGallery(true)}
           />
         )
