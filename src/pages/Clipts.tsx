@@ -30,9 +30,9 @@ const Clipts = () => {
     queryKey: ['posts', 'clipts', refreshKey],
     queryFn: async () => {
       try {
-        console.log('Fetching clips...');
+        console.log('Fetching all posts for Clipts page...');
         
-        // Use OR filter to fetch both by type AND by video presence
+        // Fetch ALL posts, without any filtering, to diagnose why posts aren't showing
         const { data, error } = await supabase
           .from('posts')
           .select(`
@@ -56,7 +56,7 @@ const Clipts = () => {
             comments: comments_count(count),
             clip_votes: clip_votes(count)
           `)
-          .or('post_type.eq.clip,video_url.neq.null')
+          // Remove all filters to show everything for debugging
           .order('created_at', { ascending: false });
           
         if (error) {
