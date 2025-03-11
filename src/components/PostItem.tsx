@@ -318,46 +318,43 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       setTrophyLoading(true);
       console.log('Trophy vote attempt for post:', postId);
 
-      // Get current vote status from database first
-      const { data: existingVotes, error: voteCheckError } = await supabase
+      // Check if the user has already voted (simplified query)
+      const { data: existingVotes, error: checkError } = await supabase
         .from('clip_votes')
         .select('id')
         .eq('post_id', postId)
         .eq('user_id', user.id);
-
-      if (voteCheckError) {
-        console.error('Error checking existing votes:', voteCheckError);
-        throw voteCheckError;
+        
+      if (checkError) {
+        console.error('Error checking for existing trophy:', checkError);
+        toast.error('Could not check trophy status');
+        return;
       }
-
+      
       const hasVote = existingVotes && existingVotes.length > 0;
-      console.log('Current vote status:', hasVote);
-
-      // Update UI to match database state
-      setHasTrophy(hasVote);
-
-      // Toggle the vote
+      console.log('Current trophy status:', hasVote ? 'Has trophy' : 'No trophy');
+      
       if (hasVote) {
-        // Remove vote
+        // Remove the trophy
+        console.log('Removing trophy');
         const { error: removeError } = await supabase
           .from('clip_votes')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', user.id);
-
+          
         if (removeError) {
-          console.error('Error removing vote:', removeError);
-          throw removeError;
+          console.error('Error removing trophy:', removeError);
+          toast.error('Failed to remove trophy');
+          return;
         }
-
-        console.log('Vote removed successfully');
-        toast.success('Trophy removed');
         
-        // Update UI - Remove trophy and decrement count
+        toast.success('Trophy removed');
         setHasTrophy(false);
         setTrophyCount(prev => Math.max(0, prev - 1));
       } else {
-        // Add vote
+        // Add a trophy
+        console.log('Adding trophy');
         const { error: addError } = await supabase
           .from('clip_votes')
           .insert({
@@ -365,114 +362,49 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             user_id: user.id,
             value: 1
           });
-
+          
         if (addError) {
-          console.error('Error adding vote:', addError);
-          throw addError;
+          console.error('Error adding trophy:', addError);
+          toast.error('Failed to add trophy');
+          return;
         }
-
-        console.log('Vote added successfully');
-        toast.success('Trophy awarded!');
         
-        // Update UI - Add trophy and increment count
+        toast.success('Trophy awarded!');
         setHasTrophy(true);
         setTrophyCount(prev => prev + 1);
-        
-        // Send notification to post owner
-        if (post.user_id !== user.id) {
-          try {
-            await createTrophyNotification(post.user_id);
-          } catch (notifError) {
-            console.error('Error creating trophy notification:', notifError);
-          }
-        }
       }
-
-      // Get the accurate count from the database to ensure UI is correct
+      
+      // Get fresh count after operation to ensure accuracy
       const { count, error: countError } = await supabase
         .from('clip_votes')
         .select('*', { count: 'exact', head: true })
         .eq('post_id', postId);
-
-      if (countError) {
-        console.error('Error getting accurate count:', countError);
-        // Don't throw error here, just log it
-      } else {
-        console.log('Accurate trophy count:', count);
-        // Update UI with accurate count from database
+        
+      if (!countError) {
+        console.log('Updated trophy count:', count);
         setTrophyCount(count || 0);
-      }
-
-      // Update queries
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      
-      // Dispatch event to notify other components
-      const trophyUpdateEvent = new CustomEvent('trophy-update', {
-        detail: {
+        
+        // Dispatch trophy update event
+        const detail = {
           postId,
           count: count || 0,
           active: !hasVote
-        }
-      });
-      window.dispatchEvent(trophyUpdateEvent);
-      
-      // Dispatch a global update event to refresh all posts displays
-      setTimeout(() => {
-        window.dispatchEvent(new Event('trophy-count-update'));
-      }, 500);
+        };
+        console.log('Dispatching trophy update event:', detail);
+        
+        window.dispatchEvent(new CustomEvent('trophy-update', { detail }));
+        setTimeout(() => {
+          window.dispatchEvent(new Event('trophy-count-update'));
+        }, 200);
+      } else {
+        console.error('Error getting updated count:', countError);
+      }
       
     } catch (error) {
       console.error('Error handling trophy vote:', error);
-      toast.error('Failed to update trophy status');
-      
-      // On error, get the true state from the database
-      try {
-        const { data: voteCheck } = await supabase
-          .from('clip_votes')
-          .select('id')
-          .eq('post_id', postId)
-          .eq('user_id', user.id);
-          
-        const { count } = await supabase
-          .from('clip_votes')
-          .select('*', { count: 'exact', head: true })
-          .eq('post_id', postId);
-        
-        // Update UI with accurate state from database
-        const hasVote = voteCheck && voteCheck.length > 0;
-        setHasTrophy(hasVote);
-        setTrophyCount(count || 0);
-        
-        console.log('Restored state from database:', { hasVote, count });
-      } catch (stateError) {
-        console.error('Error getting state from database:', stateError);
-      }
+      toast.error('An error occurred with trophy voting');
     } finally {
       setTrophyLoading(false);
-    }
-  };
-
-  const createTrophyNotification = async (postOwnerId: string) => {
-    try {
-      if (!user) return;
-      
-      // Don't notify for your own actions
-      if (user.id === postOwnerId) return;
-      
-      await supabase
-        .from('notifications')
-        .insert({
-          type: 'like', // Changed to 'like' as it's one of the allowed types
-          user_id: postOwnerId,
-          actor_id: user.id,
-          resource_id: postId,
-          resource_type: 'post',
-          content: 'gave a trophy to your post',
-          created_at: new Date().toISOString(),
-          read: false
-        });
-    } catch (error) {
-      console.error('Error creating trophy notification:', error);
     }
   };
 
