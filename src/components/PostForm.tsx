@@ -66,77 +66,73 @@ const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
     }
   };
 
-  const validateForm = async () => {
-    if (!user) {
-      setError("Please login to create a post");
-      return false;
-    }
-
-    if (!content.trim() && !selectedImage && !selectedVideo) {
-      setError("Please add some content, image, or video to your post");
-      return false;
-    }
-
-    if (selectedImage && selectedVideo) {
-      setError("Please choose only one type of media");
-      return false;
-    }
-
-    // Check content safety
-    if (content.trim() && !(await checkContentSafety(content))) {
-      return false;
-    }
-
-    setError(null);
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!(await validateForm())) {
+    const toastId = toast.loading("Creating post...");
+
+    if (!content && !selectedImage && !selectedVideo) {
+      toast.error("Please add some content to your post", { id: toastId });
       return;
     }
 
-    setIsSubmitting(true);
-    const toastId = toast.loading("Creating your post...");
-
     try {
-      let imageUrl = null;
-      let videoUrl = null;
-      const isClip = !!selectedVideo;
-      
-      console.log("Creating post with video:", !!selectedVideo);
+      setIsSubmitting(true);
+      setError(null);
 
+      // Safety check for content
+      if (content) {
+        const isSafe = await checkContentSafety(content);
+        if (!isSafe) {
+          toast.error("Content contains prohibited words or phrases", { id: toastId });
+          setError("Content contains prohibited words or phrases");
+          return;
+        }
+      }
+
+      // Process scheduled time
+      let scheduledPublishTime = null;
+      if (scheduledDate && scheduledTime) {
+        const [hours, minutes] = scheduledTime.split(':').map(Number);
+        scheduledPublishTime = new Date(scheduledDate);
+        scheduledPublishTime.setHours(hours, minutes);
+
+        // Ensure the scheduled time is in the future
+        if (scheduledPublishTime <= new Date()) {
+          toast.error("Scheduled time must be in the future", { id: toastId });
+          return;
+        }
+      }
+
+      // Upload image if selected
+      let imageUrl = "";
       if (selectedImage) {
-        const result = await uploadImage(selectedImage, setImageProgress);
-        if (result.error) throw result.error;
-        imageUrl = result.url;
+        const { url, error } = await uploadImage(selectedImage, setImageProgress);
+        if (error) throw error;
+        imageUrl = url;
       }
 
+      // Upload video if selected
+      let videoUrl = "";
       if (selectedVideo) {
-        console.log("Uploading video...");
-        const result = await uploadVideo(selectedVideo, setVideoProgress);
-        if (result.error) throw result.error;
-        videoUrl = result.url;
-        console.log("Video uploaded successfully:", videoUrl);
+        console.log("Uploading video file:", selectedVideo.name, selectedVideo.type);
+        const { url, error } = await uploadVideo(selectedVideo, setVideoProgress);
+        if (error) throw error;
+        videoUrl = url;
+        console.log("Video uploaded successfully to:", url);
       }
-      
-      // Force post type to be 'clip' if there's a video
+
+      // IMPORTANT: Always set 'clip' type for video posts
       const postType = selectedVideo ? 'clip' : 'regular';
-      console.log("Setting post type to:", postType);
+      console.log("Setting post type:", postType, "based on selectedVideo:", !!selectedVideo);
 
-      const scheduledPublishTime = scheduledDate && scheduledTime
-        ? new Date(`${format(scheduledDate, 'yyyy-MM-dd')}T${scheduledTime}`)
-        : null;
-
+      // Create the post
       const postData = {
         content,
         userId: user.id,
         imageUrl,
         videoUrl,
         scheduledPublishTime: scheduledPublishTime?.toISOString(),
-        isPublished: !scheduledPublishTime,
+        isPublished: true, // Explicitly set to true to ensure visibility
         postType: postType as 'clip' | 'regular'
       };
       
@@ -152,7 +148,7 @@ const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
       // Invalidate the posts queries to refresh the Clipts page
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       queryClient.invalidateQueries({ queryKey: ['posts', 'clipts'] });
-      
+
       const mentions = extractMentions(content);
       for (const username of mentions) {
         await createMention(username, post.id);
@@ -182,17 +178,19 @@ const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
         // Notify parent if needed
         if (onPostCreated) onPostCreated();
         
-        // Force redirect to Clipts page
-        window.location.href = '/clipts'; // Use direct location change to force full page reload
+        // Force redirect to Clipts page with a full page reload to ensure fresh data
+        setTimeout(() => {
+          window.location.href = '/clipts';
+        }, 500);
       } else {
         // For non-video posts, just do the normal close/callback
         if (onPostCreated) onPostCreated();
         if (onClose) onClose();
       }
-    } catch (error) {
-      console.error("Error creating post:", error);
-      toast.error("Failed to create post", { id: toastId });
-      setError("Failed to create post. Please try again.");
+    } catch (err) {
+      console.error("Error creating post:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      toast.error(err instanceof Error ? err.message : "Failed to create post", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
