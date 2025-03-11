@@ -39,8 +39,7 @@ const Clipts = () => {
             comments: comments_count(count),
             clip_votes: clip_votes(count)
           `)
-          // Remove post_type filter and show all posts with videos
-          .not('video_url', 'is', null)
+          .or('post_type.eq.clip,video_url.neq.null')
           .order('created_at', { ascending: false });
           
         if (error) {
@@ -51,12 +50,17 @@ const Clipts = () => {
         console.log('Video posts returned:', data?.length, 'Items found');
         
         // Transform data to make sure count properties are numbers, not objects
-        return (data || []).map(post => ({
-          ...post,
-          likes: typeof post.likes === 'object' && post.likes !== null ? Number(post.likes.count || 0) : 0,
-          comments: typeof post.comments === 'object' && post.comments !== null ? Number(post.comments.count || 0) : 0,
-          clip_votes: typeof post.clip_votes === 'object' && post.clip_votes !== null ? Number(post.clip_votes.count || 0) : 0
-        })) as unknown as Post[];
+        const transformedPosts = (data || []).map(post => {
+          console.log("Processing post:", post.id, "Type:", post.post_type, "Has video:", !!post.video_url);
+          return {
+            ...post,
+            likes: typeof post.likes === 'object' && post.likes !== null ? Number((post.likes as any).count || 0) : 0,
+            comments: typeof post.comments === 'object' && post.comments !== null ? Number((post.comments as any).count || 0) : 0,
+            clip_votes: typeof post.clip_votes === 'object' && post.clip_votes !== null ? Number((post.clip_votes as any).count || 0) : 0
+          };
+        });
+        console.log("Total posts to display:", transformedPosts.length);
+        return transformedPosts as unknown as Post[];
       } catch (error) {
         console.error('Error fetching clips:', error);
         return [] as Post[];
