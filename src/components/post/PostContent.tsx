@@ -105,16 +105,34 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     <div className="relative">
       {/* Media Content */}
       {videoUrl ? (
-        <video
-          src={videoUrl}
-          className="w-full aspect-video object-cover bg-black"
-          controls
-          playsInline
-          onLoadedData={handleMediaLoad}
-          onError={handleMediaError}
-          onPlaying={() => setIsMediaLoaded(true)}
-          controlsList="nodownload"
-        />
+        <div className="w-full aspect-video bg-black relative">
+          {isMediaError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-red-500">
+              <p className="text-center">Unable to play video.</p>
+              <p className="text-sm text-white/70 mt-2">Please try a different format or source.</p>
+            </div>
+          ) : (
+            <>
+              {!isMediaLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="animate-pulse">Loading video...</div>
+                </div>
+              )}
+              <video
+                key={videoUrl} // Add key to force video element recreation when URL changes
+                src={videoUrl}
+                className={`w-full h-full object-cover ${!isMediaLoaded ? 'opacity-0' : 'opacity-100'}`}
+                controls
+                playsInline
+                preload="metadata"
+                controlsList="nodownload"
+                onLoadedData={handleMediaLoad}
+                onError={handleMediaError}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </>
+          )}
+        </div>
       ) : imageUrls.length > 0 ? (
         showFullscreenGallery ? (
           // Full-screen gallery view for when an image is clicked
