@@ -672,57 +672,101 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       console.log(`Attempting to update trophy for post ${currentPostId} by user ${userId}`);
       
-      // Check if the user has already voted using likes table
-      const { data: existingLike, error: likeError } = await supabase
-        .from('likes')
-        .select('*')
+      // First check clip_votes table
+      const { data: existingClipVote, error: clipVoteError } = await supabase
+        .from('clip_votes')
+        .select('id')
         .eq('post_id', currentPostId)
         .eq('user_id', userId)
         .maybeSingle();
-      
-      if (likeError) {
-        console.error('Error checking like status:', likeError);
+        
+      if (clipVoteError && clipVoteError.code !== 'PGRST116') {
+        console.error("Error checking clip votes:", clipVoteError);
       }
+      
+      // Also check post_votes table
+      const { data: existingPostVote, error: postVoteError } = await supabase
+        .from('post_votes')
+        .select('id')
+        .eq('post_id', currentPostId)
+        .eq('user_id', userId)
+        .maybeSingle();
+        
+      if (postVoteError && postVoteError.code !== 'PGRST116') {
+        console.error("Error checking post votes:", postVoteError);
+      }
+      
+      const hasExistingVote = existingClipVote || existingPostVote;
+      console.log("Existing votes check:", { clipVote: !!existingClipVote, postVote: !!existingPostVote });
       
       let success = false;
       
-      if (existingLike) {
-        // Remove like
-        const { error: unlikeError } = await supabase
-          .from('likes')
-          .delete()
-          .eq('post_id', currentPostId)
-          .eq('user_id', userId);
+      if (hasExistingVote) {
+        // Remove vote from wherever it exists
+        if (existingClipVote) {
+          const { error: removeError } = await supabase
+            .from('clip_votes')
+            .delete()
+            .eq('id', existingClipVote.id);
+
+          if (removeError) {
+            console.error("Error removing clip vote:", removeError);
+            throw removeError;
+          }
+          console.log("Removed clip vote successfully");
+        }
         
-        if (unlikeError) {
-          console.error('Error removing trophy:', unlikeError);
-          throw new Error('Could not remove trophy');
+        if (existingPostVote) {
+          const { error: removeError } = await supabase
+            .from('post_votes')
+            .delete()
+            .eq('id', existingPostVote.id);
+
+          if (removeError) {
+            console.error("Error removing post vote:", removeError);
+            throw removeError;
+          }
+          console.log("Removed post vote successfully");
         }
         
         toast.success('Trophy removed');
         success = true;
       } else {
-        // Add like
-        const { error: likeError } = await supabase
-          .from('likes')
+        // Add trophy vote - always to clip_votes for consistency
+        console.log("Adding new trophy vote to post:", currentPostId);
+        const { data: newVote, error: voteError } = await supabase
+          .from('clip_votes')
           .insert({
             post_id: currentPostId,
             user_id: userId,
-            created_at: new Date().toISOString()
-          });
-        
-        if (likeError) {
-          console.error('Error adding trophy:', likeError);
-          throw new Error('Could not add trophy');
+            value: 1
+          })
+          .select()
+          .single();
+
+        if (voteError) {
+          console.error("Error adding trophy vote:", voteError);
+          throw voteError;
         }
         
+        console.log("Added trophy vote successfully:", newVote);
         toast.success('Trophy awarded!');
         success = true;
       }
       
       if (success) {
-        // Update like count in the UI
-        // This approach simply refreshes the data instead of trying to be clever
+        // Update the UI immediately
+        // Dispatch a custom event to notify other components
+        const trophyUpdateEvent = new CustomEvent('trophy-update', {
+          detail: {
+            postId: currentPostId,
+            count: hasExistingVote ? -1 : 1, // -1 if removing, +1 if adding
+            active: !hasExistingVote
+          }
+        });
+        window.dispatchEvent(trophyUpdateEvent);
+        
+        // Refresh all post data
         setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ['posts'] });
           
