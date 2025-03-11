@@ -84,29 +84,45 @@ const Clipts = () => {
       // Process only posts with videos from tat123
       const processedPosts = data
         .filter(post => post.video_url && post.video_url.trim() !== '')
-        .map(post => ({
-          id: post.id,
-          content: post.content || "",
-          image_url: post.image_url,
-          video_url: post.video_url,
-          user_id: post.user_id,
-          created_at: post.created_at,
-          profiles: post.profiles || {
-            username: "tat123",
-            display_name: "tat123",
-            avatar_url: null
-          },
-          games: post.games || [],
-          clip_votes: [{ count: 0 }],
-          is_published: true,
-          trophy_count: 0
-        }));
+        .map(async post => {
+          // Fetch trophy count for each post
+          const { count: trophyCount, error: trophyError } = await supabase
+            .from('clip_votes')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', post.id);
+            
+          if (trophyError) {
+            console.error(`Error fetching trophy count for post ${post.id}:`, trophyError);
+          }
+          
+          return {
+            id: post.id,
+            content: post.content || "",
+            image_url: post.image_url,
+            video_url: post.video_url,
+            user_id: post.user_id,
+            created_at: post.created_at,
+            profiles: post.profiles || {
+              username: "tat123",
+              display_name: "tat123",
+              avatar_url: null
+            },
+            games: post.games || [],
+            clip_votes: [{ count: trophyCount || 0 }],
+            is_published: true,
+            trophy_count: trophyCount || 0
+          };
+        });
       
-      console.log('Video posts from tat123 processed:', processedPosts.length);
+      console.log('Video posts from tat123 processed, waiting for trophy counts...');
+      
+      // Wait for all trophy count fetches to complete
+      const completedPosts = await Promise.all(processedPosts);
       
       // Only update state if we still have posts after filtering
-      if (processedPosts.length > 0) {
-        setRawPosts(processedPosts);
+      if (completedPosts.length > 0) {
+        setRawPosts(completedPosts);
+        console.log('Posts with trophy counts:', completedPosts);
       } else {
         console.log('No valid video posts from tat123 after filtering');
       }
@@ -149,11 +165,32 @@ const Clipts = () => {
     return () => clearTimeout(timeoutId);
   }, [fetchPostsDirectly, refreshKey]);
 
-  // Trophy count updates - simplified to just refresh when explicitly requested
+  // Trophy count updates - now actively refreshes trophy counts
   useEffect(() => {
-    const handleTrophyCountUpdate = () => {
-      console.log('Trophy count update - manual refresh needed');
-      // Don't automatically refresh to avoid content disappearing
+    const handleTrophyCountUpdate = async () => {
+      console.log('Trophy count update event received, refreshing trophy counts');
+      
+      // Refresh trophy counts for all displayed posts without changing the posts array
+      if (rawPosts.length > 0) {
+        const updatedPosts = await Promise.all(
+          rawPosts.map(async post => {
+            // Fetch updated trophy count
+            const { count: trophyCount } = await supabase
+              .from('clip_votes')
+              .select('*', { count: 'exact', head: true })
+              .eq('post_id', post.id);
+              
+            return {
+              ...post,
+              trophy_count: trophyCount || 0,
+              clip_votes: [{ count: trophyCount || 0 }]
+            };
+          })
+        );
+        
+        console.log('Updated trophy counts:', updatedPosts.map(p => ({ id: p.id, count: p.trophy_count })));
+        setRawPosts(updatedPosts);
+      }
     };
     
     window.addEventListener('trophy-count-update', handleTrophyCountUpdate);
@@ -161,7 +198,7 @@ const Clipts = () => {
     return () => {
       window.removeEventListener('trophy-count-update', handleTrophyCountUpdate);
     };
-  }, []);
+  }, [rawPosts]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -201,7 +238,6 @@ const Clipts = () => {
         {/* Video posts */}
         {!isLoading && rawPosts.length > 0 && (
           <div className="space-y-6">
-            <h1 className="text-xl font-bold mb-4 text-primary">Videos from tat123</h1>
             {rawPosts.map((post) => (
               <div key={`post-${post.id}-${Math.random().toString(36).substring(2, 15)}`} className="mb-6 bg-card rounded-lg overflow-hidden">
                 <PostItem key={post.id} post={post} />
