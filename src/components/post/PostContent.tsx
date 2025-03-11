@@ -76,7 +76,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
   const handleImageError = () => {
     console.error("Image failed to load");
     setIsMediaError(true);
-    toast.error("Failed to load image");
+    setIsMediaLoaded(false);
   };
 
   const handlePlayError = (error: any) => {
@@ -127,7 +127,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 </div>
               )}
               <video
-                key={videoUrl}
+                key={`video-${postId}-${Date.now()}`}
                 src={videoUrl}
                 className="w-full h-full object-contain"
                 controls
@@ -136,6 +136,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 preload="metadata"
                 onLoadedData={handleMediaLoad}
                 onError={handleVideoError}
+                onContextMenu={(e) => e.preventDefault()}
               />
             </>
           )}

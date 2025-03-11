@@ -12,6 +12,15 @@ import { BackButton } from "@/components/ui/back-button";
 // This allows us to match the expected structure while adding our own properties
 type ExtendedPost = Post & {
   trophy_count?: number;
+  profiles?: {
+    username: string;
+    display_name: string;
+    avatar_url: string | null;
+  };
+  games?: {
+    id: string;
+    name: string;
+  }[];
 };
 
 const Clipts = () => {
@@ -32,7 +41,25 @@ const Clipts = () => {
       // Use the most basic query possible, matching previous working version
       const { data, error } = await supabase
         .from('posts')
-        .select('*')
+        .select(`
+          id,
+          content,
+          image_url,
+          video_url,
+          user_id,
+          created_at,
+          post_type,
+          is_published,
+          profiles (
+            username,
+            display_name, 
+            avatar_url
+          ),
+          games (
+            id,
+            name
+          )
+        `)
         .eq('is_published', true)
         .limit(50);
         
@@ -68,7 +95,7 @@ const Clipts = () => {
           display_name: "Unknown User",
           avatar_url: null
         },
-        games: post.games,
+        games: post.games || [],
         clip_votes: [{ count: 0 }],
         is_published: true,
         trophy_count: 0
@@ -147,16 +174,17 @@ const Clipts = () => {
       }
     }, 3000);
     
+    // Only fetch on first load or manual refresh
     fetchPostsDirectly();
     
     return () => clearTimeout(timeoutId);
-  }, [fetchPostsDirectly, refreshKey, isLoading, getSamplePosts]);
+  }, [fetchPostsDirectly, refreshKey]);
 
-  // Trophy count updates - simplified to just refresh
+  // Trophy count updates - simplified to just refresh when explicitly requested
   useEffect(() => {
     const handleTrophyCountUpdate = () => {
-      console.log('Trophy count update - refreshing');
-      setRefreshKey(prev => prev + 1);
+      console.log('Trophy count update - manual refresh needed');
+      // Don't automatically refresh to avoid content disappearing
     };
     
     window.addEventListener('trophy-count-update', handleTrophyCountUpdate);
