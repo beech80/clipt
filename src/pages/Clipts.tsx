@@ -69,9 +69,9 @@ const Clipts = () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('🔍 Fetching video posts...');
+      console.log('🔍 Fetching ALL posts without filtering...');
       
-      // Query to get video posts
+      // Simplified query with minimal filtering to get ANY posts
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -85,7 +85,7 @@ const Clipts = () => {
           is_published,
           profiles (
             username,
-            display_name,
+            display_name, 
             avatar_url
           ),
           games (
@@ -93,8 +93,6 @@ const Clipts = () => {
             name
           )
         `)
-        .not('video_url', 'is', null)  // Only get posts with videos
-        .neq('video_url', '')         // Make sure video URL is not empty
         .eq('is_published', true)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -106,66 +104,42 @@ const Clipts = () => {
         return;
       }
       
-      console.log(`📊 Query returned ${data?.length || 0} video posts`);
+      console.log(`📊 Query returned ${data?.length || 0} total posts`);
       
       if (!data || data.length === 0) {
-        console.log('No video posts found');
+        console.log('No posts found in the database');
         setRawPosts([]);
         setIsLoading(false);
         return;
       }
       
-      // Process posts with minimal transformation to match the Post type
+      // Log details of the found posts to help debug
+      data.forEach(post => {
+        console.log(`Post ${post.id}: video_url=${post.video_url || 'NONE'}, image_url=${post.image_url || 'NONE'}`);
+      });
+      
+      // Process ALL posts without video filtering
       const processedPosts = data.map(post => {
         // Create a properly formatted Post object
         const formattedPost: ExtendedPost = {
           id: post.id,
-          content: post.content || "", // Make sure content exists
+          content: post.content || "", 
           image_url: post.image_url,
           video_url: post.video_url,
           user_id: post.user_id,
           created_at: post.created_at,
           profiles: post.profiles,
           games: post.games,
-          // clip_votes needs to be an array according to the Post type
           clip_votes: [{ count: 0 }],
-          // Add other optional fields
           is_published: post.is_published,
-          trophy_count: 0 // Our custom property
+          trophy_count: 0
         };
           
         return formattedPost;
       });
       
-      console.log('✅ Processed video posts:', processedPosts.length);
-      
-      // Get trophy counts for all posts
-      const postIds = processedPosts.map(post => post.id);
-      
-      if (postIds.length > 0) {
-        try {
-          const trophyCountMap = await refreshTrophyCounts(postIds);
-          
-          // Update trophy counts
-          const updatedPosts = processedPosts.map(post => {
-            const trophyCount = trophyCountMap[post.id] || 0;
-            return {
-              ...post,
-              // Update clip_votes to have the correct count in the array format
-              clip_votes: [{ count: trophyCount }],
-              trophy_count: trophyCount
-            };
-          });
-          
-          setRawPosts(updatedPosts);
-        } catch (countError) {
-          console.error('Error updating trophy counts:', countError);
-          setRawPosts(processedPosts);
-        }
-      } else {
-        setRawPosts([]);
-      }
-      
+      console.log('✅ Processed all posts:', processedPosts.length);
+      setRawPosts(processedPosts);
       setIsLoading(false);
     } catch (err) {
       console.error('❌ Exception fetching posts:', err);
@@ -248,34 +222,71 @@ const Clipts = () => {
       </div>
 
       <div className="container mx-auto px-4 py-24 max-w-2xl">
+        {/* Enhanced debug panel */}
+        <div className="mb-4 p-3 bg-purple-500/20 text-purple-200 text-xs rounded">
+          <h3 className="font-bold mb-1">Debug Information:</h3>
+          <p>Found {rawPosts.length} total posts</p>
+          <p>Video posts: {rawPosts.filter(p => p.video_url).length}</p>
+          <p>Image posts: {rawPosts.filter(p => p.image_url).length}</p>
+          <div className="mt-2">
+            <button 
+              onClick={refreshPosts} 
+              className="px-2 py-1 bg-purple-700 rounded text-white text-xs"
+            >
+              Refresh Posts
+            </button>
+          </div>
+        </div>
+
         {isLoading && (
           <div className="flex justify-center my-8">
-            <div className="animate-pulse">Loading videos...</div>
+            <div className="animate-pulse">Loading posts...</div>
           </div>
         )}
 
         {error && (
           <div className="bg-red-500/20 border border-red-500 text-white p-4 rounded-lg mb-6">
-            <h3 className="font-bold">Error loading videos:</h3>
+            <h3 className="font-bold">Error loading content:</h3>
             <p>{error}</p>
           </div>
         )}
 
-        {/* Display video posts */}
-        {!isLoading && rawPosts.length > 0 && (
-          <div className="space-y-6">
-            {rawPosts.map((post) => (
-              <PostItem key={post.id} post={post} />
-            ))}
-          </div>
+        {/* Video-only posts section */}
+        {!isLoading && rawPosts.filter(p => p.video_url).length > 0 && (
+          <>
+            <h2 className="text-lg font-bold mb-4 text-primary">Video Posts</h2>
+            <div className="space-y-6 mb-8">
+              {rawPosts
+                .filter(post => post.video_url)
+                .map((post) => (
+                  <div key={post.id} className="border border-purple-500/30 rounded overflow-hidden">
+                    <PostItem post={post} />
+                  </div>
+                ))}
+            </div>
+          </>
+        )}
+
+        {/* All other posts */}
+        {!isLoading && rawPosts.filter(p => !p.video_url).length > 0 && (
+          <>
+            <h2 className="text-lg font-bold mb-4 text-primary">Other Posts</h2>
+            <div className="space-y-6">
+              {rawPosts
+                .filter(post => !post.video_url)
+                .map((post) => (
+                  <PostItem key={post.id} post={post} />
+                ))}
+            </div>
+          </>
         )}
 
         {/* If no results found */}
         {!isLoading && rawPosts.length === 0 && !error && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center space-y-4">
-              <p className="text-2xl font-semibold text-white/60">Ready to share a video clip?</p>
-              <p className="text-white/40">No video clips found. Create a new one!</p>
+              <p className="text-2xl font-semibold text-white/60">No posts found</p>
+              <p className="text-white/40">Create a new post to get started!</p>
             </div>
           </div>
         )}
