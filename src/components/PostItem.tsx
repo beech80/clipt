@@ -148,18 +148,20 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       
       if (existingLike) {
         // Unlike the post
-        await supabase
+        const { error } = await supabase
           .from('likes')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', user.id);
           
+        if (error) throw error;
+        
         setLiked(false);
         setLikesCount(prev => Math.max(0, prev - 1));
         toast.success("Unliked post");
       } else {
         // Like the post
-        await supabase
+        const { error } = await supabase
           .from('likes')
           .insert({
             post_id: postId,
@@ -167,10 +169,30 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             created_at: new Date().toISOString()
           });
           
+        if (error) throw error;
+        
         setLiked(true);
         setLikesCount(prev => prev + 1);
         toast.success("Liked post");
       }
+      
+      // Get accurate count from database
+      const { count } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true})
+        .eq('post_id', postId);
+      
+      setLikesCount(count || 0);
+      
+      // Dispatch event to notify other components
+      const likeUpdateEvent = new CustomEvent('like-update', {
+        detail: {
+          postId,
+          count: count || 0,
+          active: !existingLike
+        }
+      });
+      window.dispatchEvent(likeUpdateEvent);
       
       // Invalidate cache for this post
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
@@ -526,6 +548,121 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     
     checkFollowStatus();
   }, [user, post.user_id]);
+
+  // Fetch and track likes/trophies whenever post ID changes
+  useEffect(() => {
+    const fetchLikeStatus = async () => {
+      if (!user || !postId) return;
+      
+      try {
+        console.log(`Checking like status for post ${postId}`);
+        const { data } = await supabase
+          .from('likes')
+          .select('*')
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        setLiked(!!data);
+      } catch (error) {
+        console.error("Error fetching like status:", error);
+      }
+    };
+    
+    const fetchLikesCount = async () => {
+      if (!postId) return;
+      
+      try {
+        console.log(`Fetching likes count for post ${postId}`);
+        const { count, error } = await supabase
+          .from('likes')
+          .select('*', { count: 'exact', head: true})
+          .eq('post_id', postId);
+        
+        if (error) throw error;
+        setLikesCount(count || 0);
+      } catch (error) {
+        console.error("Error fetching likes count:", error);
+      }
+    };
+    
+    const fetchTrophyStatus = async () => {
+      if (!user || !postId) return;
+      
+      try {
+        console.log(`Checking trophy status for post ${postId}`);
+        const { data } = await supabase
+          .from('clip_votes')
+          .select('*')
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        setHasTrophy(!!data);
+      } catch (error) {
+        console.error("Error fetching trophy status:", error);
+      }
+    };
+    
+    const fetchTrophyCount = async () => {
+      if (!postId) return;
+      
+      try {
+        console.log(`Fetching trophy count for post ${postId}`);
+        const { count, error } = await supabase
+          .from('clip_votes')
+          .select('*', { count: 'exact', head: true})
+          .eq('post_id', postId);
+        
+        if (error) throw error;
+        setTrophyCount(count || 0);
+      } catch (error) {
+        console.error("Error fetching trophy count:", error);
+      }
+    };
+    
+    // Run all fetch operations
+    fetchLikeStatus();
+    fetchLikesCount();
+    fetchTrophyStatus();
+    fetchTrophyCount();
+    
+    // Set up event listeners for real-time updates
+    const handleLikeUpdate = (e: CustomEvent) => {
+      const detail = (e as any).detail;
+      if (detail?.postId === postId) {
+        console.log('Like update event received', detail);
+        setLiked(detail.active);
+        setLikesCount(detail.count);
+      }
+    };
+    
+    const handleTrophyUpdate = (e: CustomEvent) => {
+      const detail = (e as any).detail;
+      if (detail?.postId === postId) {
+        console.log('Trophy update event received', detail);
+        setHasTrophy(detail.active);
+        setTrophyCount(detail.count);
+      }
+    };
+    
+    // Global refresh event
+    const handleGlobalUpdate = () => {
+      console.log('Global update triggered, refreshing counts');
+      fetchLikesCount();
+      fetchTrophyCount();
+    };
+    
+    window.addEventListener('like-update', handleLikeUpdate as EventListener);
+    window.addEventListener('trophy-update', handleTrophyUpdate as EventListener);
+    window.addEventListener('trophy-count-update', handleGlobalUpdate);
+    
+    return () => {
+      window.removeEventListener('like-update', handleLikeUpdate as EventListener);
+      window.removeEventListener('trophy-update', handleTrophyUpdate as EventListener);
+      window.removeEventListener('trophy-count-update', handleGlobalUpdate);
+    };
+  }, [postId, user]);
 
   // Load initial trophy status
   useEffect(() => {
