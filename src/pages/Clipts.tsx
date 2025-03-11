@@ -42,8 +42,7 @@ const Clipts = () => {
           ),
           games (
             id,
-            name,
-            image_url
+            name
           )
         `)
         .not('video_url', 'is', null) // Only get posts with videos
