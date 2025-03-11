@@ -58,32 +58,19 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
 
   // Debug logging for postId
   useEffect(() => {
-    console.log(`PostContent rendering for postId: ${postId}`, {
-      videoUrl,
-      imageUrl,
-      hasVideo: !!videoUrl,
-      hasImage: !!imageUrl || imageUrls.length > 0
-    });
-  }, [postId, videoUrl, imageUrl, imageUrls]);
+    // Remove debug logging to keep things clean
+  }, [postId]);
 
   const handleMediaLoad = () => {
-    console.log("Media loaded successfully", { videoUrl });
     setIsMediaLoaded(true);
     setIsMediaError(false);
   };
 
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     const target = e.target as HTMLVideoElement;
-    console.error("Video error:", {
-      message: target.error?.message || "Unknown error",
-      videoUrl,
-      networkState: target.networkState,
-      readyState: target.readyState
-    });
-    
+    console.error("Video error:", target.error?.message || "Unknown error");
     setIsMediaError(true);
     setIsMediaLoaded(false);
-    toast.error("Failed to load video");
   };
 
   const handleImageError = () => {
@@ -129,15 +116,8 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
       {videoUrl ? (
         <div className="w-full aspect-video bg-black relative">
           {isMediaError ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-red-500">
+            <div className="absolute inset-0 flex items-center justify-center text-red-500">
               <p className="text-center">Unable to play video.</p>
-              <p className="text-sm text-white/70 mt-2">Error: {videoUrl ? 'Format may not be supported' : 'No video URL provided'}</p>
-              <button 
-                className="mt-3 px-3 py-1 bg-purple-700 rounded text-white text-xs"
-                onClick={() => setIsMediaError(false)}
-              >
-                Try Again
-              </button>
             </div>
           ) : (
             <>
@@ -147,29 +127,16 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 </div>
               )}
               <video
-                key={videoUrl} // Force video element recreation when URL changes
+                key={videoUrl}
                 src={videoUrl}
-                className={`w-full h-full object-contain ${!isMediaLoaded ? 'opacity-0' : 'opacity-100'}`}
+                className="w-full h-full object-contain"
                 controls
                 playsInline
-                autoPlay={false}
-                loop={false}
                 muted={false}
                 preload="metadata"
-                controlsList="nodownload"
                 onLoadedData={handleMediaLoad}
                 onError={handleVideoError}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-                onContextMenu={(e) => e.preventDefault()}
               />
-              
-              {/* Display video URL for debugging */}
-              <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-xs text-white/70 p-1 text-center overflow-hidden text-ellipsis">
-                Video URL: {videoUrl?.substring(0, 50)}{videoUrl?.length > 50 ? '...' : ''}
-              </div>
             </>
           )}
         </div>
