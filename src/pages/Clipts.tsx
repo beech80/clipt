@@ -39,6 +39,11 @@ const Clipts = () => {
             username,
             display_name,
             avatar_url
+          ),
+          games (
+            id,
+            name,
+            image_url
           )
         `)
         .not('video_url', 'is', null) // Only get posts with videos
@@ -52,7 +57,7 @@ const Clipts = () => {
       }
       
       // Process the posts to match the expected format for PostItem
-      const processedPosts = data
+      let processedPosts = data
         .filter(post => post.video_url) // Double-check to ensure only video posts
         .map(post => ({
           id: post.id,
@@ -63,10 +68,74 @@ const Clipts = () => {
           created_at: post.created_at,
           post_type: post.post_type,
           profiles: post.profiles,
+          games: post.games,
           likes: { count: 0 },
           comments: { count: 0 },
           clip_votes: { count: 0 }
         }));
+      
+      // Get trophy counts for all posts in a single batch
+      const postIds = processedPosts.map(post => post.id);
+      
+      if (postIds.length > 0) {
+        try {
+          // Get clip_votes counts
+          const { data: clipVotesData, error: clipVotesError } = await supabase
+            .from('clip_votes')
+            .select('post_id, count(*)')
+            .in('post_id', postIds)
+            .group('post_id');
+            
+          if (clipVotesError) {
+            console.error('Error fetching clip votes counts:', clipVotesError);
+          } else if (clipVotesData) {
+            // Create a map of post_id to count
+            const clipVotesMap = clipVotesData.reduce((acc, item) => {
+              acc[item.post_id] = parseInt(item.count);
+              return acc;
+            }, {});
+            
+            // Get post_votes counts
+            const { data: postVotesData, error: postVotesError } = await supabase
+              .from('post_votes')
+              .select('post_id, count(*)')
+              .in('post_id', postIds)
+              .group('post_id');
+              
+            if (postVotesError) {
+              console.error('Error fetching post votes counts:', postVotesError);
+            } else if (postVotesData) {
+              // Create a map of post_id to count
+              const postVotesMap = postVotesData.reduce((acc, item) => {
+                acc[item.post_id] = parseInt(item.count);
+                return acc;
+              }, {});
+              
+              // Update the processed posts with the actual counts
+              processedPosts = processedPosts.map(post => {
+                const clipVotesCount = clipVotesMap[post.id] || 0;
+                const postVotesCount = postVotesMap[post.id] || 0;
+                const totalTrophyCount = clipVotesCount + postVotesCount;
+                
+                return {
+                  ...post,
+                  clip_votes: { 
+                    count: clipVotesCount,
+                    data: [] // Add empty array to match structure expected by components
+                  },
+                  post_votes: {
+                    count: postVotesCount,
+                    data: [] // Add empty array to match structure expected by components
+                  },
+                  trophy_count: totalTrophyCount
+                };
+              });
+            }
+          }
+        } catch (countError) {
+          console.error('Error processing trophy counts:', countError);
+        }
+      }
       
       console.log('✅ Raw posts data:', processedPosts);
       setRawPosts(processedPosts || []);
