@@ -336,7 +336,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       
       if (hasVote) {
         // Remove the trophy
-        console.log('Removing trophy');
+        console.log('Removing trophy from post', postId);
         const { error: removeError } = await supabase
           .from('clip_votes')
           .delete()
@@ -349,26 +349,36 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
           return;
         }
         
+        console.log('Trophy successfully removed');
         toast.success('Trophy removed');
         setHasTrophy(false);
         setTrophyCount(prev => Math.max(0, prev - 1));
       } else {
         // Add a trophy
-        console.log('Adding trophy');
-        const { error: addError } = await supabase
+        console.log('Adding trophy to post', postId, 'by user', user.id);
+        
+        // Create a properly formatted trophy vote object
+        const voteObject = {
+          post_id: postId,
+          user_id: user.id,
+          value: 1,
+          created_at: new Date().toISOString()
+        };
+        
+        console.log('Trophy vote object:', voteObject);
+        
+        const { data: insertData, error: addError } = await supabase
           .from('clip_votes')
-          .insert({
-            post_id: postId,
-            user_id: user.id,
-            value: 1
-          });
+          .insert(voteObject)
+          .select();
           
         if (addError) {
-          console.error('Error adding trophy:', addError);
-          toast.error('Failed to add trophy');
+          console.error('Error adding trophy:', addError.message, addError.details, addError.hint);
+          toast.error('Failed to add trophy: ' + addError.message);
           return;
         }
         
+        console.log('Trophy added successfully, response:', insertData);
         toast.success('Trophy awarded!');
         setHasTrophy(true);
         setTrophyCount(prev => prev + 1);
@@ -381,7 +391,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         .eq('post_id', postId);
         
       if (!countError) {
-        console.log('Updated trophy count:', count);
+        console.log('Updated trophy count for post', postId, ':', count);
         setTrophyCount(count || 0);
         
         // Dispatch trophy update event
@@ -393,7 +403,10 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         console.log('Dispatching trophy update event:', detail);
         
         window.dispatchEvent(new CustomEvent('trophy-update', { detail }));
+        
+        // Additional event for global count updates with short delay
         setTimeout(() => {
+          console.log('Dispatching global trophy count update');
           window.dispatchEvent(new Event('trophy-count-update'));
         }, 200);
       } else {
@@ -402,6 +415,9 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       
     } catch (error) {
       console.error('Error handling trophy vote:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message, error.stack);
+      }
       toast.error('An error occurred with trophy voting');
     } finally {
       setTrophyLoading(false);
