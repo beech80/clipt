@@ -645,7 +645,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Handler for trophy button
   const handleTrophy = async () => {
     if (!currentPostId) {
-      toast.error('No post selected');
+      console.error('Cannot trophy with no post ID');
+      toast.error('Could not find post to trophy');
       return;
     }
     
@@ -673,25 +674,37 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       console.log(`Attempting to update trophy for post ${currentPostId} by user ${userId}`);
       
       // First check clip_votes table
-      const { data: existingClipVote, error: clipVoteError } = await supabase
+      const clipVotePromise = supabase
         .from('clip_votes')
         .select('id')
         .eq('post_id', currentPostId)
         .eq('user_id', userId)
         .maybeSingle();
         
-      if (clipVoteError && clipVoteError.code !== 'PGRST116') {
-        console.error("Error checking clip votes:", clipVoteError);
-      }
-      
       // Also check post_votes table
-      const { data: existingPostVote, error: postVoteError } = await supabase
+      const postVotePromise = supabase
         .from('post_votes')
         .select('id')
         .eq('post_id', currentPostId)
         .eq('user_id', userId)
         .maybeSingle();
-        
+      
+      // Run the queries in parallel for better performance
+      const [clipVoteResult, postVoteResult] = await Promise.all([
+        clipVotePromise, 
+        postVotePromise
+      ]);
+      
+      const existingClipVote = clipVoteResult.data;
+      const clipVoteError = clipVoteResult.error;
+      
+      if (clipVoteError && clipVoteError.code !== 'PGRST116') {
+        console.error("Error checking clip votes:", clipVoteError);
+      }
+      
+      const existingPostVote = postVoteResult.data;
+      const postVoteError = postVoteResult.error;
+      
       if (postVoteError && postVoteError.code !== 'PGRST116') {
         console.error("Error checking post votes:", postVoteError);
       }
@@ -699,7 +712,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       const hasExistingVote = existingClipVote || existingPostVote;
       console.log("Existing votes check:", { clipVote: !!existingClipVote, postVote: !!existingPostVote });
       
+      // Optimistically update the local state for better UX
+      setTrophyStatus(!hasExistingVote);
+      
       let success = false;
+      let newTrophyState = !hasExistingVote;
       
       if (hasExistingVote) {
         // Remove vote from wherever it exists
@@ -736,14 +753,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         if (removeSuccess) {
           toast.success('Trophy removed');
           success = true;
+        } else if (existingClipVote || existingPostVote) {
+          // Only throw if we actually found votes to remove but couldn't remove them
+          throw new Error("Failed to remove trophy vote");
         } else {
-          console.error("Failed to remove trophy vote");
-          toast.error('Failed to update trophy status');
-          return;
+          // If there were no votes to remove, consider it a success
+          console.log("No votes found to remove, considering operation successful");
+          success = true;
         }
       } else {
-        // Add trophy vote - always to clip_votes for consistency
-        console.log("Adding new trophy vote to post:", currentPostId);
+        // Add trophy
         try {
           const { data: newVote, error: voteError } = await supabase
             .from('clip_votes')
@@ -757,8 +776,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
           if (voteError) {
             console.error("Error adding trophy vote:", voteError);
-            toast.error('Failed to update trophy status');
-            return;
+            throw voteError;
           }
           
           console.log("Added trophy vote successfully:", newVote);
@@ -766,73 +784,69 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           success = true;
         } catch (insertError) {
           console.error("Failed to insert trophy vote:", insertError);
-          toast.error('Failed to update trophy status');
-          return;
+          throw insertError;
+        }
+      }
+
+      if (success) {
+        // Dispatch a custom event to notify other components of the trophy update
+        const trophyUpdateEvent = new CustomEvent('trophy-update', {
+          detail: {
+            postId: currentPostId,
+            active: newTrophyState
+          }
+        });
+        window.dispatchEvent(trophyUpdateEvent);
+        
+        // Update trophy count in UI
+        try {
+          // Try using the RPC function first
+          const { data: trophyData, error: countError } = await supabase.rpc(
+            'get_post_trophy_count',
+            { post_id_param: currentPostId }
+          );
+          
+          if (!countError && trophyData !== null) {
+            console.log('Updated trophy count from RPC:', trophyData);
+            // Update any necessary UI elements with the count
+          } else {
+            // Fallback to direct count
+            const clipCountPromise = supabase
+              .from('clip_votes')
+              .select('*', { count: 'exact', head: true })
+              .eq('post_id', currentPostId);
+              
+            const voteCountPromise = supabase
+              .from('post_votes')
+              .select('*', { count: 'exact', head: true })
+              .eq('post_id', currentPostId);
+            
+            const [clipCountResult, voteCountResult] = await Promise.all([
+              clipCountPromise,
+              voteCountPromise
+            ]);
+            
+            const clipCount = clipCountResult.count;
+            const voteCount = voteCountResult.count;
+            
+            const finalCount = (clipCount || 0) + (voteCount || 0);
+            console.log('Updated trophy count from direct count:', finalCount);
+            // Update any necessary UI elements with the count
+          }
+        } catch (countError) {
+          console.error("Error getting accurate trophy count:", countError);
+          // Don't fail the operation if count update fails
         }
       }
       
-      if (success) {
-        // Get current trophy count for more accurate updates
-        const getTrophyCount = async () => {
-          try {
-            // Try using the RPC function first
-            const { data: trophyData, error: countError } = await supabase.rpc(
-              'get_post_trophy_count',
-              { post_id_param: currentPostId }
-            );
-            
-            let currentCount = 0;
-            
-            if (!countError && trophyData !== null) {
-              console.log('Trophy count from RPC:', trophyData);
-              currentCount = trophyData;
-            } else {
-              // Fallback to direct count
-              const { count: clipCount } = await supabase
-                .from('clip_votes')
-                .select('*', { count: 'exact', head: true })
-                .eq('post_id', currentPostId);
-                
-              const { count: voteCount } = await supabase
-                .from('post_votes')
-                .select('*', { count: 'exact', head: true })
-                .eq('post_id', currentPostId);
-              
-              currentCount = (clipCount || 0) + (voteCount || 0);
-              console.log('Trophy count from direct count:', currentCount);
-            }
-            
-            // Now dispatch event with accurate count
-            const trophyUpdateEvent = new CustomEvent('trophy-update', {
-              detail: {
-                postId: currentPostId,
-                count: currentCount,
-                active: !hasExistingVote
-              }
-            });
-            window.dispatchEvent(trophyUpdateEvent);
-            
-            // Also dispatch directly to the post element
-            const postElement = document.querySelector(`[data-post-id="${currentPostId}"]`);
-            if (postElement) {
-              console.log('Dispatching refresh event directly to post element');
-              const refreshEvent = new CustomEvent('refresh-post-data');
-              postElement.dispatchEvent(refreshEvent);
-            }
-          } catch (error) {
-            console.error('Error getting accurate trophy count:', error);
-          }
-        };
-        
-        // Call the function to get and dispatch accurate count
-        await getTrophyCount();
-        
-        // Refresh all post data
-        queryClient.invalidateQueries({ queryKey: ['posts'] });
-      }
     } catch (error) {
-      console.error('Trophy update error:', error);
+      console.error('Error handling trophy vote:', error);
       toast.error('Failed to update trophy status');
+      
+      // Revert UI state on error
+      if (currentPostId && typeof trophyStatus !== 'undefined') {
+        setTrophyStatus(trophyStatus);
+      }
     }
   };
 
@@ -1364,4 +1378,3 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 };
 
 export default GameBoyControls;
-
