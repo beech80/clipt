@@ -120,6 +120,10 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         videoUrl = result.url;
         console.log("Video uploaded successfully:", videoUrl);
       }
+      
+      // Force post type to be 'clip' if there's a video
+      const postType = selectedVideo ? 'clip' : 'regular';
+      console.log("Setting post type to:", postType);
 
       const scheduledPublishTime = scheduledDate && scheduledTime
         ? new Date(`${format(scheduledDate, 'yyyy-MM-dd')}T${scheduledTime}`)
@@ -132,7 +136,7 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         videoUrl,
         scheduledPublishTime: scheduledPublishTime?.toISOString(),
         isPublished: !scheduledPublishTime,
-        postType: selectedVideo ? 'clip' : 'regular' as 'clip' | 'regular'
+        postType: postType as 'clip' | 'regular'
       };
       
       console.log("Creating post with data:", postData);
