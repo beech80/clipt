@@ -24,9 +24,10 @@ import { useNavigate } from "react-router-dom";
 
 interface PostFormProps {
   onPostCreated?: () => void;
+  onClose?: () => void;
 }
 
-const PostForm = ({ onPostCreated }: PostFormProps) => {
+const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -148,6 +149,10 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
       
       console.log("Post created successfully:", post);
 
+      // Invalidate the posts queries to refresh the Clipts page
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      queryClient.invalidateQueries({ queryKey: ['posts', 'clipts'] });
+
       const mentions = extractMentions(content);
       for (const username of mentions) {
         await createMention(username, post.id);
@@ -160,21 +165,39 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
         { id: toastId }
       );
       
-      // Force invalidate all post-related queries 
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      
-      // Specifically invalidate clipts query
-      if (isClip) {
-        console.log("Invalidating clipts query cache");
-        queryClient.invalidateQueries({ queryKey: ['posts', 'clipts'] });
+      // Clear form
+      setContent("");
+      setSelectedImage(null);
+      setSelectedVideo(null);
+      setScheduledDate(null);
+      setScheduledTime("");
+
+      // For video posts, always navigate to the Clipts page
+      if (videoUrl) {
+        console.log("Video post created - redirecting to Clipts page");
         
-        // After a short delay, navigate to the Clipts page to see the new post
+        // Close the form if needed
+        if (onClose) onClose();
+        
+        // Notify parent if needed
+        if (onPostCreated) onPostCreated();
+        
+        // Force redirect to Clipts page
         setTimeout(() => {
+          console.log("Navigating to Clipts page now");
           navigate('/clipts');
-        }, 500);
+          
+          // Force a refresh of the Clipts page data after arrival
+          setTimeout(() => {
+            console.log("Refreshing Clipts page data");
+            queryClient.invalidateQueries({ queryKey: ['posts', 'clipts'] });
+          }, 500);
+        }, 1000);
+      } else {
+        // For non-video posts, just do the normal close/callback
+        if (onPostCreated) onPostCreated();
+        if (onClose) onClose();
       }
-      
-      resetForm();
     } catch (error) {
       console.error("Error creating post:", error);
       toast.error("Failed to create post", { id: toastId });
@@ -182,19 +205,6 @@ const PostForm = ({ onPostCreated }: PostFormProps) => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const resetForm = () => {
-    setContent("");
-    setSelectedImage(null);
-    setSelectedVideo(null);
-    setImageProgress(0);
-    setVideoProgress(0);
-    setScheduledDate(undefined);
-    setScheduledTime("");
-    setError(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (videoInputRef.current) videoInputRef.current.value = '';
   };
 
   const handleEditedMedia = (blob: Blob) => {
