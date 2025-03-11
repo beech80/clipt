@@ -1,21 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { RefreshCcw } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import PostItem from "@/components/PostItem";
+import { Post } from "@/types/post";
+import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
-import { Camera } from "lucide-react";
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import PostItem from '@/components/PostItem';
-import { Post } from '@/types/post';
 
 const Clipts = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Function to manually refresh posts
+  const refreshPosts = useCallback(() => {
+    console.log("Manually refreshing posts...");
+    setRefreshKey(prev => prev + 1);
+    queryClient.invalidateQueries({ queryKey: ['posts', 'clipts'] });
+  }, [queryClient]);
+
+  // Auto-refresh effect on mount
+  useEffect(() => {
+    console.log("Clipts page mounted - refreshing posts");
+    refreshPosts();
+  }, [refreshPosts]);
 
   const { data: posts, isLoading } = useQuery({
-    queryKey: ['posts', 'clipts'],
+    queryKey: ['posts', 'clipts', refreshKey],
     queryFn: async () => {
       try {
         console.log('Fetching clips...');
         
+        // Use OR filter to fetch both by type AND by video presence
         const { data, error } = await supabase
           .from('posts')
           .select(`
@@ -66,7 +83,8 @@ const Clipts = () => {
         return [] as Post[];
       }
     },
-    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchInterval: 5000, // Refresh every 5 seconds
+    staleTime: 0, // Consider the data always stale so we fetch on every page visit
   });
 
   return (
@@ -77,6 +95,13 @@ const Clipts = () => {
           <h1 className="text-3xl font-bold text-white">
             Clipts
           </h1>
+          <button 
+            onClick={refreshPosts}
+            className="absolute right-0 p-2 text-white/80 hover:text-white rounded-full transition-all"
+            aria-label="Refresh posts"
+          >
+            <RefreshCcw size={20} />
+          </button>
         </div>
       </div>
 
@@ -102,6 +127,12 @@ const Clipts = () => {
               <p className="text-2xl font-semibold text-white/60">Ready to share a gaming moment?</p>
               <p className="text-purple-400">Click the button below to create your first clip!</p>
               <p className="text-sm text-white/60 mt-2">For video clips only!</p>
+              <Button
+                onClick={refreshPosts}
+                className="mt-4 bg-purple-500 hover:bg-purple-600"
+              >
+                Refresh Posts
+              </Button>
             </div>
           </div>
         )}
