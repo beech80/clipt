@@ -69,9 +69,9 @@ const Clipts = () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('🔍 Fetching ALL posts without filtering...');
+      console.log('🔍 Fetching video posts...');
       
-      // Simplified query with minimal filtering to get ANY posts
+      // Query specifically for posts with valid video URLs
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -93,9 +93,11 @@ const Clipts = () => {
             name
           )
         `)
+        .not('video_url', 'is', null)
+        .not('video_url', 'eq', '')
         .eq('is_published', true)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
         
       if (error) {
         console.error('❌ Error fetching posts:', error);
@@ -104,21 +106,22 @@ const Clipts = () => {
         return;
       }
       
-      console.log(`📊 Query returned ${data?.length || 0} total posts`);
+      console.log(`📊 Query returned ${data?.length || 0} video posts`);
       
-      if (!data || data.length === 0) {
-        console.log('No posts found in the database');
+      // Display raw video URLs for debugging
+      if (data && data.length > 0) {
+        console.log('🎬 Video URLs:');
+        data.forEach((post, index) => {
+          console.log(`Video ${index + 1}: ${post.video_url}`);
+        });
+      } else {
+        console.log('No video posts found in the database');
         setRawPosts([]);
         setIsLoading(false);
         return;
       }
       
-      // Log details of the found posts to help debug
-      data.forEach(post => {
-        console.log(`Post ${post.id}: video_url=${post.video_url || 'NONE'}, image_url=${post.image_url || 'NONE'}`);
-      });
-      
-      // Process ALL posts without video filtering
+      // Process posts with video URLs for display
       const processedPosts = data.map(post => {
         // Create a properly formatted Post object
         const formattedPost: ExtendedPost = {
@@ -138,7 +141,7 @@ const Clipts = () => {
         return formattedPost;
       });
       
-      console.log('✅ Processed all posts:', processedPosts.length);
+      console.log('✅ Processed video posts:', processedPosts.length);
       setRawPosts(processedPosts);
       setIsLoading(false);
     } catch (err) {
@@ -227,20 +230,28 @@ const Clipts = () => {
           <h3 className="font-bold mb-1">Debug Information:</h3>
           <p>Found {rawPosts.length} total posts</p>
           <p>Video posts: {rawPosts.filter(p => p.video_url).length}</p>
-          <p>Image posts: {rawPosts.filter(p => p.image_url).length}</p>
-          <div className="mt-2">
+          <div className="mt-2 flex space-x-2">
             <button 
               onClick={refreshPosts} 
               className="px-2 py-1 bg-purple-700 rounded text-white text-xs"
             >
-              Refresh Posts
+              Refresh Videos
+            </button>
+            <button 
+              onClick={() => {
+                window.localStorage.clear();
+                window.location.reload();
+              }} 
+              className="px-2 py-1 bg-red-700 rounded text-white text-xs"
+            >
+              Clear Cache
             </button>
           </div>
         </div>
 
         {isLoading && (
           <div className="flex justify-center my-8">
-            <div className="animate-pulse">Loading posts...</div>
+            <div className="animate-pulse">Loading video posts...</div>
           </div>
         )}
 
@@ -251,42 +262,43 @@ const Clipts = () => {
           </div>
         )}
 
-        {/* Video-only posts section */}
-        {!isLoading && rawPosts.filter(p => p.video_url).length > 0 && (
-          <>
-            <h2 className="text-lg font-bold mb-4 text-primary">Video Posts</h2>
-            <div className="space-y-6 mb-8">
-              {rawPosts
-                .filter(post => post.video_url)
-                .map((post) => (
-                  <div key={post.id} className="border border-purple-500/30 rounded overflow-hidden">
-                    <PostItem post={post} />
-                  </div>
-                ))}
-            </div>
-          </>
-        )}
-
-        {/* All other posts */}
-        {!isLoading && rawPosts.filter(p => !p.video_url).length > 0 && (
-          <>
-            <h2 className="text-lg font-bold mb-4 text-primary">Other Posts</h2>
-            <div className="space-y-6">
-              {rawPosts
-                .filter(post => !post.video_url)
-                .map((post) => (
-                  <PostItem key={post.id} post={post} />
-                ))}
-            </div>
-          </>
+        {/* Video posts */}
+        {!isLoading && rawPosts.length > 0 && (
+          <div className="space-y-6">
+            {rawPosts.map((post) => (
+              <div key={post.id} className="border border-purple-500 rounded-lg overflow-hidden">
+                <div className="p-2 bg-purple-900/20">
+                  <h3 className="text-sm font-bold text-purple-200">Video: {post.id}</h3>
+                  {post.video_url && (
+                    <p className="text-xs text-purple-300 overflow-hidden text-ellipsis">
+                      URL: {post.video_url}
+                    </p>
+                  )}
+                </div>
+                <PostItem key={post.id} post={post} />
+              </div>
+            ))}
+          </div>
         )}
 
         {/* If no results found */}
         {!isLoading && rawPosts.length === 0 && !error && (
-          <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center justify-center py-20">
             <div className="text-center space-y-4">
-              <p className="text-2xl font-semibold text-white/60">No posts found</p>
-              <p className="text-white/40">Create a new post to get started!</p>
+              <p className="text-2xl font-semibold text-white/60">No video posts found</p>
+              <p className="text-white/40">Try creating a new post with a video</p>
+            </div>
+            
+            {/* Sample video for testing */}
+            <div className="mt-8 w-full max-w-md p-4 bg-gray-800 rounded-lg">
+              <h3 className="font-bold text-white mb-2">Test Video Player</h3>
+              <p className="text-xs text-gray-400 mb-4">If this works but your videos don't, check your video URLs</p>
+              <video 
+                src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm" 
+                controls
+                className="w-full rounded"
+              ></video>
+              <p className="text-xs text-gray-500 mt-2">Sample video from MDN Web Docs (CC0)</p>
             </div>
           </div>
         )}
