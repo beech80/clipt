@@ -271,9 +271,18 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     }
   };
 
-  const handleTrophyVote = async () => {
+  const handleTrophyVote = async (e: React.MouseEvent) => {
+    // Prevent event propagation to avoid triggering parent elements
+    e.stopPropagation();
+    
     if (!user) {
       toast.error('Please sign in to vote');
+      return;
+    }
+
+    if (!postId) {
+      console.error("Cannot vote on post with no ID");
+      toast.error('Cannot vote on this post');
       return;
     }
 
@@ -291,6 +300,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         
       if (clipVoteError && clipVoteError.code !== 'PGRST116') {
         console.error("Error checking clip votes:", clipVoteError);
+        throw clipVoteError;
       }
       
       const { data: existingPostVote, error: postVoteError } = await supabase
@@ -302,10 +312,18 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         
       if (postVoteError && postVoteError.code !== 'PGRST116') {
         console.error("Error checking post votes:", postVoteError);
+        throw postVoteError;
       }
       
       const hasExistingVote = existingClipVote || existingPostVote;
       console.log("Existing votes check:", { clipVote: !!existingClipVote, postVote: !!existingPostVote });
+
+      // Update the local state immediately for better UX
+      const newTrophyState = !hasExistingVote;
+      const newTrophyCount = newTrophyState ? trophyCount + 1 : Math.max(0, trophyCount - 1);
+      
+      setHasTrophy(newTrophyState);
+      setTrophyCount(newTrophyCount);
 
       if (hasExistingVote) {
         // Remove vote from wherever it exists
@@ -335,8 +353,6 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
           console.log("Removed post vote successfully");
         }
         
-        setHasTrophy(false);
-        setTrophyCount(prev => Math.max(0, prev - 1));
         toast.success('Trophy removed');
       } else {
         // Add trophy vote - always to clip_votes for consistency
@@ -357,8 +373,6 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         }
         
         console.log("Added trophy vote successfully:", newVote);
-        setHasTrophy(true);
-        setTrophyCount(prev => prev + 1);
         toast.success('Trophy awarded!');
         
         // Send notification to post owner
@@ -374,8 +388,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       const trophyUpdateEvent = new CustomEvent('trophy-update', {
         detail: {
           postId,
-          count: hasTrophy ? trophyCount - 1 : trophyCount + 1,
-          active: !hasTrophy
+          count: newTrophyCount,
+          active: newTrophyState
         }
       });
       window.dispatchEvent(trophyUpdateEvent);
@@ -383,6 +397,13 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     } catch (error) {
       console.error('Error handling trophy vote:', error);
       toast.error('Failed to update trophy status');
+      
+      // Revert UI state on error
+      if (hasExistingVote !== undefined) {
+        setHasTrophy(hasExistingVote);
+        const revertedCount = hasExistingVote ? trophyCount + 1 : Math.max(0, trophyCount - 1);
+        setTrophyCount(revertedCount);
+      }
     } finally {
       setTrophyLoading(false);
     }
@@ -772,12 +793,13 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         <button 
           className="trophy-button flex items-center text-sm font-medium text-gray-400 hover:text-yellow-500 transition-all duration-200 group"
           onClick={handleTrophyVote}
+          disabled={trophyLoading}
         >
           <Trophy 
-            className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all`}
+            className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all ${trophyLoading ? 'opacity-50' : ''}`}
           />
-          <span className={`text-base font-medium ${hasTrophy ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
-            {trophyCount}
+          <span className={`text-base font-medium ml-1 ${hasTrophy ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
+            {trophyCount || 0}
           </span>
         </button>
         
