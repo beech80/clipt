@@ -133,13 +133,15 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 className={`w-full h-full object-cover ${!isMediaLoaded ? 'opacity-0' : 'opacity-100'}`}
                 controls
                 playsInline
-                autoPlay
-                muted
-                preload="metadata"
+                preload="auto"
                 controlsList="nodownload"
                 onLoadedData={handleMediaLoad}
                 onError={handleVideoError}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onContextMenu={(e) => e.preventDefault()}
               />
             </>
           )}
