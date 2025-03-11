@@ -36,9 +36,9 @@ const Clipts = () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Fetching video posts only');
+      console.log('Fetching video posts from tat123 only');
       
-      // Query for ONLY posts with videos
+      // Query for ONLY posts with videos from tat123
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -63,28 +63,25 @@ const Clipts = () => {
         .not('video_url', 'is', null)
         .not('video_url', 'eq', '')
         .eq('is_published', true)
+        .eq('profiles.username', 'tat123')
         .limit(50);
         
       if (error) {
         console.error('Error fetching posts:', error);
         setError(`Database error: ${error.message}`);
         setIsLoading(false);
-        
-        // Add fallback posts for testing UI - video only
-        setRawPosts([getSamplePosts()[1]]); // Only use the video sample
         return;
       }
       
-      console.log(`Query returned ${data?.length || 0} video posts`);
+      console.log(`Query returned ${data?.length || 0} video posts from tat123`);
       
       if (!data || data.length === 0) {
-        console.log('No video posts found, using sample video');
-        setRawPosts([getSamplePosts()[1]]); // Only use the video sample
+        console.log('No video posts found from tat123');
         setIsLoading(false);
         return;
       }
       
-      // Process only posts with videos
+      // Process only posts with videos from tat123
       const processedPosts = data
         .filter(post => post.video_url && post.video_url.trim() !== '')
         .map(post => ({
@@ -95,8 +92,8 @@ const Clipts = () => {
           user_id: post.user_id,
           created_at: post.created_at,
           profiles: post.profiles || {
-            username: "unknown",
-            display_name: "Unknown User",
+            username: "tat123",
+            display_name: "tat123",
             avatar_url: null
           },
           games: post.games || [],
@@ -105,14 +102,13 @@ const Clipts = () => {
           trophy_count: 0
         }));
       
-      console.log('Video posts processed:', processedPosts.length);
+      console.log('Video posts from tat123 processed:', processedPosts.length);
       
       // Only update state if we still have posts after filtering
       if (processedPosts.length > 0) {
         setRawPosts(processedPosts);
       } else {
-        console.log('No valid video posts after filtering, using sample');
-        setRawPosts([getSamplePosts()[1]]); // Only use the video sample
+        console.log('No valid video posts from tat123 after filtering');
       }
       
       setIsLoading(false);
@@ -120,50 +116,12 @@ const Clipts = () => {
       console.error('Exception fetching posts:', err);
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setIsLoading(false);
-      
-      // Always show a video sample on error
-      setRawPosts([getSamplePosts()[1]]); // Only use the video sample
     }
   }, []);
 
-  // Helper function for sample posts
+  // Helper function for sample posts - REMOVED, no longer using sample posts
   const getSamplePosts = useCallback(() => {
-    return [
-      {
-        id: "sample1",
-        content: "Sample post 1",
-        image_url: "https://picsum.photos/seed/sample1/600/400",
-        video_url: null,
-        user_id: "system",
-        created_at: new Date().toISOString(),
-        profiles: {
-          username: "system",
-          display_name: "Sample User",
-          avatar_url: null
-        },
-        games: null,
-        clip_votes: [{ count: 3 }],
-        is_published: true,
-        trophy_count: 3
-      },
-      {
-        id: "sample2",
-        content: "Sample post 2 with video",
-        image_url: null,
-        video_url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
-        user_id: "system",
-        created_at: new Date().toISOString(),
-        profiles: {
-          username: "system",
-          display_name: "Sample User",
-          avatar_url: null
-        },
-        games: null,
-        clip_votes: [{ count: 5 }],
-        is_published: true,
-        trophy_count: 5
-      }
-    ];
+    return [];
   }, []);
 
   // Function to manually refresh posts
@@ -180,9 +138,8 @@ const Clipts = () => {
     // Set a shorter timeout (3 seconds)
     const timeoutId = setTimeout(() => {
       if (isLoading) {
-        console.log('Fetch timeout - using sample posts');
+        console.log('Fetch timeout');
         setIsLoading(false);
-        setRawPosts(getSamplePosts());
       }
     }, 3000);
     
@@ -244,9 +201,9 @@ const Clipts = () => {
         {/* Video posts */}
         {!isLoading && rawPosts.length > 0 && (
           <div className="space-y-6">
-            <h1 className="text-xl font-bold mb-4 text-primary">Videos</h1>
+            <h1 className="text-xl font-bold mb-4 text-primary">Videos from tat123</h1>
             {rawPosts.map((post) => (
-              <div key={`post-${post.id}-${Date.now()}`} className="mb-6 bg-card rounded-lg overflow-hidden">
+              <div key={`post-${post.id}-${Math.random().toString(36).substring(2, 15)}`} className="mb-6 bg-card rounded-lg overflow-hidden">
                 <PostItem key={post.id} post={post} />
               </div>
             ))}
@@ -257,7 +214,7 @@ const Clipts = () => {
         {!isLoading && rawPosts.length === 0 && !error && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <p className="text-white/60">No videos found</p>
+              <p className="text-white/60">No videos found from tat123</p>
               <button 
                 onClick={() => fetchPostsDirectly()} 
                 className="mt-3 px-3 py-1 bg-purple-700 rounded text-white text-xs"
