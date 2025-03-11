@@ -90,7 +90,7 @@ const Clipts = () => {
       setError(null);
       console.log('🔍 Directly fetching all video posts...');
       
-      // First fetch all posts with minimal filtering to see what's in the database
+      // Simplified query that focuses on getting ALL published posts first
       const { data, error } = await supabase
         .from('posts')
         .select(`
@@ -112,7 +112,6 @@ const Clipts = () => {
             name
           )
         `)
-        .not('video_url', 'is', null) // Only get posts with videos
         .eq('is_published', true)
         .order('created_at', { ascending: false });
         
@@ -122,23 +121,37 @@ const Clipts = () => {
         return;
       }
       
-      // Process the posts to match the expected format for PostItem
-      let processedPosts = data
-        .filter(post => post.video_url) // Double-check to ensure only video posts
-        .map(post => ({
-          id: post.id,
-          content: post.content,
-          image_url: post.image_url,
-          video_url: post.video_url,
-          user_id: post.user_id,
-          created_at: post.created_at,
-          post_type: post.post_type,
-          profiles: post.profiles,
-          games: post.games,
-          likes: { count: 0 },
-          comments: { count: 0 },
-          clip_votes: { count: 0 }
-        }));
+      console.log(`📊 Raw query returned ${data.length} total posts`);
+      
+      // Process posts - include ALL posts for now to see what we're getting
+      const allPosts = data.map(post => ({
+        id: post.id,
+        content: post.content,
+        image_url: post.image_url,
+        video_url: post.video_url,
+        user_id: post.user_id,
+        created_at: post.created_at,
+        post_type: post.post_type,
+        profiles: post.profiles,
+        games: post.games,
+        likes: { count: 0 },
+        comments: { count: 0 },
+        clip_votes: { count: 0 }
+      }));
+      
+      console.log('⚠️ All posts before filtering:', allPosts);
+      
+      // Now filter to only get video posts AFTER we've processed them
+      let processedPosts = allPosts.filter(post => {
+        // Check if this post has a video_url that's not null, undefined, or empty
+        const hasVideo = post.video_url && post.video_url.trim() !== '';
+        if (!hasVideo) {
+          console.log(`🔎 Post ${post.id} filtered out - no video URL`);
+        }
+        return hasVideo;
+      });
+      
+      console.log(`🎬 After filtering, found ${processedPosts.length} video posts`);
       
       // Get trophy counts for all posts in a single batch
       const postIds = processedPosts.map(post => post.id);
@@ -164,7 +177,12 @@ const Clipts = () => {
         console.log('Updated posts with trophy counts:', processedPosts.map(p => ({ id: p.id, count: p.trophy_count })));
       }
       
-      console.log('✅ Raw posts data:', processedPosts);
+      if (processedPosts.length === 0) {
+        console.log('⚠️ No video posts found after processing');
+      } else {
+        console.log('✅ Final processed posts data:', processedPosts);
+      }
+      
       setRawPosts(processedPosts || []);
     } catch (err) {
       console.error('❌ Exception fetching posts:', err);
@@ -181,7 +199,7 @@ const Clipts = () => {
     fetchPostsDirectly();
   }, [fetchPostsDirectly]);
 
-  // Auto-refresh posts on load
+  // Auto-refresh posts on load - ONLY keep this useEffect
   useEffect(() => {
     console.log("🚀 Clipts page mounted - fetching posts directly");
     fetchPostsDirectly();
@@ -223,29 +241,17 @@ const Clipts = () => {
     
     window.addEventListener('trophy-count-update', handleTrophyCountUpdate);
     
-    // Also set up manual polling for trophy count updates
-    const trophyUpdateInterval = setInterval(() => {
-      if (rawPosts.length > 0) {
-        console.log('⏰ Polling for trophy count updates');
-        handleTrophyCountUpdate();
-      }
-    }, 10000); // Check every 10 seconds
+    // SINGLE interval - poll for updates every 15 seconds instead of multiple conflicting intervals
+    const updateInterval = setInterval(() => {
+      console.log('⏰ Periodic update interval triggered');
+      fetchPostsDirectly();
+    }, 15000);
     
     return () => {
       window.removeEventListener('trophy-count-update', handleTrophyCountUpdate);
-      clearInterval(trophyUpdateInterval);
+      clearInterval(updateInterval);
     };
   }, [fetchPostsDirectly, refreshKey, rawPosts]);
-
-  useEffect(() => {
-    // Set up an interval to refresh posts every 5 seconds
-    const refreshInterval = setInterval(() => {
-      console.log("⏰ Auto-refreshing posts");
-      fetchPostsDirectly();
-    }, 5000);
-    
-    return () => clearInterval(refreshInterval);
-  }, [fetchPostsDirectly]);
 
   return (
     <div className="min-h-screen bg-background">
