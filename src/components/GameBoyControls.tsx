@@ -838,10 +838,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleTrophyClick = handleTrophy;
   const handleFollowClick = handleFollow;
 
-  const handleMenu = () => {
-    setMenuOpen(true);
-  };
-
   const handleJoystickUp = () => {
     setJoystickActive(false);
     setJoystickDirection(null);
