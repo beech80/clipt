@@ -702,8 +702,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       cancelAnimationFrame(scrollAnimationRef.current);
     }
     
-    // Start the scrolling animation loop
-    const animateScroll = () => {
+    // Get timestamp for smooth animation
+    let lastTimestamp: number | null = null;
+    
+    // Start the scrolling animation loop with timing control for smoother movement
+    const animateScroll = (timestamp: number) => {
+      // Calculate delta time for smoother animation
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const deltaTime = (timestamp - lastTimestamp) / 16.67; // Normalize to 60fps
+      lastTimestamp = timestamp;
+      
       // Get current joystick Y position directly from the DOM for most up-to-date value
       let yPosition = joystickPosition.y;
       
@@ -718,9 +726,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         }
       }
       
-      // Perform scrolling if needed
+      // Perform scrolling if needed with deltaTime for smooth consistent speed
       if (isDragging && Math.abs(yPosition) > 0) {
-        handleScrollFromJoystick(yPosition);
+        // Apply deltaTime to normalize speed across different frame rates
+        const normalizedYPosition = yPosition * (deltaTime || 1);
+        handleScrollFromJoystick(normalizedYPosition);
       }
       
       // Continue the animation loop if still dragging
@@ -747,7 +757,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleScrollFromJoystick = (yPosition: number) => {
     // Enhanced physics-based scroll with non-linear acceleration for more realistic feel
     // Use exponential curve for better control at smaller movements and faster scrolling at extremes
-    const deadzone = 1; // Smaller deadzone for better responsiveness
+    const deadzone = 0.5; // Smaller deadzone for better responsiveness
     const maxYPosition = 40; // Maximum expected joystick movement
     
     // Normalize y-position and apply deadzone
@@ -755,15 +765,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return; // Within deadzone - no scrolling
     }
     
-    // Apply non-linear curve for more precision - use a cubic curve
+    // Apply non-linear curve for more precision - use a cubic curve for smoother acceleration
     const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
-    const curveIntensity = 1.2; // More responsive curve
+    const curveIntensity = 1.1; // More responsive curve (lower = more linear and smooth)
     const direction = Math.sign(normalizedPosition);
     const magnitude = Math.pow(Math.abs(normalizedPosition), curveIntensity);
     
     // Calculate scroll speed with improved physics feel
     // Significantly increased base speed for very noticeable movement
-    const baseScrollSpeed = 80; // Higher speed for obvious movement
+    const baseScrollSpeed = 120; // Much higher speed for faster scrolling
     const scrollSpeed = direction * magnitude * baseScrollSpeed;
     
     // Always use auto scrolling for more responsive feel
@@ -775,7 +785,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       behavior: 'auto' // Always use auto for responsiveness
     });
     
-    // Make sure the joystick visually stays in the correct position
+    // Make sure the joystick visually stays in the correct position with smoother movement
     if (joystickRef.current) {
       const currentTransform = joystickRef.current.style.transform;
       if (!currentTransform || !currentTransform.includes(`${yPosition}px`)) {
