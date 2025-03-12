@@ -284,7 +284,33 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Actively set the joystick as being dragged
     setIsDragging(true);
     
-    console.log('Joystick pressed down');
+    // Initial joystick movement when first clicked
+    if (joystickRef.current && baseRef.current) {
+      const baseRect = baseRef.current.getBoundingClientRect();
+      const baseCenterX = baseRect.left + baseRect.width / 2;
+      const baseCenterY = baseRect.top + baseRect.height / 2;
+      
+      // Calculate relative position
+      let dx = e.clientX - baseCenterX;
+      let dy = e.clientY - baseCenterY;
+      
+      // Limit movement
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const maxDistance = baseRect.width / 3;
+      if (distance > maxDistance) {
+        dx = (dx / distance) * maxDistance;
+        dy = (dy / distance) * maxDistance;
+      }
+      
+      // Immediate movement on click
+      joystickRef.current.style.transition = 'none';
+      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      setJoystickPosition({ x: dx, y: dy });
+      
+      // Immediately handle scrolling
+      handleScrollFromJoystick(dy);
+      updateDirectionIndicators(dy);
+    }
     
     // Ensure we have clean event listeners by removing any existing ones first
     window.removeEventListener('mousemove', handleJoystickMouseMove);
@@ -462,8 +488,33 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     e.stopPropagation();
     setIsDragging(true);
     
-    // Log that joystick was touched
-    console.log('Joystick touch started');
+    // Initial joystick movement on first touch
+    if (joystickRef.current && baseRef.current && e.touches[0]) {
+      const baseRect = baseRef.current.getBoundingClientRect();
+      const baseCenterX = baseRect.left + baseRect.width / 2;
+      const baseCenterY = baseRect.top + baseRect.height / 2;
+      
+      // Calculate relative position
+      let dx = e.touches[0].clientX - baseCenterX;
+      let dy = e.touches[0].clientY - baseCenterY;
+      
+      // Limit movement
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const maxDistance = baseRect.width / 3;
+      if (distance > maxDistance) {
+        dx = (dx / distance) * maxDistance;
+        dy = (dy / distance) * maxDistance;
+      }
+      
+      // Immediate movement on touch
+      joystickRef.current.style.transition = 'none';
+      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      setJoystickPosition({ x: dx, y: dy });
+      
+      // Immediately handle scrolling
+      handleScrollFromJoystick(dy);
+      updateDirectionIndicators(dy);
+    }
     
     // Clean up any existing event listeners first
     window.removeEventListener('touchmove', handleJoystickTouchMove);
@@ -637,7 +688,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleScrollFromJoystick = (yPosition: number) => {
     // Enhanced physics-based scroll with non-linear acceleration for more realistic feel
     // Use exponential curve for better control at smaller movements and faster scrolling at extremes
-    const deadzone = 2; // Smaller deadzone for better responsiveness
+    const deadzone = 1; // Smaller deadzone for better responsiveness
     const maxYPosition = 40; // Maximum expected joystick movement
     
     // Normalize y-position and apply deadzone
@@ -645,24 +696,34 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return; // Within deadzone - no scrolling
     }
     
-    // Apply non-linear curve for more precision - use a quadratic curve
+    // Apply non-linear curve for more precision - use a cubic curve
     const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
-    const curveIntensity = 1.5; // More linear response for more responsive control
+    const curveIntensity = 1.2; // More responsive curve
     const direction = Math.sign(normalizedPosition);
     const magnitude = Math.pow(Math.abs(normalizedPosition), curveIntensity);
     
     // Calculate scroll speed with improved physics feel
-    // Increased base speed for more noticeable scrolling
-    const baseScrollSpeed = 50; // Higher speed for more obvious movement
+    // Significantly increased base speed for very noticeable movement
+    const baseScrollSpeed = 80; // Higher speed for obvious movement
     const scrollSpeed = direction * magnitude * baseScrollSpeed;
     
     // Always use auto scrolling for more responsive feel
     console.log(`Scrolling: direction=${direction}, speed=${scrollSpeed.toFixed(2)}px`);
     
+    // Perform immediate scrolling
     window.scrollBy({
       top: scrollSpeed,
       behavior: 'auto' // Always use auto for responsiveness
     });
+    
+    // Make sure the joystick visually stays in the correct position
+    if (joystickRef.current) {
+      const currentTransform = joystickRef.current.style.transform;
+      if (!currentTransform || !currentTransform.includes(`${yPosition}px`)) {
+        const xPos = joystickPosition.x;
+        joystickRef.current.style.transform = `translate(${xPos}px, ${yPosition}px)`;
+      }
+    }
     
     // Update visual feedback for better user experience
     updateJoystickFeedback(yPosition);
