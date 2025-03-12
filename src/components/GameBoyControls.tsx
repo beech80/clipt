@@ -132,11 +132,24 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
     console.log(`Smooth scrolling ${distance < 0 ? 'UP' : 'DOWN'} by ${Math.abs(distance)}px`);
     
-    // Use immediate scrolling for better responsiveness on mobile
-    window.scrollBy({
-      top: distance,
-      behavior: 'smooth'
-    });
+    // Directly scroll the window - use both methods to ensure compatibility
+    try {
+      // Method 1: scrollBy with smooth behavior
+      window.scrollBy({
+        top: distance,
+        behavior: 'smooth'
+      });
+      
+      // Method 2: Direct scroll as fallback
+      if (typeof window !== 'undefined') {
+        const currentPosition = window.pageYOffset || document.documentElement.scrollTop;
+        window.scrollTo(0, currentPosition + distance);
+      }
+    } catch (error) {
+      console.error("Error during scrolling:", error);
+      // Fallback to most basic method
+      window.scrollTo(0, window.scrollY + distance);
+    }
   };
 
   // Joystick direction action handler with enhanced scrolling
@@ -654,6 +667,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     const maxDistance = joystickRect.width / 2 * 0.8;
     
+    // Set joystick as active when moved
+    setJoystickActive(true);
+    
     // Normalize the delta values
     const normDeltaX = deltaX / maxDistance;
     const normDeltaY = deltaY / maxDistance;
@@ -668,37 +684,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     joystickKnobRef.current.style.transition = distance > 0 ? 'none' : 'transform 0.2s ease-out';
     joystickKnobRef.current.style.transform = `translate3d(${constrainedX}px, ${constrainedY}px, 0) scale(${1 + constrainedDistance / maxDistance * 0.1})`;
     
-    // Visual trail effect
-    const createTrail = () => {
-      const trail = document.createElement('div');
-      trail.className = 'joystick-trail';
-      trail.style.cssText = `
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        background: radial-gradient(circle, rgba(153, 102, 255, 0.3) 0%, rgba(153, 102, 255, 0) 70%);
-        border-radius: 50%;
-        z-index: 1;
-        top: ${centerY + constrainedY - 10}px;
-        left: ${centerX + constrainedX - 10}px;
-        animation: joystick-trail 0.5s ease-out forwards;
-        pointer-events: none;
-      `;
-      
-      joystickRef.current.appendChild(trail);
-      
-      setTimeout(() => {
-        if (joystickRef.current && joystickRef.current.contains(trail)) {
-          joystickRef.current.removeChild(trail);
-        }
-      }, 400);
-    };
-    
-    // Create trail only for significant movements
-    if (distance > maxDistance * 0.5) {
-      createTrail();
-    }
-    
     // Determine joystick direction for UI feedback with enhanced sensitivity
     const thresholdRelative = maxDistance * 0.15; // More sensitive threshold for better detection
     
@@ -707,6 +692,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Clear all direction classes first for cleaner transitions
     joystickRef.current.classList.remove('direction-up', 'direction-down', 'direction-left', 'direction-right');
+    
+    // Direct scrolling for immediate feedback - no waiting for continuous timer
+    if (Math.abs(normDeltaY) > 0.2) { // Any significant vertical movement
+      if (normDeltaY > 0) {
+        // Down - immediate scroll
+        smoothScroll(scrollDistance / 3); // Smaller for immediate feedback
+        joystickRef.current.classList.add('direction-down');
+      } else {
+        // Up - immediate scroll
+        smoothScroll(-scrollDistance / 3); // Smaller for immediate feedback
+        joystickRef.current.classList.add('direction-up');
+      }
+    }
     
     // Enhanced vertical bias: Give preference to vertical movements for easier scrolling
     if (Math.abs(normDeltaY) > Math.abs(normDeltaX) * 0.5) { // Reduced to detect vertical more easily
@@ -755,34 +753,30 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Mouse and touch event handlers for joystick
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const joystick = joystickRef.current;
-    if (!joystick) return;
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!joystickRef.current) return;
     
-    const rect = joystick.getBoundingClientRect();
+    e.preventDefault();
+    setJoystickActive(true);
+    
+    const rect = joystickRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    setJoystickActive(true);
     handleJoystickMove(x, y);
-    
-    // Add a CSS class for visual feedback
-    joystick.classList.add('active');
   };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const joystick = joystickRef.current;
-    if (!joystick || !e.touches[0]) return;
+  
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!joystickRef.current || !e.touches[0]) return;
     
-    const rect = joystick.getBoundingClientRect();
+    e.preventDefault();
+    setJoystickActive(true);
+    
+    const rect = joystickRef.current.getBoundingClientRect();
     const x = e.touches[0].clientX - rect.left;
     const y = e.touches[0].clientY - rect.top;
     
-    setJoystickActive(true);
     handleJoystickMove(x, y);
-    
-    // Add a CSS class for visual feedback
-    joystick.classList.add('active');
   };
 
   const handleMouseMove = (e: MouseEvent) => {
