@@ -762,40 +762,42 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               </div>
             </div>
             
-            {/* Right - Action Buttons in flower pattern */}
-            <div className="flex space-x-3">
+            {/* Right - Action Buttons in diamond shape (Xbox style) */}
+            <div className="relative w-32 h-32">
+              {/* Top button (Comment) */}
+              <button 
+                data-action="comment"
+                onClick={handleComment}
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-blue-500 flex items-center justify-center"
+              >
+                <MessageCircle className="text-blue-500 h-5 w-5" />
+              </button>
+              
+              {/* Left button (Like) */}
               <button 
                 data-action="like"
                 onClick={handleLike}
-                className="w-11 h-11 bg-[#151520] rounded-full border-2 border-red-500 flex items-center justify-center"
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-red-500 flex items-center justify-center"
               >
                 <Heart className="text-red-500 h-5 w-5" fill="#ef4444" />
               </button>
               
-              <div className="flex flex-col space-y-3">
-                <button 
-                  data-action="comment"
-                  onClick={handleComment}
-                  className="w-11 h-11 bg-[#151520] rounded-full border-2 border-blue-500 flex items-center justify-center"
-                >
-                  <MessageCircle className="text-blue-500 h-5 w-5" />
-                </button>
-                
-                <button 
-                  data-action="follow"
-                  onClick={handleFollow}
-                  className="w-11 h-11 bg-[#151520] rounded-full border-2 border-green-500 flex items-center justify-center"
-                >
-                  <UserPlus className="text-green-500 h-5 w-5" />
-                </button>
-              </div>
-              
+              {/* Right button (Trophy) */}
               <button 
                 data-action="trophy"
                 onClick={handleTrophy}
-                className="w-11 h-11 bg-[#151520] rounded-full border-2 border-yellow-500 flex items-center justify-center"
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-yellow-500 flex items-center justify-center"
               >
                 <Trophy className="text-yellow-500 h-5 w-5" />
+              </button>
+              
+              {/* Bottom button (Follow) */}
+              <button 
+                data-action="follow"
+                onClick={handleFollow}
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-green-500 flex items-center justify-center"
+              >
+                <UserPlus className="text-green-500 h-5 w-5" />
               </button>
             </div>
           </div>
