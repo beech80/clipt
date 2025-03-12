@@ -720,6 +720,214 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
+  // Handler for CLIPT button click
+  const handleCliptButtonClick = () => {
+    // Navigate to the Clipts page (restore original functionality)
+    navigate('/clipts');
+    toast.info('View Clipts');
+  };
+
+  // Handler for post button click
+  const handlePost = () => {
+    console.log('Navigating to post creation page');
+    // Use absolute path with leading slash
+    navigate('/post/new');
+    toast.info('Create a new post');
+  };
+
+  // Handle joystick movement with enhanced detection for up/down scrolling
+  const handleJoystickMove = (x: number, y: number) => {
+    if (!joystickRef.current || !joystickKnobRef.current) return;
+    
+    const joystickRect = joystickRef.current.getBoundingClientRect();
+    const centerX = joystickRect.width / 2;
+    const centerY = joystickRect.height / 2;
+    
+    const deltaX = x - centerX;
+    const deltaY = y - centerY;
+    
+    // Calculate distance from center
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const maxDistance = joystickRect.width / 2 * 0.8;
+    
+    // Normalize the delta values
+    const normDeltaX = deltaX / maxDistance;
+    const normDeltaY = deltaY / maxDistance;
+    
+    // Constrain movement to joystick bounds
+    const constrainedDistance = Math.min(distance, maxDistance);
+    const angle = Math.atan2(deltaY, deltaX);
+    const constrainedX = Math.cos(angle) * constrainedDistance;
+    const constrainedY = Math.sin(angle) * constrainedDistance;
+    
+    // Apply movement to joystick knob with enhanced animation
+    joystickKnobRef.current.style.transition = distance > 0 ? 'none' : 'transform 0.2s ease-out';
+    joystickKnobRef.current.style.transform = `translate3d(${constrainedX}px, ${constrainedY}px, 0) scale(${1 + constrainedDistance / maxDistance * 0.1})`;
+    
+    // Visual trail effect
+    const createTrail = () => {
+      const trail = document.createElement('div');
+      trail.className = 'joystick-trail';
+      trail.style.cssText = `
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: radial-gradient(circle, rgba(153, 102, 255, 0.3) 0%, rgba(153, 102, 255, 0) 70%);
+        border-radius: 50%;
+        z-index: 1;
+        top: ${centerY + constrainedY - 10}px;
+        left: ${centerX + constrainedX - 10}px;
+        animation: joystick-trail 0.5s ease-out forwards;
+        pointer-events: none;
+      `;
+      
+      joystickRef.current.appendChild(trail);
+      
+      setTimeout(() => {
+        if (joystickRef.current && joystickRef.current.contains(trail)) {
+          joystickRef.current.removeChild(trail);
+        }
+      }, 400);
+    };
+    
+    // Create trail only for significant movements
+    if (distance > maxDistance * 0.5) {
+      createTrail();
+    }
+    
+    // Determine joystick direction for UI feedback with enhanced sensitivity
+    const thresholdRelative = maxDistance * 0.2; // Even more sensitive threshold for better detection
+    
+    // Add the joystick-active class for glow effect
+    joystickRef.current.classList.add('joystick-active');
+    
+    // Clear all direction classes first for cleaner transitions
+    joystickRef.current.classList.remove('direction-up', 'direction-down', 'direction-left', 'direction-right');
+    
+    // Prioritize vertical movement for better scrolling experience
+    // A wider bias toward vertical movements
+    if (Math.abs(normDeltaY) > Math.abs(normDeltaX) * 0.8) {
+      // Vertical movement detected - up or down
+      if (normDeltaY > thresholdRelative) {
+        joystickRef.current.classList.add('direction-down');
+        if (normDeltaY > maxDistance * 0.4 && joystickDirection !== 'down') {
+          handleJoystickAction('down');
+          console.log('Triggering DOWN movement');
+        }
+      } else if (normDeltaY < -thresholdRelative) {
+        joystickRef.current.classList.add('direction-up');
+        if (normDeltaY < -maxDistance * 0.4 && joystickDirection !== 'up') {
+          handleJoystickAction('up');
+          console.log('Triggering UP movement');
+        }
+      }
+    } else {
+      // Horizontal movement detected - left or right
+      if (normDeltaX > thresholdRelative) {
+        joystickRef.current.classList.add('direction-right');
+        if (normDeltaX > maxDistance * 0.4 && joystickDirection !== 'right') {
+          handleJoystickAction('right');
+        }
+      } else if (normDeltaX < -thresholdRelative) {
+        joystickRef.current.classList.add('direction-left');
+        if (normDeltaX < -maxDistance * 0.4 && joystickDirection !== 'left') {
+          handleJoystickAction('left');
+        }
+      }
+    }
+  };
+
+  // Joystick release with enhanced spring back animation
+  const handleJoystickRelease = () => {
+    if (!joystickRef.current || !joystickKnobRef.current) return;
+    
+    setJoystickActive(false);
+    setJoystickDirection(null);
+    
+    // Enhanced spring-back effect
+    joystickKnobRef.current.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    joystickKnobRef.current.style.transform = 'translate3d(0, 0, 0) scale(1)';
+    
+    joystickRef.current.classList.remove('joystick-active', 'direction-up', 'direction-down', 'direction-left', 'direction-right');
+  };
+
+  // Mouse and touch event handlers for joystick
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const joystick = joystickRef.current;
+    if (!joystick) return;
+    
+    const rect = joystick.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    setJoystickActive(true);
+    handleJoystickMove(x, y);
+    
+    // Add a CSS class for visual feedback
+    joystick.classList.add('active');
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const joystick = joystickRef.current;
+    if (!joystick || !e.touches[0]) return;
+    
+    const rect = joystick.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const y = e.touches[0].clientY - rect.top;
+    
+    setJoystickActive(true);
+    handleJoystickMove(x, y);
+    
+    // Add a CSS class for visual feedback
+    joystick.classList.add('active');
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!joystickActive || !joystickRef.current) return;
+    
+    const rect = joystickRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    handleJoystickMove(x, y);
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!joystickActive || !joystickRef.current || !e.touches[0]) return;
+    
+    const rect = joystickRef.current.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const y = e.touches[0].clientY - rect.top;
+    
+    handleJoystickMove(x, y);
+  };
+
+  const handleMouseUp = () => {
+    if (!joystickActive) return;
+    
+    const joystick = joystickRef.current;
+    if (joystick) {
+      joystick.classList.remove('active');
+    }
+    
+    handleJoystickRelease();
+  };
+
+  // Add global event listeners for joystick movement
+  useEffect(() => {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleMouseUp);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [joystickActive, joystickDirection]);
+
   // Handlers for button clicks - all properly assigned
   const handleLikeClick = handleLike;
   const handleCommentClick = handleComment;
@@ -833,6 +1041,81 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
         70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
         100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Add animation keyframes with enhanced visual effects
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes pulse-glow {
+        0% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
+        33% { box-shadow: 0 0 25px rgba(102, 47, 161, 0.8); }
+        66% { box-shadow: 0 0 35px rgba(147, 51, 234, 0.9); }
+        100% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
+      }
+      
+      @keyframes float {
+        0% { transform: translateY(0px) rotate(0deg) scale(1); }
+        25% { transform: translateY(-4px) rotate(-1deg) scale(1.02); }
+        75% { transform: translateY(2px) rotate(1deg) scale(0.98); }
+        100% { transform: translateY(0px) rotate(0deg) scale(1); }
+      }
+      
+      @keyframes joystick-pulse {
+        0% { box-shadow: 0 0 5px rgba(102, 47, 161, 0.3); }
+        50% { box-shadow: 0 0 15px rgba(147, 51, 234, 0.5); }
+        100% { box-shadow: 0 0 5px rgba(102, 47, 161, 0.3); }
+      }
+      
+      @keyframes joystick-trail {
+        0% { opacity: 0.7; transform: scale(0.9); }
+        100% { opacity: 0; transform: scale(1.5); }
+      }
+      
+      .joystick-active {
+        animation: joystick-pulse 1.5s infinite ease-in-out;
+        transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      }
+      
+      .direction-up:after, .direction-down:after, .direction-left:after, .direction-right:after {
+        content: '';
+        position: absolute;
+        width: 40%;
+        height: 40%;
+        border-radius: 50%;
+        background: rgba(154, 95, 230, 0.3);
+        z-index: -1;
+      }
+      
+      .direction-up:after {
+        top: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      
+      .direction-down:after {
+        bottom: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      
+      .direction-left:after {
+        left: 5%;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      
+      .direction-right:after {
+        right: 5%;
+        top: 50%;
+        transform: translateY(-50%);
       }
     `;
     document.head.appendChild(style);
