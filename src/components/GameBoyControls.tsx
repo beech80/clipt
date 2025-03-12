@@ -36,6 +36,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [navigationOptions] = useState([
+    { name: 'Settings', icon: <Settings className="mr-2 h-4 w-4" />, path: '/settings' },
+    { name: 'Streaming', icon: <Video className="mr-2 h-4 w-4" />, path: '/streaming' },
+    { name: 'Profile', icon: <User className="mr-2 h-4 w-4" />, path: '/profile' },
+    { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
+    { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
+    { name: 'Top', icon: <TrendingUp className="mr-2 h-4 w-4" />, path: '/top' },
+    { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
+  ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   
@@ -732,34 +741,44 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         <div className="bg-[#0D0D18] w-full pointer-events-auto py-3">
           <div className="flex justify-between items-center px-10 max-w-5xl mx-auto">
             
-              {/* Left - Xbox-style Joystick */}
+              {/* Left - Modern Xbox-style Joystick */}
               <div 
                 ref={baseRef}
-                className="w-18 h-18 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative"
+                className="w-20 h-20 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative"
                 onMouseDown={handleJoystickMouseDown}
                 onTouchStart={handleJoystickTouchStart}
               >
-                {/* Joystick base */}
-                <div className="w-16 h-16 bg-[#272733] rounded-full flex items-center justify-center relative">
-                  {/* Up arrow indicator */}
+                {/* Joystick base with groove */}
+                <div className="w-18 h-18 bg-[#272733] rounded-full flex items-center justify-center relative overflow-hidden">
+                  {/* Circular groove effect */}
+                  <div className="absolute inset-1 rounded-full border-4 border-[#1A1A24] opacity-50"></div>
+                  
+                  {/* Directional indicators */}
                   <div className="joystick-up-indicator absolute -top-1 left-1/2 transform -translate-x-1/2 opacity-50 text-white">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
-                  
-                  {/* Down arrow indicator */}
                   <div className="joystick-down-indicator absolute -bottom-1 left-1/2 transform -translate-x-1/2 opacity-50 text-white">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 opacity-50 text-white">
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  </div>
+                  <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 opacity-50 text-white">
                     <div className="w-2 h-2 bg-white rounded-full"></div>
                   </div>
                   
                   {/* Joystick handle */}
                   <div 
                     ref={joystickRef}
-                    className="w-10 h-10 bg-[#151520] rounded-full border-2 border-gray-600 absolute z-10 transition-transform duration-75 cursor-grab active:cursor-grabbing"
+                    className="w-12 h-12 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-gray-700 absolute z-10 transition-transform duration-75 cursor-grab active:cursor-grabbing"
                     style={{
                       transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)'
+                      boxShadow: '0 3px 10px rgba(0, 0, 0, 0.7)'
                     }}
-                  ></div>
+                  >
+                    {/* Concave effect on joystick */}
+                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#151520] to-[#272733] opacity-80"></div>
+                  </div>
                 </div>
               </div>
             
@@ -780,13 +799,33 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               <div className="flex space-x-6">
                 {/* Navigation menu button */}
                 <div 
-                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer"
+                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative"
                   onClick={() => setMenuOpen(!menuOpen)}
                 >
                   <Menu className="text-white h-4 w-4" />
+                  
+                  {/* Navigation menu popup */}
+                  {menuOpen && (
+                    <div className="absolute bottom-full mb-2 left-0 w-44 bg-[#1D1D26] rounded-lg shadow-xl p-2 z-50">
+                      {navigationOptions.map((option) => (
+                        <button
+                          key={option.path}
+                          className="flex items-center w-full p-2 hover:bg-[#272733] rounded text-white text-sm text-left"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(option.path);
+                            setMenuOpen(false);
+                          }}
+                        >
+                          {option.icon}
+                          {option.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
-                {/* Post button */}
+                {/* Post button (Camera icon) */}
                 <div 
                   className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer"
                   onClick={() => navigate('/post')}
@@ -836,13 +875,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 </button>
               </div>
               
-              {/* POST button underneath */}
-              <button 
-                onClick={() => navigate('/post')}
-                className="w-20 h-8 bg-[#151520] rounded-full border-2 border-purple-500 flex items-center justify-center"
-              >
-                <span className="text-purple-500 text-xs font-bold">POST</span>
-              </button>
+
             </div>
           </div>
         </div>
