@@ -327,16 +327,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Directly update DOM for immediate response
     if (joystickRef.current) {
       joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      
+      // Override any transitions during active dragging
+      joystickRef.current.style.transition = 'none';
     }
     
     // Update state for React components (but DOM is already updated)
     setJoystickPosition({ x: dx, y: dy });
     
+    // Immediately trigger scroll for responsive feel
+    handleScrollFromJoystick(dy);
+    
     // Log joystick position for debugging
     console.log(`Joystick position: x=${dx.toFixed(2)}, y=${dy.toFixed(2)}`);
     
-    // We don't directly do the scrolling here but update indicators
-    // Scrolling happens continuously in the animation frame loop
+    // Update visual indicators for feedback
     updateDirectionIndicators(dy);
   };
   // Enhanced direction indicators with smoother transitions and variable intensity
@@ -474,6 +479,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   
   const handleJoystickTouchMove = (e: TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!isDragging || !joystickRef.current || !baseRef.current || !e.touches[0]) return;
     
     // Get joystick base position and dimensions
@@ -490,41 +496,62 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     const maxDistance = baseRect.width / 3; // Limit to 1/3 of base width
     
     if (distance > maxDistance) {
-      // Add subtle resistance at the edges for better physical feel
-      const resistanceFactor = 1 + (distance - maxDistance) * 0.05;
-      dx = (dx / distance) * maxDistance / resistanceFactor;
-      dy = (dy / distance) * maxDistance / resistanceFactor;
+      // Scale the position to stay within the max distance
+      dx = (dx / distance) * maxDistance;
+      dy = (dy / distance) * maxDistance;
     }
     
-    // Update joystick position
+    // Directly update DOM for immediate response
+    if (joystickRef.current) {
+      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      joystickRef.current.style.transition = 'none';
+    }
+    
+    // Update joystick position in state
     setJoystickPosition({ x: dx, y: dy });
     
-    // Handle scrolling based on joystick position
+    // Immediately trigger scroll for responsive feel
     handleScrollFromJoystick(dy);
+    
+    // Update visual indicators
     updateDirectionIndicators(dy);
   };
   
   const handleJoystickTouchEnd = () => {
+    // Stop dragging
+    setIsDragging(false);
+    
+    // Remove event listeners
+    window.removeEventListener('touchmove', handleJoystickTouchMove);
+    window.removeEventListener('touchend', handleJoystickTouchEnd);
+    
+    // Stop the scrolling animation
+    stopScrollAnimation();
+    
     // Store the last position for spring animation
     const lastPosition = { ...joystickPosition };
     
     // Apply spring return animation for touch too
     if (joystickRef.current) {
+      // Set CSS variables for animation
       joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
       joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
+      
+      // Add the spring animation class
       joystickRef.current.classList.add('joystick-spring-return');
+      
+      // Directly set transform for immediate visual feedback
+      joystickRef.current.style.transform = 'translate(0px, 0px)';
       
       // Remove the animation class after it completes
       setTimeout(() => {
         if (joystickRef.current) {
           joystickRef.current.classList.remove('joystick-spring-return');
         }
-      }, 400); // Match the animation duration
+      }, 550); // Match the animation duration
     }
     
-    setIsDragging(false);
-    
-    // Return joystick to center with animation
+    // Return joystick to center in state
     setJoystickPosition({ x: 0, y: 0 });
     
     // Reset visual indicators
