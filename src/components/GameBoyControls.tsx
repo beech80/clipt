@@ -104,16 +104,18 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // For smooth scrolling with enhanced physics
   const scrollDistance = 300; // pixels to scroll per movement
-  const scrollDuration = 300; // Reduced from 400 to make scrolling feel more responsive
-  const scrollCooldown = 350; // Reduced from 500 to allow more frequent scroll actions
+  const scrollDuration = 250; // Reduced from 300 to make scrolling even more responsive
+  const scrollCooldown = 250; // Reduced cooldown for better responsiveness
 
-  // Enhanced animation for smooth scrolling with momentum effect
+  // Enhanced animation for smooth scrolling with cleaner motion
   const smoothScroll = (distance: number) => {
     const now = Date.now();
     // Add cooldown to prevent rapid scrolling
     if (now - lastScrollTime.current < scrollCooldown) return;
     lastScrollTime.current = now;
       
+    console.log(`Smooth scrolling ${distance < 0 ? 'UP' : 'DOWN'} by ${Math.abs(distance)}px`);
+    
     const startPosition = window.scrollY;
     const startTime = performance.now();
     
@@ -121,13 +123,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / scrollDuration, 1);
       
-      // Enhanced easing function for more natural motion
-      const easeOutCubic = 1 - Math.pow(1 - progress, 3);
-      const easeOutQuint = 1 - Math.pow(1 - progress, 5);
-      const momentum = progress < 0.8 ? easeOutCubic : easeOutQuint;
+      // Simplified easing function for more reliable and cleaner motion
+      const easeOutQuad = 1 - Math.pow(1 - progress, 2);
       
       window.scrollTo({
-        top: startPosition + distance * momentum,
+        top: startPosition + distance * easeOutQuad,
         behavior: 'auto' // We're handling the smoothness ourselves
       });
       
@@ -139,349 +139,22 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     requestAnimationFrame(animateScroll);
   };
 
-  // Add animation keyframes with enhanced visual effects
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @keyframes pulse-glow {
-        0% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
-        33% { box-shadow: 0 0 25px rgba(102, 47, 161, 0.8); }
-        66% { box-shadow: 0 0 35px rgba(147, 51, 234, 0.9); }
-        100% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
-      }
-      
-      @keyframes float {
-        0% { transform: translateY(0px) rotate(0deg) scale(1); }
-        25% { transform: translateY(-4px) rotate(-1deg) scale(1.02); }
-        75% { transform: translateY(2px) rotate(1deg) scale(0.98); }
-        100% { transform: translateY(0px) rotate(0deg) scale(1); }
-      }
-      
-      @keyframes textGlow {
-        0% { text-shadow: 0 0 5px rgba(233, 218, 255, 0.7); }
-        50% { text-shadow: 0 0 12px rgba(233, 218, 255, 0.9), 0 0 25px rgba(147, 51, 234, 0.6); }
-        100% { text-shadow: 0 0 5px rgba(233, 218, 255, 0.7); }
-      }
-      
-      @keyframes rotate {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      
-      @keyframes ripple {
-        0% { transform: scale(0.8); opacity: 1; border-width: 1px; }
-        100% { transform: scale(2.8); opacity: 0; border-width: 0.5px; }
-      }
-      
-      @keyframes bgShift {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
-      
-      @keyframes borderPulse {
-        0% { border-color: rgba(154, 95, 230, 0.2); }
-        50% { border-color: rgba(154, 95, 230, 0.6); }
-        100% { border-color: rgba(154, 95, 230, 0.2); }
-      }
-      
-      @keyframes hue-rotate {
-        0% { filter: hue-rotate(0deg); }
-        50% { filter: hue-rotate(20deg); }
-        100% { filter: hue-rotate(0deg); }
-      }
-      
-      @keyframes clipt-warp {
-        0% { transform: scale(1) skew(0deg, 0deg); }
-        20% { transform: scale(1.05) skew(-1deg, 0.5deg); }
-        40% { transform: scale(0.98) skew(0.5deg, -0.5deg); }
-        60% { transform: scale(1.02) skew(-0.5deg, 0.25deg); }
-        80% { transform: scale(0.99) skew(0.25deg, -0.25deg); }
-        100% { transform: scale(1) skew(0deg, 0deg); }
-      }
-      
-      @keyframes joystick-pulse {
-        0% { box-shadow: 0 0 5px rgba(102, 47, 161, 0.3); }
-        50% { box-shadow: 0 0 15px rgba(147, 51, 234, 0.5); }
-        100% { box-shadow: 0 0 5px rgba(102, 47, 161, 0.3); }
-      }
-      
-      @keyframes joystick-trail {
-        0% { opacity: 0.7; transform: scale(0.9); }
-        100% { opacity: 0; transform: scale(1.5); }
-      }
-      
-      @keyframes direction-indicator {
-        0% { opacity: 0; transform: scale(0.8); }
-        50% { opacity: 0.8; transform: scale(1.1); }
-        100% { opacity: 0; transform: scale(0.8); }
-      }
-      
-      .joystick-active {
-        animation: joystick-pulse 1.5s infinite ease-in-out;
-        transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-      }
-      
-      .direction-up:after, .direction-down:after, .direction-left:after, .direction-right:after {
-        content: '';
-        position: absolute;
-        width: 40%;
-        height: 40%;
-        border-radius: 50%;
-        background: rgba(154, 95, 230, 0.3);
-        animation: direction-indicator 0.8s infinite ease-in-out;
-        z-index: -1;
-      }
-      
-      .direction-up:after {
-        top: 5%;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-      
-      .direction-down:after {
-        bottom: 5%;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-      
-      .direction-left:after {
-        left: 5%;
-        top: 50%;
-        transform: translateY(-50%);
-      }
-      
-      .direction-right:after {
-        right: 5%;
-        top: 50%;
-        transform: translateY(-50%);
-      }
-      
-      .clipt-button-hover:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 40px rgba(147, 51, 234, 0.9), 0 0 60px rgba(102, 47, 161, 0.5);
-      }
-      
-      .clipt-button-hover:hover .clipt-text {
-        animation: textGlow 1.5s infinite, clipt-warp 8s infinite ease-in-out;
-        transform: translateZ(0);
-        letter-spacing: 0.5px;
-      }
-      
-      .clipt-button-hover:hover .clipt-particles {
-        opacity: 1;
-      }
-      
-      .clipt-button-hover:hover .clipt-inner-circle {
-        animation: borderPulse 2s infinite, hue-rotate 5s infinite;
-      }
-      
-      .clipt-button-active:active {
-        transform: scale(0.95);
-        box-shadow: 0 0 15px rgba(102, 47, 161, 0.5);
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  // Handler for post button click (shared functionality)
-  const handlePost = () => {
-    console.log('Navigating to post creation page');
-    // Use absolute path with leading slash
-    navigate('/post/new');
-    toast.info('Create a new post');
-  };
-
-  // Handler for CLIPT button click
-  const handleCliptButtonClick = () => {
-    // Navigate to the Clipts page (restore original functionality)
-    navigate('/clipts');
-    toast.info('View Clipts');
-  };
-
-  // Joystick smooth movement with enhanced physics and visual feedback
-  const handleJoystickMove = (x: number, y: number) => {
-    if (!joystickRef.current || !joystickKnobRef.current) return;
-    
-    const joystickRect = joystickRef.current.getBoundingClientRect();
-    const centerX = joystickRect.width / 2;
-    const centerY = joystickRect.height / 2;
-    
-    // Calculate distance from center
-    const deltaX = x - centerX;
-    const deltaY = y - centerY;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
-    // Max distance the joystick knob can move (radius of the base minus radius of the knob)
-    const maxDistance = (joystickRect.width / 2) - (joystickKnobRef.current.offsetWidth / 2) - 2;
-    
-    // Normalize distance if it exceeds the max
-    let normDeltaX = deltaX;
-    let normDeltaY = deltaY;
-    
-    if (distance > maxDistance) {
-      const scale = maxDistance / distance;
-      normDeltaX = deltaX * scale;
-      normDeltaY = deltaY * scale;
-    }
-    
-    // Store position for trail effect
-    setJoystickPos({ x: normDeltaX, y: normDeltaY });
-    
-    // Apply smooth spring effect with enhanced physics
-    joystickKnobRef.current.style.transition = distance > maxDistance * 0.8 
-      ? 'transform 0.08s cubic-bezier(0.34, 1.56, 0.64, 1)' 
-      : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-    joystickKnobRef.current.style.transform = `translate3d(${normDeltaX}px, ${normDeltaY}px, 0) scale(${1 + distance/maxDistance*0.15})`;
-    
-    // Add trail effect (create a visual echo)
-    const createTrail = () => {
-      if (!joystickRef.current) return;
-      
-      const trail = document.createElement('div');
-      trail.style.position = 'absolute';
-      trail.style.width = '20px';
-      trail.style.height = '20px';
-      trail.style.borderRadius = '50%';
-      trail.style.backgroundColor = 'rgba(154, 95, 230, 0.3)';
-      trail.style.left = `calc(50% + ${normDeltaX - 10}px)`;
-      trail.style.top = `calc(50% + ${normDeltaY - 10}px)`;
-      trail.style.animation = 'joystick-trail 0.4s forwards';
-      trail.style.pointerEvents = 'none';
-      
-      joystickRef.current.appendChild(trail);
-      
-      // Clean up trail after animation
-      setTimeout(() => {
-        if (joystickRef.current && joystickRef.current.contains(trail)) {
-          joystickRef.current.removeChild(trail);
-        }
-      }, 400);
-    };
-    
-    // Create trail only for significant movements
-    if (distance > maxDistance * 0.5) {
-      createTrail();
-    }
-    
-    // Determine joystick direction for UI feedback with enhanced sensitivity
-    const thresholdRelative = maxDistance * 0.25; // More sensitive threshold
-    
-    // Add the joystick-active class for glow effect
-    joystickRef.current.classList.add('joystick-active');
-    
-    // Prioritize vertical movement for better scrolling experience
-    if (Math.abs(normDeltaX) > Math.abs(normDeltaY) * 1.2) {
-      if (normDeltaX > thresholdRelative) {
-        joystickRef.current.classList.add('direction-right');
-        joystickRef.current.classList.remove('direction-left', 'direction-up', 'direction-down');
-        if (normDeltaX > maxDistance * 0.5 && joystickDirection !== 'right') handleJoystickAction('right');
-      } else if (normDeltaX < -thresholdRelative) {
-        joystickRef.current.classList.add('direction-left');
-        joystickRef.current.classList.remove('direction-right', 'direction-up', 'direction-down');
-        if (normDeltaX < -maxDistance * 0.5 && joystickDirection !== 'left') handleJoystickAction('left');
-      }
-    } else {
-      if (normDeltaY > thresholdRelative) {
-        joystickRef.current.classList.add('direction-down');
-        joystickRef.current.classList.remove('direction-up', 'direction-left', 'direction-right');
-        if (normDeltaY > maxDistance * 0.5 && joystickDirection !== 'down') handleJoystickAction('down');
-      } else if (normDeltaY < -thresholdRelative) {
-        joystickRef.current.classList.add('direction-up');
-        joystickRef.current.classList.remove('direction-down', 'direction-left', 'direction-right');
-        if (normDeltaY < -maxDistance * 0.5 && joystickDirection !== 'up') handleJoystickAction('up');
-      }
-    }
-  };
-
-  // Joystick release with enhanced spring back animation
-  const handleJoystickRelease = () => {
-    if (!joystickRef.current || !joystickKnobRef.current) return;
-    
-    setJoystickActive(false);
-    setJoystickDirection(null);
-    
-    // Enhanced spring-back effect
-    joystickKnobRef.current.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-    joystickKnobRef.current.style.transform = 'translate3d(0, 0, 0) scale(1)';
-    
-    joystickRef.current.classList.remove('joystick-active', 'direction-up', 'direction-down', 'direction-left', 'direction-right');
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const joystick = joystickRef.current;
-    if (!joystick) return;
-    
-    const rect = joystick.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    setJoystickActive(true);
-    handleJoystickMove(x, y);
-    
-    // Add a CSS class for visual feedback
-    joystick.classList.add('active');
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const joystick = joystickRef.current;
-    if (!joystick || !e.touches[0]) return;
-    
-    const rect = joystick.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const y = e.touches[0].clientY - rect.top;
-    
-    setJoystickActive(true);
-    handleJoystickMove(x, y);
-    
-    // Add a CSS class for visual feedback
-    joystick.classList.add('active');
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!joystickActive || !joystickRef.current) return;
-    
-    const rect = joystickRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    handleJoystickMove(x, y);
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (!joystickActive || !joystickRef.current || !e.touches[0]) return;
-    
-    const rect = joystickRef.current.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const y = e.touches[0].clientY - rect.top;
-    
-    handleJoystickMove(x, y);
-  };
-
-  const handleMouseUp = () => {
-    if (!joystickActive) return;
-    
-    const joystick = joystickRef.current;
-    if (joystick) {
-      joystick.classList.remove('active');
-    }
-    
-    handleJoystickRelease();
-  };
-
   // Joystick direction action handler with enhanced scrolling
   const handleJoystickAction = (direction: 'up' | 'down' | 'left' | 'right') => {
     setJoystickDirection(direction);
+    console.log(`Joystick direction action: ${direction}`);
     
     // Enhanced scroll behavior based on direction
     if (direction === 'up') {
       smoothScroll(-scrollDistance); // Scroll up (negative distance)
-      // Visual feedback but make it less intrusive
-      toast.info('Scrolling up', { duration: 300, position: 'top-center', icon: '⬆️' });
+      
+      // Subtle visual feedback (reduced duration and opacity)
+      toast.info('Scrolling up', { 
+        duration: 200, 
+        position: 'top-center', 
+        icon: '⬆️',
+        style: { opacity: '0.7', fontSize: '0.9rem' }
+      });
       
       // Schedule another scroll if joystick is still active in this direction
       if (joystickActive && joystickDirection === 'up') {
@@ -493,8 +166,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
     } else if (direction === 'down') {
       smoothScroll(scrollDistance); // Scroll down (positive distance)
-      // Visual feedback but make it less intrusive
-      toast.info('Scrolling down', { duration: 300, position: 'top-center', icon: '⬇️' });
+      
+      // Subtle visual feedback (reduced duration and opacity)
+      toast.info('Scrolling down', { 
+        duration: 200, 
+        position: 'top-center', 
+        icon: '⬇️',
+        style: { opacity: '0.7', fontSize: '0.9rem' }
+      });
       
       // Schedule another scroll if joystick is still active in this direction
       if (joystickActive && joystickDirection === 'down') {
