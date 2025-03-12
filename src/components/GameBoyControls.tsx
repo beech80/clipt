@@ -24,6 +24,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import './joystick-animations.css'; // Import joystick animations
+import CommentModal from './comments/CommentModal';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -42,11 +43,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     { name: 'Profile', icon: <User className="mr-2 h-4 w-4" />, path: '/profile' },
     { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
     { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
-    { name: 'Top', icon: <TrendingUp className="mr-2 h-4 w-4" />, path: '/top' },
     { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' },
     { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   
   // Joystick states
@@ -1048,6 +1049,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         // Fallback for different actions
         if (actionType === 'comment') {
           logToDebug('Falling back to comment modal');
+          setActiveCommentPostId(currentPostId);
           setCommentModalOpen(true);
           return;
         } else if (actionType === 'like') {
@@ -1131,35 +1133,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Your return JSX - the UI for the GameBoy controller
   return (
     <>
-      {/* Comment Modal */}
-      {commentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-gaming-800 rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Add Comment</h2>
-            <textarea 
-              className="w-full p-3 rounded-md bg-gaming-700 text-white mb-4"
-              placeholder="Write your comment here..."
-              rows={4}
-            ></textarea>
-            <div className="flex justify-end space-x-3">
-              <button
-                className="px-4 py-2 bg-gray-600 rounded-md"
-                onClick={() => setCommentModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-purple-600 rounded-md"
-                onClick={() => {
-                  toast.success('Comment added!');
-                  setCommentModalOpen(false);
-                }}
-              >
-                Comment
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Enhanced Comment Modal using the proper component */}
+      {commentModalOpen && activeCommentPostId && (
+        <CommentModal
+          isOpen={commentModalOpen}
+          onClose={() => {
+            setCommentModalOpen(false);
+            setActiveCommentPostId(null);
+          }}
+          postId={activeCommentPostId}
+          autoFocusInput={false}
+        />
       )}
       
       <div 
