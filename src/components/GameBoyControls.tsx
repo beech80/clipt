@@ -104,8 +104,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // For smooth scrolling with enhanced physics
   const scrollDistance = 300; // pixels to scroll per movement
-  const scrollDuration = 400; // ms for animation duration - increased for smoother animation
-  const scrollCooldown = 500; // ms cooldown between scroll actions
+  const scrollDuration = 300; // Reduced from 400 to make scrolling feel more responsive
+  const scrollCooldown = 350; // Reduced from 500 to allow more frequent scroll actions
 
   // Enhanced animation for smooth scrolling with momentum effect
   const smoothScroll = (distance: number) => {
@@ -369,30 +369,31 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
     
     // Determine joystick direction for UI feedback with enhanced sensitivity
-    const thresholdRelative = maxDistance * 0.3; // More sensitive threshold
+    const thresholdRelative = maxDistance * 0.25; // More sensitive threshold
     
     // Add the joystick-active class for glow effect
     joystickRef.current.classList.add('joystick-active');
     
-    if (Math.abs(normDeltaX) > Math.abs(normDeltaY)) {
+    // Prioritize vertical movement for better scrolling experience
+    if (Math.abs(normDeltaX) > Math.abs(normDeltaY) * 1.2) {
       if (normDeltaX > thresholdRelative) {
         joystickRef.current.classList.add('direction-right');
         joystickRef.current.classList.remove('direction-left', 'direction-up', 'direction-down');
-        if (normDeltaX > maxDistance * 0.6 && joystickDirection !== 'right') handleJoystickAction('right');
+        if (normDeltaX > maxDistance * 0.5 && joystickDirection !== 'right') handleJoystickAction('right');
       } else if (normDeltaX < -thresholdRelative) {
         joystickRef.current.classList.add('direction-left');
         joystickRef.current.classList.remove('direction-right', 'direction-up', 'direction-down');
-        if (normDeltaX < -maxDistance * 0.6 && joystickDirection !== 'left') handleJoystickAction('left');
+        if (normDeltaX < -maxDistance * 0.5 && joystickDirection !== 'left') handleJoystickAction('left');
       }
     } else {
       if (normDeltaY > thresholdRelative) {
         joystickRef.current.classList.add('direction-down');
         joystickRef.current.classList.remove('direction-up', 'direction-left', 'direction-right');
-        if (normDeltaY > maxDistance * 0.6 && joystickDirection !== 'down') handleJoystickAction('down');
+        if (normDeltaY > maxDistance * 0.5 && joystickDirection !== 'down') handleJoystickAction('down');
       } else if (normDeltaY < -thresholdRelative) {
         joystickRef.current.classList.add('direction-up');
         joystickRef.current.classList.remove('direction-down', 'direction-left', 'direction-right');
-        if (normDeltaY < -maxDistance * 0.6 && joystickDirection !== 'up') handleJoystickAction('up');
+        if (normDeltaY < -maxDistance * 0.5 && joystickDirection !== 'up') handleJoystickAction('up');
       }
     }
   };
@@ -479,14 +480,32 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Enhanced scroll behavior based on direction
     if (direction === 'up') {
       handleJoystickDown('up');
-      smoothScroll(-scrollDistance);
-      // Visual feedback for scroll action
-      toast.info('Scrolling up', { duration: 500, position: 'top-center', icon: '⬆️' });
+      smoothScroll(-scrollDistance); // Scroll up (negative distance)
+      // Visual feedback but make it less intrusive
+      toast.info('Scrolling up', { duration: 300, position: 'top-center', icon: '⬆️' });
+      
+      // Schedule another scroll if joystick is still active in this direction
+      if (joystickActive && joystickDirection === 'up') {
+        setTimeout(() => {
+          if (joystickActive && joystickDirection === 'up') {
+            smoothScroll(-scrollDistance);
+          }
+        }, scrollCooldown);
+      }
     } else if (direction === 'down') {
       handleJoystickDown('down');
-      smoothScroll(scrollDistance);
-      // Visual feedback for scroll action
-      toast.info('Scrolling down', { duration: 500, position: 'top-center', icon: '⬇️' });
+      smoothScroll(scrollDistance); // Scroll down (positive distance)
+      // Visual feedback but make it less intrusive
+      toast.info('Scrolling down', { duration: 300, position: 'top-center', icon: '⬇️' });
+      
+      // Schedule another scroll if joystick is still active in this direction
+      if (joystickActive && joystickDirection === 'down') {
+        setTimeout(() => {
+          if (joystickActive && joystickDirection === 'down') {
+            smoothScroll(scrollDistance);
+          }
+        }, scrollCooldown);
+      }
     } else if (direction === 'left') {
       // Handle left action
       if (location.pathname.includes('/post/') && location.pathname !== '/post/new') {
