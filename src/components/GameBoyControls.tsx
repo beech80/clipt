@@ -111,7 +111,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Add cooldown to prevent rapid scrolling
     if (now - lastScrollTime.current < scrollCooldown) return;
     lastScrollTime.current = now;
-    
+      
     const startPosition = window.scrollY;
     const startTime = performance.now();
     
@@ -834,7 +834,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           .insert({
             post_id: currentPostId,
             user_id: userId,
-            value: 1
+            created_at: new Date().toISOString()
           });
         
         if (addError) {
