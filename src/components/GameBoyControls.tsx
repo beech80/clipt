@@ -550,69 +550,67 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       )}
       
       <div 
-        className={`fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-1 sm:pb-2 pointer-events-none`}
+        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-1 sm:pb-2 pointer-events-none"
       >
-        <div className="gameboy-ui-container bg-gaming-900/90 border border-gaming-700 rounded-lg p-3 pointer-events-auto">
-          <div className="flex items-center justify-between">
-            {/* Menu/Joystick (Left) */}
-            <div className="joystick relative w-16 h-16 bg-gray-800 rounded-full border-2 border-gray-700 flex items-center justify-center">
-              <div 
-                className="joystick-handle w-8 h-8 bg-gray-600 rounded-full cursor-pointer"
-              >
-                <Menu className="text-white m-auto h-6 w-6" />
-              </div>
-            </div>
-            
-            {/* CLIPT Button (Center) */}
-            <div 
-              onClick={() => navigate('/')}
-              className="clipt-button mx-4 p-1 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 cursor-pointer"
+        <div className="bg-[#2D2171] rounded-xl p-3 pointer-events-auto flex items-center space-x-6">
+          {/* Menu/Joystick (Left) */}
+          <div className="relative w-14 h-14 bg-[#151929] rounded-full flex items-center justify-center cursor-pointer">
+            <Menu className="text-white m-auto h-6 w-6" />
+          </div>
+          
+          {/* CLIPT Button (Center) */}
+          <div 
+            onClick={() => navigate('/')}
+            className="rounded-full border-2 bg-[#151929] cursor-pointer px-6 py-2"
+            style={{
+              borderImage: 'linear-gradient(to right, #9747FF, #3B82F6) 1',
+            }}
+          >
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 font-bold text-lg">
+              CLIPT
+            </span>
+          </div>
+          
+          {/* Group of Action Buttons (Right) - arranged in a flower pattern */}
+          <div className="relative">
+            {/* Top button (Like) */}
+            <button 
+              data-action="like"
+              onClick={handleLike}
+              className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-[#151929] rounded-full border-2 border-red-500 flex items-center justify-center"
             >
-              <div className="bg-gaming-900 rounded-full p-3">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 font-bold text-lg px-2">
-                  CLIPT
-                </span>
-              </div>
-            </div>
+              <Heart className="text-red-500 h-5 w-5" />
+            </button>
             
-            {/* Diamond Buttons (Right) */}
-            <div className="diamond-buttons relative w-20 h-20">
-              {/* Like/Heart Button (Top) */}
-              <button 
-                data-action="like"
-                onClick={handleLike}
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gray-800 rounded-full border-2 border-red-500 flex items-center justify-center"
-              >
-                <Heart className="text-red-500 h-5 w-5" />
-              </button>
-              
-              {/* Comment Button (Left) */}
-              <button 
-                data-action="comment"
-                onClick={handleComment}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-gray-800 rounded-full border-2 border-blue-500 flex items-center justify-center"
-              >
-                <MessageCircle className="text-blue-500 h-5 w-5" />
-              </button>
-              
-              {/* Trophy Button (Right) */}
-              <button 
-                data-action="trophy"
-                onClick={handleTrophy}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-gray-800 rounded-full border-2 border-yellow-500 flex items-center justify-center"
-              >
-                <Trophy className="text-yellow-500 h-5 w-5" />
-              </button>
-              
-              {/* Follow Button (Bottom) */}
-              <button 
-                data-action="follow"
-                onClick={handleFollow}
-                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gray-800 rounded-full border-2 border-green-500 flex items-center justify-center"
-              >
-                <UserPlus className="text-green-500 h-5 w-5" />
-              </button>
-            </div>
+            {/* Left button (Comment) */}
+            <button 
+              data-action="comment"
+              onClick={handleComment}
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 w-10 h-10 bg-[#151929] rounded-full border-2 border-blue-500 flex items-center justify-center"
+            >
+              <MessageCircle className="text-blue-500 h-5 w-5" />
+            </button>
+            
+            {/* Right button (Trophy) */}
+            <button 
+              data-action="trophy"
+              onClick={handleTrophy}
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 w-10 h-10 bg-[#151929] rounded-full border-2 border-yellow-500 flex items-center justify-center"
+            >
+              <Trophy className="text-yellow-500 h-5 w-5" />
+            </button>
+            
+            {/* Bottom button (Follow) */}
+            <button 
+              data-action="follow"
+              onClick={handleFollow}
+              className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-[#151929] rounded-full border-2 border-green-500 flex items-center justify-center"
+            >
+              <UserPlus className="text-green-500 h-5 w-5" />
+            </button>
+            
+            {/* Center invisible element to maintain spacing */}
+            <div className="w-6 h-6 opacity-0"></div>
           </div>
         </div>
       </div>
