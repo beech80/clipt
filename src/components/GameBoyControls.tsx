@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Menu, 
@@ -28,300 +28,491 @@ interface GameBoyControlsProps {
   currentPostId?: string;
 }
 
-interface Window {
-  continuousScrollTimer: NodeJS.Timeout | null;
-}
-
-declare global {
-  interface Window {
-    continuousScrollTimer: NodeJS.Timeout | null;
-  }
-}
-
-// Add the property to the window object if it doesn't exist
-if (typeof window !== 'undefined' && window.continuousScrollTimer === undefined) {
-  window.continuousScrollTimer = null;
-}
-
 const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCurrentPostId }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
-  const [joystickActive, setJoystickActive] = useState(false);
-  const [joystickDirection, setJoystickDirection] = useState<'up' | 'down' | 'left' | 'right' | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
-  const [trophyStatus, setTrophyStatus] = useState(false);
-  const [feedTrophyCount, setFeedTrophyCount] = useState(0);
-  const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 });
-  const [pulsating, setPulsating] = useState(false);
-  const [glowing, setGlowing] = useState(true);
-  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; opacity: number; size: number; color: string }>>([]);
-  const [buttonsAnimated, setButtonsAnimated] = useState(false);
-  const lastScrollTime = useRef<number>(0);
-  const joystickRef = useRef<HTMLDivElement>(null);
-  const joystickKnobRef = useRef<HTMLDivElement>(null);
-
-  // CLIPT button animation with enhanced effects
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  
+  // Visual debug logging
   useEffect(() => {
-    // Pulse animation
-    const pulseInterval = setInterval(() => {
-      setPulsating(true);
-      
-      // Generate particles when pulsing
-      createParticles();
-      
-      setTimeout(() => setPulsating(false), 1500);
-    }, 5000);
+    const debugElement = document.createElement('div');
+    debugElement.id = 'gameboy-debug';
+    debugElement.style.position = 'fixed';
+    debugElement.style.bottom = '150px';
+    debugElement.style.right = '10px';
+    debugElement.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    debugElement.style.color = '#fff';
+    debugElement.style.padding = '10px';
+    debugElement.style.borderRadius = '5px';
+    debugElement.style.zIndex = '9999';
+    debugElement.style.fontSize = '12px';
+    debugElement.style.maxWidth = '300px';
+    debugElement.style.maxHeight = '150px';
+    debugElement.style.overflow = 'auto';
     
-    // Glow animation with smoother transition
-    const glowInterval = setInterval(() => {
-      setGlowing(prev => !prev);
-    }, 2000);
+    document.body.appendChild(debugElement);
     
-    // Button hover animation toggle
-    const buttonAnimationInterval = setInterval(() => {
-      setButtonsAnimated(prev => !prev);
-    }, 8000);
+    const log = (message: string) => {
+      const entry = document.createElement('div');
+      entry.textContent = message;
+      debugElement.appendChild(entry);
+      
+      // Keep only last 10 messages
+      while (debugElement.children.length > 10) {
+        debugElement.removeChild(debugElement.firstChild as Node);
+      }
+    };
+    
+    // Add to window for debugging
+    (window as any).gameboyLog = log;
     
     return () => {
-      clearInterval(pulseInterval);
-      clearInterval(glowInterval);
-      clearInterval(buttonAnimationInterval);
+      document.body.removeChild(debugElement);
     };
   }, []);
+
+  // Helper function to log to debug
+  const logToDebug = (message: string) => {
+    console.log(message);
+    if ((window as any).gameboyLog) {
+      (window as any).gameboyLog(message);
+    }
+  };
   
-  // Particle effect system
-  const createParticles = () => {
-    const newParticles = [];
-    const colors = ['#6c4dc4', '#8654dc', '#4f46e5', '#8b5cf6', '#a78bfa'];
+  // Add post detection on mount and page changes
+  useEffect(() => {
+    logToDebug('Setting up post detection');
     
-    for (let i = 0; i < 12; i++) {
-      newParticles.push({
-        id: Math.random(),
-        x: 50 + Math.random() * 10 - 5, // center x with slight variation
-        y: 50 + Math.random() * 10 - 5, // center y with slight variation
-        opacity: 0.8 + Math.random() * 0.2,
-        size: 3 + Math.random() * 5,
-        color: colors[Math.floor(Math.random() * colors.length)]
-      });
-    }
-    
-    setParticles(newParticles);
-    
-    // Animate particles fading out
-    setTimeout(() => {
-      setParticles([]);
-    }, 2000);
-  };
-
-  // For smooth scrolling with enhanced physics
-  const scrollDistance = 300; // Increased for more significant scrolling
-  const scrollDuration = 200; // Reduced for more immediate scrolling
-  const scrollCooldown = 50; // Further reduced cooldown for more responsive continuous scrolling
-  const continuousScrollInterval = 100; // Faster interval for continuous scrolling when joystick is held
-
-  // Enhanced animation for smooth scrolling with cleaner motion
-  const smoothScroll = (distance: number) => {
-    const now = Date.now();
-    // Add minimal cooldown to prevent rapid scrolling but maintain responsiveness
-    if (now - lastScrollTime.current < scrollCooldown) return;
-    lastScrollTime.current = now;
+    // Function to ensure all posts have data-post-id attributes
+    const addDataAttributes = () => {
+      logToDebug('Adding data-post-id attributes to posts...');
       
-    console.log(`Smooth scrolling ${distance < 0 ? 'UP' : 'DOWN'} by ${Math.abs(distance)}px`);
-    
-    // Get current position for limit checking
-    const currentPosition = window.pageYOffset || document.documentElement.scrollTop;
-    const documentHeight = Math.max(
-      document.body.scrollHeight, 
-      document.documentElement.scrollHeight,
-      document.body.offsetHeight, 
-      document.documentElement.offsetHeight
-    );
-    const windowHeight = window.innerHeight;
-    
-    // Check if we're already at the top or bottom
-    const isAtTop = currentPosition <= 0;
-    const isAtBottom = currentPosition + windowHeight >= documentHeight - 10;
-    
-    // Only apply scroll if we're not at the limit or trying to scroll away from it
-    if ((distance < 0 && !isAtTop) || (distance > 0 && !isAtBottom) || 
-        (distance < 0 && !isAtTop) || (distance > 0 && !isAtBottom)) {
+      // Add data-post-id to all post-container divs
+      const postContainers = document.querySelectorAll('.post-container, .post-card, .post-item, [id*="post"]');
+      let attributesAdded = 0;
       
-      // Try multiple scroll methods for best compatibility
-      try {
-        // Method 1: scrollBy with smooth behavior
-        window.scrollBy({
-          top: distance,
-          behavior: 'smooth'
-        });
-        
-        // Method 2: Direct scroll for immediate feedback
-        if (typeof window !== 'undefined') {
-          // Calculate new position with limits
-          const newPosition = Math.max(0, Math.min(documentHeight - windowHeight, currentPosition + distance));
-          window.scrollTo(0, newPosition);
-        }
-      } catch (error) {
-        console.error("Error during scrolling:", error);
-        // Fallback to most basic method
-        window.scrollTo(0, Math.max(0, Math.min(documentHeight - windowHeight, window.scrollY + distance)));
-      }
-    } else {
-      console.log(isAtTop ? "Already at top" : "Already at bottom");
-    }
-  };
-
-  // Joystick direction action handler with enhanced scrolling
-  const handleJoystickAction = (direction: 'up' | 'down' | 'left' | 'right') => {
-    setJoystickDirection(direction);
-    console.log(`Joystick direction action: ${direction}`);
-    
-    // Clear any existing continuous scroll interval
-    const clearContinuousScroll = () => {
-      if (window.continuousScrollTimer) {
-        clearInterval(window.continuousScrollTimer);
-        window.continuousScrollTimer = null;
-      }
-    };
-    clearContinuousScroll();
-    
-    // Enhanced scroll behavior based on direction
-    if (direction === 'up') {
-      smoothScroll(-scrollDistance); // Scroll up (negative distance)
-      
-      // Subtle visual feedback (reduced duration and opacity)
-      toast.info('Scrolling up', { 
-        duration: 200, 
-        position: 'top-center', 
-        icon: '⬆️',
-        style: { opacity: '0.7', fontSize: '0.9rem' }
-      });
-      
-      // Start continuous scrolling if joystick remains active - with stronger effect
-      if (joystickActive) {
-        window.continuousScrollTimer = setInterval(() => {
-          if (joystickActive && joystickDirection === 'up') {
-            smoothScroll(-scrollDistance);
+      postContainers.forEach((post, index) => {
+        if (!post.hasAttribute('data-post-id')) {
+          // Check if the post has an ID we can use
+          let postId = '';
+          
+          // Try to find ID from various sources
+          if (post.hasAttribute('id') && post.getAttribute('id')?.includes('post')) {
+            postId = post.getAttribute('id')?.replace(/post-?/i, '') || '';
           } else {
-            clearContinuousScroll();
-          }
-        }, continuousScrollInterval);
-      }
-    } else if (direction === 'down') {
-      smoothScroll(scrollDistance); // Scroll down (positive distance)
-      
-      // Subtle visual feedback (reduced duration and opacity)
-      toast.info('Scrolling down', { 
-        duration: 200, 
-        position: 'top-center', 
-        icon: '⬇️',
-        style: { opacity: '0.7', fontSize: '0.9rem' }
-      });
-      
-      // Start continuous scrolling if joystick remains active - with stronger effect
-      if (joystickActive) {
-        window.continuousScrollTimer = setInterval(() => {
-          if (joystickActive && joystickDirection === 'down') {
-            smoothScroll(scrollDistance);
-          } else {
-            clearContinuousScroll();
-          }
-        }, continuousScrollInterval);
-      }
-    }
-    // For left/right directions - unchanged
-    else if (direction === 'left') {
-      // Handle left action
-      if (location.pathname.includes('/post/') && location.pathname !== '/post/new') {
-        // Navigate to previous post if on a post page
-        navigate(-1);
-        toast.info('Previous post', { duration: 1000, position: 'top-center' });
-      } else {
-        // Provide feedback
-        toast.info('Swipe left', { duration: 500, position: 'top-center', icon: '⬅️' });
-      }
-    } else if (direction === 'right') {
-      // Handle right action
-      if (location.pathname === '/') {
-        // Navigate to next post on home page
-        const posts = document.querySelectorAll('[data-post-id]');
-        if (posts.length > 0 && currentPostId) {
-          const currentIndex = Array.from(posts).findIndex(
-            post => post.getAttribute('data-post-id') === currentPostId
-          );
-          if (currentIndex < posts.length - 1) {
-            const nextPost = posts[currentIndex + 1];
-            const nextPostId = nextPost.getAttribute('data-post-id');
-            if (nextPostId) {
-              setCurrentPostId(nextPostId);
-              nextPost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Look for ID in child elements
+            const postIdElement = post.querySelector('[data-post-id]');
+            if (postIdElement) {
+              postId = postIdElement.getAttribute('data-post-id') || '';
+            } else {
+              // Try to find in href if there's a link to post
+              const postLink = post.querySelector('a[href*="/post/"]');
+              if (postLink) {
+                const href = postLink.getAttribute('href') || '';
+                const match = href.match(/\/post\/([^\/]+)/);
+                if (match && match[1]) {
+                  postId = match[1];
+                }
+              } else {
+                // Generate a temporary ID
+                postId = `temp-post-${index}-${Date.now()}`;
+              }
             }
           }
+          
+          // Set the attribute
+          post.setAttribute('data-post-id', postId);
+          attributesAdded++;
         }
+      });
+      
+      logToDebug(`Added data-post-id to ${attributesAdded} posts`);
+    };
+    
+    // Function to detect and select the most visible post
+    const detectAndSelectCurrentPost = () => {
+      // First ensure all posts have data-post-id
+      addDataAttributes();
+      
+      // Find all posts on the page with multiple selectors to work across different pages
+      const allPosts = Array.from(document.querySelectorAll(
+        '[data-post-id], .post-container, .post-card, .post-item, [id*="post"]'
+      ));
+      
+      if (allPosts.length === 0) {
+        logToDebug('No posts found on current page');
+        return;
       }
+      
+      logToDebug(`Found ${allPosts.length} posts on the page`);
+      
+      // Find the post most visible in the viewport
+      let mostVisiblePost: Element | null = null;
+      let maxVisibility = 0;
+      
+      allPosts.forEach(post => {
+        const rect = post.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        
+        // Skip posts that are not in the viewport at all
+        if (rect.bottom < 0 || rect.top > windowHeight) {
+          return;
+        }
+        
+        // Skip very small elements (likely not actual posts)
+        if (rect.height < 50) {
+          return;
+        }
+        
+        // Calculate how much of the post is visible
+        const visibleTop = Math.max(0, rect.top);
+        const visibleBottom = Math.min(windowHeight, rect.bottom);
+        const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+        const percentVisible = visibleHeight / rect.height;
+        
+        if (percentVisible > maxVisibility) {
+          maxVisibility = percentVisible;
+          mostVisiblePost = post;
+        }
+      });
+      
+      if (mostVisiblePost) {
+        // Get the post ID - try multiple attributes
+        const postId = mostVisiblePost.getAttribute('data-post-id') || 
+                       mostVisiblePost.getAttribute('id')?.replace(/post-?/i, '') ||
+                       mostVisiblePost.getAttribute('data-id');
+        
+        if (postId) {
+          logToDebug(`Selected post: ${postId} (${(maxVisibility * 100).toFixed(1)}% visible)`);
+          setCurrentPostId(postId);
+          
+          // Add a visual indicator to the selected post
+          allPosts.forEach(post => post.classList.remove('gameboy-selected-post'));
+          mostVisiblePost.classList.add('gameboy-selected-post');
+        }
+      } else {
+        logToDebug('No visible posts found');
+      }
+    };
+
+    // Debounce function to prevent too many calls
+    function debounce(func: Function, wait: number) {
+      let timeout: any = null;
+      return function(...args: any) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          func.apply(context, args);
+        }, wait);
+      };
     }
-  };
 
-  // Handler for CLIPT button click
-  const handleCliptButtonClick = () => {
-    // Navigate to the Clipts page (restore original functionality)
-    navigate('/clipts');
-    toast.info('View Clipts');
-  };
-
-  // Handler for post button click
-  const handlePost = () => {
-    console.log('Navigating to post creation page');
-    // Use absolute path with leading slash
-    navigate('/post/new');
-    toast.info('Create a new post');
-  };
-
-  // Handler for menu button click
-  const handleMenu = () => {
-    setMenuOpen(!menuOpen);
-    console.log('Toggling menu:', !menuOpen);
-  };
-
-  // Handler for like button click
-  const handleLike = async () => {
+    // Create debounced handler
+    const debouncedDetectPost = debounce(detectAndSelectCurrentPost, 200);
+    
+    // Set up scroll listener
+    window.addEventListener('scroll', debouncedDetectPost);
+    
+    // Initial detection with a delay to allow page to render
+    setTimeout(detectAndSelectCurrentPost, 500);
+    
+    // Set up mutation observer to detect when new posts are added
+    const observer = new MutationObserver((mutations) => {
+      let shouldDetect = false;
+      
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          Array.from(mutation.addedNodes).forEach(node => {
+            if (node instanceof HTMLElement && 
+                (node.hasAttribute('data-post-id') || 
+                 node.classList.contains('post-container') ||
+                 node.classList.contains('post-card') ||
+                 node.classList.contains('post-item') ||
+                 (node.id && node.id.includes('post')))) {
+              shouldDetect = true;
+            }
+          });
+        }
+      });
+      
+      if (shouldDetect) {
+        setTimeout(detectAndSelectCurrentPost, 300);
+      }
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Add styling for selected posts
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .gameboy-selected-post {
+        position: relative;
+        box-shadow: 0 0 0 3px #6c4dc4 !important;
+        transition: box-shadow 0.3s ease;
+      }
+      
+      .gameboy-selected-post::after {
+        content: '';
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 16px;
+        height: 16px;
+        background-color: #6c4dc4;
+        border-radius: 50%;
+        animation: pulse-glow 1.5s infinite alternate;
+        z-index: 9999;
+      }
+      
+      @keyframes pulse-glow {
+        0% { opacity: 0.6; box-shadow: 0 0 5px 2px rgba(108, 77, 196, 0.3); }
+        100% { opacity: 1; box-shadow: 0 0 10px 4px rgba(108, 77, 196, 0.6); }
+      }
+      
+      .button-press {
+        transform: scale(0.9) !important;
+        opacity: 0.8 !important;
+        transition: transform 0.15s, opacity 0.15s !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Detect page changes
+    const handlePathChange = () => {
+      if (location.pathname !== currentPath) {
+        setCurrentPath(location.pathname);
+        // Re-detect posts after path change
+        setTimeout(detectAndSelectCurrentPost, 1000);
+      }
+    };
+    
+    // Check location periodically
+    const intervalId = setInterval(handlePathChange, 500);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('scroll', debouncedDetectPost);
+      observer.disconnect();
+      document.head.removeChild(style);
+      clearInterval(intervalId);
+    };
+  }, [currentPath]);
+  
+  // Universal action handler
+  const handlePostAction = (actionType: 'like' | 'comment' | 'follow' | 'trophy') => {
+    // Visual feedback on controller button
+    const controllerButton = document.querySelector(`[data-action="${actionType}"]`);
+    if (controllerButton) {
+      controllerButton.classList.add('button-press');
+      setTimeout(() => {
+        controllerButton.classList.remove('button-press');
+      }, 300);
+    }
+    
     if (!currentPostId) {
-      toast.error('No post selected');
+      logToDebug(`No post selected for ${actionType} action`);
+      toast.error('No post selected. Try scrolling to a post first.');
       return;
     }
     
-    console.log('Liking post:', currentPostId);
+    logToDebug(`Handling ${actionType} action for post: ${currentPostId}`);
     
-    // Find the actual like button on the post and click it to trigger all the necessary logic
-    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
-    if (targetPost) {
-      const likeButton = targetPost.querySelector('.like-button');
-      if (likeButton) {
-        // Visual feedback on controller button
-        const controllerLikeButton = document.querySelector(`.diamond-buttons [data-action="like"]`);
-        if (controllerLikeButton) {
-          controllerLikeButton.classList.add('button-press');
-          setTimeout(() => {
-            controllerLikeButton.classList.remove('button-press');
-          }, 300);
+    // Try multiple selectors to find the target post
+    const postSelectors = [
+      `[data-post-id="${currentPostId}"]`,
+      `#post-${currentPostId}`,
+      `.post-container[data-id="${currentPostId}"]`,
+      `[id="${currentPostId}"]`,
+      `.post-${currentPostId}`
+    ];
+    
+    let targetPost: Element | null = null;
+    
+    // Try each selector until we find a match
+    for (const selector of postSelectors) {
+      try {
+        const post = document.querySelector(selector);
+        if (post) {
+          targetPost = post;
+          logToDebug(`Found target post with selector: ${selector}`);
+          break;
         }
-        
-        // Actually trigger the like button's click event
-        likeButton.dispatchEvent(new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        }));
+      } catch (err) {
+        console.error(`Error finding target post with selector:`, selector, err);
+      }
+    }
+    
+    if (!targetPost) {
+      logToDebug('Target post not found, looking at all posts...');
+      
+      // Try to find post among all posts with data-post-id
+      const allPosts = document.querySelectorAll('[data-post-id]');
+      let foundPost = false;
+      
+      allPosts.forEach(post => {
+        const postId = post.getAttribute('data-post-id');
+        if (postId === currentPostId) {
+          targetPost = post;
+          foundPost = true;
+          logToDebug('Found post by iterating through all posts');
+        }
+      });
+      
+      if (!foundPost) {
+        logToDebug('Post not found with any method');
+        toast.error('Post not found. Try scrolling to make it visible.');
         return;
       }
     }
     
-    // Fallback if direct button interaction doesn't work
+    if (targetPost) {
+      // Determine button selectors based on action type
+      let buttonSelectors: string[] = [];
+      
+      switch (actionType) {
+        case 'like':
+          buttonSelectors = [
+            '.like-button', 
+            'button:has(svg[data-feather="heart"])',
+            'button:has(.heart-icon)',
+            'button:has(.lucide-heart)',
+            'button[aria-label*="like" i]',
+            'button[title*="like" i]',
+            '[data-action="like"]'
+          ];
+          break;
+        case 'comment':
+          buttonSelectors = [
+            '.comment-button', 
+            'button:has(svg[data-feather="message-circle"])',
+            'button:has(.comment-icon)',
+            'button:has(.lucide-message-circle)',
+            'button[aria-label*="comment" i]',
+            'button[title*="comment" i]',
+            '[data-action="comment"]'
+          ];
+          break;
+        case 'follow':
+          buttonSelectors = [
+            '.follow-button', 
+            'button:has(svg[data-feather="user-plus"])',
+            'button:has(.follow-icon)',
+            'button:has(.lucide-user-plus)',
+            'button[aria-label*="follow" i]',
+            'button[title*="follow" i]',
+            '[data-action="follow"]'
+          ];
+          break;
+        case 'trophy':
+          buttonSelectors = [
+            '.trophy-button', 
+            'button:has(svg[data-feather="trophy"])',
+            'button:has(.trophy-icon)',
+            'button:has(.lucide-trophy)',
+            'button[aria-label*="trophy" i]',
+            'button[title*="trophy" i]',
+            '[data-action="trophy"]'
+          ];
+          break;
+      }
+      
+      let actionButton: Element | null = null;
+      
+      // Try each selector within the post first
+      for (const selector of buttonSelectors) {
+        try {
+          const buttons = targetPost.querySelectorAll(selector);
+          if (buttons.length > 0) {
+            actionButton = buttons[0];
+            logToDebug(`Found ${actionType} button within post using selector: ${selector}`);
+            break;
+          }
+        } catch (err) {
+          console.error(`Error finding ${actionType} button with selector:`, selector, err);
+        }
+      }
+      
+      // If we couldn't find in the target post, look globally with proximity check
+      if (!actionButton) {
+        logToDebug('Button not found in post, looking globally...');
+        
+        for (const selector of buttonSelectors) {
+          try {
+            // Find all buttons of this type in the document
+            const allButtons = document.querySelectorAll(selector);
+            
+            allButtons.forEach(button => {
+              // Check if this button is in or near our target post
+              let closestPost = button.closest('[data-post-id]');
+              if (!closestPost) {
+                // Try to find post by proximity if it's not a direct parent
+                const buttonRect = button.getBoundingClientRect();
+                const postRect = targetPost!.getBoundingClientRect();
+                
+                // Check if button is near our target post
+                const horizontalOverlap = 
+                  (buttonRect.left <= postRect.right && buttonRect.right >= postRect.left);
+                const verticalOverlap = 
+                  (buttonRect.top <= postRect.bottom && buttonRect.bottom >= postRect.top);
+                
+                if (horizontalOverlap && verticalOverlap) {
+                  actionButton = button;
+                  logToDebug(`Found ${actionType} button by proximity`);
+                }
+              } else if (closestPost.getAttribute('data-post-id') === currentPostId) {
+                actionButton = button;
+                logToDebug(`Found ${actionType} button via closest post`);
+              }
+            });
+            
+            if (actionButton) break;
+          } catch (err) {
+            console.error(`Error finding global ${actionType} button:`, err);
+          }
+        }
+      }
+      
+      if (actionButton) {
+        logToDebug(`Clicking ${actionType} button`);
+        
+        // Actually trigger the button's click event
+        actionButton.dispatchEvent(new MouseEvent('click', {
+          view: window,
+          bubbles: true,
+          cancelable: true
+        }));
+        
+        toast.success(`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} action triggered`);
+        return;
+      } else {
+        logToDebug(`${actionType} button not found on post`);
+        
+        // Fallback for different actions
+        if (actionType === 'comment') {
+          logToDebug('Falling back to comment modal');
+          setCommentModalOpen(true);
+          return;
+        } else if (actionType === 'like') {
+          // Try direct API like
+          handleDirectLike(currentPostId);
+          return;
+        } else {
+          toast.error(`Could not find ${actionType} button. Try another post.`);
+        }
+      }
+    }
+  };
+  
+  // Direct API like when button click fails
+  const handleDirectLike = async (postId: string) => {
     try {
-      // Check if already liked
+      logToDebug('Attempting direct API like for post: ' + postId);
+      
       const { data: currentUser } = await supabase.auth.getUser();
       const userId = currentUser?.user?.id;
       
@@ -330,10 +521,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         return;
       }
       
+      // Check if already liked
       const { data: existingLike, error: likeError } = await supabase
         .from('likes')
         .select('*')
-        .eq('post_id', currentPostId)
+        .eq('post_id', postId)
         .eq('user_id', userId)
         .maybeSingle();
       
@@ -346,7 +538,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         await supabase
           .from('likes')
           .delete()
-          .eq('post_id', currentPostId)
+          .eq('post_id', postId)
           .eq('user_id', userId);
           
         toast.success('Removed like from post');
@@ -355,7 +547,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         await supabase
           .from('likes')
           .insert({
-            post_id: currentPostId,
+            post_id: postId,
             user_id: userId,
             created_at: new Date().toISOString()
           });
@@ -365,969 +557,126 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       // Trigger a refresh for the post's like count
       document.dispatchEvent(new CustomEvent('refresh-post', {
-        detail: { postId: currentPostId }
+        detail: { postId }
       }));
+      
+      // Invalidate any React Query caches for this post
+      queryClient.invalidateQueries(['likes', postId]);
+      queryClient.invalidateQueries(['posts']);
     } catch (error) {
       console.error('Error liking post:', error);
       toast.error('Failed to like post');
     }
   };
-
-  // Handler for comment button click
-  const handleComment = async () => {
-    if (!currentPostId) {
-      toast.error('No post selected');
-      return;
-    }
-    
-    console.log('Comment on post:', currentPostId);
-    
-    // Visual feedback on controller button
-    const commentButton = document.querySelector(`.diamond-buttons [data-action="comment"]`);
-    if (commentButton) {
-      commentButton.classList.add('button-press');
-      setTimeout(() => {
-        commentButton.classList.remove('button-press');
-      }, 300);
-    }
-    
-    // Find the actual comment button on the post and click it
-    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
-    if (targetPost) {
-      const postCommentButton = targetPost.querySelector('.comment-button');
-      if (postCommentButton) {
-        postCommentButton.dispatchEvent(new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        }));
-        return;
-      }
-    }
-    
-    // Fallback: use the existing global state to trigger the comment modal
-    setCommentModalOpen(true);
-  };
-
-  // Handler for trophy button click
-  const handleTrophy = async () => {
-    if (!currentPostId) {
-      console.error('Cannot trophy with no post ID');
-      toast.error('Could not find post to trophy');
-      return;
-    }
-    
-    console.log('Trophy clicked for post:', currentPostId);
-    
-    // Visual feedback on button press
-    const trophyButton = document.querySelector(`.diamond-buttons [data-action="trophy"]`);
-    if (trophyButton) {
-      trophyButton.classList.add('button-press');
-      setTimeout(() => {
-        trophyButton.classList.remove('button-press');
-      }, 300);
-    }
-    
-    // Disable double-clicking
-    trophyButton?.setAttribute('disabled', 'true');
-    setTimeout(() => {
-      trophyButton?.removeAttribute('disabled');
-    }, 1000);
-    
-    try {
-      // Get current user
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) {
-        toast.error('Please log in to vote');
-        return;
-      }
-      
-      const userId = session.session.user.id;
-      
-      console.log(`Attempting to update trophy for post ${currentPostId} by user ${userId}`);
-      
-      // Only check clip_votes table for consistency
-      const { data: existingVotes, error: voteCheckError } = await supabase
-        .from('clip_votes')
-        .select('id')
-        .eq('post_id', currentPostId)
-        .eq('user_id', userId);
-      
-      if (voteCheckError) {
-        console.error('Error checking existing votes:', voteCheckError);
-        throw voteCheckError;
-      }
-      
-      // Determine if user has already voted
-      const hasVote = existingVotes && existingVotes.length > 0;
-      console.log('Current vote status:', hasVote);
-      
-      // Update UI and toggle vote
-      setTrophyStatus(!hasVote);
-      
-      if (hasVote) {
-        // Remove vote
-        const { error: removeError } = await supabase
-          .from('clip_votes')
-          .delete()
-          .eq('post_id', currentPostId)
-          .eq('user_id', userId);
-        
-        if (removeError) {
-          console.error('Error removing vote:', removeError);
-          throw removeError;
-        }
-        
-        console.log('Vote removed successfully');
-        toast.success('Trophy removed');
-        
-      } else {
-        // Add vote
-        const { error: addError } = await supabase
-          .from('clip_votes')
-          .insert({
-            post_id: currentPostId,
-            user_id: userId,
-            created_at: new Date().toISOString()
-          });
-        
-        if (addError) {
-          console.error('Error adding vote:', addError);
-          throw addError;
-        }
-        
-        console.log('Vote added successfully');
-        toast.success('Trophy awarded!');
-      }
-      
-      // Get accurate count from database
-      const { count, error: countError } = await supabase
-        .from('clip_votes')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', currentPostId);
-      
-      if (countError) {
-        console.error('Error getting accurate count:', countError);
-      } else {
-        console.log('Accurate trophy count:', count);
-        // Update trophy count in local state
-        setFeedTrophyCount(count || 0);
-      }
-      
-      // Dispatch event to notify other components
-      const trophyUpdateEvent = new CustomEvent('trophy-update', {
-        detail: {
-          postId: currentPostId,
-          count: count || 0,
-          active: !hasVote
-        }
-      });
-      window.dispatchEvent(trophyUpdateEvent);
-      
-      // Also dispatch with the exact same event name as in PostItem
-      document.dispatchEvent(new CustomEvent('refresh-post', {
-        detail: { postId: currentPostId }
-      }));
-      
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      
-      // Force update the UI on all pages that show posts
-      setTimeout(() => {
-        window.dispatchEvent(new Event('trophy-count-update'));
-      }, 500);
-    } catch (error) {
-      console.error('Error handling trophy vote:', error);
-      toast.error('Failed to update trophy status');
-      
-      // On error, get the true state from the database
-      try {
-        const { data: voteCheck } = await supabase
-          .from('clip_votes')
-          .select('id')
-          .eq('post_id', currentPostId)
-          .eq('user_id', session?.session?.user?.id);
-          
-        const { count } = await supabase
-          .from('clip_votes')
-          .select('*', { count: 'exact', head: true })
-          .eq('post_id', currentPostId);
-        
-        // Update UI with accurate state from database
-        const hasVote = voteCheck && voteCheck.length > 0;
-        setTrophyStatus(hasVote);
-        setFeedTrophyCount(count || 0);
-        
-        console.log('Restored state from database:', { hasVote, count });
-      } catch (stateError) {
-        console.error('Error getting state from database:', stateError);
-      }
-    }
-  };
-
-  // Handler for follow button click
-  const handleFollow = async () => {
-    if (!currentPostId) {
-      toast.error('No post selected');
-      return;
-    }
-    
-    console.log('Follow user of post:', currentPostId);
-    
-    // Visual feedback on controller button
-    const followButton = document.querySelector(`.diamond-buttons [data-action="follow"]`);
-    if (followButton) {
-      followButton.classList.add('button-press');
-      setTimeout(() => {
-        followButton.classList.remove('button-press');
-      }, 300);
-    }
-    
-    // Find the follow button on the post and click it
-    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
-    if (targetPost) {
-      const postFollowButton = targetPost.querySelector('.follow-button');
-      if (postFollowButton) {
-        postFollowButton.dispatchEvent(new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        }));
-        return;
-      }
-    }
-    
-    // Fallback if direct button interaction doesn't work
-    try {
-      const { data: currentUser } = await supabase.auth.getUser();
-      const userId = currentUser?.user?.id;
-      
-      if (!userId) {
-        toast.error('You need to be logged in to follow users');
-        return;
-      }
-      
-      // Get post author info
-      const { data: post } = await supabase
-        .from('posts')
-        .select('user_id, users:user_id(username)')
-        .eq('id', currentPostId)
-        .single();
-      
-      if (!post) {
-        toast.error('Post not found');
-        return;
-      }
-      
-      const authorId = post.user_id;
-      const authorUsername = post.users?.username;
-      
-      if (authorId === userId) {
-        toast.error('You cannot follow yourself');
-        return;
-      }
-      
-      // Check if already following
-      const { data: existingFollow } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', userId)
-        .eq('following_id', authorId)
-        .maybeSingle();
-      
-      if (existingFollow) {
-        // Unfollow
-        await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', userId)
-          .eq('following_id', authorId);
-          
-        toast.success(`Unfollowed ${authorUsername || 'user'}`);
-      } else {
-        // Follow
-        await supabase
-          .from('follows')
-          .insert({
-            follower_id: userId,
-            following_id: authorId,
-            created_at: new Date().toISOString()
-          });
-          
-        // Create notification
-        await supabase
-          .from('notifications')
-          .insert({
-            type: 'follow',
-            user_id: authorId,
-            actor_id: userId,
-            resource_id: currentPostId,
-            resource_type: 'post',
-            content: 'started following you',
-            created_at: new Date().toISOString(),
-            read: false
-          });
-          
-        toast.success(`Followed ${authorUsername || 'user'}`);
-      }
-    } catch (error) {
-      console.error('Error following user:', error);
-      toast.error('Failed to follow user');
-    }
-  };
-
-  // Handle joystick movement with enhanced detection for up/down scrolling
-  const handleJoystickMove = (x: number, y: number) => {
-    if (!joystickRef.current || !joystickKnobRef.current) return;
-    
-    const joystickRect = joystickRef.current.getBoundingClientRect();
-    const centerX = joystickRect.width / 2;
-    const centerY = joystickRect.height / 2;
-    
-    const deltaX = x - centerX;
-    const deltaY = y - centerY;
-    
-    // Calculate distance from center
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const maxDistance = joystickRect.width / 2 * 0.8;
-    
-    // Set joystick as active when moved
-    setJoystickActive(true);
-    
-    // Normalize the delta values
-    const normDeltaX = deltaX / maxDistance;
-    const normDeltaY = deltaY / maxDistance;
-    
-    // Constrain movement to joystick bounds
-    const constrainedDistance = Math.min(distance, maxDistance);
-    const angle = Math.atan2(deltaY, deltaX);
-    const constrainedX = Math.cos(angle) * constrainedDistance;
-    const constrainedY = Math.sin(angle) * constrainedDistance;
-    
-    // Apply movement to joystick knob with enhanced animation
-    joystickKnobRef.current.style.transition = distance > 0 ? 'none' : 'transform 0.2s ease-out';
-    joystickKnobRef.current.style.transform = `translate3d(${constrainedX}px, ${constrainedY}px, 0) scale(${1 + constrainedDistance / maxDistance * 0.1})`;
-    
-    // Determine joystick direction for UI feedback with enhanced sensitivity
-    const thresholdRelative = maxDistance * 0.15; // More sensitive threshold for better detection
-    
-    // Add the joystick-active class for glow effect
-    joystickRef.current.classList.add('joystick-active');
-    
-    // Clear all direction classes first for cleaner transitions
-    joystickRef.current.classList.remove('direction-up', 'direction-down', 'direction-left', 'direction-right');
-    
-    // Direct scrolling for immediate feedback - no waiting for continuous timer
-    if (Math.abs(normDeltaY) > 0.15) { // Lower threshold for more sensitive vertical movement
-      if (normDeltaY > 0) {
-        // Down - immediate scroll
-        smoothScroll(scrollDistance / 2); // Stronger immediate feedback
-        joystickRef.current.classList.add('direction-down');
-      } else {
-        // Up - immediate scroll
-        smoothScroll(-scrollDistance / 2); // Stronger immediate feedback
-        joystickRef.current.classList.add('direction-up');
-      }
-    }
-    
-    // Enhanced vertical bias: Give preference to vertical movements for easier scrolling
-    if (Math.abs(normDeltaY) > Math.abs(normDeltaX) * 0.5) { // Reduced to detect vertical more easily
-      // Vertical movement detected - up or down
-      if (normDeltaY > thresholdRelative) {
-        joystickRef.current.classList.add('direction-down');
-        if (normDeltaY > maxDistance * 0.2 && joystickDirection !== 'down') { // More sensitive
-          handleJoystickAction('down');
-          console.log('Triggering DOWN movement', normDeltaY);
-        }
-      } else if (normDeltaY < -thresholdRelative) {
-        joystickRef.current.classList.add('direction-up');
-        if (normDeltaY < -maxDistance * 0.2 && joystickDirection !== 'up') { // More sensitive
-          handleJoystickAction('up');
-          console.log('Triggering UP movement', normDeltaY);
-        }
-      }
-    } else {
-      // Horizontal movement - no change needed
-      if (normDeltaX > thresholdRelative) {
-        joystickRef.current.classList.add('direction-right');
-        if (normDeltaX > maxDistance * 0.4 && joystickDirection !== 'right') {
-          handleJoystickAction('right');
-        }
-      } else if (normDeltaX < -thresholdRelative) {
-        joystickRef.current.classList.add('direction-left');
-        if (normDeltaX < -maxDistance * 0.4 && joystickDirection !== 'left') {
-          handleJoystickAction('left');
-        }
-      }
-    }
-  };
-
-  // Joystick release with enhanced spring back animation
-  const handleJoystickRelease = () => {
-    if (!joystickRef.current || !joystickKnobRef.current) return;
-    
-    setJoystickActive(false);
-    setJoystickDirection(null);
-    
-    // Enhanced spring-back effect
-    joystickKnobRef.current.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-    joystickKnobRef.current.style.transform = 'translate3d(0, 0, 0) scale(1)';
-    
-    joystickRef.current.classList.remove('joystick-active', 'direction-up', 'direction-down', 'direction-left', 'direction-right');
-  };
-
-  // Mouse and touch event handlers for joystick
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!joystickRef.current) return;
-    
-    e.preventDefault();
-    setJoystickActive(true);
-    
-    const rect = joystickRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    handleJoystickMove(x, y);
-  };
   
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!joystickRef.current || !e.touches[0]) return;
-    
-    e.preventDefault();
-    setJoystickActive(true);
-    
-    const rect = joystickRef.current.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const y = e.touches[0].clientY - rect.top;
-    
-    handleJoystickMove(x, y);
-  };
+  // Individual action handlers that use the universal handler
+  const handleLike = () => handlePostAction('like');
+  const handleComment = () => handlePostAction('comment');
+  const handleFollow = () => handlePostAction('follow');
+  const handleTrophy = () => handlePostAction('trophy');
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!joystickActive || !joystickRef.current) return;
-    
-    const rect = joystickRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    handleJoystickMove(x, y);
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (!joystickActive || !joystickRef.current || !e.touches[0]) return;
-    
-    const rect = joystickRef.current.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const y = e.touches[0].clientY - rect.top;
-    
-    handleJoystickMove(x, y);
-  };
-
-  const handleMouseUp = () => {
-    if (!joystickActive) return;
-    
-    const joystick = joystickRef.current;
-    if (joystick) {
-      joystick.classList.remove('active');
-    }
-    
-    handleJoystickRelease();
-  };
-
-  // Add global event listeners for joystick movement
-  useEffect(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleMouseUp);
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleMouseUp);
-    };
-  }, [joystickActive, joystickDirection]);
-
-  // Handlers for button clicks
-  const handleLikeClick = handleLike;
-  const handleCommentClick = handleComment;
-  const handleTrophyClick = handleTrophy;
-  const handleFollowClick = handleFollow;
-
-  const handleJoystickUp = () => {
-    setJoystickActive(false);
-    setJoystickDirection(null);
-  };
-
-  // Navigation helper
-  const navigateTo = (path: string) => {
-    navigate(path);
-    setMenuOpen(false);
-  };
-
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .button-press {
-        transform: scale(0.9) !important;
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
-        filter: brightness(1.2) !important;
-      }
-      
-      .pulse-highlight {
-        animation: pulse-border 1s ease-out;
-      }
-      
-      .currently-selected-post {
-        position: relative;
-      }
-      
-      .currently-selected-post::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        border: 2px solid rgba(99, 102, 241, 0.5);
-        border-radius: 8px;
-        pointer-events: none;
-        z-index: 1;
-      }
-      
-      @keyframes pulse-border {
-        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
-        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .direction-up { box-shadow: 0 -4px 6px rgba(49, 130, 206, 0.6); }
-      .direction-down { box-shadow: 0 4px 6px rgba(49, 130, 206, 0.6); }
-      .direction-left { box-shadow: -4px 0 6px rgba(49, 130, 206, 0.6); }
-      .direction-right { box-shadow: 4px 0 6px rgba(49, 130, 206, 0.6); }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .button-press {
-        transform: scale(0.9) !important;
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.3) !important;
-        filter: brightness(1.2) !important;
-      }
-      
-      .pulse-highlight {
-        animation: pulse-border 1s ease-out;
-      }
-      
-      .currently-selected-post {
-        position: relative;
-      }
-      
-      .currently-selected-post::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        border: 2px solid rgba(99, 102, 241, 0.5);
-        border-radius: 8px;
-        pointer-events: none;
-        z-index: 1;
-      }
-      
-      @keyframes pulse-border {
-        0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.5); }
-        70% { box-shadow: 0 0 0 5px rgba(99, 102, 241, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
-  // Add animation keyframes with enhanced visual effects
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @keyframes pulse-glow {
-        0% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
-        33% { box-shadow: 0 0 25px rgba(102, 47, 161, 0.8); }
-        66% { box-shadow: 0 0 35px rgba(147, 51, 234, 0.9); }
-        100% { box-shadow: 0 0 15px rgba(102, 47, 161, 0.6); }
-      }
-      
-      @keyframes float {
-        0% { transform: translateY(0px) rotate(0deg) scale(1); }
-        25% { transform: translateY(-4px) rotate(-1deg) scale(1.02); }
-        75% { transform: translateY(2px) rotate(1deg) scale(0.98); }
-        100% { transform: translateY(0px) rotate(0deg) scale(1); }
-      }
-      
-      @keyframes joystick-pulse {
-        0% { box-shadow: 0 0 5px rgba(102, 47, 161, 0.3); }
-        50% { box-shadow: 0 0 15px rgba(147, 51, 234, 0.5); }
-        100% { box-shadow: 0 0 5px rgba(102, 47, 161, 0.3); }
-      }
-      
-      @keyframes joystick-trail {
-        0% { opacity: 0.7; transform: scale(0.9); }
-        100% { opacity: 0; transform: scale(1.5); }
-      }
-      
-      .joystick-active {
-        animation: joystick-pulse 1.5s infinite ease-in-out;
-        transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-      }
-      
-      .direction-up:after, .direction-down:after, .direction-left:after, .direction-right:after {
-        content: '';
-        position: absolute;
-        width: 40%;
-        height: 40%;
-        border-radius: 50%;
-        background: rgba(154, 95, 230, 0.3);
-        z-index: -1;
-      }
-      
-      .direction-up:after {
-        top: 5%;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-      
-      .direction-down:after {
-        bottom: 5%;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-      
-      .direction-left:after {
-        left: 5%;
-        top: 50%;
-        transform: translateY(-50%);
-      }
-      
-      .direction-right:after {
-        right: 5%;
-        top: 50%;
-        transform: translateY(-50%);
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
+  // Your return JSX - the UI for the GameBoy controller
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="bg-[#10101e]/95 backdrop-blur-lg pb-6 pt-4 px-6 md:px-16 lg:px-24 w-full">
-        {/* Keep currentPostId tracking but make it invisible by setting opacity to 0 */}
-        {currentPostId && (
-          <div className="absolute top-0 left-0 right-0 transform -translate-y-full opacity-0 pointer-events-none">
-            Active: Post #{currentPostId.substring(0, 8)}
-          </div>
-        )}
-        
-        <div className="grid grid-cols-3 items-center justify-items-center">
-          {/* Left joystick */}
-          <div className="flex justify-center">
-            <div 
-              ref={joystickRef}
-              className="w-[55px] h-[55px] rounded-full bg-[#1E1E30] border border-[#2E2E40]/50 touch-none relative shadow-inner overflow-hidden"
-              onMouseDown={handleMouseDown}
-              onTouchStart={handleTouchStart}
-              onMouseUp={() => handleJoystickRelease()}
-              onTouchEnd={() => handleJoystickRelease()}
-            >
-              {/* Subtle joystick guides */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-[1px] h-full bg-[#3A3A50]/20"></div>
-                <div className="h-[1px] w-full bg-[#3A3A50]/20"></div>
-              </div>
-              
-              {/* Joystick handle with improved styling */}
-              <div 
-                ref={joystickKnobRef} 
-                className="w-[30px] h-[30px] rounded-full bg-gradient-to-br from-[#353b5a] to-[#252a40] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border border-[#4c4f64]/50 shadow-md z-10 joystick-active"
+    <>
+      {/* Comment Modal */}
+      {commentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-gaming-800 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">Add Comment</h2>
+            <textarea 
+              className="w-full p-3 rounded-md bg-gaming-700 text-white mb-4"
+              placeholder="Write your comment here..."
+              rows={4}
+            ></textarea>
+            <div className="flex justify-end space-x-3">
+              <button
+                className="px-4 py-2 bg-gray-600 rounded-md"
+                onClick={() => setCommentModalOpen(false)}
               >
-                <div className="absolute inset-2 rounded-full bg-[#20233A]/40"></div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Center - CLIPT button and controls */}
-          <div className="flex flex-col items-center justify-center space-y-4">
-            {/* Ultra enhanced CLIPT button with advanced effects */}
-            <button 
-              onClick={handleCliptButtonClick}
-              className="relative w-[72px] h-[72px] rounded-full flex items-center justify-center clipt-button-hover clipt-button-active transform transition-all duration-300 overflow-hidden"
-              style={{
-                background: 'radial-gradient(circle at center, #9A5FE6 0%, #7840C0 35%, #662FA1 60%, #561D99 85%)',
-                boxShadow: '0 0 25px rgba(122, 59, 192, 0.7), inset 0 0 18px rgba(255, 255, 255, 0.25)',
-                animation: 'pulse-glow 4s infinite, float 8s ease-in-out infinite'
-              }}
-            >
-              {/* Animated particle overlay with more particles */}
-              <div className="clipt-particles absolute inset-0 opacity-0 transition-opacity duration-300" style={{ perspective: '800px' }}>
-                {[...Array(15)].map((_, i) => (
-                  <div 
-                    key={i}
-                    className="absolute rounded-full"
-                    style={{
-                      width: `${Math.random() * 10 + 2}px`,
-                      height: `${Math.random() * 10 + 2}px`,
-                      background: `rgba(${147 + Math.random() * 50}, ${51 + Math.random() * 40}, ${234 + Math.random() * 20}, ${0.5 + Math.random() * 0.5})`,
-                      top: `${Math.random() * 100}%`,
-                      left: `${Math.random() * 100}%`,
-                      filter: 'blur(0.5px)',
-                      animation: `float ${3 + Math.random() * 5}s infinite ease-in-out, rotate ${8 + Math.random() * 10}s infinite linear`
-                    }}
-                  />
-                ))}
-              </div>
-              
-              {/* Interactive multi-layer ripple effect */}
-              {Array.from({ length: 3 }, (_, i) => (
-                <div 
-                  key={i}
-                  className="absolute w-full h-full rounded-full opacity-0 pointer-events-none"
-                  style={{
-                    border: `${1 + i * 0.5}px solid rgba(${147 + i * 10}, ${51 + i * 5}, ${234 - i * 10}, ${0.3 - i * 0.05})`,
-                    animation: `ripple ${2 + i * 0.7}s linear infinite`,
-                    animationDelay: `${i * 0.4}s`
-                  }}
-                />
-              ))}
-              
-              {/* Animated gradient overlay */}
-              <div className="absolute inset-0 rounded-full overflow-hidden opacity-50" style={{ mixBlendMode: 'overlay' }}>
-                <div 
-                  className="absolute inset-0"
-                  style={{
-                    background: 'linear-gradient(120deg, rgba(154, 95, 230, 0) 20%, rgba(154, 95, 230, 0.4) 50%, rgba(154, 95, 230, 0) 80%)',
-                    backgroundSize: '200% 200%',
-                    animation: 'bgShift 5s ease infinite'
-                  }}
-                />
-              </div>
-              
-              {/* Inner glow effect with animated highlight */}
-              <div className="absolute inset-1 rounded-full bg-gradient-to-b from-[#9A5FE6]/30 to-transparent overflow-hidden">
-                <div 
-                  className="absolute w-full h-[35%] bg-gradient-to-b from-white/15 to-transparent"
-                  style={{
-                    top: '-15%',
-                    transform: 'rotate(35deg) translateZ(0)',
-                    animation: 'float 6s ease-in-out infinite'
-                  }}
-                />
-              </div>
-              
-              {/* Pulsing inner circle */}
-              <div className="clipt-inner-circle absolute inset-[3px] rounded-full border-2 border-[#9A5FE6]/20"></div>
-              
-              {/* Multi-layer holographic ring */}
-              <div className="absolute inset-0 rounded-full border border-[#9A5FE6]/30">
-                <div className="absolute inset-[-1px] rounded-full border border-[#9A5FE6]/10"></div>
-                <div className="absolute inset-[-2px] rounded-full border border-[#9A5FE6]/5"></div>
-                <div className="absolute inset-[-3px] rounded-full border border-[#9A5FE6]/2"></div>
-              </div>
-              
-              {/* Ultra fancy text with enhanced effect */}
-              <span 
-                className="clipt-text font-bold text-base relative z-10"
-                style={{ 
-                  color: '#F0E6FF',
-                  textShadow: '0 2px 5px rgba(0,0,0,0.3)',
-                  letterSpacing: '0.3px'
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-purple-600 rounded-md"
+                onClick={() => {
+                  toast.success('Comment added!');
+                  setCommentModalOpen(false);
                 }}
               >
-                CLIPT
-              </span>
-            </button>
-            
-            {/* Sub controls row */}
-            <div className="flex space-x-10">
-              <button 
-                onClick={handleMenu}
-                className="w-[30px] h-[30px] rounded-full bg-[#20203A] flex items-center justify-center hover:bg-[#252545] transition-colors duration-200 shadow-inner"
-              >
-                <Menu size={14} className="text-gray-400" />
+                Comment
               </button>
-              
-              <button 
-                onClick={handlePost}
-                className="w-[30px] h-[30px] rounded-full bg-[#20203A] flex items-center justify-center hover:bg-[#252545] transition-colors duration-200 shadow-inner"
-              >
-                <Camera size={14} className="text-gray-400" />
-              </button>
-            </div>
-          </div>
-          
-          {/* Right - Action buttons in diamond pattern */}
-          <div className="relative w-[100px] h-[100px]">
-            {/* Like button */}
-            <button 
-              className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-red-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-red-500/60 active:scale-95 transition-all duration-200"
-              data-action="like"
-              onClick={handleLike}
-            >
-              <Heart size={16} className="text-red-500" />
-            </button>
-            
-            {/* Comment button */}
-            <button 
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-blue-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-blue-500/60 active:scale-95 transition-all duration-200"
-              data-action="comment"
-              onClick={handleComment}
-            >
-              <MessageCircle size={16} className="text-blue-400" />
-            </button>
-            
-            {/* Trophy button */}
-            <button 
-              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-yellow-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-yellow-500/60 active:scale-95 transition-all duration-200"
-              data-action="trophy"
-              onClick={handleTrophy}
-            >
-              <Trophy size={16} className="text-yellow-400" />
-            </button>
-            
-            {/* Follow button */}
-            <button 
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-green-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-green-500/60 active:scale-95 transition-all duration-200"
-              data-action="follow"
-              onClick={handleFollow}
-            >
-              <UserPlus size={16} className="text-green-500" />
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Fixed and enhanced Menu dialog with all requested pages */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="absolute inset-x-0 bottom-20 bg-[#161925] border-t border-blue-500/30">
-            <div className="max-w-md mx-auto p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white text-lg font-semibold">Menu</h3>
-                <button 
-                  className="text-gray-400 hover:text-white" 
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              
-              {/* Clear and visible grid layout with exactly the requested navigation pages */}
-              <div className="grid grid-cols-2 gap-4">
-                <button 
-                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Home size={20} className="text-yellow-400" />
-                  <span className="text-white font-medium">Home</span>
-                </button>
-                
-                <button 
-                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/discovery');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Search size={20} className="text-green-400" />
-                  <span className="text-white font-medium">Discovery</span>
-                </button>
-                
-                <button 
-                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/profile');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <User size={20} className="text-blue-400" />
-                  <span className="text-white font-medium">Profile</span>
-                </button>
-                
-                <button 
-                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/settings');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Settings size={20} className="text-gray-400" />
-                  <span className="text-white font-medium">Settings</span>
-                </button>
-                
-                <button 
-                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/clipts');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Video size={20} className="text-purple-400" />
-                  <span className="text-white font-medium">Clipts</span>
-                </button>
-                
-                <button 
-                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors"
-                  onClick={() => {
-                    navigate('/top-clipts');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Award size={20} className="text-amber-400" />
-                  <span className="text-white font-medium">Top Clipts</span>
-                </button>
-                
-                <button 
-                  className="flex items-center space-x-3 p-3 rounded bg-[#20213A] hover:bg-[#30314A] transition-colors bg-opacity-100"
-                  onClick={() => {
-                    navigate('/streaming');
-                    setMenuOpen(false);
-                  }}
-                >
-                  <Monitor size={20} className="text-red-400" />
-                  <span className="text-white font-medium">Streaming</span>
-                </button>
-              </div>
             </div>
           </div>
         </div>
       )}
-    </div>
+      
+      <div 
+        className={`fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-1 sm:pb-2 pointer-events-none`}
+      >
+        <div className="gameboy-ui-container bg-gaming-900/90 border border-gaming-700 rounded-lg p-3 pointer-events-auto">
+          <div className="flex items-center justify-between">
+            {/* Menu/Joystick (Left) */}
+            <div className="joystick relative w-16 h-16 bg-gray-800 rounded-full border-2 border-gray-700 flex items-center justify-center">
+              <div 
+                className="joystick-handle w-8 h-8 bg-gray-600 rounded-full cursor-pointer"
+              >
+                <Menu className="text-white m-auto h-6 w-6" />
+              </div>
+            </div>
+            
+            {/* CLIPT Button (Center) */}
+            <div 
+              onClick={() => navigate('/')}
+              className="clipt-button mx-4 p-1 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 cursor-pointer"
+            >
+              <div className="bg-gaming-900 rounded-full p-3">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 font-bold text-lg px-2">
+                  CLIPT
+                </span>
+              </div>
+            </div>
+            
+            {/* Diamond Buttons (Right) */}
+            <div className="diamond-buttons relative w-20 h-20">
+              {/* Like/Heart Button (Top) */}
+              <button 
+                data-action="like"
+                onClick={handleLike}
+                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gray-800 rounded-full border-2 border-red-500 flex items-center justify-center"
+              >
+                <Heart className="text-red-500 h-5 w-5" />
+              </button>
+              
+              {/* Comment Button (Left) */}
+              <button 
+                data-action="comment"
+                onClick={handleComment}
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-gray-800 rounded-full border-2 border-blue-500 flex items-center justify-center"
+              >
+                <MessageCircle className="text-blue-500 h-5 w-5" />
+              </button>
+              
+              {/* Trophy Button (Right) */}
+              <button 
+                data-action="trophy"
+                onClick={handleTrophy}
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-gray-800 rounded-full border-2 border-yellow-500 flex items-center justify-center"
+              >
+                <Trophy className="text-yellow-500 h-5 w-5" />
+              </button>
+              
+              {/* Follow Button (Bottom) */}
+              <button 
+                data-action="follow"
+                onClick={handleFollow}
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-gray-800 rounded-full border-2 border-green-500 flex items-center justify-center"
+              >
+                <UserPlus className="text-green-500 h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 
