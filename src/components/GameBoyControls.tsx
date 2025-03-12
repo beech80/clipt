@@ -479,7 +479,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Enhanced scroll behavior based on direction
     if (direction === 'up') {
-      handleJoystickDown('up');
       smoothScroll(-scrollDistance); // Scroll up (negative distance)
       // Visual feedback but make it less intrusive
       toast.info('Scrolling up', { duration: 300, position: 'top-center', icon: '⬆️' });
@@ -493,7 +492,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         }, scrollCooldown);
       }
     } else if (direction === 'down') {
-      handleJoystickDown('down');
       smoothScroll(scrollDistance); // Scroll down (positive distance)
       // Visual feedback but make it less intrusive
       toast.info('Scrolling down', { duration: 300, position: 'top-center', icon: '⬇️' });
@@ -1053,11 +1051,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setMenuOpen(true);
   };
 
-  const handleJoystickDown = (direction: 'up' | 'down') => {
-    setJoystickActive(true);
-    setJoystickDirection(direction);
-  };
-  
   const handleJoystickUp = () => {
     setJoystickActive(false);
     setJoystickDirection(null);
