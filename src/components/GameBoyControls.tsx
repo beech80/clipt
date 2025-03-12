@@ -28,6 +28,21 @@ interface GameBoyControlsProps {
   currentPostId?: string;
 }
 
+interface Window {
+  continuousScrollTimer: NodeJS.Timeout | null;
+}
+
+declare global {
+  interface Window {
+    continuousScrollTimer: NodeJS.Timeout | null;
+  }
+}
+
+// Add the property to the window object if it doesn't exist
+if (typeof window !== 'undefined' && window.continuousScrollTimer === undefined) {
+  window.continuousScrollTimer = null;
+}
+
 const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCurrentPostId }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -103,41 +118,25 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // For smooth scrolling with enhanced physics
-  const scrollDistance = 300; // pixels to scroll per movement
-  const scrollDuration = 250; // Reduced from 300 to make scrolling even more responsive
-  const scrollCooldown = 250; // Reduced cooldown for better responsiveness
-  const continuousScrollInterval = 200; // Interval for continuous scrolling when joystick is held
+  const scrollDistance = 150; // Increased from original value for more noticeable scrolling
+  const scrollDuration = 200; // Reduced from 250 for more immediate scrolling
+  const scrollCooldown = 150; // Reduced cooldown for better responsiveness
+  const continuousScrollInterval = 150; // Faster interval for continuous scrolling when joystick is held
 
   // Enhanced animation for smooth scrolling with cleaner motion
   const smoothScroll = (distance: number) => {
     const now = Date.now();
-    // Add cooldown to prevent rapid scrolling
+    // Add cooldown to prevent rapid scrolling but make it more responsive
     if (now - lastScrollTime.current < scrollCooldown) return;
     lastScrollTime.current = now;
       
     console.log(`Smooth scrolling ${distance < 0 ? 'UP' : 'DOWN'} by ${Math.abs(distance)}px`);
     
-    const startPosition = window.scrollY;
-    const startTime = performance.now();
-    
-    const animateScroll = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / scrollDuration, 1);
-      
-      // Simplified easing function for more reliable and cleaner motion
-      const easeOutQuad = 1 - Math.pow(1 - progress, 2);
-      
-      window.scrollTo({
-        top: startPosition + distance * easeOutQuad,
-        behavior: 'auto' // We're handling the smoothness ourselves
-      });
-      
-      if (progress < 1) {
-        requestAnimationFrame(animateScroll);
-      }
-    };
-    
-    requestAnimationFrame(animateScroll);
+    // Use immediate scrolling for better responsiveness on mobile
+    window.scrollBy({
+      top: distance,
+      behavior: 'smooth'
+    });
   };
 
   // Joystick direction action handler with enhanced scrolling
@@ -701,7 +700,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
     
     // Determine joystick direction for UI feedback with enhanced sensitivity
-    const thresholdRelative = maxDistance * 0.2; // Sensitive threshold for better detection
+    const thresholdRelative = maxDistance * 0.15; // More sensitive threshold for better detection
     
     // Add the joystick-active class for glow effect
     joystickRef.current.classList.add('joystick-active');
@@ -710,23 +709,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     joystickRef.current.classList.remove('direction-up', 'direction-down', 'direction-left', 'direction-right');
     
     // Enhanced vertical bias: Give preference to vertical movements for easier scrolling
-    if (Math.abs(normDeltaY) > Math.abs(normDeltaX) * 0.6) { // Reduced from 0.8 to detect vertical movements more easily
+    if (Math.abs(normDeltaY) > Math.abs(normDeltaX) * 0.5) { // Reduced to detect vertical more easily
       // Vertical movement detected - up or down
       if (normDeltaY > thresholdRelative) {
         joystickRef.current.classList.add('direction-down');
-        if (normDeltaY > maxDistance * 0.3 && joystickDirection !== 'down') { // Reduced from 0.4 for quicker detection
+        if (normDeltaY > maxDistance * 0.2 && joystickDirection !== 'down') { // More sensitive
           handleJoystickAction('down');
-          console.log('Triggering DOWN movement');
+          console.log('Triggering DOWN movement', normDeltaY);
         }
       } else if (normDeltaY < -thresholdRelative) {
         joystickRef.current.classList.add('direction-up');
-        if (normDeltaY < -maxDistance * 0.3 && joystickDirection !== 'up') { // Reduced from 0.4 for quicker detection
+        if (normDeltaY < -maxDistance * 0.2 && joystickDirection !== 'up') { // More sensitive
           handleJoystickAction('up');
-          console.log('Triggering UP movement');
+          console.log('Triggering UP movement', normDeltaY);
         }
       }
     } else {
-      // Horizontal movement detected - left or right
+      // Horizontal movement - no change needed
       if (normDeltaX > thresholdRelative) {
         joystickRef.current.classList.add('direction-right');
         if (normDeltaX > maxDistance * 0.4 && joystickDirection !== 'right') {
