@@ -106,6 +106,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const scrollDistance = 300; // pixels to scroll per movement
   const scrollDuration = 250; // Reduced from 300 to make scrolling even more responsive
   const scrollCooldown = 250; // Reduced cooldown for better responsiveness
+  const continuousScrollInterval = 200; // Interval for continuous scrolling when joystick is held
 
   // Enhanced animation for smooth scrolling with cleaner motion
   const smoothScroll = (distance: number) => {
@@ -144,6 +145,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setJoystickDirection(direction);
     console.log(`Joystick direction action: ${direction}`);
     
+    // Clear any existing continuous scroll interval
+    const clearContinuousScroll = () => {
+      if (window.continuousScrollTimer) {
+        clearInterval(window.continuousScrollTimer);
+        window.continuousScrollTimer = null;
+      }
+    };
+    clearContinuousScroll();
+    
     // Enhanced scroll behavior based on direction
     if (direction === 'up') {
       smoothScroll(-scrollDistance); // Scroll up (negative distance)
@@ -156,13 +166,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         style: { opacity: '0.7', fontSize: '0.9rem' }
       });
       
-      // Schedule another scroll if joystick is still active in this direction
-      if (joystickActive && joystickDirection === 'up') {
-        setTimeout(() => {
+      // Start continuous scrolling if joystick remains active
+      if (joystickActive) {
+        window.continuousScrollTimer = setInterval(() => {
           if (joystickActive && joystickDirection === 'up') {
             smoothScroll(-scrollDistance);
+          } else {
+            clearContinuousScroll();
           }
-        }, scrollCooldown);
+        }, continuousScrollInterval);
       }
     } else if (direction === 'down') {
       smoothScroll(scrollDistance); // Scroll down (positive distance)
@@ -175,13 +187,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         style: { opacity: '0.7', fontSize: '0.9rem' }
       });
       
-      // Schedule another scroll if joystick is still active in this direction
-      if (joystickActive && joystickDirection === 'down') {
-        setTimeout(() => {
+      // Start continuous scrolling if joystick remains active
+      if (joystickActive) {
+        window.continuousScrollTimer = setInterval(() => {
           if (joystickActive && joystickDirection === 'down') {
             smoothScroll(scrollDistance);
+          } else {
+            clearContinuousScroll();
           }
-        }, scrollCooldown);
+        }, continuousScrollInterval);
       }
     } else if (direction === 'left') {
       // Handle left action
@@ -213,526 +227,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         }
       }
     }
-  };
-
-  // Keep track of current route
-  useEffect(() => {
-    setCurrentPath(location.pathname);
-    
-    // Update current post ID when prop changes
-    if (propCurrentPostId) {
-      setCurrentPostId(propCurrentPostId);
-    }
-    
-    // Reset the current post ID when changing routes
-    if (location.pathname !== currentPath && !propCurrentPostId) {
-      setCurrentPostId(null);
-    }
-
-    // Close menu when changing routes
-    setMenuOpen(false);
-  }, [location.pathname, propCurrentPostId, currentPath]);
-  
-  // Enhanced post detection with debugging
-  useEffect(() => {
-    // If a specific post ID is passed as a prop, always use that
-    if (propCurrentPostId) {
-      setCurrentPostId(propCurrentPostId);
-      return;
-    }
-    
-    // Define a function to find the most visible post
-    const findVisiblePostId = () => {
-      const posts = document.querySelectorAll('[data-post-id]');
-      if (!posts.length) return;
-      
-      let mostVisiblePost = null;
-      let maxVisibleArea = 0;
-      const viewportHeight = window.innerHeight;
-      
-      posts.forEach(post => {
-        const rect = post.getBoundingClientRect();
-        const postId = post.getAttribute('data-post-id');
-        
-        // Skip if post is not visible or too small in the viewport
-        if (rect.bottom < 100 || rect.top > viewportHeight - 100) {
-          return;
-        }
-        
-        // Calculate visible area
-        const visibleTop = Math.max(0, rect.top);
-        const visibleBottom = Math.min(viewportHeight, rect.bottom);
-        const visibleHeight = visibleBottom - visibleTop;
-        const visibleRatio = visibleHeight / rect.height;
-        
-        // Update if this post is more visible than the current most visible
-        if (visibleRatio > maxVisibleArea) {
-          maxVisibleArea = visibleRatio;
-          mostVisiblePost = post;
-        }
-      });
-      
-      // Only update if we have a post that's significantly visible (>30%)
-      if (mostVisiblePost && maxVisibleArea > 0.3) {
-        const postId = mostVisiblePost.getAttribute('data-post-id');
-        if (postId && postId !== currentPostId) {
-          console.log(`Selecting post: ${postId}`);
-          setCurrentPostId(postId);
-          
-          // Add visual indicator to highlight the currently selected post
-          posts.forEach(p => {
-            if (p.getAttribute('data-post-id') === postId) {
-              p.classList.add('currently-selected-post');
-              
-              // Add a subtle pulse animation to show which post is active
-              p.classList.add('pulse-highlight');
-              setTimeout(() => {
-                p.classList.remove('pulse-highlight');
-              }, 1000);
-            } else {
-              p.classList.remove('currently-selected-post');
-              p.classList.remove('pulse-highlight');
-            }
-          });
-          
-          // Update UI to show which post is selected (small indicator on controller)
-          const postIndicator = document.getElementById('current-post-indicator');
-          if (postIndicator) {
-            postIndicator.textContent = `Post #${postId}`;
-            postIndicator.style.opacity = '1';
-            setTimeout(() => {
-              postIndicator.style.opacity = '0.5';
-            }, 2000);
-          }
-          
-          // Also update any internal state in the app
-          document.dispatchEvent(new CustomEvent('post-selected', {
-            detail: { postId }
-          }));
-        }
-      }
-    };
-    
-    // Run immediately and set up event listeners
-    findVisiblePostId();
-    
-    // Use both scroll and a timer to ensure we're updating regularly
-    window.addEventListener('scroll', findVisiblePostId);
-    window.addEventListener('resize', findVisiblePostId);
-    
-    // Check more frequently (300ms) for more responsive updates
-    const intervalId = setInterval(findVisiblePostId, 300);
-    
-    return () => {
-      window.removeEventListener('scroll', findVisiblePostId);
-      window.removeEventListener('resize', findVisiblePostId);
-      clearInterval(intervalId);
-    };
-  }, [currentPostId, propCurrentPostId]);
-
-  // Handler for like button with improved triggering of post actions
-  const handleLike = async () => {
-    if (!currentPostId) {
-      toast.error('No post selected');
-      return;
-    }
-    
-    console.log('Liking post:', currentPostId);
-    
-    // Find the actual like button on the post and click it to trigger all the necessary logic
-    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
-    if (targetPost) {
-      const likeButton = targetPost.querySelector('.like-button');
-      if (likeButton) {
-        // Visual feedback on controller button
-        const controllerLikeButton = document.querySelector(`.diamond-buttons [data-action="like"]`);
-        if (controllerLikeButton) {
-          controllerLikeButton.classList.add('button-press');
-          setTimeout(() => {
-            controllerLikeButton.classList.remove('button-press');
-          }, 300);
-        }
-        
-        // Actually trigger the like button's click event
-        likeButton.dispatchEvent(new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        }));
-        return;
-      }
-    }
-    
-    // Fallback if direct button interaction doesn't work
-    try {
-      // Check if already liked
-      const { data: currentUser } = await supabase.auth.getUser();
-      const userId = currentUser?.user?.id;
-      
-      if (!userId) {
-        toast.error('You need to be logged in to like posts');
-        return;
-      }
-      
-      const { data: existingLike, error: likeError } = await supabase
-        .from('likes')
-        .select('*')
-        .eq('post_id', currentPostId)
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      if (likeError) {
-        console.error('Error checking like status:', likeError);
-      }
-      
-      if (existingLike) {
-        // Unlike
-        await supabase
-          .from('likes')
-          .delete()
-          .eq('post_id', currentPostId)
-          .eq('user_id', userId);
-          
-        toast.success('Removed like from post');
-      } else {
-        // Like
-        await supabase
-          .from('likes')
-          .insert({
-            post_id: currentPostId,
-            user_id: userId,
-            created_at: new Date().toISOString()
-          });
-          
-        toast.success('Liked post');
-      }
-      
-      // Trigger a refresh for the post's like count
-      document.dispatchEvent(new CustomEvent('refresh-post', {
-        detail: { postId: currentPostId }
-      }));
-    } catch (error) {
-      console.error('Error liking post:', error);
-      toast.error('Failed to like post');
-    }
-  };
-
-  // Handler for comment button
-  const handleComment = async () => {
-    if (!currentPostId) {
-      toast.error('No post selected');
-      return;
-    }
-    
-    console.log('Comment on post:', currentPostId);
-    
-    // Visual feedback on controller button
-    const commentButton = document.querySelector(`.diamond-buttons [data-action="comment"]`);
-    if (commentButton) {
-      commentButton.classList.add('button-press');
-      setTimeout(() => {
-        commentButton.classList.remove('button-press');
-      }, 300);
-    }
-    
-    // Find the actual comment button on the post and click it
-    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
-    if (targetPost) {
-      const postCommentButton = targetPost.querySelector('.comment-button');
-      if (postCommentButton) {
-        postCommentButton.dispatchEvent(new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        }));
-        return;
-      }
-    }
-    
-    // Fallback: use the existing global state to trigger the comment modal
-    setCommentModalOpen(true);
-  };
-
-  // Handler for trophy button
-  const handleTrophy = async () => {
-    if (!currentPostId) {
-      console.error('Cannot trophy with no post ID');
-      toast.error('Could not find post to trophy');
-      return;
-    }
-    
-    console.log('Trophy clicked for post:', currentPostId);
-    
-    // Visual feedback on button press
-    const trophyButton = document.querySelector(`.diamond-buttons [data-action="trophy"]`);
-    if (trophyButton) {
-      trophyButton.classList.add('button-press');
-      setTimeout(() => {
-        trophyButton.classList.remove('button-press');
-      }, 300);
-    }
-    
-    // Disable double-clicking
-    trophyButton?.setAttribute('disabled', 'true');
-    setTimeout(() => {
-      trophyButton?.removeAttribute('disabled');
-    }, 1000);
-    
-    try {
-      // Get current user
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) {
-        toast.error('Please log in to vote');
-        return;
-      }
-      
-      const userId = session.session.user.id;
-      
-      console.log(`Attempting to update trophy for post ${currentPostId} by user ${userId}`);
-      
-      // Only check clip_votes table for consistency
-      const { data: existingVotes, error: voteCheckError } = await supabase
-        .from('clip_votes')
-        .select('id')
-        .eq('post_id', currentPostId)
-        .eq('user_id', userId);
-      
-      if (voteCheckError) {
-        console.error('Error checking existing votes:', voteCheckError);
-        throw voteCheckError;
-      }
-      
-      // Determine if user has already voted
-      const hasVote = existingVotes && existingVotes.length > 0;
-      console.log('Current vote status:', hasVote);
-      
-      // Update UI and toggle vote
-      setTrophyStatus(!hasVote);
-      
-      if (hasVote) {
-        // Remove vote
-        const { error: removeError } = await supabase
-          .from('clip_votes')
-          .delete()
-          .eq('post_id', currentPostId)
-          .eq('user_id', userId);
-        
-        if (removeError) {
-          console.error('Error removing vote:', removeError);
-          throw removeError;
-        }
-        
-        console.log('Vote removed successfully');
-        toast.success('Trophy removed');
-        
-      } else {
-        // Add vote
-        const { error: addError } = await supabase
-          .from('clip_votes')
-          .insert({
-            post_id: currentPostId,
-            user_id: userId,
-            created_at: new Date().toISOString()
-          });
-        
-        if (addError) {
-          console.error('Error adding vote:', addError);
-          throw addError;
-        }
-        
-        console.log('Vote added successfully');
-        toast.success('Trophy awarded!');
-      }
-      
-      // Get accurate count from database
-      const { count, error: countError } = await supabase
-        .from('clip_votes')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', currentPostId);
-      
-      if (countError) {
-        console.error('Error getting accurate count:', countError);
-      } else {
-        console.log('Accurate trophy count:', count);
-        // Update trophy count in local state
-        setFeedTrophyCount(count || 0);
-      }
-      
-      // Dispatch event to notify other components
-      const trophyUpdateEvent = new CustomEvent('trophy-update', {
-        detail: {
-          postId: currentPostId,
-          count: count || 0,
-          active: !hasVote
-        }
-      });
-      window.dispatchEvent(trophyUpdateEvent);
-      
-      // Also dispatch with the exact same event name as in PostItem
-      document.dispatchEvent(new CustomEvent('refresh-post', {
-        detail: { postId: currentPostId }
-      }));
-      
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      
-      // Force update the UI on all pages that show posts
-      setTimeout(() => {
-        window.dispatchEvent(new Event('trophy-count-update'));
-      }, 500);
-    } catch (error) {
-      console.error('Error handling trophy vote:', error);
-      toast.error('Failed to update trophy status');
-      
-      // On error, get the true state from the database
-      try {
-        const { data: voteCheck } = await supabase
-          .from('clip_votes')
-          .select('id')
-          .eq('post_id', currentPostId)
-          .eq('user_id', session?.session?.user?.id);
-          
-        const { count } = await supabase
-          .from('clip_votes')
-          .select('*', { count: 'exact', head: true })
-          .eq('post_id', currentPostId);
-        
-        // Update UI with accurate state from database
-        const hasVote = voteCheck && voteCheck.length > 0;
-        setTrophyStatus(hasVote);
-        setFeedTrophyCount(count || 0);
-        
-        console.log('Restored state from database:', { hasVote, count });
-      } catch (stateError) {
-        console.error('Error getting state from database:', stateError);
-      }
-    }
-  };
-
-  // Handler for follow button
-  const handleFollow = async () => {
-    if (!currentPostId) {
-      toast.error('No post selected');
-      return;
-    }
-    
-    console.log('Follow user of post:', currentPostId);
-    
-    // Visual feedback on controller button
-    const followButton = document.querySelector(`.diamond-buttons [data-action="follow"]`);
-    if (followButton) {
-      followButton.classList.add('button-press');
-      setTimeout(() => {
-        followButton.classList.remove('button-press');
-      }, 300);
-    }
-    
-    // Find the follow button on the post and click it
-    const targetPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
-    if (targetPost) {
-      const postFollowButton = targetPost.querySelector('.follow-button');
-      if (postFollowButton) {
-        postFollowButton.dispatchEvent(new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        }));
-        return;
-      }
-    }
-    
-    // Fallback if direct button interaction doesn't work
-    try {
-      const { data: currentUser } = await supabase.auth.getUser();
-      const userId = currentUser?.user?.id;
-      
-      if (!userId) {
-        toast.error('You need to be logged in to follow users');
-        return;
-      }
-      
-      // Get post author info
-      const { data: post } = await supabase
-        .from('posts')
-        .select('user_id, users:user_id(username)')
-        .eq('id', currentPostId)
-        .single();
-      
-      if (!post) {
-        toast.error('Post not found');
-        return;
-      }
-      
-      const authorId = post.user_id;
-      const authorUsername = post.users?.username;
-      
-      if (authorId === userId) {
-        toast.error('You cannot follow yourself');
-        return;
-      }
-      
-      // Check if already following
-      const { data: existingFollow } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', userId)
-        .eq('following_id', authorId)
-        .maybeSingle();
-      
-      if (existingFollow) {
-        // Unfollow
-        await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', userId)
-          .eq('following_id', authorId);
-          
-        toast.success(`Unfollowed ${authorUsername || 'user'}`);
-      } else {
-        // Follow
-        await supabase
-          .from('follows')
-          .insert({
-            follower_id: userId,
-            following_id: authorId,
-            created_at: new Date().toISOString()
-          });
-          
-        // Create notification
-        await supabase
-          .from('notifications')
-          .insert({
-            type: 'follow',
-            user_id: authorId,
-            actor_id: userId,
-            resource_id: currentPostId,
-            resource_type: 'post',
-            content: 'started following you',
-            created_at: new Date().toISOString(),
-            read: false
-          });
-          
-        toast.success(`Followed ${authorUsername || 'user'}`);
-      }
-    } catch (error) {
-      console.error('Error following user:', error);
-      toast.error('Failed to follow user');
-    }
-  };
-
-  // Handler for CLIPT button click
-  const handleCliptButtonClick = () => {
-    // Navigate to the Clipts page (restore original functionality)
-    navigate('/clipts');
-    toast.info('View Clipts');
-  };
-
-  // Handler for post button click
-  const handlePost = () => {
-    console.log('Navigating to post creation page');
-    // Use absolute path with leading slash
-    navigate('/post/new');
-    toast.info('Create a new post');
   };
 
   // Handle joystick movement with enhanced detection for up/down scrolling
@@ -796,7 +290,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
     
     // Determine joystick direction for UI feedback with enhanced sensitivity
-    const thresholdRelative = maxDistance * 0.2; // Even more sensitive threshold for better detection
+    const thresholdRelative = maxDistance * 0.2; // Sensitive threshold for better detection
     
     // Add the joystick-active class for glow effect
     joystickRef.current.classList.add('joystick-active');
@@ -804,19 +298,18 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Clear all direction classes first for cleaner transitions
     joystickRef.current.classList.remove('direction-up', 'direction-down', 'direction-left', 'direction-right');
     
-    // Prioritize vertical movement for better scrolling experience
-    // A wider bias toward vertical movements
-    if (Math.abs(normDeltaY) > Math.abs(normDeltaX) * 0.8) {
+    // Enhanced vertical bias: Give preference to vertical movements for easier scrolling
+    if (Math.abs(normDeltaY) > Math.abs(normDeltaX) * 0.6) { // Reduced from 0.8 to detect vertical movements more easily
       // Vertical movement detected - up or down
       if (normDeltaY > thresholdRelative) {
         joystickRef.current.classList.add('direction-down');
-        if (normDeltaY > maxDistance * 0.4 && joystickDirection !== 'down') {
+        if (normDeltaY > maxDistance * 0.3 && joystickDirection !== 'down') { // Reduced from 0.4 for quicker detection
           handleJoystickAction('down');
           console.log('Triggering DOWN movement');
         }
       } else if (normDeltaY < -thresholdRelative) {
         joystickRef.current.classList.add('direction-up');
-        if (normDeltaY < -maxDistance * 0.4 && joystickDirection !== 'up') {
+        if (normDeltaY < -maxDistance * 0.3 && joystickDirection !== 'up') { // Reduced from 0.4 for quicker detection
           handleJoystickAction('up');
           console.log('Triggering UP movement');
         }
