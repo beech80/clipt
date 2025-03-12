@@ -640,12 +640,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
-  // Connect the button handler functions to the click handlers
-  const handleLikeClick = handleLike;
-  const handleCommentClick = handleComment;
-  const handleTrophyClick = handleTrophy;
-  const handleFollowClick = handleFollow;
-
   // Handle joystick movement with enhanced detection for up/down scrolling
   const handleJoystickMove = (x: number, y: number) => {
     if (!joystickRef.current || !joystickKnobRef.current) return;
@@ -838,7 +832,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [joystickActive, joystickDirection]);
 
-  // Handlers for button clicks - all properly assigned
+  // Handlers for button clicks
   const handleLikeClick = handleLike;
   const handleCommentClick = handleComment;
   const handleTrophyClick = handleTrophy;
@@ -1187,7 +1181,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <button 
               className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-red-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-red-500/60 active:scale-95 transition-all duration-200"
               data-action="like"
-              onClick={handleLikeClick}
+              onClick={handleLike}
             >
               <Heart size={16} className="text-red-500" />
             </button>
@@ -1196,7 +1190,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <button 
               className="absolute right-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-blue-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-blue-500/60 active:scale-95 transition-all duration-200"
               data-action="comment"
-              onClick={handleCommentClick}
+              onClick={handleComment}
             >
               <MessageCircle size={16} className="text-blue-400" />
             </button>
@@ -1205,7 +1199,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <button 
               className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-yellow-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-yellow-500/60 active:scale-95 transition-all duration-200"
               data-action="trophy"
-              onClick={handleTrophyClick}
+              onClick={handleTrophy}
             >
               <Trophy size={16} className="text-yellow-400" />
             </button>
@@ -1214,7 +1208,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <button 
               className="absolute left-0 top-1/2 transform -translate-y-1/2 w-[34px] h-[34px] rounded-full bg-[#20203A] border border-green-500/30 flex items-center justify-center hover:bg-[#252545] hover:border-green-500/60 active:scale-95 transition-all duration-200"
               data-action="follow"
-              onClick={handleFollowClick}
+              onClick={handleFollow}
             >
               <UserPlus size={16} className="text-green-500" />
             </button>
