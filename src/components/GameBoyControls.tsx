@@ -851,7 +851,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 {/* Post button (Camera icon) - Enhanced with purple highlight */}
                 <div 
                   className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative group"
-                  onClick={() => navigate('/post')}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/post/new');
+                    // Log for debugging
+                    console.log('Navigating to post creation page');
+                  }}
                 >
                   <div className="absolute inset-0 rounded-full bg-purple-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                   <Camera className="text-white h-4 w-4 group-hover:text-purple-300 transition-colors duration-300" />
