@@ -38,6 +38,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   
+  // Joystick states
+  const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const joystickRef = useRef<HTMLDivElement>(null);
+  const baseRef = useRef<HTMLDivElement>(null);
+  
   // Helper function to log to debug (console only)
   const logToDebug = (message: string) => {
     console.log(message);
@@ -242,6 +248,136 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       clearInterval(intervalId);
     };
   }, [currentPath]);
+  
+  // Joystick movement handlers
+  const handleJoystickMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    
+    // Add event listeners to window for mouse movement and release
+    window.addEventListener('mousemove', handleJoystickMouseMove);
+    window.addEventListener('mouseup', handleJoystickMouseUp);
+  };
+  
+  const handleJoystickMouseMove = (e: MouseEvent) => {
+    if (!isDragging || !joystickRef.current || !baseRef.current) return;
+    
+    // Get joystick base position and dimensions
+    const baseRect = baseRef.current.getBoundingClientRect();
+    const baseCenterX = baseRect.left + baseRect.width / 2;
+    const baseCenterY = baseRect.top + baseRect.height / 2;
+    
+    // Calculate relative position
+    let dx = e.clientX - baseCenterX;
+    let dy = e.clientY - baseCenterY;
+    
+    // Limit joystick movement to a circle
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const maxDistance = baseRect.width / 3; // Limit to 1/3 of base width
+    
+    if (distance > maxDistance) {
+      dx = (dx / distance) * maxDistance;
+      dy = (dy / distance) * maxDistance;
+    }
+    
+    // Update joystick position
+    setJoystickPosition({ x: dx, y: dy });
+    
+    // Handle scrolling based on joystick position
+    handleScrollFromJoystick(dy);
+  };
+  
+  const handleJoystickMouseUp = () => {
+    setIsDragging(false);
+    
+    // Return joystick to center with animation
+    setJoystickPosition({ x: 0, y: 0 });
+    
+    // Remove event listeners
+    window.removeEventListener('mousemove', handleJoystickMouseMove);
+    window.removeEventListener('mouseup', handleJoystickMouseUp);
+  };
+  
+  const handleJoystickTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    
+    // Add event listeners to window for touch movement and release
+    window.addEventListener('touchmove', handleJoystickTouchMove, { passive: false });
+    window.addEventListener('touchend', handleJoystickTouchEnd);
+  };
+  
+  const handleJoystickTouchMove = (e: TouchEvent) => {
+    e.preventDefault();
+    if (!isDragging || !joystickRef.current || !baseRef.current || !e.touches[0]) return;
+    
+    // Get joystick base position and dimensions
+    const baseRect = baseRef.current.getBoundingClientRect();
+    const baseCenterX = baseRect.left + baseRect.width / 2;
+    const baseCenterY = baseRect.top + baseRect.height / 2;
+    
+    // Calculate relative position
+    let dx = e.touches[0].clientX - baseCenterX;
+    let dy = e.touches[0].clientY - baseCenterY;
+    
+    // Limit joystick movement to a circle
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const maxDistance = baseRect.width / 3; // Limit to 1/3 of base width
+    
+    if (distance > maxDistance) {
+      dx = (dx / distance) * maxDistance;
+      dy = (dy / distance) * maxDistance;
+    }
+    
+    // Update joystick position
+    setJoystickPosition({ x: dx, y: dy });
+    
+    // Handle scrolling based on joystick position
+    handleScrollFromJoystick(dy);
+  };
+  
+  const handleJoystickTouchEnd = () => {
+    setIsDragging(false);
+    
+    // Return joystick to center with animation
+    setJoystickPosition({ x: 0, y: 0 });
+    
+    // Remove event listeners
+    window.removeEventListener('touchmove', handleJoystickTouchMove);
+    window.removeEventListener('touchend', handleJoystickTouchEnd);
+  };
+  
+  const handleScrollFromJoystick = (yPosition: number) => {
+    // Determine scroll direction and speed based on y position
+    const scrollSpeed = Math.abs(yPosition) * 0.5; // Adjust multiplier for faster/slower scrolling
+    
+    if (yPosition < -5) {
+      // Scroll up
+      window.scrollBy({
+        top: -scrollSpeed,
+        behavior: 'auto'
+      });
+    } else if (yPosition > 5) {
+      // Scroll down
+      window.scrollBy({
+        top: scrollSpeed,
+        behavior: 'auto'
+      });
+    }
+  };
+  
+  // Add continuous scrolling if joystick is held
+  useEffect(() => {
+    if (isDragging && joystickPosition.y !== 0) {
+      const scrollInterval = setInterval(() => {
+        handleScrollFromJoystick(joystickPosition.y);
+      }, 16); // ~60fps
+      
+      return () => {
+        clearInterval(scrollInterval);
+      };
+    }
+  }, [isDragging, joystickPosition]);
   
   // Universal action handler
   const handlePostAction = (actionType: 'like' | 'comment' | 'follow' | 'trophy') => {
@@ -554,10 +690,25 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       >
         <div className="bg-[#0D0D18] w-full pointer-events-auto py-3">
           <div className="flex justify-between items-center px-10 max-w-5xl mx-auto">
-            {/* Left - Joystick */}
-            <div className="w-14 h-14 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative">
-              {/* Create a joystick appearance instead of menu icon */}
-              <div className="w-8 h-8 bg-[#333340] rounded-full absolute"></div>
+            {/* Left - Interactive Joystick */}
+            <div 
+              ref={baseRef}
+              className="w-14 h-14 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-move relative"
+              onMouseDown={handleJoystickMouseDown}
+              onTouchStart={handleJoystickTouchStart}
+            >
+              {/* Create a joystick appearance */}
+              <div 
+                ref={joystickRef}
+                className="w-8 h-8 bg-[#333340] rounded-full absolute transition-transform duration-100 ease-out"
+                style={{ 
+                  transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
+                  boxShadow: isDragging ? '0 0 8px rgba(255,255,255,0.4)' : 'none'
+                }}
+              />
+              {/* Add subtle indicator that this is interactive */}
+              <div className="absolute inset-0 rounded-full bg-opacity-10 bg-white animate-pulse pointer-events-none" 
+                   style={{ animation: 'pulse 2s infinite ease-in-out', opacity: isDragging ? 0 : 0.1 }} />
             </div>
             
             {/* Center */}
