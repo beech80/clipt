@@ -145,34 +145,58 @@ export const CommentForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmitComment} className="p-4">
-      <Textarea
-        ref={textareaRef}
-        placeholder={user ? "Write your comment..." : "Please login to comment"}
-        value={newComment}
-        onChange={(e) => setNewComment(e.target.value)}
-        disabled={!user || isSubmitting}
-        className="w-full min-h-[60px] bg-[#1e2230] text-white rounded-lg p-2 resize-none border border-[#9b87f5]/20 focus:border-[#9b87f5]/50 focus:ring-1 focus:ring-[#9b87f5]/50 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50 comment-textarea comment-form-input"
-      />
-      <div className="flex justify-end mt-2 space-x-2">
-        {onCancel && (
-          <Button 
-            type="button" 
-            variant="ghost" 
-            onClick={onCancel}
-            disabled={isSubmitting}
-            className="text-sm"
-          >
-            Cancel
-          </Button>
+    <form onSubmit={handleSubmitComment} className="p-2">
+      <div className="relative">
+        <Textarea
+          ref={textareaRef}
+          placeholder={user ? "Write your comment..." : "Please login to comment"}
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          disabled={!user || isSubmitting}
+          className="w-full min-h-[80px] bg-gaming-900 text-white rounded-lg p-3 resize-none border border-gaming-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50 comment-textarea comment-form-input"
+        />
+        {!user && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center rounded-lg">
+            <Button
+              type="button"
+              onClick={() => window.location.href = '/login'}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm shadow-lg"
+            >
+              Login to Comment
+            </Button>
+          </div>
         )}
-        <Button 
-          type="submit" 
-          disabled={!user || isSubmitting || !newComment.trim()} 
-          className={`bg-[#9b87f5] hover:bg-[#8a78d9] text-white px-4 py-2 rounded text-sm ${isSubmitting ? 'opacity-70' : ''}`}
-        >
-          {isSubmitting ? 'Posting...' : parentId ? 'Reply' : 'Comment'}
-        </Button>
+      </div>
+      
+      <div className="flex justify-between mt-3 items-center">
+        <div className="text-xs text-gray-500">
+          {user && newComment.length > 0 && (
+            <span className={`transition-colors ${newComment.length > 500 ? 'text-red-500' : ''}`}>
+              {newComment.length}/500
+            </span>
+          )}
+        </div>
+        
+        <div className="flex space-x-2">
+          {onCancel && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel}
+              disabled={isSubmitting}
+              className="text-xs h-9 border-gaming-700 bg-gaming-800 hover:bg-gaming-700"
+            >
+              Cancel
+            </Button>
+          )}
+          <Button 
+            type="submit" 
+            disabled={!user || isSubmitting || !newComment.trim() || newComment.length > 500} 
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-5 py-2 rounded-md text-xs h-9 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Posting...' : parentId ? 'Reply' : 'Comment'}
+          </Button>
+        </div>
       </div>
     </form>
   );
