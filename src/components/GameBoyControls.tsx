@@ -118,37 +118,59 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // For smooth scrolling with enhanced physics
-  const scrollDistance = 150; // Increased from original value for more noticeable scrolling
-  const scrollDuration = 200; // Reduced from 250 for more immediate scrolling
-  const scrollCooldown = 150; // Reduced cooldown for better responsiveness
-  const continuousScrollInterval = 150; // Faster interval for continuous scrolling when joystick is held
+  const scrollDistance = 300; // Increased for more significant scrolling
+  const scrollDuration = 200; // Reduced for more immediate scrolling
+  const scrollCooldown = 50; // Further reduced cooldown for more responsive continuous scrolling
+  const continuousScrollInterval = 100; // Faster interval for continuous scrolling when joystick is held
 
   // Enhanced animation for smooth scrolling with cleaner motion
   const smoothScroll = (distance: number) => {
     const now = Date.now();
-    // Add cooldown to prevent rapid scrolling but make it more responsive
+    // Add minimal cooldown to prevent rapid scrolling but maintain responsiveness
     if (now - lastScrollTime.current < scrollCooldown) return;
     lastScrollTime.current = now;
       
     console.log(`Smooth scrolling ${distance < 0 ? 'UP' : 'DOWN'} by ${Math.abs(distance)}px`);
     
-    // Directly scroll the window - use both methods to ensure compatibility
-    try {
-      // Method 1: scrollBy with smooth behavior
-      window.scrollBy({
-        top: distance,
-        behavior: 'smooth'
-      });
+    // Get current position for limit checking
+    const currentPosition = window.pageYOffset || document.documentElement.scrollTop;
+    const documentHeight = Math.max(
+      document.body.scrollHeight, 
+      document.documentElement.scrollHeight,
+      document.body.offsetHeight, 
+      document.documentElement.offsetHeight
+    );
+    const windowHeight = window.innerHeight;
+    
+    // Check if we're already at the top or bottom
+    const isAtTop = currentPosition <= 0;
+    const isAtBottom = currentPosition + windowHeight >= documentHeight - 10;
+    
+    // Only apply scroll if we're not at the limit or trying to scroll away from it
+    if ((distance < 0 && !isAtTop) || (distance > 0 && !isAtBottom) || 
+        (distance < 0 && !isAtTop) || (distance > 0 && !isAtBottom)) {
       
-      // Method 2: Direct scroll as fallback
-      if (typeof window !== 'undefined') {
-        const currentPosition = window.pageYOffset || document.documentElement.scrollTop;
-        window.scrollTo(0, currentPosition + distance);
+      // Try multiple scroll methods for best compatibility
+      try {
+        // Method 1: scrollBy with smooth behavior
+        window.scrollBy({
+          top: distance,
+          behavior: 'smooth'
+        });
+        
+        // Method 2: Direct scroll for immediate feedback
+        if (typeof window !== 'undefined') {
+          // Calculate new position with limits
+          const newPosition = Math.max(0, Math.min(documentHeight - windowHeight, currentPosition + distance));
+          window.scrollTo(0, newPosition);
+        }
+      } catch (error) {
+        console.error("Error during scrolling:", error);
+        // Fallback to most basic method
+        window.scrollTo(0, Math.max(0, Math.min(documentHeight - windowHeight, window.scrollY + distance)));
       }
-    } catch (error) {
-      console.error("Error during scrolling:", error);
-      // Fallback to most basic method
-      window.scrollTo(0, window.scrollY + distance);
+    } else {
+      console.log(isAtTop ? "Already at top" : "Already at bottom");
     }
   };
 
@@ -178,7 +200,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         style: { opacity: '0.7', fontSize: '0.9rem' }
       });
       
-      // Start continuous scrolling if joystick remains active
+      // Start continuous scrolling if joystick remains active - with stronger effect
       if (joystickActive) {
         window.continuousScrollTimer = setInterval(() => {
           if (joystickActive && joystickDirection === 'up') {
@@ -199,7 +221,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         style: { opacity: '0.7', fontSize: '0.9rem' }
       });
       
-      // Start continuous scrolling if joystick remains active
+      // Start continuous scrolling if joystick remains active - with stronger effect
       if (joystickActive) {
         window.continuousScrollTimer = setInterval(() => {
           if (joystickActive && joystickDirection === 'down') {
@@ -209,7 +231,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           }
         }, continuousScrollInterval);
       }
-    } else if (direction === 'left') {
+    }
+    // For left/right directions - unchanged
+    else if (direction === 'left') {
       // Handle left action
       if (location.pathname.includes('/post/') && location.pathname !== '/post/new') {
         // Navigate to previous post if on a post page
@@ -694,14 +718,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     joystickRef.current.classList.remove('direction-up', 'direction-down', 'direction-left', 'direction-right');
     
     // Direct scrolling for immediate feedback - no waiting for continuous timer
-    if (Math.abs(normDeltaY) > 0.2) { // Any significant vertical movement
+    if (Math.abs(normDeltaY) > 0.15) { // Lower threshold for more sensitive vertical movement
       if (normDeltaY > 0) {
         // Down - immediate scroll
-        smoothScroll(scrollDistance / 3); // Smaller for immediate feedback
+        smoothScroll(scrollDistance / 2); // Stronger immediate feedback
         joystickRef.current.classList.add('direction-down');
       } else {
         // Up - immediate scroll
-        smoothScroll(-scrollDistance / 3); // Smaller for immediate feedback
+        smoothScroll(-scrollDistance / 2); // Stronger immediate feedback
         joystickRef.current.classList.add('direction-up');
       }
     }
