@@ -276,7 +276,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Joystick movement handlers
   const handleJoystickMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
+    
+    // Log that joystick was pressed
+    console.log('Joystick pressed down');
     
     // Add event listeners to window for mouse movement and release
     window.addEventListener('mousemove', handleJoystickMouseMove);
@@ -285,6 +289,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   
   const handleJoystickMouseMove = (e: MouseEvent) => {
     if (!isDragging || !joystickRef.current || !baseRef.current) return;
+    
+    // Prevent default browser behavior
+    e.preventDefault();
+    e.stopPropagation();
     
     // Get joystick base position and dimensions
     const baseRect = baseRef.current.getBoundingClientRect();
@@ -319,6 +327,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Update joystick position
     setJoystickPosition({ x: dx, y: dy });
+    
+    // Log joystick position for debugging
+    console.log(`Joystick position: x=${dx.toFixed(2)}, y=${dy.toFixed(2)}`);
     
     // Handle scrolling based on joystick position with enhanced feedback
     handleScrollFromJoystick(dy);
@@ -422,7 +433,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   
   const handleJoystickTouchStart = (e: React.TouchEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
+    
+    // Log that joystick was touched
+    console.log('Joystick touch started');
     
     // Add event listeners to window for touch movement and release
     window.addEventListener('touchmove', handleJoystickTouchMove, { passive: false });
@@ -516,7 +531,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleScrollFromJoystick = (yPosition: number) => {
     // Enhanced physics-based scroll with non-linear acceleration for more realistic feel
     // Use exponential curve for better control at smaller movements and faster scrolling at extremes
-    const deadzone = 3; // Small deadzone for better control
+    const deadzone = 2; // Smaller deadzone for better responsiveness
     const maxYPosition = 40; // Maximum expected joystick movement
     
     // Normalize y-position and apply deadzone
@@ -526,21 +541,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Apply non-linear curve for more precision - use a quadratic curve
     const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
-    const curveIntensity = 2.2; // Higher = more exponential (more intense at edges)
+    const curveIntensity = 1.8; // Adjusted for more linear response at lower values
     const direction = Math.sign(normalizedPosition);
     const magnitude = Math.pow(Math.abs(normalizedPosition), curveIntensity);
     
     // Calculate scroll speed with improved physics feel
-    // Maximum speed of 30px per frame for full joystick extension
-    const baseScrollSpeed = 30;
+    // Increased base speed for more noticeable scrolling
+    const baseScrollSpeed = 40;
     const scrollSpeed = direction * magnitude * baseScrollSpeed;
     
-    // Use smooth scrolling for smaller movements, snap scrolling for larger movements
-    const scrollBehavior = Math.abs(scrollSpeed) < 10 ? 'smooth' : 'auto';
+    // Always use auto scrolling for more responsive feel
+    console.log(`Scrolling: direction=${direction}, speed=${scrollSpeed.toFixed(2)}px`);
     
     window.scrollBy({
       top: scrollSpeed,
-      behavior: scrollBehavior
+      behavior: 'auto'
     });
     
     // Update visual feedback for better user experience
@@ -920,7 +935,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               {/* Left - Modern Xbox-style Joystick */}
               <div 
                 ref={baseRef}
-                className="w-24 h-24 bg-gradient-to-b from-[#1A1A24] to-[#0D0D18] rounded-full flex items-center justify-center cursor-pointer relative shadow-lg"
+                className="w-24 h-24 bg-gradient-to-b from-[#1A1A24] to-[#0D0D18] rounded-full flex items-center justify-center cursor-pointer relative shadow-lg select-none"
                 onMouseDown={handleJoystickMouseDown}
                 onTouchStart={handleJoystickTouchStart}
               >
@@ -947,10 +962,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   {/* Xbox-like thumbstick */}
                   <div 
                     ref={joystickRef}
-                    className="w-14 h-14 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-[#3A3A45] absolute z-10 transition-transform duration-75 cursor-grab active:cursor-grabbing"
+                    className="joystick-handle w-14 h-14 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-[#3A3A45] absolute z-10 cursor-grab active:cursor-grabbing select-none"
                     style={{
                       transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.7)'
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.7)',
+                      willChange: 'transform'
                     }}
                   >
                     {/* Realistic concave thumbstick surface */}
