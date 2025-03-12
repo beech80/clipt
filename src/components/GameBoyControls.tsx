@@ -47,7 +47,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
-  const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
+  const [activeCommentPostId, setActiveCommentPostId] = useState<string | undefined>(undefined);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   
   // Joystick states
@@ -1049,8 +1049,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         // Fallback for different actions
         if (actionType === 'comment') {
           logToDebug('Falling back to comment modal');
-          setActiveCommentPostId(currentPostId);
-          setCommentModalOpen(true);
+          // Ensure currentPostId is a string before setting it
+          if (currentPostId) {
+            setActiveCommentPostId(currentPostId);
+            setCommentModalOpen(true);
+            console.log(`Opening comment modal for post ID: ${currentPostId}`);
+          } else {
+            toast.error('No post selected');
+          }
           return;
         } else if (actionType === 'like') {
           // Try direct API like
@@ -1139,7 +1145,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           isOpen={commentModalOpen}
           onClose={() => {
             setCommentModalOpen(false);
-            setActiveCommentPostId(null);
+            setActiveCommentPostId(undefined);
           }}
           postId={activeCommentPostId}
           autoFocusInput={false}
