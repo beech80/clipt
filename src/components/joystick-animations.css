@@ -1,0 +1,41 @@
+/* Animations for the joystick */
+@keyframes pulse-arrow {
+  0% { opacity: 0.3; transform: scaleY(1); }
+  50% { opacity: 0.8; transform: scaleY(1.2); }
+  100% { opacity: 0.3; transform: scaleY(1); }
+}
+
+@keyframes glow-up {
+  0% { box-shadow: 0 -3px 8px rgba(135, 106, 245, 0.4); }
+  50% { box-shadow: 0 -6px 15px rgba(135, 106, 245, 0.7); }
+  100% { box-shadow: 0 -3px 8px rgba(135, 106, 245, 0.4); }
+}
+
+@keyframes glow-down {
+  0% { box-shadow: 0 3px 8px rgba(135, 106, 245, 0.4); }
+  50% { box-shadow: 0 6px 15px rgba(135, 106, 245, 0.7); }
+  100% { box-shadow: 0 3px 8px rgba(135, 106, 245, 0.4); }
+}
+
+/* Active indicator styles */
+.joystick-up-indicator.active {
+  background: rgba(135, 106, 245, 0.8) !important;
+  height: 8px !important;
+  animation: pulse-arrow 1.5s infinite !important;
+}
+
+.joystick-down-indicator.active {
+  background: rgba(135, 106, 245, 0.8) !important;
+  height: 8px !important;
+  animation: pulse-arrow 1.5s infinite !important;
+}
+
+.joystick-handle-up {
+  animation: glow-up 1.5s infinite ease-in-out !important;
+  border-bottom: 2px solid rgba(135, 106, 245, 0.7) !important;
+}
+
+.joystick-handle-down {
+  animation: glow-down 1.5s infinite ease-in-out !important;
+  border-top: 2px solid rgba(135, 106, 245, 0.7) !important;
+}

@@ -23,6 +23,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import './joystick-animations.css'; // Import joystick animations
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -285,6 +286,35 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Handle scrolling based on joystick position
     handleScrollFromJoystick(dy);
+    updateDirectionIndicators(dy);
+    updateDirectionIndicators(dy);
+  };
+  // Function to update direction indicators for better visual feedback
+  const updateDirectionIndicators = (yPosition) => {
+    const joystickHandle = joystickRef.current;
+    const upIndicator = document.querySelector('.joystick-up-indicator');
+    const downIndicator = document.querySelector('.joystick-down-indicator');
+    
+    if (joystickHandle && upIndicator && downIndicator) {
+      if (yPosition < -5) {
+        // Moving up
+        upIndicator.classList.add('active');
+        downIndicator.classList.remove('active');
+        joystickHandle.classList.add('joystick-handle-up');
+        joystickHandle.classList.remove('joystick-handle-down');
+      } else if (yPosition > 5) {
+        // Moving down
+        downIndicator.classList.add('active');
+        upIndicator.classList.remove('active');
+        joystickHandle.classList.add('joystick-handle-down');
+        joystickHandle.classList.remove('joystick-handle-up');
+      } else {
+        // Neutral
+        upIndicator.classList.remove('active');
+        downIndicator.classList.remove('active');
+        joystickHandle.classList.remove('joystick-handle-up', 'joystick-handle-down');
+      }
+    }
   };
   
   const handleJoystickMouseUp = () => {
@@ -292,6 +322,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Return joystick to center with animation
     setJoystickPosition({ x: 0, y: 0 });
+    
+    // Reset indicators
+    if (joystickRef.current) {
+      joystickRef.current.classList.remove('joystick-handle-up', 'joystick-handle-down');
+    }
+    
+    const upIndicator = document.querySelector('.joystick-up-indicator');
+    const downIndicator = document.querySelector('.joystick-down-indicator');
+    
+    if (upIndicator) upIndicator.classList.remove('active');
+    if (downIndicator) downIndicator.classList.remove('active');
     
     // Remove event listeners
     window.removeEventListener('mousemove', handleJoystickMouseMove);
@@ -690,46 +731,52 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       >
         <div className="bg-[#0D0D18] w-full pointer-events-auto py-3">
           <div className="flex justify-between items-center px-10 max-w-5xl mx-auto">
-            {/* Left - Interactive Joystick */}
-            <div 
-              ref={baseRef}
-              className="w-14 h-14 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-move relative"
-              onMouseDown={handleJoystickMouseDown}
-              onTouchStart={handleJoystickTouchStart}
-            >
-              {/* Create a joystick appearance */}
-              <div 
-                ref={joystickRef}
-                className="w-8 h-8 bg-[#333340] rounded-full absolute transition-transform duration-100 ease-out"
-                style={{ 
-                  transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
-                  boxShadow: isDragging ? '0 0 8px rgba(255,255,255,0.4)' : 'none'
-                }}
-              />
-              {/* Add subtle indicator that this is interactive */}
-              <div className="absolute inset-0 rounded-full bg-opacity-10 bg-white animate-pulse pointer-events-none" 
-                   style={{ animation: 'pulse 2s infinite ease-in-out', opacity: isDragging ? 0 : 0.1 }} />
-            </div>
             
-            {/* Center */}
-            <div className="flex flex-col items-center space-y-3">
-              {/* CLIPT button */}
+              {/* Left - Interactive Joystick */}
               <div 
-                onClick={() => navigate('/')}
-                className="w-16 h-16 bg-purple-600 rounded-full cursor-pointer flex items-center justify-center"
+                ref={baseRef}
+                className="w-14 h-14 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-move relative overflow-visible"
+                onMouseDown={handleJoystickMouseDown}
+                onTouchStart={handleJoystickTouchStart}
               >
-                <span className="text-white font-bold text-sm">CLIPT</span>
-              </div>
-              
-              {/* Menu and Camera buttons */}
-              <div className="flex space-x-6">
-                <div className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer">
-                  <Menu className="text-white h-4 w-4" />
-                </div>
+                {/* Up indicator arrow */}
+                <div 
+                  className="joystick-up-indicator absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-4 rounded-t-full pointer-events-none"
+                  style={{
+                    background: 'rgba(135, 106, 245, 0.3)',
+                    transition: 'background 0.2s ease, height 0.2s ease',
+                    zIndex: 10
+                  }}
+                />
                 
-                <div className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer">
-                  <Camera className="text-white h-4 w-4" />
-                </div>
+                {/* Down indicator arrow */}
+                <div 
+                  className="joystick-down-indicator absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-2 h-4 rounded-b-full pointer-events-none"
+                  style={{
+                    background: 'rgba(135, 106, 245, 0.3)',
+                    transition: 'background 0.2s ease, height 0.2s ease',
+                    zIndex: 10
+                  }}
+                />
+                
+                {/* Create a joystick appearance */}
+                <div 
+                  ref={joystickRef}
+                  className="w-8 h-8 bg-[#333340] rounded-full absolute transition-all duration-75 ease-out"
+                  style={{ 
+                    transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
+                    boxShadow: isDragging ? '0 0 8px rgba(135, 106, 245, 0.4)' : 'none'
+                  }}
+                />
+                
+                {/* Add subtle indicator that this is interactive */}
+                <div 
+                  className="absolute inset-0 rounded-full bg-opacity-10 bg-white animate-pulse pointer-events-none" 
+                  style={{ 
+                    animation: 'pulse 2s infinite ease-in-out', 
+                    opacity: isDragging ? 0 : 0.1 
+                  }} 
+                />
               </div>
             </div>
             
