@@ -38,50 +38,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   
-  // Visual debug logging
-  useEffect(() => {
-    const debugElement = document.createElement('div');
-    debugElement.id = 'gameboy-debug';
-    debugElement.style.position = 'fixed';
-    debugElement.style.bottom = '150px';
-    debugElement.style.right = '10px';
-    debugElement.style.backgroundColor = 'rgba(0,0,0,0.7)';
-    debugElement.style.color = '#fff';
-    debugElement.style.padding = '10px';
-    debugElement.style.borderRadius = '5px';
-    debugElement.style.zIndex = '9999';
-    debugElement.style.fontSize = '12px';
-    debugElement.style.maxWidth = '300px';
-    debugElement.style.maxHeight = '150px';
-    debugElement.style.overflow = 'auto';
-    
-    document.body.appendChild(debugElement);
-    
-    const log = (message: string) => {
-      const entry = document.createElement('div');
-      entry.textContent = message;
-      debugElement.appendChild(entry);
-      
-      // Keep only last 10 messages
-      while (debugElement.children.length > 10) {
-        debugElement.removeChild(debugElement.firstChild as Node);
-      }
-    };
-    
-    // Add to window for debugging
-    (window as any).gameboyLog = log;
-    
-    return () => {
-      document.body.removeChild(debugElement);
-    };
-  }, []);
-
-  // Helper function to log to debug
+  // Helper function to log to debug (console only)
   const logToDebug = (message: string) => {
     console.log(message);
-    if ((window as any).gameboyLog) {
-      (window as any).gameboyLog(message);
-    }
   };
   
   // Add post detection on mount and page changes
@@ -191,7 +150,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           logToDebug(`Selected post: ${postId} (${(maxVisibility * 100).toFixed(1)}% visible)`);
           setCurrentPostId(postId);
           
-          // Add a visual indicator to the selected post
+          // Add a subtle indicator to the selected post
           allPosts.forEach(post => post.classList.remove('gameboy-selected-post'));
           mostVisiblePost.classList.add('gameboy-selected-post');
         }
@@ -247,31 +206,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     observer.observe(document.body, { childList: true, subtree: true });
     
-    // Add styling for selected posts
+    // Add subtle styling for selected posts (more subdued than before)
     const style = document.createElement('style');
     style.innerHTML = `
       .gameboy-selected-post {
         position: relative;
-        box-shadow: 0 0 0 3px #6c4dc4 !important;
-        transition: box-shadow 0.3s ease;
-      }
-      
-      .gameboy-selected-post::after {
-        content: '';
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        width: 16px;
-        height: 16px;
-        background-color: #6c4dc4;
-        border-radius: 50%;
-        animation: pulse-glow 1.5s infinite alternate;
-        z-index: 9999;
-      }
-      
-      @keyframes pulse-glow {
-        0% { opacity: 0.6; box-shadow: 0 0 5px 2px rgba(108, 77, 196, 0.3); }
-        100% { opacity: 1; box-shadow: 0 0 10px 4px rgba(108, 77, 196, 0.6); }
+        box-shadow: 0 0 0 2px rgba(108, 77, 196, 0.3) !important;
       }
       
       .button-press {
@@ -342,8 +282,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           logToDebug(`Found target post with selector: ${selector}`);
           break;
         }
-      } catch (err) {
-        console.error(`Error finding target post with selector:`, selector, err);
+      } catch (error) {
+        console.error(`Error finding target post with selector:`, selector, error);
       }
     }
     
