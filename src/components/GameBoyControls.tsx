@@ -38,14 +38,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [joystickDirection, setJoystickDirection] = useState<'up' | 'down' | 'left' | 'right' | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
-  const joystickRef = useRef<HTMLDivElement>(null);
-  const joystickKnobRef = useRef<HTMLDivElement>(null);
+  const [trophyStatus, setTrophyStatus] = useState(false);
+  const [feedTrophyCount, setFeedTrophyCount] = useState(0);
   const [joystickPos, setJoystickPos] = useState({ x: 0, y: 0 });
   const [pulsating, setPulsating] = useState(false);
   const [glowing, setGlowing] = useState(true);
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; opacity: number; size: number; color: string }>>([]);
   const [buttonsAnimated, setButtonsAnimated] = useState(false);
   const lastScrollTime = useRef<number>(0);
+  const joystickRef = useRef<HTMLDivElement>(null);
+  const joystickKnobRef = useRef<HTMLDivElement>(null);
 
   // CLIPT button animation with enhanced effects
   useEffect(() => {
@@ -869,6 +871,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         }
       });
       window.dispatchEvent(trophyUpdateEvent);
+      
+      // Also dispatch with the exact same event name as in PostItem
+      document.dispatchEvent(new CustomEvent('refresh-post', {
+        detail: { postId: currentPostId }
+      }));
       
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['posts'] });
