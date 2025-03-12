@@ -1,41 +1,84 @@
-/* Animations for the joystick */
+/* Enhanced Animations for the Xbox-style joystick */
 @keyframes pulse-arrow {
-  0% { opacity: 0.3; transform: scaleY(1); }
-  50% { opacity: 0.8; transform: scaleY(1.2); }
-  100% { opacity: 0.3; transform: scaleY(1); }
+  0% { opacity: 0.3; transform: scaleY(1); filter: brightness(100%); }
+  50% { opacity: 0.9; transform: scaleY(1.3); filter: brightness(130%); }
+  100% { opacity: 0.3; transform: scaleY(1); filter: brightness(100%); }
 }
 
 @keyframes glow-up {
   0% { box-shadow: 0 -3px 8px rgba(135, 106, 245, 0.4); }
-  50% { box-shadow: 0 -6px 15px rgba(135, 106, 245, 0.7); }
+  50% { box-shadow: 0 -8px 18px rgba(135, 106, 245, 0.8); }
   100% { box-shadow: 0 -3px 8px rgba(135, 106, 245, 0.4); }
 }
 
 @keyframes glow-down {
   0% { box-shadow: 0 3px 8px rgba(135, 106, 245, 0.4); }
-  50% { box-shadow: 0 6px 15px rgba(135, 106, 245, 0.7); }
+  50% { box-shadow: 0 8px 18px rgba(135, 106, 245, 0.8); }
   100% { box-shadow: 0 3px 8px rgba(135, 106, 245, 0.4); }
 }
 
-/* Active indicator styles */
+/* Xbox-style spring physics animation */
+@keyframes xbox-spring-return {
+  0% { transform: translate(var(--last-x, 0), var(--last-y, 0)); }
+  20% { transform: translate(calc(var(--last-x, 0) * 0.7), calc(var(--last-y, 0) * 0.7)); }
+  45% { transform: translate(calc(var(--last-x, 0) * 0.3), calc(var(--last-y, 0) * 0.3)); }
+  65% { transform: translate(calc(var(--last-x, 0) * -0.08), calc(var(--last-y, 0) * -0.08)); }
+  85% { transform: translate(calc(var(--last-x, 0) * -0.03), calc(var(--last-y, 0) * -0.03)); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Enhanced joystick movement with physical resistance */
+.joystick-handle {
+  transition: transform 0.08s cubic-bezier(0.17, 0.67, 0.83, 0.67), 
+              box-shadow 0.12s ease, 
+              filter 0.1s ease;
+  will-change: transform, box-shadow, filter;
+}
+
+.joystick-spring-return {
+  animation: xbox-spring-return 0.55s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+/* Active indicator styles with variable intensity */
 .joystick-up-indicator.active {
-  background: rgba(135, 106, 245, 0.8) !important;
-  height: 8px !important;
-  animation: pulse-arrow 1.5s infinite !important;
+  background: rgba(135, 106, 245, calc(0.5 + var(--intensity, 50) / 200)) !important;
+  height: calc(5px + (var(--intensity, 50) / 15)) !important;
+  animation: pulse-arrow 1.5s infinite ease-in-out !important;
+  filter: brightness(calc(100% + var(--intensity, 0) / 2)) !important;
 }
 
 .joystick-down-indicator.active {
-  background: rgba(135, 106, 245, 0.8) !important;
-  height: 8px !important;
-  animation: pulse-arrow 1.5s infinite !important;
+  background: rgba(135, 106, 245, calc(0.5 + var(--intensity, 50) / 200)) !important;
+  height: calc(5px + (var(--intensity, 50) / 15)) !important;
+  animation: pulse-arrow 1.5s infinite ease-in-out !important;
+  filter: brightness(calc(100% + var(--intensity, 0) / 2)) !important;
 }
 
 .joystick-handle-up {
-  animation: glow-up 1.5s infinite ease-in-out !important;
-  border-bottom: 2px solid rgba(135, 106, 245, 0.7) !important;
+  animation: glow-up 1.2s infinite ease-in-out !important;
+  border-bottom: 2px solid rgba(135, 106, 245, calc(0.5 + var(--move-intensity, 50) / 200)) !important;
+  box-shadow: 0 -3px calc(5px + var(--move-intensity, 0) / 10 * 1px) rgba(135, 106, 245, calc(0.4 + var(--move-intensity, 0) / 200)) !important;
 }
 
 .joystick-handle-down {
-  animation: glow-down 1.5s infinite ease-in-out !important;
-  border-top: 2px solid rgba(135, 106, 245, 0.7) !important;
+  animation: glow-down 1.2s infinite ease-in-out !important;
+  border-top: 2px solid rgba(135, 106, 245, calc(0.5 + var(--move-intensity, 50) / 200)) !important;
+  box-shadow: 0 3px calc(5px + var(--move-intensity, 0) / 10 * 1px) rgba(135, 106, 245, calc(0.4 + var(--move-intensity, 0) / 200)) !important;
+}
+
+/* Intensity classes for better visual feedback */
+.low-intensity {
+  filter: brightness(110%) !important;
+  transition: filter 0.15s ease !important;
+}
+
+.medium-intensity {
+  filter: brightness(125%) !important;
+  transition: filter 0.12s ease !important;
+}
+
+.high-intensity {
+  filter: brightness(140%) !important;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5) !important;
+  transition: filter 0.08s ease, text-shadow 0.08s ease !important;
 }
