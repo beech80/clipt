@@ -361,7 +361,6 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         const voteObject = {
           post_id: postId,
           user_id: user.id,
-          value: 1,
           created_at: new Date().toISOString()
         };
         
