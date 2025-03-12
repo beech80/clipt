@@ -552,65 +552,71 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       <div 
         className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
       >
-        <div className="bg-[#121218] rounded-t-xl p-4 pt-5 pointer-events-auto w-full max-w-5xl flex justify-between items-center px-8 pb-6">
-          {/* Left Side - Joystick */}
-          <div className="w-14 h-14 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer">
-            <Menu className="text-white h-5 w-5" />
-          </div>
-          
-          {/* Center - CLIPT button & camera */}
-          <div className="flex flex-col items-center space-y-4">
-            {/* CLIPT button */}
-            <div 
-              onClick={() => navigate('/')}
-              className="w-16 h-16 bg-purple-600 rounded-full cursor-pointer flex items-center justify-center"
-            >
-              <span className="text-white font-bold text-sm">CLIPT</span>
+        <div className="bg-[#0D0D18] w-full pointer-events-auto py-3">
+          <div className="flex justify-between items-center px-10 max-w-5xl mx-auto">
+            {/* Left - Joystick */}
+            <div className="w-14 h-14 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer">
+              <Menu className="text-white h-5 w-5" />
             </div>
             
-            {/* Camera button */}
-            <div className="w-12 h-12 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer">
-              <Camera className="text-white h-5 w-5" />
+            {/* Center */}
+            <div className="flex flex-col items-center space-y-3">
+              {/* CLIPT button */}
+              <div 
+                onClick={() => navigate('/')}
+                className="w-16 h-16 bg-purple-600 rounded-full cursor-pointer flex items-center justify-center"
+              >
+                <span className="text-white font-bold text-sm">CLIPT</span>
+              </div>
+              
+              {/* Menu and Camera buttons */}
+              <div className="flex space-x-6">
+                <div className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer">
+                  <Menu className="text-white h-4 w-4" />
+                </div>
+                
+                <div className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer">
+                  <Camera className="text-white h-4 w-4" />
+                </div>
+              </div>
             </div>
-          </div>
-          
-          {/* Right Side - Action Buttons in flower pattern */}
-          <div className="relative w-32 h-32">
-            {/* Top button (Like) */}
-            <button 
-              data-action="like"
-              onClick={handleLike}
-              className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-[#1D1D26] rounded-full border-2 border-red-500 flex items-center justify-center"
-            >
-              <Heart className="text-red-500 h-5 w-5" />
-            </button>
             
-            {/* Left button (Comment) */}
-            <button 
-              data-action="comment"
-              onClick={handleComment}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-[#1D1D26] rounded-full border-2 border-blue-500 flex items-center justify-center"
-            >
-              <MessageCircle className="text-blue-500 h-5 w-5" />
-            </button>
-            
-            {/* Right button (Trophy) */}
-            <button 
-              data-action="trophy"
-              onClick={handleTrophy}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-[#1D1D26] rounded-full border-2 border-yellow-500 flex items-center justify-center"
-            >
-              <Trophy className="text-yellow-500 h-5 w-5" />
-            </button>
-            
-            {/* Bottom button (Follow) */}
-            <button 
-              data-action="follow"
-              onClick={handleFollow}
-              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-[#1D1D26] rounded-full border-2 border-green-500 flex items-center justify-center"
-            >
-              <UserPlus className="text-green-500 h-5 w-5" />
-            </button>
+            {/* Right - Action Buttons in flower pattern */}
+            <div className="flex space-x-3">
+              <button 
+                data-action="like"
+                onClick={handleLike}
+                className="w-11 h-11 bg-[#151520] rounded-full border-2 border-red-500 flex items-center justify-center"
+              >
+                <Heart className="text-red-500 h-5 w-5" fill="#ef4444" />
+              </button>
+              
+              <div className="flex flex-col space-y-3">
+                <button 
+                  data-action="comment"
+                  onClick={handleComment}
+                  className="w-11 h-11 bg-[#151520] rounded-full border-2 border-blue-500 flex items-center justify-center"
+                >
+                  <MessageCircle className="text-blue-500 h-5 w-5" />
+                </button>
+                
+                <button 
+                  data-action="follow"
+                  onClick={handleFollow}
+                  className="w-11 h-11 bg-[#151520] rounded-full border-2 border-green-500 flex items-center justify-center"
+                >
+                  <UserPlus className="text-green-500 h-5 w-5" />
+                </button>
+              </div>
+              
+              <button 
+                data-action="trophy"
+                onClick={handleTrophy}
+                className="w-11 h-11 bg-[#151520] rounded-full border-2 border-yellow-500 flex items-center justify-center"
+              >
+                <Trophy className="text-yellow-500 h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
