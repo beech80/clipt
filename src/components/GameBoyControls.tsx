@@ -53,11 +53,24 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [isDragging, setIsDragging] = useState(false);
   const joystickRef = useRef<HTMLDivElement>(null);
   const baseRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   
   // Helper function to log to debug (console only)
   const logToDebug = (message: string) => {
     console.log(message);
   };
+  
+  // Effect to close the menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuOpen && menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
   
   // Add post detection on mount and page changes
   useEffect(() => {
@@ -296,10 +309,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Handle scrolling based on joystick position
     handleScrollFromJoystick(dy);
     updateDirectionIndicators(dy);
-    updateDirectionIndicators(dy);
   };
   // Function to update direction indicators for better visual feedback
-  const updateDirectionIndicators = (yPosition) => {
+  const updateDirectionIndicators = (yPosition: number) => {
     const joystickHandle = joystickRef.current;
     const upIndicator = document.querySelector('.joystick-up-indicator');
     const downIndicator = document.querySelector('.joystick-down-indicator');
@@ -687,8 +699,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }));
       
       // Invalidate any React Query caches for this post
-      queryClient.invalidateQueries(['likes', postId]);
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['likes', postId] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
     } catch (error) {
       console.error('Error liking post:', error);
       toast.error('Failed to like post');
@@ -799,8 +811,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               <div className="flex space-x-6">
                 {/* Navigation menu button */}
                 <div 
-                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative"
+                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative navigation-menu-container"
                   onClick={() => setMenuOpen(!menuOpen)}
+                  ref={menuRef}
                 >
                   <Menu className="text-white h-4 w-4" />
                   
