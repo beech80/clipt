@@ -484,11 +484,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   
   const handleJoystickTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
+    // CRITICAL: These prevent statements were blocking touch events from registering properly
+    // Allow default behavior but still stop propagation to prevent other elements from capturing the event
+    // e.preventDefault(); - REMOVED
     e.stopPropagation();
+    
+    console.log('Touch start detected');
     setIsDragging(true);
     
-    // Initial joystick movement on first touch
+    // Initial joystick movement on first touch - ENHANCED
     if (joystickRef.current && baseRef.current && e.touches[0]) {
       const baseRect = baseRef.current.getBoundingClientRect();
       const baseCenterX = baseRect.left + baseRect.width / 2;
@@ -498,6 +502,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       let dx = e.touches[0].clientX - baseCenterX;
       let dy = e.touches[0].clientY - baseCenterY;
       
+      // Log touch position for debugging
+      console.log(`Touch position: dx=${dx}, dy=${dy}`);
+      
       // Limit movement
       const distance = Math.sqrt(dx * dx + dy * dy);
       const maxDistance = baseRect.width / 3;
@@ -506,9 +513,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         dy = (dy / distance) * maxDistance;
       }
       
-      // Immediate movement on touch
-      joystickRef.current.style.transition = 'none';
-      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      // FORCEFULLY move the joystick with no transition delay
+      if (joystickRef.current) {
+        joystickRef.current.style.transition = 'none';
+        joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+        
+        // Force a reflow to ensure the style changes take effect immediately
+        void joystickRef.current.offsetWidth;
+        
+        console.log('Applied transform:', `translate(${dx}px, ${dy}px)`);
+        
+        // Add visible highlight to ensure user sees movement
+        joystickRef.current.style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
+      }
+      
+      // Update state after DOM change for consistency
       setJoystickPosition({ x: dx, y: dy });
       
       // Immediately handle scrolling
@@ -521,6 +540,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     window.removeEventListener('touchend', handleJoystickTouchEnd);
     
     // Add event listeners to window for touch movement and release
+    // CRITICAL: passive:false allows preventDefault() in the move handler
     window.addEventListener('touchmove', handleJoystickTouchMove, { passive: false });
     window.addEventListener('touchend', handleJoystickTouchEnd);
     
@@ -529,9 +549,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   
   const handleJoystickTouchMove = (e: TouchEvent) => {
+    // Prevent default to stop scrolling of the page
     e.preventDefault();
     e.stopPropagation();
-    if (!isDragging || !joystickRef.current || !baseRef.current || !e.touches[0]) return;
+    
+    // Early return if conditions aren't met
+    if (!isDragging || !joystickRef.current || !baseRef.current || !e.touches[0]) {
+      console.log('Touch move conditions not met');
+      return;
+    }
+    
+    console.log('Touch move detected');
     
     // Get joystick base position and dimensions
     const baseRect = baseRef.current.getBoundingClientRect();
@@ -541,6 +569,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Calculate relative position
     let dx = e.touches[0].clientX - baseCenterX;
     let dy = e.touches[0].clientY - baseCenterY;
+    
+    console.log(`Touch move: dx=${dx}, dy=${dy}`);
     
     // Limit joystick movement to a circle with better physics feel
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -552,10 +582,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       dy = (dy / distance) * maxDistance;
     }
     
-    // Directly update DOM for immediate response
+    // FORCEFULLY update DOM for immediate response
     if (joystickRef.current) {
-      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      // Remove any transition for immediate movement
       joystickRef.current.style.transition = 'none';
+      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      
+      // Force a reflow to ensure the style is applied immediately
+      void joystickRef.current.offsetWidth;
+      
+      // Add visible highlight
+      joystickRef.current.style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
+      
+      console.log('Applied touch move transform:', `translate(${dx}px, ${dy}px)`);
     }
     
     // Update joystick position in state
@@ -569,8 +608,28 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   
   const handleJoystickTouchEnd = () => {
+    console.log('Touch end detected');
+    
+    // Store last position before resetting for spring animation
+    if (joystickRef.current) {
+      const lastPosition = { ...joystickPosition };
+      
+      // Set CSS variables for spring animation
+      joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
+      joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
+      
+      // Add spring return animation class
+      joystickRef.current.classList.add('joystick-spring-return');
+      
+      // Remove highlight
+      joystickRef.current.style.boxShadow = '';
+    }
+    
     // Stop dragging
     setIsDragging(false);
+    
+    // Reset joystick position in state
+    setJoystickPosition({ x: 0, y: 0 });
     
     // Remove event listeners
     window.removeEventListener('touchmove', handleJoystickTouchMove);
