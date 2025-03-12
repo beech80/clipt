@@ -295,66 +295,125 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     let dx = e.clientX - baseCenterX;
     let dy = e.clientY - baseCenterY;
     
-    // Limit joystick movement to a circle
+    // Limit joystick movement to a circle with improved physical response
     const distance = Math.sqrt(dx * dx + dy * dy);
     const maxDistance = baseRect.width / 3; // Limit to 1/3 of base width
     
     if (distance > maxDistance) {
-      dx = (dx / distance) * maxDistance;
-      dy = (dy / distance) * maxDistance;
+      // Add subtle resistance at the edges for more realistic feel
+      const resistanceFactor = 1 + (distance - maxDistance) * 0.05; 
+      dx = (dx / distance) * maxDistance / resistanceFactor;
+      dy = (dy / distance) * maxDistance / resistanceFactor;
+      
+      // Add subtle haptic-like visual feedback when hitting the edge
+      if (joystickRef.current) {
+        joystickRef.current.animate([
+          { transform: `translate(${dx * 0.98}px, ${dy * 0.98}px)` },
+          { transform: `translate(${dx}px, ${dy}px)` }
+        ], {
+          duration: 80,
+          easing: 'ease-out'
+        });
+      }
     }
     
     // Update joystick position
     setJoystickPosition({ x: dx, y: dy });
     
-    // Handle scrolling based on joystick position
+    // Handle scrolling based on joystick position with enhanced feedback
     handleScrollFromJoystick(dy);
     updateDirectionIndicators(dy);
   };
-  // Function to update direction indicators for better visual feedback
+  // Enhanced direction indicators with smoother transitions and variable intensity
   const updateDirectionIndicators = (yPosition: number) => {
     const joystickHandle = joystickRef.current;
     const upIndicator = document.querySelector('.joystick-up-indicator');
     const downIndicator = document.querySelector('.joystick-down-indicator');
     
     if (joystickHandle && upIndicator && downIndicator) {
-      if (yPosition < -5) {
-        // Moving up
+      // Normalize the position to calculate intensity (0-100%)
+      const maxYPosition = 40; // Maximum expected joystick movement
+      const intensity = Math.min(Math.abs(yPosition) / maxYPosition * 100, 100);
+      
+      // Apply intensity as a CSS variable for smoother visual feedback
+      const direction = yPosition < 0 ? 'up' : yPosition > 0 ? 'down' : 'neutral';
+      
+      // Reset all states first
+      upIndicator.classList.remove('active');
+      downIndicator.classList.remove('active');
+      joystickHandle.classList.remove('joystick-handle-up', 'joystick-handle-down');
+      
+      if (direction === 'up' && Math.abs(yPosition) > 3) { // Smaller deadzone for visual feedback
+        // Moving up with variable intensity
         upIndicator.classList.add('active');
-        downIndicator.classList.remove('active');
         joystickHandle.classList.add('joystick-handle-up');
-        joystickHandle.classList.remove('joystick-handle-down');
-      } else if (yPosition > 5) {
-        // Moving down
+        
+        // Apply intensity as a CSS variable
+        upIndicator.setAttribute('style', `--intensity: ${intensity}%`);
+        joystickHandle.setAttribute('style', `--move-intensity: ${intensity}%`);
+      } else if (direction === 'down' && Math.abs(yPosition) > 3) {
+        // Moving down with variable intensity
         downIndicator.classList.add('active');
-        upIndicator.classList.remove('active');
         joystickHandle.classList.add('joystick-handle-down');
-        joystickHandle.classList.remove('joystick-handle-up');
+        
+        // Apply intensity as a CSS variable
+        downIndicator.setAttribute('style', `--intensity: ${intensity}%`);
+        joystickHandle.setAttribute('style', `--move-intensity: ${intensity}%`);
       } else {
-        // Neutral
-        upIndicator.classList.remove('active');
-        downIndicator.classList.remove('active');
-        joystickHandle.classList.remove('joystick-handle-up', 'joystick-handle-down');
+        // Neutral position - reset all
+        joystickHandle.setAttribute('style', `--move-intensity: 0%`);
+        upIndicator.setAttribute('style', `--intensity: 0%`);
+        downIndicator.setAttribute('style', `--intensity: 0%`);
       }
     }
   };
   
   const handleJoystickMouseUp = () => {
+    // Store the last position for spring animation
+    const lastPosition = { ...joystickPosition };
+    
+    // Apply spring return animation
+    if (joystickRef.current) {
+      joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
+      joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
+      joystickRef.current.classList.add('joystick-spring-return');
+      
+      // Remove the animation class after it completes
+      setTimeout(() => {
+        if (joystickRef.current) {
+          joystickRef.current.classList.remove('joystick-spring-return');
+        }
+      }, 400); // Match the animation duration
+    }
+    
     setIsDragging(false);
     
-    // Return joystick to center with animation
+    // Return joystick to center
     setJoystickPosition({ x: 0, y: 0 });
     
-    // Reset indicators
+    // Reset indicators with all classes for visual cleanup
     if (joystickRef.current) {
-      joystickRef.current.classList.remove('joystick-handle-up', 'joystick-handle-down');
+      joystickRef.current.classList.remove(
+        'joystick-handle-up', 
+        'joystick-handle-down',
+        'low-intensity',
+        'medium-intensity',
+        'high-intensity'
+      );
     }
     
     const upIndicator = document.querySelector('.joystick-up-indicator');
     const downIndicator = document.querySelector('.joystick-down-indicator');
     
-    if (upIndicator) upIndicator.classList.remove('active');
-    if (downIndicator) downIndicator.classList.remove('active');
+    if (upIndicator) {
+      upIndicator.classList.remove('active');
+      upIndicator.setAttribute('style', '--intensity: 0%');
+    }
+    
+    if (downIndicator) {
+      downIndicator.classList.remove('active');
+      downIndicator.setAttribute('style', '--intensity: 0%');
+    }
     
     // Remove event listeners
     window.removeEventListener('mousemove', handleJoystickMouseMove);
@@ -383,13 +442,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     let dx = e.touches[0].clientX - baseCenterX;
     let dy = e.touches[0].clientY - baseCenterY;
     
-    // Limit joystick movement to a circle
+    // Limit joystick movement to a circle with better physics feel
     const distance = Math.sqrt(dx * dx + dy * dy);
     const maxDistance = baseRect.width / 3; // Limit to 1/3 of base width
     
     if (distance > maxDistance) {
-      dx = (dx / distance) * maxDistance;
-      dy = (dy / distance) * maxDistance;
+      // Add subtle resistance at the edges for better physical feel
+      const resistanceFactor = 1 + (distance - maxDistance) * 0.05;
+      dx = (dx / distance) * maxDistance / resistanceFactor;
+      dy = (dy / distance) * maxDistance / resistanceFactor;
     }
     
     // Update joystick position
@@ -397,13 +458,55 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Handle scrolling based on joystick position
     handleScrollFromJoystick(dy);
+    updateDirectionIndicators(dy);
   };
   
   const handleJoystickTouchEnd = () => {
+    // Store the last position for spring animation
+    const lastPosition = { ...joystickPosition };
+    
+    // Apply spring return animation for touch too
+    if (joystickRef.current) {
+      joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
+      joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
+      joystickRef.current.classList.add('joystick-spring-return');
+      
+      // Remove the animation class after it completes
+      setTimeout(() => {
+        if (joystickRef.current) {
+          joystickRef.current.classList.remove('joystick-spring-return');
+        }
+      }, 400); // Match the animation duration
+    }
+    
     setIsDragging(false);
     
     // Return joystick to center with animation
     setJoystickPosition({ x: 0, y: 0 });
+    
+    // Reset visual indicators
+    if (joystickRef.current) {
+      joystickRef.current.classList.remove(
+        'joystick-handle-up', 
+        'joystick-handle-down',
+        'low-intensity',
+        'medium-intensity',
+        'high-intensity'
+      );
+    }
+    
+    const upIndicator = document.querySelector('.joystick-up-indicator');
+    const downIndicator = document.querySelector('.joystick-down-indicator');
+    
+    if (upIndicator) {
+      upIndicator.classList.remove('active');
+      upIndicator.setAttribute('style', '--intensity: 0%');
+    }
+    
+    if (downIndicator) {
+      downIndicator.classList.remove('active');
+      downIndicator.setAttribute('style', '--intensity: 0%');
+    }
     
     // Remove event listeners
     window.removeEventListener('touchmove', handleJoystickTouchMove);
@@ -411,35 +514,95 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   
   const handleScrollFromJoystick = (yPosition: number) => {
-    // Determine scroll direction and speed based on y position
-    const scrollSpeed = Math.abs(yPosition) * 0.5; // Adjust multiplier for faster/slower scrolling
+    // Enhanced physics-based scroll with non-linear acceleration for more realistic feel
+    // Use exponential curve for better control at smaller movements and faster scrolling at extremes
+    const deadzone = 3; // Small deadzone for better control
+    const maxYPosition = 40; // Maximum expected joystick movement
     
-    if (yPosition < -5) {
-      // Scroll up
-      window.scrollBy({
-        top: -scrollSpeed,
-        behavior: 'auto'
-      });
-    } else if (yPosition > 5) {
-      // Scroll down
-      window.scrollBy({
-        top: scrollSpeed,
-        behavior: 'auto'
-      });
+    // Normalize y-position and apply deadzone
+    if (Math.abs(yPosition) < deadzone) {
+      return; // Within deadzone - no scrolling
+    }
+    
+    // Apply non-linear curve for more precision - use a quadratic curve
+    const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
+    const curveIntensity = 2.2; // Higher = more exponential (more intense at edges)
+    const direction = Math.sign(normalizedPosition);
+    const magnitude = Math.pow(Math.abs(normalizedPosition), curveIntensity);
+    
+    // Calculate scroll speed with improved physics feel
+    // Maximum speed of 30px per frame for full joystick extension
+    const baseScrollSpeed = 30;
+    const scrollSpeed = direction * magnitude * baseScrollSpeed;
+    
+    // Use smooth scrolling for smaller movements, snap scrolling for larger movements
+    const scrollBehavior = Math.abs(scrollSpeed) < 10 ? 'smooth' : 'auto';
+    
+    window.scrollBy({
+      top: scrollSpeed,
+      behavior: scrollBehavior
+    });
+    
+    // Update visual feedback for better user experience
+    updateJoystickFeedback(yPosition);
+  };
+  
+  // Additional function for enhanced visual feedback
+  const updateJoystickFeedback = (yPosition: number) => {
+    const joystickHandle = joystickRef.current;
+    if (!joystickHandle) return;
+    
+    // Add intensity classes based on how far the joystick is pushed
+    const intensity = Math.abs(yPosition) / 40; // 0 to 1 range
+    
+    // Remove all existing intensity classes
+    joystickHandle.classList.remove('low-intensity', 'medium-intensity', 'high-intensity');
+    
+    // Add appropriate intensity class
+    if (intensity > 0.7) {
+      joystickHandle.classList.add('high-intensity');
+    } else if (intensity > 0.3) {
+      joystickHandle.classList.add('medium-intensity');
+    } else if (intensity > 0.1) {
+      joystickHandle.classList.add('low-intensity');
     }
   };
   
-  // Add continuous scrolling if joystick is held
+  // Enhanced continuous scrolling with adaptive frame rate for smoother experience
   useEffect(() => {
-    if (isDragging && joystickPosition.y !== 0) {
-      const scrollInterval = setInterval(() => {
-        handleScrollFromJoystick(joystickPosition.y);
-      }, 16); // ~60fps
+    let lastTimestamp = 0;
+    let animationFrameId: number;
+    
+    const scrollAnimation = (timestamp: number) => {
+      if (!isDragging) return;
       
-      return () => {
-        clearInterval(scrollInterval);
-      };
+      // Calculate delta time for consistent scrolling regardless of frame rate
+      const deltaTime = timestamp - lastTimestamp;
+      
+      // Only update on appropriate intervals (targeting ~60fps)
+      if (deltaTime > 16) {
+        lastTimestamp = timestamp;
+        
+        // Apply the joystick scrolling with frame-rate independent speed
+        if (joystickPosition.y !== 0) {
+          handleScrollFromJoystick(joystickPosition.y);
+        }
+      }
+      
+      // Continue the animation loop
+      animationFrameId = requestAnimationFrame(scrollAnimation);
+    };
+    
+    if (isDragging) {
+      // Start the animation frame loop for smoother performance
+      animationFrameId = requestAnimationFrame(scrollAnimation);
     }
+    
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, [isDragging, joystickPosition]);
   
   // Universal action handler
