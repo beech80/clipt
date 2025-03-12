@@ -899,13 +899,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 </button>
               </div>
               
-              {/* POST button underneath action buttons */}
-              <button 
-                onClick={() => navigate('/post')}
-                className="w-20 h-8 bg-[#151520] rounded-full border-2 border-purple-500 flex items-center justify-center"
-              >
-                <span className="text-purple-500 text-xs font-bold">POST</span>
-              </button>
+
             </div>
           </div>
         </div>
