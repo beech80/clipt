@@ -43,6 +43,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
     { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
     { name: 'Top', icon: <TrendingUp className="mr-2 h-4 w-4" />, path: '/top' },
+    { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' },
     { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
@@ -756,42 +757,51 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               {/* Left - Modern Xbox-style Joystick */}
               <div 
                 ref={baseRef}
-                className="w-20 h-20 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative"
+                className="w-24 h-24 bg-gradient-to-b from-[#1A1A24] to-[#0D0D18] rounded-full flex items-center justify-center cursor-pointer relative shadow-lg"
                 onMouseDown={handleJoystickMouseDown}
                 onTouchStart={handleJoystickTouchStart}
               >
-                {/* Joystick base with groove */}
-                <div className="w-18 h-18 bg-[#272733] rounded-full flex items-center justify-center relative overflow-hidden">
-                  {/* Circular groove effect */}
-                  <div className="absolute inset-1 rounded-full border-4 border-[#1A1A24] opacity-50"></div>
+                {/* Joystick base with realistic grooves */}
+                <div className="w-20 h-20 bg-gradient-to-b from-[#272733] to-[#1D1D26] rounded-full flex items-center justify-center relative overflow-hidden">
+                  {/* Circular groove effect - more pronounced */}
+                  <div className="absolute inset-1 rounded-full border-[3px] border-[#0D0D18] opacity-70"></div>
+                  <div className="absolute inset-3 rounded-full border-[1px] border-[#3A3A45] opacity-30"></div>
                   
-                  {/* Directional indicators */}
-                  <div className="joystick-up-indicator absolute -top-1 left-1/2 transform -translate-x-1/2 opacity-50 text-white">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  {/* Directional indicators with glow effect */}
+                  <div className="joystick-up-indicator absolute -top-1 left-1/2 transform -translate-x-1/2 opacity-80 text-white">
+                    <div className="w-2 h-3 bg-gradient-to-b from-[#876AF5] to-[#6A4EDB] rounded"></div>
                   </div>
-                  <div className="joystick-down-indicator absolute -bottom-1 left-1/2 transform -translate-x-1/2 opacity-50 text-white">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className="joystick-down-indicator absolute -bottom-1 left-1/2 transform -translate-x-1/2 opacity-80 text-white">
+                    <div className="w-2 h-3 bg-gradient-to-b from-[#876AF5] to-[#6A4EDB] rounded"></div>
                   </div>
-                  <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 opacity-50 text-white">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 opacity-80 text-white">
+                    <div className="h-2 w-3 bg-gradient-to-r from-[#876AF5] to-[#6A4EDB] rounded"></div>
                   </div>
-                  <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 opacity-50 text-white">
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 opacity-80 text-white">
+                    <div className="h-2 w-3 bg-gradient-to-r from-[#876AF5] to-[#6A4EDB] rounded"></div>
                   </div>
                   
-                  {/* Joystick handle */}
+                  {/* Xbox-like thumbstick */}
                   <div 
                     ref={joystickRef}
-                    className="w-12 h-12 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-gray-700 absolute z-10 transition-transform duration-75 cursor-grab active:cursor-grabbing"
+                    className="w-14 h-14 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-[#3A3A45] absolute z-10 transition-transform duration-75 cursor-grab active:cursor-grabbing"
                     style={{
                       transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
-                      boxShadow: '0 3px 10px rgba(0, 0, 0, 0.7)'
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.7)'
                     }}
                   >
-                    {/* Concave effect on joystick */}
-                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#151520] to-[#272733] opacity-80"></div>
+                    {/* Realistic concave thumbstick surface */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#151520] to-[#272733] opacity-80">
+                      {/* Texture circles for grip */}
+                      <div className="absolute inset-[4px] rounded-full border-[1px] border-[#3A3A45] opacity-40"></div>
+                      <div className="absolute inset-[8px] rounded-full border-[1px] border-[#3A3A45] opacity-40"></div>
+                      {/* Center dot for Xbox-like appearance */}
+                      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#3A3A45]"></div>
+                    </div>
                   </div>
                 </div>
+                {/* Outer ring highlight to enhance 3D effect */}
+                <div className="absolute inset-[-1px] rounded-full border border-[#3A3A45] opacity-20"></div>
               </div>
             
             {/* Center */}
@@ -838,12 +848,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   )}
                 </div>
                 
-                {/* Post button (Camera icon) */}
+                {/* Post button (Camera icon) - Enhanced with purple highlight */}
                 <div 
-                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer"
+                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative group"
                   onClick={() => navigate('/post')}
                 >
-                  <Camera className="text-white h-4 w-4" />
+                  <div className="absolute inset-0 rounded-full bg-purple-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  <Camera className="text-white h-4 w-4 group-hover:text-purple-300 transition-colors duration-300" />
                 </div>
               </div>
             </div>
@@ -888,7 +899,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 </button>
               </div>
               
-
+              {/* POST button underneath action buttons */}
+              <button 
+                onClick={() => navigate('/post')}
+                className="w-20 h-8 bg-[#151520] rounded-full border-2 border-purple-500 flex items-center justify-center"
+              >
+                <span className="text-purple-500 text-xs font-bold">POST</span>
+              </button>
             </div>
           </div>
         </div>
