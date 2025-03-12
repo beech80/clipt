@@ -40,6 +40,13 @@
   box-shadow: 0 0 5px rgba(135, 106, 245, 0.3);
 }
 
+/* Enhance touch visibility - scale up slightly when active */
+.joystick-handle:active {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(135, 106, 245, 0.9);
+  filter: brightness(1.2);
+}
+
 .joystick-spring-return {
   animation: xbox-spring-return 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   /* Disable transition during spring animation */
