@@ -820,7 +820,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             </div>
           </div>
         </div>
-      </div>
     </>
   );
 };
