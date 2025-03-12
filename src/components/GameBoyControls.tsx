@@ -550,34 +550,37 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       )}
       
       <div 
-        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-1 sm:pb-2 pointer-events-none"
+        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
       >
-        <div className="bg-[#2D2171] rounded-xl p-3 pointer-events-auto flex items-center space-x-6">
-          {/* Menu/Joystick (Left) */}
-          <div className="relative w-14 h-14 bg-[#151929] rounded-full flex items-center justify-center cursor-pointer">
-            <Menu className="text-white m-auto h-6 w-6" />
+        <div className="bg-[#121218] rounded-t-xl p-4 pt-5 pointer-events-auto w-full max-w-5xl flex justify-between items-center px-8 pb-6">
+          {/* Left Side - Joystick */}
+          <div className="w-14 h-14 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer">
+            <Menu className="text-white h-5 w-5" />
           </div>
           
-          {/* CLIPT Button (Center) */}
-          <div 
-            onClick={() => navigate('/')}
-            className="rounded-full border-2 bg-[#151929] cursor-pointer px-6 py-2"
-            style={{
-              borderImage: 'linear-gradient(to right, #9747FF, #3B82F6) 1',
-            }}
-          >
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 font-bold text-lg">
-              CLIPT
-            </span>
+          {/* Center - CLIPT button & camera */}
+          <div className="flex flex-col items-center space-y-4">
+            {/* CLIPT button */}
+            <div 
+              onClick={() => navigate('/')}
+              className="w-16 h-16 bg-purple-600 rounded-full cursor-pointer flex items-center justify-center"
+            >
+              <span className="text-white font-bold text-sm">CLIPT</span>
+            </div>
+            
+            {/* Camera button */}
+            <div className="w-12 h-12 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer">
+              <Camera className="text-white h-5 w-5" />
+            </div>
           </div>
           
-          {/* Group of Action Buttons (Right) - arranged in a flower pattern */}
-          <div className="relative">
+          {/* Right Side - Action Buttons in flower pattern */}
+          <div className="relative w-32 h-32">
             {/* Top button (Like) */}
             <button 
               data-action="like"
               onClick={handleLike}
-              className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-[#151929] rounded-full border-2 border-red-500 flex items-center justify-center"
+              className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-[#1D1D26] rounded-full border-2 border-red-500 flex items-center justify-center"
             >
               <Heart className="text-red-500 h-5 w-5" />
             </button>
@@ -586,7 +589,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <button 
               data-action="comment"
               onClick={handleComment}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 w-10 h-10 bg-[#151929] rounded-full border-2 border-blue-500 flex items-center justify-center"
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-[#1D1D26] rounded-full border-2 border-blue-500 flex items-center justify-center"
             >
               <MessageCircle className="text-blue-500 h-5 w-5" />
             </button>
@@ -595,7 +598,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <button 
               data-action="trophy"
               onClick={handleTrophy}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 w-10 h-10 bg-[#151929] rounded-full border-2 border-yellow-500 flex items-center justify-center"
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-[#1D1D26] rounded-full border-2 border-yellow-500 flex items-center justify-center"
             >
               <Trophy className="text-yellow-500 h-5 w-5" />
             </button>
@@ -604,13 +607,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <button 
               data-action="follow"
               onClick={handleFollow}
-              className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-10 h-10 bg-[#151929] rounded-full border-2 border-green-500 flex items-center justify-center"
+              className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-[#1D1D26] rounded-full border-2 border-green-500 flex items-center justify-center"
             >
               <UserPlus className="text-green-500 h-5 w-5" />
             </button>
-            
-            {/* Center invisible element to maintain spacing */}
-            <div className="w-6 h-6 opacity-0"></div>
           </div>
         </div>
       </div>
