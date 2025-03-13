@@ -162,33 +162,33 @@ export const CommentForm = ({
                   src={user?.user_metadata?.avatar_url} 
                   alt={user?.user_metadata?.name || 'User'} 
                 />
-                <AvatarFallback>
+                <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
                   {(user?.user_metadata?.name?.charAt(0) || user?.email?.charAt(0) || 'U').toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </div>
             
             {/* Input container */}
-            <div className="flex-1 flex items-center rounded-full bg-gray-100 dark:bg-gaming-800">
+            <div className="flex-1 flex items-center rounded-full bg-gaming-800 border border-gaming-700">
               <input
                 ref={textareaRef as any}
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder={placeholder}
                 disabled={isSubmitting}
-                className="flex-1 bg-transparent border-0 text-sm px-4 py-2 focus:outline-none focus:ring-0"
+                className="flex-1 bg-transparent border-0 text-sm px-4 py-2 focus:outline-none focus:ring-0 text-gaming-100"
               />
               <div className="flex items-center">
                 <button 
                   type="button"
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 p-2"
+                  className="text-gray-400 hover:text-gray-300 p-2"
                 >
                   <Smile className="h-5 w-5" />
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !newComment.trim()}
-                  className={`text-blue-500 hover:text-blue-600 font-medium px-3 py-1 ${!newComment.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`text-blue-400 hover:text-blue-300 font-medium px-3 py-1 ${!newComment.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {buttonText}
                 </button>
@@ -197,9 +197,9 @@ export const CommentForm = ({
           </div>
         </form>
       ) : (
-        <div className="text-center p-3 bg-gray-50 dark:bg-gaming-800 rounded-lg">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Please <Button variant="link" className="p-0 h-auto" onClick={() => toast.info("Please login to comment")}>login</Button> to comment
+        <div className="text-center p-3 bg-gaming-800 rounded-lg">
+          <p className="text-sm text-gray-400">
+            Please <Button variant="link" className="p-0 h-auto text-blue-400 hover:text-blue-300" onClick={() => toast.info("Please login to comment")}>login</Button> to comment
           </p>
         </div>
       )}

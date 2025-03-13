@@ -19,7 +19,7 @@ const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(true);
 
   const { data: commentsCount = 0, refetch } = useQuery({
     queryKey: ['comments-count', post.id],
@@ -63,9 +63,12 @@ const PostItem = ({ post }: PostItemProps) => {
   const gameId = post.games?.id;
 
   return (
-    <div className={`relative w-full gaming-card transition-opacity duration-300 ${
-      isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
-    }`}>
+    <div 
+      id={`post-${post.id}`}
+      className={`relative w-full gaming-card transition-opacity duration-300 ${
+        isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
+      }`}
+    >
       {/* User Header */}
       <div className="flex items-center justify-between p-4 border-b border-gaming-400/20 backdrop-blur-sm bg-gaming-800/80">
         <div className="flex items-center space-x-3">
@@ -115,10 +118,12 @@ const PostItem = ({ post }: PostItemProps) => {
             {post.likes_count || 0}
           </span>
         </div>
-        <div className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110 active:scale-95">
+        <div 
+          className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+          onClick={() => setShowComments(!showComments)}
+        >
           <MessageSquare 
             className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90"
-            onClick={handleCommentClick}
           />
           <span className="text-sm font-medium text-gaming-100 group-hover:text-blue-300 transition-colors">
             {commentsCount}
@@ -149,46 +154,47 @@ const PostItem = ({ post }: PostItemProps) => {
       )}
 
       {/* Comments Toggle */}
-      {commentsCount > 0 && (
-        <div className="px-4 py-2 border-t border-gaming-400/20">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
-            onClick={() => setShowComments(!showComments)}
-          >
-            {showComments ? (
-              <>
-                <ChevronUp className="h-4 w-4 mr-1" />
-                Hide comments
-              </>
-            ) : (
-              <>
-                <ChevronDown className="h-4 w-4 mr-1" />
-                View all {commentsCount} comments
-              </>
-            )}
-          </Button>
-        </div>
-      )}
+      <div className="px-4 py-2 border-t border-gaming-400/20">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
+          onClick={() => setShowComments(!showComments)}
+          data-comments-toggle
+        >
+          {showComments ? (
+            <>
+              <ChevronUp className="h-4 w-4 mr-1" />
+              Hide comments
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-4 w-4 mr-1" />
+              {commentsCount > 0 
+                ? `View all ${commentsCount} comments` 
+                : "Add a comment..."}
+            </>
+          )}
+        </Button>
+      </div>
 
       {/* Inline Comments */}
-      {showComments && (
-        <div className="border-t border-gaming-400/20">
-          <CommentList 
-            postId={String(post.id)} 
-            onCommentAdded={() => {
-              // Update comment count when a new comment is added
-              setTimeout(() => {
-                // Requery for latest count
-                void refetch();
-              }, 500);
-            }}
-          />
-        </div>
-      )}
+      <div className={`border-t border-gaming-400/20 transition-all duration-300 ${
+        showComments ? 'max-h-[1000px]' : 'max-h-0 overflow-hidden'
+      }`}>
+        <CommentList 
+          postId={String(post.id)} 
+          onCommentAdded={() => {
+            // Update comment count when a new comment is added
+            setTimeout(() => {
+              // Requery for latest count
+              void refetch();
+            }, 500);
+          }}
+        />
+      </div>
 
-      {/* Comment Modal */}
+      {/* Comment Modal - redirects to inline comments */}
       <CommentModal 
         isOpen={commentModalOpen}
         onClose={() => setCommentModalOpen(false)}

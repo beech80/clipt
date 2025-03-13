@@ -1,249 +1,173 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, MessageSquare, AlertCircle } from "lucide-react";
-import { CommentItem } from "./comment/CommentItem";
-import { CommentForm } from "./comment/CommentForm";
-import { useEffect, useRef, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { cn } from "@/lib/utils";
-
-interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  parent_id?: string | null;
-  likes_count: number;
-  user_id: string;
-  replies: Comment[];
-  profiles: {
-    username: string;
-    avatar_url: string | null;
-  };
-}
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CommentForm } from './comment/CommentForm';
+import { CommentItem, Comment } from './comment/CommentItem';
+import { Button } from '@/components/ui/button';
+import { Loader2, MessageCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { getComments, getCommentCount } from '@/services/commentService';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface CommentListProps {
   postId: string;
-  onBack?: () => void;
   onCommentAdded?: () => void;
   autoFocus?: boolean;
-  parentId?: string;
+  className?: string;
 }
 
 export const CommentList = ({ 
   postId, 
-  onBack, 
   onCommentAdded,
   autoFocus = false,
-  parentId
+  className = ''
 }: CommentListProps) => {
-  // Ensure postId is always a string
-  const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
-  const formRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  const [isFetching, setIsFetching] = useState(false);
-  const queryClient = useQueryClient();
+  const normalizedPostId = String(postId);
+  const [replyToComment, setReplyToComment] = useState<string | null>(null);
 
-  // Scroll to comment form if autoFocus is true
-  useEffect(() => {
-    if (autoFocus && formRef.current) {
-      setTimeout(() => {
-        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 500);
-    }
-  }, [autoFocus]);
+  // Fetch comments for this post
+  const {
+    data: comments,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['comments', normalizedPostId],
+    queryFn: async () => {
+      try {
+        const response = await getComments(normalizedPostId);
+        return response.data || [];
+      } catch (err) {
+        console.error("Failed to fetch comments:", err);
+        return [];
+      }
+    },
+    staleTime: 1000 * 60, // 1 minute
+  });
 
-  // Add logging to see the postId value
-  useEffect(() => {
-    console.log(`CommentList component mounted with postId: ${normalizedPostId}`);
+  // Refresh comments when a new comment is added
+  const handleCommentAdded = useCallback(() => {
+    // Refetch comments
+    void refetch();
     
-    // Additional check to see the exact type and value
-    console.log('PostId type:', typeof normalizedPostId);
-    console.log('PostId value:', normalizedPostId);
-  }, [normalizedPostId]);
+    // Clear reply state if active
+    setReplyToComment(null);
+    
+    // Callback to parent if provided
+    if (onCommentAdded) {
+      onCommentAdded();
+    }
+  }, [refetch, onCommentAdded]);
 
-  // Exit early if no postId is provided or if it's invalid
-  if (!normalizedPostId) {
-    console.error("Empty postId received by CommentList");
+  // Memoize the comment tree
+  const commentTree = useMemo(() => {
+    const allComments = comments || [];
+    
+    // Convert flat array to nested tree structure
+    const topLevelComments: Comment[] = [];
+    const commentMap = new Map<string, Comment>();
+    
+    // First pass: create a map of id -> comment
+    allComments.forEach(comment => {
+      commentMap.set(comment.id, { ...comment, children: [] });
+    });
+    
+    // Second pass: build the tree
+    allComments.forEach(comment => {
+      const commentWithChildren = commentMap.get(comment.id)!;
+      
+      if (comment.parent_id && commentMap.has(comment.parent_id)) {
+        // This is a reply, add it to its parent's children
+        const parent = commentMap.get(comment.parent_id)!;
+        parent.children = [...(parent.children || []), commentWithChildren];
+      } else {
+        // This is a top-level comment
+        topLevelComments.push(commentWithChildren);
+      }
+    });
+    
+    return topLevelComments;
+  }, [comments]);
+
+  if (isLoading) {
     return (
-      <div className="bg-[#1A1F2C] min-h-[400px] flex flex-col items-center justify-center">
-        <div className="text-center py-6">
-          <p className="text-red-500 text-lg">Error: Cannot identify post</p>
-          <p className="text-red-500 text-sm mt-2">Please try refreshing the page</p>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="mt-4"
-            onClick={() => window.location.reload()}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh Page
-          </Button>
-        </div>
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 text-blue-400 animate-spin" />
       </div>
     );
   }
 
-  // Fetch comments for the post
-  const { data: comments, isLoading, error, refetch } = useQuery<Comment[]>({
-    queryKey: ['comments', normalizedPostId],
-    queryFn: async () => {
-      try {
-        setIsFetching(true);
-        
-        // Fetch all comments for this post
-        const { data: allComments, error } = await supabase
-          .from('comments')
-          .select(`
-            id,
-            content,
-            created_at,
-            updated_at,
-            parent_id,
-            user_id,
-            likes_count,
-            profiles:user_id (
-              username,
-              avatar_url
-            )
-          `)
-          .eq('post_id', normalizedPostId)
-          .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        // Organize comments into a tree structure (top-level comments and their replies)
-        const commentTree: Comment[] = [];
-        const commentMap = new Map<string, Comment>();
-        
-        // First pass: create all comment objects with empty replies arrays
-        allComments.forEach((comment: any) => {
-          const commentWithReplies = {
-            ...comment,
-            replies: [],
-          };
-          commentMap.set(comment.id, commentWithReplies);
-        });
-        
-        // Second pass: organize into parent-child relationships
-        allComments.forEach((comment: any) => {
-          const commentWithReplies = commentMap.get(comment.id)!;
-          
-          if (!comment.parent_id) {
-            // This is a top-level comment
-            commentTree.push(commentWithReplies);
-          } else {
-            // This is a reply
-            const parentComment = commentMap.get(comment.parent_id);
-            if (parentComment) {
-              parentComment.replies.push(commentWithReplies);
-            } else {
-              // Parent comment might have been deleted, so treat as top-level
-              commentTree.push(commentWithReplies);
-            }
-          }
-        });
-        
-        // Sort replies by creation date (oldest first)
-        commentTree.forEach(comment => {
-          comment.replies.sort((a, b) => 
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-        });
-        
-        return commentTree;
-      } catch (error) {
-        console.error("Error fetching comments:", error);
-        throw new Error('Failed to fetch comments');
-      } finally {
-        setIsFetching(false);
-      }
-    }
-  });
+  if (error) {
+    return (
+      <div className="flex flex-col items-center py-6 px-4 text-center">
+        <AlertCircle className="h-12 w-12 text-red-500 mb-2" />
+        <h3 className="text-lg font-semibold mb-1">Failed to load comments</h3>
+        <p className="text-sm text-gray-400 mb-4">Please try again later</p>
+        <Button 
+          size="sm" 
+          variant="outline"
+          onClick={() => refetch()}
+          className="bg-gaming-800 border-gaming-700 hover:bg-gaming-700"
+        >
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
-  const handleCommentAdded = () => {
-    refetch();
-    if (onCommentAdded) onCommentAdded();
-  };
+  if (comments?.length === 0) {
+    return (
+      <div className="space-y-4 p-4">
+        <div className="flex flex-col items-center py-5">
+          <MessageCircle className="h-10 w-10 text-gray-500 mb-2" />
+          <p className="text-center text-sm text-gray-400">No comments yet. Be the first to comment!</p>
+        </div>
+        <CommentForm 
+          postId={normalizedPostId} 
+          onCommentAdded={handleCommentAdded}
+          autoFocus={autoFocus}
+        />
+      </div>
+    );
+  }
 
+  // Render comment tree
   return (
-    <div className="space-y-2 bg-gaming-900/80 border-t border-gaming-700">
-      {/* Comment form at the top only on the main comment section */}
-      {!parentId && user && (
-        <div className="px-4 py-3 border-b border-gaming-700">
-          <CommentForm 
-            postId={normalizedPostId} 
-            onCommentAdded={() => {
-              queryClient.invalidateQueries();
-              if (onCommentAdded) onCommentAdded();
-            }}
-            autoFocus={autoFocus}
-            placeholder="Add a comment..."
-            buttonText="Post"
+    <div className={`space-y-2 ${className}`}>
+      {/* Comment form at the top */}
+      <div className="px-4 pt-4 pb-2">
+        <CommentForm 
+          postId={normalizedPostId} 
+          onCommentAdded={handleCommentAdded}
+          autoFocus={autoFocus}
+        />
+      </div>
+      
+      {/* Comments list with nested structure */}
+      <div className="px-4 divide-y divide-gaming-800">
+        {commentTree.map((comment) => (
+          <CommentItem
+            key={comment.id}
+            comment={comment}
+            depth={0}
+            onReply={(commentId) => setReplyToComment(commentId)}
+            isReplying={replyToComment === comment.id}
+            onReplyCancel={() => setReplyToComment(null)}
+            onReplyAdded={handleCommentAdded}
           />
-        </div>
-      )}
-
-      {/* Loading state */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-6">
-          <div className="animate-pulse flex flex-col space-y-4 w-full px-4">
-            <div className="flex items-start gap-3">
-              <div className="rounded-full bg-gaming-800 h-8 w-8"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-3 bg-gaming-800 rounded w-1/4"></div>
-                <div className="h-3 bg-gaming-800 rounded w-full"></div>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="rounded-full bg-gaming-800 h-8 w-8"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-3 bg-gaming-800 rounded w-1/3"></div>
-                <div className="h-3 bg-gaming-800 rounded w-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error state */}
-      {error && (
-        <div className="p-4 text-center">
-          <p className="text-red-500 text-sm">
-            Failed to load comments. Please try again.
-          </p>
+        ))}
+      </div>
+      
+      {/* Load more comments button (if needed in the future) */}
+      {comments && comments.length > 10 && (
+        <div className="px-4 py-2 text-center">
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => queryClient.invalidateQueries()}
-            className="mt-2 text-xs text-blue-400 hover:text-blue-300"
+            className="text-blue-400 hover:text-blue-300"
           >
-            Retry
+            Load more comments
           </Button>
-        </div>
-      )}
-
-      {/* No comments yet */}
-      {!isLoading && !error && comments && comments.length === 0 && (
-        <div className="px-4 py-4 text-center">
-          <p className="text-gray-400 text-sm">
-            Be the first to comment on this post!
-          </p>
-        </div>
-      )}
-
-      {/* Comment list */}
-      {!isLoading && !error && comments && comments.length > 0 && (
-        <div className="py-2">
-          {comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              postId={normalizedPostId}
-              onReplyAdded={() => queryClient.invalidateQueries()}
-            />
-          ))}
         </div>
       )}
     </div>
