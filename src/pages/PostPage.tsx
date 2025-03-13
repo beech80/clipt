@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
-import { MessageSquare, ThumbsUp, Trophy, Share2 } from 'lucide-react';
+import { MessageSquare, ThumbsUp, Trophy, Share2, ExternalLink } from 'lucide-react';
 
 const PostPage = () => {
   const { id } = useParams();
@@ -52,6 +52,12 @@ const PostPage = () => {
                 <MessageSquare className="mr-1 h-5 w-5" />
                 <span className="text-sm">8</span>
               </button>
+              <button 
+                className="flex items-center text-gray-300 hover:text-purple-400"
+                onClick={() => navigate(`/post/${id}/comments`)}
+              >
+                <span className="text-xs ml-1 underline text-purple-400">See all comments</span>
+              </button>
               <button className="flex items-center text-gray-300 hover:text-purple-400">
                 <Trophy className="mr-1 h-5 w-5" />
               </button>
@@ -64,7 +70,20 @@ const PostPage = () => {
         
         {/* Comments section */}
         <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 shadow-xl">
-          <h3 className="text-lg font-medium text-white mb-4">Comments</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-white">Comments</h3>
+            
+            {/* Link to dedicated comments page */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate(`/post/${id}/comments`)}
+              className="text-xs flex items-center gap-1 text-purple-400 hover:text-purple-300 hover:bg-purple-950/30"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              View All Comments
+            </Button>
+          </div>
           
           {/* Comment input */}
           <div className="flex space-x-3 mb-6">
