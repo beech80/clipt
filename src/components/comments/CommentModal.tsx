@@ -83,11 +83,23 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
   const { data: comments = [], isLoading, error, refetch } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
-      const result = await getComments(postId);
-      return result.data || [];
+      try {
+        console.log(`Fetching comments for post ${postId}`);
+        const result = await getComments(postId);
+        if (result.error) {
+          console.error("Error fetching comments:", result.error);
+          throw result.error;
+        }
+        console.log(`Retrieved ${result.data?.length || 0} comments`, result.data);
+        return result.data || [];
+      } catch (error) {
+        console.error("Exception in comments query:", error);
+        throw error;
+      }
     },
     enabled: isOpen && !!postId,
-    staleTime: 10000, // 10 seconds
+    staleTime: 5000, // 5 seconds
+    refetchOnWindowFocus: false,
   });
 
   // Add comment mutation
@@ -189,6 +201,16 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
     e.preventDefault();
     if (!comment.trim()) return;
     
+    console.log(`Submitting comment for post ${postId}`, {
+      content: comment.trim(),
+      parentId: replyingTo?.id || null
+    });
+    
+    if (!user) {
+      toast.error("You must be logged in to comment");
+      return;
+    }
+    
     addComment.mutate({
       content: comment.trim(),
       parentId: replyingTo?.id
@@ -284,7 +306,12 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
 
   // Organize comments into threaded view
   const organizedComments = React.useMemo(() => {
-    if (!comments || !Array.isArray(comments)) return [];
+    if (!comments || !Array.isArray(comments)) {
+      console.log("No comments to organize or comments is not an array", comments);
+      return [];
+    }
+    
+    console.log(`Organizing ${comments.length} comments`);
     
     // Create a map of comments by ID for quick lookup
     const commentMap = new Map<string, Comment>();
@@ -604,44 +631,38 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
         </div>
         
         {/* Comment input at bottom - Instagram style */}
-        <div className="border-t border-gaming-700 p-3 sticky bottom-0 bg-gaming-900 z-10">
-          <form onSubmit={handleSubmitComment} className="flex items-center gap-2">
-            <Avatar className="h-8 w-8 flex-shrink-0">
-              <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
-              <AvatarFallback>{user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-            </Avatar>
-            
-            <div className="flex-1 relative">
+        <div className="border-t border-gaming-700 bg-gaming-900 p-3 sticky bottom-0">
+          <form onSubmit={handleSubmitComment} className="flex items-end gap-2">
+            <div className="relative flex-1">
               {replyingTo && (
-                <div className="absolute -top-5 left-0 text-xs text-gaming-400">
-                  Replying to <span className="font-semibold">{replyingTo.profiles?.username}</span>
+                <div className="absolute -top-5 left-0 text-xs text-gaming-300 flex items-center">
+                  <span>Replying to {replyingTo.profiles?.username}</span>
                   <button 
-                    className="ml-2 text-gaming-300"
+                    type="button"
+                    className="ml-1 text-gaming-400 hover:text-gaming-300"
                     onClick={() => setReplyingTo(null)}
                   >
-                    Cancel
+                    <X className="h-3 w-3" />
                   </button>
                 </div>
               )}
-              
               <Textarea
                 id="comment-textarea"
                 placeholder={replyingTo ? `Reply to ${replyingTo.profiles?.username}...` : "Add a comment..."}
-                className="min-h-9 py-2 px-3 bg-gaming-800 border-gaming-700 resize-none text-sm"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
+                className="min-h-9 py-2 px-3 bg-gaming-800 border-gaming-700 resize-none"
                 rows={1}
               />
             </div>
-            
-            <Button
-              type="submit"
+            <Button 
+              type="submit" 
               variant="ghost"
               size="sm"
-              className={`text-blue-500 font-semibold ${!comment.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:text-blue-400'}`}
-              disabled={!comment.trim() || addComment.isPending}
+              disabled={!comment.trim()}
+              className="text-blue-400 hover:text-blue-300 disabled:opacity-50"
             >
-              {addComment.isPending ? 'Posting...' : 'Post'}
+              Post
             </Button>
           </form>
         </div>
