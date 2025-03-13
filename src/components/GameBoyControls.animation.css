@@ -1,0 +1,91 @@
+/* Enhanced joystick animations and visual feedback */
+
+.joystick-base {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  background: #1D1D26;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+  overflow: visible;
+}
+
+.joystick-indicator {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(135, 106, 245, 0.5);
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.joystick-up-arrow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 6px;
+  background: rgba(135, 106, 245, 0.3);
+  border-radius: 2px 2px 0 0;
+  pointer-events: none;
+  transition: background 0.2s ease, height 0.2s ease;
+}
+
+.joystick-down-arrow {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  width: 4px;
+  height: 6px;
+  background: rgba(135, 106, 245, 0.3);
+  border-radius: 0 0 2px 2px;
+  pointer-events: none;
+  transition: background 0.2s ease, height 0.2s ease;
+}
+
+.joystick-knob {
+  width: 32px;
+  height: 32px;
+  background: #333340;
+  border-radius: 50%;
+  position: absolute;
+  transition: transform 0.075s ease-out, box-shadow 0.1s ease;
+}
+
+/* Active states */
+.joystick-active .joystick-indicator {
+  opacity: 0.6;
+}
+
+.joystick-up .joystick-up-arrow {
+  background: rgba(135, 106, 245, 0.8);
+  height: 8px;
+  animation: pulse-subtle 1.5s infinite;
+}
+
+.joystick-down .joystick-down-arrow {
+  background: rgba(135, 106, 245, 0.8);
+  height: 8px;
+  animation: pulse-subtle 1.5s infinite;
+}
+
+.joystick-up .joystick-knob {
+  box-shadow: 0 -4px 12px rgba(135, 106, 245, 0.7);
+  border-bottom: 2px solid rgba(135, 106, 245, 0.7);
+}
+
+.joystick-down .joystick-knob {
+  box-shadow: 0 4px 12px rgba(135, 106, 245, 0.7);
+  border-top: 2px solid rgba(135, 106, 245, 0.7);
+}
+
+@keyframes pulse-subtle {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.3; }
+}

@@ -2,14 +2,16 @@ import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
-// Import icons individually to avoid bundling issues
-import { Heart } from "lucide-react";
-import { MessageSquare } from "lucide-react";
-import { Trophy } from "lucide-react";
-import { Trash2 } from "lucide-react";
-import { MoreVertical } from "lucide-react";
-import { UserCheck } from "lucide-react";
-import { UserPlus } from "lucide-react";
+// Import from our centralized icons component
+import { 
+  HeartIcon, 
+  MessageIcon, 
+  TrophyIcon, 
+  TrashIcon, 
+  MoreIcon, 
+  UserCheckIcon, 
+  UserPlusIcon 
+} from "@/components/ui/icons";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,29 +26,6 @@ import { CommentList } from "./post/CommentList";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Textarea } from './ui/textarea';
-
-// Create wrapper components for icons to avoid bundling issues
-const HeartIcon = ({ className, fill }: { className?: string, fill?: string }) => (
-  <Heart className={className || "h-5 w-5"} fill={fill || "none"} />
-);
-const MessageIcon = ({ className }: { className?: string }) => (
-  <MessageSquare className={className || "h-5 w-5"} />
-);
-const TrophyIcon = ({ className, fill }: { className?: string, fill?: string }) => (
-  <Trophy className={className || "h-5 w-5"} fill={fill || "none"} />
-);
-const TrashIcon = ({ className }: { className?: string }) => (
-  <Trash2 className={className || "h-5 w-5"} />
-);
-const MoreIcon = ({ className }: { className?: string }) => (
-  <MoreVertical className={className || "h-5 w-5"} />
-);
-const UserCheckIcon = ({ className }: { className?: string }) => (
-  <UserCheck className={className || "h-5 w-5"} />
-);
-const UserPlusIcon = ({ className }: { className?: string }) => (
-  <UserPlus className={className || "h-5 w-5"} />
-);
 
 interface PostItemProps {
   post: Post;

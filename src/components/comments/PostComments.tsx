@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getComments, likeComment, deleteComment, editComment } from "@/services/commentService";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button"; 
+import { CommentList } from "@/components/post/CommentList";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { MessageIcon } from "@/components/ui/icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { formatDistanceToNowStrict } from 'date-fns';
-import { Heart, X, ChevronDown, ChevronUp, MoreVertical, Check, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -15,28 +16,29 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { HeartIcon, CloseIcon, ChevronDownIcon, ChevronUpIcon, MoreVerticalIcon, CheckIcon } from "@/components/ui/icons";
 
 // Create wrapper components to avoid bundling issues
-const HeartIcon = ({ className, fill }: { className?: string, fill: string }) => (
-  <Heart className={className || "h-4 w-4"} fill={fill} />
+const Heart = ({ className, fill }: { className?: string, fill: string }) => (
+  <HeartIcon className={className || "h-4 w-4"} fill={fill} />
 );
-const CloseIcon = ({ className }: { className?: string }) => (
-  <X className={className || "h-4 w-4"} />
+const Close = ({ className }: { className?: string }) => (
+  <CloseIcon className={className || "h-4 w-4"} />
 );
-const DownIcon = ({ className }: { className?: string }) => (
-  <ChevronDown className={className || "h-4 w-4"} />
+const Down = ({ className }: { className?: string }) => (
+  <ChevronDownIcon className={className || "h-4 w-4"} />
 );
-const UpIcon = ({ className }: { className?: string }) => (
-  <ChevronUp className={className || "h-4 w-4"} />
+const Up = ({ className }: { className?: string }) => (
+  <ChevronUpIcon className={className || "h-4 w-4"} />
 );
-const MessageIcon = ({ className }: { className?: string }) => (
-  <MessageSquare className={className || "h-4 w-4"} />
+const Message = ({ className }: { className?: string }) => (
+  <MessageIcon className={className || "h-4 w-4"} />
 );
-const MoreIcon = ({ className }: { className?: string }) => (
-  <MoreVertical className={className || "h-4 w-4"} />
+const More = ({ className }: { className?: string }) => (
+  <MoreVerticalIcon className={className || "h-4 w-4"} />
 );
-const CheckIcon = ({ className }: { className?: string }) => (
-  <Check className={className || "h-4 w-4"} />
+const Check = ({ className }: { className?: string }) => (
+  <CheckIcon className={className || "h-4 w-4"} />
 );
 
 interface PostCommentsProps {
@@ -350,11 +352,11 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
           className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
           onClick={onToggle}
         >
-          <MessageIcon className="h-4 w-4 mr-1" />
+          <Message className="h-4 w-4 mr-1" />
           {comments.length > 0 
             ? `View all ${comments.length} comments` 
             : "Add a comment..."}
-          <DownIcon />
+          <Down className="h-4 w-4" />
         </Button>
       </div>
     );
@@ -371,7 +373,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
           className="text-gaming-400 hover:text-gaming-200 p-1 h-auto"
           onClick={onToggle}
         >
-          <UpIcon />
+          <Up className="h-4 w-4" />
         </Button>
       </div>
       
@@ -416,7 +418,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                               onClick={handleSaveEdit}
                               className="h-7 text-xs flex items-center"
                             >
-                              <CheckIcon className="h-3 w-3 mr-1" /> Save
+                              <Check className="h-3 w-3 mr-1" /> Save
                             </Button>
                             <Button 
                               variant="ghost" 
@@ -424,7 +426,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                               onClick={handleCancelEdit}
                               className="h-7 text-xs flex items-center"
                             >
-                              <CloseIcon /> Cancel
+                              <Close className="h-3 w-3" /> Cancel
                             </Button>
                           </div>
                         </div>
@@ -456,11 +458,11 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                           <div className="h-px bg-gaming-700 w-4 mr-1"></div>
                           {showRepliesFor[comment.id] ? (
                             <span className="flex items-center">
-                              Hide replies <UpIcon className="h-3 w-3 ml-1" />
+                              Hide replies <Up className="h-3 w-3 ml-1" />
                             </span>
                           ) : (
                             <span className="flex items-center">
-                              View {comment.children.length} {comment.children.length === 1 ? 'reply' : 'replies'} <DownIcon className="h-3 w-3 ml-1" />
+                              View {comment.children.length} {comment.children.length === 1 ? 'reply' : 'replies'} <Down className="h-3 w-3 ml-1" />
                             </span>
                           )}
                         </button>
@@ -495,7 +497,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                                             onClick={handleSaveEdit}
                                             className="h-6 text-xs flex items-center px-2"
                                           >
-                                            <CheckIcon className="h-3 w-3 mr-1" /> Save
+                                            <Check className="h-3 w-3 mr-1" /> Save
                                           </Button>
                                           <Button 
                                             variant="ghost" 
@@ -503,7 +505,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                                             onClick={handleCancelEdit}
                                             className="h-6 text-xs flex items-center px-2"
                                           >
-                                            <CloseIcon /> Cancel
+                                            <Close className="h-3 w-3" /> Cancel
                                           </Button>
                                         </div>
                                       </div>
@@ -531,14 +533,14 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                                     className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
                                     onClick={() => handleLikeComment(reply.id)}
                                   >
-                                    <HeartIcon fill={reply.liked_by_me ? "currentColor" : "none"} />
+                                    <Heart fill={reply.liked_by_me ? "currentColor" : "none"} />
                                   </button>
                                   
                                   {isCommentAuthor(reply) && (
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                         <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                                          <MoreIcon className="h-3 w-3" />
+                                          <More className="h-3 w-3" />
                                         </button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
@@ -571,14 +573,14 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                       className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
                       onClick={() => handleLikeComment(comment.id)}
                     >
-                      <HeartIcon fill={comment.liked_by_me ? "currentColor" : "none"} />
+                      <Heart fill={comment.liked_by_me ? "currentColor" : "none"} />
                     </button>
                     
                     {isCommentAuthor(comment) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                            <MoreIcon className="h-4 w-4" />
+                            <More className="h-4 w-4" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
@@ -617,7 +619,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                   className="ml-1 text-gaming-400 hover:text-gaming-300"
                   onClick={() => setReplyingTo(null)}
                 >
-                  <CloseIcon />
+                  <Close className="h-3 w-3" />
                 </button>
               </div>
             )}

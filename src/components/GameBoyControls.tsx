@@ -1,25 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Menu, 
-  Heart, 
-  Camera,
-  MessageCircle, 
-  Trophy, 
-  UserPlus, 
-  X, 
-  Home, 
-  Search, 
-  Bell, 
-  Upload, 
-  User,
-  TrendingUp,
-  Settings,
-  Bookmark,
-  Video,
-  Award,
-  Monitor
-} from 'lucide-react';
+// Import from our centralized icons component
+import {
+  MenuIcon,
+  HeartIcon, 
+  CameraIcon,
+  MessageIcon,
+  MessageCircleIcon,
+  TrophyIcon,
+  UserPlusIcon,
+  CloseIcon,
+  HomeIcon,
+  SearchIcon,
+  BellIcon,
+  UploadIcon,
+  UserIcon,
+  SettingsIcon,
+  VideoIcon,
+  AwardIcon,
+  MonitorIcon,
+  TrendingUpIcon,
+  BookmarkIcon
+} from '@/components/ui/icons';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -38,13 +40,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navigationOptions] = useState([
-    { name: 'Settings', icon: <Settings className="mr-2 h-4 w-4" />, path: '/settings' },
-    { name: 'Streaming', icon: <Video className="mr-2 h-4 w-4" />, path: '/streaming' },
-    { name: 'Profile', icon: <User className="mr-2 h-4 w-4" />, path: '/profile' },
-    { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
-    { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
-    { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' },
-    { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
+    { name: 'Settings', icon: <SettingsIcon className="mr-2 h-4 w-4" />, path: '/settings' },
+    { name: 'Streaming', icon: <VideoIcon className="mr-2 h-4 w-4" />, path: '/streaming' },
+    { name: 'Profile', icon: <UserIcon className="mr-2 h-4 w-4" />, path: '/profile' },
+    { name: 'Messages', icon: <MessageIcon className="mr-2 h-4 w-4" />, path: '/messages' },
+    { name: 'Discovery', icon: <SearchIcon className="mr-2 h-4 w-4" />, path: '/discovery' },
+    { name: 'Top Clipts', icon: <AwardIcon className="mr-2 h-4 w-4" />, path: '/top-clipts' },
+    { name: 'Clipts', icon: <MonitorIcon className="mr-2 h-4 w-4" />, path: '/clipts' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | undefined>(undefined);
@@ -353,10 +355,22 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Directly update DOM for immediate response
     if (joystickRef.current) {
+      // Set CSS variables for animation
+      joystickRef.current.style.setProperty('--last-x', `${joystickPosition.x}px`);
+      joystickRef.current.style.setProperty('--last-y', `${joystickPosition.y}px`);
+      
+      // Add the spring animation class
+      joystickRef.current.classList.add('joystick-spring-return');
+      
+      // Directly set transform for immediate visual feedback
       joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
       
-      // Override any transitions during active dragging
-      joystickRef.current.style.transition = 'none';
+      // Remove the animation class after it completes
+      setTimeout(() => {
+        if (joystickRef.current) {
+          joystickRef.current.classList.remove('joystick-spring-return');
+        }
+      }, 550); // Match the animation duration
     }
     
     // Update state for React components (but DOM is already updated)
@@ -1229,7 +1243,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   onClick={() => setMenuOpen(!menuOpen)}
                   ref={menuRef}
                 >
-                  <Menu className="text-white h-4 w-4" />
+                  <MenuIcon className="text-white h-4 w-4" />
                   
                   {/* Navigation menu popup */}
                   {menuOpen && (
@@ -1263,7 +1277,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   }}
                 >
                   <div className="absolute inset-0 rounded-full bg-purple-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                  <Camera className="text-white h-4 w-4 group-hover:text-purple-300 transition-colors duration-300" />
+                  <CameraIcon className="text-white h-4 w-4 group-hover:text-purple-300 transition-colors duration-300" />
                 </div>
               </div>
             </div>
@@ -1277,7 +1291,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   onClick={handleComment}
                   className="absolute top-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-blue-500 flex items-center justify-center"
                 >
-                  <MessageCircle className="text-blue-500 h-5 w-5" />
+                  <MessageIcon className="text-blue-500 h-5 w-5" />
                 </button>
                 
                 {/* Left button (Like) */}
@@ -1286,7 +1300,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   onClick={handleLike}
                   className="absolute left-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-red-500 flex items-center justify-center"
                 >
-                  <Heart className="text-red-500 h-5 w-5" fill="#ef4444" />
+                  <HeartIcon className="text-red-500 h-5 w-5" fill="#ef4444" />
                 </button>
                 
                 {/* Right button (Trophy) */}
@@ -1295,7 +1309,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   onClick={handleTrophy}
                   className="absolute right-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-yellow-500 flex items-center justify-center"
                 >
-                  <Trophy className="text-yellow-500 h-5 w-5" />
+                  <TrophyIcon className="text-yellow-500 h-5 w-5" />
                 </button>
                 
                 {/* Bottom button (Follow) */}
@@ -1304,7 +1318,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   onClick={handleFollow}
                   className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-green-500 flex items-center justify-center"
                 >
-                  <UserPlus className="text-green-500 h-5 w-5" />
+                  <UserPlusIcon className="text-green-500 h-5 w-5" />
                 </button>
               </div>
               
