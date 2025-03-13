@@ -20,15 +20,28 @@ const PostItem = ({ post }: PostItemProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
 
-  const { data: commentsCount = 0, refetch } = useQuery({
+  const { data: commentsCount = 0, refetch: refetchCommentCount } = useQuery({
     queryKey: ['comments-count', post.id],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('comments')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', post.id);
-      return count || 0;
-    }
+      try {
+        const { count, error } = await supabase
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', post.id);
+          
+        if (error) {
+          console.error("Error fetching comment count:", error);
+          return 0;
+        }
+        
+        return count || 0;
+      } catch (error) {
+        console.error("Exception fetching comment count:", error);
+        return 0;
+      }
+    },
+    refetchOnWindowFocus: false,
+    staleTime: 10000, // 10 seconds
   });
 
   useEffect(() => {
@@ -60,6 +73,11 @@ const PostItem = ({ post }: PostItemProps) => {
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
   const gameId = post.games?.id;
+
+  const handleCommentModalClose = () => {
+    setCommentModalOpen(false);
+    refetchCommentCount();
+  };
 
   return (
     <div 
@@ -170,7 +188,7 @@ const PostItem = ({ post }: PostItemProps) => {
       {/* Comment Modal - Instagram-style popup */}
       <CommentModal 
         isOpen={commentModalOpen}
-        onClose={() => setCommentModalOpen(false)}
+        onClose={handleCommentModalClose}
         postId={String(post.id)}
       />
     </div>

@@ -62,6 +62,11 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
   try {
     console.log(`Fetching comments for post: ${postId}, page: ${page}, limit: ${limit}`);
     
+    if (!postId) {
+      console.error("No postId provided to getComments");
+      return { data: [], error: new Error("No postId provided") };
+    }
+    
     // Get the current user
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
@@ -79,6 +84,7 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
         parent_id,
         likes_count,
         user_id,
+        post_id,
         profiles:user_id (
           username,
           avatar_url
@@ -94,9 +100,11 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
       throw error;
     }
 
+    console.log(`Raw comments data for post ${postId}:`, data);
+
     // If we have a logged-in user, determine which comments they've liked
     let commentLikes: any[] = [];
-    if (userId) {
+    if (userId && data && data.length > 0) {
       const { data: likes, error: likesError } = await supabase
         .from('comment_likes')
         .select('comment_id')
@@ -111,10 +119,10 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
     }
 
     // Add liked_by_me property to each comment
-    const commentsWithLikeStatus = data.map((comment: any) => ({
+    const commentsWithLikeStatus = data ? data.map((comment: any) => ({
       ...comment,
       liked_by_me: commentLikes.some((like: any) => like.comment_id === comment.id)
-    }));
+    })) : [];
 
     console.log(`Retrieved ${commentsWithLikeStatus?.length || 0} comments for post ${postId}`);
     return { data: commentsWithLikeStatus, error: null };
