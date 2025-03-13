@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
 
 // Import custom styles for the comment modal
 import './comment-modal.css';
@@ -153,39 +154,41 @@ const CommentModal: React.FC<CommentModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()} modal={true}>
       <DialogContent 
-        className="sm:max-w-[700px] h-[95vh] max-h-[950px] flex flex-col p-0 gap-0 bg-gaming-800 border-gaming-700 rounded-lg shadow-xl"
+        className="sm:max-w-[500px] h-[95vh] max-h-[800px] flex flex-col p-0 gap-0 bg-white dark:bg-gaming-900 border-0 rounded-lg shadow-xl"
       >
-        {/* Enhanced header with post info */}
-        <DialogHeader className="sticky top-0 z-10 px-6 py-4 border-b border-gaming-700 bg-gaming-900 rounded-t-lg">
+        {/* Simple header with Comments title */}
+        <DialogHeader className="sticky top-0 z-10 px-4 py-3 border-b border-gray-200 dark:border-gaming-800 bg-white dark:bg-gaming-900 rounded-t-lg">
           <div className="flex items-center justify-between w-full">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={handleClose} 
-              className="rounded-full hover:bg-gaming-700"
-              ref={initialFocusRef}
+              className="rounded-full hover:bg-gray-100 dark:hover:bg-gaming-800"
             >
               <X className="h-5 w-5" />
             </Button>
             
-            <DialogTitle className="text-center flex-1 text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              Comments ({totalComments})
+            <DialogTitle className="text-center flex-1 text-xl font-semibold">
+              Comments
             </DialogTitle>
             
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full hover:bg-gaming-700 opacity-0 pointer-events-none"
+              className="rounded-full hover:bg-gray-100 dark:hover:bg-gaming-800 opacity-0 pointer-events-none"
             >
               <X className="h-5 w-5 invisible" />
             </Button>
           </div>
-          
-          {/* Post summary */}
+        </DialogHeader>
+        
+        {/* Comment list with Instagram-style UI */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-white dark:bg-gaming-900 custom-scrollbar">
+          {/* Original post author */}
           {postData && (
-            <div className="mt-2 px-2 py-3 bg-gaming-800 rounded-md border border-gaming-700">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-gaming-700 overflow-hidden flex items-center justify-center">
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gaming-800">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gaming-800 overflow-hidden flex items-center justify-center">
                   {postData?.profiles?.avatar_url ? (
                     <img 
                       src={postData?.profiles?.avatar_url} 
@@ -196,29 +199,20 @@ const CommentModal: React.FC<CommentModalProps> = ({
                     <User className="w-4 h-4 text-gray-400" />
                   )}
                 </div>
-                <span className="font-medium text-sm">{postData?.profiles?.username || 'Anonymous'}</span>
-              </div>
-              <p className="text-sm text-gray-300 line-clamp-2">{postData?.content || postData?.title || ''}</p>
-              
-              {/* View All Comments button */}
-              <div className="flex justify-end mt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleViewAllComments}
-                  className="text-xs h-7 border-gaming-700 hover:bg-gaming-700 text-purple-400 hover:text-purple-300 flex items-center gap-1 px-2 py-1"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  View All Comments
-                </Button>
+                <div className="flex-1">
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium text-sm">{postData?.profiles?.username || 'Anonymous'}</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">•</span>
+                    <span className="text-gray-500 dark:text-gray-400 text-sm">{formatDistanceToNow(new Date(postData.created_at), { addSuffix: false })}</span>
+                  </div>
+                  <p className="text-sm mt-1">{postData?.content || postData?.title || ''}</p>
+                </div>
               </div>
             </div>
           )}
-        </DialogHeader>
-        
-        {/* Comment list with visual enhancements */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gaming-800 custom-scrollbar">
-          <div className="py-2 px-1">
+          
+          {/* Comments section */}
+          <div className="py-0">
             <CommentList 
               postId={postId} 
               onCommentAdded={() => {
@@ -229,28 +223,32 @@ const CommentModal: React.FC<CommentModalProps> = ({
           </div>
         </div>
         
-        {/* Comment count footer */}
-        <div className="border-t border-gaming-700 py-2 px-4 bg-gaming-900 text-xs text-gray-400 flex items-center justify-between">
-          <span className="flex items-center gap-1">
-            <MessageCircle className="w-3.5 h-3.5" /> {totalComments} comment{totalComments !== 1 ? 's' : ''}
-          </span>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleViewAllComments}
-              className="text-xs h-7 px-2 text-purple-400 hover:text-purple-300"
-            >
-              <ExternalLink className="mr-1 h-3 w-3" /> Full View
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => window.location.reload()}
-              className="text-xs h-7 px-2"
-            >
-              <RefreshCw className="mr-1 h-3 w-3" /> Refresh
-            </Button>
+        {/* Emoji reaction bar and comment input field */}
+        <div className="border-t border-gray-200 dark:border-gaming-800 px-4 pt-2 pb-4 bg-white dark:bg-gaming-900">
+          {/* Emoji reactions */}
+          <div className="flex items-center justify-between mb-3 overflow-x-auto">
+            <div className="flex gap-4">
+              <button className="text-xl">❤️</button>
+              <button className="text-xl">👏</button>
+              <button className="text-xl">🔥</button>
+              <button className="text-xl">👍</button>
+              <button className="text-xl">😢</button>
+              <button className="text-xl">😊</button>
+              <button className="text-xl">😮</button>
+              <button className="text-xl">😂</button>
+            </div>
+          </div>
+          
+          {/* Comment input */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gaming-800 overflow-hidden flex items-center justify-center">
+              <User className="w-4 h-4 text-gray-400" />
+            </div>
+            <input 
+              type="text" 
+              placeholder="Add a comment..." 
+              className="flex-1 bg-gray-100 dark:bg-gaming-800 border-0 rounded-full py-2 px-4 text-sm focus:outline-none focus:ring-0"
+            />
           </div>
         </div>
       </DialogContent>
