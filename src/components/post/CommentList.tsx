@@ -29,11 +29,15 @@ export const CommentList = ({
   // Normalized post ID (always string)
   const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
 
+  console.log('CommentList rendering for postId:', normalizedPostId);
+
   // Query comments for the post
   const { data: comments, isLoading, error, refetch } = useQuery({
     queryKey: ['comments', normalizedPostId],
     queryFn: async () => {
+      console.log('Fetching comments for post:', normalizedPostId);
       const result = await getComments(normalizedPostId);
+      console.log('Comments result:', result);
       return result.data || [];
     },
     enabled: !!normalizedPostId,
@@ -80,6 +84,8 @@ export const CommentList = ({
   const organizedComments = useMemo(() => {
     if (!comments || !Array.isArray(comments)) return [];
     
+    console.log('Organizing comments:', comments.length);
+    
     // Create a map of comments by ID for quick lookup
     const commentMap = new Map<string, Comment>();
     const topLevelComments: Comment[] = [];
@@ -115,7 +121,7 @@ export const CommentList = ({
   // Loading state
   if (isLoading) {
     return (
-      <div className="py-4 text-center">
+      <div className="py-4 text-center text-gaming-100">
         <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
         <p className="text-sm text-gray-500 mt-2">Loading comments...</p>
       </div>
@@ -124,6 +130,7 @@ export const CommentList = ({
 
   // Error state
   if (error) {
+    console.error('Error loading comments:', error);
     return (
       <div className="py-4 text-center text-red-500">
         <AlertCircle className="w-5 h-5 mx-auto" />
@@ -132,13 +139,15 @@ export const CommentList = ({
     );
   }
 
+  console.log('Rendering comments UI, comment count:', organizedComments.length);
+
   return (
     <div 
-      className={`rounded-md ${className}`}
+      className={`w-full ${className}`}
       ref={commentsContainerRef}
     >
       <div className="py-2 px-3 border-b border-gaming-800">
-        <h3 className="font-semibold text-center">Comments</h3>
+        <h3 className="font-semibold text-center text-gaming-100">Comments</h3>
       </div>
       
       {/* Comment input form */}
