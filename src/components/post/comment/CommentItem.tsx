@@ -177,14 +177,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
   }
 
   return (
-    <div className="rounded-lg bg-[#252A39] p-3 mb-3">
+    <div className="rounded-lg bg-[#252A39] p-3 mb-3 transition-all hover:bg-[#2A3046] border border-[#3A3F4C]">
       <div className="flex gap-3 group relative">
         <div className="flex-shrink-0">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-10 w-10 border-2 border-purple-600/30">
             {avatarUrl ? (
-              <AvatarImage src={avatarUrl} alt={username} />
+              <AvatarImage src={avatarUrl} alt={username} className="object-cover" />
             ) : (
-              <AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white font-bold">
                 {username.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             )}
@@ -192,13 +192,13 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg relative">
+          <div className="bg-gray-100 dark:bg-[#1E2330] p-3 rounded-lg relative">
             <div className="flex justify-between items-start gap-2">
               <a 
                 href={`/profile/${comment.user_id}`}
                 onClick={(e) => {
                   e.preventDefault();
-                  window.location.href = `/profile/${comment.user_id}`;
+                  navigate(`/profile/${comment.user_id}`);
                 }}
                 className="font-semibold text-gray-900 dark:text-white hover:underline"
               >
@@ -232,11 +232,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
                         </svg>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-36">
+                    <DropdownMenuContent align="end" className="w-36 bg-[#1A1F2C] border-[#3A3F4C]">
                       <DropdownMenuItem 
                         onClick={handleEditClick}
                         disabled={isEditing || isDeleting}
-                        className="cursor-pointer"
+                        className="cursor-pointer hover:bg-[#252A39]"
                       >
                         <Edit className="mr-2 h-4 w-4" />
                         Edit
@@ -244,7 +244,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
                       <DropdownMenuItem 
                         onClick={handleDelete}
                         disabled={isDeleting}
-                        className="text-red-500 focus:text-red-400 cursor-pointer"
+                        className="text-red-500 focus:text-red-400 cursor-pointer hover:bg-[#252A39]"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
@@ -262,6 +262,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
                   onChange={(e) => setEditedContent(e.target.value)}
                   className="min-h-[80px] text-sm bg-[#1A1F2C] border-[#3A3F4C] mb-2"
                   placeholder="Edit your comment..."
+                  autoFocus
                 />
                 <div className="flex justify-end space-x-2">
                   <Button 
@@ -293,12 +294,15 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
             {!isEditing && (
               <div className="flex items-center space-x-4 mt-2">
                 <button 
-                  className={`text-xs flex items-center ${isLiking ? 'opacity-50' : 'hover:text-[#9b87f5]'} transition-colors`}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full ${
+                    likesCount > 0 ? 'bg-red-500/10' : 'bg-gray-800/30'
+                  } ${isLiking ? 'opacity-50' : 'hover:bg-red-500/20'} transition-colors`}
                   onClick={handleLike}
                   disabled={isLiking}
+                  aria-label={`Like comment by ${username}`}
                 >
-                  <Heart className={`h-3.5 w-3.5 mr-1 ${likesCount > 0 ? 'text-red-500 fill-red-500' : ''}`} />
-                  <span>{likesCount}</span>
+                  <Heart className={`h-4 w-4 ${likesCount > 0 ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
+                  <span className="text-xs font-medium">{likesCount}</span>
                 </button>
                 <button 
                   className="text-xs flex items-center hover:text-[#9b87f5] transition-colors"

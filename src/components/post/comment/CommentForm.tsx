@@ -5,6 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SendIcon, Smile } from "lucide-react";
 
 interface CommentFormProps {
   postId: string;
@@ -145,35 +147,67 @@ export const CommentForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmitComment} className="p-2">
-      <div className="relative">
-        <Textarea
-          ref={textareaRef}
-          placeholder={user ? "Write your comment..." : "Please login to comment"}
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          disabled={!user || isSubmitting}
-          className="w-full min-h-[80px] bg-gaming-900 text-white rounded-lg p-3 resize-none border border-gaming-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50 comment-textarea comment-form-input"
-        />
-        {!user && (
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center rounded-lg">
-            <Button
-              type="button"
-              onClick={() => window.location.href = '/login'}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm shadow-lg"
-            >
-              Login to Comment
-            </Button>
-          </div>
-        )}
+    <form onSubmit={handleSubmitComment} className="p-4 bg-gaming-800/50 rounded-lg border border-gaming-700">
+      {/* User profile and textarea row */}
+      <div className="flex gap-3">
+        {/* User Avatar */}
+        <div className="flex-shrink-0">
+          <Avatar className="h-10 w-10 border-2 border-purple-600/30">
+            {user?.user_metadata?.avatar_url ? (
+              <AvatarImage 
+                src={user.user_metadata.avatar_url} 
+                alt={user.user_metadata.name || user.email || 'User'} 
+                className="object-cover"
+              />
+            ) : (
+              <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white font-bold">
+                {user?.email?.substring(0, 2)?.toUpperCase() || user?.user_metadata?.name?.substring(0, 2)?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            )}
+          </Avatar>
+        </div>
+
+        {/* Comment Input */}
+        <div className="relative flex-1">
+          <Textarea
+            ref={textareaRef}
+            placeholder={user ? "Write your comment..." : "Please login to comment"}
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            disabled={!user || isSubmitting}
+            className="w-full min-h-[80px] bg-gaming-900 text-white rounded-lg p-3 resize-none border border-gaming-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 placeholder:text-gray-500 outline-none transition-all text-sm disabled:opacity-50 comment-textarea comment-form-input"
+          />
+
+          {!user && (
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center rounded-lg">
+              <Button
+                type="button"
+                onClick={() => window.location.href = '/login'}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm shadow-lg"
+              >
+                Login to Comment
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="flex justify-between mt-3 items-center">
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-500 flex items-center">
           {user && newComment.length > 0 && (
-            <span className={`transition-colors ${newComment.length > 500 ? 'text-red-500' : ''}`}>
+            <span className={`transition-colors ${newComment.length > 500 ? 'text-red-500 font-semibold' : ''}`}>
               {newComment.length}/500
             </span>
+          )}
+          {/* Emoji button placeholder - could be implemented in the future */}
+          {user && (
+            <button 
+              type="button" 
+              className="ml-3 text-gray-400 hover:text-gray-200 transition-colors"
+              onClick={() => toast("Emoji picker coming soon!")}
+            >
+              <Smile className="h-4 w-4" />
+            </button>
           )}
         </div>
         
@@ -192,8 +226,9 @@ export const CommentForm = ({
           <Button 
             type="submit" 
             disabled={!user || isSubmitting || !newComment.trim() || newComment.length > 500} 
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-5 py-2 rounded-md text-xs h-9 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-md text-xs h-9 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 px-4"
           >
+            <SendIcon className="h-3.5 w-3.5" />
             {isSubmitting ? 'Posting...' : parentId ? 'Reply' : 'Comment'}
           </Button>
         </div>
