@@ -1,7 +1,15 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, ArrowLeft, Heart, ChevronDown, ChevronUp, MoreVertical, Check, X as XIcon } from "lucide-react";
+// Import each icon separately to avoid bundling issues
+import { X } from "lucide-react";
+import { Heart } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { ChevronUp } from "lucide-react";
+import { MoreVertical } from "lucide-react";
+import { Check } from "lucide-react";
+// Import X again with a different name to avoid conflicts
+import { X as XIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getComments, getCommentCount, likeComment, deleteComment, editComment, createComment } from "@/services/commentService";
@@ -9,7 +17,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDistanceToNowStrict } from 'date-fns';
+import { formatDistanceToNowStrict } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
