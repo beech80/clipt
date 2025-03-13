@@ -351,72 +351,79 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-gaming-900 border-gaming-700 text-white p-0 max-h-[90vh] flex flex-col">
-        {/* Instagram-style header */}
-        <DialogTitle className="flex justify-between items-center p-3 border-b border-gaming-700 sticky top-0 bg-gaming-900 z-10">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8 mr-2" 
-              onClick={onClose}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h3 className="text-lg font-semibold">Comments</h3>
-          </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] bg-gaming-900 text-white p-0 gap-0 flex flex-col">
+        <DialogTitle className="flex items-center justify-between border-b border-gaming-700 p-4">
+          <h2 className="text-xl font-bold">Add Comment</h2>
           <Button 
             variant="ghost" 
-            size="icon" 
-            className="h-8 w-8" 
+            size="icon"
             onClick={onClose}
+            className="h-7 w-7 rounded-full text-gaming-300 hover:text-white"
           >
             <X className="h-4 w-4" />
           </Button>
         </DialogTitle>
         
-        {/* Original post creator section - Instagram style */}
+        {/* Post information */}
         {post && (
-          <div className="p-4 border-b border-gaming-700 flex gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={post.profiles?.avatar_url || ''} />
-              <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-            </Avatar>
-            <div>
+          <div className="p-4 border-b border-gaming-700">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8 flex-shrink-0">
+                <AvatarImage src={post.profiles?.avatar_url || ''} />
+                <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+              </Avatar>
               <div>
-                <span className="font-semibold text-gaming-100 mr-1">
+                <p className="font-semibold text-sm text-white">
                   {post.profiles?.username || 'Anonymous'}
-                </span>
-                <span className="text-gaming-200">{post.content || ''}</span>
+                </p>
+                <p className="text-gaming-200 text-sm">Commenting on post from {post.profiles?.username}</p>
               </div>
             </div>
+            {post.content && (
+              <p className="mt-2 text-sm text-gaming-200 ml-10">{post.content}</p>
+            )}
+            {post.image_url && (
+              <div className="ml-10 mt-2 w-14 h-14 rounded overflow-hidden">
+                <img 
+                  src={post.image_url} 
+                  alt="Post image" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
         )}
-        
-        {/* Comments section - scrollable */}
-        <div className="flex-1 overflow-y-auto">
+
+        {/* Comments section with scrolling */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <h3 className="font-medium text-white mb-3">Comments</h3>
+          
           {isLoading ? (
-            <div className="p-12 text-center text-gaming-300">Loading comments...</div>
+            <div className="py-10 text-center text-gaming-300">
+              Loading comments...
+            </div>
           ) : error ? (
-            <div className="p-12 text-center text-red-500">Failed to load comments</div>
+            <div className="py-10 text-center text-red-500">
+              Error loading comments. Please try again.
+            </div>
           ) : organizedComments.length === 0 ? (
-            <div className="p-12 text-center text-gaming-300">
+            <div className="py-10 text-center text-gaming-300">
               No comments yet. Be the first to comment!
             </div>
           ) : (
-            <div>
+            <div className="space-y-4">
               {organizedComments.map(comment => (
-                <div key={comment.id} className="px-4 py-3 border-b border-gray-800">
-                  <div className="flex gap-3">
-                    <Avatar className="h-9 w-9 flex-shrink-0">
+                <div key={comment.id} className="py-2 border-b border-gaming-700/30 last:border-b-0">
+                  <div className="flex gap-2">
+                    <Avatar className="h-8 w-8 flex-shrink-0">
                       <AvatarImage src={comment.profiles?.avatar_url || ''} />
                       <AvatarFallback>{comment.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                     </Avatar>
                     
                     <div className="flex-1">
                       <div>
-                        <span className="font-semibold text-gaming-100 mr-1">
+                        <span className="font-semibold text-gaming-100 mr-1 text-sm">
                           {comment.profiles?.username || 'Anonymous'}
                         </span>
                         {editingComment?.id === comment.id ? (
@@ -433,7 +440,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
                                 variant="outline" 
                                 size="sm"
                                 onClick={handleSaveEdit}
-                                className="h-8 text-xs flex items-center"
+                                className="h-7 text-xs flex items-center"
                               >
                                 <Check className="h-3 w-3 mr-1" /> Save
                               </Button>
@@ -441,14 +448,14 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
                                 variant="ghost" 
                                 size="sm"
                                 onClick={handleCancelEdit}
-                                className="h-8 text-xs flex items-center"
+                                className="h-7 text-xs flex items-center"
                               >
                                 <XIcon className="h-3 w-3 mr-1" /> Cancel
                               </Button>
                             </div>
                           </div>
                         ) : (
-                          <span className="text-gaming-200">{comment.content}</span>
+                          <span className="text-gaming-200 text-sm">{comment.content}</span>
                         )}
                       </div>
                       
@@ -472,7 +479,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
                             className="flex items-center text-xs text-gaming-400 mt-1"
                             onClick={() => toggleReplies(comment.id)}
                           >
-                            <div className="h-px bg-gaming-700 w-6 mr-2"></div>
+                            <div className="h-px bg-gaming-700 w-4 mr-1"></div>
                             {showRepliesFor[comment.id] ? (
                               <span className="flex items-center">
                                 Hide replies <ChevronUp className="h-3 w-3 ml-1" />
@@ -485,17 +492,17 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
                           </button>
                           
                           {showRepliesFor[comment.id] && (
-                            <div className="mt-3 space-y-3">
+                            <div className="mt-2 space-y-2 pl-4 border-l border-gaming-700/30">
                               {comment.children.map(reply => (
-                                <div key={reply.id} className="flex gap-3">
-                                  <Avatar className="h-8 w-8 flex-shrink-0">
+                                <div key={reply.id} className="flex gap-2">
+                                  <Avatar className="h-6 w-6 flex-shrink-0">
                                     <AvatarImage src={reply.profiles?.avatar_url || ''} />
                                     <AvatarFallback>{reply.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                                   </Avatar>
                                   
                                   <div className="flex-1">
                                     <div>
-                                      <span className="font-semibold text-gaming-100 mr-1">
+                                      <span className="font-semibold text-gaming-100 mr-1 text-sm">
                                         {reply.profiles?.username || 'Anonymous'}
                                       </span>
                                       {editingComment?.id === reply.id ? (
@@ -503,16 +510,16 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
                                           <Textarea
                                             value={editContent}
                                             onChange={(e) => setEditContent(e.target.value)}
-                                            className="min-h-9 py-2 px-3 bg-gaming-800 border-gaming-700 resize-none text-sm"
+                                            className="min-h-8 py-1 px-2 bg-gaming-800 border-gaming-700 resize-none text-sm"
                                             rows={2}
                                             autoFocus
                                           />
-                                          <div className="flex gap-2 mt-2">
+                                          <div className="flex gap-2 mt-1">
                                             <Button 
                                               variant="outline" 
                                               size="sm"
                                               onClick={handleSaveEdit}
-                                              className="h-8 text-xs flex items-center"
+                                              className="h-6 text-xs flex items-center px-2"
                                             >
                                               <Check className="h-3 w-3 mr-1" /> Save
                                             </Button>
@@ -520,18 +527,18 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
                                               variant="ghost" 
                                               size="sm"
                                               onClick={handleCancelEdit}
-                                              className="h-8 text-xs flex items-center"
+                                              className="h-6 text-xs flex items-center px-2"
                                             >
                                               <XIcon className="h-3 w-3 mr-1" /> Cancel
                                             </Button>
                                           </div>
                                         </div>
                                       ) : (
-                                        <span className="text-gaming-200">{reply.content}</span>
+                                        <span className="text-gaming-200 text-sm">{reply.content}</span>
                                       )}
                                     </div>
                                     
-                                    <div className="flex items-center mt-1 text-xs text-gaming-400 space-x-3">
+                                    <div className="flex items-center mt-1 text-xs text-gaming-400 space-x-2">
                                       <span>{formatDate(reply.created_at)}</span>
                                       {reply.likes_count > 0 && (
                                         <span>{reply.likes_count} like{reply.likes_count !== 1 ? 's' : ''}</span>
@@ -551,7 +558,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
                                       onClick={() => handleLikeComment(reply.id)}
                                     >
                                       <Heart 
-                                        className="h-4 w-4" 
+                                        className="h-3 w-3" 
                                         fill={reply.liked_by_me ? "currentColor" : "none"}
                                       />
                                     </button>
@@ -559,8 +566,8 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
                                     {isCommentAuthor(reply) && (
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                          <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors p-1">
-                                            <MoreVertical className="h-4 w-4" />
+                                          <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
+                                            <MoreVertical className="h-3 w-3" />
                                           </button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
@@ -602,7 +609,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
                       {isCommentAuthor(comment) && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors p-1">
+                            <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
                               <MoreVertical className="h-4 w-4" />
                             </button>
                           </DropdownMenuTrigger>
@@ -629,42 +636,48 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
             </div>
           )}
         </div>
-        
-        {/* Comment input at bottom - Instagram style */}
-        <div className="border-t border-gaming-700 bg-gaming-900 p-3 sticky bottom-0">
-          <form onSubmit={handleSubmitComment} className="flex items-end gap-2">
-            <div className="relative flex-1">
-              {replyingTo && (
-                <div className="absolute -top-5 left-0 text-xs text-gaming-300 flex items-center">
-                  <span>Replying to {replyingTo.profiles?.username}</span>
-                  <button 
-                    type="button"
-                    className="ml-1 text-gaming-400 hover:text-gaming-300"
-                    onClick={() => setReplyingTo(null)}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              )}
-              <Textarea
-                id="comment-textarea"
-                placeholder={replyingTo ? `Reply to ${replyingTo.profiles?.username}...` : "Add a comment..."}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="min-h-9 py-2 px-3 bg-gaming-800 border-gaming-700 resize-none"
-                rows={1}
-              />
-            </div>
+
+        {/* Comment form at the bottom */}
+        <div className="border-t border-gaming-700 p-4 bg-gaming-900">
+          <div className="relative">
+            {replyingTo && (
+              <div className="absolute -top-5 left-0 text-xs text-gaming-300 flex items-center">
+                <span>Replying to {replyingTo.profiles?.username}</span>
+                <button 
+                  type="button"
+                  className="ml-1 text-gaming-400 hover:text-gaming-300"
+                  onClick={() => setReplyingTo(null)}
+                >
+                  <XIcon className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+            <Textarea
+              id="comment-textarea"
+              placeholder={replyingTo ? `Reply to ${replyingTo.profiles?.username}...` : "Write your comment..."}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="min-h-24 py-3 px-4 bg-gaming-800 border-gaming-700 resize-none w-full"
+              rows={4}
+            />
+          </div>
+          
+          <div className="flex justify-end mt-4 gap-3">
             <Button 
-              type="submit" 
-              variant="ghost"
-              size="sm"
-              disabled={!comment.trim()}
-              className="text-blue-400 hover:text-blue-300 disabled:opacity-50"
+              variant="outline"
+              onClick={onClose}
+              className="text-gaming-300 border-gaming-700 hover:bg-gaming-800"
             >
-              Post
+              Cancel
             </Button>
-          </form>
+            <Button
+              onClick={handleSubmitComment}
+              disabled={!comment.trim() || addComment.isPending}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {addComment.isPending ? 'Posting...' : 'Post Comment'}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

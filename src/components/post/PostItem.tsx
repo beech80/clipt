@@ -67,12 +67,9 @@ const PostItem = ({ post }: PostItemProps) => {
   };
 
   const handleCommentClick = () => {
-    // If we prefer the dropdown, expand it, otherwise show modal
-    if (window.innerWidth < 768) { // Mobile view - use modal
-      setCommentModalOpen(true);
-    } else { // Desktop view - use dropdown
-      setCommentsExpanded(true);
-    }
+    // Mobile first approach - use modal for all devices
+    setCommentModalOpen(true);
+    // No longer conditional based on screen size since we want the modal on all devices
   };
   
   const handleCommentModalClose = () => {
