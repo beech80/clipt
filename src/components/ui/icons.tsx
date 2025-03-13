@@ -1,158 +1,317 @@
 import React from 'react';
-import * as LucideIcons from 'lucide-react';
+import {
+  Heart,
+  MessageCircle,
+  MessageSquare,
+  Trophy,
+  Camera,
+  UserPlus,
+  UserCheck,
+  X,
+  Home,
+  Search,
+  Bell,
+  Upload,
+  User,
+  Settings,
+  Video,
+  Award,
+  Monitor,
+  TrendingUp,
+  Bookmark,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Calendar,
+  Menu,
+  Mail,
+  Send,
+  Paperclip,
+  MoreVertical,
+  Edit,
+  Trash,
+  ThumbsUp,
+  Share,
+  Copy,
+  Download,
+  Flag,
+  Lock,
+  Unlock,
+  Shield,
+  AlertCircle,
+  HelpCircle,
+  ArrowRight,
+  ArrowLeft,
+  Power,
+  Moon,
+  Sun,
+  Zap,
+  Star
+} from 'lucide-react';
 
-// Create a mapping of all Lucide icons
-const iconsLib = { ...LucideIcons };
-
-// Types for icon props
-export interface IconProps {
-  name: string;
+// Standard icon props interface
+interface IconBaseProps extends React.SVGProps<SVGSVGElement> {
   className?: string;
-  fill?: string;
-  size?: number;
+  size?: string | number;
   color?: string;
-  onClick?: () => void;
+  fill?: string;
 }
 
-/**
- * A unified Icon component that safely wraps Lucide icons to prevent bundling issues
- * 
- * Usage:
- * <Icon name="Heart" className="h-5 w-5" fill="red" />
- * <Icon name="MessageSquare" className="h-4 w-4" />
- */
-export const Icon: React.FC<IconProps> = ({ 
-  name, 
-  className = "", 
-  fill = "none", 
-  size,
-  color,
-  onClick
-}) => {
-  // Get the icon component by name
-  const IconComponent = iconsLib[name as keyof typeof iconsLib] as React.ElementType;
-  
-  if (!IconComponent) {
-    console.error(`Icon ${name} not found`);
-    return null;
-  }
+// Export direct wrapper components for each icon
+export const HeartIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Heart ref={ref} {...props} />;
+});
+HeartIcon.displayName = 'HeartIcon';
 
-  // Build style props
-  const sizeProps = size ? { width: size, height: size } : {};
-  const colorProps = color ? { color } : {};
-  
-  return (
-    <IconComponent 
-      className={className} 
-      fill={fill} 
-      onClick={onClick}
-      {...sizeProps}
-      {...colorProps}
-    />
-  );
-};
+export const MessageCircleIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <MessageCircle ref={ref} {...props} />;
+});
+MessageCircleIcon.displayName = 'MessageCircleIcon';
 
-// Export common icon wrappers with preset styles
-export const HeartIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Heart" {...props} />
-);
+export const MessageIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <MessageSquare ref={ref} {...props} />;
+});
+MessageIcon.displayName = 'MessageIcon';
 
-export const MessageIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="MessageSquare" {...props} />
-);
+export const TrophyIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Trophy ref={ref} {...props} />;
+});
+TrophyIcon.displayName = 'TrophyIcon';
 
-export const TrophyIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Trophy" {...props} />
-);
+export const CameraIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Camera ref={ref} {...props} />;
+});
+CameraIcon.displayName = 'CameraIcon';
 
-export const UserIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="User" {...props} />
-);
+export const UserPlusIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <UserPlus ref={ref} {...props} />;
+});
+UserPlusIcon.displayName = 'UserPlusIcon';
 
-export const CloseIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="X" {...props} />
-);
+export const UserCheckIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <UserCheck ref={ref} {...props} />;
+});
+UserCheckIcon.displayName = 'UserCheckIcon';
 
-export const MenuIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Menu" {...props} />
-);
+export const CloseIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <X ref={ref} {...props} />;
+});
+CloseIcon.displayName = 'CloseIcon';
 
-export const HomeIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Home" {...props} />
-);
+export const HomeIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Home ref={ref} {...props} />;
+});
+HomeIcon.displayName = 'HomeIcon';
 
-export const SearchIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Search" {...props} />
-);
+export const SearchIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Search ref={ref} {...props} />;
+});
+SearchIcon.displayName = 'SearchIcon';
 
-export const BellIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Bell" {...props} />
-);
+export const BellIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Bell ref={ref} {...props} />;
+});
+BellIcon.displayName = 'BellIcon';
 
-export const UploadIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Upload" {...props} />
-);
+export const UploadIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Upload ref={ref} {...props} />;
+});
+UploadIcon.displayName = 'UploadIcon';
 
-export const SettingsIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Settings" {...props} />
-);
+export const UserIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <User ref={ref} {...props} />;
+});
+UserIcon.displayName = 'UserIcon';
 
-export const BookmarkIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Bookmark" {...props} />
-);
+export const SettingsIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Settings ref={ref} {...props} />;
+});
+SettingsIcon.displayName = 'SettingsIcon';
 
-export const VideoIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Video" {...props} />
-);
+export const VideoIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Video ref={ref} {...props} />;
+});
+VideoIcon.displayName = 'VideoIcon';
 
-export const AwardIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Award" {...props} />
-);
+export const AwardIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Award ref={ref} {...props} />;
+});
+AwardIcon.displayName = 'AwardIcon';
 
-export const MonitorIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Monitor" {...props} />
-);
+export const MonitorIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Monitor ref={ref} {...props} />;
+});
+MonitorIcon.displayName = 'MonitorIcon';
 
-export const CameraIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Camera" {...props} />
-);
+export const TrendingUpIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <TrendingUp ref={ref} {...props} />;
+});
+TrendingUpIcon.displayName = 'TrendingUpIcon';
 
-export const UserPlusIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="UserPlus" {...props} />
-);
+export const BookmarkIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Bookmark ref={ref} {...props} />;
+});
+BookmarkIcon.displayName = 'BookmarkIcon';
 
-export const UserCheckIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="UserCheck" {...props} />
-);
+export const CheckIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Check ref={ref} {...props} />;
+});
+CheckIcon.displayName = 'CheckIcon';
 
-export const TrashIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Trash2" {...props} />
-);
+export const ChevronDownIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <ChevronDown ref={ref} {...props} />;
+});
+ChevronDownIcon.displayName = 'ChevronDownIcon';
 
-export const MoreIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="MoreVertical" {...props} />
-);
+export const ChevronUpIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <ChevronUp ref={ref} {...props} />;
+});
+ChevronUpIcon.displayName = 'ChevronUpIcon';
 
-export const MoreVerticalIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="MoreVertical" {...props} />
-);
+export const ChevronLeftIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <ChevronLeft ref={ref} {...props} />;
+});
+ChevronLeftIcon.displayName = 'ChevronLeftIcon';
 
-export const ChevronDownIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="ChevronDown" {...props} />
-);
+export const ChevronRightIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <ChevronRight ref={ref} {...props} />;
+});
+ChevronRightIcon.displayName = 'ChevronRightIcon';
 
-export const ChevronUpIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="ChevronUp" {...props} />
-);
+export const ClockIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Clock ref={ref} {...props} />;
+});
+ClockIcon.displayName = 'ClockIcon';
 
-export const CheckIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="Check" {...props} />
-);
+export const CalendarIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Calendar ref={ref} {...props} />;
+});
+CalendarIcon.displayName = 'CalendarIcon';
 
-export const TrendingUpIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="TrendingUp" {...props} />
-);
+export const MenuIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Menu ref={ref} {...props} />;
+});
+MenuIcon.displayName = 'MenuIcon';
 
-export const MessageCircleIcon = (props: Omit<IconProps, 'name'>) => (
-  <Icon name="MessageCircle" {...props} />
-);
+export const MailIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Mail ref={ref} {...props} />;
+});
+MailIcon.displayName = 'MailIcon';
+
+export const SendIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Send ref={ref} {...props} />;
+});
+SendIcon.displayName = 'SendIcon';
+
+export const PaperclipIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Paperclip ref={ref} {...props} />;
+});
+PaperclipIcon.displayName = 'PaperclipIcon';
+
+export const MoreVerticalIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <MoreVertical ref={ref} {...props} />;
+});
+MoreVerticalIcon.displayName = 'MoreVerticalIcon';
+
+export const MoreIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <MoreVertical ref={ref} {...props} />;
+});
+MoreIcon.displayName = 'MoreIcon';
+
+export const EditIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Edit ref={ref} {...props} />;
+});
+EditIcon.displayName = 'EditIcon';
+
+export const TrashIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Trash ref={ref} {...props} />;
+});
+TrashIcon.displayName = 'TrashIcon';
+
+export const ThumbsUpIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <ThumbsUp ref={ref} {...props} />;
+});
+ThumbsUpIcon.displayName = 'ThumbsUpIcon';
+
+export const ShareIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Share ref={ref} {...props} />;
+});
+ShareIcon.displayName = 'ShareIcon';
+
+export const CopyIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Copy ref={ref} {...props} />;
+});
+CopyIcon.displayName = 'CopyIcon';
+
+export const DownloadIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Download ref={ref} {...props} />;
+});
+DownloadIcon.displayName = 'DownloadIcon';
+
+export const FlagIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Flag ref={ref} {...props} />;
+});
+FlagIcon.displayName = 'FlagIcon';
+
+export const LockIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Lock ref={ref} {...props} />;
+});
+LockIcon.displayName = 'LockIcon';
+
+export const UnlockIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Unlock ref={ref} {...props} />;
+});
+UnlockIcon.displayName = 'UnlockIcon';
+
+export const ShieldIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Shield ref={ref} {...props} />;
+});
+ShieldIcon.displayName = 'ShieldIcon';
+
+export const AlertCircleIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <AlertCircle ref={ref} {...props} />;
+});
+AlertCircleIcon.displayName = 'AlertCircleIcon';
+
+export const HelpCircleIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <HelpCircle ref={ref} {...props} />;
+});
+HelpCircleIcon.displayName = 'HelpCircleIcon';
+
+export const ArrowRightIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <ArrowRight ref={ref} {...props} />;
+});
+ArrowRightIcon.displayName = 'ArrowRightIcon';
+
+export const ArrowLeftIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <ArrowLeft ref={ref} {...props} />;
+});
+ArrowLeftIcon.displayName = 'ArrowLeftIcon';
+
+export const PowerIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Power ref={ref} {...props} />;
+});
+PowerIcon.displayName = 'PowerIcon';
+
+export const MoonIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Moon ref={ref} {...props} />;
+});
+MoonIcon.displayName = 'MoonIcon';
+
+export const SunIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Sun ref={ref} {...props} />;
+});
+SunIcon.displayName = 'SunIcon';
+
+export const ZapIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Zap ref={ref} {...props} />;
+});
+ZapIcon.displayName = 'ZapIcon';
+
+export const StarIcon = React.forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => {
+  return <Star ref={ref} {...props} />;
+});
+StarIcon.displayName = 'StarIcon';
