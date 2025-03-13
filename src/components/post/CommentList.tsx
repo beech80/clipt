@@ -167,10 +167,10 @@ export const CommentList = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 bg-gaming-900/80 border-t border-gaming-700">
       {/* Comment form at the top only on the main comment section */}
       {!parentId && user && (
-        <div className="px-4 py-2 border-b border-gray-200 dark:border-gaming-800">
+        <div className="px-4 py-3 border-b border-gaming-700">
           <CommentForm 
             postId={normalizedPostId} 
             onCommentAdded={() => {
@@ -178,27 +178,29 @@ export const CommentList = ({
               if (onCommentAdded) onCommentAdded();
             }}
             autoFocus={autoFocus}
+            placeholder="Add a comment..."
+            buttonText="Post"
           />
         </div>
       )}
 
       {/* Loading state */}
       {isLoading && (
-        <div className="flex justify-center items-center py-8">
+        <div className="flex justify-center items-center py-6">
           <div className="animate-pulse flex flex-col space-y-4 w-full px-4">
             <div className="flex items-start gap-3">
-              <div className="rounded-full bg-gray-200 dark:bg-gaming-800 h-8 w-8"></div>
+              <div className="rounded-full bg-gaming-800 h-8 w-8"></div>
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-gray-200 dark:bg-gaming-800 rounded w-1/4"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gaming-800 rounded w-full"></div>
+                <div className="h-3 bg-gaming-800 rounded w-1/4"></div>
+                <div className="h-3 bg-gaming-800 rounded w-full"></div>
               </div>
             </div>
             
             <div className="flex items-start gap-3">
-              <div className="rounded-full bg-gray-200 dark:bg-gaming-800 h-8 w-8"></div>
+              <div className="rounded-full bg-gaming-800 h-8 w-8"></div>
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-gray-200 dark:bg-gaming-800 rounded w-1/3"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gaming-800 rounded w-full"></div>
+                <div className="h-3 bg-gaming-800 rounded w-1/3"></div>
+                <div className="h-3 bg-gaming-800 rounded w-full"></div>
               </div>
             </div>
           </div>
@@ -215,7 +217,7 @@ export const CommentList = ({
             variant="ghost" 
             size="sm" 
             onClick={() => queryClient.invalidateQueries()}
-            className="mt-2 text-xs"
+            className="mt-2 text-xs text-blue-400 hover:text-blue-300"
           >
             Retry
           </Button>
@@ -224,16 +226,16 @@ export const CommentList = ({
 
       {/* No comments yet */}
       {!isLoading && !error && comments && comments.length === 0 && (
-        <div className="px-4 py-6 text-center">
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            No comments yet. Be the first to comment!
+        <div className="px-4 py-4 text-center">
+          <p className="text-gray-400 text-sm">
+            Be the first to comment on this post!
           </p>
         </div>
       )}
 
       {/* Comment list */}
       {!isLoading && !error && comments && comments.length > 0 && (
-        <div className="relative">
+        <div className="py-2">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}
