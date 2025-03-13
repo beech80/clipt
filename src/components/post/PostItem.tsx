@@ -19,7 +19,6 @@ const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
-  const [showComments, setShowComments] = useState(true);
 
   const { data: commentsCount = 0, refetch } = useQuery({
     queryKey: ['comments-count', post.id],
@@ -120,7 +119,7 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
         <div 
           className="flex items-center space-x-1 group transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
-          onClick={() => setShowComments(!showComments)}
+          onClick={handleCommentClick}
         >
           <MessageSquare 
             className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors group-active:scale-90"
@@ -153,48 +152,22 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
       )}
 
-      {/* Comments Toggle */}
+      {/* Comment button at bottom */}
       <div className="px-4 py-2 border-t border-gaming-400/20">
         <Button 
           variant="ghost" 
           size="sm" 
           className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
-          onClick={() => setShowComments(!showComments)}
-          data-comments-toggle
+          onClick={handleCommentClick}
         >
-          {showComments ? (
-            <>
-              <ChevronUp className="h-4 w-4 mr-1" />
-              Hide comments
-            </>
-          ) : (
-            <>
-              <ChevronDown className="h-4 w-4 mr-1" />
-              {commentsCount > 0 
-                ? `View all ${commentsCount} comments` 
-                : "Add a comment..."}
-            </>
-          )}
+          <MessageSquare className="h-4 w-4 mr-1" />
+          {commentsCount > 0 
+            ? `View all ${commentsCount} comments` 
+            : "Add a comment..."}
         </Button>
       </div>
 
-      {/* Inline Comments */}
-      {showComments && (
-        <div className="border-t border-gaming-400/20">
-          <CommentList 
-            postId={String(post.id)} 
-            onCommentAdded={() => {
-              // Update comment count when a new comment is added
-              setTimeout(() => {
-                // Requery for latest count
-                void refetch();
-              }, 500);
-            }}
-          />
-        </div>
-      )}
-
-      {/* Comment Modal - redirects to inline comments */}
+      {/* Comment Modal - Instagram-style popup */}
       <CommentModal 
         isOpen={commentModalOpen}
         onClose={() => setCommentModalOpen(false)}
