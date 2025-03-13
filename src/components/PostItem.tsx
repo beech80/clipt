@@ -2,7 +2,14 @@ import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
-import { Heart, MessageSquare, Trophy, Trash2, MoreVertical, UserCheck, UserPlus } from "lucide-react";
+// Import icons individually to avoid bundling issues
+import { Heart } from "lucide-react";
+import { MessageSquare } from "lucide-react";
+import { Trophy } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { MoreVertical } from "lucide-react";
+import { UserCheck } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +24,29 @@ import { CommentList } from "./post/CommentList";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Textarea } from './ui/textarea';
+
+// Create wrapper components for icons to avoid bundling issues
+const HeartIcon = ({ className, fill }: { className?: string, fill?: string }) => (
+  <Heart className={className || "h-5 w-5"} fill={fill || "none"} />
+);
+const MessageIcon = ({ className }: { className?: string }) => (
+  <MessageSquare className={className || "h-5 w-5"} />
+);
+const TrophyIcon = ({ className, fill }: { className?: string, fill?: string }) => (
+  <Trophy className={className || "h-5 w-5"} fill={fill || "none"} />
+);
+const TrashIcon = ({ className }: { className?: string }) => (
+  <Trash2 className={className || "h-5 w-5"} />
+);
+const MoreIcon = ({ className }: { className?: string }) => (
+  <MoreVertical className={className || "h-5 w-5"} />
+);
+const UserCheckIcon = ({ className }: { className?: string }) => (
+  <UserCheck className={className || "h-5 w-5"} />
+);
+const UserPlusIcon = ({ className }: { className?: string }) => (
+  <UserPlus className={className || "h-5 w-5"} />
+);
 
 interface PostItemProps {
   post: Post;
@@ -802,14 +832,14 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         {isOwner && (
           <DropdownMenu>
             <DropdownMenuTrigger className="p-2 hover:bg-gaming-800 rounded-full transition-colors">
-              <MoreVertical className="h-5 w-5 text-gaming-300" />
+              <MoreIcon className="h-5 w-5 text-gaming-300" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem
                 className="text-red-500 focus:text-red-400 cursor-pointer"
                 onClick={handleDeletePost}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <TrashIcon className="mr-2 h-4 w-4" />
                 Delete Post
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -832,7 +862,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
           className="like-button flex items-center text-sm font-medium transition-all duration-200 group"
           onClick={handleLike}
         >
-          <Heart 
+          <HeartIcon 
             className={`h-6 w-6 ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
             fill={liked ? "currentColor" : "none"}
           />
@@ -846,7 +876,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
               className="comment-button flex items-center text-sm font-medium text-gray-400 hover:text-blue-500 transition-all duration-200 group"
               onClick={handleComment}
             >
-              <MessageSquare 
+              <MessageIcon 
                 className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
               />
               <span className="text-base font-medium text-gray-400 group-hover:text-blue-300">
@@ -888,7 +918,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
           onClick={handleTrophyVote}
           disabled={trophyLoading}
         >
-          <Trophy 
+          <TrophyIcon 
             className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all ${trophyLoading ? 'opacity-50' : ''}`}
           />
           <span className={`text-base font-medium ml-1 ${hasTrophy ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
@@ -903,11 +933,11 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             onClick={handleFollow}
           >
             {isFollowing ? (
-              <UserCheck 
+              <UserCheckIcon 
                 className="h-6 w-6 text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
               />
             ) : (
-              <UserPlus 
+              <UserPlusIcon 
                 className="h-6 w-6 text-gray-400 group-hover:text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
               />
             )}
