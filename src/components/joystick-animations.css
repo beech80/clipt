@@ -110,3 +110,61 @@
   text-shadow: 0 0 5px rgba(255, 255, 255, 0.5) !important;
   transition: filter 0.08s ease, text-shadow 0.08s ease !important;
 }
+
+/* Joystick animations */
+.joystick {
+  transition: transform 0.15s ease-out;
+}
+
+.joystick-active {
+  transition: none;
+}
+
+/* Pulse animation for the joystick when active */
+@keyframes joystick-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(135, 106, 245, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(135, 106, 245, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(135, 106, 245, 0);
+  }
+}
+
+.joystick-active .joystick-thumb {
+  animation: joystick-pulse 1.5s infinite;
+}
+
+/* Spring return animation */
+@keyframes spring-return {
+  0% {
+    transform: translate(var(--last-x), var(--last-y));
+  }
+  70% {
+    transform: translate(calc(var(--last-x) * 0.05), calc(var(--last-y) * 0.05));
+  }
+  85% {
+    transform: translate(calc(var(--last-x) * -0.03), calc(var(--last-y) * -0.03));
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.joystick-spring-return {
+  animation: spring-return 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Directional indicators */
+.joystick-up-indicator, 
+.joystick-down-indicator {
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.joystick-active.joystick-up .joystick-up-indicator,
+.joystick-active.joystick-down .joystick-down-indicator {
+  opacity: 1;
+}

@@ -1,8 +1,15 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-// Import basic Lucide icons - simpler approach
-import { X, Heart, ChevronDown, ChevronUp, MoreVertical, Check } from "lucide-react";
+// Import from our centralized icon library
+import { 
+  CloseIcon, 
+  HeartIcon, 
+  ChevronDownIcon, 
+  ChevronUpIcon, 
+  MoreIcon, 
+  CheckIcon 
+} from "@/components/ui/icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getComments, getCommentCount, likeComment, deleteComment, editComment, createComment } from "@/services/commentService";
@@ -18,17 +25,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Create wrapper components to avoid bundling issues
-const CloseIcon = () => <X className="h-4 w-4" />;
-const HeartIcon = ({ fill }: { fill: string }) => <Heart className="h-4 w-4" fill={fill} />;
-const SmallHeartIcon = ({ fill }: { fill: string }) => <Heart className="h-3 w-3" fill={fill} />;
-const DownIcon = () => <ChevronDown className="h-3 w-3 ml-1" />;
-const UpIcon = () => <ChevronUp className="h-3 w-3 ml-1" />;
-const MoreIcon = () => <MoreVertical className="h-4 w-4" />;
-const SmallMoreIcon = () => <MoreVertical className="h-3 w-3" />;
-const CheckmarkIcon = () => <Check className="h-3 w-3 mr-1" />;
-const SmallCloseIcon = () => <X className="h-3 w-3 mr-1" />;
-const TinyCloseIcon = () => <X className="h-3 w-3" />;
+// Custom styled versions of our icons
+const SmallHeartIcon = ({ fill }: { fill: string }) => <HeartIcon className="h-3 w-3" fill={fill} />;
+const DownIcon = () => <ChevronDownIcon className="h-3 w-3 ml-1" />;
+const UpIcon = () => <ChevronUpIcon className="h-3 w-3 ml-1" />;
+const SmallMoreIcon = () => <MoreIcon className="h-3 w-3" />;
+const CheckmarkIcon = () => <CheckIcon className="h-3 w-3 mr-1" />;
+const SmallCloseIcon = () => <CloseIcon className="h-3 w-3 mr-1" />;
+const TinyCloseIcon = () => <CloseIcon className="h-3 w-3" />;
 
 interface CommentModalProps {
   isOpen: boolean;
