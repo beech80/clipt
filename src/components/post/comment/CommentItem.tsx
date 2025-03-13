@@ -177,10 +177,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
   }
 
   return (
-    <div className="rounded-lg bg-[#252A39] p-3 mb-3 transition-all hover:bg-[#2A3046] border border-[#3A3F4C]">
+    <div className="rounded-lg bg-[#252A39] p-4 mb-3 transition-all hover:bg-[#2A3046] border border-[#3A3F4C] shadow-sm">
       <div className="flex gap-3 group relative">
         <div className="flex-shrink-0">
-          <Avatar className="h-10 w-10 border-2 border-purple-600/30">
+          <Avatar className="h-12 w-12 border-2 border-purple-600/30 shadow-md hover:border-purple-500 transition-all duration-200">
             {avatarUrl ? (
               <AvatarImage src={avatarUrl} alt={username} className="object-cover" />
             ) : (
@@ -192,21 +192,23 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="bg-gray-100 dark:bg-[#1E2330] p-3 rounded-lg relative">
-            <div className="flex justify-between items-start gap-2">
-              <a 
-                href={`/profile/${comment.user_id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate(`/profile/${comment.user_id}`);
-                }}
-                className="font-semibold text-gray-900 dark:text-white hover:underline"
-              >
-                {username}
-              </a>
-              {wasEdited && (
-                <span className="text-xs text-gray-400 ml-2">(edited)</span>
-              )}
+          <div className="bg-gray-100 dark:bg-[#1E2330] p-4 rounded-lg relative shadow-sm">
+            <div className="flex justify-between items-start gap-2 mb-2">
+              <div className="flex items-center">
+                <a 
+                  href={`/profile/${comment.user_id}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(`/profile/${comment.user_id}`);
+                  }}
+                  className="font-semibold text-gray-900 dark:text-white hover:underline text-base"
+                >
+                  {username}
+                </a>
+                {wasEdited && (
+                  <span className="text-xs text-gray-400 ml-2 bg-gray-800/40 px-2 py-0.5 rounded-full">(edited)</span>
+                )}
+              </div>
               <div className="flex items-center">
                 <span className="text-xs text-gray-400 mr-2">{formattedDate}</span>
                 
@@ -216,6 +218,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
                     size="sm"
                     onClick={() => navigate(`/messages/${comment.user_id}`)}
                     className="text-xs p-1 hover:bg-[#1A1F2C] rounded-full"
+                    aria-label={`Message ${username}`}
+                    title={`Message ${username}`}
                   >
                     <MessageSquare className="h-4 w-4 text-gray-400" />
                   </Button>
@@ -286,61 +290,63 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
                 </div>
               </div>
             ) : (
-              <p className="text-sm mb-2 whitespace-pre-wrap break-words text-black dark:text-gray-200">
+              <p className="text-sm mb-3 whitespace-pre-wrap break-words text-black dark:text-gray-200 leading-relaxed">
                 {comment.content}
               </p>
             )}
             
             {!isEditing && (
-              <div className="flex items-center space-x-4 mt-2">
+              <div className="flex items-center space-x-4 mt-3 border-t border-gray-700/20 pt-3">
                 <button 
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full ${
-                    likesCount > 0 ? 'bg-red-500/10' : 'bg-gray-800/30'
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
+                    likesCount > 0 ? 'bg-red-500/10 text-red-400' : 'bg-gray-800/30 text-gray-300'
                   } ${isLiking ? 'opacity-50' : 'hover:bg-red-500/20'} transition-colors`}
                   onClick={handleLike}
                   disabled={isLiking}
                   aria-label={`Like comment by ${username}`}
                 >
                   <Heart className={`h-4 w-4 ${likesCount > 0 ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
-                  <span className="text-xs font-medium">{likesCount}</span>
+                  <span className="text-xs font-medium">{likesCount > 0 ? likesCount : 'Like'}</span>
                 </button>
                 <button 
-                  className="text-xs flex items-center hover:text-[#9b87f5] transition-colors"
+                  className="text-xs flex items-center hover:text-[#9b87f5] transition-colors bg-gray-800/30 px-3 py-1.5 rounded-full text-gray-300"
                   onClick={handleReplyClick}
                 >
-                  <Reply className="h-3.5 w-3.5 mr-1" />
+                  <Reply className="h-3.5 w-3.5 mr-1.5" />
                   <span>Reply</span>
                 </button>
               </div>
             )}
             
             {isReplying && (
-              <div className="mt-3 ml-4 border-l-2 border-[#9b87f5]/20 pl-3">
+              <div className="mt-4 border-t border-[#9b87f5]/20 pt-4">
                 <CommentForm 
                   postId={postId} 
                   parentId={comment.id} 
                   onCancel={() => setIsReplying(false)}
                   onCommentAdded={handleReplyComplete}
+                  autoFocus={true}
                 />
               </div>
             )}
             
             {hasReplies && (
-              <div className="mt-3">
+              <div className="mt-4 border-t border-gray-700/20 pt-3">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={toggleReplies}
-                  className="text-xs text-[#9b87f5] hover:text-[#8a78d9] px-3 py-1"
+                  className="text-xs text-[#9b87f5] hover:text-[#8a78d9] px-3 py-1.5 flex items-center gap-1.5"
                 >
+                  <MessageSquare className="h-3.5 w-3.5" />
                   {showReplies 
                     ? `Hide ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
-                    : `Show ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
+                    : `View ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
                   }
                 </Button>
                 
                 {showReplies && (
-                  <div className="ml-4 mt-2 border-l-2 border-[#9b87f5]/20 pl-3 space-y-3">
+                  <div className="mt-3 border-l-2 border-[#9b87f5]/20 pl-4 space-y-3">
                     {comment.replies.map((reply) => (
                       <CommentItem 
                         key={reply.id} 
