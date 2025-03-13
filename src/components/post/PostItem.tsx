@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { PostInteractions } from "./interactions/PostInteractions";
 import { Post } from "@/types/post";
-import { Heart, MessageSquare, Trophy } from "lucide-react";
+import { Heart, MessageSquare, Trophy, ChevronDown, ChevronUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import CommentModal from "../comments/CommentModal";
+import { CommentList } from "./CommentList";
+import { Button } from "../ui/button";
 
 interface PostItemProps {
   post: Post;
@@ -17,8 +19,9 @@ const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
-  const { data: commentsCount = 0 } = useQuery({
+  const { data: commentsCount = 0, refetch } = useQuery({
     queryKey: ['comments-count', post.id],
     queryFn: async () => {
       const { count } = await supabase
@@ -142,6 +145,46 @@ const PostItem = ({ post }: PostItemProps) => {
             {' '}
             <span className="text-gaming-200">{post.content}</span>
           </p>
+        </div>
+      )}
+
+      {/* Comments Toggle */}
+      {commentsCount > 0 && (
+        <div className="px-4 py-2 border-t border-gaming-400/20">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
+            onClick={() => setShowComments(!showComments)}
+          >
+            {showComments ? (
+              <>
+                <ChevronUp className="h-4 w-4 mr-1" />
+                Hide comments
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4 mr-1" />
+                View all {commentsCount} comments
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Inline Comments */}
+      {showComments && (
+        <div className="border-t border-gaming-400/20">
+          <CommentList 
+            postId={String(post.id)} 
+            onCommentAdded={() => {
+              // Update comment count when a new comment is added
+              setTimeout(() => {
+                // Requery for latest count
+                void refetch();
+              }, 500);
+            }}
+          />
         </div>
       )}
 
