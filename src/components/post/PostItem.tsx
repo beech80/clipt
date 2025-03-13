@@ -7,6 +7,7 @@ import { Post } from "@/types/post";
 import { Heart, MessageSquare, Trophy } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useQuery } from "@tanstack/react-query";
+import CommentModal from "../comments/CommentModal";
 
 interface PostItemProps {
   post: Post;
@@ -15,6 +16,7 @@ interface PostItemProps {
 const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
 
   const { data: commentsCount = 0 } = useQuery({
     queryKey: ['comments-count', post.id],
@@ -32,7 +34,7 @@ const PostItem = ({ post }: PostItemProps) => {
   }, []);
 
   const handleCommentClick = () => {
-    navigate(`/post/${post.id}/comments`);
+    setCommentModalOpen(true);
   };
 
   const handleProfileClick = (userId: string) => {
@@ -81,7 +83,7 @@ const PostItem = ({ post }: PostItemProps) => {
             {post.games && (
               <span 
                 className="block text-sm text-gaming-300 hover:text-gaming-100 cursor-pointer" 
-                onClick={(e) => handleGameClick(e, post.games.id)}
+                onClick={(e) => handleGameClick(e, String(post.games.id))}
               >
                 Playing {post.games.name}
               </span>
@@ -142,6 +144,13 @@ const PostItem = ({ post }: PostItemProps) => {
           </p>
         </div>
       )}
+
+      {/* Comment Modal */}
+      <CommentModal 
+        isOpen={commentModalOpen}
+        onClose={() => setCommentModalOpen(false)}
+        postId={String(post.id)}
+      />
     </div>
   );
 };
