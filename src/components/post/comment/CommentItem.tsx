@@ -138,13 +138,22 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     }
   };
 
+  // Calculate days ago for display
+  const daysAgo = () => {
+    const today = new Date();
+    const commentDate = new Date(comment.created_at);
+    const diffTime = Math.abs(today.getTime() - commentDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays + 'd';
+  };
+
   // Render the comment item
   return (
-    <div className={`py-3 ${isDeleting ? 'opacity-50' : ''}`}>
+    <div className={`py-2 ${isDeleting ? 'opacity-50' : ''}`}>
       {/* Main comment content */}
-      <div className="flex gap-3">
+      <div className="flex">
         {/* Avatar */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 mr-3">
           <Avatar 
             className="h-8 w-8 cursor-pointer" 
             onClick={handleProfileClick}
@@ -159,103 +168,105 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           </Avatar>
         </div>
         
-        {/* Comment content */}
-        <div className="flex-1 space-y-1">
-          {/* Username and content */}
-          <div className="max-w-full">
-            {isEditing ? (
-              <div className="space-y-2">
-                <Textarea
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  className="min-h-[80px] bg-gaming-800 border-gaming-700 text-sm resize-none"
-                />
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={() => {
-                      setIsEditing(false);
-                      setEditedContent(comment.content);
-                    }}
-                    className="h-8 text-xs"
-                  >
-                    <X className="h-3 w-3 mr-1" />
-                    Cancel
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    onClick={handleEdit}
-                    className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Check className="h-3 w-3 mr-1" />
-                    Save
-                  </Button>
-                </div>
+        {/* Comment content - Instagram style */}
+        <div className="flex-1">
+          {isEditing ? (
+            <div className="space-y-2">
+              <Textarea
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                className="min-h-[80px] bg-gaming-800 border-gaming-700 text-sm resize-none"
+              />
+              <div className="flex justify-end gap-2">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditedContent(comment.content);
+                  }}
+                  className="h-8 text-xs"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Cancel
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={handleEdit}
+                  className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
+                >
+                  <Check className="h-3 w-3 mr-1" />
+                  Save
+                </Button>
               </div>
-            ) : (
-              <div className="inline-block bg-gaming-800 rounded-2xl px-4 py-2 text-sm">
+            </div>
+          ) : (
+            <div>
+              {/* Username and comment text */}
+              <div className="flex flex-wrap">
                 <span 
-                  className="font-semibold cursor-pointer hover:underline text-gaming-100"
+                  className="font-semibold mr-2 cursor-pointer hover:underline text-gaming-100"
                   onClick={handleProfileClick}
                 >
                   {comment.profiles?.username || 'User'}
                 </span>
-                <p className="mt-1 text-gaming-200 whitespace-pre-wrap break-words">{comment.content}</p>
+                <span className="text-gaming-200">{comment.content}</span>
               </div>
-            )}
-          </div>
-          
-          {/* Action buttons */}
-          <div className="flex items-center gap-4 mt-1 ml-1 text-xs text-gray-500">
-            <span className="text-gaming-300">
-              {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-            </span>
-            
-            <button 
-              className="font-medium text-gaming-300 hover:text-gaming-100"
-              onClick={handleLike}
-              disabled={isLiking}
-            >
-              Like
-            </button>
-            
-            <button 
-              className="font-medium text-gaming-300 hover:text-gaming-100"
-              onClick={handleReply}
-            >
-              Reply
-            </button>
-            
-            {isAuthor && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="text-gaming-300 hover:text-gaming-100">
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="start" 
-                  className="bg-gaming-800 border-gaming-700 text-gaming-100"
+              
+              {/* Comment metadata row - Instagram style */}
+              <div className="flex items-center mt-1 text-xs text-gaming-400 space-x-3">
+                <span>{daysAgo()}</span>
+                {likesCount > 0 && (
+                  <span>{likesCount} {likesCount === 1 ? 'like' : 'likes'}</span>
+                )}
+                <button 
+                  className="font-medium hover:text-gaming-300"
+                  onClick={handleReply}
                 >
-                  <DropdownMenuItem 
-                    onClick={() => setIsEditing(true)}
-                    className="hover:bg-gaming-700 cursor-pointer"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={handleDelete}
-                    className="text-red-500 hover:bg-gaming-700 cursor-pointer"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
+                  Reply
+                </button>
+                {isAuthor && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="text-gaming-400 hover:text-gaming-300">
+                        <MoreVertical className="h-3 w-3" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent 
+                      align="start" 
+                      className="bg-gaming-800 border-gaming-700 text-gaming-100"
+                    >
+                      <DropdownMenuItem 
+                        onClick={() => setIsEditing(true)}
+                        className="hover:bg-gaming-700 cursor-pointer"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={handleDelete}
+                        className="text-red-500 hover:bg-gaming-700 cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Like button - Instagram style */}
+          <button 
+            className="absolute right-3"
+            onClick={handleLike}
+            disabled={isLiking}
+          >
+            <Heart 
+              className={`h-4 w-4 ${likesCount > 0 ? 'fill-red-500 text-red-500' : 'text-gaming-400'}`} 
+            />
+          </button>
         </div>
       </div>
       
@@ -273,24 +284,23 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         </div>
       )}
       
-      {/* Nested replies */}
+      {/* Nested replies - Instagram style */}
       {hasReplies && (
-        <div className="mt-2">
-          {/* Toggle replies button */}
-          {comment.children && comment.children.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-11 mb-2 text-xs text-blue-400 hover:text-blue-300 h-6 px-2 py-0"
+        <div className="mt-1">
+          {/* Toggle replies button - Instagram style */}
+          {comment.children && comment.children.length > 0 && depth === 0 && (
+            <button
+              className="ml-11 text-xs text-gaming-400 hover:text-gaming-300 flex items-center"
               onClick={() => setShowReplies(!showReplies)}
             >
+              <div className="w-5 h-[1px] bg-gaming-700 mr-2"></div>
               {showReplies ? 'Hide replies' : `View ${comment.children.length} ${comment.children.length === 1 ? 'reply' : 'replies'}`}
-            </Button>
+            </button>
           )}
           
           {/* Replies */}
           {showReplies && comment.children && comment.children.length > 0 && (
-            <div className="pl-11 space-y-3">
+            <div className="pl-11 mt-1 space-y-2">
               {comment.children.map((reply) => (
                 <CommentItem
                   key={reply.id}

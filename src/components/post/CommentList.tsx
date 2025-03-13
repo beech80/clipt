@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CommentForm } from './comment/CommentForm';
 import { CommentItem, Comment } from './comment/CommentItem';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageCircle, AlertCircle } from 'lucide-react';
+import { Loader2, MessageCircle, AlertCircle, Heart, Hand, Flame, ThumbsUp, Smile } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getComments, getCommentCount } from '@/services/commentService';
 import { useQuery } from '@tanstack/react-query';
@@ -21,155 +21,224 @@ export const CommentList = ({
   autoFocus = false,
   className = ''
 }: CommentListProps) => {
+  const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
+  const commentsContainerRef = useRef<HTMLDivElement>(null);
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const { user } = useAuth();
-  const normalizedPostId = String(postId);
-  const [replyToComment, setReplyToComment] = useState<string | null>(null);
 
-  // Fetch comments for this post
-  const {
-    data: comments,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
+  // Normalized post ID (always string)
+  const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
+
+  // Query comments for the post
+  const { data: comments, isLoading, error, refetch } = useQuery({
     queryKey: ['comments', normalizedPostId],
     queryFn: async () => {
-      try {
-        const response = await getComments(normalizedPostId);
-        return response.data || [];
-      } catch (err) {
-        console.error("Failed to fetch comments:", err);
-        return [];
-      }
+      const result = await getComments(normalizedPostId);
+      return result.data || [];
     },
-    staleTime: 1000 * 60, // 1 minute
+    enabled: !!normalizedPostId,
+    staleTime: 10000, // 10 seconds
   });
 
-  // Refresh comments when a new comment is added
+  // Get comment count
+  const { data: commentCount = 0 } = useQuery({
+    queryKey: ['comments-count', normalizedPostId],
+    queryFn: () => getCommentCount(normalizedPostId),
+    enabled: !!normalizedPostId,
+    staleTime: 10000,
+  });
+
+  // Handle adding a new comment or reply
   const handleCommentAdded = useCallback(() => {
-    // Refetch comments
-    void refetch();
-    
-    // Clear reply state if active
-    setReplyToComment(null);
-    
-    // Callback to parent if provided
+    refetch();
     if (onCommentAdded) {
       onCommentAdded();
     }
+    setReplyToCommentId(null);
   }, [refetch, onCommentAdded]);
 
-  // Memoize the comment tree
-  const commentTree = useMemo(() => {
-    const allComments = comments || [];
+  // Handle clicks on reply button
+  const handleReplyClick = useCallback((commentId: string) => {
+    setReplyToCommentId(commentId);
     
-    // Convert flat array to nested tree structure
-    const topLevelComments: Comment[] = [];
+    // Scroll to the reply form after a short delay
+    setTimeout(() => {
+      const replyElement = document.getElementById(`reply-${commentId}`);
+      if (replyElement) {
+        replyElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }, []);
+
+  const handleEmojiSelect = (emoji: string) => {
+    setSelectedEmoji(emoji);
+    // Here you would typically send the emoji reaction to the backend
+    toast.success(`Reacted with ${emoji}`);
+  };
+
+  // Organize comments into threaded view
+  const organizedComments = useMemo(() => {
+    if (!comments || !Array.isArray(comments)) return [];
+    
+    // Create a map of comments by ID for quick lookup
     const commentMap = new Map<string, Comment>();
+    const topLevelComments: Comment[] = [];
     
-    // First pass: create a map of id -> comment
-    allComments.forEach(comment => {
+    // First pass - add all comments to the map
+    comments.forEach(comment => {
       commentMap.set(comment.id, { ...comment, children: [] });
     });
     
-    // Second pass: build the tree
-    allComments.forEach(comment => {
-      const commentWithChildren = commentMap.get(comment.id)!;
+    // Second pass - organize into parent-child relationships
+    comments.forEach(comment => {
+      const currentComment = commentMap.get(comment.id);
+      if (!currentComment) return;
       
       if (comment.parent_id && commentMap.has(comment.parent_id)) {
-        // This is a reply, add it to its parent's children
-        const parent = commentMap.get(comment.parent_id)!;
-        parent.children = [...(parent.children || []), commentWithChildren];
+        // This is a reply - add to parent's children
+        const parentComment = commentMap.get(comment.parent_id);
+        if (parentComment && parentComment.children) {
+          parentComment.children.push(currentComment);
+        }
       } else {
         // This is a top-level comment
-        topLevelComments.push(commentWithChildren);
+        topLevelComments.push(currentComment);
       }
     });
     
-    return topLevelComments;
+    // Sort top level comments by created_at (newest first)
+    return topLevelComments.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   }, [comments]);
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 text-blue-400 animate-spin" />
+      <div className="py-4 text-center">
+        <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
+        <p className="text-sm text-gray-500 mt-2">Loading comments...</p>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center py-6 px-4 text-center">
-        <AlertCircle className="h-12 w-12 text-red-500 mb-2" />
-        <h3 className="text-lg font-semibold mb-1">Failed to load comments</h3>
-        <p className="text-sm text-gray-400 mb-4">Please try again later</p>
-        <Button 
-          size="sm" 
-          variant="outline"
-          onClick={() => refetch()}
-          className="bg-gaming-800 border-gaming-700 hover:bg-gaming-700"
-        >
-          Try Again
-        </Button>
+      <div className="py-4 text-center text-red-500">
+        <AlertCircle className="w-5 h-5 mx-auto" />
+        <p className="text-sm mt-2">Failed to load comments</p>
       </div>
     );
   }
 
-  if (comments?.length === 0) {
-    return (
-      <div className="space-y-4 p-4">
-        <div className="flex flex-col items-center py-5">
-          <MessageCircle className="h-10 w-10 text-gray-500 mb-2" />
-          <p className="text-center text-sm text-gray-400">No comments yet. Be the first to comment!</p>
-        </div>
-        <CommentForm 
-          postId={normalizedPostId} 
-          onCommentAdded={handleCommentAdded}
-          autoFocus={autoFocus}
-        />
-      </div>
-    );
-  }
-
-  // Render comment tree
   return (
-    <div className={`space-y-2 ${className}`}>
-      {/* Comment form at the top */}
-      <div className="px-4 pt-4 pb-2">
+    <div 
+      className={`rounded-md ${className}`}
+      ref={commentsContainerRef}
+    >
+      <div className="py-2 px-3 border-b border-gaming-800">
+        <h3 className="font-semibold text-center">Comments</h3>
+      </div>
+      
+      {/* Comment input form */}
+      <div className="px-4 py-3 border-b border-gaming-800">
         <CommentForm 
-          postId={normalizedPostId} 
-          onCommentAdded={handleCommentAdded}
+          postId={normalizedPostId}
+          onReplyComplete={handleCommentAdded}
           autoFocus={autoFocus}
         />
       </div>
-      
-      {/* Comments list with nested structure */}
-      <div className="px-4 divide-y divide-gaming-800">
-        {commentTree.map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            depth={0}
-            onReply={(commentId) => setReplyToComment(commentId)}
-            isReplying={replyToComment === comment.id}
-            onReplyCancel={() => setReplyToComment(null)}
-            onReplyAdded={handleCommentAdded}
-          />
-        ))}
+
+      {/* Comments list */}
+      <div className="divide-y divide-gaming-800/30">
+        {organizedComments && organizedComments.length > 0 ? (
+          organizedComments.map(comment => (
+            <div key={comment.id} className="px-4">
+              <CommentItem 
+                comment={comment} 
+                onReply={handleReplyClick}
+                isReplying={replyToCommentId === comment.id}
+                onReplyCancel={() => setReplyToCommentId(null)}
+                onReplyAdded={handleCommentAdded}
+              />
+              
+              {/* Reply form */}
+              {replyToCommentId === comment.id && (
+                <div id={`reply-${comment.id}`} className="ml-11 mb-3">
+                  <CommentForm 
+                    postId={normalizedPostId}
+                    parentId={comment.id}
+                    onReplyComplete={handleCommentAdded}
+                    onCancel={() => setReplyToCommentId(null)}
+                    placeholder={`Reply to ${comment.profiles?.username || 'User'}...`}
+                    buttonText="Reply"
+                  />
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <div className="py-8 text-center text-gray-500">
+            <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No comments yet. Be the first to comment!</p>
+          </div>
+        )}
       </div>
-      
-      {/* Load more comments button (if needed in the future) */}
-      {comments && comments.length > 10 && (
-        <div className="px-4 py-2 text-center">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-blue-400 hover:text-blue-300"
+
+      {/* Instagram-style emoji reactions at bottom */}
+      <div className="pt-3 pb-2 px-4 border-t border-gaming-800 flex items-center justify-between">
+        <div className="flex space-x-6">
+          <button 
+            className={`text-2xl ${selectedEmoji === '❤️' ? 'text-red-500' : 'text-gaming-400 hover:text-gaming-300'}`}
+            onClick={() => handleEmojiSelect('❤️')}
           >
-            Load more comments
-          </Button>
+            ❤️
+          </button>
+          <button 
+            className={`text-2xl ${selectedEmoji === '🙌' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
+            onClick={() => handleEmojiSelect('🙌')}
+          >
+            🙌
+          </button>
+          <button 
+            className={`text-2xl ${selectedEmoji === '🔥' ? 'text-orange-500' : 'text-gaming-400 hover:text-gaming-300'}`}
+            onClick={() => handleEmojiSelect('🔥')}
+          >
+            🔥
+          </button>
+          <button 
+            className={`text-2xl ${selectedEmoji === '👏' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
+            onClick={() => handleEmojiSelect('👏')}
+          >
+            👏
+          </button>
+          <button 
+            className={`text-2xl ${selectedEmoji === '😊' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
+            onClick={() => handleEmojiSelect('😊')}
+          >
+            😊
+          </button>
+          <button 
+            className={`text-2xl ${selectedEmoji === '😂' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
+            onClick={() => handleEmojiSelect('😂')}
+          >
+            😂
+          </button>
+          <button 
+            className={`text-2xl ${selectedEmoji === '😮' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
+            onClick={() => handleEmojiSelect('😮')}
+          >
+            😮
+          </button>
+          <button 
+            className={`text-2xl ${selectedEmoji === '😢' ? 'text-blue-500' : 'text-gaming-400 hover:text-gaming-300'}`}
+            onClick={() => handleEmojiSelect('😢')}
+          >
+            😢
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 };
