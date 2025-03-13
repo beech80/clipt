@@ -2,13 +2,26 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CommentList } from '@/components/post/CommentList';
 import { Button } from '@/components/ui/button';
-import { X, MessageCircle, Heart, RefreshCw, User } from 'lucide-react';
+import { X, MessageCircle, Heart, RefreshCw, User, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 // Import custom styles for the comment modal
 import './comment-modal.css';
+
+// Define type for post data
+interface PostWithProfile {
+  id: string;
+  content?: string;
+  title?: string;
+  created_at: string;
+  profiles?: {
+    username: string;
+    avatar_url: string;
+  };
+}
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -25,33 +38,57 @@ const CommentModal: React.FC<CommentModalProps> = ({
 }) => {
   const initialFocusRef = useRef<HTMLButtonElement>(null);
   const [totalComments, setTotalComments] = useState<number>(0);
+  const navigate = useNavigate();
 
   // Fetch post details to show title
-  const { data: postData } = useQuery({
+  const { data: postData } = useQuery<PostWithProfile | null>({
     queryKey: ['post-details', postId],
     queryFn: async () => {
       if (!postId) return null;
       
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          title,
-          content,
-          created_at,
-          profiles:user_id (username, avatar_url)
-        `)
-        .eq('id', postId)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            content,
+            created_at,
+            user_id,
+            profiles:user_id (
+              username,
+              avatar_url
+            )
+          `)
+          .eq('id', postId)
+          .single();
+          
+        if (error) {
+          console.error("Error fetching post:", error);
+          return null;
+        }
         
-      if (error) throw error;
-      return data;
+        // Ensure we have a valid post object
+        if (!data || typeof data !== 'object') {
+          return null;
+        }
+        
+        // Return with proper type
+        return {
+          id: data.id || '',
+          content: data.content,
+          created_at: data.created_at || new Date().toISOString(),
+          profiles: data.profiles
+        } as PostWithProfile;
+      } catch (err) {
+        console.error("Failed to fetch post data:", err);
+        return null;
+      }
     },
     enabled: !!postId && isOpen,
   });
 
   // Count total comments
-  const { data: commentCount } = useQuery({
+  const { data: commentCount } = useQuery<number>({
     queryKey: ['comment-count', postId],
     queryFn: async () => {
       if (!postId) return 0;
@@ -65,10 +102,13 @@ const CommentModal: React.FC<CommentModalProps> = ({
       return count || 0;
     },
     enabled: !!postId && isOpen,
-    onSuccess: (count) => {
-      setTotalComments(count || 0);
-    }
   });
+
+  useEffect(() => {
+    if (commentCount !== undefined) {
+      setTotalComments(commentCount);
+    }
+  }, [commentCount]);
 
   useEffect(() => {
     console.log(`Comment modal ${isOpen ? 'opened' : 'closed'} for post ${postId}`);
@@ -98,6 +138,14 @@ const CommentModal: React.FC<CommentModalProps> = ({
     }
   };
 
+  // Navigate to full comments page
+  const handleViewAllComments = () => {
+    if (postId) {
+      onClose(); // Close the modal first
+      navigate(`/post/${postId}/comments`); // Navigate to the dedicated comments page
+    }
+  };
+
   if (!postId) {
     return null;
   }
@@ -106,7 +154,6 @@ const CommentModal: React.FC<CommentModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()} modal={true}>
       <DialogContent 
         className="sm:max-w-[700px] h-[95vh] max-h-[950px] flex flex-col p-0 gap-0 bg-gaming-800 border-gaming-700 rounded-lg shadow-xl"
-        initialFocus={initialFocusRef}
       >
         {/* Enhanced header with post info */}
         <DialogHeader className="sticky top-0 z-10 px-6 py-4 border-b border-gaming-700 bg-gaming-900 rounded-t-lg">
@@ -139,19 +186,32 @@ const CommentModal: React.FC<CommentModalProps> = ({
             <div className="mt-2 px-2 py-3 bg-gaming-800 rounded-md border border-gaming-700">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-full bg-gaming-700 overflow-hidden flex items-center justify-center">
-                  {postData.profiles?.avatar_url ? (
+                  {postData?.profiles?.avatar_url ? (
                     <img 
-                      src={postData.profiles.avatar_url} 
-                      alt={postData.profiles.username || 'User'} 
+                      src={postData?.profiles?.avatar_url} 
+                      alt={postData?.profiles?.username || 'User'} 
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <User className="w-4 h-4 text-gray-400" />
                   )}
                 </div>
-                <span className="font-medium text-sm">{postData.profiles?.username || 'Anonymous'}</span>
+                <span className="font-medium text-sm">{postData?.profiles?.username || 'Anonymous'}</span>
               </div>
-              <p className="text-sm text-gray-300 line-clamp-2">{postData.content || postData.title}</p>
+              <p className="text-sm text-gray-300 line-clamp-2">{postData?.content || postData?.title || ''}</p>
+              
+              {/* View All Comments button */}
+              <div className="flex justify-end mt-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleViewAllComments}
+                  className="text-xs h-7 border-gaming-700 hover:bg-gaming-700 text-purple-400 hover:text-purple-300 flex items-center gap-1 px-2 py-1"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  View All Comments
+                </Button>
+              </div>
             </div>
           )}
         </DialogHeader>
@@ -174,14 +234,24 @@ const CommentModal: React.FC<CommentModalProps> = ({
           <span className="flex items-center gap-1">
             <MessageCircle className="w-3.5 h-3.5" /> {totalComments} comment{totalComments !== 1 ? 's' : ''}
           </span>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => window.location.reload()}
-            className="text-xs h-7 px-2"
-          >
-            <RefreshCw className="mr-1 h-3 w-3" /> Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleViewAllComments}
+              className="text-xs h-7 px-2 text-purple-400 hover:text-purple-300"
+            >
+              <ExternalLink className="mr-1 h-3 w-3" /> Full View
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => window.location.reload()}
+              className="text-xs h-7 px-2"
+            >
+              <RefreshCw className="mr-1 h-3 w-3" /> Refresh
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
