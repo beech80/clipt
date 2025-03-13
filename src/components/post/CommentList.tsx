@@ -81,21 +81,24 @@ export const CommentList = ({
     );
   }
 
-  const { data: comments, isLoading, error, refetch } = useQuery({
+  // Fetch comments for the post
+  const { data: comments, isLoading, error, refetch } = useQuery<Comment[]>({
     queryKey: ['comments', normalizedPostId],
     queryFn: async () => {
-      console.log(`Fetching comments for post: ${normalizedPostId}`);
-      
       try {
-        const { data, error } = await supabase
+        setIsFetching(true);
+        
+        // Fetch all comments for this post
+        const { data: allComments, error } = await supabase
           .from('comments')
           .select(`
             id,
             content,
             created_at,
+            updated_at,
             parent_id,
-            likes_count,
             user_id,
+            likes_count,
             profiles:user_id (
               username,
               avatar_url
@@ -103,140 +106,185 @@ export const CommentList = ({
           `)
           .eq('post_id', normalizedPostId)
           .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error("Error fetching comments:", error);
-          throw error;
-        }
-
-        console.log(`Retrieved ${data?.length || 0} comments for post ${normalizedPostId}`);
-
-        // Process comments into a tree structure
-        const typedComments = data as unknown as (Omit<Comment, 'replies'>)[];
-        const commentMap = new Map<string, Comment>();
-        const rootComments: Comment[] = [];
         
-        // First pass: create all comment objects with empty replies array
-        typedComments.forEach(comment => {
-          commentMap.set(comment.id, { ...comment, replies: [] });
+        if (error) throw error;
+        
+        // Organize comments into a tree structure (top-level comments and their replies)
+        const commentTree: Comment[] = [];
+        const commentMap = new Map<string, Comment>();
+        
+        // First pass: create all comment objects with empty replies arrays
+        allComments.forEach((comment: any) => {
+          const commentWithReplies = {
+            ...comment,
+            replies: [],
+          };
+          commentMap.set(comment.id, commentWithReplies);
         });
         
-        // Second pass: populate replies and build root comments list
-        typedComments.forEach(comment => {
-          const fullComment = commentMap.get(comment.id)!;
+        // Second pass: organize into parent-child relationships
+        allComments.forEach((comment: any) => {
+          const commentWithReplies = commentMap.get(comment.id)!;
           
-          if (comment.parent_id && commentMap.has(comment.parent_id)) {
-            // This is a reply, add it to parent's replies
-            const parentComment = commentMap.get(comment.parent_id)!;
-            parentComment.replies.push(fullComment);
+          if (!comment.parent_id) {
+            // This is a top-level comment
+            commentTree.push(commentWithReplies);
           } else {
-            // This is a root comment
-            rootComments.push(fullComment);
+            // This is a reply
+            const parentComment = commentMap.get(comment.parent_id);
+            if (parentComment) {
+              parentComment.replies.push(commentWithReplies);
+            } else {
+              // Parent comment might have been deleted, so treat as top-level
+              commentTree.push(commentWithReplies);
+            }
           }
         });
         
-        // Sort root comments by creation date (newest first)
-        rootComments.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
+        // Sort replies by creation date (oldest first)
+        commentTree.forEach(comment => {
+          comment.replies.sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+        });
         
-        return rootComments;
-      } catch (err) {
-        console.error("Error in comments query function:", err);
-        throw err;
+        return commentTree;
+      } catch (error) {
+        console.error("Error fetching comments:", error);
+        throw new Error('Failed to fetch comments');
+      } finally {
+        setIsFetching(false);
       }
-    },
-    retry: 2, // Retry failed queries up to 2 times
-    refetchOnWindowFocus: false,
+    }
   });
-
-  // Handle loading state
-  if (isLoading) {
-    return (
-      <div className="bg-gaming-800 min-h-[400px] flex items-center justify-center rounded-md shadow-inner">
-        <div className="text-center py-10">
-          <div className="relative mx-auto w-12 h-12 mb-5">
-            <Loader2 className="h-12 w-12 animate-spin mx-auto absolute text-purple-500 opacity-75" />
-            <MessageSquare className="h-6 w-6 absolute inset-0 m-auto text-white" />
-          </div>
-          <p className="text-sm text-gray-300 animate-pulse">Loading comments...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Handle error state
-  if (error) {
-    console.error("Error displaying comments:", error);
-    return (
-      <div className="bg-gaming-800 min-h-[400px] flex flex-col items-center justify-center rounded-md shadow-inner">
-        <div className="text-center py-8 px-4 max-w-md">
-          <div className="bg-red-500/10 p-3 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-          </div>
-          <p className="text-red-400 text-lg font-semibold">Unable to load comments</p>
-          <p className="text-sm text-gray-400 mt-2 mb-4">{(error as Error).message || 'An unknown error occurred'}</p>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="mt-2 bg-gaming-700 hover:bg-gaming-600 border-gaming-600 text-white"
-            onClick={() => {
-              setIsFetching(true);
-              refetch().finally(() => setIsFetching(false));
-            }}
-            disabled={isFetching}
-          >
-            <RefreshCw className={cn("mr-2 h-4 w-4", isFetching && "animate-spin")} />
-            {isFetching ? "Retrying..." : "Try Again"}
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   const handleCommentAdded = () => {
     refetch();
     if (onCommentAdded) onCommentAdded();
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center min-h-[200px]">
+        <Loader2 className="h-10 w-10 animate-spin text-purple-500 mb-4" />
+        <p className="text-gray-400 text-center">Loading comments...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center">
+        <div className="bg-red-500/10 p-3 rounded-full mb-4">
+          <AlertCircle className="h-8 w-8 text-red-500" />
+        </div>
+        <p className="text-red-400 mb-2 text-center font-medium">Failed to load comments</p>
+        <p className="text-gray-400 text-sm text-center mb-4">
+          We couldn't load the comments for this post. Please try again.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  const hasComments = comments && comments.length > 0;
+
   return (
-    <div className="bg-gaming-800 min-h-[400px] flex flex-col overflow-hidden">
-      {/* Main comment list container */}
-      <div className="flex-1 px-3 py-2 overflow-y-auto comment-list-container custom-scrollbar">
-        {comments && comments.length > 0 ? (
-          <div className="space-y-3">
-            {comments.map((comment) => (
-              <div key={comment.id} className="comment-item-appear" style={{animationDelay: `${comments.indexOf(comment) * 50}ms`}}>
-                <CommentItem 
-                  comment={comment} 
-                  onReplyAdded={handleCommentAdded} 
-                  postId={normalizedPostId} 
-                />
-              </div>
-            ))}
-          </div>
+    <div className="p-4 md:p-6">
+      {/* Comment Form */}
+      <div 
+        ref={formRef} 
+        className={cn(
+          "mb-6 p-4 bg-gaming-800 rounded-lg border-b border-gaming-700",
+          !hasComments && "border-b-0"
+        )}
+      >
+        <h3 className="text-white font-medium mb-4 flex items-center">
+          <MessageSquare className="mr-2 h-4 w-4 text-purple-400" />
+          Add Your Comment
+        </h3>
+        {user ? (
+          <CommentForm 
+            postId={normalizedPostId} 
+            onCommentAdded={handleCommentAdded}
+            autoFocus={autoFocus} 
+          />
         ) : (
-          <div className="py-12 text-center">
-            <div className="bg-gaming-700/30 rounded-full w-14 h-14 mx-auto mb-3 flex items-center justify-center">
-              <MessageSquare className="h-7 w-7 text-gray-400" />
-            </div>
-            <p className="text-gray-400 mb-2">No comments yet</p>
-            <p className="text-sm text-gray-500">Be the first to share your thoughts!</p>
+          <div className="text-center py-4 bg-gaming-700/30 rounded-lg">
+            <p className="text-gray-400 mb-2">Sign in to leave a comment</p>
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => window.location.href = '/signin'} 
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              Sign In
+            </Button>
           </div>
         )}
       </div>
 
-      {/* Comment form */}
-      <div 
-        ref={formRef} 
-        className="sticky bottom-0 border-t border-gaming-700 bg-gaming-800/95 backdrop-blur-sm p-3 shadow-lg transition-all duration-300"
-      >
-        <CommentForm 
-          postId={normalizedPostId} 
-          onCommentAdded={handleCommentAdded} 
-          autoFocus={autoFocus}
-        />
-      </div>
+      {/* Comments List */}
+      {hasComments ? (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-medium">
+              {comments.length === 1 
+                ? '1 Comment' 
+                : `${comments.length} Comments`}
+            </h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="text-xs text-gray-400 hover:text-white"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isFetching ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
+          
+          <div className="space-y-4">
+            {comments.map((comment) => (
+              <CommentItem 
+                key={comment.id} 
+                comment={comment}
+                postId={normalizedPostId}
+                onReplyAdded={handleCommentAdded} 
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 text-center bg-gaming-800/30 rounded-lg border border-dashed border-gaming-700">
+          <div className="bg-purple-500/10 p-3 rounded-full mb-3">
+            <MessageSquare className="h-7 w-7 text-purple-400" />
+          </div>
+          <h3 className="text-white font-medium mb-1">No comments yet</h3>
+          <p className="text-gray-400 text-sm max-w-md mb-4">
+            Be the first to share your thoughts on this post!
+          </p>
+          {!user && (
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => window.location.href = '/signin'} 
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              Sign In to Comment
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
