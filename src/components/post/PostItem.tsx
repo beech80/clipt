@@ -32,7 +32,7 @@ const PostItem = ({ post }: PostItemProps) => {
   }, []);
 
   const handleCommentClick = () => {
-    navigate(`/comments/${post.id}`);
+    navigate(`/post/${post.id}/comments`);
   };
 
   const handleProfileClick = (userId: string) => {
