@@ -179,20 +179,20 @@ const PostItem = ({ post }: PostItemProps) => {
       </div>
 
       {/* Inline Comments */}
-      <div className={`border-t border-gaming-400/20 transition-all duration-300 ${
-        showComments ? 'max-h-[1000px]' : 'max-h-0 overflow-hidden'
-      }`}>
-        <CommentList 
-          postId={String(post.id)} 
-          onCommentAdded={() => {
-            // Update comment count when a new comment is added
-            setTimeout(() => {
-              // Requery for latest count
-              void refetch();
-            }, 500);
-          }}
-        />
-      </div>
+      {showComments && (
+        <div className="border-t border-gaming-400/20">
+          <CommentList 
+            postId={String(post.id)} 
+            onCommentAdded={() => {
+              // Update comment count when a new comment is added
+              setTimeout(() => {
+                // Requery for latest count
+                void refetch();
+              }, 500);
+            }}
+          />
+        </div>
+      )}
 
       {/* Comment Modal - redirects to inline comments */}
       <CommentModal 
