@@ -62,9 +62,14 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
   try {
     console.log(`Fetching comments for post: ${postId}, page: ${page}, limit: ${limit}`);
     
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+    
     // Calculate offset
     const offset = page * limit;
     
+    // Fetch top-level comments
     const { data, error } = await supabase
       .from('comments')
       .select(`
@@ -89,8 +94,30 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
       throw error;
     }
 
-    console.log(`Retrieved ${data?.length || 0} comments for post ${postId}`);
-    return { data, error: null };
+    // If we have a logged-in user, determine which comments they've liked
+    let commentLikes: any[] = [];
+    if (userId) {
+      const { data: likes, error: likesError } = await supabase
+        .from('comment_likes')
+        .select('comment_id')
+        .eq('user_id', userId)
+        .in('comment_id', data.map((comment: any) => comment.id));
+
+      if (likesError) {
+        console.error("Error fetching comment likes:", likesError);
+      } else {
+        commentLikes = likes || [];
+      }
+    }
+
+    // Add liked_by_me property to each comment
+    const commentsWithLikeStatus = data.map((comment: any) => ({
+      ...comment,
+      liked_by_me: commentLikes.some((like: any) => like.comment_id === comment.id)
+    }));
+
+    console.log(`Retrieved ${commentsWithLikeStatus?.length || 0} comments for post ${postId}`);
+    return { data: commentsWithLikeStatus, error: null };
   } catch (error) {
     console.error("Error in getComments:", error);
     return { data: null, error: error as Error };
@@ -99,6 +126,13 @@ export const getComments = async (postId: string, page = 0, limit = 50): Promise
 
 export const getReplies = async (commentId: string): Promise<CommentResponse> => {
   try {
+    console.log(`Fetching replies for comment: ${commentId}`);
+    
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+    
+    // Fetch replies to the comment
     const { data, error } = await supabase
       .from('comments')
       .select(`
@@ -121,64 +155,136 @@ export const getReplies = async (commentId: string): Promise<CommentResponse> =>
       throw error;
     }
 
-    return { data, error: null };
+    // If we have a logged-in user, determine which replies they've liked
+    let replyLikes: any[] = [];
+    if (userId && data.length > 0) {
+      const { data: likes, error: likesError } = await supabase
+        .from('comment_likes')
+        .select('comment_id')
+        .eq('user_id', userId)
+        .in('comment_id', data.map((reply: any) => reply.id));
+
+      if (likesError) {
+        console.error("Error fetching reply likes:", likesError);
+      } else {
+        replyLikes = likes || [];
+      }
+    }
+
+    // Add liked_by_me property to each reply
+    const repliesWithLikeStatus = data.map((reply: any) => ({
+      ...reply,
+      liked_by_me: replyLikes.some((like: any) => like.comment_id === reply.id)
+    }));
+
+    console.log(`Retrieved ${repliesWithLikeStatus?.length || 0} replies for comment ${commentId}`);
+    return { data: repliesWithLikeStatus, error: null };
   } catch (error) {
     console.error("Error in getReplies:", error);
     return { data: null, error: error as Error };
   }
 };
 
-export const likeComment = async (commentId: string, userId: string): Promise<{ data: any; error: Error | null }> => {
+export const likeComment = async (commentId: string): Promise<CommentResponse> => {
   try {
-    if (!commentId || !userId) {
-      throw new Error("Comment ID and User ID are required");
-    }
-
-    console.log(`Toggling like for comment ${commentId} by user ${userId}`);
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
     
-    // First check if user has already liked this comment
+    if (!user) {
+      throw new Error("You must be logged in to like a comment");
+    }
+    
+    const userId = user.id;
+    
+    // Check if the user has already liked this comment
     const { data: existingLike, error: checkError } = await supabase
       .from('comment_likes')
-      .select('id')
+      .select('*')
       .eq('comment_id', commentId)
       .eq('user_id', userId)
       .single();
-      
-    if (checkError && checkError.code !== 'PGRST116') {
-      // Error other than "no rows returned"
+    
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows returned
       console.error("Error checking existing like:", checkError);
       throw checkError;
     }
-
+    
+    let result;
+    // If the user has already liked this comment, unlike it
     if (existingLike) {
-      // User already liked this comment, so unlike it
-      const { error: unlikeError } = await supabase
+      const { data, error } = await supabase
         .from('comment_likes')
         .delete()
-        .eq('id', existingLike.id);
-
-      if (unlikeError) {
-        console.error("Error unliking comment:", unlikeError);
-        throw unlikeError;
+        .eq('comment_id', commentId)
+        .eq('user_id', userId);
+      
+      if (error) {
+        console.error("Error removing like:", error);
+        throw error;
       }
-
-      return { data: { liked: false }, error: null };
+      
+      // Update the comment like count (decrement)
+      await updateCommentLikesCount(commentId);
+      
+      result = { liked: false };
+      toast.success("Removed like from comment");
     } else {
-      // User hasn't liked this comment yet, so like it
-      const { data: newLike, error: likeError } = await supabase
+      // Otherwise, like the comment
+      const { data, error } = await supabase
         .from('comment_likes')
-        .insert({ comment_id: commentId, user_id: userId })
-        .select();
-
-      if (likeError) {
-        console.error("Error liking comment:", likeError);
-        throw likeError;
+        .insert({
+          comment_id: commentId,
+          user_id: userId
+        });
+      
+      if (error) {
+        console.error("Error adding like:", error);
+        throw error;
       }
-
-      return { data: { liked: true }, error: null };
+      
+      // Update the comment like count (increment)
+      await updateCommentLikesCount(commentId);
+      
+      result = { liked: true };
+      toast.success("Liked comment");
     }
+    
+    return { data: result, error: null };
   } catch (error) {
-    console.error("Error in likeComment function:", error);
+    console.error("Error in likeComment:", error);
+    toast.error("Failed to like comment");
+    return { data: null, error: error as Error };
+  }
+};
+
+// Helper function to update comment likes count
+const updateCommentLikesCount = async (commentId: string) => {
+  try {
+    // Count the total likes for this comment
+    const { count, error } = await supabase
+      .from('comment_likes')
+      .select('*', { count: 'exact', head: true })
+      .eq('comment_id', commentId);
+    
+    if (error) {
+      console.error("Error counting likes:", error);
+      throw error;
+    }
+    
+    // Update the comment with the new count
+    const { data, error: updateError } = await supabase
+      .from('comments')
+      .update({ likes_count: count || 0 })
+      .eq('id', commentId);
+    
+    if (updateError) {
+      console.error("Error updating likes count:", updateError);
+      throw updateError;
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error("Error in updateCommentLikesCount:", error);
     return { data: null, error: error as Error };
   }
 };
