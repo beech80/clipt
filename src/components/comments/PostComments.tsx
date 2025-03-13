@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { formatDistanceToNowStrict } from 'date-fns';
-import { Heart, MessageSquare, ChevronDown, ChevronUp, MoreVertical, Check, X as XIcon } from "lucide-react";
+import { Heart, X, ChevronDown, ChevronUp, MoreVertical, Check, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -15,6 +15,29 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+// Create wrapper components to avoid bundling issues
+const HeartIcon = ({ className, fill }: { className?: string, fill: string }) => (
+  <Heart className={className || "h-4 w-4"} fill={fill} />
+);
+const CloseIcon = ({ className }: { className?: string }) => (
+  <X className={className || "h-4 w-4"} />
+);
+const DownIcon = ({ className }: { className?: string }) => (
+  <ChevronDown className={className || "h-4 w-4"} />
+);
+const UpIcon = ({ className }: { className?: string }) => (
+  <ChevronUp className={className || "h-4 w-4"} />
+);
+const MessageIcon = ({ className }: { className?: string }) => (
+  <MessageSquare className={className || "h-4 w-4"} />
+);
+const MoreIcon = ({ className }: { className?: string }) => (
+  <MoreVertical className={className || "h-4 w-4"} />
+);
+const CheckIcon = ({ className }: { className?: string }) => (
+  <Check className={className || "h-4 w-4"} />
+);
 
 interface PostCommentsProps {
   postId: string;
@@ -327,11 +350,11 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
           className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
           onClick={onToggle}
         >
-          <MessageSquare className="h-4 w-4 mr-1" />
+          <MessageIcon className="h-4 w-4 mr-1" />
           {comments.length > 0 
             ? `View all ${comments.length} comments` 
             : "Add a comment..."}
-          <ChevronDown className="ml-1 h-3 w-3" />
+          <DownIcon />
         </Button>
       </div>
     );
@@ -348,7 +371,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
           className="text-gaming-400 hover:text-gaming-200 p-1 h-auto"
           onClick={onToggle}
         >
-          <ChevronUp className="h-4 w-4" />
+          <UpIcon />
         </Button>
       </div>
       
@@ -393,7 +416,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                               onClick={handleSaveEdit}
                               className="h-7 text-xs flex items-center"
                             >
-                              <Check className="h-3 w-3 mr-1" /> Save
+                              <CheckIcon className="h-3 w-3 mr-1" /> Save
                             </Button>
                             <Button 
                               variant="ghost" 
@@ -401,7 +424,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                               onClick={handleCancelEdit}
                               className="h-7 text-xs flex items-center"
                             >
-                              <XIcon className="h-3 w-3 mr-1" /> Cancel
+                              <CloseIcon /> Cancel
                             </Button>
                           </div>
                         </div>
@@ -433,11 +456,11 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                           <div className="h-px bg-gaming-700 w-4 mr-1"></div>
                           {showRepliesFor[comment.id] ? (
                             <span className="flex items-center">
-                              Hide replies <ChevronUp className="h-3 w-3 ml-1" />
+                              Hide replies <UpIcon className="h-3 w-3 ml-1" />
                             </span>
                           ) : (
                             <span className="flex items-center">
-                              View {comment.children.length} {comment.children.length === 1 ? 'reply' : 'replies'} <ChevronDown className="h-3 w-3 ml-1" />
+                              View {comment.children.length} {comment.children.length === 1 ? 'reply' : 'replies'} <DownIcon className="h-3 w-3 ml-1" />
                             </span>
                           )}
                         </button>
@@ -472,7 +495,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                                             onClick={handleSaveEdit}
                                             className="h-6 text-xs flex items-center px-2"
                                           >
-                                            <Check className="h-3 w-3 mr-1" /> Save
+                                            <CheckIcon className="h-3 w-3 mr-1" /> Save
                                           </Button>
                                           <Button 
                                             variant="ghost" 
@@ -480,7 +503,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                                             onClick={handleCancelEdit}
                                             className="h-6 text-xs flex items-center px-2"
                                           >
-                                            <XIcon className="h-3 w-3 mr-1" /> Cancel
+                                            <CloseIcon /> Cancel
                                           </Button>
                                         </div>
                                       </div>
@@ -508,17 +531,14 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                                     className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
                                     onClick={() => handleLikeComment(reply.id)}
                                   >
-                                    <Heart 
-                                      className="h-3 w-3" 
-                                      fill={reply.liked_by_me ? "currentColor" : "none"}
-                                    />
+                                    <HeartIcon fill={reply.liked_by_me ? "currentColor" : "none"} />
                                   </button>
                                   
                                   {isCommentAuthor(reply) && (
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                         <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                                          <MoreVertical className="h-3 w-3" />
+                                          <MoreIcon className="h-3 w-3" />
                                         </button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
@@ -551,17 +571,14 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                       className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
                       onClick={() => handleLikeComment(comment.id)}
                     >
-                      <Heart 
-                        className="h-4 w-4" 
-                        fill={comment.liked_by_me ? "currentColor" : "none"}
-                      />
+                      <HeartIcon fill={comment.liked_by_me ? "currentColor" : "none"} />
                     </button>
                     
                     {isCommentAuthor(comment) && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                            <MoreVertical className="h-4 w-4" />
+                            <MoreIcon className="h-4 w-4" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
@@ -600,7 +617,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, expanded, onToggle 
                   className="ml-1 text-gaming-400 hover:text-gaming-300"
                   onClick={() => setReplyingTo(null)}
                 >
-                  <XIcon className="h-3 w-3" />
+                  <CloseIcon />
                 </button>
               </div>
             )}

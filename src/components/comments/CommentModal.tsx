@@ -1,15 +1,8 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-// Import each icon separately to avoid bundling issues
-import { X } from "lucide-react";
-import { Heart } from "lucide-react";
-import { ChevronDown } from "lucide-react";
-import { ChevronUp } from "lucide-react";
-import { MoreVertical } from "lucide-react";
-import { Check } from "lucide-react";
-// Import X again with a different name to avoid conflicts
-import { X as XIcon } from "lucide-react";
+// Import basic Lucide icons - simpler approach
+import { X, Heart, ChevronDown, ChevronUp, MoreVertical, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { getComments, getCommentCount, likeComment, deleteComment, editComment, createComment } from "@/services/commentService";
@@ -24,6 +17,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+// Create wrapper components to avoid bundling issues
+const CloseIcon = () => <X className="h-4 w-4" />;
+const HeartIcon = ({ fill }: { fill: string }) => <Heart className="h-4 w-4" fill={fill} />;
+const SmallHeartIcon = ({ fill }: { fill: string }) => <Heart className="h-3 w-3" fill={fill} />;
+const DownIcon = () => <ChevronDown className="h-3 w-3 ml-1" />;
+const UpIcon = () => <ChevronUp className="h-3 w-3 ml-1" />;
+const MoreIcon = () => <MoreVertical className="h-4 w-4" />;
+const SmallMoreIcon = () => <MoreVertical className="h-3 w-3" />;
+const CheckmarkIcon = () => <Check className="h-3 w-3 mr-1" />;
+const SmallCloseIcon = () => <X className="h-3 w-3 mr-1" />;
+const TinyCloseIcon = () => <X className="h-3 w-3" />;
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -337,7 +342,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
   };
 
   // Organize comments into threaded view
-  const organizedComments = React.useMemo(() => {
+  const organizedComments = useMemo(() => {
     if (!comments || !Array.isArray(comments)) {
       console.log("No comments to organize or comments is not an array", comments);
       return [];
@@ -431,7 +436,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
             onClick={onClose}
             className="h-7 w-7 rounded-full text-gaming-300 hover:text-white"
           >
-            <X className="h-4 w-4" />
+            <CloseIcon />
           </Button>
         </DialogTitle>
         
@@ -526,7 +531,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                                 onClick={handleSaveEdit}
                                 className="h-7 text-xs flex items-center"
                               >
-                                <Check className="h-3 w-3 mr-1" /> Save
+                                <CheckmarkIcon /> Save
                               </Button>
                               <Button 
                                 variant="ghost" 
@@ -534,7 +539,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                                 onClick={handleCancelEdit}
                                 className="h-7 text-xs flex items-center"
                               >
-                                <XIcon className="h-3 w-3 mr-1" /> Cancel
+                                <SmallCloseIcon /> Cancel
                               </Button>
                             </div>
                           </div>
@@ -566,11 +571,11 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                             <div className="h-px bg-gaming-700 w-4 mr-1"></div>
                             {showRepliesFor[comment.id] ? (
                               <span className="flex items-center">
-                                Hide replies <ChevronUp className="h-3 w-3 ml-1" />
+                                Hide replies <UpIcon />
                               </span>
                             ) : (
                               <span className="flex items-center">
-                                View {comment.children.length} {comment.children.length === 1 ? 'reply' : 'replies'} <ChevronDown className="h-3 w-3 ml-1" />
+                                View {comment.children.length} {comment.children.length === 1 ? 'reply' : 'replies'} <DownIcon />
                               </span>
                             )}
                           </button>
@@ -605,7 +610,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                                               onClick={handleSaveEdit}
                                               className="h-6 text-xs flex items-center px-2"
                                             >
-                                              <Check className="h-3 w-3 mr-1" /> Save
+                                              <CheckmarkIcon /> Save
                                             </Button>
                                             <Button 
                                               variant="ghost" 
@@ -613,7 +618,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                                               onClick={handleCancelEdit}
                                               className="h-6 text-xs flex items-center px-2"
                                             >
-                                              <XIcon className="h-3 w-3 mr-1" /> Cancel
+                                              <SmallCloseIcon /> Cancel
                                             </Button>
                                           </div>
                                         </div>
@@ -641,17 +646,14 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                                       className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
                                       onClick={() => handleLikeComment(reply.id)}
                                     >
-                                      <Heart 
-                                        className="h-3 w-3" 
-                                        fill={reply.liked_by_me ? "currentColor" : "none"}
-                                      />
+                                      <SmallHeartIcon fill={reply.liked_by_me ? "currentColor" : "none"} />
                                     </button>
                                     
                                     {isCommentAuthor(reply) && (
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                           <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                                            <MoreVertical className="h-3 w-3" />
+                                            <SmallMoreIcon />
                                           </button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
@@ -684,17 +686,14 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                         className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
                         onClick={() => handleLikeComment(comment.id)}
                       >
-                        <Heart 
-                          className="h-4 w-4" 
-                          fill={comment.liked_by_me ? "currentColor" : "none"}
-                        />
+                        <HeartIcon fill={comment.liked_by_me ? "currentColor" : "none"} />
                       </button>
                       
                       {isCommentAuthor(comment) && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                              <MoreVertical className="h-4 w-4" />
+                              <MoreIcon />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
@@ -732,7 +731,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                   className="ml-1 text-gaming-400 hover:text-gaming-300"
                   onClick={() => setReplyingTo(null)}
                 >
-                  <XIcon className="h-3 w-3" />
+                  <TinyCloseIcon />
                 </button>
               </div>
             )}
