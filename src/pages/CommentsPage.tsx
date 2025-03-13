@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { CommentList } from '@/components/post/CommentList';
-import { Loader2, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, RefreshCw, AlertCircle, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
@@ -190,14 +190,43 @@ const CommentsPage: React.FC = () => {
 
       {/* Comments section */}
       <div className="container mx-auto px-4">
-        <div className="bg-gaming-800 rounded-lg shadow-md overflow-hidden">
+        <div className="mb-4">
+          <h2 className="text-xl font-bold text-white mb-2 flex items-center">
+            <MessageSquare className="mr-2 h-5 w-5 text-purple-400" />
+            Comments
+            {post?.comments_count ? (
+              <span className="ml-2 px-2 py-0.5 bg-purple-600/20 rounded-full text-sm text-purple-300">
+                {post.comments_count}
+              </span>
+            ) : null}
+          </h2>
+          <p className="text-gray-400 text-sm mb-4">
+            Join the conversation! Like, reply, or share your thoughts on this post.
+          </p>
+        </div>
+
+        <div className="bg-gaming-800 rounded-lg shadow-md overflow-hidden border border-gaming-700">
           <CommentList 
             postId={id} 
             onCommentAdded={() => {
               // Refresh comments count after adding
               toast.success('Comment added!');
             }} 
+            autoFocus={true}
           />
+        </div>
+
+        {/* Info box about comment features */}
+        <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <h3 className="text-blue-300 font-medium mb-2 flex items-center">
+            <AlertCircle className="mr-2 h-4 w-4" />
+            Comment Features
+          </h3>
+          <ul className="text-sm text-gray-300 space-y-1 ml-6 list-disc">
+            <li>Like comments by clicking the heart button</li>
+            <li>Edit or delete your own comments using the menu (•••)</li>
+            <li>View user profiles by clicking their name</li>
+          </ul>
         </div>
       </div>
     </div>
