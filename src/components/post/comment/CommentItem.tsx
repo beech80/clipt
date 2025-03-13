@@ -49,319 +49,248 @@ export const CommentItem: React.FC<CommentItemProps> = ({ comment, postId, onRep
   // Check if the current user is the author of the comment
   const isAuthor = user && user.id === comment.user_id;
 
-  const handleReplyClick = () => {
-    setIsReplying(!isReplying);
+  // Handle clicking on a username to navigate to their profile
+  const handleUsernameClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    navigate(`/profile/${comment.user_id}`);
   };
 
-  const handleReplyComplete = () => {
-    setIsReplying(false);
-    setShowReplies(true);
-    if (onReplyAdded) onReplyAdded();
-  };
-
-  const toggleReplies = () => {
-    setShowReplies(!showReplies);
-  };
-
+  // Handle like functionality
   const handleLike = async () => {
     if (!user) {
       toast.error("Please login to like comments");
       return;
     }
 
+    if (isLiking) return;
+    setIsLiking(true);
+
     try {
-      setIsLiking(true);
-      const { data, error } = await likeComment(comment.id, user.id);
+      // Optimistic UI update
+      setLikesCount(prev => prev + 1);
       
-      if (error) {
-        throw error;
-      }
-      
-      if (data.liked) {
-        setLikesCount(prev => prev + 1);
-        toast.success("Comment liked");
-      } else {
-        setLikesCount(prev => Math.max(0, prev - 1));
-        toast.success("Comment unliked");
-      }
+      // API call
+      await likeComment(comment.id);
     } catch (error) {
+      // Revert on error
+      setLikesCount(prev => prev - 1);
       console.error("Error liking comment:", error);
       toast.error("Failed to like comment");
     } finally {
       setIsLiking(false);
     }
   };
-  
-  // Handler for starting edit mode
-  const handleEditClick = () => {
-    setIsEditing(true);
-    setEditedContent(comment.content);
+
+  // Toggle reply form visibility
+  const handleReplyClick = () => {
+    setIsReplying(!isReplying);
   };
-  
-  // Handler for saving edited comment
-  const handleSaveEdit = async () => {
-    if (!user) {
-      toast.error("Please login to edit comments");
-      return;
-    }
-    
-    if (!editedContent.trim()) {
-      toast.error("Comment cannot be empty");
-      return;
-    }
-    
-    try {
-      const { data, error } = await editComment(comment.id, user.id, editedContent);
-      
-      if (error) {
-        console.error("Error editing comment:", error);
-        toast.error(`Failed to update comment: ${error.message}`);
-        return;
-      }
-      
-      // Update the UI with edited content
-      comment.content = editedContent;
-      if (data && data[0]?.updated_at) {
-        comment.updated_at = data[0].updated_at;
-      }
-      
-      setIsEditing(false);
-      toast.success("Comment updated");
-    } catch (error: any) {
-      console.error("Error editing comment:", error);
-      toast.error(`Failed to update comment: ${error.message || "Unknown error"}`);
-    }
+
+  // Toggle replies visibility
+  const handleToggleReplies = () => {
+    setShowReplies(!showReplies);
   };
-  
-  // Handler for cancel editing
+
+  // Cancel editing
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedContent(comment.content);
   };
-  
-  // Handler for deleting comment
-  const handleDelete = async () => {
-    if (!user) {
-      toast.error("Please login to delete comments");
+
+  // Submit edited comment
+  const handleSubmitEdit = async () => {
+    if (!editedContent.trim()) {
+      toast.error("Comment cannot be empty");
       return;
     }
-    
+
     try {
-      setIsDeleting(true);
-      const { data, error } = await deleteComment(comment.id, user.id);
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Remove the comment from UI (We'll rely on refetching in parent)
-      if (onReplyAdded) onReplyAdded(); // Reuse the onReplyAdded to refetch comments
+      await editComment(comment.id, editedContent);
+      setIsEditing(false);
+      toast.success("Comment updated");
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      toast.error("Failed to update comment");
+    }
+  };
+
+  // Delete comment
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteComment(comment.id);
       toast.success("Comment deleted");
+      // We'll rely on the parent component to refresh the comments list
     } catch (error) {
       console.error("Error deleting comment:", error);
       toast.error("Failed to delete comment");
-    } finally {
       setIsDeleting(false);
     }
   };
 
-  const username = comment.profiles?.username || "Unknown";
-  const avatarUrl = comment.profiles?.avatar_url;
-  const formattedDate = formatDistanceToNow(new Date(comment.created_at), { addSuffix: true });
-  const wasEdited = comment.updated_at && comment.updated_at !== comment.created_at;
-
-  // Exit early if no valid postId
-  if (!postId || typeof postId !== 'string' || postId.trim() === '') {
-    console.error("Invalid postId in CommentItem for comment:", comment.id);
-    return null;
-  }
+  // Handle after reply is submitted
+  const handleReplySubmitted = () => {
+    setIsReplying(false);
+    if (onReplyAdded) {
+      onReplyAdded();
+    }
+  };
 
   return (
-    <div className="rounded-lg bg-[#252A39] p-4 mb-3 transition-all hover:bg-[#2A3046] border border-[#3A3F4C] shadow-sm">
-      <div className="flex gap-3 group relative">
-        <div className="flex-shrink-0">
-          <Avatar className="h-12 w-12 border-2 border-purple-600/30 shadow-md hover:border-purple-500 transition-all duration-200">
-            {avatarUrl ? (
-              <AvatarImage src={avatarUrl} alt={username} className="object-cover" />
-            ) : (
-              <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white font-bold">
-                {username.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            )}
+    <div className="space-y-2 px-4 py-2">
+      {/* Main comment content */}
+      <div className="flex items-start gap-3">
+        {/* User avatar */}
+        <div 
+          className="w-8 h-8 rounded-full overflow-hidden cursor-pointer"
+          onClick={handleUsernameClick}
+        >
+          <Avatar className="w-full h-full">
+            <AvatarImage 
+              src={comment.profiles.avatar_url || undefined} 
+              alt={comment.profiles.username} 
+            />
+            <AvatarFallback>
+              {comment.profiles.username.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
         </div>
 
+        {/* Comment content area */}
         <div className="flex-1 min-w-0">
-          <div className="bg-gray-100 dark:bg-[#1E2330] p-4 rounded-lg relative shadow-sm">
-            <div className="flex justify-between items-start gap-2 mb-2">
-              <div className="flex items-center">
-                <a 
-                  href={`/profile/${comment.user_id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(`/profile/${comment.user_id}`);
-                  }}
-                  className="font-semibold text-gray-900 dark:text-white hover:underline text-base"
+          {isEditing ? (
+            <div className="space-y-2">
+              <Textarea
+                value={editedContent}
+                onChange={(e) => setEditedContent(e.target.value)}
+                className="min-h-[80px] bg-gray-100 dark:bg-gaming-800 border-0 rounded-md focus-visible:ring-0 text-sm"
+              />
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-xs"
+                  onClick={handleCancelEdit}
+                  disabled={isDeleting}
                 >
-                  {username}
-                </a>
-                {wasEdited && (
-                  <span className="text-xs text-gray-400 ml-2 bg-gray-800/40 px-2 py-0.5 rounded-full">(edited)</span>
-                )}
+                  <X className="mr-1 w-3 h-3" /> Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-8 text-xs bg-blue-500 hover:bg-blue-600"
+                  onClick={handleSubmitEdit}
+                  disabled={isDeleting}
+                >
+                  <Check className="mr-1 w-3 h-3" /> Save
+                </Button>
               </div>
-              <div className="flex items-center">
-                <span className="text-xs text-gray-400 mr-2">{formattedDate}</span>
+            </div>
+          ) : (
+            <div>
+              {/* Username and comment content */}
+              <div className="pb-1">
+                <span 
+                  className="font-medium text-sm mr-2 cursor-pointer hover:underline"
+                  onClick={handleUsernameClick}
+                >
+                  {comment.profiles.username}
+                </span>
+                <span className="text-sm">{comment.content}</span>
+              </div>
+              
+              {/* Comment metadata and actions */}
+              <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <span>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
+                {likesCount > 0 && <span>{likesCount} likes</span>}
+                <button 
+                  className="hover:text-gray-900 dark:hover:text-gray-200 font-medium" 
+                  onClick={handleReplyClick}
+                >
+                  Reply
+                </button>
                 
-                {!isAuthor && user && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/messages/${comment.user_id}`)}
-                    className="text-xs p-1 hover:bg-[#1A1F2C] rounded-full"
-                    aria-label={`Message ${username}`}
-                    title={`Message ${username}`}
-                  >
-                    <MessageSquare className="h-4 w-4 text-gray-400" />
-                  </Button>
-                )}
-                
+                {/* Author-only edit/delete dropdown */}
                 {isAuthor && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 hover:bg-[#1A1F2C] rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                          <circle cx="12" cy="12" r="1" />
-                          <circle cx="19" cy="12" r="1" />
-                          <circle cx="5" cy="12" r="1" />
-                        </svg>
+                      <button className="hover:text-gray-900 dark:hover:text-gray-200 font-medium">
+                        • • •
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-36 bg-[#1A1F2C] border-[#3A3F4C]">
+                    <DropdownMenuContent align="end" className="bg-white dark:bg-gaming-800 border-gray-200 dark:border-gaming-700">
                       <DropdownMenuItem 
-                        onClick={handleEditClick}
-                        disabled={isEditing || isDeleting}
-                        className="cursor-pointer hover:bg-[#252A39]"
+                        className="text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gaming-700"
+                        onClick={() => setIsEditing(true)}
                       >
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
+                        <Edit className="mr-2 h-4 w-4" /> Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem 
+                        className="text-sm text-red-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gaming-700"
                         onClick={handleDelete}
-                        disabled={isDeleting}
-                        className="text-red-500 focus:text-red-400 cursor-pointer hover:bg-[#252A39]"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
               </div>
             </div>
-            
-            {isEditing ? (
-              <div className="mb-2">
-                <Textarea
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
-                  className="min-h-[80px] text-sm bg-[#1A1F2C] border-[#3A3F4C] mb-2"
-                  placeholder="Edit your comment..."
-                  autoFocus
-                />
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleCancelEdit}
-                    className="text-xs h-8"
-                  >
-                    <X className="h-3.5 w-3.5 mr-1" />
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={handleSaveEdit}
-                    className="text-xs h-8 bg-[#9b87f5] hover:bg-[#8a78d9]"
-                  >
-                    <Check className="h-3.5 w-3.5 mr-1" />
-                    Save
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm mb-3 whitespace-pre-wrap break-words text-black dark:text-gray-200 leading-relaxed">
-                {comment.content}
-              </p>
-            )}
-            
-            {!isEditing && (
-              <div className="flex items-center space-x-4 mt-3 border-t border-gray-700/20 pt-3">
-                <button 
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
-                    likesCount > 0 ? 'bg-red-500/10 text-red-400' : 'bg-gray-800/30 text-gray-300'
-                  } ${isLiking ? 'opacity-50' : 'hover:bg-red-500/20'} transition-colors`}
-                  onClick={handleLike}
-                  disabled={isLiking}
-                  aria-label={`Like comment by ${username}`}
-                >
-                  <Heart className={`h-4 w-4 ${likesCount > 0 ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
-                  <span className="text-xs font-medium">{likesCount > 0 ? likesCount : 'Like'}</span>
-                </button>
-                <button 
-                  className="text-xs flex items-center hover:text-[#9b87f5] transition-colors bg-gray-800/30 px-3 py-1.5 rounded-full text-gray-300"
-                  onClick={handleReplyClick}
-                >
-                  <Reply className="h-3.5 w-3.5 mr-1.5" />
-                  <span>Reply</span>
-                </button>
-              </div>
-            )}
-            
-            {isReplying && (
-              <div className="mt-4 border-t border-[#9b87f5]/20 pt-4">
-                <CommentForm 
-                  postId={postId} 
-                  parentId={comment.id} 
-                  onCancel={() => setIsReplying(false)}
-                  onCommentAdded={handleReplyComplete}
-                  autoFocus={true}
-                />
-              </div>
-            )}
-            
-            {hasReplies && (
-              <div className="mt-4 border-t border-gray-700/20 pt-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleReplies}
-                  className="text-xs text-[#9b87f5] hover:text-[#8a78d9] px-3 py-1.5 flex items-center gap-1.5"
-                >
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  {showReplies 
-                    ? `Hide ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
-                    : `View ${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
-                  }
-                </Button>
-                
-                {showReplies && (
-                  <div className="mt-3 border-l-2 border-[#9b87f5]/20 pl-4 space-y-3">
-                    {comment.replies.map((reply) => (
-                      <CommentItem 
-                        key={reply.id} 
-                        comment={reply}
-                        postId={postId}
-                        onReplyAdded={onReplyAdded}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          )}
         </div>
+        
+        {/* Like button */}
+        <button
+          className="flex items-center text-gray-500 hover:text-red-500 dark:text-gray-400"
+          onClick={handleLike}
+          disabled={isLiking}
+        >
+          <Heart className={`h-4 w-4 ${likesCount > 0 ? 'fill-red-500 text-red-500' : ''}`} />
+        </button>
       </div>
+      
+      {/* Reply form */}
+      {isReplying && (
+        <div className="ml-10 mt-2">
+          <CommentForm
+            postId={postId}
+            placeholder="Write a reply..."
+            parentId={comment.id}
+            onCommentAdded={handleReplySubmitted}
+            buttonText="Reply"
+          />
+        </div>
+      )}
+      
+      {/* Show/hide replies */}
+      {hasReplies && (
+        <div className="ml-10 mt-1">
+          <button 
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center"
+            onClick={handleToggleReplies}
+          >
+            <div className="w-6 h-[1px] bg-gray-300 dark:bg-gray-700 mr-2"></div>
+            {showReplies ? 'Hide' : 'View'} {comment.replies.length} {comment.replies.length === 1 ? 'reply' : 'replies'}
+          </button>
+        </div>
+      )}
+      
+      {/* Replies list */}
+      {showReplies && hasReplies && (
+        <div className="ml-10 mt-2 space-y-4">
+          {comment.replies.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              postId={postId}
+              onReplyAdded={onReplyAdded}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

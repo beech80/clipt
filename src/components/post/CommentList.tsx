@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, MessageSquare, AlertCircle } from "lucide-react";
@@ -27,19 +27,22 @@ interface CommentListProps {
   onBack?: () => void;
   onCommentAdded?: () => void;
   autoFocus?: boolean;
+  parentId?: string;
 }
 
 export const CommentList = ({ 
   postId, 
   onBack, 
   onCommentAdded,
-  autoFocus = false 
+  autoFocus = false,
+  parentId
 }: CommentListProps) => {
   // Ensure postId is always a string
   const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
   const formRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const [isFetching, setIsFetching] = useState(false);
+  const queryClient = useQueryClient();
 
   // Scroll to comment form if autoFocus is true
   useEffect(() => {
@@ -163,126 +166,82 @@ export const CommentList = ({
     if (onCommentAdded) onCommentAdded();
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[200px]">
-        <Loader2 className="h-10 w-10 animate-spin text-purple-500 mb-4" />
-        <p className="text-gray-400 text-center">Loading comments...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-8 flex flex-col items-center justify-center">
-        <div className="bg-red-500/10 p-3 rounded-full mb-4">
-          <AlertCircle className="h-8 w-8 text-red-500" />
-        </div>
-        <p className="text-red-400 mb-2 text-center font-medium">Failed to load comments</p>
-        <p className="text-gray-400 text-sm text-center mb-4">
-          We couldn't load the comments for this post. Please try again.
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Retry
-        </Button>
-      </div>
-    );
-  }
-
-  const hasComments = comments && comments.length > 0;
-
   return (
-    <div className="p-4 md:p-6">
-      {/* Comment Form */}
-      <div 
-        ref={formRef} 
-        className={cn(
-          "mb-6 p-4 bg-gaming-800 rounded-lg border-b border-gaming-700",
-          !hasComments && "border-b-0"
-        )}
-      >
-        <h3 className="text-white font-medium mb-4 flex items-center">
-          <MessageSquare className="mr-2 h-4 w-4 text-purple-400" />
-          Add Your Comment
-        </h3>
-        {user ? (
+    <div className="space-y-2">
+      {/* Comment form at the top only on the main comment section */}
+      {!parentId && user && (
+        <div className="px-4 py-2 border-b border-gray-200 dark:border-gaming-800">
           <CommentForm 
             postId={normalizedPostId} 
-            onCommentAdded={handleCommentAdded}
-            autoFocus={autoFocus} 
+            onCommentAdded={() => {
+              queryClient.invalidateQueries();
+              if (onCommentAdded) onCommentAdded();
+            }}
+            autoFocus={autoFocus}
           />
-        ) : (
-          <div className="text-center py-4 bg-gaming-700/30 rounded-lg">
-            <p className="text-gray-400 mb-2">Sign in to leave a comment</p>
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={() => window.location.href = '/signin'} 
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              Sign In
-            </Button>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Comments List */}
-      {hasComments ? (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-white font-medium">
-              {comments.length === 1 
-                ? '1 Comment' 
-                : `${comments.length} Comments`}
-            </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="text-xs text-gray-400 hover:text-white"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isFetching ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            {comments.map((comment) => (
-              <CommentItem 
-                key={comment.id} 
-                comment={comment}
-                postId={normalizedPostId}
-                onReplyAdded={handleCommentAdded} 
-              />
-            ))}
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-pulse flex flex-col space-y-4 w-full px-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-gray-200 dark:bg-gaming-800 h-8 w-8"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-3 bg-gray-200 dark:bg-gaming-800 rounded w-1/4"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gaming-800 rounded w-full"></div>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-gray-200 dark:bg-gaming-800 h-8 w-8"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-3 bg-gray-200 dark:bg-gaming-800 rounded w-1/3"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gaming-800 rounded w-full"></div>
+              </div>
+            </div>
           </div>
         </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center bg-gaming-800/30 rounded-lg border border-dashed border-gaming-700">
-          <div className="bg-purple-500/10 p-3 rounded-full mb-3">
-            <MessageSquare className="h-7 w-7 text-purple-400" />
-          </div>
-          <h3 className="text-white font-medium mb-1">No comments yet</h3>
-          <p className="text-gray-400 text-sm max-w-md mb-4">
-            Be the first to share your thoughts on this post!
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className="p-4 text-center">
+          <p className="text-red-500 text-sm">
+            Failed to load comments. Please try again.
           </p>
-          {!user && (
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={() => window.location.href = '/signin'} 
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              Sign In to Comment
-            </Button>
-          )}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => queryClient.invalidateQueries()}
+            className="mt-2 text-xs"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+
+      {/* No comments yet */}
+      {!isLoading && !error && comments && comments.length === 0 && (
+        <div className="px-4 py-6 text-center">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            No comments yet. Be the first to comment!
+          </p>
+        </div>
+      )}
+
+      {/* Comment list */}
+      {!isLoading && !error && comments && comments.length > 0 && (
+        <div className="relative">
+          {comments.map((comment) => (
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              postId={normalizedPostId}
+              onReplyAdded={() => queryClient.invalidateQueries()}
+            />
+          ))}
         </div>
       )}
     </div>
