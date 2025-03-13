@@ -1048,12 +1048,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         
         // Fallback for different actions
         if (actionType === 'comment') {
-          logToDebug('Falling back to comment modal');
-          // Ensure currentPostId is a string before setting it
+          logToDebug('Falling back to comment page');
+          // Navigate directly to comments page instead of opening the modal
           if (currentPostId) {
-            setActiveCommentPostId(currentPostId);
-            setCommentModalOpen(true);
-            console.log(`Opening comment modal for post ID: ${currentPostId}`);
+            navigate(`/post/${currentPostId}/comments`);
+            console.log(`Navigating to comments page for post ID: ${currentPostId}`);
           } else {
             toast.error('No post selected');
           }
