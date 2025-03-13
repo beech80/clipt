@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, ArrowLeft, Heart, ChevronDown, ChevronUp, MoreVertical, Check, X as XIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { getComments, getCommentCount, likeComment, deleteComment, editComment } from "@/services/commentService";
+import { getComments, getCommentCount, likeComment, deleteComment, editComment, createComment } from "@/services/commentService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -39,20 +39,47 @@ interface Comment {
   children?: Comment[];
 }
 
-const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) => {
+interface CommentData {
+  post_id: string;
+  user_id: string;
+  content: string;
+  parent_id?: string | null;
+}
+
+const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) => {
   const { user } = useAuth();
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
-  const [showRepliesFor, setShowRepliesFor] = useState<{[key: string]: boolean}>({});
   const [editingComment, setEditingComment] = useState<Comment | null>(null);
-  const [editContent, setEditContent] = useState('');
-  const queryClient = useQueryClient();
+  const [editContent, setEditContent] = useState("");
+  const [showRepliesFor, setShowRepliesFor] = useState<Record<string, boolean>>({});
   const [post, setPost] = useState<any>(null);
-  
-  // Get the post content to display in the modal header
+
+  // Get useQueryClient
+  const queryClient = useQueryClient();
+
+  // Console.log when component mounts and dependencies change
+  useEffect(() => {
+    console.log(`CommentModal rendered - postId: ${postId}, isOpen: ${isOpen}`);
+    
+    if (isOpen && postId) {
+      console.log(`Modal open for post ${postId}, fetching data...`);
+    }
+  }, [postId, isOpen]);
+
+  // Force refresh comments when modal opens
+  useEffect(() => {
+    if (isOpen && postId) {
+      console.log("Modal opened, forcing comment refresh");
+      refetch();
+    }
+  }, [isOpen, postId, refetch]);
+
+  // Fetch the post data
   useEffect(() => {
     if (isOpen && postId) {
       const fetchPost = async () => {
+        console.log(`Fetching post data for ${postId}`);
         try {
           const { data, error } = await supabase
             .from("posts")
@@ -67,82 +94,79 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
             `)
             .eq("id", postId)
             .single();
+            
+          if (error) {
+            console.error("Error fetching post:", error);
+            toast.error("Failed to load post");
+            return;
+          }
           
-          if (error) throw error;
+          console.log("Post data retrieved:", data);
           setPost(data);
         } catch (error) {
-          console.error("Error fetching post:", error);
+          console.error("Error in fetchPost:", error);
+          toast.error("An error occurred while loading the post");
         }
       };
       
       fetchPost();
     }
   }, [isOpen, postId]);
-  
-  // Query comments for the post
-  const { data: comments = [], isLoading, error, refetch } = useQuery({
+
+  // Fetch comments
+  const { 
+    data: comments = [], 
+    isLoading, 
+    error,
+    refetch 
+  } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
-      try {
-        console.log(`Fetching comments for post ${postId}`);
-        const result = await getComments(postId);
-        if (result.error) {
-          console.error("Error fetching comments:", result.error);
-          throw result.error;
-        }
-        console.log(`Retrieved ${result.data?.length || 0} comments`, result.data);
-        return result.data || [];
-      } catch (error) {
-        console.error("Exception in comments query:", error);
+      console.log(`Running useQuery to fetch comments for post ${postId}`);
+      if (!postId) return [];
+      const { data, error } = await getComments(postId);
+      if (error) {
+        console.error('Error fetching comments in useQuery:', error);
         throw error;
       }
+      console.log(`Comments fetched in useQuery:`, data?.length, data);
+      return data || [];
     },
-    enabled: isOpen && !!postId,
-    staleTime: 5000, // 5 seconds
-    refetchOnWindowFocus: false,
+    enabled: !!postId && isOpen
   });
 
   // Add comment mutation
   const addComment = useMutation({
     mutationFn: async ({ content, parentId }: { content: string, parentId?: string }) => {
-      if (!user) throw new Error("You must be logged in to comment");
+      if (!user || !postId) {
+        throw new Error('User or post ID is missing');
+      }
       
-      const { data, error } = await supabase
-        .from('comments')
-        .insert([
-          {
-            content,
-            user_id: user.id,
-            post_id: postId,
-            parent_id: parentId || null
-          }
-        ])
-        .select(`
-          id,
-          content,
-          created_at,
-          parent_id,
-          user_id,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .single();
-        
-      if (error) throw error;
-      return data;
+      console.log(`Adding comment: content=${content}, parentId=${parentId}, postId=${postId}`);
+      
+      const commentData: CommentData = {
+        post_id: postId,
+        user_id: user.id,
+        content: content,
+        parent_id: parentId || null
+      };
+      
+      const result = await createComment(commentData);
+      if (result.error) {
+        throw result.error;
+      }
+      return result.data;
     },
     onSuccess: () => {
+      console.log("Comment added successfully, refetching comments...");
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       setComment('');
       setReplyingTo(null);
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
-      toast.success("Comment added successfully!");
+      toast.success('Comment added successfully!');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error adding comment:", error);
-      toast.error("Failed to add comment");
+      toast.error('Failed to add comment. Please try again.');
     }
   });
 
@@ -311,7 +335,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
       return [];
     }
     
-    console.log(`Organizing ${comments.length} comments`);
+    console.log(`Organizing ${comments.length} comments for post ${postId}`);
     
     // Create a map of comments by ID for quick lookup
     const commentMap = new Map<string, Comment>();
@@ -332,22 +356,60 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
         const parentComment = commentMap.get(comment.parent_id);
         if (parentComment && parentComment.children) {
           parentComment.children.push(currentComment);
+        } else {
+          // If we can't find the parent or it has no children array
+          // (rare edge case), treat as top-level
+          topLevelComments.push(currentComment);
         }
       } else {
-        // This is a top-level comment
+        // This is a top-level comment (no parent or parent not found)
         topLevelComments.push(currentComment);
       }
     });
     
     // Sort all comments by created_at (newest first)
-    return topLevelComments.sort((a, b) => 
+    const sortedComments = topLevelComments.sort((a, b) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-  }, [comments]);
+    
+    console.log(`Organized comments: ${sortedComments.length} top-level comments with their replies`, 
+      sortedComments.map(c => ({ 
+        id: c.id, 
+        content: c.content.substring(0, 20) + '...', 
+        childCount: c.children?.length 
+      }))
+    );
+    
+    return sortedComments;
+  }, [comments, postId]);
 
   // Check if current user is the author of a comment
-  const isCommentAuthor = (comment: Comment) => {
-    return user?.id === comment.user_id;
+  const isCommentAuthor = useCallback((comment: Comment) => {
+    if (!user) return false;
+    const isAuthor = user.id === comment.user_id;
+    console.log(`Checking if user ${user.id} is author of comment ${comment.id} by ${comment.user_id}: ${isAuthor}`);
+    return isAuthor;
+  }, [user]);
+
+  // Enhanced logging to debug why comments aren't showing
+  useEffect(() => {
+    if (comments?.length > 0) {
+      console.log("Current comments data:", comments);
+      console.log("User IDs in comments:", comments.map(c => ({
+        comment_id: c.id,
+        user_id: c.user_id,
+        username: c.profiles?.username,
+        content_preview: c.content.substring(0, 15) + '...',
+        isMyComment: user?.id === c.user_id
+      })));
+    }
+  }, [comments, user]);
+
+  // Add ability to manually refresh comments
+  const handleRefreshComments = () => {
+    console.log("Manually refreshing comments");
+    refetch();
+    toast.success("Refreshing comments...");
   };
 
   return (
@@ -397,7 +459,17 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
 
         {/* Comments section with scrolling */}
         <div className="flex-1 overflow-y-auto p-4">
-          <h3 className="font-medium text-white mb-3">Comments</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-medium text-white">Comments</h3>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleRefreshComments}
+              className="text-xs text-gaming-300 hover:text-white"
+            >
+              Refresh
+            </Button>
+          </div>
           
           {isLoading ? (
             <div className="py-10 text-center text-gaming-300">
@@ -413,6 +485,10 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
             </div>
           ) : (
             <div className="space-y-4">
+              <div className="p-2 bg-gaming-800 rounded mb-4 text-sm">
+                <p className="text-gaming-200">Showing {organizedComments.length} comments 
+                {comments?.length > organizedComments.length && ` (and ${comments.length - organizedComments.length} replies)`}</p>
+              </div>
               {organizedComments.map(comment => (
                 <div key={comment.id} className="py-2 border-b border-gaming-700/30 last:border-b-0">
                   <div className="flex gap-2">
