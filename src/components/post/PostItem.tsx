@@ -8,7 +8,7 @@ import { Heart, MessageSquare, Trophy, ChevronDown, ChevronUp } from "lucide-rea
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import CommentModal from "../comments/CommentModal";
-import { CommentList } from "./CommentList";
+import PostComments from "../comments/PostComments";
 import { Button } from "../ui/button";
 
 interface PostItemProps {
@@ -19,6 +19,7 @@ const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [commentsExpanded, setCommentsExpanded] = useState(false);
 
   const { data: commentsCount = 0, refetch: refetchCommentCount } = useQuery({
     queryKey: ['comments-count', post.id],
@@ -48,10 +49,6 @@ const PostItem = ({ post }: PostItemProps) => {
     setIsLoading(false);
   }, []);
 
-  const handleCommentClick = () => {
-    setCommentModalOpen(true);
-  };
-
   const handleProfileClick = (userId: string) => {
     navigate(`/profile/${userId}`);
   };
@@ -69,15 +66,29 @@ const PostItem = ({ post }: PostItemProps) => {
     navigate(`/game/${gameId}`);
   };
 
+  const handleCommentClick = () => {
+    // If we prefer the dropdown, expand it, otherwise show modal
+    if (window.innerWidth < 768) { // Mobile view - use modal
+      setCommentModalOpen(true);
+    } else { // Desktop view - use dropdown
+      setCommentsExpanded(true);
+    }
+  };
+  
+  const handleCommentModalClose = () => {
+    setCommentModalOpen(false);
+    // Refetch comment count after the modal is closed to keep counts in sync
+    refetchCommentCount();
+  };
+
+  const toggleComments = () => {
+    setCommentsExpanded(!commentsExpanded);
+  };
+
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
   const gameId = post.games?.id;
-
-  const handleCommentModalClose = () => {
-    setCommentModalOpen(false);
-    refetchCommentCount();
-  };
 
   return (
     <div 
@@ -170,27 +181,60 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
       )}
 
-      {/* Comment button at bottom */}
-      <div className="px-4 py-2 border-t border-gaming-400/20">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
-          onClick={handleCommentClick}
-        >
-          <MessageSquare className="h-4 w-4 mr-1" />
-          {commentsCount > 0 
-            ? `View all ${commentsCount} comments` 
-            : "Add a comment..."}
-        </Button>
-      </div>
+      {/* Footer - Likes, caption and comments section */}
+      <div className="pt-2 pb-1 px-4">
+        {/* Engagement count */}
+        <div className="mb-2">
+          <button 
+            className="font-semibold text-sm text-white"
+            onClick={() => {
+              /* Handle likes click */
+            }}
+          >
+            {post.likes_count} like{post.likes_count !== 1 ? 's' : ''}
+          </button>
+        </div>
 
-      {/* Comment Modal - Instagram-style popup */}
-      <CommentModal 
-        isOpen={commentModalOpen}
-        onClose={handleCommentModalClose}
-        postId={String(post.id)}
+        {/* Caption */}
+        <div className="mb-2">
+          <span className="font-semibold text-sm text-white mr-1">{post.profiles?.username}</span>
+          <span className="text-sm text-gaming-200">{post.content}</span>
+        </div>
+
+        {/* View all comments */}
+        {commentsCount > 0 && !commentsExpanded && (
+          <button 
+            className="text-sm text-gaming-400 hover:text-gaming-300 mb-1"
+            onClick={toggleComments}
+          >
+            View all {commentsCount} comment{commentsCount !== 1 ? 's' : ''}
+          </button>
+        )}
+      </div>
+      
+      {/* Comment section - will be shown/hidden based on state */}
+      <PostComments 
+        postId={post.id} 
+        expanded={commentsExpanded}
+        onToggle={toggleComments}
       />
+
+      {/* Comment Modal - For mobile view */}
+      <CommentModal 
+        postId={post.id} 
+        isOpen={commentModalOpen} 
+        onClose={handleCommentModalClose} 
+      />
+
+      {/* Timestamp */}
+      <div className="px-4 pb-3 pt-1">
+        <p className="text-xs uppercase text-gaming-400">
+          {new Date(post.created_at).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric'
+          })}
+        </p>
+      </div>
     </div>
   );
 };
