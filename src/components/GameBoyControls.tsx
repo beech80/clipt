@@ -365,9 +365,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Immediately trigger scroll for responsive feel
     handleScrollFromJoystick(dy);
     
-    // Log joystick position for debugging
-    console.log(`Joystick position: x=${dx.toFixed(2)}, y=${dy.toFixed(2)}`);
-    
     // Update visual indicators for feedback
     updateDirectionIndicators(dy);
   };
@@ -1051,8 +1048,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           logToDebug('Falling back to comment page');
           // Navigate directly to comments page instead of opening the modal
           if (currentPostId) {
-            navigate(`/post/${currentPostId}/comments`);
-            console.log(`Navigating to comments page for post ID: ${currentPostId}`);
+            setActiveCommentPostId(currentPostId);
+            setCommentModalOpen(true);
+            console.log(`Opening comment modal for post ID: ${currentPostId}`);
           } else {
             toast.error('No post selected');
           }
