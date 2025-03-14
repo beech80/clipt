@@ -353,3 +353,160 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
+
+/* GameBoy Controller Styles */
+.gameboy-controls {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background-color: #111827;
+  border-top: 1px solid #2d3748;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 50;
+}
+
+/* Joystick */
+.joystick {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  background-color: #374151;
+  border-radius: 50%;
+  border: 2px solid #4b5563;
+}
+
+.d-pad-center {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: #1f2937;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.d-pad-up, .d-pad-right, .d-pad-down, .d-pad-left {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: #2d3748;
+}
+
+.d-pad-up {
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.d-pad-right {
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+}
+
+.d-pad-down {
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+}
+
+.d-pad-left {
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+  clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+}
+
+/* CLIPT button */
+.clipt-button-container {
+  background-color: transparent;
+  border: none;
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.clipt-button {
+  padding: 10px 20px;
+  border-radius: 9999px;
+  background-color: transparent;
+  color: white;
+  font-weight: bold;
+  border: 2px solid;
+  border-image: linear-gradient(45deg, #7c3aed, #3b82f6) 1;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+}
+
+.pulse-glow {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(124, 58, 237, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+  }
+}
+
+/* Action buttons */
+.action-buttons {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.action-button {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+.action-button-top {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.action-button-right {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+.action-button-bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.action-button-left {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.post-button, .menu-button {
+  background-color: #1f2937;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 5px 10px;
+}
