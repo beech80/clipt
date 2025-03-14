@@ -13,8 +13,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import '@/index.css';
 import '@/styles/animations.css';
 
-// Important: Load GameBoyControls with Suspense to prevent initialization issues
-const GameBoyControls = React.lazy(() => import('@/components/GameBoyControls'));
+// Import directly without lazy loading
+import GameBoyControls from '@/components/GameBoyControls';
 
 // Lazy load all page components
 const Home = React.lazy(() => import('./pages/Home'));
@@ -41,6 +41,13 @@ const Streaming = React.lazy(() => import('./pages/Streaming'));
 const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 
+// Create a fallback component to show while pages are loading
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-screen w-full bg-black">
+    <div className="text-white text-2xl">Loading Clipt...</div>
+  </div>
+);
+
 function AppContent() {
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -63,9 +70,7 @@ function AppContent() {
     <div className="app-container min-h-screen bg-black text-white">
       <ScrollToTop />
       <ErrorBoundary>
-        <Suspense fallback={<div className="loading-container flex items-center justify-center h-screen w-full">
-          <div className="loading-spinner animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
-        </div>}>
+        <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
@@ -94,10 +99,8 @@ function AppContent() {
           </Routes>
         </Suspense>
         
-        {/* GameBoy Controller - Loaded with Suspense */}
-        <Suspense fallback={<div className="fixed bottom-0 left-0 right-0 h-24 bg-black/50"></div>}>
-          <GameBoyControls currentPostId={currentPostId} />
-        </Suspense>
+        {/* GameBoy Controller - directly imported instead of lazy loaded */}
+        <GameBoyControls currentPostId={currentPostId} />
       </ErrorBoundary>
     </div>
   );

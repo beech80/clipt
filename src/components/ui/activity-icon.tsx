@@ -5,40 +5,32 @@
  * to avoid ALL circular dependencies and initialization errors.
  */
 
-// Simple interface for the Activity icon with the minimum props needed
+// Standalone Activity Icon implementation
+// This component is completely isolated to avoid circular dependencies
+
+import React from 'react';
+
 interface ActivityIconProps {
   className?: string;
-  size?: number | string;
-  strokeWidth?: number;
-  color?: string;
 }
 
-// Completely standalone Activity Icon - no dependencies whatsoever
-export function ActivityIcon({
-  className = "",
-  size = 24,
-  strokeWidth = 2,
-  color = "currentColor",
-  ...props
-}: ActivityIconProps & React.SVGAttributes<SVGElement>) {
+const ActivityIcon: React.FC<ActivityIconProps> = ({ className = "" }) => {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`lucide-activity ${className}`}
-      {...props}
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
     >
-      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
     </svg>
   );
-}
+};
 
-// Export the ActivityIcon for direct use
 export default ActivityIcon;
