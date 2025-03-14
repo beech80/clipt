@@ -4,7 +4,11 @@ import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
 // Lazy load GameBoyControls to prevent initialization issues
-const GameBoyControls = React.lazy(() => import('@/components/GameBoyControls'));
+const GameBoyControls = React.lazy(() => 
+  import('@/components/GameBoyControls').then(module => ({
+    default: module.default
+  }))
+);
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { AuthProvider } from '@/contexts/AuthContext';

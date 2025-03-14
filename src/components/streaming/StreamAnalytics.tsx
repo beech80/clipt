@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Calendar, BarChart3, Users, Clock, TrendingUp, Activity, Maximize2 } from 'lucide-react';
+import { Calendar, BarChart3, Users, Clock, TrendingUp, Maximize2 } from 'lucide-react';
+import { Activity } from '@/components/ui/icon-fix';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
