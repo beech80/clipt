@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Cpu, Activity, Zap } from 'lucide-react';
+import { Cpu, Zap } from 'lucide-react';
+import { Activity } from '@/components/ui/icon-fix';
 
 interface EncodingManagerProps {
   streamId: string;

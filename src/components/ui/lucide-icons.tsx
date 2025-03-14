@@ -3,9 +3,11 @@
  * This file provides individual, named exports for each icon to avoid any circular dependencies
  */
 
-// Import each icon individually from lucide-react
+// Import our fixed Activity icon to prevent initialization errors
+import { Activity } from './icon-fix';
+
+// Import all other icons individually from lucide-react
 import {
-  Activity,
   AlertCircle,
   AlertTriangle,
   ArrowDown,
@@ -66,9 +68,9 @@ import {
   Zap,
 } from 'lucide-react';
 
-// Export each icon individually without any destructuring or default exports
+// Export all icons, using our fixed Activity icon instead of the original
 export { 
-  Activity,
+  Activity, // This is our fixed version from icon-fix.tsx
   AlertCircle,
   AlertTriangle,
   ArrowDown,
