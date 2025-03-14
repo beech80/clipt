@@ -1,132 +1,111 @@
-import React, { useState, useEffect, Suspense } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import React from 'react';
 import { Toaster } from 'sonner';
-import ErrorBoundary from '@/components/ErrorBoundary';
-import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
-import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
-import ScrollToTop from '@/components/common/ScrollToTop';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { MessagesProvider } from '@/contexts/MessagesContext';
 import { CommentsProvider } from '@/contexts/CommentContext';
-import { usePerformanceMonitoring } from '@/lib/performance';
-import { useQueryClient } from '@tanstack/react-query';
 import '@/index.css';
-import '@/styles/animations.css';
+import './components/GameBoyControls.css';
 
-// Import directly without lazy loading
-import GameBoyControls from '@/components/GameBoyControls';
-
-// Lazy load all page components
-const Home = React.lazy(() => import('./pages/Home'));
-const Auth = React.lazy(() => import('./pages/Auth'));
-const NewPost = React.lazy(() => import('./pages/NewPost'));
-const PostPage = React.lazy(() => import('./pages/PostPage'));
-const Game = React.lazy(() => import('./pages/Game'));
-const TopGames = React.lazy(() => import('./pages/TopGames'));
-const Clipts = React.lazy(() => import('./pages/Clipts'));
-const TopClipts = React.lazy(() => import('./pages/TopClipts'));
-const UserProfile = React.lazy(() => import('./pages/UserProfile'));
-const Discovery = React.lazy(() => import('./pages/Discovery'));
-const NotFound = React.lazy(() => import('./pages/NotFound'));
-const Menu = React.lazy(() => import('./pages/Menu'));
-const Profile = React.lazy(() => import('./pages/Profile'));
-const Messages = React.lazy(() => import('./pages/Messages'));
-const Settings = React.lazy(() => import('./pages/Settings'));
-const EditProfile = React.lazy(() => import('./pages/EditProfile'));
-const Admin = React.lazy(() => import('./pages/Admin'));
-const Login = React.lazy(() => import('./pages/Login'));
-const Signup = React.lazy(() => import('./pages/Signup'));
-const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
-const Streaming = React.lazy(() => import('./pages/Streaming'));
-const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
-const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
-
-// Create a fallback component to show while pages are loading
-const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-screen w-full bg-black">
-    <div className="text-white text-2xl">Loading Clipt...</div>
-  </div>
-);
-
-function AppContent() {
-  const location = useLocation();
-  const queryClient = useQueryClient();
-  const [currentPostId, setCurrentPostId] = useState<string | null>(null);
-
-  // Extract post ID from URL if viewing a post
-  useEffect(() => {
-    if (location.pathname.includes('/post/')) {
-      const postId = location.pathname.split('/post/')[1].split('/')[0];
-      setCurrentPostId(postId);
-    } else {
-      setCurrentPostId(null);
-    }
-  }, [location.pathname]);
-
-  // Performance monitoring
-  usePerformanceMonitoring('App');
-
+// Simple component for testing rendering
+const MinimalApp = () => {
   return (
-    <div className="app-container min-h-screen bg-black text-white">
-      <ScrollToTop />
-      <ErrorBoundary>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/post/:postId" element={<PostPage />} />
-            <Route path="/new-post" element={<NewPost />} />
-            <Route path="/top-games" element={<TopGames />} />
-            <Route path="/game/:gameId" element={<Game />} />
-            <Route path="/game/:gameId/streamers" element={<GameStreamers />} />
-            <Route path="/clipts" element={<Clipts />} />
-            <Route path="/top-clipts" element={<TopClipts />} />
-            <Route path="/user/:userId" element={<UserProfile />} />
-            <Route path="/discovery" element={<Discovery />} />
-            <Route path="/menu" element={<Menu />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/messages/:conversationId" element={<Messages />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/edit-profile" element={<EditProfile />} />
-            <Route path="/post/:postId/comments" element={<CommentsPage />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/retro-search" element={<RetroSearchPage />} />
-            <Route path="/streaming" element={<Streaming />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
+      <h1 className="text-3xl font-bold mb-6">Clipt</h1>
+      <p className="mb-6">Your gaming moments, captured.</p>
+      
+      {/* GameBoy Controller UI */}
+      <div className="fixed bottom-0 left-0 right-0 h-24 bg-gray-900 border-t border-gray-800 flex items-center justify-between px-4">
+        {/* Joystick on the left */}
+        <div className="joystick-container">
+          <div className="joystick">
+            <div className="d-pad-up"></div>
+            <div className="d-pad-right"></div>
+            <div className="d-pad-down"></div>
+            <div className="d-pad-left"></div>
+            <div className="d-pad-center"></div>
+          </div>
+        </div>
         
-        {/* GameBoy Controller - directly imported instead of lazy loaded */}
-        <GameBoyControls currentPostId={currentPostId} />
-      </ErrorBoundary>
+        {/* Center section with CLIPT button, POST and hamburger menu */}
+        <div className="flex flex-col items-center">
+          {/* CLIPT button with blue-purple gradient outline */}
+          <button className="clipt-button-container mb-2">
+            <div className="clipt-button pulse-glow">
+              <span className="text-white font-bold">CLIPT</span>
+            </div>
+          </button>
+          
+          {/* POST and hamburger buttons */}
+          <div className="flex space-x-3">
+            <button className="post-button text-xs bg-gray-800 px-3 py-1 rounded-md flex items-center">
+              <span className="mr-1">+</span>
+              <span>POST</span>
+            </button>
+            <button className="menu-button text-xs bg-gray-800 px-3 py-1 rounded-md">
+              <span>☰</span>
+            </button>
+          </div>
+        </div>
+        
+        {/* 4 Action buttons on the right in diamond formation */}
+        <div className="action-buttons">
+          <div className="diamond-buttons">
+            <button className="action-button action-button-top">
+              <div className="w-full h-full rounded-full bg-gray-800 border border-red-500 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+              </div>
+            </button>
+            <button className="action-button action-button-right">
+              <div className="w-full h-full rounded-full bg-gray-800 border border-blue-500 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                  <polyline points="16 6 12 2 8 6"></polyline>
+                  <line x1="12" y1="2" x2="12" y2="15"></line>
+                </svg>
+              </div>
+            </button>
+            <button className="action-button action-button-bottom">
+              <div className="w-full h-full rounded-full bg-gray-800 border border-purple-500 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-500">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+            </button>
+            <button className="action-button action-button-left">
+              <div className="w-full h-full rounded-full bg-gray-800 border border-green-500 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 function App() {
   return (
     <AuthProvider>
       <MessagesProvider>
         <CommentsProvider>
-          <ReportDialogProvider>
-            <PWAInstallPrompt />
-            <Toaster 
-              position="top-center" 
-              richColors 
-              toastOptions={{
-                style: {
-                  background: '#111',
-                  color: '#fff',
-                  border: '1px solid #222',
-                },
-                className: 'retro-toast',
-              }} 
-            />
-            <AppContent />
-          </ReportDialogProvider>
+          <MinimalApp />
+          <Toaster 
+            position="top-center" 
+            richColors 
+            toastOptions={{
+              style: {
+                background: '#111',
+                color: '#fff',
+                border: '1px solid #222',
+              },
+              className: 'retro-toast',
+            }} 
+          />
         </CommentsProvider>
       </MessagesProvider>
     </AuthProvider>

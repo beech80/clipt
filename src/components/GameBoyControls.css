@@ -1,120 +1,126 @@
 /* GameBoy Controls Styling */
+
+/* Main container */
 .gameboy-controls {
+  height: 6rem;
   background-color: rgba(17, 24, 39, 0.95);
   border-top: 1px solid #2d3748;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
 }
 
-/* Joystick container */
+/* Joystick Styling */
 .joystick-container {
   width: 80px;
   height: 80px;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .joystick {
   width: 70px;
   height: 70px;
+  position: relative;
+  background-color: #374151;
+  border-radius: 50%;
+  border: 2px solid #4b5563;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.joystick .d-pad-center {
+  position: absolute;
+  width: 20px;
+  height: 20px;
   background-color: #1f2937;
   border-radius: 50%;
-  position: relative;
-  border: 2px solid #374151;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.joystick .d-pad-up,
+.joystick .d-pad-right,
+.joystick .d-pad-down,
+.joystick .d-pad-left {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #2d3748;
+  cursor: pointer;
+}
+
+.joystick .d-pad-up {
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.joystick .d-pad-right {
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+}
+
+.joystick .d-pad-down {
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+}
+
+.joystick .d-pad-left {
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+  clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+}
+
+/* CLIPT Button Styling */
+.clipt-button-container {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.d-pad-up, .d-pad-right, .d-pad-down, .d-pad-left {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  background-color: #374151;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.d-pad-up {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%) translateY(-30%);
-  border-radius: 5px 5px 0 0;
-}
-
-.d-pad-right {
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%) translateX(30%);
-  border-radius: 0 5px 5px 0;
-}
-
-.d-pad-down {
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%) translateY(30%);
-  border-radius: 0 0 5px 5px;
-}
-
-.d-pad-left {
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%) translateX(-30%);
-  border-radius: 5px 0 0 5px;
-}
-
-.d-pad-center {
-  width: 20px;
-  height: 20px;
-  background-color: #4b5563;
-  border-radius: 50%;
-}
-
-/* CLIPT button */
-.clipt-button-container {
-  position: relative;
-}
-
 .clipt-button {
-  padding: 10px 20px;
-  background-color: transparent;
-  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
   border: 2px solid transparent;
-  background-image: linear-gradient(#111827, #111827), 
-                    linear-gradient(to right, #3b82f6, #8b5cf6);
+  background: linear-gradient(45deg, #7c3aed, #3b82f6);
   background-origin: border-box;
-  background-clip: content-box, border-box;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  background-clip: padding-box, border-box;
   position: relative;
-  transition: all 0.3s ease;
-}
-
-.clipt-button:hover {
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pulse-glow {
   animation: pulse 2s infinite;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 7px rgba(124, 58, 237, 0.5);
   }
   50% {
-    box-shadow: 0 0 15px rgba(139, 92, 246, 0.7);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
   }
   100% {
-    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 7px rgba(124, 58, 237, 0.5);
   }
 }
 
-/* Action buttons */
+/* Action Buttons Styling */
 .action-buttons {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative;
+  width: 80px;
+  height: 80px;
 }
 
 .diamond-buttons {
@@ -124,22 +130,19 @@
 }
 
 .action-button {
-  width: 32px;
-  height: 32px;
+  position: absolute;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: #1f2937;
-  border: 1px solid #4b5563;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  box-shadow: 0 0 5px rgba(0,0,0,0.3);
-  transition: all 0.15s ease;
+  background: transparent;
+  transition: transform 0.1s;
 }
 
 .action-button:active {
   transform: scale(0.95);
-  box-shadow: 0 0 2px rgba(0,0,0,0.3);
 }
 
 .action-button-top {
@@ -149,8 +152,8 @@
 }
 
 .action-button-right {
-  right: 0;
   top: 50%;
+  right: 0;
   transform: translateY(-50%);
 }
 
@@ -161,49 +164,53 @@
 }
 
 .action-button-left {
-  left: 0;
   top: 50%;
+  left: 0;
   transform: translateY(-50%);
 }
 
 .action-button-large {
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background-color: #1f2937;
-  border: 1px solid #fcd34d;
+  border: 2px solid #eab308;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 5px rgba(252, 211, 77, 0.3);
 }
 
+/* Post Button Styling */
 .post-button {
-  padding: 4px 8px;
-  background-color: #1f2937;
-  border-radius: 4px;
-  border: 1px solid #4b5563;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+  background-color: #1f2937;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  transition: background-color 0.2s;
 }
 
-/* Navigation menu */
+.post-button:hover {
+  background-color: #2d3748;
+}
+
+/* Navigation Menu Styling */
 .navigation-menu {
   position: absolute;
   bottom: 100%;
   left: 0;
   right: 0;
-  max-height: 200px;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease;
+  z-index: 50;
+  animation: slideUp 0.3s ease-out;
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(20px);
+    transform: translateY(100%);
     opacity: 0;
   }
   to {
