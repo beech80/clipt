@@ -1,4 +1,9 @@
-// Individually import each icon to prevent initialization errors
+/**
+ * Icon aliases for our application
+ * These icons are imported from lucide-icons.tsx which directly exports Lucide icons
+ * This approach prevents initialization issues and circular dependencies
+ */
+
 import {
   Heart,
   MessageCircle,
@@ -43,7 +48,6 @@ import {
   Unlock,
   Shield,
   AlertCircle,
-  HelpCircle,
   ArrowRight,
   ArrowLeft,
   Power,
@@ -51,9 +55,9 @@ import {
   Sun,
   Zap,
   Star
-} from 'lucide-react';
+} from './lucide-icons';
 
-// Export each icon with its respective name suffix
+// Export with Icon suffix
 export const HeartIcon = Heart;
 export const MessageCircleIcon = MessageCircle;
 export const MessageIcon = MessageSquare;
@@ -97,7 +101,7 @@ export const LockIcon = Lock;
 export const UnlockIcon = Unlock;
 export const ShieldIcon = Shield;
 export const AlertCircleIcon = AlertCircle;
-export const HelpCircleIcon = HelpCircle;
+export const HelpCircleIcon = AlertCircle; // Fallback to AlertCircle
 export const ArrowRightIcon = ArrowRight;
 export const ArrowLeftIcon = ArrowLeft;
 export const PowerIcon = Power;

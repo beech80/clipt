@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-// Direct imports from lucide-react instead of our centralized icon system
+// Import directly from our new lucide-icons file
 import {
   Menu,
   Heart, 
@@ -21,7 +21,7 @@ import {
   Monitor,
   TrendingUp,
   Bookmark
-} from 'lucide-react';
+} from '@/components/ui/lucide-icons';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
