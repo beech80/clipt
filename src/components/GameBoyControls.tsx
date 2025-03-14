@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-// Import directly from our new lucide-icons file
+// Import directly from our custom svg-icons implementation
 import {
   Menu,
   Heart, 
@@ -13,15 +13,15 @@ import {
   Home,
   Search,
   Bell,
-  Upload,
   User,
   Settings,
   Video,
   Award,
   Monitor,
   TrendingUp,
-  Bookmark
-} from '@/components/ui/lucide-icons';
+  Bookmark,
+  Upload
+} from '@/components/ui/svg-icons';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -385,8 +385,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Enhanced direction indicators with smoother transitions and variable intensity
   const updateDirectionIndicators = (yPosition: number) => {
     const joystickHandle = joystickRef.current;
-    const upIndicator = document.querySelector('.joystick-up-indicator');
-    const downIndicator = document.querySelector('.joystick-down-indicator');
+    const upIndicator = document.querySelector('.joystick-up-indicator') as HTMLElement;
+    const downIndicator = document.querySelector('.joystick-down-indicator') as HTMLElement;
     
     if (joystickHandle && upIndicator && downIndicator) {
       // Normalize the position to calculate intensity (0-100%)
@@ -402,7 +402,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       joystickHandle.classList.remove('joystick-handle-up', 'joystick-handle-down');
       
       // Preserve the current transform in the style attribute
-      const currentTransform = joystickHandle.style.transform || `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`;
+      const joystickHandleElement = joystickHandle as HTMLElement;
+      const currentTransform = joystickHandleElement.style.transform || `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`;
       
       if (direction === 'up' && Math.abs(yPosition) > 2) { // Smaller deadzone for visual feedback
         // Moving up with variable intensity
@@ -411,7 +412,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         
         // Apply intensity as a CSS variable while preserving transform
         upIndicator.style.setProperty('--intensity', `${intensity}`);
-        joystickHandle.style.setProperty('--move-intensity', `${intensity}`);
+        joystickHandleElement.style.setProperty('--move-intensity', `${intensity}`);
       } else if (direction === 'down' && Math.abs(yPosition) > 2) {
         // Moving down with variable intensity
         downIndicator.classList.add('active');
@@ -419,10 +420,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         
         // Apply intensity as a CSS variable while preserving transform
         downIndicator.style.setProperty('--intensity', `${intensity}`);
-        joystickHandle.style.setProperty('--move-intensity', `${intensity}`);
+        joystickHandleElement.style.setProperty('--move-intensity', `${intensity}`);
       } else {
         // Neutral position - reset intensity but keep transform
-        joystickHandle.style.setProperty('--move-intensity', '0');
+        joystickHandleElement.style.setProperty('--move-intensity', '0');
         upIndicator.style.setProperty('--intensity', '0');
         downIndicator.style.setProperty('--intensity', '0');
       }
@@ -477,8 +478,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       );
     }
     
-    const upIndicator = document.querySelector('.joystick-up-indicator');
-    const downIndicator = document.querySelector('.joystick-down-indicator');
+    const upIndicator = document.querySelector('.joystick-up-indicator') as HTMLElement;
+    const downIndicator = document.querySelector('.joystick-down-indicator') as HTMLElement;
     
     if (upIndicator) {
       upIndicator.classList.remove('active');
@@ -687,8 +688,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       );
     }
     
-    const upIndicator = document.querySelector('.joystick-up-indicator');
-    const downIndicator = document.querySelector('.joystick-down-indicator');
+    const upIndicator = document.querySelector('.joystick-up-indicator') as HTMLElement;
+    const downIndicator = document.querySelector('.joystick-down-indicator') as HTMLElement;
     
     if (upIndicator) {
       upIndicator.classList.remove('active');
@@ -1159,7 +1160,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             setActiveCommentPostId(undefined);
           }}
           postId={activeCommentPostId}
-          autoFocusInput={false}
         />
       )}
       

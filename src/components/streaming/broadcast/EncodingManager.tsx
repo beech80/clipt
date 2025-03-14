@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Cpu, Zap } from 'lucide-react';
-import { Activity } from '@/components/ui/icon-fix';
+import { Activity } from '@/components/ui/svg-icons';
 
 interface EncodingManagerProps {
   streamId: string;

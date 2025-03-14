@@ -19,6 +19,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import '@/index.css';
 import '@/styles/animations.css';
 
+// Import custom svg icons instead of lucide-react icons
+import { Activity } from '@/components/ui/svg-icons';
+
 const Home = React.lazy(() => import('./pages/Home'));
 const Auth = React.lazy(() => import('./pages/Auth'));
 const NewPost = React.lazy(() => import('./pages/NewPost'));

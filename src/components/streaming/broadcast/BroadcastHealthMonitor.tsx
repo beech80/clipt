@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AlertCircle, Cpu, Zap } from "lucide-react";
-import { Activity } from '@/components/ui/icon-fix';
+import { Activity } from '@/components/ui/svg-icons';
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
