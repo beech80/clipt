@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AlertCircle, Cpu, Zap } from "lucide-react";
-import { Activity } from '@/components/ui/svg-icons';
+import { ActivityIcon } from '@/components/ui/activity-icon';
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -100,7 +100,7 @@ export const BroadcastHealthMonitor = ({ streamId, sessionId }: BroadcastHealthM
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
+              <ActivityIcon className="h-4 w-4" />
               <span>Frame Rate</span>
             </div>
             <span>{metrics.current_fps} FPS</span>
