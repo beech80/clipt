@@ -1,5 +1,5 @@
 import { Gamepad2, Users, Share2, Clock, Copy } from "lucide-react";
-import { Activity } from "@/components/ui/icon-fix";
+import { Activity } from "@/components/ui/svg-icons";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatDuration } from "@/utils/dateUtils";

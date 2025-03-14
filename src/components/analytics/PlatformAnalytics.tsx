@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
 import { Users, TrendingUp, Award, Clock, MessageSquare } from "lucide-react";
-import { Activity } from '@/components/ui/icon-fix';
+import { Activity } from '@/components/ui/svg-icons';
 
 interface PlatformMetrics {
   total_users: number;

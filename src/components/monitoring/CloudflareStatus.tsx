@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { cloudflareService, CloudflareCheckResult } from '@/services/cloudflareService';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Activity } from '@/components/ui/icon-fix';
+import { Activity } from '@/components/ui/svg-icons';
 import { Globe, Wifi } from 'lucide-react';
 import { toast } from 'sonner';
 

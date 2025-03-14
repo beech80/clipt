@@ -8,7 +8,7 @@ import { CrowdChallenges } from './CrowdChallenges';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Gamepad, BarChart2, ThumbsUp, Trophy } from 'lucide-react';
-import { Activity } from '@/components/ui/icon-fix';
+import { Activity } from '@/components/ui/svg-icons';
 
 interface StreamInteractiveProps {
   streamId: string;
