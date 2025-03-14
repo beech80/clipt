@@ -3,11 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 // Import directly from our custom svg-icons implementation
 import {
   Menu,
-  Heart, 
   Camera,
-  MessageSquare,
   MessageCircle,
-  Trophy,
   UserPlus,
   X,
   Home,
@@ -21,7 +18,13 @@ import {
   TrendingUp,
   Bookmark,
   Upload
-} from '@/components/ui/svg-icons';
+} from '@/components/ui/standalone-icons';
+import {
+  Heart,
+  MessageSquare as MessageSquareIcon,
+  Trophy
+} from '@/components/ui/standalone-icons';
+import ActivityIcon from '@/components/ui/activity-icon';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -40,13 +43,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navigationOptions] = useState([
+    { name: 'Home', icon: <Home className="mr-2 h-4 w-4" />, path: '/' },
+    { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
+    { name: 'Clipts', icon: <ActivityIcon className="mr-2 h-4 w-4" />, path: '/clipts' },
+    { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
+    { name: 'Profile', icon: <User className="mr-2 h-4 w-4" />, path: '/profile' },
     { name: 'Settings', icon: <Settings className="mr-2 h-4 w-4" />, path: '/settings' },
     { name: 'Streaming', icon: <Video className="mr-2 h-4 w-4" />, path: '/streaming' },
-    { name: 'Profile', icon: <User className="mr-2 h-4 w-4" />, path: '/profile' },
-    { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
-    { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
-    { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' },
-    { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
+    { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | undefined>(undefined);

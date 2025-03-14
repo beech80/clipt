@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
-// Lazy load GameBoyControls to prevent initialization issues
-const GameBoyControls = React.lazy(() => 
-  import('@/components/GameBoyControls').then(module => ({
-    default: module.default
-  }))
-);
+
+// Important: Load GameBoyControls with Suspense to prevent initialization issues
+const GameBoyControls = React.lazy(() => import('@/components/GameBoyControls'));
+
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -19,9 +17,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import '@/index.css';
 import '@/styles/animations.css';
 
-// Import custom svg icons instead of lucide-react icons
-import { Activity } from '@/components/ui/svg-icons';
-
+// Lazy load all page components
 const Home = React.lazy(() => import('./pages/Home'));
 const Auth = React.lazy(() => import('./pages/Auth'));
 const NewPost = React.lazy(() => import('./pages/NewPost'));
@@ -35,142 +31,101 @@ const Discovery = React.lazy(() => import('./pages/Discovery'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Menu = React.lazy(() => import('./pages/Menu'));
 const Profile = React.lazy(() => import('./pages/Profile'));
-// Fix the problematic imports with more reliable patterns
-const Streaming = React.lazy(() => 
-  import('./pages/Streaming').catch(error => {
-    console.error('Error loading Streaming module:', error);
-    return { default: () => <div>Failed to load streaming page. Please refresh.</div> };
-  })
-);
 const Messages = React.lazy(() => import('./pages/Messages'));
 const Settings = React.lazy(() => import('./pages/Settings'));
-const EditProfile = React.lazy(() => 
-  import('./pages/EditProfile').catch(error => {
-    console.error('Error loading EditProfile module:', error);
-    return { default: () => <div>Failed to load profile editor. Please refresh.</div> };
-  })
-);
+const EditProfile = React.lazy(() => import('./pages/EditProfile'));
 const Admin = React.lazy(() => import('./pages/Admin'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
-const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
 const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
+const Streaming = React.lazy(() => import('./pages/Streaming'));
+const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 
 function AppContent() {
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  const [currentPostId, setCurrentPostId] = useState<string | null>(null);
+
+  // Extract post ID from URL if viewing a post
+  useEffect(() => {
+    if (location.pathname.includes('/post/')) {
+      const postId = location.pathname.split('/post/')[1].split('/')[0];
+      setCurrentPostId(postId);
+    } else {
+      setCurrentPostId(null);
+    }
+  }, [location.pathname]);
+
+  // Performance monitoring
   usePerformanceMonitoring('App');
-  
+
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/post/new" element={<NewPost />} />
-      <Route path="/post/:id" element={<PostPage />} />
-      <Route path="/post/:postId/comments" element={<CommentsPage />} />
-      <Route path="/game/:id" element={<Game />} />
-      <Route path="/games" element={<TopGames />} />
-      <Route path="/clipts" element={<Clipts />} />
-      <Route path="/top-clipts" element={<TopClipts />} />
-      <Route path="/profile/:id?" element={<UserProfile />} />
-      <Route path="/discovery" element={<Discovery />} />
-      <Route path="/menu" element={<Menu />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/profile/edit" element={
-        <ErrorBoundary fallback={<div className="p-4 text-center">Error loading profile editor. Try refreshing the page.</div>}>
-          <EditProfile />
-        </ErrorBoundary>
-      } />
-      <Route path="/streaming" element={
-        <ErrorBoundary fallback={<div className="p-4 text-center">Error loading streaming page. Try refreshing the page.</div>}>
-          <Streaming />
-        </ErrorBoundary>
-      } />
-      <Route path="/messages" element={<Messages />} />
-      <Route path="/messages/:userId" element={<Messages />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/admin" element={<Admin />} />
-      <Route path="/game-streamers/:gameId" element={<GameStreamers />} />
-      <Route path="/retro-search" element={<RetroSearchPage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <div className="app-container min-h-screen bg-black text-white">
+      <ScrollToTop />
+      <ErrorBoundary>
+        <Suspense fallback={<div className="loading">Loading...</div>}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/post/:postId" element={<PostPage />} />
+            <Route path="/new-post" element={<NewPost />} />
+            <Route path="/top-games" element={<TopGames />} />
+            <Route path="/game/:gameId" element={<Game />} />
+            <Route path="/game/:gameId/streamers" element={<GameStreamers />} />
+            <Route path="/clipts" element={<Clipts />} />
+            <Route path="/top-clipts" element={<TopClipts />} />
+            <Route path="/user/:userId" element={<UserProfile />} />
+            <Route path="/discovery" element={<Discovery />} />
+            <Route path="/menu" element={<Menu />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/messages/:conversationId" element={<Messages />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/post/:postId/comments" element={<CommentsPage />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/retro-search" element={<RetroSearchPage />} />
+            <Route path="/streaming" element={<Streaming />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+        
+        {/* GameBoy Controller - Loaded with Suspense */}
+        <Suspense fallback={<div className="fixed bottom-0 left-0 right-0 h-24 bg-black/50"></div>}>
+          <GameBoyControls currentPostId={currentPostId} />
+        </Suspense>
+      </ErrorBoundary>
+    </div>
   );
 }
 
 function App() {
-  const location = useLocation();
-  const [currentPostId, setCurrentPostId] = useState<string | undefined>(undefined);
-  const queryClient = useQueryClient(); 
-  
-  // Extract post ID from URL if on a post page
-  useEffect(() => {
-    const match = location.pathname.match(/\/post\/([^/?#]+)/);
-    let newPostId = undefined;
-    
-    if (match && match[1] && match[1] !== 'undefined' && match[1] !== 'null') {
-      newPostId = match[1];
-    }
-    
-    console.log("App detected post ID:", {
-      pathname: location.pathname,
-      extractedId: match?.[1] || 'none',
-      settingId: newPostId
-    });
-    
-    setCurrentPostId(newPostId);
-    // Clear the cache when navigation occurs
-    // This forces components to re-fetch fresh data
-    if (location.pathname.startsWith('/profile/') || 
-        location.pathname.startsWith('/game/')) {
-      console.log("Clearing query cache for navigation:", location.pathname);
-      queryClient.clear();
-    }
-  }, [location.pathname, queryClient]);
-
-  // Routes that should not display the GameBoy controls
-  const noControlsRoutes = ['/auth'];
-  const shouldShowControls = !noControlsRoutes.some(route => 
-    location.pathname.startsWith(route)
-  );
-
   return (
-    <ErrorBoundary>
-      <React.Suspense fallback={
-        <div className="flex items-center justify-center h-screen bg-blue-950">
-          <div className="text-center p-4">
-            <div className="animate-pulse text-blue-300 mb-2">Loading...</div>
-            <div className="text-sm text-blue-400">Please wait while we get things ready</div>
-          </div>
-        </div>
-      }>
-        <AuthProvider>
-          <MessagesProvider>
-            <ReportDialogProvider>
-              <CommentsProvider>
-                <Toaster richColors position="top-center" />
-                <ScrollToTop />
-                <div className="app-content-wrapper" style={{ 
-                  paddingBottom: shouldShowControls ? '180px' : '0',
-                  minHeight: '100vh',
-                  maxHeight: '100vh',
-                  overflow: 'auto',
-                  overscrollBehavior: 'none'
-                }}>
-                  <AppContent />
-                </div>
-                <PWAInstallPrompt />
-                {shouldShowControls && (
-                  <React.Suspense fallback={<div>Loading GameBoy controls...</div>}>
-                    <GameBoyControls currentPostId={currentPostId} />
-                  </React.Suspense>
-                )}
-              </CommentsProvider>
-            </ReportDialogProvider>
-          </MessagesProvider>
-        </AuthProvider>
-      </React.Suspense>
-    </ErrorBoundary>
+    <AuthProvider>
+      <MessagesProvider>
+        <CommentsProvider>
+          <ReportDialogProvider>
+            <PWAInstallPrompt />
+            <AppContent />
+            <Toaster 
+              position="top-center" 
+              richColors 
+              toastOptions={{
+                style: {
+                  background: '#111',
+                  color: '#fff',
+                  border: '1px solid #222',
+                },
+                className: 'retro-toast',
+              }} 
+            />
+          </ReportDialogProvider>
+        </CommentsProvider>
+      </MessagesProvider>
+    </AuthProvider>
   );
 }
 

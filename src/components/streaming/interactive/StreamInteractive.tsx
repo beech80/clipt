@@ -8,7 +8,7 @@ import { CrowdChallenges } from './CrowdChallenges';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Gamepad, BarChart2, ThumbsUp, Trophy } from 'lucide-react';
-import { Activity } from '@/components/ui/svg-icons';
+import ActivityIcon from '@/components/ui/activity-icon';
 
 interface StreamInteractiveProps {
   streamId: string;
@@ -42,7 +42,7 @@ export function StreamInteractive({ streamId, isStreamer = false }: StreamIntera
           </TabsTrigger>
           {isStreamer && (
             <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
+              <ActivityIcon className="h-4 w-4" />
               Analytics
             </TabsTrigger>
           )}
