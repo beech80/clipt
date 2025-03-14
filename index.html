@@ -6,7 +6,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Clipt - Your gaming highlight platform" />
     <title>Clipt</title>
+    <!-- For SEO and social sharing -->
+    <meta property="og:title" content="Clipt - Gaming Highlights Platform" />
+    <meta property="og:description" content="Share and discover amazing gaming moments" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/logo512.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Clipt - Gaming Highlights Platform" />
+    <meta name="twitter:description" content="Share and discover amazing gaming moments" />
+    <meta name="twitter:image" content="/logo512.png" />
     
+    <!-- Lovable Script -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+
+    <!-- PostHog Analytics -->
+    <script>
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+      posthog.init(import.meta.env.VITE_POSTHOG_API_KEY, {api_host: 'https://app.posthog.com'});
+    </script>
+
+    <!-- Sentry Error Tracking -->
+    <script
+      src="https://js.sentry-cdn.com/YOUR-PUBLIC-KEY.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      Sentry.init({
+        dsn: import.meta.env.VITE_SENTRY_DSN,
+        integrations: [
+          new Sentry.BrowserTracing({
+            tracePropagationTargets: ["localhost", /^https:\/\/yourwebsite\.com/],
+          }),
+          new Sentry.Replay(),
+        ],
+        tracesSampleRate: 1.0,
+        replaysSessionSampleRate: 0.1,
+        replaysOnErrorSampleRate: 1.0,
+      });
+    </script>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      if (import.meta.env.VITE_GOOGLE_ANALYTICS_ID) {
+        gtag('config', import.meta.env.VITE_GOOGLE_ANALYTICS_ID);
+      }
+    </script>
+
+    <!-- Service worker registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(registration => {
+            console.log('SW registered: ', registration);
+          }).catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+        });
+      }
+    </script>
+    
+    <!-- Application JSON-LD -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Clipt",
+        "description": "Gaming highlight platform for sharing and discovering gaming moments",
+        "applicationCategory": "Entertainment",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "screenshot": "/screenshot.png",
+        "featureList": "Share clips, Discover content, Connect with gamers",
+        "softwareVersion": "1.0.0",
+        "logo": "/logo192.png"
+      }
+    </script>
+    
+    <!-- Preconnect to Supabase -->
+    <link rel="preconnect" href="https://slnjliheyiiummxhrgmk.supabase.co" />
+    <base href="/" />
     <style>
         body {
             margin: 0;
@@ -116,7 +202,9 @@
             background-color: transparent;
             font-weight: bold;
             color: white;
-            border: none;
+            border: 2px solid;
+            border-image: linear-gradient(45deg, #7c3aed, #3b82f6) 1;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
             position: relative;
             cursor: pointer;
         }
@@ -132,6 +220,7 @@
             border: 2px solid transparent;
             background: linear-gradient(45deg, #7c3aed, #3b82f6) border-box;
             -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: destination-out;
             mask-composite: exclude;
             animation: pulse 1.5s infinite;
@@ -222,51 +311,68 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Guaranteed UI -->
-    <div class="container">
-        <h1>Clipt</h1>
-        <p>Your gaming moments, captured.</p>
-    </div>
-    
-    <!-- GameBoy Controls -->
-    <div class="gameboy-controls">
-        <!-- Joystick -->
-        <div class="joystick">
-            <div class="d-pad-up"></div>
-            <div class="d-pad-right"></div>
-            <div class="d-pad-down"></div>
-            <div class="d-pad-left"></div>
-            <div class="d-pad-center"></div>
-        </div>
-        
-        <!-- Center Buttons -->
-        <div class="center-controls">
-            <button class="clipt-button">CLIPT</button>
-            <div class="bottom-buttons">
-                <button class="small-button">+ POST</button>
-                <button class="small-button">☰</button>
-            </div>
-        </div>
-        
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button class="action-button top-button">❤️</button>
-            <button class="action-button right-button">↗️</button>
-            <button class="action-button bottom-button">👤</button>
-            <button class="action-button left-button">💬</button>
-        </div>
-    </div>
-    
+    <!-- Fallback in case React doesn't render -->
     <script>
-        // Simple button press effect
-        document.querySelectorAll('button').forEach(button => {
-            button.addEventListener('click', () => {
-                button.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    button.style.transform = '';
-                }, 100);
-            });
-        });
+      setTimeout(() => {
+        const root = document.getElementById('root');
+        // Only add fallback if React hasn't rendered anything
+        if (!root || root.children.length === 0) {
+          console.log('React not rendering, showing fallback UI');
+          
+          // Add fallback GameBoy controller
+          const gameboy = document.createElement('div');
+          gameboy.className = 'gameboy-controls';
+          gameboy.style.position = 'fixed';
+          gameboy.style.bottom = '0';
+          gameboy.style.left = '0';
+          gameboy.style.right = '0';
+          gameboy.style.height = '100px';
+          gameboy.style.backgroundColor = '#111827';
+          gameboy.style.borderTop = '1px solid #2d3748';
+          gameboy.style.display = 'flex';
+          gameboy.style.alignItems = 'center';
+          gameboy.style.justifyContent = 'space-between';
+          gameboy.style.padding = '0 20px';
+          
+          gameboy.innerHTML = `
+            <!-- Joystick -->
+            <div style="width: 80px; height: 80px; position: relative;">
+              <div style="width: 80px; height: 80px; background-color: #374151; border-radius: 50%; border: 2px solid #4b5563; position: relative;">
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #1f2937; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #2d3748; top: 5px; left: 50%; transform: translateX(-50%); clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #2d3748; top: 50%; right: 5px; transform: translateY(-50%); clip-path: polygon(0% 0%, 0% 100%, 100% 50%);"></div>
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #2d3748; bottom: 5px; left: 50%; transform: translateX(-50%); clip-path: polygon(0% 0%, 100% 0%, 50% 100%);"></div>
+                <div style="position: absolute; width: 24px; height: 24px; background-color: #2d3748; top: 50%; left: 5px; transform: translateY(-50%); clip-path: polygon(0% 50%, 100% 0%, 100% 100%);"></div>
+              </div>
+            </div>
+            
+            <!-- Center buttons -->
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <button style="padding: 10px 20px; margin-bottom: 10px; border-radius: 9999px; background-color: transparent; color: white; font-weight: bold; border: 2px solid; border-image: linear-gradient(45deg, #7c3aed, #3b82f6) 1; box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);">
+                CLIPT
+              </button>
+              <div style="display: flex; gap: 10px;">
+                <button style="padding: 5px 10px; background-color: #1f2937; color: white; border: none; border-radius: 4px; font-size: 12px;">
+                  + POST
+                </button>
+                <button style="padding: 5px 10px; background-color: #1f2937; color: white; border: none; border-radius: 4px; font-size: 12px;">
+                  ☰
+                </button>
+              </div>
+            </div>
+            
+            <!-- Action buttons -->
+            <div style="position: relative; width: 80px; height: 80px;">
+              <button style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #1f2937; border: 1px solid #ef4444; color: #ef4444; display: flex; align-items: center; justify-content: center; top: 0; left: 50%; transform: translateX(-50%);">❤️</button>
+              <button style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #1f2937; border: 1px solid #3b82f6; color: #3b82f6; display: flex; align-items: center; justify-content: center; top: 50%; right: 0; transform: translateY(-50%);">↗️</button>
+              <button style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #1f2937; border: 1px solid #8b5cf6; color: #8b5cf6; display: flex; align-items: center; justify-content: center; bottom: 0; left: 50%; transform: translateX(-50%);">👤</button>
+              <button style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #1f2937; border: 1px solid #10b981; color: #10b981; display: flex; align-items: center; justify-content: center; top: 50%; left: 0; transform: translateY(-50%);">💬</button>
+            </div>
+          `;
+          
+          document.body.appendChild(gameboy);
+        }
+      }, 2000); // Wait 2 seconds for React to render
     </script>
   </body>
 </html>
