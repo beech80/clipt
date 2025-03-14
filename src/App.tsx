@@ -3,10 +3,6 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
-
-// Important: Load GameBoyControls with Suspense to prevent initialization issues
-const GameBoyControls = React.lazy(() => import('@/components/GameBoyControls'));
-
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -16,6 +12,9 @@ import { usePerformanceMonitoring } from '@/lib/performance';
 import { useQueryClient } from '@tanstack/react-query';
 import '@/index.css';
 import '@/styles/animations.css';
+
+// Important: Load GameBoyControls with Suspense to prevent initialization issues
+const GameBoyControls = React.lazy(() => import('@/components/GameBoyControls'));
 
 // Lazy load all page components
 const Home = React.lazy(() => import('./pages/Home'));
@@ -64,7 +63,9 @@ function AppContent() {
     <div className="app-container min-h-screen bg-black text-white">
       <ScrollToTop />
       <ErrorBoundary>
-        <Suspense fallback={<div className="loading">Loading...</div>}>
+        <Suspense fallback={<div className="loading-container flex items-center justify-center h-screen w-full">
+          <div className="loading-spinner animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
@@ -109,7 +110,6 @@ function App() {
         <CommentsProvider>
           <ReportDialogProvider>
             <PWAInstallPrompt />
-            <AppContent />
             <Toaster 
               position="top-center" 
               richColors 
@@ -122,6 +122,7 @@ function App() {
                 className: 'retro-toast',
               }} 
             />
+            <AppContent />
           </ReportDialogProvider>
         </CommentsProvider>
       </MessagesProvider>

@@ -7,10 +7,10 @@ import {
   MessageCircle,
   UserPlus,
   X,
-  Home,
+  Home as HomeIcon,
   Search,
   Bell,
-  User,
+  User as UserIcon,
   Settings,
   Video,
   Award,
@@ -31,6 +31,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import './joystick-animations.css'; // Import joystick animations
 import CommentModal from './comments/CommentModal';
 
+// Import non-critical icons from lucide-react
+import {
+  Share,
+  Plus,
+  ArrowRight
+} from 'lucide-react';
+
 interface GameBoyControlsProps {
   currentPostId?: string;
 }
@@ -43,11 +50,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navigationOptions] = useState([
-    { name: 'Home', icon: <Home className="mr-2 h-4 w-4" />, path: '/' },
+    { name: 'Home', icon: <HomeIcon className="mr-2 h-4 w-4" />, path: '/' },
     { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
     { name: 'Clipts', icon: <ActivityIcon className="mr-2 h-4 w-4" />, path: '/clipts' },
     { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
-    { name: 'Profile', icon: <User className="mr-2 h-4 w-4" />, path: '/profile' },
+    { name: 'Profile', icon: <UserIcon className="mr-2 h-4 w-4" />, path: '/profile' },
     { name: 'Settings', icon: <Settings className="mr-2 h-4 w-4" />, path: '/settings' },
     { name: 'Streaming', icon: <Video className="mr-2 h-4 w-4" />, path: '/streaming' },
     { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' }
