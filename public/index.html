@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clipt</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #fff;
+      font-family: sans-serif;
+    }
+    .container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      margin-bottom: 2rem;
+    }
+    
+    /* GameBoy Controller */
+    .gameboy-controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 6rem;
+      background-color: #111827;
+      border-top: 1px solid #2d3748;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+    }
+    
+    /* Joystick */
+    .joystick-container {
+      width: 80px;
+      height: 80px;
+      position: relative;
+    }
+    .joystick {
+      width: 70px;
+      height: 70px;
+      position: relative;
+      background-color: #374151;
+      border-radius: 50%;
+      border: 2px solid #4b5563;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+    .d-pad-center {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #1f2937;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .d-pad-up, .d-pad-right, .d-pad-down, .d-pad-left {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #2d3748;
+    }
+    .d-pad-up {
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    }
+    .d-pad-right {
+      top: 50%;
+      right: 5px;
+      transform: translateY(-50%);
+      clip-path: polygon(0% 0%, 0% 100%, 100% 50%);
+    }
+    .d-pad-down {
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+    }
+    .d-pad-left {
+      top: 50%;
+      left: 5px;
+      transform: translateY(-50%);
+      clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+    }
+    
+    /* CLIPT Button */
+    .clipt-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .clipt-button {
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      background-color: transparent;
+      border: 2px solid;
+      border-image: linear-gradient(45deg, #7c3aed, #3b82f6) 1;
+      box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+      margin-bottom: 0.5rem;
+    }
+    .buttons-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .small-button {
+      padding: 0.25rem 0.5rem;
+      background-color: #1f2937;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+    .diamond-buttons {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .action-button {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .action-button-top {
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 1px solid #ef4444;
+    }
+    .action-button-right {
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      border: 1px solid #3b82f6;
+    }
+    .action-button-bottom {
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 1px solid #8b5cf6;
+    }
+    .action-button-left {
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+      border: 1px solid #10b981;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Clipt</h1>
+    <p>Your gaming moments, captured.</p>
+  </div>
+  
+  <!-- GameBoy Controls -->
+  <div class="gameboy-controls">
+    <!-- Joystick -->
+    <div class="joystick-container">
+      <div class="joystick">
+        <div class="d-pad-up"></div>
+        <div class="d-pad-right"></div>
+        <div class="d-pad-down"></div>
+        <div class="d-pad-left"></div>
+        <div class="d-pad-center"></div>
+      </div>
+    </div>
+    
+    <!-- Center Buttons -->
+    <div class="clipt-container">
+      <button class="clipt-button">
+        <span>CLIPT</span>
+      </button>
+      <div class="buttons-row">
+        <button class="small-button">+ POST</button>
+        <button class="small-button">☰</button>
+      </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <div class="diamond-buttons">
+        <button class="action-button action-button-top">❤️</button>
+        <button class="action-button action-button-right">↗️</button>
+        <button class="action-button action-button-bottom">👤</button>
+        <button class="action-button action-button-left">💬</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Simple script to make buttons interactive
+    document.querySelectorAll('button').forEach(button => {
+      button.addEventListener('click', () => {
+        button.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          button.style.transform = 'scale(1)';
+        }, 100);
+      });
+    });
+  </script>
+</body>
+</html>
