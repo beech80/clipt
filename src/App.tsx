@@ -3,7 +3,8 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
-import GameBoyControls from '@/components/GameBoyControls';
+// Lazy load GameBoyControls to prevent initialization issues
+const GameBoyControls = React.lazy(() => import('@/components/GameBoyControls'));
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -152,7 +153,11 @@ function App() {
                   <AppContent />
                 </div>
                 <PWAInstallPrompt />
-                {shouldShowControls && <GameBoyControls currentPostId={currentPostId} />}
+                {shouldShowControls && (
+                  <React.Suspense fallback={<div>Loading GameBoy controls...</div>}>
+                    <GameBoyControls currentPostId={currentPostId} />
+                  </React.Suspense>
+                )}
               </CommentsProvider>
             </ReportDialogProvider>
           </MessagesProvider>
