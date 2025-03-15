@@ -663,39 +663,81 @@ const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) 
         
         {/* Comment input at bottom - Instagram style */}
         {!replyingTo && (
-          <form onSubmit={handleSubmitComment} className="border-t border-gaming-700 p-3 sticky bottom-0 bg-gaming-900">
-            <div className="flex items-center">
-              {user && (
-                <Avatar className="h-8 w-8 mr-2 flex-shrink-0">
-                  <AvatarImage 
-                    src={user.user_metadata?.avatar_url || ''} 
-                    alt={user.user_metadata?.username || 'User'} 
-                  />
-                  <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
-                    {user.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              
-              <div className="flex-1 relative">
-                <Textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="min-h-9 py-2 px-3 bg-gaming-800 border-none resize-none text-sm w-full focus:ring-1 focus:ring-purple-500 rounded-2xl"
-                  rows={1}
-                />
+          <div className="border-t border-gaming-700 sticky bottom-0 bg-gaming-900">
+            {/* Emoji reaction row */}
+            <div className="flex justify-between px-4 py-2 border-b border-gaming-700/50">
+              <div className="flex space-x-6">
+                <button className="text-red-500 hover:text-red-400 transition-colors">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </button>
+                <button className="text-yellow-500 hover:text-yellow-400 transition-colors">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 11h-3.17l2.54-2.54c.39-.39.39-1.02 0-1.41-.39-.39-1.03-.39-1.42 0L15 11h-2V9l3.95-3.95c.39-.39.39-1.03 0-1.42-.39-.39-1.02-.39-1.41 0L12 7.17 8.46 3.63c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.03 0 1.42L11 9v2H9L5.05 7.05c-.39-.39-1.03-.39-1.42 0-.39.39-.39 1.02 0 1.41L6.17 11H3c-.55 0-1 .45-1 1s.45 1 1 1h3.17l-2.54 2.54c-.39.39-.39 1.02 0 1.41.39.39 1.03.39 1.42 0L9 13h2v2l-3.95 3.95c-.39.39-.39 1.03 0 1.42.39.39 1.02.39 1.41 0L12 16.83l3.55 3.54c.39.39 1.02.39 1.41 0 .39-.39.39-1.03 0-1.42L13 15v-2h2l3.95 3.95c.39.39 1.03.39 1.42 0 .39-.39.39-1.02 0-1.41L17.83 13H21c.55 0 1-.45 1-1s-.45-1-1-1z"/>
+                  </svg>
+                </button>
+                <button className="text-orange-500 hover:text-orange-400 transition-colors">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zM8 17c-.83 0-1.5-.67-1.5-1.5S7.17 14 8 14s1.5.67 1.5 1.5S8.83 17 8 17zm8 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                  </svg>
+                </button>
+                <button className="text-yellow-400 hover:text-yellow-300 transition-colors">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 11h-3.17l2.54-2.54c.39-.39.39-1.02 0-1.41-.39-.39-1.03-.39-1.42 0L15 11h-2V9l3.95-3.95c.39-.39.39-1.03 0-1.42-.39-.39-1.02-.39-1.41 0L12 7.17 8.46 3.63c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.03 0 1.42L11 9v2H9L5.05 7.05c-.39-.39-1.03-.39-1.42 0-.39.39-.39 1.02 0 1.41L6.17 11H3c-.55 0-1 .45-1 1s.45 1 1 1h3.17l-2.54 2.54c-.39.39-.39 1.02 0 1.41.39.39 1.03.39 1.42 0L9 13h2v2l-3.95 3.95c-.39.39-.39 1.03 0 1.42.39.39 1.02.39 1.41 0L12 16.83l3.55 3.54c.39.39 1.02.39 1.41 0 .39-.39.39-1.03 0-1.42L13 15v-2h2l3.95 3.95c.39.39 1.03.39 1.42 0 .39-.39.39-1.02 0-1.41L17.83 13H21c.55 0 1-.45 1-1s-.45-1-1-1z"/>
+                  </svg>
+                </button>
               </div>
-              
-              <Button
-                type="submit"
-                disabled={!comment.trim()}
-                className="ml-2 text-blue-400 hover:text-blue-300 bg-transparent hover:bg-transparent h-9 disabled:opacity-50 disabled:cursor-not-allowed px-3"
-              >
-                Post
-              </Button>
+              <div className="flex space-x-6">
+                <button className="text-gray-400 hover:text-gray-300 transition-colors">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </button>
+                <button className="text-gray-400 hover:text-gray-300 transition-colors">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
-          </form>
+            
+            {/* Instagram-style comment input */}
+            <form onSubmit={handleSubmitComment} className="px-3 py-2">
+              <div className="flex items-center">
+                {user && (
+                  <Avatar className="h-8 w-8 mr-2 flex-shrink-0">
+                    <AvatarImage 
+                      src={user.user_metadata?.avatar_url || ''} 
+                      alt={user.user_metadata?.username || 'User'} 
+                    />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
+                      {user.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder={`Add a comment as ${user?.user_metadata?.username || 'user'}...`}
+                    className="w-full py-2 px-3 bg-transparent border-none rounded-full text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-0"
+                  />
+                </div>
+                
+                {comment.trim() && (
+                  <button
+                    type="submit"
+                    className="ml-2 text-blue-400 font-semibold text-sm hover:text-blue-300 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Post
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
         )}
       </DialogContent>
     </Dialog>
