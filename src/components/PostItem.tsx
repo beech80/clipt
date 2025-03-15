@@ -2,16 +2,7 @@ import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
-// Import from our centralized icons component
-import { 
-  HeartIcon, 
-  MessageIcon, 
-  TrophyIcon, 
-  TrashIcon, 
-  MoreIcon, 
-  UserCheckIcon, 
-  UserPlusIcon 
-} from "@/components/ui/icons";
+import { Heart, MessageSquare, Trophy, Trash2, MoreVertical, UserCheck, UserPlus } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -811,14 +802,14 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         {isOwner && (
           <DropdownMenu>
             <DropdownMenuTrigger className="p-2 hover:bg-gaming-800 rounded-full transition-colors">
-              <MoreIcon className="h-5 w-5 text-gaming-300" />
+              <MoreVertical className="h-5 w-5 text-gaming-300" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem
                 className="text-red-500 focus:text-red-400 cursor-pointer"
                 onClick={handleDeletePost}
               >
-                <TrashIcon className="mr-2 h-4 w-4" />
+                <Trash2 className="mr-2 h-4 w-4" />
                 Delete Post
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -841,7 +832,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
           className="like-button flex items-center text-sm font-medium transition-all duration-200 group"
           onClick={handleLike}
         >
-          <HeartIcon 
+          <Heart 
             className={`h-6 w-6 ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
             fill={liked ? "currentColor" : "none"}
           />
@@ -855,7 +846,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
               className="comment-button flex items-center text-sm font-medium text-gray-400 hover:text-blue-500 transition-all duration-200 group"
               onClick={handleComment}
             >
-              <MessageIcon 
+              <MessageSquare 
                 className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
               />
               <span className="text-base font-medium text-gray-400 group-hover:text-blue-300">
@@ -897,7 +888,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
           onClick={handleTrophyVote}
           disabled={trophyLoading}
         >
-          <TrophyIcon 
+          <Trophy 
             className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all ${trophyLoading ? 'opacity-50' : ''}`}
           />
           <span className={`text-base font-medium ml-1 ${hasTrophy ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
@@ -912,11 +903,11 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             onClick={handleFollow}
           >
             {isFollowing ? (
-              <UserCheckIcon 
+              <UserCheck 
                 className="h-6 w-6 text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
               />
             ) : (
-              <UserPlusIcon 
+              <UserPlus 
                 className="h-6 w-6 text-gray-400 group-hover:text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
               />
             )}

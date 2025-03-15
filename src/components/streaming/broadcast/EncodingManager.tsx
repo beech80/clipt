@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Cpu, Zap } from 'lucide-react';
-import ActivityIcon from '@/components/ui/activity-icon';
+import { Cpu, Activity, Zap } from 'lucide-react';
 
 interface EncodingManagerProps {
   streamId: string;
@@ -74,7 +73,7 @@ export const EncodingManager = ({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <ActivityIcon className="h-4 w-4" />
+              <Activity className="h-4 w-4" />
               <span>Frame Rate</span>
             </div>
             <span>{stats.current_fps} FPS</span>

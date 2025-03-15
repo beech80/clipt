@@ -1,38 +1,21 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-// Import from our centralized icon library
-import { 
-  CloseIcon, 
-  HeartIcon, 
-  ChevronDownIcon, 
-  ChevronUpIcon, 
-  MoreIcon, 
-  CheckIcon 
-} from "@/components/ui/icons";
+import { X, ArrowLeft, Heart, ChevronDown, ChevronUp, MoreVertical, Check, X as XIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { getComments, getCommentCount, likeComment, deleteComment, editComment, createComment } from "@/services/commentService";
+import { getComments, getCommentCount, likeComment, deleteComment, editComment } from "@/services/commentService";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDistanceToNowStrict } from "date-fns";
+import { formatDistanceToNowStrict } from 'date-fns';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// Custom styled versions of our icons
-const SmallHeartIcon = ({ fill }: { fill: string }) => <HeartIcon className="h-3 w-3" fill={fill} />;
-const DownIcon = () => <ChevronDownIcon className="h-3 w-3 ml-1" />;
-const UpIcon = () => <ChevronUpIcon className="h-3 w-3 ml-1" />;
-const SmallMoreIcon = () => <MoreIcon className="h-3 w-3" />;
-const CheckmarkIcon = () => <CheckIcon className="h-3 w-3 mr-1" />;
-const SmallCloseIcon = () => <CloseIcon className="h-3 w-3 mr-1" />;
-const TinyCloseIcon = () => <CloseIcon className="h-3 w-3" />;
 
 interface CommentModalProps {
   isOpen: boolean;
@@ -56,47 +39,20 @@ interface Comment {
   children?: Comment[];
 }
 
-interface CommentData {
-  post_id: string;
-  user_id: string;
-  content: string;
-  parent_id?: string | null;
-}
-
-const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) => {
+const CommentModal: React.FC<CommentModalProps> = ({ isOpen, onClose, postId }) => {
   const { user } = useAuth();
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
+  const [showRepliesFor, setShowRepliesFor] = useState<{[key: string]: boolean}>({});
   const [editingComment, setEditingComment] = useState<Comment | null>(null);
-  const [editContent, setEditContent] = useState("");
-  const [showRepliesFor, setShowRepliesFor] = useState<Record<string, boolean>>({});
-  const [post, setPost] = useState<any>(null);
-
-  // Get useQueryClient
+  const [editContent, setEditContent] = useState('');
   const queryClient = useQueryClient();
-
-  // Console.log when component mounts and dependencies change
-  useEffect(() => {
-    console.log(`CommentModal rendered - postId: ${postId}, isOpen: ${isOpen}`);
-    
-    if (isOpen && postId) {
-      console.log(`Modal open for post ${postId}, fetching data...`);
-    }
-  }, [postId, isOpen]);
-
-  // Force refresh comments when modal opens
-  useEffect(() => {
-    if (isOpen && postId) {
-      console.log("Modal opened, forcing comment refresh");
-      refetch();
-    }
-  }, [isOpen, postId, refetch]);
-
-  // Fetch the post data
+  const [post, setPost] = useState<any>(null);
+  
+  // Get the post content to display in the modal header
   useEffect(() => {
     if (isOpen && postId) {
       const fetchPost = async () => {
-        console.log(`Fetching post data for ${postId}`);
         try {
           const { data, error } = await supabase
             .from("posts")
@@ -111,79 +67,82 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
             `)
             .eq("id", postId)
             .single();
-            
-          if (error) {
-            console.error("Error fetching post:", error);
-            toast.error("Failed to load post");
-            return;
-          }
           
-          console.log("Post data retrieved:", data);
+          if (error) throw error;
           setPost(data);
         } catch (error) {
-          console.error("Error in fetchPost:", error);
-          toast.error("An error occurred while loading the post");
+          console.error("Error fetching post:", error);
         }
       };
       
       fetchPost();
     }
   }, [isOpen, postId]);
-
-  // Fetch comments
-  const { 
-    data: comments = [], 
-    isLoading, 
-    error,
-    refetch 
-  } = useQuery({
+  
+  // Query comments for the post
+  const { data: comments = [], isLoading, error, refetch } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
-      console.log(`Running useQuery to fetch comments for post ${postId}`);
-      if (!postId) return [];
-      const { data, error } = await getComments(postId);
-      if (error) {
-        console.error('Error fetching comments in useQuery:', error);
+      try {
+        console.log(`Fetching comments for post ${postId}`);
+        const result = await getComments(postId);
+        if (result.error) {
+          console.error("Error fetching comments:", result.error);
+          throw result.error;
+        }
+        console.log(`Retrieved ${result.data?.length || 0} comments`, result.data);
+        return result.data || [];
+      } catch (error) {
+        console.error("Exception in comments query:", error);
         throw error;
       }
-      console.log(`Comments fetched in useQuery:`, data?.length, data);
-      return data || [];
     },
-    enabled: !!postId && isOpen
+    enabled: isOpen && !!postId,
+    staleTime: 5000, // 5 seconds
+    refetchOnWindowFocus: false,
   });
 
   // Add comment mutation
   const addComment = useMutation({
     mutationFn: async ({ content, parentId }: { content: string, parentId?: string }) => {
-      if (!user || !postId) {
-        throw new Error('User or post ID is missing');
-      }
+      if (!user) throw new Error("You must be logged in to comment");
       
-      console.log(`Adding comment: content=${content}, parentId=${parentId}, postId=${postId}`);
-      
-      const commentData: CommentData = {
-        post_id: postId,
-        user_id: user.id,
-        content: content,
-        parent_id: parentId || null
-      };
-      
-      const result = await createComment(commentData);
-      if (result.error) {
-        throw result.error;
-      }
-      return result.data;
+      const { data, error } = await supabase
+        .from('comments')
+        .insert([
+          {
+            content,
+            user_id: user.id,
+            post_id: postId,
+            parent_id: parentId || null
+          }
+        ])
+        .select(`
+          id,
+          content,
+          created_at,
+          parent_id,
+          user_id,
+          profiles:user_id (
+            username,
+            avatar_url
+          )
+        `)
+        .single();
+        
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
-      console.log("Comment added successfully, refetching comments...");
-      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
       setComment('');
       setReplyingTo(null);
-      toast.success('Comment added successfully!');
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
+      toast.success("Comment added successfully!");
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error("Error adding comment:", error);
-      toast.error('Failed to add comment. Please try again.');
+      toast.error("Failed to add comment");
     }
   });
 
@@ -346,13 +305,13 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
   };
 
   // Organize comments into threaded view
-  const organizedComments = useMemo(() => {
+  const organizedComments = React.useMemo(() => {
     if (!comments || !Array.isArray(comments)) {
       console.log("No comments to organize or comments is not an array", comments);
       return [];
     }
     
-    console.log(`Organizing ${comments.length} comments for post ${postId}`);
+    console.log(`Organizing ${comments.length} comments`);
     
     // Create a map of comments by ID for quick lookup
     const commentMap = new Map<string, Comment>();
@@ -373,150 +332,91 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
         const parentComment = commentMap.get(comment.parent_id);
         if (parentComment && parentComment.children) {
           parentComment.children.push(currentComment);
-        } else {
-          // If we can't find the parent or it has no children array
-          // (rare edge case), treat as top-level
-          topLevelComments.push(currentComment);
         }
       } else {
-        // This is a top-level comment (no parent or parent not found)
+        // This is a top-level comment
         topLevelComments.push(currentComment);
       }
     });
     
     // Sort all comments by created_at (newest first)
-    const sortedComments = topLevelComments.sort((a, b) => 
+    return topLevelComments.sort((a, b) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-    
-    console.log(`Organized comments: ${sortedComments.length} top-level comments with their replies`, 
-      sortedComments.map(c => ({ 
-        id: c.id, 
-        content: c.content.substring(0, 20) + '...', 
-        childCount: c.children?.length 
-      }))
-    );
-    
-    return sortedComments;
-  }, [comments, postId]);
+  }, [comments]);
 
   // Check if current user is the author of a comment
-  const isCommentAuthor = useCallback((comment: Comment) => {
-    if (!user) return false;
-    const isAuthor = user.id === comment.user_id;
-    console.log(`Checking if user ${user.id} is author of comment ${comment.id} by ${comment.user_id}: ${isAuthor}`);
-    return isAuthor;
-  }, [user]);
-
-  // Enhanced logging to debug why comments aren't showing
-  useEffect(() => {
-    if (comments?.length > 0) {
-      console.log("Current comments data:", comments);
-      console.log("User IDs in comments:", comments.map(c => ({
-        comment_id: c.id,
-        user_id: c.user_id,
-        username: c.profiles?.username,
-        content_preview: c.content.substring(0, 15) + '...',
-        isMyComment: user?.id === c.user_id
-      })));
-    }
-  }, [comments, user]);
-
-  // Add ability to manually refresh comments
-  const handleRefreshComments = () => {
-    console.log("Manually refreshing comments");
-    refetch();
-    toast.success("Refreshing comments...");
+  const isCommentAuthor = (comment: Comment) => {
+    return user?.id === comment.user_id;
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] bg-gaming-900 text-white p-0 gap-0 flex flex-col">
-        <DialogTitle className="flex items-center justify-between border-b border-gaming-700 p-4">
-          <h2 className="text-xl font-bold">Add Comment</h2>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md bg-gaming-900 border-gaming-700 text-white p-0 max-h-[90vh] flex flex-col">
+        {/* Instagram-style header */}
+        <DialogTitle className="flex justify-between items-center p-3 border-b border-gaming-700 sticky top-0 bg-gaming-900 z-10">
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 mr-2" 
+              onClick={onClose}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h3 className="text-lg font-semibold">Comments</h3>
+          </div>
           <Button 
             variant="ghost" 
-            size="icon"
+            size="icon" 
+            className="h-8 w-8" 
             onClick={onClose}
-            className="h-7 w-7 rounded-full text-gaming-300 hover:text-white"
           >
-            <CloseIcon />
+            <X className="h-4 w-4" />
           </Button>
         </DialogTitle>
         
-        {/* Post information */}
+        {/* Original post creator section - Instagram style */}
         {post && (
-          <div className="p-4 border-b border-gaming-700">
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8 flex-shrink-0">
-                <AvatarImage src={post.profiles?.avatar_url || ''} />
-                <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-              </Avatar>
+          <div className="p-4 border-b border-gaming-700 flex gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={post.profiles?.avatar_url || ''} />
+              <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+            </Avatar>
+            <div>
               <div>
-                <p className="font-semibold text-sm text-white">
+                <span className="font-semibold text-gaming-100 mr-1">
                   {post.profiles?.username || 'Anonymous'}
-                </p>
-                <p className="text-gaming-200 text-sm">Commenting on post from {post.profiles?.username}</p>
+                </span>
+                <span className="text-gaming-200">{post.content || ''}</span>
               </div>
             </div>
-            {post.content && (
-              <p className="mt-2 text-sm text-gaming-200 ml-10">{post.content}</p>
-            )}
-            {post.image_url && (
-              <div className="ml-10 mt-2 w-14 h-14 rounded overflow-hidden">
-                <img 
-                  src={post.image_url} 
-                  alt="Post image" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
           </div>
         )}
-
-        {/* Comments section with scrolling */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-medium text-white">Comments</h3>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleRefreshComments}
-              className="text-xs text-gaming-300 hover:text-white"
-            >
-              Refresh
-            </Button>
-          </div>
-          
+        
+        {/* Comments section - scrollable */}
+        <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="py-10 text-center text-gaming-300">
-              Loading comments...
-            </div>
+            <div className="p-12 text-center text-gaming-300">Loading comments...</div>
           ) : error ? (
-            <div className="py-10 text-center text-red-500">
-              Error loading comments. Please try again.
-            </div>
+            <div className="p-12 text-center text-red-500">Failed to load comments</div>
           ) : organizedComments.length === 0 ? (
-            <div className="py-10 text-center text-gaming-300">
+            <div className="p-12 text-center text-gaming-300">
               No comments yet. Be the first to comment!
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="p-2 bg-gaming-800 rounded mb-4 text-sm">
-                <p className="text-gaming-200">Showing {organizedComments.length} comments 
-                {comments?.length > organizedComments.length && ` (and ${comments.length - organizedComments.length} replies)`}</p>
-              </div>
+            <div>
               {organizedComments.map(comment => (
-                <div key={comment.id} className="py-2 border-b border-gaming-700/30 last:border-b-0">
-                  <div className="flex gap-2">
-                    <Avatar className="h-8 w-8 flex-shrink-0">
+                <div key={comment.id} className="px-4 py-3 border-b border-gray-800">
+                  <div className="flex gap-3">
+                    <Avatar className="h-9 w-9 flex-shrink-0">
                       <AvatarImage src={comment.profiles?.avatar_url || ''} />
                       <AvatarFallback>{comment.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                     </Avatar>
                     
                     <div className="flex-1">
                       <div>
-                        <span className="font-semibold text-gaming-100 mr-1 text-sm">
+                        <span className="font-semibold text-gaming-100 mr-1">
                           {comment.profiles?.username || 'Anonymous'}
                         </span>
                         {editingComment?.id === comment.id ? (
@@ -533,22 +433,22 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                                 variant="outline" 
                                 size="sm"
                                 onClick={handleSaveEdit}
-                                className="h-7 text-xs flex items-center"
+                                className="h-8 text-xs flex items-center"
                               >
-                                <CheckmarkIcon /> Save
+                                <Check className="h-3 w-3 mr-1" /> Save
                               </Button>
                               <Button 
                                 variant="ghost" 
                                 size="sm"
                                 onClick={handleCancelEdit}
-                                className="h-7 text-xs flex items-center"
+                                className="h-8 text-xs flex items-center"
                               >
-                                <SmallCloseIcon /> Cancel
+                                <XIcon className="h-3 w-3 mr-1" /> Cancel
                               </Button>
                             </div>
                           </div>
                         ) : (
-                          <span className="text-gaming-200 text-sm">{comment.content}</span>
+                          <span className="text-gaming-200">{comment.content}</span>
                         )}
                       </div>
                       
@@ -572,30 +472,30 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                             className="flex items-center text-xs text-gaming-400 mt-1"
                             onClick={() => toggleReplies(comment.id)}
                           >
-                            <div className="h-px bg-gaming-700 w-4 mr-1"></div>
+                            <div className="h-px bg-gaming-700 w-6 mr-2"></div>
                             {showRepliesFor[comment.id] ? (
                               <span className="flex items-center">
-                                Hide replies <UpIcon />
+                                Hide replies <ChevronUp className="h-3 w-3 ml-1" />
                               </span>
                             ) : (
                               <span className="flex items-center">
-                                View {comment.children.length} {comment.children.length === 1 ? 'reply' : 'replies'} <DownIcon />
+                                View {comment.children.length} {comment.children.length === 1 ? 'reply' : 'replies'} <ChevronDown className="h-3 w-3 ml-1" />
                               </span>
                             )}
                           </button>
                           
                           {showRepliesFor[comment.id] && (
-                            <div className="mt-2 space-y-2 pl-4 border-l border-gaming-700/30">
+                            <div className="mt-3 space-y-3">
                               {comment.children.map(reply => (
-                                <div key={reply.id} className="flex gap-2">
-                                  <Avatar className="h-6 w-6 flex-shrink-0">
+                                <div key={reply.id} className="flex gap-3">
+                                  <Avatar className="h-8 w-8 flex-shrink-0">
                                     <AvatarImage src={reply.profiles?.avatar_url || ''} />
                                     <AvatarFallback>{reply.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                                   </Avatar>
                                   
                                   <div className="flex-1">
                                     <div>
-                                      <span className="font-semibold text-gaming-100 mr-1 text-sm">
+                                      <span className="font-semibold text-gaming-100 mr-1">
                                         {reply.profiles?.username || 'Anonymous'}
                                       </span>
                                       {editingComment?.id === reply.id ? (
@@ -603,35 +503,35 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                                           <Textarea
                                             value={editContent}
                                             onChange={(e) => setEditContent(e.target.value)}
-                                            className="min-h-8 py-1 px-2 bg-gaming-800 border-gaming-700 resize-none text-sm"
+                                            className="min-h-9 py-2 px-3 bg-gaming-800 border-gaming-700 resize-none text-sm"
                                             rows={2}
                                             autoFocus
                                           />
-                                          <div className="flex gap-2 mt-1">
+                                          <div className="flex gap-2 mt-2">
                                             <Button 
                                               variant="outline" 
                                               size="sm"
                                               onClick={handleSaveEdit}
-                                              className="h-6 text-xs flex items-center px-2"
+                                              className="h-8 text-xs flex items-center"
                                             >
-                                              <CheckmarkIcon /> Save
+                                              <Check className="h-3 w-3 mr-1" /> Save
                                             </Button>
                                             <Button 
                                               variant="ghost" 
                                               size="sm"
                                               onClick={handleCancelEdit}
-                                              className="h-6 text-xs flex items-center px-2"
+                                              className="h-8 text-xs flex items-center"
                                             >
-                                              <SmallCloseIcon /> Cancel
+                                              <XIcon className="h-3 w-3 mr-1" /> Cancel
                                             </Button>
                                           </div>
                                         </div>
                                       ) : (
-                                        <span className="text-gaming-200 text-sm">{reply.content}</span>
+                                        <span className="text-gaming-200">{reply.content}</span>
                                       )}
                                     </div>
                                     
-                                    <div className="flex items-center mt-1 text-xs text-gaming-400 space-x-2">
+                                    <div className="flex items-center mt-1 text-xs text-gaming-400 space-x-3">
                                       <span>{formatDate(reply.created_at)}</span>
                                       {reply.likes_count > 0 && (
                                         <span>{reply.likes_count} like{reply.likes_count !== 1 ? 's' : ''}</span>
@@ -650,14 +550,17 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                                       className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
                                       onClick={() => handleLikeComment(reply.id)}
                                     >
-                                      <SmallHeartIcon fill={reply.liked_by_me ? "currentColor" : "none"} />
+                                      <Heart 
+                                        className="h-4 w-4" 
+                                        fill={reply.liked_by_me ? "currentColor" : "none"}
+                                      />
                                     </button>
                                     
                                     {isCommentAuthor(reply) && (
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                          <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                                            <SmallMoreIcon />
+                                          <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors p-1">
+                                            <MoreVertical className="h-4 w-4" />
                                           </button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
@@ -690,14 +593,17 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
                         className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
                         onClick={() => handleLikeComment(comment.id)}
                       >
-                        <HeartIcon fill={comment.liked_by_me ? "currentColor" : "none"} />
+                        <Heart 
+                          className="h-4 w-4" 
+                          fill={comment.liked_by_me ? "currentColor" : "none"}
+                        />
                       </button>
                       
                       {isCommentAuthor(comment) && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                              <MoreIcon />
+                            <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors p-1">
+                              <MoreVertical className="h-4 w-4" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
@@ -723,48 +629,42 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
             </div>
           )}
         </div>
-
-        {/* Comment form at the bottom */}
-        <div className="border-t border-gaming-700 p-4 bg-gaming-900">
-          <div className="relative">
-            {replyingTo && (
-              <div className="absolute -top-5 left-0 text-xs text-gaming-300 flex items-center">
-                <span>Replying to {replyingTo.profiles?.username}</span>
-                <button 
-                  type="button"
-                  className="ml-1 text-gaming-400 hover:text-gaming-300"
-                  onClick={() => setReplyingTo(null)}
-                >
-                  <TinyCloseIcon />
-                </button>
-              </div>
-            )}
-            <Textarea
-              id="comment-textarea"
-              placeholder={replyingTo ? `Reply to ${replyingTo.profiles?.username}...` : "Write your comment..."}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="min-h-24 py-3 px-4 bg-gaming-800 border-gaming-700 resize-none w-full"
-              rows={4}
-            />
-          </div>
-          
-          <div className="flex justify-end mt-4 gap-3">
+        
+        {/* Comment input at bottom - Instagram style */}
+        <div className="border-t border-gaming-700 bg-gaming-900 p-3 sticky bottom-0">
+          <form onSubmit={handleSubmitComment} className="flex items-end gap-2">
+            <div className="relative flex-1">
+              {replyingTo && (
+                <div className="absolute -top-5 left-0 text-xs text-gaming-300 flex items-center">
+                  <span>Replying to {replyingTo.profiles?.username}</span>
+                  <button 
+                    type="button"
+                    className="ml-1 text-gaming-400 hover:text-gaming-300"
+                    onClick={() => setReplyingTo(null)}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              <Textarea
+                id="comment-textarea"
+                placeholder={replyingTo ? `Reply to ${replyingTo.profiles?.username}...` : "Add a comment..."}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="min-h-9 py-2 px-3 bg-gaming-800 border-gaming-700 resize-none"
+                rows={1}
+              />
+            </div>
             <Button 
-              variant="outline"
-              onClick={onClose}
-              className="text-gaming-300 border-gaming-700 hover:bg-gaming-800"
+              type="submit" 
+              variant="ghost"
+              size="sm"
+              disabled={!comment.trim()}
+              className="text-blue-400 hover:text-blue-300 disabled:opacity-50"
             >
-              Cancel
+              Post
             </Button>
-            <Button
-              onClick={handleSubmitComment}
-              disabled={!comment.trim() || addComment.isPending}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {addComment.isPending ? 'Posting...' : 'Post Comment'}
-            </Button>
-          </div>
+          </form>
         </div>
       </DialogContent>
     </Dialog>
