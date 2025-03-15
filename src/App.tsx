@@ -1,90 +1,165 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
+import GameBoyControls from '@/components/GameBoyControls';
+import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
+import ScrollToTop from '@/components/common/ScrollToTop';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { MessagesProvider } from '@/contexts/MessagesContext';
+import { CommentsProvider } from '@/contexts/CommentContext';
+import { usePerformanceMonitoring } from '@/lib/performance';
+import { useQueryClient } from '@tanstack/react-query';
+import '@/index.css';
+import '@/styles/animations.css';
 
-// Import all page components directly
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Menu from './pages/Menu';
-import Discovery from './pages/Discovery';
-import Profile from './pages/Profile';
-import Messages from './pages/Messages';
-import Settings from './pages/Settings';
-import NotFound from './pages/NotFound';
-import PostPage from './pages/PostPage';
-import EditProfile from './pages/EditProfile';
-import TopGames from './pages/TopGames';
-import Game from './pages/Game';
-import Clipts from './pages/Clipts';
-import TopClipts from './pages/TopClipts';
-import UserProfile from './pages/UserProfile';
-import NewPost from './pages/NewPost';
-import CommentsPage from './pages/CommentsPage';
-import GameStreamers from './pages/GameStreamers';
-import RetroSearchPage from './pages/RetroSearchPage';
-import Streaming from './pages/Streaming';
+const Home = React.lazy(() => import('./pages/Home'));
+const Auth = React.lazy(() => import('./pages/Auth'));
+const NewPost = React.lazy(() => import('./pages/NewPost'));
+const PostPage = React.lazy(() => import('./pages/PostPage'));
+const Game = React.lazy(() => import('./pages/Game'));
+const TopGames = React.lazy(() => import('./pages/TopGames'));
+const Clipts = React.lazy(() => import('./pages/Clipts'));
+const TopClipts = React.lazy(() => import('./pages/TopClipts'));
+const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+const Discovery = React.lazy(() => import('./pages/Discovery'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
+const Menu = React.lazy(() => import('./pages/Menu'));
+const Profile = React.lazy(() => import('./pages/Profile'));
+// Fix the problematic imports with more reliable patterns
+const Streaming = React.lazy(() => 
+  import('./pages/Streaming').catch(error => {
+    console.error('Error loading Streaming module:', error);
+    return { default: () => <div>Failed to load streaming page. Please refresh.</div> };
+  })
+);
+const Messages = React.lazy(() => import('./pages/Messages'));
+const Settings = React.lazy(() => import('./pages/Settings'));
+const EditProfile = React.lazy(() => 
+  import('./pages/EditProfile').catch(error => {
+    console.error('Error loading EditProfile module:', error);
+    return { default: () => <div>Failed to load profile editor. Please refresh.</div> };
+  })
+);
+const Admin = React.lazy(() => import('./pages/Admin'));
+const Login = React.lazy(() => import('./pages/Login'));
+const Signup = React.lazy(() => import('./pages/Signup'));
+const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
+const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
+const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 
-// Import the GameBoy controller
-import GameBoyControls from './components/GameBoyControls';
-
-// Main App component
-const App = () => {
-  const location = useLocation();
-  const [currentPostId, setCurrentPostId] = React.useState<string | null>(null);
+function AppContent() {
+  usePerformanceMonitoring('App');
   
-  // Extract post ID from URL if viewing a post
-  React.useEffect(() => {
-    if (location.pathname.includes('/post/')) {
-      const postId = location.pathname.split('/post/')[1].split('/')[0];
-      setCurrentPostId(postId);
-    } else {
-      setCurrentPostId(null);
-    }
-  }, [location.pathname]);
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/post/new" element={<NewPost />} />
+      <Route path="/post/:id" element={<PostPage />} />
+      <Route path="/post/:postId/comments" element={<CommentsPage />} />
+      <Route path="/game/:id" element={<Game />} />
+      <Route path="/games" element={<TopGames />} />
+      <Route path="/clipts" element={<Clipts />} />
+      <Route path="/top-clipts" element={<TopClipts />} />
+      <Route path="/profile/:id?" element={<UserProfile />} />
+      <Route path="/discovery" element={<Discovery />} />
+      <Route path="/menu" element={<Menu />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/profile/edit" element={
+        <ErrorBoundary fallback={<div className="p-4 text-center">Error loading profile editor. Try refreshing the page.</div>}>
+          <EditProfile />
+        </ErrorBoundary>
+      } />
+      <Route path="/streaming" element={
+        <ErrorBoundary fallback={<div className="p-4 text-center">Error loading streaming page. Try refreshing the page.</div>}>
+          <Streaming />
+        </ErrorBoundary>
+      } />
+      <Route path="/messages" element={<Messages />} />
+      <Route path="/messages/:userId" element={<Messages />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="/game-streamers/:gameId" element={<GameStreamers />} />
+      <Route path="/retro-search" element={<RetroSearchPage />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
 
-  // Scroll to top when route changes
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
+function App() {
+  const location = useLocation();
+  const [currentPostId, setCurrentPostId] = useState<string | undefined>(undefined);
+  const queryClient = useQueryClient(); 
+  
+  // Extract post ID from URL if on a post page
+  useEffect(() => {
+    const match = location.pathname.match(/\/post\/([^/?#]+)/);
+    let newPostId = undefined;
+    
+    if (match && match[1] && match[1] !== 'undefined' && match[1] !== 'null') {
+      newPostId = match[1];
+    }
+    
+    console.log("App detected post ID:", {
+      pathname: location.pathname,
+      extractedId: match?.[1] || 'none',
+      settingId: newPostId
+    });
+    
+    setCurrentPostId(newPostId);
+    // Clear the cache when navigation occurs
+    // This forces components to re-fetch fresh data
+    if (location.pathname.startsWith('/profile/') || 
+        location.pathname.startsWith('/game/')) {
+      console.log("Clearing query cache for navigation:", location.pathname);
+      queryClient.clear();
+    }
+  }, [location.pathname, queryClient]);
+
+  // Routes that should not display the GameBoy controls
+  const noControlsRoutes = ['/auth'];
+  const shouldShowControls = !noControlsRoutes.some(route => 
+    location.pathname.startsWith(route)
+  );
 
   return (
-    <div className="app-container min-h-screen bg-black text-white">
-      <div className="page-content pb-32"> {/* Add padding to bottom for GameBoy controller */}
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/menu" element={<Menu />} />
-          <Route path="/discovery" element={<Discovery />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/post/:id" element={<PostPage />} />
-          <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/top-games" element={<TopGames />} />
-          <Route path="/game/:id" element={<Game />} />
-          <Route path="/clipts" element={<Clipts />} />
-          <Route path="/top-clipts" element={<TopClipts />} />
-          <Route path="/user/:id" element={<UserProfile />} />
-          <Route path="/new-post" element={<NewPost />} />
-          <Route path="/comments/:id" element={<CommentsPage />} />
-          <Route path="/game-streamers/:id" element={<GameStreamers />} />
-          <Route path="/retro-search" element={<RetroSearchPage />} />
-          <Route path="/streaming/:id" element={<Streaming />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
-
-      {/* Toaster for notifications */}
-      <Toaster position="top-center" richColors />
-      
-      {/* GameBoy Controller UI fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 z-50">
-        <GameBoyControls currentPostId={currentPostId} />
-      </div>
-    </div>
+    <ErrorBoundary>
+      <React.Suspense fallback={
+        <div className="flex items-center justify-center h-screen bg-blue-950">
+          <div className="text-center p-4">
+            <div className="animate-pulse text-blue-300 mb-2">Loading...</div>
+            <div className="text-sm text-blue-400">Please wait while we get things ready</div>
+          </div>
+        </div>
+      }>
+        <AuthProvider>
+          <MessagesProvider>
+            <ReportDialogProvider>
+              <CommentsProvider>
+                <Toaster richColors position="top-center" />
+                <ScrollToTop />
+                <div className="app-content-wrapper" style={{ 
+                  paddingBottom: shouldShowControls ? '180px' : '0',
+                  minHeight: '100vh',
+                  maxHeight: '100vh',
+                  overflow: 'auto',
+                  overscrollBehavior: 'none'
+                }}>
+                  <AppContent />
+                </div>
+                <PWAInstallPrompt />
+                {shouldShowControls && <GameBoyControls currentPostId={currentPostId} />}
+              </CommentsProvider>
+            </ReportDialogProvider>
+          </MessagesProvider>
+        </AuthProvider>
+      </React.Suspense>
+    </ErrorBoundary>
   );
-};
+}
 
 export default App;

@@ -58,7 +58,7 @@ export const createComment = async (commentData: CommentData): Promise<CommentRe
   }
 };
 
-export const getComments = async (postId: string, page = 0, limit = 100): Promise<CommentResponse> => {
+export const getComments = async (postId: string, page = 0, limit = 50): Promise<CommentResponse> => {
   try {
     console.log(`Fetching comments for post: ${postId}, page: ${page}, limit: ${limit}`);
     
@@ -71,16 +71,10 @@ export const getComments = async (postId: string, page = 0, limit = 100): Promis
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
     
-    console.log(`Current user ID: ${userId || 'Not logged in'}`);
-    
     // Calculate offset
     const offset = page * limit;
     
-    // Debug authentication
-    const { data: authDebug } = await supabase.auth.getSession();
-    console.log("Auth session:", authDebug?.session ? "Active" : "None");
-    
-    // Fetch ALL comments for this post, with a higher limit to ensure we get all
+    // Fetch top-level comments
     const { data, error } = await supabase
       .from('comments')
       .select(`
@@ -97,9 +91,9 @@ export const getComments = async (postId: string, page = 0, limit = 100): Promis
         )
       `)
       .eq('post_id', postId)
-      // No user filtering! We want ALL comments regardless of who posted them
+      .is('parent_id', null) // Get top-level comments only
       .order('created_at', { ascending: false })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
 
     if (error) {
       console.error("Error fetching comments:", error);
@@ -107,20 +101,6 @@ export const getComments = async (postId: string, page = 0, limit = 100): Promis
     }
 
     console.log(`Raw comments data for post ${postId}:`, data);
-    
-    if (data && data.length > 0) {
-      console.log("Sample comment:", {
-        id: data[0].id,
-        content: data[0].content,
-        user_id: data[0].user_id,
-        username: data[0].profiles?.username,
-        parent_id: data[0].parent_id
-      });
-      
-      // Count distinct users who commented
-      const uniqueUsers = new Set(data.map((comment: any) => comment.user_id));
-      console.log(`Comments from ${uniqueUsers.size} unique users`);
-    }
 
     // If we have a logged-in user, determine which comments they've liked
     let commentLikes: any[] = [];

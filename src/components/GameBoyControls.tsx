@@ -1,42 +1,30 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-// Import directly from our custom svg-icons implementation
-import {
-  Menu,
+import { 
+  Menu, 
+  Heart, 
   Camera,
-  MessageCircle,
-  UserPlus,
-  X,
-  Home as HomeIcon,
-  Search,
-  Bell,
-  User as UserIcon,
+  MessageCircle, 
+  Trophy, 
+  UserPlus, 
+  X, 
+  Home, 
+  Search, 
+  Bell, 
+  Upload, 
+  User,
+  TrendingUp,
   Settings,
+  Bookmark,
   Video,
   Award,
-  Monitor,
-  TrendingUp,
-  Bookmark,
-  Upload
-} from '@/components/ui/standalone-icons';
-import {
-  Heart,
-  MessageSquare as MessageSquareIcon,
-  Trophy
-} from '@/components/ui/standalone-icons';
-import ActivityIcon from '@/components/ui/activity-icon';
+  Monitor
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import './joystick-animations.css'; // Import joystick animations
 import CommentModal from './comments/CommentModal';
-
-// Import non-critical icons from lucide-react
-import {
-  Share,
-  Plus,
-  ArrowRight
-} from 'lucide-react';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -50,14 +38,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [navigationOptions] = useState([
-    { name: 'Home', icon: <HomeIcon className="mr-2 h-4 w-4" />, path: '/' },
-    { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
-    { name: 'Clipts', icon: <ActivityIcon className="mr-2 h-4 w-4" />, path: '/clipts' },
-    { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
-    { name: 'Profile', icon: <UserIcon className="mr-2 h-4 w-4" />, path: '/profile' },
     { name: 'Settings', icon: <Settings className="mr-2 h-4 w-4" />, path: '/settings' },
     { name: 'Streaming', icon: <Video className="mr-2 h-4 w-4" />, path: '/streaming' },
-    { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' }
+    { name: 'Profile', icon: <User className="mr-2 h-4 w-4" />, path: '/profile' },
+    { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
+    { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
+    { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' },
+    { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | undefined>(undefined);
@@ -366,22 +353,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Directly update DOM for immediate response
     if (joystickRef.current) {
-      // Set CSS variables for animation
-      joystickRef.current.style.setProperty('--last-x', `${joystickPosition.x}px`);
-      joystickRef.current.style.setProperty('--last-y', `${joystickPosition.y}px`);
-      
-      // Add the spring animation class
-      joystickRef.current.classList.add('joystick-spring-return');
-      
-      // Directly set transform for immediate visual feedback
       joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
       
-      // Remove the animation class after it completes
-      setTimeout(() => {
-        if (joystickRef.current) {
-          joystickRef.current.classList.remove('joystick-spring-return');
-        }
-      }, 550); // Match the animation duration
+      // Override any transitions during active dragging
+      joystickRef.current.style.transition = 'none';
     }
     
     // Update state for React components (but DOM is already updated)
@@ -396,8 +371,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Enhanced direction indicators with smoother transitions and variable intensity
   const updateDirectionIndicators = (yPosition: number) => {
     const joystickHandle = joystickRef.current;
-    const upIndicator = document.querySelector('.joystick-up-indicator') as HTMLElement;
-    const downIndicator = document.querySelector('.joystick-down-indicator') as HTMLElement;
+    const upIndicator = document.querySelector('.joystick-up-indicator');
+    const downIndicator = document.querySelector('.joystick-down-indicator');
     
     if (joystickHandle && upIndicator && downIndicator) {
       // Normalize the position to calculate intensity (0-100%)
@@ -413,8 +388,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       joystickHandle.classList.remove('joystick-handle-up', 'joystick-handle-down');
       
       // Preserve the current transform in the style attribute
-      const joystickHandleElement = joystickHandle as HTMLElement;
-      const currentTransform = joystickHandleElement.style.transform || `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`;
+      const currentTransform = joystickHandle.style.transform || `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`;
       
       if (direction === 'up' && Math.abs(yPosition) > 2) { // Smaller deadzone for visual feedback
         // Moving up with variable intensity
@@ -423,7 +397,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         
         // Apply intensity as a CSS variable while preserving transform
         upIndicator.style.setProperty('--intensity', `${intensity}`);
-        joystickHandleElement.style.setProperty('--move-intensity', `${intensity}`);
+        joystickHandle.style.setProperty('--move-intensity', `${intensity}`);
       } else if (direction === 'down' && Math.abs(yPosition) > 2) {
         // Moving down with variable intensity
         downIndicator.classList.add('active');
@@ -431,10 +405,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         
         // Apply intensity as a CSS variable while preserving transform
         downIndicator.style.setProperty('--intensity', `${intensity}`);
-        joystickHandleElement.style.setProperty('--move-intensity', `${intensity}`);
+        joystickHandle.style.setProperty('--move-intensity', `${intensity}`);
       } else {
         // Neutral position - reset intensity but keep transform
-        joystickHandleElement.style.setProperty('--move-intensity', '0');
+        joystickHandle.style.setProperty('--move-intensity', '0');
         upIndicator.style.setProperty('--intensity', '0');
         downIndicator.style.setProperty('--intensity', '0');
       }
@@ -489,8 +463,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       );
     }
     
-    const upIndicator = document.querySelector('.joystick-up-indicator') as HTMLElement;
-    const downIndicator = document.querySelector('.joystick-down-indicator') as HTMLElement;
+    const upIndicator = document.querySelector('.joystick-up-indicator');
+    const downIndicator = document.querySelector('.joystick-down-indicator');
     
     if (upIndicator) {
       upIndicator.classList.remove('active');
@@ -699,8 +673,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       );
     }
     
-    const upIndicator = document.querySelector('.joystick-up-indicator') as HTMLElement;
-    const downIndicator = document.querySelector('.joystick-down-indicator') as HTMLElement;
+    const upIndicator = document.querySelector('.joystick-up-indicator');
+    const downIndicator = document.querySelector('.joystick-down-indicator');
     
     if (upIndicator) {
       upIndicator.classList.remove('active');
@@ -1161,84 +1135,186 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Your return JSX - the UI for the GameBoy controller
   return (
-    <div className="gameboy-controls bg-gray-900/95 backdrop-blur-sm border-t border-indigo-900 py-3 px-6">
-      {/* Left Side - Joystick */}
-      <div className="joystick-container">
-        <div 
-          ref={baseRef}
-          className="joystick-base w-16 h-16 bg-gray-800 rounded-full border border-gray-700 relative"
-        >
-          <div 
-            ref={joystickRef}
-            className="joystick-stick absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-gray-700 rounded-full cursor-grab active:cursor-grabbing"
-          ></div>
-        </div>
-      </div>
+    <>
+      {/* Enhanced Comment Modal using the proper component */}
+      {commentModalOpen && activeCommentPostId && (
+        <CommentModal
+          isOpen={commentModalOpen}
+          onClose={() => {
+            setCommentModalOpen(false);
+            setActiveCommentPostId(undefined);
+          }}
+          postId={activeCommentPostId}
+          autoFocusInput={false}
+        />
+      )}
+      
+      <div 
+        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
+      >
+        <div className="bg-[#0D0D18] w-full pointer-events-auto py-3">
+          <div className="flex justify-between items-center px-10 max-w-5xl mx-auto">
+            
+              {/* Left - Modern Xbox-style Joystick */}
+              <div 
+                ref={baseRef}
+                className="w-24 h-24 bg-gradient-to-b from-[#1A1A24] to-[#0D0D18] rounded-full flex items-center justify-center cursor-pointer relative shadow-lg select-none"
+                onMouseDown={handleJoystickMouseDown}
+                onTouchStart={handleJoystickTouchStart}
+              >
+                {/* Joystick base with realistic grooves */}
+                <div className="w-20 h-20 bg-gradient-to-b from-[#272733] to-[#1D1D26] rounded-full flex items-center justify-center relative overflow-hidden">
+                  {/* Circular groove effect - more pronounced */}
+                  <div className="absolute inset-1 rounded-full border-[3px] border-[#0D0D18] opacity-70"></div>
+                  <div className="absolute inset-3 rounded-full border-[1px] border-[#3A3A45] opacity-30"></div>
+                  
+                  {/* Directional indicators with glow effect */}
+                  <div className="joystick-up-indicator absolute -top-1 left-1/2 transform -translate-x-1/2 opacity-80 text-white">
+                    <div className="w-2 h-3 bg-gradient-to-b from-[#876AF5] to-[#6A4EDB] rounded"></div>
+                  </div>
+                  <div className="joystick-down-indicator absolute -bottom-1 left-1/2 transform -translate-x-1/2 opacity-80 text-white">
+                    <div className="w-2 h-3 bg-gradient-to-b from-[#876AF5] to-[#6A4EDB] rounded"></div>
+                  </div>
+                  <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 opacity-80 text-white">
+                    <div className="h-2 w-3 bg-gradient-to-r from-[#876AF5] to-[#6A4EDB] rounded"></div>
+                  </div>
+                  <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 opacity-80 text-white">
+                    <div className="h-2 w-3 bg-gradient-to-r from-[#876AF5] to-[#6A4EDB] rounded"></div>
+                  </div>
+                  
+                  {/* Xbox-like thumbstick */}
+                  <div 
+                    ref={joystickRef}
+                    className="joystick-handle w-14 h-14 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-[#3A3A45] absolute z-10 cursor-grab active:cursor-grabbing select-none"
+                    style={{
+                      transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.7)', 
+                      willChange: 'transform',
+                      touchAction: 'none', /* Prevent default touch actions */
+                      transition: isDragging ? 'none' : 'transform 0.05s ease-out'
+                    }}
+                  >
+                    {/* Realistic concave thumbstick surface */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#151520] to-[#272733] opacity-80">
+                      {/* Texture circles for grip */}
+                      <div className="absolute inset-[4px] rounded-full border-[1px] border-[#3A3A45] opacity-40"></div>
+                      <div className="absolute inset-[8px] rounded-full border-[1px] border-[#3A3A45] opacity-40"></div>
+                      {/* Center dot for Xbox-like appearance */}
+                      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#3A3A45]"></div>
+                    </div>
+                  </div>
+                </div>
+                {/* Outer ring highlight to enhance 3D effect */}
+                <div className="absolute inset-[-1px] rounded-full border border-[#3A3A45] opacity-20"></div>
+              </div>
+            
+            {/* Center */}
+            <div className="flex flex-col items-center space-y-3">
+              {/* CLIPT button with gradient border */}
+              <div 
+                onClick={() => navigate('/clipts')}
+                className="w-16 h-16 bg-[#0D0D18] rounded-full cursor-pointer flex items-center justify-center relative"
+              >
+                {/* Gradient border using pseudo-element */}
+                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 animate-pulse" style={{ opacity: 0.7 }}></span>
+                <span className="absolute inset-[2px] rounded-full bg-[#0D0D18]"></span>
+                <span className="relative text-white font-bold text-sm z-10">CLIPT</span>
+              </div>
+              
+              {/* Menu and Camera buttons */}
+              <div className="flex space-x-6">
+                {/* Navigation menu button */}
+                <div 
+                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative navigation-menu-container"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  ref={menuRef}
+                >
+                  <Menu className="text-white h-4 w-4" />
+                  
+                  {/* Navigation menu popup */}
+                  {menuOpen && (
+                    <div className="absolute bottom-full mb-2 left-0 w-44 bg-[#1D1D26] rounded-lg shadow-xl p-2 z-50">
+                      {navigationOptions.map((option) => (
+                        <button
+                          key={option.path}
+                          className="flex items-center w-full p-2 hover:bg-[#272733] rounded text-white text-sm text-left"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(option.path);
+                            setMenuOpen(false);
+                          }}
+                        >
+                          {option.icon}
+                          {option.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Post button (Camera icon) - Enhanced with purple highlight */}
+                <div 
+                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative group"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/post/new');
+                    // Log for debugging
+                    console.log('Navigating to post creation page');
+                  }}
+                >
+                  <div className="absolute inset-0 rounded-full bg-purple-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  <Camera className="text-white h-4 w-4 group-hover:text-purple-300 transition-colors duration-300" />
+                </div>
+              </div>
+            </div>
+            
+            {/* Right - Action Buttons in diamond shape (Xbox style) */}
+            <div className="flex flex-col items-center">
+              <div className="relative w-32 h-32 mb-3">
+                {/* Top button (Comment) */}
+                <button 
+                  data-action="comment"
+                  onClick={handleComment}
+                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-blue-500 flex items-center justify-center"
+                >
+                  <MessageCircle className="text-blue-500 h-5 w-5" />
+                </button>
+                
+                {/* Left button (Like) */}
+                <button 
+                  data-action="like"
+                  onClick={handleLike}
+                  className="absolute left-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-red-500 flex items-center justify-center"
+                >
+                  <Heart className="text-red-500 h-5 w-5" fill="#ef4444" />
+                </button>
+                
+                {/* Right button (Trophy) */}
+                <button 
+                  data-action="trophy"
+                  onClick={handleTrophy}
+                  className="absolute right-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-yellow-500 flex items-center justify-center"
+                >
+                  <Trophy className="text-yellow-500 h-5 w-5" />
+                </button>
+                
+                {/* Bottom button (Follow) */}
+                <button 
+                  data-action="follow"
+                  onClick={handleFollow}
+                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-green-500 flex items-center justify-center"
+                >
+                  <UserPlus className="text-green-500 h-5 w-5" />
+                </button>
+              </div>
+              
 
-      {/* Center - CLIPT Button */}
-      <div className="flex flex-col items-center">
-        <button 
-          onClick={() => navigate('/')}
-          className="clipt-button pulse-glow text-white font-bold py-2 px-8 rounded-full mb-3"
-        >
-          CLIPT
-        </button>
-        
-        <div className="flex space-x-2">
-          <button 
-            onClick={() => navigate('/new-post')}
-            className="post-button bg-gray-800 hover:bg-gray-700 text-white text-xs px-4 py-1 rounded"
-          >
-            POST
-          </button>
-          <button 
-            onClick={() => navigate('/menu')}
-            className="menu-button bg-gray-800 hover:bg-gray-700 text-white p-1 rounded"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Right Side - Action Buttons in Diamond Formation */}
-      <div className="action-buttons">
-        <div className="relative w-20 h-20">
-          {/* Top Button - Heart/Like */}
-          <button 
-            onClick={handleLike}
-            className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-transparent border border-red-500 text-red-500 hover:bg-red-500/20 action-button action-button-heart"
-          >
-            <Heart className="h-4 w-4" />
-          </button>
-          
-          {/* Right Button - Comment */}
-          <button 
-            onClick={handleComment}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-transparent border border-blue-500 text-blue-500 hover:bg-blue-500/20 action-button action-button-comment"
-          >
-            <MessageSquareIcon className="h-4 w-4" />
-          </button>
-          
-          {/* Bottom Button - Follow */}
-          <button 
-            onClick={handleFollow}
-            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-transparent border border-green-500 text-green-500 hover:bg-green-500/20 action-button action-button-follow"
-          >
-            <UserPlus className="h-4 w-4" />
-          </button>
-          
-          {/* Left Button - Trophy */}
-          <button 
-            onClick={() => navigate('/profile')}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center bg-transparent border border-yellow-500 text-yellow-500 hover:bg-yellow-500/20 action-button action-button-trophy"
-          >
-            <Trophy className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    </div>
+    </>
   );
-
 };
 
 export default GameBoyControls;
