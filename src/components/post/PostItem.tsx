@@ -10,6 +10,9 @@ import { useQuery } from "@tanstack/react-query";
 import CommentModal from "../comments/CommentModal";
 import { CommentList } from "./CommentList";
 import { Button } from "../ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 interface PostItemProps {
   post: Post;
@@ -17,8 +20,14 @@ interface PostItemProps {
 
 const PostItem = ({ post }: PostItemProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
 
   const { data: commentsCount = 0, refetch: refetchCommentCount } = useQuery({
     queryKey: ['comments-count', post.id],
@@ -48,7 +57,43 @@ const PostItem = ({ post }: PostItemProps) => {
     setIsLoading(false);
   }, []);
 
+  const fetchComments = async () => {
+    if (!showComments) return;
+
+    setLoadingComments(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`
+          *,
+          profiles:user_id(id, username, avatar_url)
+        `)
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: false })
+        .limit(5);  // Show only 5 most recent comments
+        
+      if (error) {
+        console.error("Error fetching comments:", error);
+        return;
+      }
+      
+      setComments(data || []);
+    } catch (error) {
+      console.error("Exception fetching comments:", error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, [showComments, post.id]);
+
   const handleCommentClick = () => {
+    setShowComments(!showComments);
+  };
+
+  const handleViewAllComments = () => {
     setCommentModalOpen(true);
   };
 
@@ -69,6 +114,42 @@ const PostItem = ({ post }: PostItemProps) => {
     navigate(`/game/${gameId}`);
   };
 
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !user) return;
+    
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          content: newComment,
+          post_id: post.id,
+          user_id: user.id,
+          parent_id: null
+        })
+        .select(`
+          *,
+          profiles:user_id(id, username, avatar_url)
+        `)
+        .single();
+        
+      if (error) throw error;
+      
+      // Add new comment to the list and update count
+      setComments(prev => [data, ...prev]);
+      refetchCommentCount();
+      setNewComment('');
+      
+      toast.success('Comment added successfully');
+    } catch (error) {
+      console.error('Error posting comment:', error);
+      toast.error('Failed to post comment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
@@ -77,6 +158,7 @@ const PostItem = ({ post }: PostItemProps) => {
   const handleCommentModalClose = () => {
     setCommentModalOpen(false);
     refetchCommentCount();
+    fetchComments();
   };
 
   return (
@@ -170,22 +252,112 @@ const PostItem = ({ post }: PostItemProps) => {
         </div>
       )}
 
-      {/* Comment button at bottom */}
-      <div className="px-4 py-2 border-t border-gaming-400/20">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
-          onClick={handleCommentClick}
-        >
-          <MessageSquare className="h-4 w-4 mr-1" />
-          {commentsCount > 0 
-            ? `View all ${commentsCount} comments` 
-            : "Add a comment..."}
-        </Button>
-      </div>
+      {/* Instagram-style Comments Section */}
+      {showComments && (
+        <div className="px-4 py-2 border-t border-gaming-400/20">
+          {/* Comments list */}
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {loadingComments ? (
+              <div className="flex justify-center py-2">
+                <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+              </div>
+            ) : comments.length > 0 ? (
+              comments.map((comment) => (
+                <div key={comment.id} className="flex items-start space-x-2 py-1">
+                  <Avatar 
+                    className="h-6 w-6 flex-shrink-0 cursor-pointer"
+                    onClick={() => handleProfileClick(comment.profiles?.id)}
+                  >
+                    <AvatarImage src={comment.profiles?.avatar_url || ''} alt={comment.profiles?.username || 'User'} />
+                    <AvatarFallback>{(comment.profiles?.username?.[0] || 'U').toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-baseline">
+                      <span 
+                        className="text-xs font-semibold text-gaming-100 hover:text-gaming-200 cursor-pointer transition-colors"
+                        onClick={() => handleProfileClick(comment.profiles?.id)}
+                      >
+                        {comment.profiles?.username || 'Anonymous'}
+                      </span>
+                      <span className="text-xs text-gaming-400 ml-2">
+                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gaming-200 mt-0.5">{comment.content}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-gaming-400 italic py-2">No comments yet. Be the first to comment!</p>
+            )}
+          </div>
+          
+          {/* View all comments button if there are more */}
+          {commentsCount > comments.length && (
+            <button 
+              className="text-xs text-gaming-400 hover:text-gaming-200 mt-2 transition-colors block w-full text-left"
+              onClick={handleViewAllComments}
+            >
+              View all {commentsCount} comments
+            </button>
+          )}
+          
+          {/* Instagram-style comment input */}
+          <div className="mt-3 border-t border-gaming-700/30 pt-3">
+            <form onSubmit={handleCommentSubmit} className="flex items-center">
+              {user && (
+                <Avatar className="h-6 w-6 mr-2 flex-shrink-0">
+                  <AvatarImage 
+                    src={user?.user_metadata?.avatar_url || ''} 
+                    alt={user?.user_metadata?.username || 'User'} 
+                  />
+                  <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
+                    {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              
+              <input
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder={`Add a comment as ${user?.user_metadata?.username || 'user'}...`}
+                className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder:text-gray-500 py-1.5 focus:outline-none focus:ring-0"
+                disabled={isSubmitting || !user}
+              />
+              
+              {newComment.trim() && (
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !newComment.trim() || !user}
+                  className="ml-2 text-blue-400 font-semibold text-xs hover:text-blue-300 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Post
+                </button>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
 
-      {/* Comment Modal - Instagram-style popup */}
+      {/* Comment button if comments are hidden */}
+      {!showComments && (
+        <div className="px-4 py-2 border-t border-gaming-400/20">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
+            onClick={handleCommentClick}
+          >
+            <MessageSquare className="h-4 w-4 mr-1" />
+            {commentsCount > 0 
+              ? `View all ${commentsCount} comments` 
+              : "Add a comment..."}
+          </Button>
+        </div>
+      )}
+
+      {/* Comment Modal for full view */}
       <CommentModal 
         isOpen={commentModalOpen}
         onClose={handleCommentModalClose}
