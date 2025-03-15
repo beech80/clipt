@@ -667,3 +667,5 @@ export const CommentModal: React.FC<CommentModalProps> = ({
     </Dialog>
   );
 };
+
+export default CommentModal;
