@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -50,6 +51,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [showReplies, setShowReplies] = useState(depth === 0);
   const [isLiking, setIsLiking] = useState(false);
   const [likesCount, setLikesCount] = useState(comment.likes_count || 0);
+  const [isLiked, setIsLiked] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -76,10 +78,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     setIsLiking(true);
     try {
       // Toggle comment like
-      await likeComment(comment.id, user.id);
+      await likeComment(comment.id);
       
       // Update UI immediately
-      setLikesCount(prev => prev > 0 ? prev - 1 : prev + 1);
+      setIsLiked(!isLiked);
+      setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
     } catch (error) {
       console.error("Error liking comment:", error);
       toast.error("Failed to like comment");
@@ -124,7 +127,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     if (window.confirm("Are you sure you want to delete this comment?")) {
       setIsDeleting(true);
       try {
-        await deleteComment(comment.id, user?.id || '');
+        await deleteComment(comment.id);
         toast.success("Comment deleted successfully");
         // Trigger any needed refreshes
         if (onReplyAdded) {
@@ -138,24 +141,38 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     }
   };
 
-  // Calculate days ago for display
-  const daysAgo = () => {
-    const today = new Date();
-    const commentDate = new Date(comment.created_at);
-    const diffTime = Math.abs(today.getTime() - commentDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays + 'd';
+  // Format the timestamp to be like Instagram (e.g., "2d" or "4h")
+  const formatShortTime = () => {
+    try {
+      const timeAgo = formatDistanceToNow(new Date(comment.created_at), { addSuffix: false });
+      // Convert "X days" to "Xd", "X hours" to "Xh", etc.
+      return timeAgo
+        .replace(" days", "d")
+        .replace(" day", "d")
+        .replace(" hours", "h")
+        .replace(" hour", "h")
+        .replace(" minutes", "m")
+        .replace(" minute", "m")
+        .replace(" seconds", "s")
+        .replace(" second", "s")
+        .replace(" months", "mo")
+        .replace(" month", "mo")
+        .replace(" years", "y")
+        .replace(" year", "y");
+    } catch (error) {
+      return '';
+    }
   };
 
   // Render the comment item
   return (
     <div className={`py-2 ${isDeleting ? 'opacity-50' : ''}`}>
       {/* Main comment content */}
-      <div className="flex">
+      <div className="flex group">
         {/* Avatar */}
         <div className="flex-shrink-0 mr-3">
           <Avatar 
-            className="h-8 w-8 cursor-pointer" 
+            className="h-8 w-8 cursor-pointer border border-transparent group-hover:border-purple-500/30 transition-colors" 
             onClick={handleProfileClick}
           >
             <AvatarImage 
@@ -171,7 +188,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         {/* Comment content - Instagram style */}
         <div className="flex-1">
           {isEditing ? (
-            <div className="space-y-2">
+            <div className="space-y-2 bg-gaming-900/50 p-2 rounded-lg border border-gaming-800">
               <Textarea
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
@@ -215,7 +232,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               
               {/* Comment metadata row - Instagram style */}
               <div className="flex items-center mt-1 text-xs text-gaming-400 space-x-3">
-                <span>{daysAgo()}</span>
+                <span>{formatShortTime()}</span>
                 {likesCount > 0 && (
                   <span>{likesCount} {likesCount === 1 ? 'like' : 'likes'}</span>
                 )}
@@ -259,12 +276,12 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           
           {/* Like button - Instagram style */}
           <button 
-            className="absolute right-3"
+            className="absolute right-3 transform transition-transform active:scale-150 duration-200"
             onClick={handleLike}
             disabled={isLiking}
           >
             <Heart 
-              className={`h-4 w-4 ${likesCount > 0 ? 'fill-red-500 text-red-500' : 'text-gaming-400'}`} 
+              className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gaming-400 group-hover:text-gaming-300'}`} 
             />
           </button>
         </div>
@@ -274,7 +291,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       {isReplying && (
         <div className="ml-11 mt-3">
           <CommentForm 
-            postId=""  // We don't need post ID for replies
+            postId={comment.id}
             parentId={comment.id}
             onCancel={onReplyCancel}
             onReplyComplete={onReplyAdded}
