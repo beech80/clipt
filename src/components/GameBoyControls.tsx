@@ -1233,45 +1233,84 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   
                   {/* Navigation menu popup */}
                   {menuOpen && (
-                    <div className="absolute bottom-full mb-2 left-0 w-48 bg-[#0D0D18] border-2 border-[#3A3A45] rounded-md shadow-xl p-0.5 z-50 animate-in fade-in-70 slide-in-from-bottom-5 duration-200">
-                      {/* Menu header with pixel-like border */}
-                      <div className="text-center py-2 text-sm font-bold text-white border-b-2 border-dashed border-[#3A3A45] mb-1 px-2">
-                        GAME MENU
-                      </div>
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                      {/* Close button */}
+                      <button 
+                        onClick={() => setMenuOpen(false)} 
+                        className="absolute top-8 right-8 w-10 h-10 rounded-full bg-[#1D1D26] flex items-center justify-center border border-[#3A3A45]"
+                      >
+                        <X className="h-5 w-5 text-white" />
+                      </button>
                       
-                      {/* Game-style menu items */}
-                      <div className="space-y-0.5 p-1">
-                        {navigationOptions.map((option) => (
-                          <button
-                            key={option.path}
-                            className="flex items-center w-full px-3 py-2 hover:bg-gradient-to-r hover:from-purple-900/40 hover:to-blue-900/40 rounded text-white text-sm text-left transition-all duration-200 group relative overflow-hidden"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(option.path);
-                              setMenuOpen(false);
-                            }}
-                          >
-                            {/* Icon container with gameboy-like button effect */}
-                            <div className="flex items-center justify-center h-6 w-6 bg-gradient-to-br from-[#333339] to-[#1F1F25] rounded-sm mr-3 shadow-inner relative group-hover:from-purple-700 group-hover:to-blue-700 transition-colors duration-300">
-                              <div className="absolute inset-[1px] bg-[#0D0D18] rounded-sm flex items-center justify-center">
-                                {React.cloneElement(option.icon as React.ReactElement, { 
-                                  className: "h-3.5 w-3.5 text-purple-400 group-hover:text-white transition-colors duration-300" 
-                                })}
+                      {/* Game-style menu container */}
+                      <div className="w-[90%] max-w-md bg-[#0D0D18] border-4 border-[#3A3A45] rounded-lg p-1 animate-in fade-in-90 zoom-in-90 duration-300">
+                        {/* Menu header with pixel-like border - GameBoy style window */}
+                        <div className="relative bg-[#0D0D18] border-b-4 border-dashed border-[#3A3A45] mb-2">
+                          <div className="absolute top-0 left-0 w-3 h-3 bg-[#3A3A45] rounded-sm -translate-x-1 -translate-y-1"></div>
+                          <div className="absolute top-0 right-0 w-3 h-3 bg-[#3A3A45] rounded-sm translate-x-1 -translate-y-1"></div>
+                          <h2 className="text-center py-4 text-lg font-bold text-white bg-gradient-to-r from-purple-500/20 to-blue-500/20">
+                            GAME MENU
+                          </h2>
+                        </div>
+                        
+                        {/* Game-style menu items in a grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3">
+                          {navigationOptions.map((option) => (
+                            <button
+                              key={option.path}
+                              className="flex items-center p-4 bg-[#1D1D26] border-2 border-[#3A3A45] rounded-md hover:bg-gradient-to-r hover:from-purple-900/40 hover:to-blue-900/40 text-white text-left transition-all duration-200 group relative overflow-hidden"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(option.path);
+                                setMenuOpen(false);
+                              }}
+                            >
+                              {/* Icon container with gameboy-like button effect */}
+                              <div className="flex items-center justify-center h-10 w-10 bg-gradient-to-br from-[#333339] to-[#1F1F25] rounded-md mr-4 shadow-inner relative group-hover:from-purple-700 group-hover:to-blue-700 transition-colors duration-300">
+                                <div className="absolute inset-[2px] bg-[#0D0D18] rounded-sm flex items-center justify-center">
+                                  {React.cloneElement(option.icon as React.ReactElement, { 
+                                    className: "h-5 w-5 text-purple-400 group-hover:text-white transition-colors duration-300" 
+                                  })}
+                                </div>
                               </div>
-                            </div>
-                            
-                            {/* Menu text with subtle glow effect on hover */}
-                            <span className="group-hover:text-purple-300 group-hover:font-medium transition-all duration-300">
-                              {option.name}
-                            </span>
-                            
-                            {/* Arrow indicator */}
-                            <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-purple-400">►</span>
-                            
-                            {/* Subtle highlight effect on hover */}
-                            <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-gradient-to-r from-purple-500 to-blue-500 group-hover:w-full transition-all duration-300"></div>
-                          </button>
-                        ))}
+                              
+                              <div className="flex flex-col">
+                                {/* Menu text with subtle glow effect on hover */}
+                                <span className="group-hover:text-purple-300 font-medium transition-all duration-300 text-base">
+                                  {option.name}
+                                </span>
+                                
+                                {/* Description line - optional */}
+                                <span className="text-xs text-gray-400 group-hover:text-blue-300 transition-colors">
+                                  {option.name === 'Settings' && 'Configure your game'}
+                                  {option.name === 'Streaming' && 'Live gameplay'}
+                                  {option.name === 'Profile' && 'Your player stats'}
+                                  {option.name === 'Messages' && 'Chat with players'}
+                                  {option.name === 'Discovery' && 'Find new games'}
+                                  {option.name === 'Top Clipts' && 'Hall of fame'}
+                                  {option.name === 'Clipts' && 'View all clipts'}
+                                </span>
+                              </div>
+                              
+                              {/* Arrow indicator */}
+                              <span className="ml-auto opacity-70 group-hover:opacity-100 transition-opacity text-purple-400 text-lg">►</span>
+                              
+                              {/* Pixel dots in corners */}
+                              <div className="absolute bottom-1 left-1 w-1 h-1 bg-[#3A3A45]"></div>
+                              <div className="absolute bottom-1 right-1 w-1 h-1 bg-[#3A3A45]"></div>
+                              <div className="absolute top-1 left-1 w-1 h-1 bg-[#3A3A45]"></div>
+                              <div className="absolute top-1 right-1 w-1 h-1 bg-[#3A3A45]"></div>
+                              
+                              {/* Subtle highlight effect on hover */}
+                              <div className="absolute bottom-0 left-0 h-[3px] w-0 bg-gradient-to-r from-purple-500 to-blue-500 group-hover:w-full transition-all duration-300"></div>
+                            </button>
+                          ))}
+                        </div>
+                        
+                        {/* Footer with game-like credits */}
+                        <div className="mt-4 border-t-2 border-dashed border-[#3A3A45] py-3 px-4 text-center">
+                          <p className="text-xs text-gray-500">CLIPT  2025 • PRESS <span className="text-purple-400">X</span> TO CLOSE</p>
+                        </div>
                       </div>
                     </div>
                   )}
