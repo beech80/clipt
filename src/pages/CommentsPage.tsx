@@ -3,13 +3,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Heart, Send, Filter } from 'lucide-react';
+import { ArrowLeft, Heart, Send, ChevronDown, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { formatDistanceToNow } from 'date-fns';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatDate } from '@/lib/utils';
+import '../components/comments/comment-modal.css';
 
 interface CommentData {
   id: string;
@@ -19,12 +18,14 @@ interface CommentData {
   created_at: string;
   parent_id?: string | null;
   likes_count?: number;
+  liked_by_user?: boolean;
   profiles: {
     id: string;
     username: string;
     avatar_url: string | null;
     display_name: string | null;
   };
+  replies?: CommentData[];
 }
 
 export default function CommentsPage() {
@@ -35,6 +36,7 @@ export default function CommentsPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
 
   // Fetch the post details to display context
   const { data: post } = useQuery({
@@ -62,7 +64,7 @@ export default function CommentsPage() {
   });
 
   // Fetch existing comments for this post
-  const { data: comments, isLoading } = useQuery({
+  const { data: comments = [], isLoading } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
       if (!postId) return [];
@@ -80,48 +82,64 @@ export default function CommentsPage() {
           profiles (id, username, avatar_url, display_name)
         `)
         .eq('post_id', postId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
       
       if (error) throw error;
-      return data as CommentData[];
+      
+      // Check which comments the user has liked
+      if (user) {
+        const { data: likes } = await supabase
+          .from('comment_likes')
+          .select('comment_id')
+          .eq('user_id', user.id);
+          
+        const likedCommentIds = new Set((likes || []).map(like => like.comment_id));
+        
+        return data.map(comment => ({
+          ...comment,
+          liked_by_user: likedCommentIds.has(comment.id)
+        }));
+      }
+      
+      return data;
     },
     enabled: !!postId,
   });
 
-  // Organize comments into threads
+  // Organize comments into threaded structure
   const organizedComments = () => {
     if (!comments) return [];
     
-    // Create a map for quick parent lookup
-    const commentMap = new Map();
+    const commentMap = new Map<string, CommentData>();
     const topLevelComments: CommentData[] = [];
     
-    // First pass - add all comments to the map
+    // First, add all comments to the map
     comments.forEach(comment => {
-      commentMap.set(comment.id, { ...comment, replies: [] });
+      commentMap.set(comment.id, {...comment, replies: []});
     });
     
-    // Second pass - organize into parent/child
+    // Then organize into parent/child relationships
     comments.forEach(comment => {
-      const commentWithReplies = commentMap.get(comment.id);
-      
       if (comment.parent_id && commentMap.has(comment.parent_id)) {
-        // This is a reply - add to parent
+        // This is a reply, add to parent's replies array
         const parent = commentMap.get(comment.parent_id);
-        parent.replies = parent.replies || [];
-        parent.replies.push(commentWithReplies);
+        if (parent && parent.replies) {
+          parent.replies.push(commentMap.get(comment.id) as CommentData);
+        }
       } else {
         // This is a top-level comment
-        topLevelComments.push(commentWithReplies);
+        topLevelComments.push(commentMap.get(comment.id) as CommentData);
       }
     });
     
     return topLevelComments;
   };
+  
+  const threadedComments = organizedComments();
 
   // Mutation for adding a new comment
   const addCommentMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, parentId }: { content: string, parentId?: string }) => {
       if (!user || !postId) throw new Error('Not authenticated or missing post ID');
       
       const { data, error } = await supabase
@@ -131,6 +149,7 @@ export default function CommentsPage() {
             post_id: postId,
             user_id: user.id,
             content,
+            parent_id: parentId || null
           },
         ])
         .select();
@@ -148,15 +167,71 @@ export default function CommentsPage() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const toggleLikeMutation = useMutation({
+    mutationFn: async ({ commentId, isLiked }: { commentId: string, isLiked: boolean }) => {
+      if (!user) throw new Error('Not authenticated');
+      
+      if (isLiked) {
+        // Unlike the comment
+        const { error } = await supabase
+          .from('comment_likes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('comment_id', commentId);
+          
+        if (error) throw error;
+      } else {
+        // Like the comment
+        const { error } = await supabase
+          .from('comment_likes')
+          .insert([
+            {
+              comment_id: commentId,
+              user_id: user.id
+            }
+          ]);
+          
+        if (error) throw error;
+      }
+      
+      return { commentId, isLiked: !isLiked };
+    },
+    onSuccess: (result) => {
+      // Update the comments data in the cache
+      queryClient.setQueryData(['comments', postId], (oldData: CommentData[] | undefined) => {
+        if (!oldData) return [];
+        
+        return oldData.map(comment => {
+          if (comment.id === result.commentId) {
+            return {
+              ...comment,
+              likes_count: result.isLiked 
+                ? (comment.likes_count || 0) + 1 
+                : Math.max(0, (comment.likes_count || 0) - 1),
+              liked_by_user: result.isLiked
+            };
+          }
+          return comment;
+        });
+      });
+    },
+    onError: (error) => {
+      toast.error('Failed to update like: ' + error.message);
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent, parentId?: string) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    addCommentMutation.mutate(newComment);
+    addCommentMutation.mutate({ content: newComment, parentId });
   };
 
-  const handleLike = (commentId: string) => {
-    // You would implement the like functionality here
-    toast('Liked comment');
+  const handleLike = (commentId: string, isLiked: boolean) => {
+    if (!user) {
+      toast.error('Please sign in to like comments');
+      return;
+    }
+    toggleLikeMutation.mutate({ commentId, isLiked });
   };
 
   const handleEmojiSelect = (emoji: string) => {
@@ -164,213 +239,227 @@ export default function CommentsPage() {
     setNewComment(prev => prev + emoji);
     inputRef.current?.focus();
   };
+  
+  const toggleReplies = (commentId: string) => {
+    setExpandedComments(prev => ({
+      ...prev,
+      [commentId]: !prev[commentId]
+    }));
+  };
 
   // Format like "5d" for Instagram-style dates
   const formatShortDate = (date: string) => {
-    const days = Math.floor((new Date().getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
+    const now = new Date();
+    const commentDate = new Date(date);
+    const diffInSeconds = Math.floor((now.getTime() - commentDate.getTime()) / 1000);
     
-    if (days < 1) {
-      return 'today';
-    } else if (days === 1) {
-      return '1d';
-    } else if (days < 7) {
-      return `${days}d`;
-    } else if (days < 30) {
-      return `${Math.floor(days / 7)}w`;
-    } else if (days < 365) {
-      return `${Math.floor(days / 30)}m`;
+    if (diffInSeconds < 60) {
+      return 'now';
+    } else if (diffInSeconds < 3600) {
+      return `${Math.floor(diffInSeconds / 60)}m`;
+    } else if (diffInSeconds < 86400) {
+      return `${Math.floor(diffInSeconds / 3600)}h`;
+    } else if (diffInSeconds < 604800) {
+      return `${Math.floor(diffInSeconds / 86400)}d`;
+    } else if (diffInSeconds < 2592000) {
+      return `${Math.floor(diffInSeconds / 604800)}w`;
     } else {
-      return `${Math.floor(days / 365)}y`;
+      return `${Math.floor(diffInSeconds / 2592000)}mo`;
     }
   };
 
+  const handleReply = (username: string) => {
+    setNewComment(`@${username} `);
+    inputRef.current?.focus();
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="instagram-comments min-h-screen flex flex-col">
       {/* Header */}
-      <div className="border-b flex justify-between items-center px-4 py-2 sticky top-0 bg-background z-10">
-        <div className="flex items-center">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate(-1)}
-            className="mr-2"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-lg font-semibold">Comments</h1>
-        </div>
-        <Button variant="ghost" size="icon">
-          <Filter className="h-5 w-5" />
-        </Button>
+      <div className="comment-header sticky top-0 z-10 bg-white">
+        <button 
+          className="back-button"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </button>
+        <h1 className="title">Comments</h1>
+        <button className="direct-button">
+          <MessageSquare className="h-6 w-6" />
+        </button>
       </div>
 
-      <div className="flex-1 overflow-auto">
-        {/* Original post context */}
-        {post && (
-          <div className="border-b p-4">
-            <div className="flex items-start mb-2">
-              <Avatar className="h-8 w-8 mr-3">
-                <AvatarImage src={post.profiles?.avatar_url || ''} />
-                <AvatarFallback>
-                  {post.profiles?.username?.substring(0, 2).toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="flex items-center">
-                  <span className="font-medium text-sm mr-1">
-                    {post.profiles?.username}
-                  </span>
-                  <span className="text-blue-500">
-                    ✓
-                  </span>
-                </div>
-                <p className="text-sm">{post.content}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatShortDate(post.created_at)}
-                </p>
-              </div>
+      {/* Original post context */}
+      {post && (
+        <div className="post-author">
+          <Avatar className="avatar">
+            <AvatarImage src={post.profiles?.avatar_url || ''} />
+            <AvatarFallback>
+              {post.profiles?.username?.substring(0, 2).toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <div className="flex items-center">
+              <span className="username">{post.profiles?.username}</span>
+              <span className="verified">✓</span>
+              <span className="post-content">{post.content}</span>
+            </div>
+            <div className="comment-meta">
+              <span className="comment-time">{formatShortDate(post.created_at)}</span>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Comments list */}
-        <div className="divide-y">
-          {isLoading ? (
-            <div className="flex justify-center py-6">
-              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : comments?.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              <p>No comments yet</p>
-              <p className="text-sm">Be the first to comment</p>
-            </div>
-          ) : (
-            // Main comments list - Instagram style
-            comments?.map((comment) => (
-              <div key={comment.id} className="p-4">
-                <div className="flex">
-                  <Avatar className="h-8 w-8 mr-3 flex-shrink-0">
-                    <AvatarImage src={comment.profiles?.avatar_url || ''} />
-                    <AvatarFallback>
-                      {comment.profiles?.username?.substring(0, 2).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center">
-                          <span className="font-semibold text-sm mr-1">
-                            {comment.profiles?.username}
-                          </span>
-                          {comment.profiles?.username === post?.profiles?.username && (
-                            <span className="text-blue-500">
-                              ✓
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm">{comment.content}</p>
-                        <div className="flex items-center mt-1 space-x-3 text-xs text-muted-foreground">
-                          <span>{formatShortDate(comment.created_at)}</span>
-                          {comment.likes_count && comment.likes_count > 0 && (
-                            <span>{comment.likes_count} likes</span>
-                          )}
-                          <button className="font-medium">Reply</button>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => handleLike(comment.id)}
-                        className="text-muted-foreground hover:text-primary"
-                      >
-                        <Heart className="h-4 w-4" />
-                      </button>
-                    </div>
-                    
-                    {/* Show replies */}
-                    {comment.replies && comment.replies.length > 0 && (
-                      <div className="mt-2 ml-5 border-l-2 border-muted pl-3 space-y-3">
-                        {comment.replies.map((reply) => (
-                          <div key={reply.id} className="flex">
-                            <Avatar className="h-6 w-6 mr-2">
-                              <AvatarImage src={reply.profiles?.avatar_url || ''} />
-                              <AvatarFallback>
-                                {reply.profiles?.username?.substring(0, 2).toUpperCase() || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <span className="font-semibold text-xs mr-1">
-                                    {reply.profiles?.username}
-                                  </span>
-                                  <p className="text-xs">{reply.content}</p>
-                                  <div className="flex items-center mt-1 space-x-2 text-xs text-muted-foreground">
-                                    <span>{formatShortDate(reply.created_at)}</span>
-                                    <button className="font-medium">Reply</button>
-                                  </div>
-                                </div>
-                                <button className="text-muted-foreground hover:text-primary">
-                                  <Heart className="h-3 w-3" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+      {/* Comments list */}
+      <div className="comment-list flex-1 overflow-auto">
+        {isLoading ? (
+          <div className="flex justify-center p-6">
+            <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+          </div>
+        ) : threadedComments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-gray-500">
+            <MessageSquare className="h-10 w-10 mb-2 opacity-40" />
+            <p>No comments yet</p>
+            <p className="text-sm">Be the first to comment</p>
+          </div>
+        ) : (
+          threadedComments.map(comment => (
+            <div key={comment.id} className="comment-thread">
+              <div className="comment-item">
+                <Avatar className="comment-avatar">
+                  <AvatarImage src={comment.profiles?.avatar_url || ''} />
+                  <AvatarFallback>
+                    {comment.profiles?.username?.substring(0, 2).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="comment-content">
+                  <div>
+                    <span className="comment-user">{comment.profiles?.username}</span>
+                    {post && comment.profiles?.username === post.profiles?.username && (
+                      <span className="verified-badge">✓</span>
                     )}
+                    <span className="comment-text"> {comment.content}</span>
+                  </div>
+                  <div className="comment-meta">
+                    <span className="comment-time">{formatShortDate(comment.created_at)}</span>
+                    {comment.likes_count && comment.likes_count > 0 && (
+                      <span className="comment-likes">{comment.likes_count} likes</span>
+                    )}
+                    <button onClick={() => handleReply(comment.profiles.username)}>Reply</button>
                   </div>
                 </div>
+                <button 
+                  className="like-button"
+                  onClick={() => handleLike(comment.id, !!comment.liked_by_user)}
+                >
+                  <Heart 
+                    className="h-4 w-4" 
+                    fill={comment.liked_by_user ? "currentColor" : "none"}
+                    color={comment.liked_by_user ? "#ed4956" : "#8e8e8e"}
+                  />
+                </button>
               </div>
-            ))
-          )}
-        </div>
+              
+              {/* Comment replies */}
+              {comment.replies && comment.replies.length > 0 && (
+                <>
+                  <div 
+                    className="replies-toggle"
+                    onClick={() => toggleReplies(comment.id)}
+                  >
+                    <div className="line"></div>
+                    {expandedComments[comment.id] 
+                      ? `Hide replies` 
+                      : `View replies (${comment.replies.length})`}
+                  </div>
+                  
+                  {expandedComments[comment.id] && (
+                    <div className="reply-list">
+                      {comment.replies.map((reply) => (
+                        <div key={reply.id} className="comment-item">
+                          <Avatar className="comment-avatar">
+                            <AvatarImage src={reply.profiles?.avatar_url || ''} />
+                            <AvatarFallback>
+                              {reply.profiles?.username?.substring(0, 2).toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="comment-content">
+                            <div>
+                              <span className="comment-user">{reply.profiles?.username}</span>
+                              {post && reply.profiles?.username === post.profiles?.username && (
+                                <span className="verified-badge">✓</span>
+                              )}
+                              <span className="comment-text"> {reply.content}</span>
+                            </div>
+                            <div className="comment-meta">
+                              <span className="comment-time">{formatShortDate(reply.created_at)}</span>
+                              {reply.likes_count && reply.likes_count > 0 && (
+                                <span className="comment-likes">{reply.likes_count} likes</span>
+                              )}
+                              <button onClick={() => handleReply(reply.profiles.username)}>Reply</button>
+                            </div>
+                          </div>
+                          <button 
+                            className="like-button"
+                            onClick={() => handleLike(reply.id, !!reply.liked_by_user)}
+                          >
+                            <Heart 
+                              className="h-4 w-4" 
+                              fill={reply.liked_by_user ? "currentColor" : "none"}
+                              color={reply.liked_by_user ? "#ed4956" : "#8e8e8e"}
+                            />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
       {/* Emoji reaction bar */}
-      <div className="border-t px-4 py-2 flex justify-between">
-        <div className="flex space-x-4">
-          <button onClick={() => handleEmojiSelect('❤️')} className="text-xl">❤️</button>
-          <button onClick={() => handleEmojiSelect('👏')} className="text-xl">👏</button>
-          <button onClick={() => handleEmojiSelect('🔥')} className="text-xl">🔥</button>
-          <button onClick={() => handleEmojiSelect('👍')} className="text-xl">👍</button>
-          <button onClick={() => handleEmojiSelect('😢')} className="text-xl">😢</button>
-          <button onClick={() => handleEmojiSelect('😍')} className="text-xl">😍</button>
-          <button onClick={() => handleEmojiSelect('😮')} className="text-xl">😮</button>
-          <button onClick={() => handleEmojiSelect('😂')} className="text-xl">😂</button>
-        </div>
+      <div className="emoji-bar">
+        <button className="emoji-button" onClick={() => handleEmojiSelect('❤️')}>❤️</button>
+        <button className="emoji-button" onClick={() => handleEmojiSelect('👏')}>👏</button>
+        <button className="emoji-button" onClick={() => handleEmojiSelect('🔥')}>🔥</button>
+        <button className="emoji-button" onClick={() => handleEmojiSelect('👍')}>👍</button>
+        <button className="emoji-button" onClick={() => handleEmojiSelect('😢')}>😢</button>
+        <button className="emoji-button" onClick={() => handleEmojiSelect('😍')}>😍</button>
+        <button className="emoji-button" onClick={() => handleEmojiSelect('😮')}>😮</button>
+        <button className="emoji-button" onClick={() => handleEmojiSelect('😂')}>😂</button>
       </div>
 
       {/* Comment input */}
-      <div className="border-t p-3 sticky bottom-0 bg-background">
-        <form onSubmit={handleSubmit} className="flex items-center">
-          <Avatar className="h-8 w-8 mr-2">
-            <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
-            <AvatarFallback>
-              {user?.user_metadata?.name?.substring(0, 2)?.toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 bg-muted rounded-full px-4 py-2 flex items-center">
-            <input
-              ref={inputRef}
-              type="text"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={`Add a comment as ${user?.user_metadata?.username || user?.email || 'you'}...`}
-              className="bg-transparent outline-none w-full text-sm"
-            />
-          </div>
-          <Button 
+      <div className="comment-input-container sticky bottom-0">
+        <Avatar className="comment-user-avatar">
+          <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
+          <AvatarFallback>
+            {user?.user_metadata?.name?.substring(0, 2)?.toUpperCase() || 'U'}
+          </AvatarFallback>
+        </Avatar>
+        <form 
+          className="comment-input-wrapper flex-1"
+          onSubmit={handleSubmit}
+        >
+          <input
+            ref={inputRef}
+            type="text"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder={`Add a comment as ${user?.user_metadata?.username || user?.email || 'you'}...`}
+            className="comment-input"
+          />
+          <button 
             type="submit" 
+            className={`post-button ${newComment.trim() ? 'active' : ''}`}
             disabled={!newComment.trim() || addCommentMutation.isPending}
-            size="sm"
-            variant="ghost"
-            className="ml-2"
           >
-            {addCommentMutation.isPending ? (
-              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
+            {addCommentMutation.isPending ? 'Posting...' : 'Post'}
+          </button>
         </form>
       </div>
     </div>
