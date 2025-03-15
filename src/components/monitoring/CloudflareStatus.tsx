@@ -3,8 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { cloudflareService, CloudflareCheckResult } from '@/services/cloudflareService';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import ActivityIcon from '@/components/ui/activity-icon';
-import { Globe, Wifi } from 'lucide-react';
+import { Activity, Globe, Wifi } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function CloudflareStatus() {
@@ -49,7 +48,7 @@ export function CloudflareStatus() {
 
       {isLoading ? (
         <div className="flex items-center justify-center h-20">
-          <ActivityIcon className="h-6 w-6 animate-pulse" />
+          <Activity className="w-6 h-6 animate-pulse" />
         </div>
       ) : checkResult ? (
         <div className="space-y-2">
