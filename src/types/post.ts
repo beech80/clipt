@@ -44,6 +44,37 @@ export interface PostActionsProps {
   onCommentClick: () => void;
 }
 
+export interface Profile {
+  id: string;
+  username: string | null;
+  avatar_url: string | null;
+  display_name?: string | null;
+  bio?: string | null;
+  website?: string | null;
+  social_links?: Record<string, string> | null;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  post_id: string;
+  user_id: string;
+  parent_id: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface PostWithProfile extends Post {
+  profiles: Profile;
+  comments?: CommentWithProfile[];
+}
+
+export interface CommentWithProfile extends Comment {
+  profiles: Profile;
+  children?: CommentWithProfile[];
+  likes_count?: number;
+}
+
 export interface SearchFilters {
   type: 'all' | 'posts' | 'profiles' | 'streams';
   dateRange: 'all' | 'today' | 'week' | 'month';

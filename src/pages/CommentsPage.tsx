@@ -11,7 +11,7 @@ import { CommentForm } from '@/components/post/comment/CommentForm';
 import { PostWithProfile, CommentWithProfile } from '@/types/post';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import supabase from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -30,6 +30,8 @@ export const CommentsPage = () => {
   const [editText, setEditText] = useState('');
   const [isEditSubmitting, setIsEditSubmitting] = useState(false);
   const [loadingCommentIds, setLoadingCommentIds] = useState<string[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: post, isLoading: isPostLoading, error: postError } = useQuery<PostWithProfile | null>({
     queryKey: ['post-details', id],
@@ -305,6 +307,32 @@ export const CommentsPage = () => {
     );
   };
 
+  const handleCommentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({ content: newComment, post_id: post.id, parent_id: null })
+        .select();
+      
+      if (error) throw error;
+      
+      toast.success('Comment created successfully');
+      setNewComment('');
+      
+      // Refresh post data
+      queryClient.invalidateQueries({ queryKey: ['post-details', id] });
+    } catch (error) {
+      console.error('Error creating comment:', error);
+      toast.error('Failed to create comment');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="container max-w-3xl mx-auto py-6 px-4">
       <div className="flex items-center mb-6">
@@ -380,10 +408,85 @@ export const CommentsPage = () => {
         </div>
       </Card>
 
-      {/* Add Comment Form */}
-      <div className="mb-6" id="comment-form">
-        <CommentForm postId={post.id} className="mb-6" />
+      {/* Instagram-style comment input */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gaming-900 border-t border-gaming-700">
+        {/* Emoji reaction row */}
+        <div className="flex justify-between px-4 py-2 border-b border-gaming-700/50">
+          <div className="flex space-x-6">
+            <button className="text-red-500 hover:text-red-400 transition-colors">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+            <button className="text-yellow-500 hover:text-yellow-400 transition-colors">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+              </svg>
+            </button>
+            <button className="text-orange-500 hover:text-orange-400 transition-colors">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zM8 17c-.83 0-1.5-.67-1.5-1.5S7.17 14 8 14s1.5.67 1.5 1.5S8.83 17 8 17zm8 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+              </svg>
+            </button>
+            <button className="text-yellow-400 hover:text-yellow-300 transition-colors">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 11h-3.17l2.54-2.54c.39-.39.39-1.02 0-1.41-.39-.39-1.03-.39-1.42 0L15 11h-2V9l3.95-3.95c.39-.39.39-1.03 0-1.42-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.03 0 1.42L11 9v2H9L5.05 7.05c-.39-.39-1.03-.39-1.42 0-.39.39-.39 1.02 0 1.41L6.17 11H3c-.55 0-1 .45-1 1s.45 1 1 1h3.17l-2.54 2.54c-.39.39-.39 1.02 0 1.41.39.39 1.03.39 1.42 0L9 13h2v2l-3.95 3.95c-.39.39-.39 1.03 0 1.42.39.39 1.02.39 1.41 0 .39-.39.39-1.03 0-1.42L13 15v-2h2l3.95 3.95c.39.39 1.03.39 1.42 0 .39-.39.39-1.02 0-1.41L17.83 13H21c.55 0 1-.45 1-1s-.45-1-1-1z"/>
+              </svg>
+            </button>
+          </div>
+          <div className="flex space-x-6">
+            <button className="text-gray-400 hover:text-gray-300 transition-colors">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </button>
+            <button className="text-gray-400 hover:text-gray-300 transition-colors">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <form 
+          onSubmit={handleCommentSubmit} 
+          className="px-4 py-3 flex items-center"
+        >
+          {user && (
+            <Avatar className="h-8 w-8 mr-2 flex-shrink-0">
+              <AvatarImage 
+                src={user?.user_metadata?.avatar_url || ''} 
+                alt={user?.user_metadata?.username || 'User'} 
+              />
+              <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
+                {user?.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+          )}
+          
+          <input
+            type="text"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder={`Add a comment as ${user?.user_metadata?.username || 'user'}...`}
+            className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder:text-gray-500 py-2 px-3 focus:outline-none focus:ring-0"
+            disabled={isSubmitting}
+          />
+          
+          {newComment.trim() && (
+            <button
+              type="submit"
+              disabled={isSubmitting || !newComment.trim()}
+              className="ml-2 text-blue-400 font-semibold text-sm hover:text-blue-300 bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Post
+            </button>
+          )}
+        </form>
       </div>
+
+      {/* Add padding to ensure content isn't hidden behind fixed comment input */}
+      <div className="pb-36"></div>
 
       {/* Comments */}
       <div className="space-y-6">
