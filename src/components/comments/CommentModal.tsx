@@ -71,6 +71,9 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
   const [editContent, setEditContent] = useState("");
   const [showRepliesFor, setShowRepliesFor] = useState<Record<string, boolean>>({});
   const [post, setPost] = useState<any>(null);
+  const [showUserComments, setShowUserComments] = useState<string | null>(null);
+  const [userComments, setUserComments] = useState<Comment[]>([]);
+  const [isLoadingUserComments, setIsLoadingUserComments] = useState(false);
 
   // Get useQueryClient
   const queryClient = useQueryClient();
@@ -236,6 +239,56 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
       toast.error("Failed to update comment");
     }
   });
+
+  // Fetch user comments
+  const fetchUserComments = useCallback(async (userId: string) => {
+    if (!userId) return;
+    
+    setIsLoadingUserComments(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`
+          id,
+          content,
+          created_at,
+          parent_id,
+          user_id,
+          post_id,
+          profiles:user_id (
+            username,
+            avatar_url
+          ),
+          likes_count
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+        
+      if (error) {
+        console.error("Error fetching user comments:", error);
+        toast.error("Failed to load user comments");
+        return;
+      }
+      
+      setUserComments(data || []);
+    } catch (error) {
+      console.error("Error in fetchUserComments:", error);
+      toast.error("An error occurred while loading user comments");
+    } finally {
+      setIsLoadingUserComments(false);
+    }
+  }, []);
+
+  // Toggle showing user comments
+  const toggleUserComments = useCallback((userId: string) => {
+    if (showUserComments === userId) {
+      setShowUserComments(null);
+    } else {
+      setShowUserComments(userId);
+      fetchUserComments(userId);
+    }
+  }, [showUserComments, fetchUserComments]);
 
   // Handle comment submission
   const handleSubmitComment = (e: React.FormEvent) => {
@@ -431,340 +484,442 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, isOpen, onClose }) 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] bg-gaming-900 text-white p-0 gap-0 flex flex-col">
-        <DialogTitle className="flex items-center justify-between border-b border-gaming-700 p-4">
-          <h2 className="text-xl font-bold">Add Comment</h2>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={onClose}
-            className="h-7 w-7 rounded-full text-gaming-300 hover:text-white"
-          >
-            <CloseIcon />
+      <DialogContent className="sm:max-w-lg bg-gaming-800 border-gaming-700 text-white p-0 max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Header with title and close button */}
+        <div className="flex justify-between items-center py-3 px-4 border-b border-gaming-700 bg-gradient-to-r from-indigo-900/50 to-purple-900/50">
+          <DialogTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            Add Comment
+          </DialogTitle>
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-gray-400 hover:text-white">
+            <CloseIcon className="h-5 w-5" />
           </Button>
-        </DialogTitle>
+        </div>
         
-        {/* Post information */}
+        {/* Post summary (if available) */}
         {post && (
-          <div className="p-4 border-b border-gaming-700">
-            <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8 flex-shrink-0">
-                <AvatarImage src={post.profiles?.avatar_url || ''} />
-                <AvatarFallback>{post.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+          <div className="p-4 border-b border-gaming-700 bg-gaming-900/50">
+            <div className="flex items-start space-x-3">
+              <Avatar className="w-10 h-10 rounded-full border-2 border-purple-600/50">
+                <AvatarImage src={post?.profiles?.avatar_url || ''} alt={post?.profiles?.username || 'User'} />
+                <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500">
+                  {post?.profiles?.username?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="font-semibold text-sm text-white">
-                  {post.profiles?.username || 'Anonymous'}
-                </p>
-                <p className="text-gaming-200 text-sm">Commenting on post from {post.profiles?.username}</p>
+              
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-white">{post?.profiles?.username || 'User'}</div>
+                <p className="text-sm text-gray-300 line-clamp-2 mt-1">{post?.content || ''}</p>
               </div>
             </div>
-            {post.content && (
-              <p className="mt-2 text-sm text-gaming-200 ml-10">{post.content}</p>
-            )}
-            {post.image_url && (
-              <div className="ml-10 mt-2 w-14 h-14 rounded overflow-hidden">
-                <img 
-                  src={post.image_url} 
-                  alt="Post image" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
           </div>
         )}
-
-        {/* Comments section with scrolling */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-medium text-white">Comments</h3>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleRefreshComments}
-              className="text-xs text-gaming-300 hover:text-white"
-            >
-              Refresh
-            </Button>
-          </div>
+        
+        {/* Comment input section */}
+        <div className="p-4 border-b border-gaming-700 bg-gradient-to-b from-gaming-800 to-gaming-900/90">
+          {replyingTo ? (
+            <div className="mb-3 flex items-center">
+              <div className="text-sm text-gray-300">
+                Replying to <span className="font-medium text-blue-400">{replyingTo.profiles.username}</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setReplyingTo(null)} 
+                className="ml-auto text-gray-400 hover:text-white h-6 px-1"
+              >
+                <SmallCloseIcon />
+                Cancel
+              </Button>
+            </div>
+          ) : null}
           
+          {/* Comment form with animated border */}
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl opacity-30 group-focus-within:opacity-100 blur transition duration-1000 group-hover:duration-200"></div>
+            <div className="relative bg-gaming-900 rounded-xl p-2">
+              <div className="flex items-start space-x-2">
+                <Avatar className="w-8 h-8 mt-1">
+                  <AvatarImage src={user?.user_metadata?.avatar_url || ''} alt={user?.user_metadata?.username || 'User'} />
+                  <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500">
+                    {user?.user_metadata?.username?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex-1 min-w-0">
+                  <Textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder={replyingTo ? `Reply to ${replyingTo.profiles.username}...` : "Write a comment..."}
+                    className="min-h-[80px] resize-none bg-transparent border-0 focus-visible:ring-0 text-white placeholder:text-gray-500 p-0"
+                  />
+                  
+                  <div className="flex justify-between items-center mt-2">
+                    <div className="flex space-x-1">
+                      {['😊', '👍', '❤️', '🔥', '👏', '🎮'].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => setComment(prev => prev + emoji)}
+                          className="text-lg hover:bg-gaming-700 p-1 rounded-full transition-colors"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <Button
+                      onClick={() => handleSubmitComment}
+                      disabled={!comment.trim() || addComment.isPending}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full px-4"
+                    >
+                      {addComment.isPending ? <SmallLoader className="mr-2 animate-spin" /> : null}
+                      {replyingTo ? 'Reply' : 'Post'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Comment list section with scroll */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {isLoading ? (
-            <div className="py-10 text-center text-gaming-300">
-              Loading comments...
+            <div className="flex justify-center items-center h-32">
+              <SmallLoader className="animate-spin h-8 w-8 text-purple-500" />
             </div>
           ) : error ? (
-            <div className="py-10 text-center text-red-500">
-              Error loading comments. Please try again.
+            <div className="text-center p-4">
+              <p className="text-red-400">Failed to load comments</p>
+              <Button variant="ghost" onClick={() => refetch()} className="mt-2 text-sm">
+                Try Again
+              </Button>
             </div>
-          ) : organizedComments.length === 0 ? (
-            <div className="py-10 text-center text-gaming-300">
-              No comments yet. Be the first to comment!
+          ) : comments.length === 0 ? (
+            <div className="text-center p-6 space-y-2">
+              <div className="mx-auto w-16 h-16 rounded-full bg-purple-900/20 flex items-center justify-center">
+                <MessageSquare className="h-8 w-8 text-purple-500 opacity-70" />
+              </div>
+              <h3 className="text-lg font-medium text-white">No comments yet</h3>
+              <p className="text-gray-400 text-sm">Be the first to share your thoughts!</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="p-2 bg-gaming-800 rounded mb-4 text-sm">
-                <p className="text-gaming-200">Showing {organizedComments.length} comments 
-                {comments?.length > organizedComments.length && ` (and ${comments.length - organizedComments.length} replies)`}</p>
-              </div>
-              {organizedComments.map(comment => (
-                <div key={comment.id} className="py-2 border-b border-gaming-700/30 last:border-b-0">
-                  <div className="flex gap-2">
-                    <Avatar className="h-8 w-8 flex-shrink-0">
-                      <AvatarImage src={comment.profiles?.avatar_url || ''} />
-                      <AvatarFallback>{comment.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1">
-                      <div>
-                        <span className="font-semibold text-gaming-100 mr-1 text-sm">
-                          {comment.profiles?.username || 'Anonymous'}
-                        </span>
-                        {editingComment?.id === comment.id ? (
-                          <div className="mt-1">
+            <>
+              {/* User comments section - shown when a user is clicked */}
+              {showUserComments && (
+                <div className="bg-gaming-700/50 rounded-xl p-4 mb-4 border border-gaming-600">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-white flex items-center">
+                      <MessageSquare className="h-4 w-4 mr-1 text-blue-400" />
+                      Recent comments by 
+                      <span className="text-blue-400 ml-1">
+                        {userComments[0]?.profiles?.username || 'this user'}
+                      </span>
+                    </h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowUserComments(null)}
+                      className="h-6 w-6 p-0 text-gray-400 hover:text-white"
+                    >
+                      <TinyCloseIcon />
+                    </Button>
+                  </div>
+                  
+                  {isLoadingUserComments ? (
+                    <div className="flex justify-center items-center h-20">
+                      <SmallLoader className="animate-spin h-5 w-5 text-purple-500" />
+                    </div>
+                  ) : userComments.length > 0 ? (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {userComments.map(userComment => (
+                        <div 
+                          key={userComment.id} 
+                          className="text-sm bg-gaming-800/70 p-2 rounded-lg hover:bg-gaming-800 transition-colors"
+                        >
+                          <div className="text-xs text-gray-400 mb-1">
+                            {formatDistanceToNowStrict(new Date(userComment.created_at), { addSuffix: true })}
+                          </div>
+                          <p className="text-gray-300">{userComment.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-3 text-sm text-gray-400">
+                      No other comments found
+                    </div>
+                  )}
+                </div>
+              )}
+            
+              {/* Regular comments list */}
+              {organizedComments.map((comment) => (
+                <div key={comment.id} className="comment-thread">
+                  <div className={`comment-item p-3 rounded-xl ${comment.parent_id ? 'bg-gaming-800/50' : 'bg-gaming-800/70 border border-gaming-700/50'}`}>
+                    <div className="flex items-start space-x-2">
+                      {/* Avatar - clickable to see user's comments */}
+                      <div className="cursor-pointer" onClick={() => toggleUserComments(comment.user_id)}>
+                        <Avatar className={`w-8 h-8 ${showUserComments === comment.user_id ? 'ring-2 ring-blue-500' : ''}`}>
+                          <AvatarImage src={comment.profiles.avatar_url || ''} alt={comment.profiles.username} />
+                          <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500">
+                            {comment.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center mb-1">
+                          {/* Username - clickable to see user's comments */}
+                          <span 
+                            className="font-medium text-white hover:text-blue-400 cursor-pointer transition-colors"
+                            onClick={() => toggleUserComments(comment.user_id)}
+                          >
+                            {comment.profiles.username}
+                          </span>
+                          
+                          <span className="text-xs text-gray-400 ml-2">
+                            {formatDistanceToNowStrict(new Date(comment.created_at), { addSuffix: true })}
+                          </span>
+                          
+                          {/* User's own comment options */}
+                          {user && user.id === comment.user_id && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 ml-auto text-gray-400 hover:text-white">
+                                  <SmallMoreIcon />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
+                                <DropdownMenuItem
+                                  className="text-blue-400 hover:text-blue-300 hover:bg-gaming-700 cursor-pointer"
+                                  onClick={() => handleEditClick(comment)}
+                                >
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-red-400 hover:text-red-300 hover:bg-gaming-700 cursor-pointer"
+                                  onClick={() => handleDeleteComment(comment.id)}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                        
+                        {/* Comment content or edit form */}
+                        {editingComment && editingComment.id === comment.id ? (
+                          <div className="mb-2">
                             <Textarea
                               value={editContent}
                               onChange={(e) => setEditContent(e.target.value)}
-                              className="min-h-9 py-2 px-3 bg-gaming-800 border-gaming-700 resize-none text-sm"
-                              rows={2}
-                              autoFocus
+                              className="min-h-[60px] resize-none bg-gaming-900 border border-gaming-600 focus-visible:ring-purple-500 text-white p-2 text-sm"
                             />
-                            <div className="flex gap-2 mt-2">
-                              <Button 
-                                variant="outline" 
+                            <div className="flex justify-end space-x-2 mt-2">
+                              <Button
                                 size="sm"
-                                onClick={handleSaveEdit}
-                                className="h-7 text-xs flex items-center"
+                                variant="ghost"
+                                onClick={() => setEditingComment(null)}
+                                className="h-7 px-2 text-sm text-gray-400 hover:text-white"
                               >
-                                <CheckmarkIcon /> Save
+                                Cancel
                               </Button>
-                              <Button 
-                                variant="ghost" 
+                              <Button
                                 size="sm"
-                                onClick={handleCancelEdit}
-                                className="h-7 text-xs flex items-center"
+                                onClick={() => handleSaveEdit()}
+                                disabled={!editContent.trim() || editCommentMutation.isPending}
+                                className="h-7 px-3 text-sm bg-blue-600 hover:bg-blue-700 text-white"
                               >
-                                <SmallCloseIcon /> Cancel
+                                Save
                               </Button>
                             </div>
                           </div>
                         ) : (
-                          <span className="text-gaming-200 text-sm">{comment.content}</span>
+                          <p className="text-gray-300 whitespace-pre-wrap break-words">{comment.content}</p>
                         )}
-                      </div>
-                      
-                      <div className="flex items-center mt-1 text-xs text-gaming-400 space-x-3">
-                        <span>{formatDate(comment.created_at)}</span>
-                        {comment.likes_count > 0 && (
-                          <span>{comment.likes_count} like{comment.likes_count !== 1 ? 's' : ''}</span>
-                        )}
-                        <button 
-                          className="font-semibold hover:text-gaming-300"
-                          onClick={() => handleReplyClick(comment)}
-                        >
-                          Reply
-                        </button>
-                      </div>
-                      
-                      {/* Show replies if any */}
-                      {comment.children && comment.children.length > 0 && (
-                        <div className="mt-2">
+                        
+                        {/* Comment actions */}
+                        <div className="flex items-center space-x-3 mt-2 text-xs">
                           <button
-                            className="flex items-center text-xs text-gaming-400 mt-1"
-                            onClick={() => toggleReplies(comment.id)}
+                            onClick={() => handleLikeComment(comment.id)}
+                            className={`flex items-center space-x-1 ${comment.liked_by_me ? 'text-red-500' : 'text-gray-400 hover:text-red-400'}`}
                           >
-                            <div className="h-px bg-gaming-700 w-4 mr-1"></div>
-                            {showRepliesFor[comment.id] ? (
-                              <span className="flex items-center">
-                                Hide replies <UpIcon />
-                              </span>
-                            ) : (
-                              <span className="flex items-center">
-                                View {comment.children.length} {comment.children.length === 1 ? 'reply' : 'replies'} <DownIcon />
-                              </span>
-                            )}
+                            <SmallHeartIcon fill={comment.liked_by_me ? "currentColor" : "none"} />
+                            <span>{comment.likes_count || 0}</span>
                           </button>
                           
-                          {showRepliesFor[comment.id] && (
-                            <div className="mt-2 space-y-2 pl-4 border-l border-gaming-700/30">
-                              {comment.children.map(reply => (
-                                <div key={reply.id} className="flex gap-2">
-                                  <Avatar className="h-6 w-6 flex-shrink-0">
-                                    <AvatarImage src={reply.profiles?.avatar_url || ''} />
-                                    <AvatarFallback>{reply.profiles?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-                                  </Avatar>
-                                  
-                                  <div className="flex-1">
-                                    <div>
-                                      <span className="font-semibold text-gaming-100 mr-1 text-sm">
-                                        {reply.profiles?.username || 'Anonymous'}
-                                      </span>
-                                      {editingComment?.id === reply.id ? (
-                                        <div className="mt-1">
-                                          <Textarea
-                                            value={editContent}
-                                            onChange={(e) => setEditContent(e.target.value)}
-                                            className="min-h-8 py-1 px-2 bg-gaming-800 border-gaming-700 resize-none text-sm"
-                                            rows={2}
-                                            autoFocus
-                                          />
-                                          <div className="flex gap-2 mt-1">
-                                            <Button 
-                                              variant="outline" 
-                                              size="sm"
-                                              onClick={handleSaveEdit}
-                                              className="h-6 text-xs flex items-center px-2"
-                                            >
-                                              <CheckmarkIcon /> Save
-                                            </Button>
-                                            <Button 
-                                              variant="ghost" 
-                                              size="sm"
-                                              onClick={handleCancelEdit}
-                                              className="h-6 text-xs flex items-center px-2"
-                                            >
-                                              <SmallCloseIcon /> Cancel
-                                            </Button>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <span className="text-gaming-200 text-sm">{reply.content}</span>
-                                      )}
-                                    </div>
-                                    
-                                    <div className="flex items-center mt-1 text-xs text-gaming-400 space-x-2">
-                                      <span>{formatDate(reply.created_at)}</span>
-                                      {reply.likes_count > 0 && (
-                                        <span>{reply.likes_count} like{reply.likes_count !== 1 ? 's' : ''}</span>
-                                      )}
-                                      <button 
-                                        className="font-semibold hover:text-gaming-300"
-                                        onClick={() => handleReplyClick(reply)}
-                                      >
-                                        Reply
-                                      </button>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex items-center space-x-1">
-                                    <button 
-                                      className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
-                                      onClick={() => handleLikeComment(reply.id)}
-                                    >
-                                      <SmallHeartIcon fill={reply.liked_by_me ? "currentColor" : "none"} />
-                                    </button>
-                                    
-                                    {isCommentAuthor(reply) && (
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                                            <SmallMoreIcon />
-                                          </button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
-                                          <DropdownMenuItem 
-                                            className="text-blue-400 hover:text-blue-300 cursor-pointer"
-                                            onClick={() => handleEditClick(reply)}
-                                          >
-                                            Edit
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem 
-                                            className="text-red-500 hover:text-red-400 cursor-pointer"
-                                            onClick={() => handleDeleteComment(reply.id)}
-                                          >
-                                            Delete
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
+                          <button
+                            onClick={() => handleReplyClick(comment)}
+                            className="flex items-center space-x-1 text-gray-400 hover:text-blue-400"
+                          >
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                            <span>Reply</span>
+                          </button>
+                          
+                          {comment.children && comment.children.length > 0 && (
+                            <button
+                              onClick={() => toggleReplies(comment.id)}
+                              className="flex items-center space-x-1 text-blue-400 hover:text-blue-300"
+                            >
+                              <span>{comment.children.length} replies</span>
+                              {showRepliesFor[comment.id] ? <UpIcon /> : <DownIcon />}
+                            </button>
                           )}
                         </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center space-x-1">
-                      <button 
-                        className="flex-shrink-0 text-gaming-400 hover:text-red-500 transition-colors"
-                        onClick={() => handleLikeComment(comment.id)}
-                      >
-                        <HeartIcon fill={comment.liked_by_me ? "currentColor" : "none"} />
-                      </button>
-                      
-                      {isCommentAuthor(comment) && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="flex-shrink-0 text-gaming-400 hover:text-gaming-300 transition-colors">
-                              <MoreIcon />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
-                            <DropdownMenuItem 
-                              className="text-blue-400 hover:text-blue-300 cursor-pointer"
-                              onClick={() => handleEditClick(comment)}
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              className="text-red-500 hover:text-red-400 cursor-pointer"
-                              onClick={() => handleDeleteComment(comment.id)}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Reply form */}
+                  {replyingTo && replyingTo.id === comment.id && (
+                    <div className="ml-10 mt-2">
+                      <div className="bg-gaming-800/30 rounded-lg p-2 border border-gaming-700/30">
+                        <Textarea
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          placeholder={`Reply to ${replyingTo.profiles.username}...`}
+                          className="min-h-[60px] resize-none bg-transparent border-0 focus-visible:ring-0 text-white p-0 text-sm"
+                        />
+                        <div className="flex justify-end space-x-2 mt-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setReplyingTo(null)}
+                            className="h-7 px-2 text-xs text-gray-400 hover:text-white"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleSubmitComment()}
+                            disabled={!comment.trim() || addComment.isPending}
+                            className="h-7 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            Reply
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Replies */}
+                  {comment.children && comment.children.length > 0 && showRepliesFor[comment.id] && (
+                    <div className="ml-10 mt-2 space-y-2 border-l-2 border-gaming-700/30 pl-3">
+                      {comment.children.map((reply) => (
+                        <div key={reply.id} className="comment-item">
+                          {/* Render reply with similar structure to parent comment */}
+                          <div className="flex items-start space-x-2">
+                            <div className="cursor-pointer" onClick={() => toggleUserComments(reply.user_id)}>
+                              <Avatar className={`w-6 h-6 ${showUserComments === reply.user_id ? 'ring-2 ring-blue-500' : ''}`}>
+                                <AvatarImage src={reply.profiles.avatar_url || ''} alt={reply.profiles.username} />
+                                <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500">
+                                  {reply.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center mb-1">
+                                <span 
+                                  className="font-medium text-white hover:text-blue-400 cursor-pointer transition-colors text-sm"
+                                  onClick={() => toggleUserComments(reply.user_id)}
+                                >
+                                  {reply.profiles.username}
+                                </span>
+                                
+                                <span className="text-xs text-gray-400 ml-2">
+                                  {formatDistanceToNowStrict(new Date(reply.created_at), { addSuffix: true })}
+                                </span>
+                                
+                                {/* Reply options for user's own replies */}
+                                {user && user.id === reply.user_id && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-5 w-5 ml-auto text-gray-400 hover:text-white">
+                                        <SmallMoreIcon />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700 text-white">
+                                      <DropdownMenuItem
+                                        className="text-blue-400 hover:text-blue-300 hover:bg-gaming-700 cursor-pointer"
+                                        onClick={() => handleEditClick(reply)}
+                                      >
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        className="text-red-400 hover:text-red-300 hover:bg-gaming-700 cursor-pointer"
+                                        onClick={() => handleDeleteComment(reply.id)}
+                                      >
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </div>
+                              
+                              {/* Reply content or edit form */}
+                              {editingComment && editingComment.id === reply.id ? (
+                                <div className="mb-2">
+                                  <Textarea
+                                    value={editContent}
+                                    onChange={(e) => setEditContent(e.target.value)}
+                                    className="min-h-[60px] resize-none bg-gaming-900 border border-gaming-600 focus-visible:ring-purple-500 text-white p-2 text-sm"
+                                  />
+                                  <div className="flex justify-end space-x-2 mt-2">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => setEditingComment(null)}
+                                      className="h-6 px-2 text-xs text-gray-400 hover:text-white"
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleSaveEdit()}
+                                      disabled={!editContent.trim() || editCommentMutation.isPending}
+                                      className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                                    >
+                                      Save
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-gray-300 text-sm whitespace-pre-wrap break-words">{reply.content}</p>
+                              )}
+                              
+                              {/* Reply actions */}
+                              <div className="flex items-center space-x-3 mt-1 text-xs">
+                                <button
+                                  onClick={() => handleLikeComment(reply.id)}
+                                  className={`flex items-center space-x-1 ${reply.liked_by_me ? 'text-red-500' : 'text-gray-400 hover:text-red-400'}`}
+                                >
+                                  <SmallHeartIcon fill={reply.liked_by_me ? "currentColor" : "none"} />
+                                  <span>{reply.likes_count || 0}</span>
+                                </button>
+                                
+                                <button
+                                  onClick={() => handleReplyClick(comment)} // reply to parent instead of nested reply
+                                  className="flex items-center space-x-1 text-gray-400 hover:text-blue-400"
+                                >
+                                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                  </svg>
+                                  <span>Reply</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
-            </div>
+            </>
           )}
-        </div>
-
-        {/* Comment form at the bottom */}
-        <div className="border-t border-gaming-700 p-4 bg-gaming-900">
-          <div className="relative">
-            {replyingTo && (
-              <div className="absolute -top-5 left-0 text-xs text-gaming-300 flex items-center">
-                <span>Replying to {replyingTo.profiles?.username}</span>
-                <button 
-                  type="button"
-                  className="ml-1 text-gaming-400 hover:text-gaming-300"
-                  onClick={() => setReplyingTo(null)}
-                >
-                  <TinyCloseIcon />
-                </button>
-              </div>
-            )}
-            <Textarea
-              id="comment-textarea"
-              placeholder={replyingTo ? `Reply to ${replyingTo.profiles?.username}...` : "Write your comment..."}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="min-h-24 py-3 px-4 bg-gaming-800 border-gaming-700 resize-none w-full"
-              rows={4}
-            />
-          </div>
-          
-          <div className="flex justify-end mt-4 gap-3">
-            <Button 
-              variant="outline"
-              onClick={onClose}
-              className="text-gaming-300 border-gaming-700 hover:bg-gaming-800"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmitComment}
-              disabled={!comment.trim() || addComment.isPending}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {addComment.isPending ? 'Posting...' : 'Post Comment'}
-            </Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
