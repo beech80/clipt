@@ -355,6 +355,120 @@
 }
 
 /* GameBoy Controller Styles */
+.clipt-button {
+  position: relative;
+  background: #1e1e28;
+  color: white;
+  font-weight: bold;
+  padding: 8px 20px;
+  border-radius: 9999px;
+  border: none;
+  box-shadow: 0 0 15px 5px rgba(124, 58, 237, 0.6);
+  transition: all 0.3s ease;
+}
+
+.clipt-button:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  padding: 2px;
+  background: linear-gradient(45deg, #7c3aed, #3b82f6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.clipt-button:hover {
+  box-shadow: 0 0 20px 8px rgba(124, 58, 237, 0.8);
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 15px 2px rgba(124, 58, 237, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 25px 5px rgba(124, 58, 237, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 15px 2px rgba(124, 58, 237, 0.6);
+  }
+}
+
+.gameboy-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background-color: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(4px);
+  border-top: 1px solid #4338ca;
+  width: 100%;
+}
+
+.joystick-container {
+  position: relative;
+  width: 70px;
+  height: 70px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.action-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.action-button-heart {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.action-button-comment {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.action-button-follow {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.action-button-trophy {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.gameboy-selected-post {
+  position: relative;
+}
+
+.gameboy-selected-post::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(124, 58, 237, 0.5);
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 1;
+}
+
 .gameboy-controls {
   position: fixed;
   bottom: 0;
