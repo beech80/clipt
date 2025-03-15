@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CommentForm } from './comment/CommentForm';
 import { CommentItem, Comment } from './comment/CommentItem';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageCircle, AlertCircle, Heart, Hand, Flame, ThumbsUp, Smile } from 'lucide-react';
+import { Loader2, MessageCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getComments, getCommentCount } from '@/services/commentService';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface CommentListProps {
   postId: string;
@@ -29,15 +31,11 @@ export const CommentList = ({
   // Normalized post ID (always string)
   const normalizedPostId = typeof postId === 'string' ? postId : String(postId);
 
-  console.log('CommentList rendering for postId:', normalizedPostId);
-
   // Query comments for the post
   const { data: comments, isLoading, error, refetch } = useQuery({
     queryKey: ['comments', normalizedPostId],
     queryFn: async () => {
-      console.log('Fetching comments for post:', normalizedPostId);
       const result = await getComments(normalizedPostId);
-      console.log('Comments result:', result);
       return result.data || [];
     },
     enabled: !!normalizedPostId,
@@ -84,8 +82,6 @@ export const CommentList = ({
   const organizedComments = useMemo(() => {
     if (!comments || !Array.isArray(comments)) return [];
     
-    console.log('Organizing comments:', comments.length);
-    
     // Create a map of comments by ID for quick lookup
     const commentMap = new Map<string, Comment>();
     const topLevelComments: Comment[] = [];
@@ -121,8 +117,8 @@ export const CommentList = ({
   // Loading state
   if (isLoading) {
     return (
-      <div className="py-4 text-center text-gaming-100">
-        <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
+      <div className="py-6 text-center">
+        <Loader2 className="w-6 h-6 mx-auto animate-spin text-blue-500" />
         <p className="text-sm text-gray-500 mt-2">Loading comments...</p>
       </div>
     );
@@ -132,38 +128,65 @@ export const CommentList = ({
   if (error) {
     console.error('Error loading comments:', error);
     return (
-      <div className="py-4 text-center text-red-500">
-        <AlertCircle className="w-5 h-5 mx-auto" />
-        <p className="text-sm mt-2">Failed to load comments</p>
+      <div className="py-6 text-center">
+        <AlertCircle className="w-6 h-6 mx-auto text-red-500" />
+        <p className="text-sm text-red-500 mt-2">Failed to load comments</p>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="mt-2" 
+          onClick={() => refetch()}
+        >
+          Try Again
+        </Button>
       </div>
     );
   }
-
-  console.log('Rendering comments UI, comment count:', organizedComments.length);
 
   return (
     <div 
       className={`w-full ${className}`}
       ref={commentsContainerRef}
     >
-      <div className="py-2 px-3 border-b border-gaming-800">
-        <h3 className="font-semibold text-center text-gaming-100">Comments</h3>
+      {/* Comments Header */}
+      <div className="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">Comments</h3>
+          {commentCount > 0 && (
+            <Badge variant="secondary" className="rounded-full">
+              {commentCount}
+            </Badge>
+          )}
+        </div>
+        {commentCount > 0 && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs"
+            onClick={() => refetch()}
+          >
+            Refresh
+          </Button>
+        )}
       </div>
       
       {/* Comment input form */}
-      <div className="px-4 py-3 border-b border-gaming-800">
+      <div className="px-4 py-3">
         <CommentForm 
           postId={normalizedPostId}
           onReplyComplete={handleCommentAdded}
           autoFocus={autoFocus}
+          placeholder="Add a comment..."
         />
       </div>
 
+      <Separator className="my-1" />
+
       {/* Comments list */}
-      <div className="divide-y divide-gaming-800/30">
+      <div className="px-4 pt-2 pb-4 space-y-4">
         {organizedComments && organizedComments.length > 0 ? (
           organizedComments.map(comment => (
-            <div key={comment.id} className="px-4">
+            <div key={comment.id} className="py-1">
               <CommentItem 
                 comment={comment} 
                 onReply={handleReplyClick}
@@ -171,83 +194,42 @@ export const CommentList = ({
                 onReplyCancel={() => setReplyToCommentId(null)}
                 onReplyAdded={handleCommentAdded}
               />
-              
-              {/* Reply form */}
-              {replyToCommentId === comment.id && (
-                <div id={`reply-${comment.id}`} className="ml-11 mb-3">
-                  <CommentForm 
-                    postId={normalizedPostId}
-                    parentId={comment.id}
-                    onReplyComplete={handleCommentAdded}
-                    onCancel={() => setReplyToCommentId(null)}
-                    placeholder={`Reply to ${comment.profiles?.username || 'User'}...`}
-                    buttonText="Reply"
-                  />
-                </div>
-              )}
             </div>
           ))
         ) : (
-          <div className="py-8 text-center text-gray-500">
-            <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">No comments yet. Be the first to comment!</p>
+          <div className="py-8 text-center">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+              <MessageCircle className="w-8 h-8 mx-auto mb-2 text-gray-400 dark:text-gray-500" />
+              <p className="text-sm text-gray-500 dark:text-gray-400">No comments yet</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Be the first to share your thoughts!</p>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Instagram-style emoji reactions at bottom */}
-      <div className="pt-3 pb-2 px-4 border-t border-gaming-800 flex items-center justify-between">
-        <div className="flex space-x-6">
-          <button 
-            className={`text-2xl ${selectedEmoji === '❤️' ? 'text-red-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('❤️')}
-          >
-            ❤️
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '🙌' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('🙌')}
-          >
-            🙌
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '🔥' ? 'text-orange-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('🔥')}
-          >
-            🔥
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '👏' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('👏')}
-          >
-            👏
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '😊' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('😊')}
-          >
-            😊
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '😂' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('😂')}
-          >
-            😂
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '😮' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('😮')}
-          >
-            😮
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '😢' ? 'text-blue-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('😢')}
-          >
-            😢
-          </button>
-        </div>
-      </div>
+      {/* Quick reaction buttons */}
+      {organizedComments && organizedComments.length > 0 && (
+        <>
+          <Separator />
+          <div className="px-4 py-3 flex items-center justify-center">
+            <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-full p-1">
+              {['❤️', '👍', '🔥', '👏', '😂'].map(emoji => (
+                <button 
+                  key={emoji}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                    selectedEmoji === emoji 
+                      ? 'bg-white dark:bg-gray-700 shadow-sm transform scale-110' 
+                      : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                  onClick={() => handleEmojiSelect(emoji)}
+                >
+                  <span className="text-lg">{emoji}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

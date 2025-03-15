@@ -76,7 +76,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     setIsLiking(true);
     try {
       // Toggle comment like
-      await likeComment(comment.id, user.id);
+      await likeComment(comment.id);
       
       // Update UI immediately
       setLikesCount(prev => prev > 0 ? prev - 1 : prev + 1);
@@ -100,60 +100,50 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     }
   };
 
-  // Edit functions
-  const handleEdit = async () => {
-    if (editedContent.trim() === comment.content || editedContent.trim() === "") {
-      return;
-    }
-
+  // Delete comment
+  const handleDelete = async () => {
+    if (!user) return;
+    
+    setIsDeleting(true);
     try {
-      await editComment(comment.id, user?.id || '', editedContent.trim());
-      toast.success("Comment updated successfully");
+      await deleteComment(comment.id, user.id);
+      toast.success("Comment deleted");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast.error("Failed to delete comment");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Edit comment
+  const handleEdit = async () => {
+    if (!user || !isEditing) return;
+    
+    try {
+      await editComment(comment.id, user.id, editedContent);
       setIsEditing(false);
-      // Trigger any needed refreshes
-      if (onReplyAdded) {
-        onReplyAdded();
-      }
+      toast.success("Comment updated");
     } catch (error) {
       console.error("Error updating comment:", error);
       toast.error("Failed to update comment");
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm("Are you sure you want to delete this comment?")) {
-      setIsDeleting(true);
-      try {
-        await deleteComment(comment.id, user?.id || '');
-        toast.success("Comment deleted successfully");
-        // Trigger any needed refreshes
-        if (onReplyAdded) {
-          onReplyAdded();
-        }
-      } catch (error) {
-        console.error("Error deleting comment:", error);
-        toast.error("Failed to delete comment");
-        setIsDeleting(false);
-      }
+  // Format time distance (e.g. "2 hours ago")
+  const formatTimeAgo = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (error) {
+      return "recently";
     }
   };
 
-  // Calculate days ago for display
-  const daysAgo = () => {
-    const today = new Date();
-    const commentDate = new Date(comment.created_at);
-    const diffTime = Math.abs(today.getTime() - commentDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays + 'd';
-  };
-
-  // Render the comment item
   return (
-    <div className={`py-2 ${isDeleting ? 'opacity-50' : ''}`}>
-      {/* Main comment content */}
-      <div className="flex">
+    <div className="group">
+      <div className="flex gap-2">
         {/* Avatar */}
-        <div className="flex-shrink-0 mr-3">
+        <div className="flex-shrink-0">
           <Avatar 
             className="h-8 w-8 cursor-pointer" 
             onClick={handleProfileClick}
@@ -163,159 +153,176 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               alt={comment.profiles?.username || 'User'} 
             />
             <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
-              {(comment.profiles?.username?.charAt(0) || 'U').toUpperCase()}
+              {comment.profiles?.username?.charAt(0).toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
         </div>
         
-        {/* Comment content - Instagram style */}
-        <div className="flex-1">
-          {isEditing ? (
-            <div className="space-y-2">
-              <Textarea
-                value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
-                className="min-h-[80px] bg-gaming-800 border-gaming-700 text-sm resize-none"
-              />
-              <div className="flex justify-end gap-2">
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditedContent(comment.content);
-                  }}
-                  className="h-8 text-xs"
-                >
-                  <X className="h-3 w-3 mr-1" />
-                  Cancel
-                </Button>
-                <Button 
-                  size="sm" 
-                  onClick={handleEdit}
-                  className="h-8 text-xs bg-blue-600 hover:bg-blue-700"
-                >
-                  <Check className="h-3 w-3 mr-1" />
-                  Save
-                </Button>
+        {/* Comment content */}
+        <div className="flex-grow">
+          <div className={`${isEditing ? '' : 'bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-2xl'}`}>
+            {isEditing ? (
+              <div className="space-y-2">
+                <Textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  className="min-h-[60px] bg-gray-100 dark:bg-gray-800 border-none focus-visible:ring-1 focus-visible:ring-blue-500"
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button 
+                    onClick={() => setIsEditing(false)} 
+                    size="sm" 
+                    variant="ghost"
+                    className="h-8 px-2 text-gray-500"
+                  >
+                    <X className="h-4 w-4 mr-1" /> Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleEdit} 
+                    size="sm" 
+                    variant="default"
+                    className="h-8 px-3 bg-blue-500 hover:bg-blue-600"
+                  >
+                    <Check className="h-4 w-4 mr-1" /> Save
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div>
-              {/* Username and comment text */}
-              <div className="flex flex-wrap">
-                <span 
-                  className="font-semibold mr-2 cursor-pointer hover:underline text-gaming-100"
-                  onClick={handleProfileClick}
-                >
-                  {comment.profiles?.username || 'User'}
-                </span>
-                <span className="text-gaming-200">{comment.content}</span>
-              </div>
-              
-              {/* Comment metadata row - Instagram style */}
-              <div className="flex items-center mt-1 text-xs text-gaming-400 space-x-3">
-                <span>{daysAgo()}</span>
-                {likesCount > 0 && (
-                  <span>{likesCount} {likesCount === 1 ? 'like' : 'likes'}</span>
+            ) : (
+              <>
+                <div className="flex flex-col">
+                  <div className="flex items-start gap-1">
+                    <span 
+                      className="font-semibold text-sm hover:underline cursor-pointer"
+                      onClick={handleProfileClick}
+                    >
+                      {comment.profiles?.username || 'Unknown User'}
+                    </span>
+                    {isAuthor && (
+                      <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-300">
+                        Author
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap break-words">{comment.content}</p>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* Comment actions */}
+          {!isEditing && (
+            <div className="flex items-center mt-1 gap-4 text-xs text-gray-500">
+              {/* Like */}
+              <button 
+                className={`flex items-center gap-1 hover:text-gray-800 dark:hover:text-gray-200 ${likesCount > 0 ? 'text-red-500 hover:text-red-600' : ''}`}
+                onClick={handleLike}
+                disabled={isLiking}
+              >
+                {likesCount > 0 ? (
+                  <Heart className="h-3 w-3 fill-current" />
+                ) : (
+                  <Heart className="h-3 w-3" />
                 )}
-                <button 
-                  className="font-medium hover:text-gaming-300"
-                  onClick={handleReply}
-                >
-                  Reply
-                </button>
-                {isAuthor && (
+                <span>{likesCount > 0 ? likesCount : 'Like'}</span>
+              </button>
+              
+              {/* Reply */}
+              <button 
+                className="flex items-center gap-1 hover:text-gray-800 dark:hover:text-gray-200"
+                onClick={handleReply}
+              >
+                <Reply className="h-3 w-3" />
+                <span>Reply</span>
+              </button>
+              
+              {/* Time */}
+              <span className="text-gray-400">{formatTimeAgo(comment.created_at)}</span>
+              
+              {/* Options - Only show for author */}
+              {isAuthor && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="text-gaming-400 hover:text-gaming-300">
-                        <MoreVertical className="h-3 w-3" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      align="start" 
-                      className="bg-gaming-800 border-gaming-700 text-gaming-100"
-                    >
-                      <DropdownMenuItem 
-                        onClick={() => setIsEditing(true)}
-                        className="hover:bg-gaming-700 cursor-pointer"
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 rounded-full"
                       >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-32">
+                      <DropdownMenuItem onClick={() => setIsEditing(true)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={handleDelete}
-                        className="text-red-500 hover:bg-gaming-700 cursor-pointer"
+                        className="text-red-500 focus:text-red-500"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
           
-          {/* Like button - Instagram style */}
-          <button 
-            className="absolute right-3"
-            onClick={handleLike}
-            disabled={isLiking}
-          >
-            <Heart 
-              className={`h-4 w-4 ${likesCount > 0 ? 'fill-red-500 text-red-500' : 'text-gaming-400'}`} 
-            />
-          </button>
+          {/* Render reply form if this comment is being replied to */}
+          {isReplying && (
+            <div id={`reply-${comment.id}`} className="mt-3 ml-3">
+              <CommentForm 
+                postId={comment.id.split('_')[0]} 
+                parentId={comment.id}
+                onReplyComplete={() => {
+                  if (onReplyAdded) onReplyAdded();
+                  if (onReplyCancel) onReplyCancel();
+                  setShowReplies(true);
+                }}
+                onCancel={onReplyCancel}
+                placeholder={`Reply to ${comment.profiles?.username || 'this comment'}...`}
+                autoFocus
+              />
+            </div>
+          )}
+          
+          {/* Render nested replies */}
+          {hasReplies && (
+            <div className="mt-2">
+              <button 
+                className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                onClick={() => setShowReplies(!showReplies)}
+              >
+                <MessageSquare className="h-3 w-3" />
+                {showReplies 
+                  ? `Hide ${comment.children?.length} ${comment.children?.length === 1 ? 'reply' : 'replies'}`
+                  : `View ${comment.children?.length} ${comment.children?.length === 1 ? 'reply' : 'replies'}`
+                }
+              </button>
+              
+              {/* Show replies when expanded */}
+              {showReplies && comment.children && (
+                <div className="mt-2 pl-3 border-l-2 border-gray-200 dark:border-gray-700">
+                  {comment.children.map((reply) => (
+                    <div key={reply.id} className="mt-3">
+                      <CommentItem
+                        comment={reply}
+                        depth={depth + 1}
+                        onReply={onReply}
+                        isReplying={isReplying && reply.id === comment.id}
+                        onReplyCancel={onReplyCancel}
+                        onReplyAdded={onReplyAdded}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-      
-      {/* Reply form if replying to this comment */}
-      {isReplying && (
-        <div className="ml-11 mt-3">
-          <CommentForm 
-            postId=""  // We don't need post ID for replies
-            parentId={comment.id}
-            onCancel={onReplyCancel}
-            onReplyComplete={onReplyAdded}
-            placeholder={`Reply to ${comment.profiles?.username || 'User'}...`}
-            buttonText="Reply"
-          />
-        </div>
-      )}
-      
-      {/* Nested replies - Instagram style */}
-      {hasReplies && (
-        <div className="mt-1">
-          {/* Toggle replies button - Instagram style */}
-          {comment.children && comment.children.length > 0 && depth === 0 && (
-            <button
-              className="ml-11 text-xs text-gaming-400 hover:text-gaming-300 flex items-center"
-              onClick={() => setShowReplies(!showReplies)}
-            >
-              <div className="w-5 h-[1px] bg-gaming-700 mr-2"></div>
-              {showReplies ? 'Hide replies' : `View ${comment.children.length} ${comment.children.length === 1 ? 'reply' : 'replies'}`}
-            </button>
-          )}
-          
-          {/* Replies */}
-          {showReplies && comment.children && comment.children.length > 0 && (
-            <div className="pl-11 mt-1 space-y-2">
-              {comment.children.map((reply) => (
-                <CommentItem
-                  key={reply.id}
-                  comment={reply}
-                  depth={depth + 1}
-                  onReply={onReply}
-                  isReplying={false} // Only one reply form can be open at a time
-                  onReplyCancel={onReplyCancel}
-                  onReplyAdded={onReplyAdded}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 };

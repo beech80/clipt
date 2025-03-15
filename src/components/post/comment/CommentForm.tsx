@@ -5,7 +5,12 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { createComment } from '@/services/commentService';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Smile } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface CommentFormProps {
   postId: string;
@@ -76,13 +81,23 @@ export const CommentForm: React.FC<CommentFormProps> = ({
     }
   };
 
+  // Emoji picker constants
+  const emojis = ['❤️', '👍', '🔥', '👏', '😂', '😮', '😢', '🙏'];
+  
+  const addEmoji = (emoji: string) => {
+    setCommentText(prev => prev + emoji);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
   return (
     <form 
       onSubmit={handleSubmit} 
-      className={`flex items-center gap-2 ${className}`}
+      className={`flex items-center gap-2 w-full ${className}`}
     >
       {user && (
-        <Avatar className="h-8 w-8">
+        <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarImage 
             src={user.user_metadata?.avatar_url || ''} 
             alt={user.user_metadata?.username || 'User'} 
@@ -93,34 +108,60 @@ export const CommentForm: React.FC<CommentFormProps> = ({
         </Avatar>
       )}
       
-      <div className="relative flex-grow">
+      <div className="relative flex-grow flex bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden pl-3 pr-1 py-1">
         <Input
           ref={inputRef}
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           placeholder={placeholder}
-          className="rounded-full border-0 bg-gaming-950 px-4 py-2 h-10 text-sm placeholder:text-gaming-500"
-          disabled={isSubmitting || !user}
+          className="flex-grow border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-0 h-auto py-0.5"
         />
-      </div>
-      
-      {commentText.trim() && (
-        <Button
+        
+        {/* Emoji picker */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              type="button" 
+              size="sm" 
+              variant="ghost" 
+              className="h-8 w-8 p-0 rounded-full text-muted-foreground hover:text-foreground flex-shrink-0"
+            >
+              <Smile className="h-5 w-5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2" align="end">
+            <div className="flex gap-2 flex-wrap max-w-[200px]">
+              {emojis.map(emoji => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => addEmoji(emoji)}
+                  className="text-xl hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+        
+        <Button 
           type="submit"
-          variant="ghost"
           disabled={isSubmitting || !commentText.trim()}
-          className="text-blue-500 font-semibold text-sm hover:text-blue-400 hover:bg-transparent p-0"
+          size="sm"
+          variant="ghost"
+          className={`h-8 ml-1 font-medium ${!commentText.trim() ? 'text-blue-300' : 'text-blue-500'} hover:text-blue-600 hover:bg-transparent`}
         >
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : buttonText}
         </Button>
-      )}
+      </div>
       
       {onCancel && (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onCancel}
-          className="text-gaming-400 hover:text-gaming-300 text-xs p-0"
+        <Button 
+          onClick={onCancel} 
+          size="sm" 
+          variant="ghost" 
+          className="h-9 px-2"
         >
           Cancel
         </Button>
