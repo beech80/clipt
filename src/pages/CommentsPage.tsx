@@ -1,262 +1,233 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { CommentList } from '@/components/post/CommentList';
-import { Loader2, ArrowLeft, RefreshCw, AlertCircle, MessageSquare } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { ArrowLeft, Send } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { formatDistanceToNow } from 'date-fns';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Define proper type for post data
-interface PostWithProfile {
+interface CommentData {
   id: string;
+  user_id: string;
+  post_id: string;
   content: string;
   created_at: string;
-  user_id: string;
-  likes_count: number;
-  comments_count: number;
   profiles: {
+    id: string;
     username: string;
-    avatar_url: string;
+    avatar_url: string | null;
+    display_name: string | null;
   };
 }
 
-/**
- * A dedicated page to view all comments for a specific post
- */
-const CommentsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+export default function CommentsPage() {
+  const { postId } = useParams<{ postId: string }>();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const queryClient = useQueryClient();
 
-  // Redirect if no postId is provided
-  useEffect(() => {
-    if (!id) {
-      toast.error('No post selected');
-      navigate('/');
-    }
-  }, [id, navigate]);
-
-  // Fetch post details to display post content
-  const { 
-    data: post, 
-    isLoading: isPostLoading, 
-    error: postError 
-  } = useQuery<PostWithProfile | null>({
-    queryKey: ['post-details', id],
+  // Fetch the post details to display context
+  const { data: post } = useQuery({
+    queryKey: ['post', postId],
     queryFn: async () => {
-      if (!id) return null;
+      if (!postId) return null;
       
       const { data, error } = await supabase
         .from('posts')
         .select(`
           id,
           content,
-          created_at,
+          game_title,
           user_id,
-          likes_count,
-          comments_count,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
+          created_at,
+          profiles:user_id (username, avatar_url, display_name)
         `)
-        .eq('id', id)
+        .eq('id', postId)
         .single();
-        
-      if (error) {
-        console.error("Error fetching post:", error);
-        throw new Error(error.message);
-      }
       
-      // Make sure we have a valid post with all expected properties
-      if (!data || typeof data !== 'object') {
-        throw new Error("Post data is invalid");
-      }
-      
-      return data as PostWithProfile;
+      if (error) throw error;
+      return data;
     },
-    enabled: !!id,
+    enabled: !!postId,
   });
 
-  // Handle refreshing comments
-  const handleRefresh = () => {
-    if (isRefreshing) return;
-    
-    setIsRefreshing(true);
-    window.location.reload();
+  // Fetch existing comments for this post
+  const { data: comments, isLoading } = useQuery({
+    queryKey: ['comments', postId],
+    queryFn: async () => {
+      if (!postId) return [];
+      
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`
+          id,
+          user_id,
+          post_id,
+          content,
+          created_at,
+          profiles (id, username, avatar_url, display_name)
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      return data as CommentData[];
+    },
+    enabled: !!postId,
+  });
+
+  // Mutation for adding a new comment
+  const addCommentMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!user || !postId) throw new Error('Not authenticated or missing post ID');
+      
+      const { data, error } = await supabase
+        .from('comments')
+        .insert([
+          {
+            post_id: postId,
+            user_id: user.id,
+            content,
+          },
+        ])
+        .select();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      setNewComment('');
+      toast.success('Comment added successfully');
+      queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+    },
+    onError: (error) => {
+      toast.error('Failed to add comment: ' + error.message);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    addCommentMutation.mutate(newComment);
   };
-
-  // Navigation back to post
-  const goBackToPost = () => {
-    navigate(`/post/${id}`);
-  };
-
-  if (isPostLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gaming-900 p-4">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-purple-500" />
-          <p className="text-gray-400">Loading comments...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (postError || !post) {
-    return (
-      <div className="h-screen flex flex-col items-center justify-center bg-gaming-900 p-6">
-        <div className="max-w-md text-center">
-          <div className="bg-red-500/10 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-            <AlertCircle className="h-10 w-10 text-red-500" />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Post Not Found</h2>
-          <p className="text-gray-400 mb-6">
-            The post you're looking for doesn't exist or has been removed.
-          </p>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => navigate('/')}
-          >
-            Back to Home
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-gaming-900 pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-gaming-800/95 backdrop-blur-sm border-b border-gaming-700 shadow-md">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={goBackToPost}
-            className="text-gray-300 hover:text-white"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Post
-          </Button>
-          <h1 className="text-lg font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-            Comments
-          </h1>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="text-gray-300 hover:text-white"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
+    <div className="min-h-screen bg-background px-4 py-6 space-y-6 animate-fade-in">
+      {/* Header with back button */}
+      <div className="flex items-center mb-6">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => navigate(-1)}
+          className="mr-2"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-semibold">Comments</h1>
       </div>
 
-      {/* Post summary */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="bg-gaming-800 rounded-lg p-5 mb-6 shadow-lg border border-gaming-700 hover:border-purple-500/30 transition-all duration-300">
-          <div className="flex items-start gap-4">
-            <a
-              href={`/profile/${post?.user_id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                navigate(`/profile/${post?.user_id}`);
-              }}
-            >
-              <Avatar className="h-12 w-12 rounded-full border-2 border-purple-600/50 hover:border-purple-500/80 transition-all duration-200 shadow-md">
-                <AvatarImage
-                  src={post?.profiles?.avatar_url || ''}
-                  alt={post?.profiles?.username || 'User'}
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500">
-                  {post?.profiles?.username?.substring(0, 2)?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-            </a>
-            <div className="flex-1">
-              <div className="flex justify-between items-center mb-2">
-                <a
-                  href={`/profile/${post?.user_id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(`/profile/${post?.user_id}`);
-                  }}
-                  className="font-semibold text-white text-lg hover:text-purple-400 transition-colors"
-                >
-                  {post?.profiles?.username || 'Anonymous'}
-                </a>
-                <span className="text-xs text-gray-400 bg-gaming-700/50 px-2 py-1 rounded-full">
-                  {post?.created_at ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) : ''}
-                </span>
-              </div>
-              <p className="text-gray-300 mb-4 text-base whitespace-pre-wrap break-words leading-relaxed">{post?.content || ''}</p>
-              <div className="text-sm text-gray-400 flex items-center gap-6 pt-3 border-t border-gaming-700/50">
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-red-500" fill={post?.likes_count ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  <span>{post?.likes_count ?? 0} likes</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <MessageSquare className="h-4 w-4 text-purple-400" />
-                  <span>{post?.comments_count ?? 0} comments</span>
+      {/* Post context (optional) */}
+      {post && (
+        <div className="bg-card border border-border rounded-lg p-4 mb-6">
+          <div className="flex items-center space-x-3 mb-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={post.profiles?.avatar_url || ''} />
+              <AvatarFallback>
+                {post.profiles?.username?.substring(0, 2).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium text-sm">{post.profiles?.display_name || post.profiles?.username}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+              </p>
+            </div>
+          </div>
+          <p className="text-sm line-clamp-2">{post.content}</p>
+        </div>
+      )}
+
+      {/* Existing comments */}
+      <div className="space-y-4 mb-6">
+        <h2 className="text-lg font-medium mb-3">
+          {comments?.length === 0 
+            ? "No comments yet - be the first to comment!" 
+            : `${comments?.length || 0} Comments`
+          }
+        </h2>
+        
+        {isLoading && (
+          <div className="flex justify-center py-4">
+            <div className="animate-pulse rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        )}
+        
+        <div className="space-y-3">
+          {comments?.map((comment) => (
+            <div key={comment.id} className="bg-card/50 backdrop-blur-sm border border-border rounded-lg p-4 transition-all hover:bg-card/80">
+              <div className="flex space-x-3 mb-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={comment.profiles.avatar_url || ''} />
+                  <AvatarFallback>
+                    {comment.profiles.username?.substring(0, 2).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <p className="font-medium text-sm">{comment.profiles.display_name || comment.profiles.username}</p>
+                    <time className="text-xs text-muted-foreground">
+                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                    </time>
+                  </div>
+                  <p className="text-sm mt-1">{comment.content}</p>
                 </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Comments section */}
-      <div className="container mx-auto px-4">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-white mb-3 flex items-center">
-            <MessageSquare className="mr-2 h-5 w-5 text-purple-400" />
-            All Comments
-            {post?.comments_count ? (
-              <span className="ml-2 px-2.5 py-0.5 bg-purple-600/20 rounded-full text-sm text-purple-300">
-                {post.comments_count}
-              </span>
-            ) : null}
-          </h2>
-          <p className="text-gray-400 text-sm mb-6">
-            Join the conversation! Like comments, reply to others, or share your own thoughts on this post.
-          </p>
-        </div>
-
-        <div className="bg-gaming-800/50 rounded-lg shadow-lg overflow-hidden border border-gaming-700">
-          <CommentList 
-            postId={id} 
-            onCommentAdded={() => {
-              // Refresh comments count after adding
-              toast.success('Comment added!');
-            }} 
-            autoFocus={true}
-          />
-        </div>
-
-        {/* Info box about comment features */}
-        <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg mb-6">
-          <h3 className="text-blue-300 font-medium mb-2 flex items-center">
-            <AlertCircle className="mr-2 h-4 w-4" />
-            Comment Features
-          </h3>
-          <ul className="text-sm text-gray-300 space-y-1.5 ml-6 list-disc">
-            <li>Like comments by clicking the heart button</li>
-            <li>Reply to any comment to start a conversation</li>
-            <li>Edit or delete your own comments using the menu (•••)</li>
-            <li>View user profiles by clicking their name or avatar</li>
-            <li>Send direct messages by clicking the message icon</li>
-          </ul>
-        </div>
+      {/* Comment form */}
+      <div className="sticky bottom-0 bg-background pt-2 pb-6">
+        {user ? (
+          <form onSubmit={handleSubmit} className="flex items-end space-x-2">
+            <div className="flex-1">
+              <Textarea
+                placeholder="Add a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="min-h-[80px] resize-none bg-card/50 backdrop-blur-sm border-border"
+              />
+            </div>
+            <Button 
+              type="submit" 
+              disabled={!newComment.trim() || addCommentMutation.isPending}
+              className="h-10 flex items-center"
+            >
+              {addCommentMutation.isPending ? (
+                <div className="animate-spin h-4 w-4 border-2 border-t-transparent rounded-full" />
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Post
+                </>
+              )}
+            </Button>
+          </form>
+        ) : (
+          <div className="bg-card/50 backdrop-blur-sm border border-border rounded-lg p-4 text-center">
+            <p className="text-sm mb-2">You must be logged in to comment</p>
+            <Button onClick={() => navigate('/login')} size="sm">
+              Login
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
-};
-
-export default CommentsPage;
+}
