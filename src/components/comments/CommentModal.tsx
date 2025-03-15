@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { getComments, addComment, updateComment, deleteComment } from '@/services/commentService';
@@ -528,21 +528,21 @@ export const CommentModal: React.FC<CommentModalProps> = ({
                                             <Textarea
                                               value={editContent}
                                               onChange={(e) => setEditContent(e.target.value)}
-                                              className="min-h-[60px] bg-[#2d2e3d] border-[#3b3d4d] focus:border-indigo-500 rounded-lg text-white resize-none text-sm"
+                                              className="min-h-[60px] flex-1 bg-[#232433] border-[#3b3d4d] focus:border-indigo-500 rounded-lg text-white resize-none text-sm"
                                               autoFocus
                                             />
                                             <div className="flex gap-2 mt-2 justify-end">
                                               <Button 
                                                 variant="ghost" 
                                                 onClick={handleCancelEdit}
-                                                className="h-8 px-3 text-sm text-gray-300 hover:text-white hover:bg-[#3d3e4d]"
+                                                className="h-8 text-sm text-gray-300 hover:text-white hover:bg-[#3d3e4d]"
                                               >
                                                 Cancel
                                               </Button>
                                               <Button 
                                                 onClick={handleSaveEdit}
                                                 disabled={!editContent.trim() || editContent.trim() === reply.content}
-                                                className="h-8 px-3 text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+                                                className="h-8 text-sm bg-indigo-600 hover:bg-indigo-700 text-white"
                                               >
                                                 Save
                                               </Button>
