@@ -1233,21 +1233,46 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   
                   {/* Navigation menu popup */}
                   {menuOpen && (
-                    <div className="absolute bottom-full mb-2 left-0 w-44 bg-[#1D1D26] rounded-lg shadow-xl p-2 z-50">
-                      {navigationOptions.map((option) => (
-                        <button
-                          key={option.path}
-                          className="flex items-center w-full p-2 hover:bg-[#272733] rounded text-white text-sm text-left"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(option.path);
-                            setMenuOpen(false);
-                          }}
-                        >
-                          {option.icon}
-                          {option.name}
-                        </button>
-                      ))}
+                    <div className="absolute bottom-full mb-2 left-0 w-48 bg-[#0D0D18] border-2 border-[#3A3A45] rounded-md shadow-xl p-0.5 z-50 animate-in fade-in-70 slide-in-from-bottom-5 duration-200">
+                      {/* Menu header with pixel-like border */}
+                      <div className="text-center py-2 text-sm font-bold text-white border-b-2 border-dashed border-[#3A3A45] mb-1 px-2">
+                        GAME MENU
+                      </div>
+                      
+                      {/* Game-style menu items */}
+                      <div className="space-y-0.5 p-1">
+                        {navigationOptions.map((option) => (
+                          <button
+                            key={option.path}
+                            className="flex items-center w-full px-3 py-2 hover:bg-gradient-to-r hover:from-purple-900/40 hover:to-blue-900/40 rounded text-white text-sm text-left transition-all duration-200 group relative overflow-hidden"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(option.path);
+                              setMenuOpen(false);
+                            }}
+                          >
+                            {/* Icon container with gameboy-like button effect */}
+                            <div className="flex items-center justify-center h-6 w-6 bg-gradient-to-br from-[#333339] to-[#1F1F25] rounded-sm mr-3 shadow-inner relative group-hover:from-purple-700 group-hover:to-blue-700 transition-colors duration-300">
+                              <div className="absolute inset-[1px] bg-[#0D0D18] rounded-sm flex items-center justify-center">
+                                {React.cloneElement(option.icon as React.ReactElement, { 
+                                  className: "h-3.5 w-3.5 text-purple-400 group-hover:text-white transition-colors duration-300" 
+                                })}
+                              </div>
+                            </div>
+                            
+                            {/* Menu text with subtle glow effect on hover */}
+                            <span className="group-hover:text-purple-300 group-hover:font-medium transition-all duration-300">
+                              {option.name}
+                            </span>
+                            
+                            {/* Arrow indicator */}
+                            <span className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-purple-400">►</span>
+                            
+                            {/* Subtle highlight effect on hover */}
+                            <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-gradient-to-r from-purple-500 to-blue-500 group-hover:w-full transition-all duration-300"></div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
