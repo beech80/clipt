@@ -6,10 +6,7 @@ import { MessagesProvider } from '@/contexts/MessagesContext';
 import { CommentsProvider } from '@/contexts/CommentContext';
 import '@/index.css';
 
-// Import GameBoyControls directly
-import GameBoyControls from '@/components/GameBoyControls';
-
-// Import pages directly without lazy loading to ensure they render
+// Import all page components directly
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
@@ -32,6 +29,9 @@ import GameStreamers from '@/pages/GameStreamers';
 import RetroSearchPage from '@/pages/RetroSearchPage';
 import Streaming from '@/pages/Streaming';
 
+// Import the GameBoy controller
+import GameBoyControls from '@/components/GameBoyControls';
+
 function AppContent() {
   const location = useLocation();
   const [currentPostId, setCurrentPostId] = useState<string | null>(null);
@@ -46,36 +46,62 @@ function AppContent() {
     }
   }, [location.pathname]);
 
+  // Scroll to top when route changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  // Debug message to verify the app is rendering
+  console.log('App rendering, current path:', location.pathname);
+
   return (
     <div className="app-container min-h-screen bg-black text-white">
-      <div className="page-content pb-24"> {/* Add padding to bottom for GameBoy controller */}
+      {/* Debug message visible on screen */}
+      <div className="fixed top-0 left-0 bg-red-500 text-white p-2 z-50">
+        App is running - Path: {location.pathname}
+      </div>
+      
+      <div className="page-content pb-32"> {/* Add padding to bottom for GameBoy controller */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/post/:postId" element={<PostPage />} />
-          <Route path="/new-post" element={<NewPost />} />
-          <Route path="/top-games" element={<TopGames />} />
-          <Route path="/game/:gameId" element={<Game />} />
-          <Route path="/game/:gameId/streamers" element={<GameStreamers />} />
-          <Route path="/clipts" element={<Clipts />} />
-          <Route path="/top-clipts" element={<TopClipts />} />
-          <Route path="/user/:userId" element={<UserProfile />} />
-          <Route path="/discovery" element={<Discovery />} />
           <Route path="/menu" element={<Menu />} />
+          <Route path="/discovery" element={<Discovery />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/messages" element={<Messages />} />
-          <Route path="/messages/:conversationId" element={<Messages />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/post/:id" element={<PostPage />} />
           <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/post/:postId/comments" element={<CommentsPage />} />
+          <Route path="/top-games" element={<TopGames />} />
+          <Route path="/game/:id" element={<Game />} />
+          <Route path="/clipts" element={<Clipts />} />
+          <Route path="/top-clipts" element={<TopClipts />} />
+          <Route path="/user/:id" element={<UserProfile />} />
+          <Route path="/new-post" element={<NewPost />} />
+          <Route path="/comments/:id" element={<CommentsPage />} />
+          <Route path="/game-streamers/:id" element={<GameStreamers />} />
           <Route path="/retro-search" element={<RetroSearchPage />} />
-          <Route path="/streaming" element={<Streaming />} />
+          <Route path="/streaming/:id" element={<Streaming />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
+
+      {/* Toaster for notifications */}
+      <Toaster 
+        position="top-center" 
+        richColors 
+        toastOptions={{
+          style: {
+            background: '#111',
+            color: '#fff',
+            border: '1px solid #222',
+          },
+          className: 'retro-toast',
+        }} 
+      />
       
-      {/* GameBoy Controller - fixed at the bottom of the screen */}
+      {/* GameBoy Controller UI fixed at bottom */}
       <div className="fixed bottom-0 left-0 right-0 z-50">
         <GameBoyControls currentPostId={currentPostId} />
       </div>
@@ -88,18 +114,6 @@ function App() {
     <AuthProvider>
       <MessagesProvider>
         <CommentsProvider>
-          <Toaster 
-            position="top-center" 
-            richColors 
-            toastOptions={{
-              style: {
-                background: '#111',
-                color: '#fff',
-                border: '1px solid #222',
-              },
-              className: 'retro-toast',
-            }} 
-          />
           <AppContent />
         </CommentsProvider>
       </MessagesProvider>
