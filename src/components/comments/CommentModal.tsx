@@ -4,7 +4,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
-import { getComments, addComment, updateComment, deleteComment } from '@/services/commentService';
+import { getComments, createComment, editComment, deleteComment } from '@/services/commentService';
 import { 
   Avatar, 
   AvatarFallback, 
@@ -134,7 +134,7 @@ export const CommentModal: React.FC<CommentModalProps> = ({
         parent_id: replyingTo ? replyingTo.id : null,
       };
 
-      await addComment(commentData);
+      await createComment(commentData);
       
       setComment('');
       setReplyingTo(null);
@@ -235,7 +235,7 @@ export const CommentModal: React.FC<CommentModalProps> = ({
     if (!editingComment || !editContent.trim()) return;
 
     try {
-      await updateComment(editingComment.id, { content: editContent.trim() });
+      await editComment(editingComment.id, user.id, editContent.trim());
       
       setEditingComment(null);
       setEditContent('');
