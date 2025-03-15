@@ -1,11 +1,11 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { createComment } from '@/services/commentService';
 import { toast } from 'sonner';
-import { Loader2, Send, Smile } from 'lucide-react';
+import { Loader2, Send, Smile, X } from 'lucide-react';
 
 interface CommentFormProps {
   postId: string;
@@ -34,11 +34,11 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   const { user } = useAuth();
   const [showEmojis, setShowEmojis] = useState(false);
 
-  // Common emojis for quick access
-  const quickEmojis = ['❤️', '🔥', '👏', '😂', '🙌', '😍', '👍', '😮'];
+  // Common emojis for quick access - Instagram style emoji set
+  const quickEmojis = ['❤️', '🔥', '👏', '😂', '🙌', '😍', '👍', '😮', '😢', '🙏', '👌', '🎉'];
 
   // Auto focus input if requested
-  React.useEffect(() => {
+  useEffect(() => {
     if (autoFocus && inputRef.current) {
       inputRef.current.focus();
     }
@@ -72,6 +72,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
         onReplyComplete();
       }
       
+      toast.success('Comment posted');
     } catch (error) {
       console.error('Error posting comment:', error);
       toast.error('Failed to post comment');
@@ -83,35 +84,44 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   const insertEmoji = (emoji: string) => {
     setCommentText(prev => prev + emoji);
     inputRef.current?.focus();
+    setShowEmojis(false);
   };
 
+  if (!user) {
+    return (
+      <div className={`bg-gaming-950/60 backdrop-blur-sm rounded-lg p-3 ${className}`}>
+        <div className="text-sm text-center text-gaming-400">
+          Please sign in to comment
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`bg-gaming-950/60 backdrop-blur-sm rounded-lg ${className}`}>
+    <div className={`instagram-comment-form ${className}`}>
       <form 
         onSubmit={handleSubmit} 
         className="flex items-center gap-2 p-3 relative"
       >
-        {user && (
-          <Avatar className="h-8 w-8 border border-purple-500/30">
-            <AvatarImage 
-              src={user.user_metadata?.avatar_url || ''} 
-              alt={user.user_metadata?.username || 'User'} 
-            />
-            <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
-              {user.user_metadata?.username?.charAt(0).toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
-        )}
+        <Avatar className="h-8 w-8 border border-purple-500/30 flex-shrink-0">
+          <AvatarImage 
+            src={user.user_metadata?.avatar_url || ''} 
+            alt={user.user_metadata?.username || 'User'} 
+          />
+          <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
+            {user.user_metadata?.username?.charAt(0).toUpperCase() || 'U'}
+          </AvatarFallback>
+        </Avatar>
         
         <div className="relative flex-grow">
-          <div className="flex items-center bg-gaming-900 rounded-full border border-gaming-700 pl-3 pr-1 py-1">
+          <div className="flex items-center bg-gaming-900 rounded-full border border-gaming-700 pl-3 pr-1 py-1.5">
             <input
               ref={inputRef}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder={placeholder}
               className="bg-transparent w-full text-sm placeholder:text-gaming-500 focus:outline-none"
-              disabled={isSubmitting || !user}
+              disabled={isSubmitting}
             />
             
             <button
@@ -135,10 +145,20 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             )}
           </div>
           
-          {/* Emoji picker */}
+          {/* Instagram-style Emoji picker */}
           {showEmojis && (
             <div className="absolute left-0 right-0 bottom-full mb-2 bg-gaming-900 border border-gaming-700 rounded-lg p-2 z-10 shadow-lg">
-              <div className="flex flex-wrap gap-2 justify-center">
+              <div className="flex justify-between items-center mb-2 border-b border-gaming-800 pb-1.5">
+                <span className="text-xs font-medium text-gaming-300">Emojis</span>
+                <button 
+                  type="button" 
+                  onClick={() => setShowEmojis(false)}
+                  className="text-gaming-400 hover:text-gaming-200"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="grid grid-cols-6 gap-2">
                 {quickEmojis.map(emoji => (
                   <button
                     key={emoji}
@@ -165,6 +185,14 @@ export const CommentForm: React.FC<CommentFormProps> = ({
           </Button>
         )}
       </form>
+
+      <style jsx>{`
+        .instagram-comment-form {
+          background-color: rgba(17, 24, 39, 0.6);
+          backdrop-filter: blur(8px);
+          border-radius: 0.5rem;
+        }
+      `}</style>
     </div>
   );
 };
