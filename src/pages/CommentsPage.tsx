@@ -1,105 +1,88 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { CommentList } from '@/components/post/CommentList';
-import { Loader2, ArrowLeft, RefreshCw, AlertCircle, MessageSquare } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import React, { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { User } from '@supabase/supabase-js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal, ChevronLeft, MessageCircle, Heart, Share2, Bookmark, Loader2, Edit, Trash2 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { getPostWithComments } from '@/lib/api/posts';
+import { CommentForm } from '@/components/post/comment/CommentForm';
+import { PostWithProfile, CommentWithProfile } from '@/types/post';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import supabase from '@/lib/supabase';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { createComment, deleteComment } from '@/lib/api/comments';
 
-// Define proper type for post data
-interface PostWithProfile {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  likes_count: number;
-  comments_count: number;
-  profiles: {
-    username: string;
-    avatar_url: string;
-  };
-}
-
-/**
- * A dedicated page to view all comments for a specific post
- */
-const CommentsPage: React.FC = () => {
+export const CommentsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
+  const [loadingCommentIds, setLoadingCommentIds] = useState<string[]>([]);
 
-  // Redirect if no postId is provided
-  useEffect(() => {
-    if (!id) {
-      toast.error('No post selected');
-      navigate('/');
-    }
-  }, [id, navigate]);
-
-  // Fetch post details to display post content
-  const { 
-    data: post, 
-    isLoading: isPostLoading, 
-    error: postError 
-  } = useQuery<PostWithProfile | null>({
+  const { data: post, isLoading: isPostLoading, error: postError } = useQuery<PostWithProfile | null>({
     queryKey: ['post-details', id],
     queryFn: async () => {
       if (!id) return null;
-      
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id,
-          likes_count,
-          comments_count,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('id', id)
-        .single();
-        
-      if (error) {
-        console.error("Error fetching post:", error);
-        throw new Error(error.message);
-      }
-      
-      // Make sure we have a valid post with all expected properties
-      if (!data || typeof data !== 'object') {
-        throw new Error("Post data is invalid");
-      }
-      
-      return data as PostWithProfile;
+      const post = await getPostWithComments(id);
+      return post;
     },
-    enabled: !!id,
   });
-
-  // Handle refreshing comments
-  const handleRefresh = () => {
-    if (isRefreshing) return;
-    
-    setIsRefreshing(true);
-    window.location.reload();
-  };
-
-  // Navigation back to post
-  const goBackToPost = () => {
-    navigate(`/post/${id}`);
-  };
 
   if (isPostLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gaming-900 p-4">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-purple-500" />
-          <p className="text-gray-400">Loading comments...</p>
+      <div className="container max-w-3xl mx-auto py-6 px-4">
+        <div className="flex items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mr-2" 
+            asChild
+          >
+            <Link to="/home">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Back
+            </Link>
+          </Button>
+          <h1 className="text-xl font-bold">Comments</h1>
+        </div>
+
+        <Card className="mb-6 p-4 border border-gaming-700 bg-gaming-800">
+          <div className="flex items-center mb-4">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="ml-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-16 mt-1" />
+            </div>
+          </div>
+          <Skeleton className="h-4 w-full mt-2" />
+          <Skeleton className="h-4 w-3/4 mt-2" />
+          <Skeleton className="h-64 w-full mt-4 rounded-lg" />
+        </Card>
+
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-4 border border-gaming-700 bg-gaming-800">
+              <div className="flex">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="ml-2 flex-grow">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-12 w-full mt-2" />
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       </div>
     );
@@ -107,156 +90,313 @@ const CommentsPage: React.FC = () => {
 
   if (postError || !post) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-gaming-900 p-6">
-        <div className="max-w-md text-center">
-          <div className="bg-red-500/10 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-            <AlertCircle className="h-10 w-10 text-red-500" />
-          </div>
-          <h2 className="text-xl font-bold text-white mb-2">Post Not Found</h2>
-          <p className="text-gray-400 mb-6">
-            The post you're looking for doesn't exist or has been removed.
-          </p>
-          <Button
-            className="bg-purple-600 hover:bg-purple-700"
-            onClick={() => navigate('/')}
+      <div className="container max-w-3xl mx-auto py-6 px-4">
+        <div className="bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-4 text-red-700 dark:text-red-400">
+          <p>Error loading post: {(postError as Error)?.message || 'Post not found'}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-2" 
+            asChild
           >
-            Back to Home
+            <Link to="/home">Back to Feed</Link>
           </Button>
         </div>
       </div>
     );
   }
 
+  // Group comments by their parent_id
+  const commentsByParentId: Record<string, CommentWithProfile[]> = {};
+  
+  // Initialize with root comments (parent_id is null)
+  commentsByParentId['root'] = [];
+  
+  post.comments.forEach(comment => {
+    const parentId = comment.parent_id || 'root';
+    if (!commentsByParentId[parentId]) {
+      commentsByParentId[parentId] = [];
+    }
+    commentsByParentId[parentId].push(comment);
+  });
+
+  // Sort comments by created_at
+  Object.keys(commentsByParentId).forEach(parentId => {
+    commentsByParentId[parentId].sort((a, b) => 
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  });
+
+  const renderComments = (parentId: string | 'root' = 'root', depth: number = 0) => {
+    const comments = commentsByParentId[parentId];
+    if (!comments) return null;
+    
+    return (
+      <div className={`space-y-4 ${depth > 0 ? 'ml-6 pl-4 border-l border-gaming-600' : ''}`}>
+        {comments.map(comment => (
+          <div key={comment.id} className="relative">
+            <Card className={`p-4 border border-gaming-700 bg-gaming-800 ${depth === 0 ? 'hover:border-gaming-600 transition-colors' : ''}`}>
+              <div className="flex items-start">
+                <Link to={`/profile/${comment.profiles.username}`} className="shrink-0">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage 
+                      src={comment.profiles.avatar_url || ''} 
+                      alt={comment.profiles.username || 'User'} 
+                    />
+                    <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
+                      {comment.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+                
+                <div className="ml-3 flex-grow">
+                  <div className="flex justify-between items-center">
+                    <Link to={`/profile/${comment.profiles.username}`} className="font-medium text-white hover:underline">
+                      {comment.profiles.username}
+                    </Link>
+                    
+                    <div className="flex items-center">
+                      <span className="text-xs text-gray-400">
+                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                      </span>
+                      
+                      {user && comment.user_id === user.id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-1">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700">
+                            <DropdownMenuItem 
+                              className="flex items-center cursor-pointer hover:bg-gaming-700"
+                              onClick={() => {
+                                setEditingCommentId(comment.id);
+                                setEditText(comment.content);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Comment
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="flex items-center cursor-pointer text-red-500 hover:bg-gaming-700 hover:text-red-400"
+                              onClick={async () => {
+                                if (confirm('Are you sure you want to delete this comment?')) {
+                                  setLoadingCommentIds(prev => [...prev, comment.id]);
+                                  try {
+                                    await deleteComment(comment.id);
+                                    toast.success('Comment deleted successfully');
+                                    
+                                    // Refresh post data
+                                    queryClient.invalidateQueries({ queryKey: ['post-details', id] });
+                                  } catch (error) {
+                                    console.error('Error deleting comment:', error);
+                                    toast.error('Failed to delete comment');
+                                  } finally {
+                                    setLoadingCommentIds(prev => prev.filter(id => id !== comment.id));
+                                  }
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Comment
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {editingCommentId === comment.id ? (
+                    <div className="mt-2">
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        className="w-full p-2 bg-gaming-700 border border-gaming-600 rounded-md text-white resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        rows={3}
+                      />
+                      <div className="mt-2 flex justify-end space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingCommentId(null);
+                            setEditText('');
+                          }}
+                          className="text-sm"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                          disabled={isEditSubmitting || !editText.trim()}
+                          onClick={async () => {
+                            if (!editText.trim()) return;
+                            
+                            setIsEditSubmitting(true);
+                            try {
+                              const { data, error } = await supabase
+                                .from('comments')
+                                .update({ content: editText })
+                                .eq('id', comment.id)
+                                .select();
+                              
+                              if (error) throw error;
+                              
+                              toast.success('Comment updated successfully');
+                              setEditingCommentId(null);
+                              setEditText('');
+                              
+                              // Refresh post data
+                              queryClient.invalidateQueries({ queryKey: ['post-details', id] });
+                            } catch (error) {
+                              console.error('Error updating comment:', error);
+                              toast.error('Failed to update comment');
+                            } finally {
+                              setIsEditSubmitting(false);
+                            }
+                          }}
+                        >
+                          {isEditSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-white">{comment.content}</p>
+                  )}
+                  
+                  {loadingCommentIds.includes(comment.id) && (
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center rounded-lg">
+                      <Loader2 className="h-6 w-6 animate-spin text-white" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {!editingCommentId && (
+                <div className="mt-3 ml-13 flex items-center space-x-4">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs h-7 px-2 text-gray-400 hover:text-white"
+                    onClick={() => {
+                      const commentForm = document.getElementById('comment-form');
+                      if (commentForm) {
+                        commentForm.scrollIntoView({ behavior: 'smooth' });
+                        // Set focus to the input
+                        const input = commentForm.querySelector('input');
+                        if (input) input.focus();
+                      }
+                    }}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                    Reply
+                  </Button>
+                </div>
+              )}
+            </Card>
+            
+            {/* Render replies */}
+            {renderComments(comment.id, depth + 1)}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gaming-900 pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-gaming-800/95 backdrop-blur-sm border-b border-gaming-700 shadow-md">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={goBackToPost}
-            className="text-gray-300 hover:text-white"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Post
-          </Button>
-          <h1 className="text-lg font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-            Comments
-          </h1>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="text-gray-300 hover:text-white"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
+    <div className="container max-w-3xl mx-auto py-6 px-4">
+      <div className="flex items-center mb-6">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="mr-2" 
+          asChild
+        >
+          <Link to="/home">
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back
+          </Link>
+        </Button>
+        <h1 className="text-xl font-bold">Comments</h1>
       </div>
 
-      {/* Post summary */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="bg-gaming-800 rounded-lg p-5 mb-6 shadow-lg border border-gaming-700 hover:border-purple-500/30 transition-all duration-300">
-          <div className="flex items-start gap-4">
-            <a
-              href={`/profile/${post?.user_id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                navigate(`/profile/${post?.user_id}`);
-              }}
-            >
-              <Avatar className="h-12 w-12 rounded-full border-2 border-purple-600/50 hover:border-purple-500/80 transition-all duration-200 shadow-md">
-                <AvatarImage
-                  src={post?.profiles?.avatar_url || ''}
-                  alt={post?.profiles?.username || 'User'}
-                  className="object-cover"
-                />
-                <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500">
-                  {post?.profiles?.username?.substring(0, 2)?.toUpperCase() || 'U'}
-                </AvatarFallback>
-              </Avatar>
-            </a>
-            <div className="flex-1">
-              <div className="flex justify-between items-center mb-2">
-                <a
-                  href={`/profile/${post?.user_id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(`/profile/${post?.user_id}`);
-                  }}
-                  className="font-semibold text-white text-lg hover:text-purple-400 transition-colors"
-                >
-                  {post?.profiles?.username || 'Anonymous'}
-                </a>
-                <span className="text-xs text-gray-400 bg-gaming-700/50 px-2 py-1 rounded-full">
-                  {post?.created_at ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) : ''}
-                </span>
-              </div>
-              <p className="text-gray-300 mb-4 text-base whitespace-pre-wrap break-words leading-relaxed">{post?.content || ''}</p>
-              <div className="text-sm text-gray-400 flex items-center gap-6 pt-3 border-t border-gaming-700/50">
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-4 h-4 text-red-500" fill={post?.likes_count ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  <span>{post?.likes_count ?? 0} likes</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <MessageSquare className="h-4 w-4 text-purple-400" />
-                  <span>{post?.comments_count ?? 0} comments</span>
-                </div>
-              </div>
-            </div>
+      {/* Post */}
+      <Card className="mb-6 p-4 border border-gaming-700 bg-gaming-800">
+        <div className="flex items-start mb-4">
+          <Link to={`/profile/${post.profiles.username}`}>
+            <Avatar className="h-10 w-10">
+              <AvatarImage 
+                src={post.profiles.avatar_url || ''} 
+                alt={post.profiles.username || 'User'} 
+              />
+              <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
+                {post.profiles.username?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+          <div className="ml-3 flex-grow">
+            <Link to={`/profile/${post.profiles.username}`} className="font-medium text-white hover:underline">
+              {post.profiles.username}
+            </Link>
+            <p className="text-sm text-gray-400">
+              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            </p>
           </div>
         </div>
+        
+        <p className="mb-4 text-white">{post.content}</p>
+        
+        {post.image_url && (
+          <div className="relative aspect-video mb-4 overflow-hidden rounded-lg">
+            <img 
+              src={post.image_url} 
+              alt="Post" 
+              className="object-cover w-full h-full"
+            />
+          </div>
+        )}
+        
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex space-x-4">
+            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+              <Heart className="h-5 w-5 mr-1" />
+              <span>{post.likes_count || 0}</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+              <MessageCircle className="h-5 w-5 mr-1" />
+              <span>{post.comments_count || 0}</span>
+            </Button>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+              <Share2 className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+              <Bookmark className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Add Comment Form */}
+      <div className="mb-6" id="comment-form">
+        <CommentForm postId={post.id} className="mb-6" />
       </div>
 
-      {/* Comments section */}
-      <div className="container mx-auto px-4">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-white mb-3 flex items-center">
-            <MessageSquare className="mr-2 h-5 w-5 text-purple-400" />
-            All Comments
-            {post?.comments_count ? (
-              <span className="ml-2 px-2.5 py-0.5 bg-purple-600/20 rounded-full text-sm text-purple-300">
-                {post.comments_count}
-              </span>
-            ) : null}
-          </h2>
-          <p className="text-gray-400 text-sm mb-6">
-            Join the conversation! Like comments, reply to others, or share your own thoughts on this post.
-          </p>
-        </div>
-
-        <div className="bg-gaming-800/50 rounded-lg shadow-lg overflow-hidden border border-gaming-700">
-          <CommentList 
-            postId={id} 
-            onCommentAdded={() => {
-              // Refresh comments count after adding
-              toast.success('Comment added!');
-            }} 
-            autoFocus={true}
-          />
-        </div>
-
-        {/* Info box about comment features */}
-        <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg mb-6">
-          <h3 className="text-blue-300 font-medium mb-2 flex items-center">
-            <AlertCircle className="mr-2 h-4 w-4" />
-            Comment Features
-          </h3>
-          <ul className="text-sm text-gray-300 space-y-1.5 ml-6 list-disc">
-            <li>Like comments by clicking the heart button</li>
-            <li>Reply to any comment to start a conversation</li>
-            <li>Edit or delete your own comments using the menu (•••)</li>
-            <li>View user profiles by clicking their name or avatar</li>
-            <li>Send direct messages by clicking the message icon</li>
-          </ul>
-        </div>
+      {/* Comments */}
+      <div className="space-y-6">
+        <h2 className="text-lg font-medium">Comments</h2>
+        {post.comments.length > 0 ? (
+          renderComments()
+        ) : (
+          <div className="text-center py-8 bg-gaming-800 border border-gaming-700 rounded-lg">
+            <MessageCircle className="h-12 w-12 mx-auto text-gray-400 mb-2" />
+            <p className="text-gray-400">No comments yet. Be the first to comment!</p>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
-export default CommentsPage;
