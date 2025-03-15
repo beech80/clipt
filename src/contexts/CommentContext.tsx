@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import CommentModal from '@/components/comments/CommentModal';
 
@@ -61,7 +62,7 @@ export const CommentsProvider: React.FC<CommentsProviderProps> = ({ children }) 
       <CommentModal 
         isOpen={isOpen} 
         onClose={closeComments} 
-        postId={postId} 
+        postId={postId || ''} 
         autoFocusInput={isInputFocused}
       />
     </CommentContext.Provider>
