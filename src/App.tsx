@@ -48,7 +48,6 @@ const Signup = React.lazy(() => import('./pages/Signup'));
 const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
 const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
-const Comments = React.lazy(() => import('./pages/comments'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
