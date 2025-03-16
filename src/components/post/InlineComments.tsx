@@ -1,11 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { getComments } from "@/services/commentService";
-import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Heart, MessageSquare } from "lucide-react";
 
 interface InlineCommentsProps {
   postId: string;
@@ -45,53 +43,44 @@ const InlineComments: React.FC<InlineCommentsProps> = ({
     );
   }
 
-  // Always render the container, even if no comments
+  if (totalComments === 0) {
+    return null;
+  }
+
   return (
-    <div className="px-4 py-2 bg-gaming-800">
-      {/* Only show comments if they exist */}
-      {totalComments > 0 && (
-        <>
-          {/* Comment previews */}
-          <div className="space-y-4">
-            {displayComments.map((comment) => (
-              <div key={comment.id} className="mt-2">
-                <div className="flex items-start gap-2 bg-gaming-800 rounded-md p-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={comment.profiles?.avatar_url || ""}
-                      alt={comment.profiles?.username || "User"}
-                    />
-                    <AvatarFallback>
-                      {(comment.profiles?.username?.[0] || "?").toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="flex-1">
-                    <div className="flex flex-col">
-                      <div>
-                        <span className="font-semibold text-sm text-gaming-100 mr-2">
-                          {comment.profiles?.username || "Anonymous"}
-                        </span>
-                        <span className="text-sm text-gaming-200 break-words">
-                          {comment.content}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center mt-2">
-                        <span className="text-xs text-gaming-400">
-                          {formatDistanceToNow(new Date(comment.created_at), {
-                            addSuffix: true,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+    <div className="comments-container py-2">
+      {displayComments.map((comment) => (
+        <div key={comment.id} className="comment-item flex py-2">
+          <div className="comment-avatar mr-2 ml-4">
+            <Avatar className="h-8 w-8">
+              <AvatarImage
+                src={comment.profiles?.avatar_url || ""}
+                alt={comment.profiles?.username || "User"}
+              />
+              <AvatarFallback>
+                {(comment.profiles?.username?.[0] || "?").toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
           </div>
-        </>
-      )}
+          <div className="comment-content flex-1 mr-4">
+            <div className="comment-text">
+              <span className="username font-semibold text-sm text-gaming-100 mr-2">
+                {comment.profiles?.username || "Anonymous"}
+              </span>
+              <span className="text-sm text-gaming-200">
+                {comment.content}
+              </span>
+            </div>
+            <div className="comment-actions flex mt-1">
+              <span className="text-xs text-gaming-400">
+                {formatDistanceToNow(new Date(comment.created_at), {
+                  addSuffix: true,
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
