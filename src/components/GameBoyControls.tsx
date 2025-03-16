@@ -85,7 +85,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       logToDebug('Adding data-post-id attributes to posts...');
       
       // Add data-post-id to all post-container divs
-      const postContainers = document.querySelectorAll('.post-container, .post-card, .post-item, [id*="post"]');
+      const postContainers = document.querySelectorAll('.post-container, .post-card, .post-item, [id*="post"], .post, article');
       let attributesAdded = 0;
       
       postContainers.forEach((post, index) => {
@@ -111,8 +111,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   postId = match[1];
                 }
               } else {
-                // Generate a temporary ID
-                postId = `temp-post-${index}-${Date.now()}`;
+                // Look for hidden input fields that might contain post IDs
+                const hiddenInput = post.querySelector('input[type="hidden"][name*="post"]');
+                if (hiddenInput) {
+                  postId = hiddenInput.getAttribute('value') || '';
+                } else {
+                  // Generate a temporary ID
+                  postId = `temp-post-${index}-${Date.now()}`;
+                }
               }
             }
           }
@@ -131,9 +137,22 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // First ensure all posts have data-post-id
       addDataAttributes();
       
+      // Check if we're on a single post page
+      const isSinglePostPage = location.pathname.includes('/post/');
+      if (isSinglePostPage) {
+        // Extract post ID from URL
+        const match = location.pathname.match(/\/post\/([^\/]+)/);
+        if (match && match[1]) {
+          const postId = match[1];
+          logToDebug(`Single post page detected. Using post ID from URL: ${postId}`);
+          setCurrentPostId(postId);
+          return;
+        }
+      }
+      
       // Find all posts on the page with multiple selectors to work across different pages
       const allPosts = Array.from(document.querySelectorAll(
-        '[data-post-id], .post-container, .post-card, .post-item, [id*="post"]'
+        '[data-post-id], .post-container, .post-card, .post-item, [id*="post"], .post, article'
       ));
       
       if (allPosts.length === 0) {
@@ -167,8 +186,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         const visibleHeight = Math.max(0, visibleBottom - visibleTop);
         const percentVisible = visibleHeight / rect.height;
         
-        if (percentVisible > maxVisibility) {
-          maxVisibility = percentVisible;
+        // Give preference to posts that are in the center of the viewport
+        const centerFactor = 1 - Math.abs((visibleTop + visibleBottom) / 2 - windowHeight / 2) / windowHeight;
+        const visibilityScore = percentVisible * (1 + centerFactor);
+        
+        if (visibilityScore > maxVisibility) {
+          maxVisibility = visibilityScore;
           mostVisiblePost = post;
         }
       });
@@ -186,9 +209,27 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           // Add a subtle indicator to the selected post
           allPosts.forEach(post => post.classList.remove('gameboy-selected-post'));
           mostVisiblePost.classList.add('gameboy-selected-post');
+          
+          // Store the post ID in a session variable for backup
+          try {
+            sessionStorage.setItem('clipt-last-selected-post', postId);
+          } catch (e) {
+            console.error('Failed to store post ID in session storage:', e);
+          }
         }
       } else {
         logToDebug('No visible posts found');
+        
+        // Try to get last selected post from session storage
+        try {
+          const lastSelectedPost = sessionStorage.getItem('clipt-last-selected-post');
+          if (lastSelectedPost) {
+            logToDebug(`Using last selected post from session storage: ${lastSelectedPost}`);
+            setCurrentPostId(lastSelectedPost);
+          }
+        } catch (e) {
+          console.error('Failed to retrieve post ID from session storage:', e);
+        }
       }
     };
 
@@ -203,12 +244,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         }, wait);
       };
     }
-
+    
     // Create debounced handler
     const debouncedDetectPost = debounce(detectAndSelectCurrentPost, 200);
     
     // Set up scroll listener
     window.addEventListener('scroll', debouncedDetectPost);
+    
+    // Set up additional events that might indicate content changes
+    window.addEventListener('click', debouncedDetectPost);
+    window.addEventListener('touchend', debouncedDetectPost);
     
     // Initial detection with a delay to allow page to render
     setTimeout(detectAndSelectCurrentPost, 500);
@@ -225,6 +270,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                  node.classList.contains('post-container') ||
                  node.classList.contains('post-card') ||
                  node.classList.contains('post-item') ||
+                 node.classList.contains('post') ||
+                 node.tagName.toLowerCase() === 'article' ||
                  (node.id && node.id.includes('post')))) {
               shouldDetect = true;
             }
@@ -270,6 +317,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Clean up
     return () => {
       window.removeEventListener('scroll', debouncedDetectPost);
+      window.removeEventListener('click', debouncedDetectPost);
+      window.removeEventListener('touchend', debouncedDetectPost);
       observer.disconnect();
       document.head.removeChild(style);
       clearInterval(intervalId);
@@ -1129,7 +1178,44 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   
   // Individual action handlers that use the universal handler
   const handleLike = () => handlePostAction('like');
-  const handleComment = () => handlePostAction('comment');
+  const handleComment = () => {
+    // First check if we have a current post ID
+    if (!currentPostId) {
+      // Try to detect post if we don't have one
+      const isSinglePostPage = location.pathname.includes('/post/');
+      if (isSinglePostPage) {
+        // Extract post ID from URL
+        const match = location.pathname.match(/\/post\/([^\/]+)/);
+        if (match && match[1]) {
+          const newPostId = match[1];
+          console.log(`Detected post ID from URL: ${newPostId}`);
+          setActiveCommentPostId(newPostId);
+          setCommentModalOpen(true);
+          return;
+        }
+      }
+      
+      toast.error("No post selected. Try scrolling to a post first.");
+      return;
+    }
+    
+    // We have a currentPostId, now try to open comments
+    console.log(`Opening comment modal for post: ${currentPostId}`);
+    setActiveCommentPostId(currentPostId);
+    setCommentModalOpen(true);
+    
+    // For better UX, show a visual indication of which post is selected
+    const selectedPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
+    if (selectedPost) {
+      // Add a pulsing effect to show which post was selected
+      selectedPost.classList.add('comment-target-pulse');
+      
+      // Remove the effect after animation completes
+      setTimeout(() => {
+        selectedPost.classList.remove('comment-target-pulse');
+      }, 1000);
+    }
+  };
   const handleFollow = () => handlePostAction('follow');
   const handleTrophy = () => handlePostAction('trophy');
 
@@ -1217,7 +1303,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               >
                 {/* Gradient border using pseudo-element */}
                 <span className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 animate-pulse" style={{ opacity: 0.7 }}></span>
-                <span className="absolute inset-[2px] rounded-full bg-[#0D0D18]"></span>
+                <span className="absolute inset-[2px] bg-[#0D0D18] rounded-sm"></span>
                 <span className="relative text-white font-bold text-sm z-10">CLIPT</span>
               </div>
               
