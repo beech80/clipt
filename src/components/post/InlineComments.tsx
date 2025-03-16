@@ -5,6 +5,7 @@ import { getComments } from "@/services/commentService";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Heart, MessageSquare } from "lucide-react";
 
 interface InlineCommentsProps {
   postId: string;
@@ -46,56 +47,50 @@ const InlineComments: React.FC<InlineCommentsProps> = ({
 
   // Always render the container, even if no comments
   return (
-    <div className="px-4 py-2 border-t border-gaming-400/20">
-      {/* View all comments link */}
-      {totalComments > 0 ? (
-        <button
-          onClick={onViewAllClick}
-          className="text-blue-500 hover:text-blue-400 text-sm font-medium mb-2 flex items-center"
-        >
-          View all {totalComments} comments
-        </button>
-      ) : (
-        <p className="text-sm text-gaming-400 mb-2">No comments yet. Be the first to comment!</p>
-      )}
-
-      {/* Comment previews */}
+    <div className="px-4 py-2 bg-gaming-800">
+      {/* Only show comments if they exist */}
       {totalComments > 0 && (
-        <div className="space-y-2">
-          {displayComments.map((comment) => (
-            <div key={comment.id} className="flex items-start gap-2">
-              <Avatar className="h-6 w-6">
-                <AvatarImage
-                  src={comment.profiles?.avatar_url || ""}
-                  alt={comment.profiles?.username || "User"}
-                />
-                <AvatarFallback>
-                  {(comment.profiles?.username?.[0] || "?").toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+        <>
+          {/* Comment previews */}
+          <div className="space-y-4">
+            {displayComments.map((comment) => (
+              <div key={comment.id} className="mt-2">
+                <div className="flex items-start gap-2 bg-gaming-800 rounded-md p-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={comment.profiles?.avatar_url || ""}
+                      alt={comment.profiles?.username || "User"}
+                    />
+                    <AvatarFallback>
+                      {(comment.profiles?.username?.[0] || "?").toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
 
-              <div className="flex-1">
-                <div className="inline-flex items-baseline">
-                  <span className="font-semibold text-sm text-gaming-100 mr-2">
-                    {comment.profiles?.username || "Anonymous"}
-                  </span>
-                  <span className="text-sm text-gaming-200 break-words">
-                    {comment.content}
-                  </span>
-                </div>
+                  <div className="flex-1">
+                    <div className="flex flex-col">
+                      <div>
+                        <span className="font-semibold text-sm text-gaming-100 mr-2">
+                          {comment.profiles?.username || "Anonymous"}
+                        </span>
+                        <span className="text-sm text-gaming-200 break-words">
+                          {comment.content}
+                        </span>
+                      </div>
 
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="text-xs text-gaming-400">
-                    {formatDistanceToNow(new Date(comment.created_at), {
-                      addSuffix: true,
-                    })}
-                  </span>
-                  {/* Could add reply button here in the future */}
+                      <div className="flex items-center mt-2">
+                        <span className="text-xs text-gaming-400">
+                          {formatDistanceToNow(new Date(comment.created_at), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
