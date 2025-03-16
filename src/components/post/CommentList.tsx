@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CommentForm } from './comment/CommentForm';
 import { CommentItem, Comment } from './comment/CommentItem';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageCircle, AlertCircle, Heart, Hand, Flame, ThumbsUp, Smile } from 'lucide-react';
+import { Loader2, MessageCircle, AlertCircle, Heart, Hand, Flame, ThumbsUp, Smile, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getComments, getCommentCount } from '@/services/commentService';
 import { useQuery } from '@tanstack/react-query';
@@ -13,13 +13,15 @@ interface CommentListProps {
   onCommentAdded?: () => void;
   autoFocus?: boolean;
   className?: string;
+  onBack?: () => void;
 }
 
 export const CommentList = ({ 
   postId, 
   onCommentAdded,
   autoFocus = false,
-  className = ''
+  className = '',
+  onBack
 }: CommentListProps) => {
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const commentsContainerRef = useRef<HTMLDivElement>(null);
@@ -146,8 +148,19 @@ export const CommentList = ({
       className={`w-full ${className}`}
       ref={commentsContainerRef}
     >
-      <div className="py-2 px-3 border-b border-gaming-800">
+      <div className="py-2 px-3 border-b border-gaming-800 flex justify-between items-center">
         <h3 className="font-semibold text-center text-gaming-100">Comments</h3>
+        {onBack && (
+          <Button 
+            onClick={onBack} 
+            variant="ghost" 
+            size="sm" 
+            className="text-gaming-400 hover:text-gaming-200"
+          >
+            <ArrowLeft size={16} className="mr-1" />
+            Back
+          </Button>
+        )}
       </div>
       
       {/* Comment input form */}
@@ -160,8 +173,18 @@ export const CommentList = ({
       </div>
 
       {/* Comments list */}
-      <div className="divide-y divide-gaming-800/30">
-        {organizedComments && organizedComments.length > 0 ? (
+      <div className="divide-y divide-gaming-800/30 max-h-[400px] overflow-y-auto">
+        {isLoading ? (
+          <div className="py-4 text-center text-gaming-100">
+            <Loader2 className="w-5 h-5 mx-auto animate-spin text-blue-500" />
+            <p className="text-sm text-gray-500 mt-2">Loading comments...</p>
+          </div>
+        ) : error ? (
+          <div className="py-4 text-center text-red-500">
+            <AlertCircle className="w-5 h-5 mx-auto" />
+            <p className="text-sm mt-2">Failed to load comments</p>
+          </div>
+        ) : comments && comments.length > 0 ? (
           organizedComments.map(comment => (
             <div key={comment.id} className="px-4">
               <CommentItem 
@@ -197,7 +220,7 @@ export const CommentList = ({
 
       {/* Instagram-style emoji reactions at bottom */}
       <div className="pt-3 pb-2 px-4 border-t border-gaming-800 flex items-center justify-between">
-        <div className="flex space-x-6">
+        <div className="flex space-x-6 overflow-x-auto py-2">
           <button 
             className={`text-2xl ${selectedEmoji === '❤️' ? 'text-red-500' : 'text-gaming-400 hover:text-gaming-300'}`}
             onClick={() => handleEmojiSelect('❤️')}
@@ -227,24 +250,6 @@ export const CommentList = ({
             onClick={() => handleEmojiSelect('😊')}
           >
             😊
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '😂' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('😂')}
-          >
-            😂
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '😮' ? 'text-yellow-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('😮')}
-          >
-            😮
-          </button>
-          <button 
-            className={`text-2xl ${selectedEmoji === '😢' ? 'text-blue-500' : 'text-gaming-400 hover:text-gaming-300'}`}
-            onClick={() => handleEmojiSelect('😢')}
-          >
-            😢
           </button>
         </div>
       </div>

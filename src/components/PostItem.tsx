@@ -258,7 +258,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       return;
     }
     
-    console.log(`Opening comments for post ID: ${postId}`);
+    console.log(`Toggling comments for post ID: ${postId}`);
     setShowComments(!showComments);
     
     if (onCommentClick) {
@@ -836,7 +836,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
             className={`h-6 w-6 ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
             fill={liked ? "currentColor" : "none"}
           />
-          <span className={`text-base font-medium ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'}`}>
+          <span className={`text-base font-medium ml-1 ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'}`}>
             {likesCount}
           </span>
         </button>
@@ -922,33 +922,4 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       {post.content && (
         <div className="px-4 py-3 border-t border-gaming-400/20">
           <p className="text-base text-gaming-100">
-            <span className="font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
-              {username}
-            </span>
-            {' '}
-            <span className="text-gaming-200">{post.content}</span>
-          </p>
-        </div>
-      )}
-
-      {/* Comments Section - Make sure postId is valid and passed correctly */}
-      {showComments && (
-        <div className="border-t border-gaming-400/20">
-          {postId ? (
-            <CommentList 
-              postId={postId}
-              onBack={() => setShowComments(false)} 
-              key={`comments-${postId}`} // Force re-render with key
-            />
-          ) : (
-            <div className="p-4 text-center text-red-500">
-              Error: Cannot identify post
-            </div>
-          )}
-        </div>
-      )}
-    </article>
-  );
-};
-
-export default PostItem;
+            <span className="font
