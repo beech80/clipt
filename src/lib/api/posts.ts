@@ -27,7 +27,7 @@ export async function getPostWithComments(postId: string): Promise<PostWithProfi
       return null;
     }
 
-    // Then fetch all comments for this post
+    // Then fetch all comments for this post with profile information
     const { data: comments, error: commentsError } = await supabase
       .from('comments')
       .select(`
@@ -35,7 +35,7 @@ export async function getPostWithComments(postId: string): Promise<PostWithProfi
         profiles: profiles(*)
       `)
       .eq('post_id', postId)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (commentsError) {
       console.error('Error fetching comments:', commentsError);

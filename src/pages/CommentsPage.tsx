@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -28,8 +28,15 @@ const CommentsPage = () => {
       const post = await getPostWithComments(postId);
       return post;
     },
-    enabled: !!postId
+    enabled: !!postId,
+    // Fetch comments again every time we revisit this page
+    refetchOnWindowFocus: true
   });
+
+  // Handle invalidating queries when a new comment is added
+  const refreshComments = () => {
+    queryClient.invalidateQueries(['post-details', postId]);
+  };
 
   const handleBackClick = () => {
     navigate(-1);
@@ -37,10 +44,12 @@ const CommentsPage = () => {
 
   const handleReplyComplete = () => {
     setReplyingToId(null);
-    queryClient.invalidateQueries(['post-details', postId]);
+    refreshComments();
   };
 
   const organizeComments = (comments: CommentWithProfile[] = []) => {
+    if (!comments || comments.length === 0) return [];
+    
     const commentMap = new Map();
     const topLevelComments: CommentWithProfile[] = [];
 
@@ -139,7 +148,10 @@ const CommentsPage = () => {
     );
   }
 
-  const organizedComments = organizeComments(post.comments);
+  const organizedComments = organizeComments(post.comments || []);
+  
+  console.log('Post with comments:', post);
+  console.log('Organized comments:', organizedComments);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
@@ -199,7 +211,7 @@ const CommentsPage = () => {
             </Button>
             <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
               <MessageCircle className="h-5 w-5 mr-1" />
-              <span>{post.comments_count || 0}</span>
+              <span>{post.comments?.length || 0}</span>
             </Button>
           </div>
           <div className="flex space-x-2">
@@ -217,14 +229,14 @@ const CommentsPage = () => {
       <div className="mb-6">
         <CommentForm 
           postId={postId as string}
-          onReplyComplete={() => queryClient.invalidateQueries(['post-details', postId])}
-          className="bg-gaming-800 border border-gaming-700 p-4 rounded-lg"
+          onReplyComplete={refreshComments}
         />
       </div>
 
       {/* Comments */}
       <div className="space-y-6">
-        <h2 className="text-lg font-medium">Comments</h2>
+        <h2 className="text-lg font-medium">Comments ({post.comments?.length || 0})</h2>
+        
         {organizedComments.length > 0 ? (
           <div className="space-y-4">
             {organizedComments.map(comment => (
