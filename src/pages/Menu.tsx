@@ -9,7 +9,6 @@ import {
   Search, 
   Award,
   MonitorPlay,
-  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -20,89 +19,87 @@ const Menu = () => {
   const menuItems = [
     { 
       title: 'Settings', 
-      description: 'Configure your game',
       icon: <Settings className="h-6 w-6 text-purple-400" />, 
       path: '/settings' 
     },
     { 
       title: 'Streaming', 
-      description: 'Live gameplay',
       icon: <Video className="h-6 w-6 text-purple-400" />, 
       path: '/streaming' 
     },
     { 
       title: 'Profile', 
-      description: 'Your player stats',
       icon: <User className="h-6 w-6 text-purple-400" />, 
       path: '/profile' 
     },
     { 
       title: 'Messages', 
-      description: 'Chat with players',
       icon: <MessageSquare className="h-6 w-6 text-purple-400" />, 
       path: '/messages' 
     },
     { 
       title: 'Discovery', 
-      description: 'Find new games',
       icon: <Search className="h-6 w-6 text-purple-400" />, 
       path: '/discovery' 
     },
     { 
       title: 'Top Clipts', 
-      description: 'Hall of fame',
       icon: <Award className="h-6 w-6 text-purple-400" />, 
       path: '/top-clipts' 
     },
     { 
       title: 'Clipts', 
-      description: 'View all clipts',
       icon: <MonitorPlay className="h-6 w-6 text-purple-400" />, 
       path: '/clipts' 
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#1e1a2e] flex flex-col">
+    <div className="min-h-screen bg-[#131420] flex flex-col">
       {/* Header */}
-      <div className="py-6 text-center border-b border-gray-700">
-        <h1 className="text-2xl font-bold text-white tracking-wider">GAME MENU</h1>
+      <div className="py-6 text-center">
+        <h1 className="text-2xl font-bold text-purple-400 tracking-wider">MENU</h1>
+        <div className="w-24 h-1 bg-gradient-to-r from-purple-700 to-purple-400 mx-auto mt-2 rounded-full"></div>
       </div>
 
-      {/* Menu Grid */}
-      <div className="flex-1 container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {menuItems.map((item) => (
+      {/* Menu List */}
+      <div className="flex-1 px-6 py-4 max-w-md mx-auto w-full">
+        <div className="bg-[#1e1a2e] border border-purple-900/30 rounded-2xl p-3 shadow-lg shadow-purple-900/20">
+          {menuItems.map((item, index) => (
             <div 
               key={item.title}
               onClick={() => navigate(item.path)}
-              className="cursor-pointer border border-gray-700 rounded-lg relative group"
+              className={`
+                flex items-center space-x-4 p-4 cursor-pointer transition-all
+                hover:bg-[#252040] rounded-xl group
+                ${index !== menuItems.length - 1 ? 'border-b border-purple-900/20' : ''}
+              `}
             >
-              {/* Pseudo-elements for the corner dots */}
-              <div className="absolute w-2 h-2 bg-gray-600 rounded-full top-2 left-2"></div>
-              <div className="absolute w-2 h-2 bg-gray-600 rounded-full top-2 right-2"></div>
-              <div className="absolute w-2 h-2 bg-gray-600 rounded-full bottom-2 left-2"></div>
-              <div className="absolute w-2 h-2 bg-gray-600 rounded-full bottom-2 right-2"></div>
+              <div className="bg-[#252040] group-hover:bg-[#38336a] p-3 rounded-lg transition-colors">
+                {item.icon}
+              </div>
+              <span className="text-white font-medium group-hover:text-purple-400 transition-colors">
+                {item.title}
+              </span>
               
-              <div className="p-6 flex items-center">
-                <div className="bg-[#252040] p-3 rounded-lg">
-                  {item.icon}
-                </div>
-                
-                <div className="ml-4 flex-1">
-                  <h3 className="text-xl font-semibold text-white">{item.title}</h3>
-                  <p className="text-gray-400 text-sm">{item.description}</p>
-                </div>
-                
-                <ChevronRight className="text-purple-400 group-hover:translate-x-1 transition-transform" />
+              <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 18L15 12L9 6" stroke="#9b87f5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Bottom border */}
-      <div className="border-t border-gray-700 h-10"></div>
+      {/* Game controller decoration at bottom */}
+      <div className="py-10 flex justify-center">
+        <div className="relative w-32 h-12 opacity-10">
+          <div className="absolute left-0 top-0 w-12 h-12 rounded-full border-2 border-purple-400"></div>
+          <div className="absolute right-0 top-0 w-12 h-12 rounded-full border-2 border-purple-400"></div>
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-4 bg-purple-400 rounded-full"></div>
+        </div>
+      </div>
     </div>
   );
 };
