@@ -8,9 +8,7 @@ import {
   MessageSquare, 
   Search, 
   Award,
-  MonitorPlay,
-  Gamepad,
-  ChevronRight
+  MonitorPlay
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -21,109 +19,122 @@ const Menu = () => {
   const menuItems = [
     { 
       title: 'Settings', 
-      icon: <Settings className="h-5 w-5" />, 
+      icon: <Settings className="h-6 w-6 text-purple-400" />, 
+      description: 'Configure your game',
       path: '/settings' 
     },
     { 
       title: 'Streaming', 
-      icon: <Video className="h-5 w-5" />, 
+      icon: <Video className="h-6 w-6 text-purple-400" />, 
+      description: 'Live gameplay',
       path: '/streaming' 
     },
     { 
       title: 'Profile', 
-      icon: <User className="h-5 w-5" />, 
+      icon: <User className="h-6 w-6 text-purple-400" />, 
+      description: 'Your player stats',
       path: '/profile' 
     },
     { 
       title: 'Messages', 
-      icon: <MessageSquare className="h-5 w-5" />, 
+      icon: <MessageSquare className="h-6 w-6 text-purple-400" />, 
+      description: 'Chat with players',
       path: '/messages' 
     },
     { 
       title: 'Discovery', 
-      icon: <Search className="h-5 w-5" />, 
+      icon: <Search className="h-6 w-6 text-purple-400" />, 
+      description: 'Find new games',
       path: '/discovery' 
     },
     { 
       title: 'Top Clips', 
-      icon: <Award className="h-5 w-5" />, 
+      icon: <Award className="h-6 w-6 text-purple-400" />, 
+      description: 'Hall of fame',
       path: '/top-clipts' 
     },
     { 
       title: 'Clips', 
-      icon: <MonitorPlay className="h-5 w-5" />, 
+      icon: <MonitorPlay className="h-6 w-6 text-purple-400" />, 
+      description: 'View all clips',
       path: '/clipts' 
     }
   ];
 
   return (
     <div className="min-h-screen bg-[#0D0B14] flex flex-col">
-      {/* Glowing Header */}
-      <div className="relative py-5 text-center mb-4">
-        <h1 className="text-3xl font-bold text-white tracking-wider relative inline-block">
-          MENU
-          <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 via-[#9b87f5] to-purple-600 rounded-full"></div>
-          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-purple-500/50 rounded-full"></div>
+      {/* Menu Header */}
+      <div className="relative py-5 mb-6 mt-2 text-center border-b border-dashed border-gray-700">
+        <h1 className="text-3xl font-bold text-white tracking-wider">
+          GAME MENU
         </h1>
       </div>
 
-      {/* Menu list with modern styling */}
-      <div className="flex-1 px-3 py-3 space-y-2.5 max-w-md mx-auto w-full">
-        {menuItems.map((item) => (
-          <div 
-            key={item.title}
-            onClick={() => navigate(item.path)}
-            className="
-              group relative overflow-hidden
-              bg-[#1A1525] border border-[#2A2535]/50 rounded-md p-3
-              hover:bg-[#25243b] transition-all duration-300
-              shadow-lg hover:shadow-purple-900/20
-              flex items-center space-x-4
-              cursor-pointer
-            "
-          >
-            {/* Glow effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/5 to-purple-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            {/* Icon container with glow */}
-            <div className="relative z-10 bg-[#252040] p-2.5 rounded-md flex items-center justify-center">
-              <div className="text-[#9b87f5]">
-                {item.icon}
+      {/* Menu Grid */}
+      <div className="flex-1 px-4 py-3 max-w-4xl mx-auto w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {menuItems.map((item) => (
+            <div 
+              key={item.title}
+              onClick={() => navigate(item.path)}
+              className="
+                group relative
+                bg-[#181626] border border-[#2c2b3a] rounded-md
+                hover:border-[#3d3b4f] transition-all duration-300
+                cursor-pointer
+                overflow-hidden
+              "
+            >
+              {/* Menu item border dots (corners) */}
+              <div className="absolute top-1 left-1 w-1.5 h-1.5 bg-gray-500 rounded-full opacity-40"></div>
+              <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-gray-500 rounded-full opacity-40"></div>
+              <div className="absolute bottom-1 left-1 w-1.5 h-1.5 bg-gray-500 rounded-full opacity-40"></div>
+              <div className="absolute bottom-1 right-1 w-1.5 h-1.5 bg-gray-500 rounded-full opacity-40"></div>
+              
+              <div className="p-4 flex items-start">
+                {/* Icon container */}
+                <div className="p-3 rounded bg-[#1e1c2c] mr-4">
+                  {item.icon}
+                </div>
+                
+                {/* Text content */}
+                <div className="flex-1">
+                  <h3 className="text-white text-lg font-medium mb-1">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm">
+                    {item.description}
+                  </p>
+                </div>
+                
+                {/* Arrow indicator */}
+                <div className="text-purple-400 ml-2 flex items-center">
+                  <svg 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 16 16" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="transform group-hover:translate-x-1 transition-transform duration-300"
+                  >
+                    <path 
+                      d="M6 12L10 8L6 4" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
               </div>
-              <div className="absolute inset-0 bg-purple-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
-            
-            {/* Title with hover effect */}
-            <span className="relative z-10 text-white font-medium text-base group-hover:text-[#9b87f5] transition-colors duration-300">
-              {item.title}
-            </span>
-            
-            {/* Arrow indicator */}
-            <div className="ml-auto relative z-10">
-              <ChevronRight className="h-5 w-5 text-[#9b87f5] transform transition-transform duration-300 group-hover:translate-x-0.5" />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Bottom design element */}
-      <div className="py-8 flex justify-center">
-        <div className="relative w-16 h-16 flex items-center justify-center">
-          <div className="absolute inset-0 bg-[#252040] rounded-full opacity-10 animate-pulse"></div>
-          <Gamepad size={28} className="text-[#9b87f5] animate-float" />
+          ))}
         </div>
       </div>
 
-      {/* Add a CSS animation for the floating effect */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-      `}</style>
+      {/* Bottom border */}
+      <div className="border-t border-dashed border-gray-700 py-6 mt-4">
+      </div>
     </div>
   );
 };
