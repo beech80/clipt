@@ -61,7 +61,6 @@ function AppContent() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/post/new" element={<NewPost />} />
       <Route path="/post/:id" element={<PostPage />} />
-      <Route path="/comments" element={<Comments />} />
       <Route path="/post/:postId/comments" element={<CommentsPage />} />
       <Route path="/game/:id" element={<Game />} />
       <Route path="/games" element={<TopGames />} />
