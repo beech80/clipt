@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import CommentModal from '@/components/comments/CommentModal';
 
 interface CommentContextType {
@@ -28,6 +28,24 @@ export const CommentsProvider: React.FC<CommentsProviderProps> = ({ children }) 
   const [isOpen, setIsOpen] = useState(false);
   const [postId, setPostId] = useState<string | undefined>(undefined);
   const [isInputFocused, setIsInputFocused] = useState(false);
+
+  // Listen for gameboy controller comment events
+  useEffect(() => {
+    const handleGameboyCommentEvent = (e: CustomEvent) => {
+      if (e.detail && e.detail.postId) {
+        console.log('CommentContext received gameboy event for post:', e.detail.postId);
+        openCommentInput(e.detail.postId);
+        // Set a flag that the event was handled by the context
+        (window as any).__commentEventHandled = true;
+      }
+    };
+
+    window.addEventListener('gameboy_open_comments' as any, handleGameboyCommentEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('gameboy_open_comments' as any, handleGameboyCommentEvent as EventListener);
+    };
+  }, []);
 
   const openComments = (id: string) => {
     console.log('Opening comments for post:', id);

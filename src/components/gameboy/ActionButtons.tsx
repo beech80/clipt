@@ -4,6 +4,7 @@ import { Heart, MessageCircle, UserPlus, Trophy, SendHorizontal } from 'lucide-r
 import { useComments } from '@/contexts/CommentContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { enhancedHandleComment } from './ButtonHandlers';
 
 interface ActionButtonsProps {
   navigate: NavigateFunction;
@@ -15,6 +16,22 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
   const [loading, setLoading] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+
+  // Comment event listener to handle gameboy controller interactions
+  useEffect(() => {
+    const handleCommentEvent = (e: CustomEvent) => {
+      if (e.detail && e.detail.postId) {
+        openCommentInput(e.detail.postId);
+        (window as any).__commentEventHandled = true;
+      }
+    };
+
+    window.addEventListener('gameboy_open_comments' as any, handleCommentEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('gameboy_open_comments' as any, handleCommentEvent as EventListener);
+    };
+  }, [openCommentInput]);
 
   // Check initial like and follow status
   useEffect(() => {
@@ -114,12 +131,18 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
     }
   };
 
-  // Handle comment action
+  // Handle comment action - enhanced to work with controller
   const handleComment = () => {
     if (!currentPostId) return;
     
-    openCommentInput(currentPostId);
-    toast.info('Comment mode activated');
+    // Try the enhanced method first
+    const success = enhancedHandleComment(currentPostId);
+    
+    // If that fails, use the context approach
+    if (!success) {
+      openCommentInput(currentPostId);
+      toast.info('Comment mode activated');
+    }
   };
 
   // Handle follow action

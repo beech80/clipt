@@ -3,6 +3,8 @@
  * These functions work with any post structure on the home and clipts pages
  */
 
+import { useComments } from '@/contexts/CommentContext';
+
 /**
  * Handle like button click with improved post/button detection
  */
@@ -80,6 +82,7 @@ export const enhancedHandleLike = (currentPostId: string | null) => {
 
 /**
  * Handle comment button click with improved post/button detection
+ * Enhanced to use CommentContext for more reliable interaction
  */
 export const enhancedHandleComment = (currentPostId: string | null) => {
   if (!currentPostId) {
@@ -89,7 +92,23 @@ export const enhancedHandleComment = (currentPostId: string | null) => {
   
   console.log('Comment on post:', currentPostId);
   
-  // Try multiple selectors to find the target post
+  // First try to use the CommentContext if available in the global window object
+  if (typeof window !== 'undefined') {
+    // Try to access the openComments function from CommentContext via a custom event
+    const commentEvent = new CustomEvent('gameboy_open_comments', { 
+      detail: { postId: currentPostId }
+    });
+    window.dispatchEvent(commentEvent);
+    
+    // See if our event was handled
+    if ((window as any).__commentEventHandled) {
+      console.log('Comment opened via context');
+      delete (window as any).__commentEventHandled;
+      return true;
+    }
+  }
+  
+  // Fallback to DOM method if context approach doesn't work
   const postSelectors = [
     `[data-post-id="${currentPostId}"]`,
     `#post-${currentPostId}`,
@@ -116,7 +135,9 @@ export const enhancedHandleComment = (currentPostId: string | null) => {
       '[data-action="comment"]', 
       '.comment-action',
       'button:has(.comment-icon)',
-      'button:has([data-feather="message-circle"])'
+      'button:has([data-feather="message-circle"])',
+      'button:has(.message-square)',
+      'button:has([data-icon="message-square"])'
     ];
     
     let commentButton: Element | null = null;
@@ -142,8 +163,13 @@ export const enhancedHandleComment = (currentPostId: string | null) => {
         cancelable: true
       }));
       
+      console.log('Comment button clicked via DOM method');
       return true;
+    } else {
+      console.error('Comment button not found on post', { currentPostId, targetPost });
     }
+  } else {
+    console.error('Target post not found for commenting', { currentPostId });
   }
   
   return false;
