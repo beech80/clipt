@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Settings, 
   Video, 
@@ -10,11 +10,10 @@ import {
   Award,
   MonitorPlay
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 
-const Menu = () => {
+const AppSidebar = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const location = useLocation();
 
   const menuItems = [
     { 
@@ -62,27 +61,30 @@ const Menu = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#111111] flex flex-col">
-      {/* Sidebar-style Menu */}
-      <div className="w-full max-w-xs fixed left-0 top-0 bottom-0 h-full overflow-y-auto bg-[#121212]">
-        <div className="px-2 py-4">
-          <ul className="space-y-1">
-            {menuItems.map((item) => (
+    <div className="fixed left-0 top-0 bottom-0 w-64 bg-[#121212] border-r border-[#1A1A1A]">
+      <div className="px-2 py-4">
+        <ul className="space-y-1">
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            
+            return (
               <li key={item.title}>
                 <button
                   onClick={() => navigate(item.path)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left transition-colors hover:bg-[#1A1A1A]"
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left transition-colors ${
+                    isActive ? 'bg-[#1A1A1A]' : 'hover:bg-[#1A1A1A]'
+                  }`}
                 >
                   <span className="text-white">{item.icon}</span>
                   <span className={`${item.color} font-medium`}>{item.title}</span>
                 </button>
               </li>
-            ))}
-          </ul>
-        </div>
+            );
+          })}
+        </ul>
       </div>
     </div>
   );
 };
 
-export default Menu;
+export default AppSidebar;
