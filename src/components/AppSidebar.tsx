@@ -8,8 +8,7 @@ import {
   MessageSquare, 
   Search, 
   Award,
-  MonitorPlay,
-  ChevronRight
+  MonitorPlay
 } from 'lucide-react';
 
 interface AppSidebarProps {
@@ -23,90 +22,92 @@ const AppSidebar = ({ isVisible = false }: AppSidebarProps) => {
   const menuItems = [
     { 
       title: 'Settings', 
-      icon: <Settings className="h-5 w-5" />, 
+      icon: <Settings className="h-6 w-6 text-purple-400" />, 
       path: '/settings',
-      color: 'text-white'
+      description: 'Configure your game'
     },
     { 
       title: 'Streaming', 
-      icon: <Video className="h-5 w-5" />, 
+      icon: <Video className="h-6 w-6 text-purple-400" />, 
       path: '/streaming',
-      color: 'text-white'
+      description: 'Live gameplay'
     },
     { 
       title: 'Profile', 
-      icon: <User className="h-5 w-5" />, 
+      icon: <User className="h-6 w-6 text-purple-400" />, 
       path: '/profile',
-      color: 'text-white'
+      description: 'Your player stats'
     },
     { 
       title: 'Messages', 
-      icon: <MessageSquare className="h-5 w-5" />, 
+      icon: <MessageSquare className="h-6 w-6 text-purple-400" />, 
       path: '/messages',
-      color: 'text-yellow-300'
+      description: 'Chat with players'
     },
     { 
       title: 'Discovery', 
-      icon: <Search className="h-5 w-5" />, 
+      icon: <Search className="h-6 w-6 text-purple-400" />, 
       path: '/discovery',
-      color: 'text-orange-300'
+      description: 'Find new games'
     },
     { 
       title: 'Top Clips', 
-      icon: <Award className="h-5 w-5" />, 
+      icon: <Award className="h-6 w-6 text-purple-400" />, 
       path: '/top-clipts',
-      color: 'text-blue-300'
+      description: 'Hall of fame'
     },
     { 
       title: 'Clips', 
-      icon: <MonitorPlay className="h-5 w-5" />, 
+      icon: <MonitorPlay className="h-6 w-6 text-purple-400" />, 
       path: '/clipts',
-      color: 'text-red-300'
+      description: 'View all clips'
     }
   ];
 
   return (
     <div 
       id="app-sidebar"
-      className={`fixed left-0 top-0 bottom-0 w-64 bg-[#121212] border-r border-[#1A1A1A] z-50 transform transition-transform duration-300 ease-in-out ${
-        isVisible ? 'translate-x-0' : '-translate-x-full'
+      className={`fixed left-0 top-0 bottom-0 w-full h-full bg-[#0f0b23]/95 backdrop-blur-md z-50 transition-all duration-300 ease-in-out overflow-auto ${
+        isVisible ? 'opacity-100 visible' : 'opacity-0 invisible'
       }`}
     >
-      <div className="px-2 py-4">
-        <div className="mb-6 px-3">
-          <h2 className="text-xl font-bold text-purple-400 flex items-center">
-            Menu
-            <div className="h-px flex-grow bg-gradient-to-r from-purple-500/50 to-transparent ml-3"></div>
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        <div className="mb-6 border-b border-gray-700 pb-4">
+          <h2 className="text-2xl font-bold text-center text-white uppercase tracking-wide">
+            Game Menu
           </h2>
         </div>
-        <ul className="space-y-1">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             
             return (
-              <li key={item.title}>
+              <div 
+                key={item.title}
+                className="relative border border-gray-800 bg-gray-900/50 rounded-lg p-4 backdrop-blur-sm transition-all hover:bg-gray-800/70 hover:shadow-lg overflow-hidden"
+              >
                 <button
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md text-left transition-all ${
-                    isActive 
-                      ? 'bg-[#1A1A1A] shadow-[0_0_10px_rgba(139,92,246,0.1)]' 
-                      : 'hover:bg-[#1A1A1A] hover:shadow-[0_0_10px_rgba(139,92,246,0.05)]'
-                  }`}
+                  className="w-full flex items-start text-left"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className={`${isActive ? "text-purple-400" : "text-white"}`}>
-                      {item.icon}
-                    </span>
-                    <span className={`${isActive ? "text-purple-400" : item.color} font-medium`}>{item.title}</span>
+                  <div className="flex-shrink-0 p-3 bg-gray-800 rounded-md">
+                    {item.icon}
                   </div>
-                  <ChevronRight className={`h-4 w-4 opacity-0 transform transition-all ${
-                    isActive ? "opacity-100 text-purple-400" : "group-hover:opacity-50 text-gray-400"
-                  }`} />
+                  
+                  <div className="ml-4 flex-1">
+                    <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                    <p className="text-sm text-gray-400">{item.description}</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-center">
+                    <div className="text-purple-400 rotate-90 transform">▶</div>
+                  </div>
                 </button>
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
       </div>
     </div>
   );

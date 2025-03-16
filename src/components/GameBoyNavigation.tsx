@@ -19,7 +19,7 @@ const GameBoyNavigation: React.FC = () => {
     { 
       name: 'Menu', 
       path: '#', 
-      icon: <MenuIcon size={20} className="text-purple-400 animate-pulse" />, 
+      icon: <MenuIcon size={20} className="text-purple-400" />, 
       onClick: () => setSidebarVisible(!sidebarVisible) 
     }
   ];
@@ -56,18 +56,35 @@ const GameBoyNavigation: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [sidebarVisible]);
 
+  // Handle escape key to close sidebar
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && sidebarVisible) {
+        setSidebarVisible(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    return () => document.removeEventListener('keydown', handleEscKey);
+  }, [sidebarVisible]);
+
+  // Prevent body scrolling when sidebar is open
+  useEffect(() => {
+    if (sidebarVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarVisible]);
+
   return (
     <>
-      {sidebarVisible && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300"
-          onClick={() => setSidebarVisible(false)}
-        />
-      )}
-      
       <AppSidebar isVisible={sidebarVisible} />
       
-      <div className={`gameboy-navigation fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ${
+      <div className={`gameboy-navigation fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ${
         scrolled 
           ? 'bg-[#0D0B14]/90 backdrop-blur-md border-t border-purple-900/50 shadow-lg' 
           : 'bg-[#0D0B14]/80 backdrop-blur-sm border-t border-purple-900/30'
