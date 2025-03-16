@@ -44,58 +44,59 @@ const InlineComments: React.FC<InlineCommentsProps> = ({
     );
   }
 
-  if (totalComments === 0) {
-    return null;
-  }
-
+  // Always render the container, even if no comments
   return (
     <div className="px-4 py-2 border-t border-gaming-400/20">
       {/* View all comments link */}
-      {totalComments > 0 && (
+      {totalComments > 0 ? (
         <button
           onClick={onViewAllClick}
           className="text-blue-500 hover:text-blue-400 text-sm font-medium mb-2 flex items-center"
         >
           View all {totalComments} comments
         </button>
+      ) : (
+        <p className="text-sm text-gaming-400 mb-2">No comments yet. Be the first to comment!</p>
       )}
 
       {/* Comment previews */}
-      <div className="space-y-2">
-        {displayComments.map((comment) => (
-          <div key={comment.id} className="flex items-start gap-2">
-            <Avatar className="h-6 w-6">
-              <AvatarImage
-                src={comment.profiles?.avatar_url || ""}
-                alt={comment.profiles?.username || "User"}
-              />
-              <AvatarFallback>
-                {(comment.profiles?.username?.[0] || "?").toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+      {totalComments > 0 && (
+        <div className="space-y-2">
+          {displayComments.map((comment) => (
+            <div key={comment.id} className="flex items-start gap-2">
+              <Avatar className="h-6 w-6">
+                <AvatarImage
+                  src={comment.profiles?.avatar_url || ""}
+                  alt={comment.profiles?.username || "User"}
+                />
+                <AvatarFallback>
+                  {(comment.profiles?.username?.[0] || "?").toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
 
-            <div className="flex-1">
-              <div className="inline-flex items-baseline">
-                <span className="font-semibold text-sm text-gaming-100 mr-2">
-                  {comment.profiles?.username || "Anonymous"}
-                </span>
-                <span className="text-sm text-gaming-200 break-words">
-                  {comment.content}
-                </span>
-              </div>
+              <div className="flex-1">
+                <div className="inline-flex items-baseline">
+                  <span className="font-semibold text-sm text-gaming-100 mr-2">
+                    {comment.profiles?.username || "Anonymous"}
+                  </span>
+                  <span className="text-sm text-gaming-200 break-words">
+                    {comment.content}
+                  </span>
+                </div>
 
-              <div className="flex items-center gap-3 mt-1">
-                <span className="text-xs text-gaming-400">
-                  {formatDistanceToNow(new Date(comment.created_at), {
-                    addSuffix: true,
-                  })}
-                </span>
-                {/* Could add reply button here in the future */}
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-xs text-gaming-400">
+                    {formatDistanceToNow(new Date(comment.created_at), {
+                      addSuffix: true,
+                    })}
+                  </span>
+                  {/* Could add reply button here in the future */}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
