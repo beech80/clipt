@@ -10,7 +10,8 @@ import {
   Home, 
   Film,
   Award,
-  LogOut
+  LogOut,
+  MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -24,6 +25,7 @@ const Menu = () => {
     { title: 'Streaming', icon: <Video className="h-6 w-6 mr-4" />, path: '/streaming' },
     { title: 'Discovery', icon: <Compass className="h-6 w-6 mr-4" />, path: '/discovery' },
     { title: 'Messages', icon: <MessageSquare className="h-6 w-6 mr-4" />, path: '/messages' },
+    { title: 'All Comments', icon: <MessageCircle className="h-6 w-6 mr-4" />, path: '/comments' },
     { title: 'Clipts', icon: <Film className="h-6 w-6 mr-4" />, path: '/clipts' },
     { title: 'Top Clipts', icon: <Award className="h-6 w-6 mr-4" />, path: '/top-clipts' },
     { title: 'Settings', icon: <SettingsIcon className="h-6 w-6 mr-4" />, path: '/settings' }

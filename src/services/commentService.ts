@@ -415,3 +415,92 @@ export const getCommentCount = async (postId: string): Promise<number> => {
     return 0;
   }
 };
+
+// New function to get all comments across posts with pagination
+export const getAllComments = async (page = 0, limit = 20): Promise<CommentResponse> => {
+  try {
+    console.log(`Fetching all comments, page: ${page}, limit: ${limit}`);
+    
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+    
+    // Calculate offset
+    const offset = page * limit;
+    
+    // Fetch comments across all posts
+    const { data, error } = await supabase
+      .from('comments')
+      .select(`
+        id,
+        content,
+        created_at,
+        updated_at,
+        parent_id,
+        likes_count,
+        user_id,
+        post_id,
+        profiles:user_id (
+          username,
+          avatar_url
+        ),
+        posts:post_id (
+          id,
+          title,
+          thumbnail_url
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error("Error fetching all comments:", error);
+      throw error;
+    }
+
+    // If we have a logged-in user, determine which comments they've liked
+    let commentLikes: any[] = [];
+    if (userId && data && data.length > 0) {
+      const { data: likes, error: likesError } = await supabase
+        .from('comment_likes')
+        .select('comment_id')
+        .eq('user_id', userId)
+        .in('comment_id', data.map((comment: any) => comment.id));
+
+      if (likesError) {
+        console.error("Error fetching comment likes:", likesError);
+      } else {
+        commentLikes = likes || [];
+      }
+    }
+
+    // Add liked_by_me property to each comment
+    const commentsWithLikeStatus = data ? data.map((comment: any) => ({
+      ...comment,
+      liked_by_me: commentLikes.some((like: any) => like.comment_id === comment.id)
+    })) : [];
+
+    // Get total count
+    const { count, error: countError } = await supabase
+      .from('comments')
+      .select('*', { count: 'exact', head: true });
+    
+    if (countError) {
+      console.error("Error counting total comments:", countError);
+    }
+
+    console.log(`Retrieved ${commentsWithLikeStatus?.length || 0} comments out of ${count || 'unknown'} total`);
+    return { 
+      data: { 
+        comments: commentsWithLikeStatus,
+        total: count || 0,
+        page,
+        limit
+      }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error("Error in getAllComments:", error);
+    return { data: null, error: error as Error };
+  }
+};
