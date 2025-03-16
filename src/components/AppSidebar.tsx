@@ -61,7 +61,7 @@ const AppSidebar = () => {
   ];
 
   return (
-    <div className="fixed left-0 top-0 bottom-0 w-64 bg-[#121212] border-r border-[#1A1A1A]">
+    <div className="fixed left-0 top-0 bottom-0 w-64 bg-[#121212] border-r border-[#1A1A1A] z-50">
       <div className="px-2 py-4">
         <ul className="space-y-1">
           {menuItems.map((item) => {
