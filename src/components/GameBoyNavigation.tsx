@@ -19,7 +19,7 @@ const GameBoyNavigation: React.FC = () => {
     { 
       name: 'Menu', 
       path: '#', 
-      icon: <MenuIcon size={20} className="text-purple-400" />, 
+      icon: <MenuIcon size={20} className={`${sidebarVisible ? 'text-purple-400' : 'text-gray-400'}`} />, 
       onClick: () => setSidebarVisible(!sidebarVisible) 
     }
   ];
@@ -82,7 +82,10 @@ const GameBoyNavigation: React.FC = () => {
 
   return (
     <>
-      <AppSidebar isVisible={sidebarVisible} />
+      <AppSidebar 
+        isVisible={sidebarVisible} 
+        onClose={() => setSidebarVisible(false)} 
+      />
       
       <div className={`gameboy-navigation fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ${
         scrolled 
