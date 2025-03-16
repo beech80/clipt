@@ -9,7 +9,8 @@ import {
   Search, 
   Award,
   MonitorPlay,
-  Gamepad
+  Gamepad,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -20,93 +21,109 @@ const Menu = () => {
   const menuItems = [
     { 
       title: 'Settings', 
-      icon: <Settings className="h-6 w-6 text-purple-400" />, 
+      icon: <Settings className="h-5 w-5" />, 
       path: '/settings' 
     },
     { 
       title: 'Streaming', 
-      icon: <Video className="h-6 w-6 text-purple-400" />, 
+      icon: <Video className="h-5 w-5" />, 
       path: '/streaming' 
     },
     { 
       title: 'Profile', 
-      icon: <User className="h-6 w-6 text-purple-400" />, 
+      icon: <User className="h-5 w-5" />, 
       path: '/profile' 
     },
     { 
       title: 'Messages', 
-      icon: <MessageSquare className="h-6 w-6 text-purple-400" />, 
+      icon: <MessageSquare className="h-5 w-5" />, 
       path: '/messages' 
     },
     { 
       title: 'Discovery', 
-      icon: <Search className="h-6 w-6 text-purple-400" />, 
+      icon: <Search className="h-5 w-5" />, 
       path: '/discovery' 
     },
     { 
-      title: 'Top Clipts', 
-      icon: <Award className="h-6 w-6 text-purple-400" />, 
+      title: 'Top Clips', 
+      icon: <Award className="h-5 w-5" />, 
       path: '/top-clipts' 
     },
     { 
-      title: 'Clipts', 
-      icon: <MonitorPlay className="h-6 w-6 text-purple-400" />, 
+      title: 'Clips', 
+      icon: <MonitorPlay className="h-5 w-5" />, 
       path: '/clipts' 
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#131420] flex flex-col p-4">
-      {/* Header */}
-      <div className="py-8 text-center mb-6">
-        <h1 className="text-3xl font-bold text-purple-400 tracking-widest relative inline-block">
+    <div className="min-h-screen bg-[#0D0B14] flex flex-col">
+      {/* Glowing Header */}
+      <div className="relative py-5 text-center mb-4">
+        <h1 className="text-3xl font-bold text-white tracking-wider relative inline-block">
           MENU
-          <div className="w-full h-1 bg-gradient-to-r from-purple-700 to-purple-400 mt-2 rounded-full"></div>
-          <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-purple-700 to-purple-400 rounded-full opacity-30"></div>
+          <div className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 via-[#9b87f5] to-purple-600 rounded-full"></div>
+          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-purple-500/50 rounded-full"></div>
         </h1>
       </div>
 
-      {/* Menu Grid */}
-      <div className="flex-1 px-4 max-w-md mx-auto w-full">
-        <div className="grid grid-cols-1 gap-4">
-          {menuItems.map((item) => (
-            <div 
-              key={item.title}
-              onClick={() => navigate(item.path)}
-              className="
-                bg-[#1e1a2e] border border-purple-900/30 rounded-lg p-4
-                hover:bg-[#252040] cursor-pointer transition-all duration-300
-                shadow-lg hover:shadow-purple-900/40
-                transform hover:-translate-y-1 hover:scale-[1.02]
-                flex items-center space-x-4
-              "
-            >
-              <div className="bg-[#252040] p-3 rounded-lg transition-colors relative">
+      {/* Menu list with modern styling */}
+      <div className="flex-1 px-3 py-3 space-y-2.5 max-w-md mx-auto w-full">
+        {menuItems.map((item) => (
+          <div 
+            key={item.title}
+            onClick={() => navigate(item.path)}
+            className="
+              group relative overflow-hidden
+              bg-[#1A1525] border border-[#2A2535]/50 rounded-md p-3
+              hover:bg-[#25243b] transition-all duration-300
+              shadow-lg hover:shadow-purple-900/20
+              flex items-center space-x-4
+              cursor-pointer
+            "
+          >
+            {/* Glow effect on hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/5 to-purple-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            {/* Icon container with glow */}
+            <div className="relative z-10 bg-[#252040] p-2.5 rounded-md flex items-center justify-center">
+              <div className="text-[#9b87f5]">
                 {item.icon}
-                <div className="absolute inset-0 bg-purple-500/10 rounded-lg animate-pulse opacity-0 group-hover:opacity-100"></div>
               </div>
-              
-              <span className="text-white font-medium text-lg">
-                {item.title}
-              </span>
-              
-              <div className="ml-auto">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 18L15 12L9 6" stroke="#9b87f5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
+              <div className="absolute inset-0 bg-purple-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
-          ))}
+            
+            {/* Title with hover effect */}
+            <span className="relative z-10 text-white font-medium text-base group-hover:text-[#9b87f5] transition-colors duration-300">
+              {item.title}
+            </span>
+            
+            {/* Arrow indicator */}
+            <div className="ml-auto relative z-10">
+              <ChevronRight className="h-5 w-5 text-[#9b87f5] transform transition-transform duration-300 group-hover:translate-x-0.5" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom design element */}
+      <div className="py-8 flex justify-center">
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          <div className="absolute inset-0 bg-[#252040] rounded-full opacity-10 animate-pulse"></div>
+          <Gamepad size={28} className="text-[#9b87f5] animate-float" />
         </div>
       </div>
 
-      {/* Bottom Graphic */}
-      <div className="py-10 flex justify-center">
-        <div className="relative w-48 opacity-30">
-          <Gamepad size={48} className="text-purple-400 mx-auto" />
-          <div className="h-1 w-24 bg-gradient-to-r from-purple-700 to-purple-400 mx-auto mt-4 rounded-full"></div>
-        </div>
-      </div>
+      {/* Add a CSS animation for the floating effect */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };

@@ -33,8 +33,8 @@ const GameBoyNavigation: React.FC = () => {
   return (
     <div className={`gameboy-navigation fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ${
       scrolled 
-        ? 'bg-[#131420]/90 backdrop-blur-md border-t border-purple-900/50 shadow-lg' 
-        : 'bg-[#131420]/80 backdrop-blur-sm border-t border-purple-900/30'
+        ? 'bg-[#0D0B14]/90 backdrop-blur-md border-t border-purple-900/50 shadow-lg' 
+        : 'bg-[#0D0B14]/80 backdrop-blur-sm border-t border-purple-900/30'
     }`}>
       <div className="max-w-screen-md mx-auto">
         <div className="flex justify-between items-center">
@@ -47,7 +47,7 @@ const GameBoyNavigation: React.FC = () => {
                 key={item.path}
                 className={`flex-1 py-4 flex flex-col items-center justify-center focus:outline-none transition-all duration-300 ${
                   isActive 
-                    ? 'text-purple-400' 
+                    ? 'text-[#9b87f5]' 
                     : 'text-gray-400 hover:text-gray-200'
                 }`}
                 onClick={() => navigate(item.path)}
@@ -60,7 +60,7 @@ const GameBoyNavigation: React.FC = () => {
                 </div>
                 <span className="text-xs font-medium mt-1">{item.name}</span>
                 {isActive && (
-                  <div className="h-1 w-8 bg-gradient-to-r from-purple-400 via-purple-500 to-purple-400 rounded-full mt-1" />
+                  <div className="h-0.5 w-6 bg-gradient-to-r from-purple-400 via-[#9b87f5] to-purple-400 rounded-full mt-1" />
                 )}
               </button>
             );
