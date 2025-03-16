@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Trophy, User } from 'lucide-react';
+import { Home, Search, Trophy, User, Menu as MenuIcon } from 'lucide-react';
 
 const GameBoyNavigation: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +13,8 @@ const GameBoyNavigation: React.FC = () => {
     { name: 'Home', path: '/', icon: <Home size={20} /> },
     { name: 'Discover', path: '/discover', icon: <Search size={20} /> },
     { name: 'Top Clips', path: '/topclips', icon: <Trophy size={20} /> },
-    { name: 'Profile', path: '/profile', icon: <User size={20} /> }
+    { name: 'Profile', path: '/profile', icon: <User size={20} /> },
+    { name: 'Menu', path: '/menu', icon: <MenuIcon size={20} /> }
   ];
 
   // Add scroll listener to apply blur effect when scrolling
@@ -32,14 +33,14 @@ const GameBoyNavigation: React.FC = () => {
   return (
     <div className={`gameboy-navigation fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
       scrolled 
-        ? 'bg-gaming-900/90 backdrop-blur-md border-b border-gaming-700 shadow-lg' 
-        : 'bg-gaming-900/70 backdrop-blur-sm border-b border-gaming-700/50'
+        ? 'bg-[#1e1a2e]/90 backdrop-blur-md border-b border-purple-900/50 shadow-lg' 
+        : 'bg-[#1e1a2e]/70 backdrop-blur-sm border-b border-purple-900/30'
     }`}>
       <div className="max-w-screen-md mx-auto">
         <div className="flex justify-between items-center">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || 
-                            (item.path !== '/' && location.pathname.startsWith(item.path));
+                           (item.path !== '/' && location.pathname.startsWith(item.path));
             
             return (
               <button
@@ -71,17 +72,6 @@ const GameBoyNavigation: React.FC = () => {
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
         <div className="w-12 h-12 bg-gradient-to-br from-purple-600/30 to-blue-600/30 backdrop-blur-md rounded-full border border-purple-500/50 flex items-center justify-center shadow-lg">
           <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-br from-purple-400 to-blue-400">CLIPT</span>
-          <div className="absolute inset-0 w-full h-full">
-            <div className="w-full h-full rounded-full" style={{ 
-              border: '2px solid transparent',
-              borderRadius: '50%',
-              background: 'linear-gradient(45deg, #8B5CF6, #6366F1) border-box',
-              WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
-              WebkitMaskComposite: 'xor',
-              maskComposite: 'exclude',
-              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-            }}></div>
-          </div>
         </div>
       </div>
 

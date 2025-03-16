@@ -45,9 +45,9 @@ export function DocsNavigation() {
   const location = useLocation();
 
   return (
-    <nav className="space-y-4">
+    <nav className="space-y-4 bg-[#1e1a2e] rounded-lg border border-gray-700 p-4">
       <div className="px-3 py-2">
-        <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+        <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-white">
           Documentation
         </h2>
         <div className="space-y-1">
@@ -58,10 +58,10 @@ export function DocsNavigation() {
                 key={guide.href}
                 to={guide.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:text-primary",
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:text-purple-400",
                   location.pathname === guide.href 
-                    ? "bg-secondary text-primary" 
-                    : "text-muted-foreground"
+                    ? "bg-[#252040] text-purple-400" 
+                    : "text-gray-400"
                 )}
               >
                 <Icon className="h-4 w-4" />
