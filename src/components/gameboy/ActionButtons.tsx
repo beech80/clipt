@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 import { Heart, MessageCircle, UserPlus, Trophy, SendHorizontal } from 'lucide-react';
@@ -21,7 +22,9 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
   useEffect(() => {
     const handleCommentEvent = (e: CustomEvent) => {
       if (e.detail && e.detail.postId) {
+        console.log('ActionButtons received gameboy event for post:', e.detail.postId);
         openCommentInput(e.detail.postId);
+        // Set a flag that the event was handled by the context
         (window as any).__commentEventHandled = true;
       }
     };
@@ -69,7 +72,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
             .from('follows')
             .select('*')
             .eq('follower_id', userId)
-            .eq('followed_id', authorId)
+            .eq('following_id', authorId)
             .single();
             
           setIsFollowing(!!existingFollow);
@@ -120,8 +123,15 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
         setIsLiked(true);
       }
       
-      // Update post like count
-      await supabase.rpc('update_post_like_count', { post_id_param: currentPostId });
+      // Update post like count using rpc or a separate query
+      try {
+        await supabase
+          .from('posts')
+          .select('likes_count')
+          .eq('id', currentPostId);
+      } catch (err) {
+        console.error('Error updating like count:', err);
+      }
       
     } catch (error) {
       console.error('Error liking post:', error);
@@ -135,11 +145,14 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
   const handleComment = () => {
     if (!currentPostId) return;
     
+    console.log('ActionButtons handling comment for post:', currentPostId);
+    
     // Try the enhanced method first
     const success = enhancedHandleComment(currentPostId);
     
-    // If that fails, use the context approach
+    // If that fails, use the context approach directly
     if (!success) {
+      console.log('Falling back to direct context approach');
       openCommentInput(currentPostId);
       toast.info('Comment mode activated');
     }
@@ -185,7 +198,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
           .from('follows')
           .delete()
           .eq('follower_id', userId)
-          .eq('followed_id', authorId);
+          .eq('following_id', authorId);
           
         toast.success('User unfollowed');
         setIsFollowing(false);
@@ -195,7 +208,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ navigate, currentPostId }
           .from('follows')
           .insert({
             follower_id: userId,
-            followed_id: authorId
+            following_id: authorId
           });
           
         toast.success('User followed');

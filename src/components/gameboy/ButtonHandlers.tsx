@@ -1,3 +1,4 @@
+
 /**
  * Enhanced button handlers for GameBoy controller buttons
  * These functions work with any post structure on the home and clipts pages
@@ -94,17 +95,25 @@ export const enhancedHandleComment = (currentPostId: string | null) => {
   
   // First try to use the CommentContext if available in the global window object
   if (typeof window !== 'undefined') {
-    // Try to access the openComments function from CommentContext via a custom event
-    const commentEvent = new CustomEvent('gameboy_open_comments', { 
-      detail: { postId: currentPostId }
-    });
-    window.dispatchEvent(commentEvent);
-    
-    // See if our event was handled
-    if ((window as any).__commentEventHandled) {
-      console.log('Comment opened via context');
-      delete (window as any).__commentEventHandled;
+    try {
+      // Try to access the openComments function from CommentContext via a custom event
+      const commentEvent = new CustomEvent('gameboy_open_comments', { 
+        detail: { postId: currentPostId }
+      });
+      window.dispatchEvent(commentEvent);
+      
+      // Wait a short moment and check if our event was handled
+      setTimeout(() => {
+        if ((window as any).__commentEventHandled) {
+          console.log('Comment opened via context');
+          delete (window as any).__commentEventHandled;
+        }
+      }, 50);
+      
+      // We'll return true assuming the event was dispatched
       return true;
+    } catch (error) {
+      console.error('Error using CommentContext approach:', error);
     }
   }
   

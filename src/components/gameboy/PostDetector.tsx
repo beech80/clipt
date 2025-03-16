@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -24,7 +25,8 @@ const PostDetector: React.FC<PostDetectorProps> = ({
       const allPosts = [
         ...Array.from(document.querySelectorAll('[data-post-id]')),
         ...Array.from(document.querySelectorAll('.post-card')),
-        ...Array.from(document.querySelectorAll('.post-container'))
+        ...Array.from(document.querySelectorAll('.post-container')),
+        ...Array.from(document.querySelectorAll('article'))
       ];
       
       // Filter out duplicates
@@ -42,6 +44,14 @@ const PostDetector: React.FC<PostDetectorProps> = ({
       let maxVisibility = 0;
       
       uniquePosts.forEach(post => {
+        // Check if the post has an id attribute or a data-post-id attribute
+        const hasPostId = post.getAttribute('data-post-id') || 
+                         post.getAttribute('id') ||
+                         post.getAttribute('data-id');
+        
+        // Skip posts without an ID
+        if (!hasPostId) return;
+        
         const rect = post.getBoundingClientRect();
         const windowHeight = window.innerHeight;
         
@@ -60,7 +70,7 @@ const PostDetector: React.FC<PostDetectorProps> = ({
       if (mostVisiblePost) {
         // Get the post ID - try multiple attributes
         const postId = mostVisiblePost.getAttribute('data-post-id') || 
-                      mostVisiblePost.getAttribute('id') ||
+                      mostVisiblePost.getAttribute('id')?.replace('post-', '') ||
                       mostVisiblePost.getAttribute('data-id');
         
         if (postId && postId !== currentPostId) {
@@ -72,7 +82,7 @@ const PostDetector: React.FC<PostDetectorProps> = ({
           mostVisiblePost.classList.add('gameboy-selected-post');
           
           // Apply a subtle toast notification
-          toast('Post selected');
+          toast.info('Post selected');
         }
       }
     };
@@ -108,7 +118,8 @@ const PostDetector: React.FC<PostDetectorProps> = ({
             if (node instanceof HTMLElement && 
                 (node.hasAttribute('data-post-id') || 
                  node.classList.contains('post-card') || 
-                 node.classList.contains('post-container'))) {
+                 node.classList.contains('post-container') ||
+                 node.tagName.toLowerCase() === 'article')) {
               shouldDetect = true;
             }
           });

@@ -34,9 +34,13 @@ export const CommentsProvider: React.FC<CommentsProviderProps> = ({ children }) 
     const handleGameboyCommentEvent = (e: CustomEvent) => {
       if (e.detail && e.detail.postId) {
         console.log('CommentContext received gameboy event for post:', e.detail.postId);
-        openCommentInput(e.detail.postId);
-        // Set a flag that the event was handled by the context
-        (window as any).__commentEventHandled = true;
+        
+        // Important: Delay the execution slightly to let any click events resolve first
+        setTimeout(() => {
+          openCommentInput(e.detail.postId);
+          // Set a flag that the event was handled by the context
+          (window as any).__commentEventHandled = true;
+        }, 10);
       }
     };
 
