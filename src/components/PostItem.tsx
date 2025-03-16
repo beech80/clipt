@@ -35,7 +35,6 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [commentsCount, setCommentsCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [trophyCount, setTrophyCount] = useState(0);
   const [hasTrophy, setHasTrophy] = useState(false);
@@ -70,7 +69,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         return;
       }
       
-      setCommentsCount(count || 0);
+      // Removed local state update
     } catch (error) {
       console.error('Error in fetchCommentsCount:', error);
     }
@@ -81,7 +80,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
   }, [postId]);
 
   // Fetch comment count
-  const { data: commentsCountQuery = 0 } = useQuery({
+  const { data: commentsCountData = 0, isLoading: commentsCountLoading } = useQuery({
     queryKey: ['comments-count', postId],
     queryFn: async () => {
       if (!postId) return 0;
@@ -100,6 +99,8 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     },
     enabled: !!postId
   });
+
+  const commentsCount = commentsCountData;
 
   const handleDeletePost = async () => {
     try {
@@ -237,7 +238,6 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       if (error) throw error;
       
       // Update local state
-      setCommentsCount(commentsCount + 1);
       setCommentText('');
       setIsDialogOpen(false);
       toast.success('Comment added');
