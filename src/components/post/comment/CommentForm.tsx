@@ -4,8 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { createComment } from '@/services/commentService';
 import { toast } from 'sonner';
-import { Input } from '@/components/ui/input';
-import { Loader2, Smile } from 'lucide-react';
+import { Loader2, Smile, Send, X } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -28,21 +27,21 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   parentId = null,
   onReplyComplete,
   onCancel,
-  placeholder = "Add a comment...",
-  buttonText = "Post",
+  placeholder = "Write your comment...",
+  buttonText = "Post Comment",
   className = '',
   autoFocus = false
 }) => {
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const { user } = useAuth();
 
-  // Auto focus input if requested
+  // Auto focus textarea if requested
   React.useEffect(() => {
-    if (autoFocus && inputRef.current) {
-      inputRef.current.focus();
+    if (autoFocus && textareaRef.current) {
+      textareaRef.current.focus();
     }
   }, [autoFocus]);
 
@@ -88,47 +87,58 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   
   const addEmoji = (emoji: string) => {
     setCommentText(prev => prev + emoji);
-    if (inputRef.current) {
-      inputRef.current.focus();
+    if (textareaRef.current) {
+      textareaRef.current.focus();
     }
   };
 
   return (
-    <form 
-      onSubmit={handleSubmit} 
-      className={`relative group ${className}`}
-    >
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full opacity-30 group-focus-within:opacity-70 blur group-hover:opacity-50 transition duration-300"></div>
-      <div className="relative flex items-center gap-2 bg-gaming-800 p-2 rounded-full border border-gaming-700 shadow-lg">
-        {user && (
-          <Avatar className="h-8 w-8 flex-shrink-0">
-            <AvatarImage 
-              src={user.user_metadata?.avatar_url || ''} 
-              alt={user.user_metadata?.username || 'User'} 
-            />
-            <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
-              {user.user_metadata?.username?.charAt(0).toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
+    <div className={`shadow-lg ${className}`}>
+      {/* Header with title */}
+      <div className="bg-gaming-900 p-4 rounded-t-lg border-b border-gaming-700 flex justify-between items-center">
+        <h3 className="text-lg font-medium text-white">Add Comment</h3>
+        {onCancel && (
+          <Button 
+            onClick={onCancel} 
+            size="icon"
+            variant="ghost" 
+            className="h-8 w-8 rounded-full hover:bg-gaming-700"
+          >
+            <X className="h-4 w-4" />
+          </Button>
         )}
-        
-        <div className="relative flex-grow flex bg-transparent rounded-full overflow-hidden pl-2 pr-1">
-          <Input
-            ref={inputRef}
+      </div>
+      
+      {/* Content showing which post we're commenting on */}
+      {parentId ? (
+        <div className="px-4 py-2 bg-gaming-800 text-sm text-gray-400">
+          Replying to comment
+        </div>
+      ) : (
+        <div className="px-4 py-2 bg-gaming-800 text-sm text-gray-400">
+          Commenting on post from {user?.user_metadata?.username || 'user'}
+        </div>
+      )}
+      
+      <form onSubmit={handleSubmit} className="bg-gaming-800 p-4 rounded-b-lg">
+        {/* Textarea for comment */}
+        <div className="relative mb-4">
+          <textarea
+            ref={textareaRef}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             placeholder={placeholder}
-            className="flex-grow border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-0 h-auto py-1.5 text-white placeholder:text-gray-500"
+            className="w-full h-24 bg-gaming-900 border border-gaming-700 rounded-lg p-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-600 resize-none"
           />
           
-          {/* Improved emoji picker */}
+          {/* Emoji picker button */}
           <Popover open={isEmojiPickerOpen} onOpenChange={setIsEmojiPickerOpen}>
             <PopoverTrigger asChild>
               <Button 
                 type="button" 
                 size="sm" 
                 variant="ghost" 
-                className="h-8 w-8 p-0 rounded-full text-gray-400 hover:text-white flex-shrink-0 hover:bg-gaming-700"
+                className="absolute bottom-2 right-2 h-8 w-8 p-0 rounded-full text-gray-400 hover:text-white hover:bg-gaming-700"
               >
                 <Smile className="h-5 w-5" />
               </Button>
@@ -172,30 +182,35 @@ export const CommentForm: React.FC<CommentFormProps> = ({
               </div>
             </PopoverContent>
           </Popover>
+        </div>
+        
+        {/* Action buttons */}
+        <div className="flex justify-end space-x-3">
+          {onCancel && (
+            <Button 
+              onClick={onCancel} 
+              type="button"
+              variant="outline" 
+              className="border-gaming-600 hover:bg-gaming-700 text-gray-300"
+            >
+              Cancel
+            </Button>
+          )}
           
           <Button 
             type="submit"
             disabled={isSubmitting || !commentText.trim()}
-            className={`bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full px-4 ml-2 transition-all duration-200 ${!commentText.trim() ? 'opacity-70' : 'opacity-100'}`}
+            className="bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-700 hover:to-purple-800 text-white px-6 py-2"
           >
             {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : null}
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Send className="h-4 w-4 mr-2" />
+            )}
             {buttonText}
           </Button>
         </div>
-      </div>
-      
-      {onCancel && (
-        <Button 
-          onClick={onCancel} 
-          size="sm" 
-          variant="ghost" 
-          className="h-9 px-2"
-        >
-          Cancel
-        </Button>
-      )}
-    </form>
+      </form>
+    </div>
   );
 };
