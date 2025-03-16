@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { PostInteractions } from "./interactions/PostInteractions";
 import { Post } from "@/types/post";
-import { Heart, MessageSquare, Trophy, ChevronDown, ChevronUp } from "lucide-react";
+import { Heart, MessageSquare, Trophy, ChevronDown, ChevronUp, MoreVertical } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import CommentModal from "../comments/CommentModal";
@@ -13,6 +13,8 @@ import { Button } from "../ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
+import { Textarea } from "../ui/textarea";
 
 interface PostItemProps {
   post: Post;
@@ -28,6 +30,8 @@ const PostItem = ({ post }: PostItemProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [comments, setComments] = useState<any[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
+  const [editingComment, setEditingComment] = useState(null);
+  const [editContent, setEditContent] = useState('');
 
   const { data: commentsCount = 0, refetch: refetchCommentCount } = useQuery({
     queryKey: ['comments-count', post.id],
@@ -161,6 +165,36 @@ const PostItem = ({ post }: PostItemProps) => {
     fetchComments();
   };
 
+  const deleteComment = async (commentId: string, userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId)
+        .eq('user_id', userId);
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      throw error;
+    }
+  };
+
+  const editComment = async (commentId: string, userId: string, content: string) => {
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .update({ content })
+        .eq('id', commentId)
+        .eq('user_id', userId);
+        
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      throw error;
+    }
+  };
+
   return (
     <div 
       id={`post-${post.id}`}
@@ -237,6 +271,18 @@ const PostItem = ({ post }: PostItemProps) => {
             {post.clip_votes?.[0]?.count || 0}
           </span>
         </div>
+        
+        {/* Added a more prominent comment button */}
+        <div className="ml-auto">
+          <Button 
+            onClick={() => setCommentModalOpen(true)} 
+            className="h-8 px-4 text-sm bg-gaming-700 hover:bg-gaming-600 text-white flex items-center space-x-1"
+            variant="secondary"
+          >
+            <MessageSquare className="h-4 w-4 mr-1" />
+            {commentsCount > 0 ? 'View Comments' : 'Add Comment'}
+          </Button>
+        </div>
       </div>
 
       {/* Caption */}
@@ -272,18 +318,107 @@ const PostItem = ({ post }: PostItemProps) => {
                     <AvatarFallback>{(comment.profiles?.username?.[0] || 'U').toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <div className="flex items-baseline">
-                      <span 
-                        className="text-xs font-semibold text-gaming-100 hover:text-gaming-200 cursor-pointer transition-colors"
-                        onClick={() => handleProfileClick(comment.profiles?.id)}
-                      >
-                        {comment.profiles?.username || 'Anonymous'}
-                      </span>
-                      <span className="text-xs text-gaming-400 ml-2">
-                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                      </span>
+                    <div className="flex items-baseline justify-between">
+                      <div>
+                        <span 
+                          className="text-xs font-semibold text-gaming-100 hover:text-gaming-200 cursor-pointer transition-colors"
+                          onClick={() => handleProfileClick(comment.profiles?.id)}
+                        >
+                          {comment.profiles?.username || 'Anonymous'}
+                        </span>
+                        <span className="text-xs text-gaming-400 ml-2">
+                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                        </span>
+                      </div>
+                      
+                      {/* Dropdown menu for comment actions */}
+                      {user && user.id === comment.user_id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="xs" className="h-5 w-5 p-0">
+                              <MoreVertical className="h-3 w-3 text-gaming-400" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-gaming-800 border-gaming-700">
+                            <DropdownMenuItem 
+                              className="text-xs cursor-pointer hover:bg-gaming-700 focus:bg-gaming-700 text-gaming-200"
+                              onClick={() => {
+                                // Edit logic - set up editing state for this comment
+                                setEditingComment(comment);
+                                setEditContent(comment.content);
+                              }}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-xs cursor-pointer hover:bg-gaming-700 focus:bg-gaming-700 text-red-400"
+                              onClick={async () => {
+                                try {
+                                  await deleteComment(comment.id, user.id);
+                                  // Remove comment from the list
+                                  setComments(prev => prev.filter(c => c.id !== comment.id));
+                                  refetchCommentCount();
+                                  toast.success('Comment deleted');
+                                } catch (error) {
+                                  console.error('Error deleting comment:', error);
+                                  toast.error('Failed to delete comment');
+                                }
+                              }}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
-                    <p className="text-xs text-gaming-200 mt-0.5">{comment.content}</p>
+                    
+                    {editingComment && editingComment.id === comment.id ? (
+                      <div className="mt-1">
+                        <Textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          className="min-h-[40px] text-xs bg-gaming-700 border-gaming-600 focus:border-blue-500 rounded-lg text-white resize-none"
+                          autoFocus
+                        />
+                        <div className="flex gap-2 mt-1 justify-end">
+                          <Button 
+                            size="xs"
+                            variant="ghost" 
+                            onClick={() => {
+                              setEditingComment(null);
+                              setEditContent('');
+                            }}
+                            className="h-6 text-xs text-gray-300 hover:text-white hover:bg-gaming-700"
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            size="xs"
+                            onClick={async () => {
+                              try {
+                                await editComment(comment.id, user.id, editContent.trim());
+                                // Update the comment in the list
+                                setComments(prev => prev.map(c => 
+                                  c.id === comment.id ? {...c, content: editContent.trim()} : c
+                                ));
+                                setEditingComment(null);
+                                setEditContent('');
+                                toast.success('Comment updated');
+                              } catch (error) {
+                                console.error('Error updating comment:', error);
+                                toast.error('Failed to update comment');
+                              }
+                            }}
+                            disabled={!editContent.trim() || editContent.trim() === comment.content}
+                            className="h-6 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            Save
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gaming-200 mt-0.5">{comment.content}</p>
+                    )}
                   </div>
                 </div>
               ))
@@ -342,17 +477,26 @@ const PostItem = ({ post }: PostItemProps) => {
 
       {/* Comment button if comments are hidden */}
       {!showComments && (
-        <div className="px-4 py-2 border-t border-gaming-400/20">
+        <div className="px-4 py-2 border-t border-gaming-400/20 flex justify-between items-center">
           <Button 
             variant="ghost" 
             size="sm" 
-            className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
+            className="text-gaming-300 hover:text-gaming-100 flex items-center"
             onClick={handleCommentClick}
           >
             <MessageSquare className="h-4 w-4 mr-1" />
             {commentsCount > 0 
-              ? `View all ${commentsCount} comments` 
-              : "Add a comment..."}
+              ? `Show ${commentsCount} comments` 
+              : "Show comments"}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="text-gaming-300 hover:text-gaming-100 bg-gaming-700 hover:bg-gaming-600"
+            onClick={() => setCommentModalOpen(true)}
+          >
+            Open Full Comments
           </Button>
         </div>
       )}
