@@ -933,7 +933,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       )}
 
       {/* Inline Comments Section - Showing limited comments by default */}
-      {!showComments && commentsCount > 0 && (
+      {!showComments && (
         <InlineComments 
           postId={postId}
           maxComments={3}
