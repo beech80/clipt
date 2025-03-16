@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Game, Settings, Trophy, Video, User, MessageSquare } from "lucide-react";
+import { Settings, Trophy, Video, User, MessageSquare, Gamepad } from "lucide-react";
 
 export default function MainNav() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function MainNav() {
   const isModerator = userRole === 'moderator' || userRole === 'admin';
 
   const navItems = [
-    { name: "Feed", path: "/", icon: <Game className="mr-2 h-4 w-4" /> },
+    { name: "Feed", path: "/", icon: <Gamepad className="mr-2 h-4 w-4" /> },
     { name: "Clipts", path: "/clipts", icon: <Video className="mr-2 h-4 w-4" /> },
     { name: "Top Clipts", path: "/top-clipts", icon: <Trophy className="mr-2 h-4 w-4" /> },
     { name: "Profile", path: "/profile", icon: <User className="mr-2 h-4 w-4" /> },
