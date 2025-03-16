@@ -1,5 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
+import { Comment } from '@/components/post/comment/CommentItem';
 
 export const getComments = async (postId: string) => {
   try {
@@ -62,7 +63,14 @@ export const createComment = async ({
           parent_id
         }
       ])
-      .select();
+      .select(`
+        *,
+        profiles:user_id (
+          username,
+          avatar_url,
+          display_name
+        )
+      `);
       
     if (error) throw error;
     return { data, error: null };

@@ -1,8 +1,9 @@
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CommentForm } from './comment/CommentForm';
 import { CommentItem, Comment } from './comment/CommentItem';
 import { Button } from '@/components/ui/button';
-import { Loader2, MessageCircle, AlertCircle, Heart, Hand, Flame, ThumbsUp, Smile, ArrowLeft } from 'lucide-react';
+import { Loader2, MessageCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getComments, getCommentCount } from '@/services/commentService';
 import { useQuery } from '@tanstack/react-query';

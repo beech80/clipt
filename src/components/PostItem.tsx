@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import PostContent from "./post/PostContent";
 import { supabase } from "@/lib/supabase";
@@ -922,4 +923,40 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
       {post.content && (
         <div className="px-4 py-3 border-t border-gaming-400/20">
           <p className="text-base text-gaming-100">
-            <span className="font
+            <span className="font-semibold hover:text-gaming-200 cursor-pointer transition-colors" onClick={() => handleProfileClick(post.user_id)}>
+              {username}
+            </span>
+            {' '}
+            <span className="text-gaming-200">{post.content}</span>
+          </p>
+        </div>
+      )}
+
+      {/* Comments section */}
+      <div className="px-4 py-3 border-t border-gaming-400/20">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="w-full flex items-center justify-center text-gaming-300 hover:text-gaming-100"
+          onClick={handleCommentClick}
+        >
+          <MessageSquare className="h-4 w-4 mr-1" />
+          {commentsCount > 0 
+            ? `View all ${commentsCount} comments` 
+            : "Add a comment..."}
+        </Button>
+        {showComments && (
+          <div className="mt-3">
+            <CommentList
+              postId={postId}
+              onCommentAdded={fetchCommentsCount}
+              className="max-h-[300px] overflow-y-auto"
+            />
+          </div>
+        )}
+      </div>
+    </article>
+  );
+};
+
+export default PostItem;
