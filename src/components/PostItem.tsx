@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CommentList } from "./post/CommentList"; 
+import InlineComments from "./post/InlineComments";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Textarea } from './ui/textarea';
@@ -711,7 +712,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
               .select('id')
               .eq('post_id', postId)
               .eq('user_id', user.id)
-              .maybeSingle(),
+              .single(),
             
             // Get counts from both tables
             supabase
@@ -720,7 +721,7 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
               .eq('post_id', postId),
           ]).then(([clipVote, clipCount]) => {
             // Update has trophy state
-            setHasTrophy(!!(clipVote.data));
+            setHasTrophy(!!clipVote.data);
             
             // Update trophy count
             setTrophyCount(clipCount.count || 0);
@@ -931,13 +932,26 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
         </div>
       )}
 
-      {/* Comments Section - Make sure postId is valid and passed correctly */}
+      {/* Inline Comments Section - Showing limited comments by default */}
+      {!showComments && commentsCount > 0 && (
+        <InlineComments 
+          postId={postId}
+          maxComments={3}
+          onViewAllClick={handleCommentClick}
+        />
+      )}
+
+      {/* Full Comments Section - shown when expanded */}
       {showComments && (
         <div className="border-t border-gaming-400/20">
           {postId ? (
             <CommentList 
               postId={postId}
-              onBack={() => setShowComments(false)} 
+              onCommentAdded={() => {
+                // Refresh comment count
+                queryClient.invalidateQueries({ queryKey: ['comments-count', postId] });
+              }}
+              className="comments-section"
               key={`comments-${postId}`} // Force re-render with key
             />
           ) : (
