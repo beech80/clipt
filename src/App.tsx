@@ -48,6 +48,7 @@ const Signup = React.lazy(() => import('./pages/Signup'));
 const GameStreamers = React.lazy(() => import('./pages/GameStreamers'));
 const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
+const Comments = React.lazy(() => import('./pages/comments'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -60,6 +61,7 @@ function AppContent() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/post/new" element={<NewPost />} />
       <Route path="/post/:id" element={<PostPage />} />
+      <Route path="/comments" element={<Comments />} />
       <Route path="/post/:postId/comments" element={<CommentsPage />} />
       <Route path="/game/:id" element={<Game />} />
       <Route path="/games" element={<TopGames />} />

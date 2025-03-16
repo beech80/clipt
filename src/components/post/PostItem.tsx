@@ -97,8 +97,9 @@ const PostItem = ({ post }: PostItemProps) => {
     setShowComments(!showComments);
   };
 
-  const handleViewAllComments = () => {
-    setCommentModalOpen(true);
+  const handleViewAllComments = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/comments?postId=${post.id}`);
   };
 
   const handleProfileClick = (userId: string) => {
@@ -275,7 +276,7 @@ const PostItem = ({ post }: PostItemProps) => {
         {/* Added a more prominent comment button */}
         <div className="ml-auto">
           <Button 
-            onClick={() => setCommentModalOpen(true)} 
+            onClick={handleViewAllComments} 
             className="h-8 px-4 text-sm bg-gaming-700 hover:bg-gaming-600 text-white flex items-center space-x-1"
             variant="secondary"
           >
@@ -494,19 +495,12 @@ const PostItem = ({ post }: PostItemProps) => {
             variant="outline" 
             size="sm"
             className="text-gaming-300 hover:text-gaming-100 bg-gaming-700 hover:bg-gaming-600"
-            onClick={() => setCommentModalOpen(true)}
+            onClick={handleViewAllComments}
           >
             Open Full Comments
           </Button>
         </div>
       )}
-
-      {/* Comment Modal for full view */}
-      <CommentModal 
-        isOpen={commentModalOpen}
-        onClose={handleCommentModalClose}
-        postId={String(post.id)}
-      />
     </div>
   );
 };
