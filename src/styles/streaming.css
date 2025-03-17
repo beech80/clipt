@@ -1,0 +1,66 @@
+/* Mobile optimized styles for streaming components */
+
+/* Responsive tabs for mobile */
+.moderation-tabs {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none; /* For Internet Explorer and Edge */
+  gap: 2px;
+  background: #1a1a2e;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.moderation-tabs::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari and Opera */
+}
+
+.moderation-tabs [data-state="active"] {
+  background: linear-gradient(135deg, #5a2a82 0%, #9333ea 100%);
+  color: white;
+  font-weight: bold;
+  border-bottom: 2px solid #9f7aea;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Better tab sizing for mobile */
+.moderation-tabs button {
+  flex: 0 0 auto;
+  min-width: 50px;
+  padding: 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.moderation-tabs button:hover {
+  background-color: #2d2d4a;
+}
+
+/* Add extra spacing on small screens */
+@media (max-width: 640px) {
+  .moderation-tabs {
+    padding: 3px;
+    justify-content: space-between;
+  }
+  
+  .moderation-tabs button {
+    min-width: 40px;
+    padding: 8px;
+    margin: 0 1px;
+  }
+  
+  .moderation-tabs button svg {
+    margin-right: 0;
+  }
+}
+
+/* Larger screens */
+@media (min-width: 641px) {
+  .moderation-tabs button {
+    min-width: 100px;
+    padding: 8px 16px;
+  }
+}
