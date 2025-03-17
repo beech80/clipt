@@ -110,18 +110,39 @@
 }
 
 /* Squads Clipts Menu Item Styling */
-button[data-testid="menu-item-squads clipts"] {
+.squads-menu-item {
   position: relative;
   border-color: #9f7aea !important;
   background: linear-gradient(135deg, #1a1d45 0%, #2e1a4a 100%) !important;
-}
-
-button[data-testid="menu-item-squads clipts"]:hover {
   box-shadow: 0 0 8px 2px #9f7aea, 4px 4px 0px #000000;
+  animation: squads-pulse 2s infinite ease-in-out;
+  z-index: 2;
 }
 
+.squads-menu-item::before {
+  content: "NEW";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #9f7aea;
+  color: white;
+  font-size: 10px;
+  padding: 3px 6px;
+  font-family: 'Press Start 2P', monospace;
+  transform: rotate(15deg);
+  z-index: 2;
+  border: 1px solid #ffffff;
+}
+
+@keyframes squads-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 8px 2px #9f7aea, 4px 4px 0px #000000; }
+  50% { transform: scale(1.03); box-shadow: 0 0 15px 3px #9f7aea, 4px 4px 0px #000000; }
+  100% { transform: scale(1); box-shadow: 0 0 8px 2px #9f7aea, 4px 4px 0px #000000; }
+}
+
+/* Fix for button[data-testid] selectors */
 button[data-testid="menu-item-squads clipts"] svg {
-  color: #9f7aea;
+  color: #9f7aea !important;
 }
 
 /* Retro Game Background */
