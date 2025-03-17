@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
 import { toast } from "sonner";
 import { debugVideoElement } from "@/utils/debugVideos";
+import { getVideoUrlWithProperExtension } from "@/utils/videoUtils";
 
 // Define an extended type that includes our runtime properties
 // This allows us to match the expected structure while adding our own properties
@@ -101,11 +102,18 @@ const Clipts = () => {
               const url = new URL(videoUrl);
               isValidVideo = url.protocol === 'http:' || url.protocol === 'https:';
               
-              // Fix potential MIME type issues by appending proper extension if missing
-              if (isValidVideo && !url.pathname.includes('.')) {
-                // Try to append an extension if it's missing to help browsers determine MIME type
-                post.video_url = `${videoUrl}.mp4`;
-                console.log(`Modified video URL to ensure proper MIME type handling: ${post.video_url}`);
+              // Apply formatting and MIME type corrections
+              if (isValidVideo) {
+                // Process URL to ensure it has proper extension/format 
+                post.video_url = getVideoUrlWithProperExtension(videoUrl);
+                
+                // Log what happened
+                if (post.video_url !== videoUrl) {
+                  console.log(`Fixed video URL for post ${post.id}:`, {
+                    original: videoUrl,
+                    fixed: post.video_url
+                  });
+                }
               }
             } catch (e) {
               console.warn(`Invalid URL format for post ${post.id}: ${videoUrl}`);
@@ -117,7 +125,7 @@ const Clipts = () => {
           // Fetch trophy count for each post
           const { count: trophyCount, error: trophyError } = await supabase
             .from('clip_votes')
-            .select('*', { count: 'exact', head: true })
+            .select('*', { count: 'exact', head: true})
             .eq('post_id', post.id);
             
           if (trophyError) {
@@ -228,7 +236,7 @@ const Clipts = () => {
             // Fetch updated trophy count
             const { count: trophyCount } = await supabase
               .from('clip_votes')
-              .select('*', { count: 'exact', head: true })
+              .select('*', { count: 'exact', head: true})
               .eq('post_id', post.id);
               
             return {
@@ -256,43 +264,54 @@ const Clipts = () => {
       <div className="flex items-center justify-between p-4 fixed top-0 w-full z-10 bg-background/80 backdrop-blur-sm">
         <BackButton />
         <h1 className="text-xl font-bold text-primary">Clipts</h1>
-        <Button
-          onClick={() => {
-            toast.info("Refreshing videos...");
-            refreshPosts();
-            // Force user interaction for autoplay
-            document.documentElement.setAttribute('data-user-interacted', 'true');
-          }}
-          size="icon"
-          variant="ghost"
-          className="text-primary"
-        >
-          <RefreshCw className={`h-5 w-5 ${refreshKey > 0 ? 'animate-spin' : ''}`} />
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              toast.info("Refreshing videos...");
+              refreshPosts();
+              // Force user interaction for autoplay
+              document.documentElement.setAttribute('data-user-interacted', 'true');
+            }}
+            className="text-primary"
+          >
+            <RefreshCw className={`h-5 w-5 ${refreshKey > 0 ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/video-debug')}
+          >
+            Debug
+          </Button>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-24 max-w-2xl">
-        {isLoading && (
+        {/* Debug section */}
+        <div className="mb-6 p-3 bg-slate-800 rounded text-xs overflow-x-auto">
+          <h2 className="text-white mb-2 font-semibold">Debug Info:</h2>
+          <p className="text-gray-300">
+            Found {rawPosts.length} posts, User interaction: {document.documentElement.hasAttribute('data-user-interacted') ? 'Yes' : 'No'}
+          </p>
+          <details>
+            <summary className="cursor-pointer text-blue-400 hover:text-blue-300">Show Video URLs</summary>
+            <ul className="mt-2 space-y-1">
+              {rawPosts.map(post => (
+                <li key={post.id} className="text-gray-400">
+                  Post {post.id.substring(0, 8)}: {post.video_url || 'No URL'}
+                </li>
+              ))}
+            </ul>
+          </details>
+        </div>
+        
+        {isLoading ? (
           <div className="flex justify-center my-8">
             <div className="animate-pulse">Loading videos...</div>
           </div>
-        )}
-
-        {error && (
-          <div className="bg-red-500/20 border border-red-500 text-white p-4 rounded-lg mb-6">
-            <h3 className="font-bold">Error:</h3>
-            <p>{error}</p>
-            <button 
-              onClick={() => fetchPostsDirectly()} 
-              className="mt-3 px-3 py-1 bg-purple-700 rounded text-white text-xs"
-            >
-              Try Again
-            </button>
-          </div>
-        )}
-
-        {/* Video posts */}
-        {!isLoading && rawPosts.length > 0 && (
+        ) : (
           <div className="space-y-6">
             {rawPosts.map((post) => (
               <div 
@@ -331,6 +350,19 @@ const Clipts = () => {
                 Refresh
               </button>
             </div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="bg-red-500/20 border border-red-500 text-white p-4 rounded-lg mb-6">
+            <h3 className="font-bold">Error:</h3>
+            <p>{error}</p>
+            <button 
+              onClick={() => fetchPostsDirectly()} 
+              className="mt-3 px-3 py-1 bg-purple-700 rounded text-white text-xs"
+            >
+              Try Again
+            </button>
           </div>
         )}
       </div>

@@ -27,7 +27,8 @@ const Menu = () => {
         { title: 'Settings', icon: <SettingsIcon className="h-6 w-6 mr-4 text-purple-400" />, path: '/settings', description: 'Configure your game' },
         { title: 'Streaming', icon: <Video className="h-6 w-6 mr-4 text-purple-400" />, path: '/streaming', description: 'Live gameplay' },
         { title: 'Profile', icon: <User className="h-6 w-6 mr-4 text-purple-400" />, path: '/profile', description: 'Your player stats' },
-        { title: 'Messages', icon: <MessageSquare className="h-6 w-6 mr-4 text-purple-400" />, path: '/messages', description: 'Chat with players' }
+        { title: 'Messages', icon: <MessageSquare className="h-6 w-6 mr-4 text-purple-400" />, path: '/messages', description: 'Chat with players' },
+        { title: 'Video Debug', icon: <Film className="h-6 w-6 mr-4 text-red-400" />, path: '/video-debug', description: 'Fix video issues [DEV]', className: 'dev-tool' }
       ]
     },
     {
@@ -72,7 +73,11 @@ const Menu = () => {
                 <button
                   key={index}
                   onClick={() => navigate(item.path)}
-                  className={`retro-menu-item p-4 flex items-center border-2 border-[#4a4dff] bg-[#1a1d45] hover:bg-[#252968] transition-all transform hover:translate-y-[-2px] focus:outline-none focus:ring-2 focus:ring-[#5ce1ff] ${item.className || ''}`}
+                  className={`retro-menu-item p-4 flex items-center border-2 border-[#4a4dff] bg-[#1a1d45] hover:bg-[#252968] transition-all transform hover:translate-y-[-2px] focus:outline-none focus:ring-2 focus:ring-[#5ce1ff] ${
+                    item.className === 'dev-tool' 
+                    ? 'border-red-500 bg-red-900/40 hover:bg-red-900/60' 
+                    : ''
+                  } ${item.className || ''}`}
                   data-testid={`menu-item-${item.title.toLowerCase()}`}
                 >
                   <div className="bg-[#252968] p-2 rounded-none border border-[#4a4dff]">
