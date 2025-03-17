@@ -11,6 +11,7 @@ import { StreamChat } from "@/components/streaming/StreamChat";
 import { StreamDashboard } from "@/components/streaming/StreamDashboard";
 import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
 import { ChatModerationDashboard } from "@/components/streaming/moderation/ChatModerationDashboard";
+import '@/styles/streaming.css';
 
 export default function Streaming() {
   const { user } = useAuth();
@@ -77,27 +78,30 @@ export default function Streaming() {
 
   return (
     <div className="container max-w-6xl py-4 px-4 md:px-6 space-y-6">
-      <h1 className="text-2xl md:text-3xl font-bold">Streaming</h1>
+      <div className="streaming-header mb-6">
+        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Streaming</h1>
+        <p className="text-gray-400 mt-2">Broadcast your gameplay to the world</p>
+      </div>
       
       <Tabs defaultValue="live" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-6">
-          <TabsTrigger value="live">
-            <Play className="w-4 h-4 mr-2" />
+        <TabsList className="streaming-tabs-main grid grid-cols-2 md:grid-cols-4 mb-6 gap-2">
+          <TabsTrigger value="live" className="streaming-tab-button">
+            <Play className="w-5 h-5 mr-2" />
             <span className="hidden sm:inline">Live</span>
             <span className="sm:hidden">Live</span>
           </TabsTrigger>
-          <TabsTrigger value="setup">
-            <Settings2 className="w-4 h-4 mr-2" />
+          <TabsTrigger value="setup" className="streaming-tab-button">
+            <Settings2 className="w-5 h-5 mr-2" />
             <span className="hidden sm:inline">Setup</span>
             <span className="sm:hidden">Setup</span>
           </TabsTrigger>
-          <TabsTrigger value="schedule">
-            <Calendar className="w-4 h-4 mr-2" />
+          <TabsTrigger value="schedule" className="streaming-tab-button">
+            <Calendar className="w-5 h-5 mr-2" />
             <span className="hidden sm:inline">Schedule</span>
             <span className="sm:hidden">Schedule</span>
           </TabsTrigger>
-          <TabsTrigger value="dashboard">
-            <ChartBar className="w-4 h-4 mr-2" />
+          <TabsTrigger value="dashboard" className="streaming-tab-button">
+            <ChartBar className="w-5 h-5 mr-2" />
             <span className="hidden sm:inline">Dashboard</span>
             <span className="sm:hidden">Stats</span>
           </TabsTrigger>
