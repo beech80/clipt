@@ -1,21 +1,53 @@
 /* Enhanced scrollbar styling for the comment modal */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
+  width: 12px; /* Wider scrollbar for easier clicking */
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
   background: rgba(26, 31, 44, 0.8);
   border-radius: 8px;
+  margin: 4px 0; /* Add some margin for better appearance */
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(135, 106, 245, 0.5);
+  background: rgba(135, 106, 245, 0.6);
   border-radius: 8px;
+  border: 2px solid rgba(26, 31, 44, 0.8); /* Add border for better visibility */
+  min-height: 60px; /* Ensure scroll thumb is big enough to interact with */
   transition: background 0.2s ease;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(135, 106, 245, 0.8);
+  background: rgba(135, 106, 245, 0.9);
+}
+
+/* Ensure scrolling works well on all browsers */
+.custom-scrollbar {
+  scrollbar-width: auto; /* For Firefox */
+  scrollbar-color: rgba(135, 106, 245, 0.6) rgba(26, 31, 44, 0.8); /* For Firefox */
+  -webkit-overflow-scrolling: touch; /* For iOS Safari */
+}
+
+/* Add indicators at the top and bottom of scrollable areas when content overflows */
+.custom-scrollbar::before,
+.custom-scrollbar::after {
+  content: '';
+  position: sticky;
+  left: 0;
+  right: 0;
+  height: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.custom-scrollbar::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(26, 31, 44, 0.8) 0%, transparent 100%);
+}
+
+.custom-scrollbar::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(26, 31, 44, 0.8) 0%, transparent 100%);
 }
 
 /* Comment animation effects */
