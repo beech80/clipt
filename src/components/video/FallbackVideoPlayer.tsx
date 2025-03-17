@@ -48,6 +48,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [showPlayButton, setShowPlayButton] = useState(false);
 
   // Debug log on initial render
   useEffect(() => {
@@ -64,6 +65,57 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
     setUseProxyFallback(false);
     setAttemptCount(0);
   }, [videoUrl]);
+
+  // Auto-play when user interacts with the page
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      console.log('User interaction detected, trying to play video');
+      if (videoRef.current && videoRef.current.paused) {
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log('Auto-play still blocked after user interaction:', error);
+            // Add a play button overlay if autoplay fails
+            setShowPlayButton(true);
+          });
+        }
+      }
+    };
+
+    // Try to autoplay immediately
+    if (videoRef.current && autoPlay) {
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log('Initial auto-play blocked:', error);
+          setShowPlayButton(true);
+        });
+      }
+    }
+
+    // Listen for custom user-interacted event
+    document.addEventListener('user-interacted', handleUserInteraction);
+    
+    // Listen for visibility changes (when tab becomes visible again)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && videoRef.current && autoPlay) {
+        videoRef.current.play().catch(() => {});
+      }
+    });
+    
+    // Try to play every few seconds if not already playing
+    const intervalId = setInterval(() => {
+      if (videoRef.current && videoRef.current.paused && autoPlay) {
+        videoRef.current.play().catch(() => {});
+      }
+    }, 2000);
+    
+    return () => {
+      document.removeEventListener('user-interacted', handleUserInteraction);
+      document.removeEventListener('visibilitychange', handleUserInteraction);
+      clearInterval(intervalId);
+    };
+  }, [autoPlay]);
 
   // Handle video load success
   const handleLoadSuccess = () => {
@@ -227,6 +279,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
         key={`video-${postId}-${attemptCount}`}
         onLoadedData={handleLoadSuccess}
         onCanPlay={handleLoadSuccess}
+        onPlay={() => setShowPlayButton(false)}
         onError={() => {
           console.error(`Video error for attempt ${attemptCount}`);
           tryNextFallback();
@@ -243,31 +296,28 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
         </p>
       </video>
 
+      {/* Loading indicator */}
       {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <div className="animate-pulse">Loading video...</div>
+        </div>
+      )}
+      
+      {/* Manual play button overlay for browsers that block autoplay */}
+      {showPlayButton && (
         <div 
-          className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
+          className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer z-10"
           onClick={() => {
-            document.documentElement.setAttribute('data-user-interacted', 'true');
             if (videoRef.current) {
-              videoRef.current.muted = false;
-              videoRef.current.load();
-              videoRef.current.play().catch(err => {
-                console.error("Manual play failed:", err);
-                // Try again muted
-                if (videoRef.current) {
-                  videoRef.current.muted = true;
-                  videoRef.current.play().catch(() => {
-                    console.error("Even muted playback failed");
-                    tryNextFallback();
-                  });
-                }
-              });
+              videoRef.current.play()
+                .then(() => setShowPlayButton(false))
+                .catch(err => console.error("Manual play failed:", err));
             }
           }}
         >
-          <div className="p-4 bg-purple-800/80 rounded-full hover:bg-purple-700/80 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
+          <div className="bg-purple-700/80 p-4 rounded-full hover:bg-purple-600 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
+              <path d="M8 5v14l11-7z"/>
             </svg>
           </div>
         </div>

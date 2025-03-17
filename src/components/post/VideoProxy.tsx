@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 interface VideoProxyProps {
   src: string;
@@ -31,6 +31,8 @@ const VideoProxy: React.FC<VideoProxyProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [showPlayButton, setShowPlayButton] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Fetch and create a blob URL from the source
   useEffect(() => {
@@ -132,6 +134,38 @@ const VideoProxy: React.FC<VideoProxyProps> = ({
     setRetryCount(0); // This will trigger the useEffect to run again
   };
 
+  // Add autoplay support with user interaction listeners
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      console.log('User interaction detected in VideoProxy');
+      if (videoRef.current && videoRef.current.paused) {
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log('Auto-play still blocked in VideoProxy:', error);
+            setShowPlayButton(true);
+          });
+        }
+      }
+    };
+
+    document.addEventListener('user-interacted', handleUserInteraction);
+    
+    // Try to autoplay on interval
+    const intervalId = setInterval(() => {
+      if (videoRef.current && videoRef.current.paused && autoPlay && !isLoading) {
+        videoRef.current.play().catch(() => {
+          setShowPlayButton(true);
+        });
+      }
+    }, 2000);
+    
+    return () => {
+      document.removeEventListener('user-interacted', handleUserInteraction);
+      clearInterval(intervalId);
+    };
+  }, [autoPlay, isLoading]);
+
   return (
     <div className="relative w-full h-full">
       {isLoading && (
@@ -154,6 +188,7 @@ const VideoProxy: React.FC<VideoProxyProps> = ({
       
       {blobUrl && (
         <video
+          ref={videoRef}
           src={blobUrl}
           className={className}
           controls={controls}
@@ -169,18 +204,41 @@ const VideoProxy: React.FC<VideoProxyProps> = ({
             setIsLoading(false);
             if (onLoad) onLoad();
             // Force play for mobile devices which sometimes need user interaction
-            const video = document.querySelector('video');
-            if (video && autoPlay) {
-              const playPromise = video.play();
+            if (videoRef.current && autoPlay) {
+              const playPromise = videoRef.current.play();
               if (playPromise !== undefined) {
-                playPromise.catch(err => {
+                playPromise.then(() => {
+                  setShowPlayButton(false);
+                }).catch(err => {
                   console.log('Auto-play prevented in VideoProxy. User interaction needed:', err);
+                  setShowPlayButton(true);
                 });
               }
             }
           }}
+          onPlay={() => setShowPlayButton(false)}
           style={{ width: '100%', height: '100%', objectFit: 'cover', maxHeight: '90vh' }}
         />
+      )}
+      
+      {/* Manual play button overlay for browsers that block autoplay */}
+      {showPlayButton && !isLoading && blobUrl && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer z-10"
+          onClick={() => {
+            if (videoRef.current) {
+              videoRef.current.play()
+                .then(() => setShowPlayButton(false))
+                .catch(err => console.error("Manual play failed:", err));
+            }
+          }}
+        >
+          <div className="bg-purple-700/80 p-4 rounded-full hover:bg-purple-600 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="white">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        </div>
       )}
     </div>
   );

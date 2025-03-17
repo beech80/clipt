@@ -190,7 +190,7 @@ const Clipts = () => {
     console.log("Clipts page mounted - simplified version");
     
     // Set a longer timeout (5 seconds) to ensure videos have time to load
-    const timeoutId = setTimeout(() => {
+    const loadingTimeoutId = setTimeout(() => {
       if (isLoading) {
         console.log('Fetch timeout');
         setIsLoading(false);
@@ -208,19 +208,53 @@ const Clipts = () => {
       // Trigger a custom event that video elements can listen for
       const userInteractEvent = new CustomEvent('user-interacted');
       document.dispatchEvent(userInteractEvent);
+      
+      // Force play all videos on the page after user interaction
+      document.querySelectorAll('video').forEach(video => {
+        if (video.paused) {
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.log('Auto-play still prevented after user interaction:', error);
+            });
+          }
+        }
+      });
     };
 
     // Force trigger interaction to help with video playback
-    setTimeout(triggerInteraction, 1000);
+    const timeoutId2 = setTimeout(triggerInteraction, 1000);
+    
+    // More aggressive approach: check and try to play videos every few seconds
+    const autoplayInterval = setInterval(() => {
+      if (document.documentElement.hasAttribute('data-user-interacted')) {
+        document.querySelectorAll('video').forEach(video => {
+          if (video.paused) {
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(error => {
+                // Silent fail is fine here
+              });
+            }
+          }
+        });
+      }
+    }, 3000);
 
     // Add interaction listeners to help with autoplay
-    document.addEventListener('click', triggerInteraction, { once: true });
-    document.addEventListener('touchstart', triggerInteraction, { once: true });
+    document.addEventListener('click', triggerInteraction);
+    document.addEventListener('touchstart', triggerInteraction);
+    document.addEventListener('keydown', triggerInteraction);
+    document.addEventListener('scroll', triggerInteraction);
     
     return () => {
-      clearTimeout(timeoutId);
+      clearTimeout(loadingTimeoutId);
+      clearTimeout(timeoutId2);
+      clearInterval(autoplayInterval);
       document.removeEventListener('click', triggerInteraction);
       document.removeEventListener('touchstart', triggerInteraction);
+      document.removeEventListener('keydown', triggerInteraction);
+      document.removeEventListener('scroll', triggerInteraction);
     };
   }, [fetchPostsDirectly, refreshKey]);
 
