@@ -1540,7 +1540,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                         
                         {/* Footer with game-like credits */}
                         <div className="mt-4 border-t-2 border-dashed border-[#3A3A45] py-3 px-4 text-center">
-                          <p className="text-xs text-gray-500">PRESS <span className="text-purple-400">X</span> TO CLOSE</p>
+                          
                         </div>
                       </div>
                     </div>
@@ -1613,3 +1613,4 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 };
 
 export default GameBoyControls;
+
