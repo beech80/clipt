@@ -1219,6 +1219,152 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleFollow = () => handlePostAction('follow');
   const handleTrophy = () => handlePostAction('trophy');
 
+  // Enhanced comment button handler
+  const handleCommentClick = () => {
+    // Enhanced post detection for comments
+    const currentPostId = getCurrentPostId();
+    
+    if (currentPostId) {
+      console.log('Comment button clicked for post:', currentPostId);
+      
+      // Add visual feedback - pulse animation on the selected post
+      const postElement = document.querySelector(`[data-post-id="${currentPostId}"], #post-${currentPostId}`);
+      if (postElement) {
+        // Add a pulse effect to indicate the targeted post
+        postElement.classList.add('comment-target-pulse');
+        // Remove it after animation completes
+        setTimeout(() => postElement.classList.remove('comment-target-pulse'), 800);
+      }
+      
+      // Find if this post is already showing comments
+      const commentSection = document.querySelector(`[data-post-id="${currentPostId}"] .comments-section, #post-${currentPostId} .comments-section`);
+      const isShowingComments = commentSection && window.getComputedStyle(commentSection).display !== 'none';
+      
+      // Use event delegation to find and trigger the comment button on the post
+      const targetPostCommentBtn = document.querySelector(`[data-post-id="${currentPostId}"] .comment-button, #post-${currentPostId} .comment-button`);
+      if (targetPostCommentBtn) {
+        targetPostCommentBtn.click();
+      } else {
+        // Fallback: navigate to the post's dedicated page with comments section
+        navigate(`/post/${currentPostId}`);
+      }
+      
+      // Store the last interacted post ID to maintain context
+      try {
+        localStorage.setItem('clipt-last-comment-post', currentPostId);
+      } catch (e) {
+        console.error('Failed to store post ID:', e);
+      }
+    } else {
+      // Fallback - notify user
+      toast.info('Select a post to comment on', {
+        position: 'bottom-center',
+        duration: 2000,
+      });
+      
+      // Try to scroll to the first visible post to help user
+      const firstVisiblePost = Array.from(document.querySelectorAll('.post-item, [data-post-id], [id^="post-"]')).find(
+        post => {
+          const rect = post.getBoundingClientRect();
+          return rect.top >= 0 && rect.bottom <= window.innerHeight;
+        }
+      );
+      
+      if (firstVisiblePost) {
+        firstVisiblePost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  };
+
+  // Function to get the current post ID with improved reliability
+  const getCurrentPostId = () => {
+    // First check if we have a selected post ID in state
+    if (currentPostId) {
+      return currentPostId;
+    }
+    
+    // Then check session storage as backup
+    try {
+      const storedPostId = sessionStorage.getItem('clipt-last-selected-post');
+      if (storedPostId) {
+        return storedPostId;
+      }
+    } catch (e) {
+      console.error('Failed to access session storage:', e);
+    }
+    
+    // Last resort - find the most visible post on screen
+    return detectMostVisiblePost();
+  };
+
+  // Helper function to detect the most visible post on screen
+  const detectMostVisiblePost = () => {
+    const allPosts = Array.from(document.querySelectorAll('.post-item, [data-post-id], [id^="post-"]'));
+    
+    if (allPosts.length === 0) {
+      return null;
+    }
+    
+    let mostVisiblePost = null;
+    let maxVisibility = 0;
+    
+    allPosts.forEach(post => {
+      const rect = post.getBoundingClientRect();
+      
+      // Calculate visibility score based on how much of the post is in viewport
+      if (rect.bottom < 0 || rect.top > window.innerHeight) {
+        // Post is not visible at all
+        return;
+      }
+      
+      // Calculate what percentage of the post is visible
+      const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+      const percentVisible = visibleHeight / rect.height;
+      
+      // Bonus for being in the center of the screen
+      const distanceFromCenter = Math.abs((rect.top + rect.bottom) / 2 - window.innerHeight / 2);
+      const centerFactor = 1 - (distanceFromCenter / window.innerHeight);
+      
+      // Combined score
+      const visibilityScore = percentVisible * (1 + centerFactor);
+      
+      if (visibilityScore > maxVisibility) {
+        maxVisibility = visibilityScore;
+        mostVisiblePost = post;
+      }
+    });
+    
+    if (mostVisiblePost) {
+      // Get post ID from various possible attributes
+      const postId = mostVisiblePost.getAttribute('data-post-id') || 
+                     mostVisiblePost.getAttribute('id')?.replace(/post-?/i, '') ||
+                     mostVisiblePost.getAttribute('data-id');
+      
+      return postId || null;
+    }
+    
+    return null;
+  };
+
+  // Add subtle styling for the comment target pulse animation
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .gameboy-selected-post {
+      outline: 2px solid rgba(61, 90, 254, 0.3);
+      transition: outline 0.3s ease;
+    }
+    
+    .comment-target-pulse {
+      animation: comment-pulse 0.8s ease;
+    }
+    
+    @keyframes comment-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(61, 90, 254, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(61, 90, 254, 0.1); }
+      100% { box-shadow: 0 0 0 0 rgba(61, 90, 254, 0); }
+    }
+  `;
+  
   // Your return JSX - the UI for the GameBoy controller
   return (
     <>
@@ -1424,7 +1570,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 {/* Top button (Comment) */}
                 <button 
                   data-action="comment"
-                  onClick={handleComment}
+                  onClick={handleCommentClick}
                   className="absolute top-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-blue-500 flex items-center justify-center"
                 >
                   <MessageCircle className="text-blue-500 h-5 w-5" />
