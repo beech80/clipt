@@ -111,27 +111,28 @@
 
 /* Squads Clipts Menu Item Styling */
 .squads-menu-item {
-  position: relative;
+  position: relative !important;
   border-color: #9f7aea !important;
   background: linear-gradient(135deg, #1a1d45 0%, #2e1a4a 100%) !important;
-  box-shadow: 0 0 8px 2px #9f7aea, 4px 4px 0px #000000;
-  animation: squads-pulse 2s infinite ease-in-out;
-  z-index: 2;
+  box-shadow: 0 0 8px 2px #9f7aea, 4px 4px 0px #000000 !important;
+  animation: squads-pulse 2s infinite ease-in-out !important;
+  z-index: 2 !important;
+  order: 3 !important; /* Force position after Top Clipts */
 }
 
 .squads-menu-item::before {
-  content: "NEW";
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: #9f7aea;
-  color: white;
-  font-size: 10px;
-  padding: 3px 6px;
-  font-family: 'Press Start 2P', monospace;
-  transform: rotate(15deg);
-  z-index: 2;
-  border: 1px solid #ffffff;
+  content: "NEW" !important;
+  position: absolute !important;
+  top: -10px !important;
+  right: -10px !important;
+  background: #ff3e3e !important;
+  color: white !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  font-family: 'Press Start 2P', monospace !important;
+  transform: rotate(15deg) !important;
+  z-index: 2 !important;
+  border: 2px solid #ffffff !important;
 }
 
 @keyframes squads-pulse {
@@ -140,7 +141,13 @@
   100% { transform: scale(1); box-shadow: 0 0 8px 2px #9f7aea, 4px 4px 0px #000000; }
 }
 
-/* Fix for button[data-testid] selectors */
+/* Additional selector to ensure targeting works */
+button[data-testid="menu-item-squads clipts"] {
+  position: relative !important;
+  border: 3px solid #9f7aea !important;
+  background-color: #2e1a4a !important;
+}
+
 button[data-testid="menu-item-squads clipts"] svg {
   color: #9f7aea !important;
 }
