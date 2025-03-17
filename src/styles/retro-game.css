@@ -78,6 +78,35 @@
   box-shadow: 6px 6px 0px #000000;
 }
 
+/* Home Menu Item Highlight */
+.home-menu-item {
+  position: relative;
+  box-shadow: 0 0 0 2px #5ce1ff, 4px 4px 0px #000000;
+  border-color: #5ce1ff !important;
+  z-index: 1;
+  animation: subtle-pulse 2s infinite ease-in-out;
+}
+
+.home-menu-item::before {
+  content: "NEW";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #ff3e3e;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  font-family: 'Press Start 2P', monospace;
+  transform: rotate(15deg);
+  z-index: 2;
+}
+
+@keyframes subtle-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
 /* Retro Game Background */
 .retro-game-bg {
   background-color: #0f112a;
