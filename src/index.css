@@ -353,3 +353,64 @@
 .xbox-joystick-direction {
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
+
+/* Gaming theme colors for the GameChat component */
+.bg-gaming-900 {
+  background-color: #0f111a;
+}
+
+.bg-gaming-850 {
+  background-color: #131624;
+}
+
+.bg-gaming-800 {
+  background-color: #171a29;
+}
+
+.bg-gaming-800\/50 {
+  background-color: rgba(23, 26, 41, 0.5);
+}
+
+.bg-gaming-700 {
+  background-color: #222536;
+}
+
+.border-gaming-700 {
+  border-color: #2a2e42;
+}
+
+.border-gaming-600 {
+  border-color: #383d56;
+}
+
+.text-gaming-100 {
+  color: #eaebef;
+}
+
+.text-gaming-200 {
+  color: #d5d7e0;
+}
+
+.text-gaming-400 {
+  color: #9397a8;
+}
+
+.text-gaming-400\/70 {
+  color: rgba(147, 151, 168, 0.7);
+}
+
+.text-gaming-500 {
+  color: #777c8e;
+}
+
+.hover\:bg-gaming-700:hover {
+  background-color: #222536;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-gaming-700 {
+  scrollbar-color: #2a2e42 transparent;
+}
