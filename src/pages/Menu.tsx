@@ -20,15 +20,25 @@ const Menu = () => {
   const { user, signOut } = useAuth();
 
   const menuItems = [
-    { title: 'Home', icon: <Home className="h-6 w-6 mr-4" />, path: '/' },
-    { title: 'Profile', icon: <User className="h-6 w-6 mr-4" />, path: '/profile' },
-    { title: 'Streaming', icon: <Video className="h-6 w-6 mr-4" />, path: '/streaming' },
-    { title: 'Discovery', icon: <Compass className="h-6 w-6 mr-4" />, path: '/discovery' },
-    { title: 'Messages', icon: <MessageSquare className="h-6 w-6 mr-4" />, path: '/messages' },
-    { title: 'All Comments', icon: <MessageCircle className="h-6 w-6 mr-4" />, path: '/comments' },
-    { title: 'Clipts', icon: <Film className="h-6 w-6 mr-4" />, path: '/clipts' },
-    { title: 'Top Clipts', icon: <Award className="h-6 w-6 mr-4" />, path: '/top-clipts' },
-    { title: 'Settings', icon: <SettingsIcon className="h-6 w-6 mr-4" />, path: '/settings' }
+    {
+      title: 'GAME TOOLS',
+      items: [
+        { title: 'Settings', icon: <SettingsIcon className="h-6 w-6 mr-4 text-purple-400" />, path: '/settings', description: 'Configure your game' },
+        { title: 'Streaming', icon: <Video className="h-6 w-6 mr-4 text-purple-400" />, path: '/streaming', description: 'Live gameplay' },
+        { title: 'Profile', icon: <User className="h-6 w-6 mr-4 text-purple-400" />, path: '/profile', description: 'Your player stats' },
+        { title: 'Messages', icon: <MessageSquare className="h-6 w-6 mr-4 text-purple-400" />, path: '/messages', description: 'Chat with players' }
+      ]
+    },
+    {
+      title: 'EXPLORE',
+      items: [
+        { title: 'Discovery', icon: <Compass className="h-6 w-6 mr-4 text-blue-400" />, path: '/discovery', description: 'Find new games' },
+        { title: 'Top Clipts', icon: <Award className="h-6 w-6 mr-4 text-blue-400" />, path: '/top-clipts', description: 'Hall of fame' },
+        { title: 'Home', icon: <Home className="h-6 w-6 mr-4 text-blue-400" />, path: '/', description: 'Main screen' },
+        { title: 'Clipts', icon: <Film className="h-6 w-6 mr-4 text-blue-400" />, path: '/clipts', description: 'View all clipts' },
+        { title: 'All Comments', icon: <MessageCircle className="h-6 w-6 mr-4 text-blue-400" />, path: '/comments', description: 'Community chat' }
+      ]
+    }
   ];
 
   const handleLogout = async () => {
@@ -41,39 +51,52 @@ const Menu = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c]">
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/40 backdrop-blur-lg border-b border-white/10">
+    <div className="min-h-screen bg-[#0f112a] text-white">
+      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-[#141644] border-b-4 border-[#4a4dff] shadow-[0_4px_0_0_#000]">
         <div className="flex items-center justify-center max-w-7xl mx-auto relative">
-          <h1 className="text-3xl font-bold text-white">Menu</h1>
+          <h1 className="text-3xl font-bold text-white pixel-font retro-text-shadow">GAME MENU</h1>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 pt-24 pb-20 max-w-md">
-        <div className="bg-black/30 backdrop-blur-sm rounded-xl p-6 border border-white/10 shadow-xl">
-          <div className="flex flex-col space-y-2">
-            {menuItems.map((item, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                className="flex justify-start items-center py-6 text-lg text-white hover:bg-white/10 transition"
-                onClick={() => navigate(item.path)}
-              >
-                {item.icon}
-                {item.title}
-              </Button>
-            ))}
-            
-            <hr className="border-white/10 my-2" />
-            
-            <Button
-              variant="ghost"
-              className="flex justify-start items-center py-6 text-lg text-red-400 hover:bg-white/10 transition"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-6 w-6 mr-4" />
-              Sign Out
-            </Button>
+      <div className="container mx-auto px-4 pt-24 pb-20 max-w-4xl">
+        {menuItems.map((section, sectionIndex) => (
+          <div key={sectionIndex} className="mb-8">
+            <h2 className="text-xl font-bold mb-4 text-[#5ce1ff] pixel-font retro-text-shadow">{section.title}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {section.items.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => navigate(item.path)}
+                  className="retro-menu-item p-4 flex items-center border-2 border-[#4a4dff] bg-[#1a1d45] hover:bg-[#252968] transition-all transform hover:translate-y-[-2px] focus:outline-none focus:ring-2 focus:ring-[#5ce1ff]"
+                >
+                  <div className="bg-[#252968] p-2 rounded-none border border-[#4a4dff]">
+                    {item.icon}
+                  </div>
+                  <div className="ml-4 text-left">
+                    <h3 className="text-lg font-bold pixel-font">{item.title}</h3>
+                    <p className="text-gray-400 text-sm">{item.description}</p>
+                  </div>
+                  <div className="ml-auto">
+                    <svg className="w-5 h-5 text-[#5ce1ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
+        ))}
+        
+        <div className="mt-8 text-center">
+          <button
+            onClick={handleLogout}
+            className="retro-button-secondary px-6 py-3 flex items-center mx-auto"
+          >
+            <LogOut className="h-5 w-5 mr-2" />
+            <span className="pixel-font">SIGN OUT</span>
+          </button>
+          
+          <p className="text-sm text-gray-500 mt-8 pixel-font">CLIPT 2025 • PRESS X TO CLOSE</p>
         </div>
       </div>
     </div>

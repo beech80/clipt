@@ -13,6 +13,7 @@ import { usePerformanceMonitoring } from '@/lib/performance';
 import { useQueryClient } from '@tanstack/react-query';
 import '@/index.css';
 import '@/styles/animations.css';
+import '@/styles/retro-game.css';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const Auth = React.lazy(() => import('./pages/Auth'));

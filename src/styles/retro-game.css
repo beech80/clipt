@@ -1,0 +1,153 @@
+/* Retro Game Styling for Clipt */
+
+/* Pixel Font Styles */
+.pixel-font {
+  font-family: 'Press Start 2P', 'VT323', monospace;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
+}
+
+/* Retro Text Shadow */
+.retro-text-shadow {
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.8);
+}
+
+/* Retro Border */
+.retro-border {
+  border: 2px solid #4a4dff;
+  box-shadow: 4px 4px 0px #000000;
+  position: relative;
+  background: #1a1d45;
+}
+
+.retro-border-top {
+  border-top: 2px solid #4a4dff;
+  box-shadow: 0px -4px 0px #000000;
+}
+
+/* Retro Button */
+.retro-button {
+  border: 2px solid #4a4dff;
+  background: #252968;
+  box-shadow: 3px 3px 0px #000000;
+  color: white;
+  font-family: 'Press Start 2P', 'VT323', monospace;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  position: relative;
+  border-radius: 0;
+}
+
+.retro-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #000000;
+  background: #3539a0;
+}
+
+.retro-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.retro-button-secondary {
+  border: 2px solid #ff4d4a;
+  background: #682925;
+  box-shadow: 3px 3px 0px #000000;
+  color: white;
+  font-family: 'Press Start 2P', 'VT323', monospace;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  position: relative;
+  border-radius: 0;
+}
+
+.retro-button-secondary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #000000;
+  background: #a03935;
+}
+
+/* Menu Items */
+.retro-menu-item {
+  position: relative;
+  transition: all 0.2s;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.retro-menu-item:hover {
+  box-shadow: 6px 6px 0px #000000;
+}
+
+/* Retro Game Background */
+.retro-game-bg {
+  background-color: #0f112a;
+  background-image: 
+    linear-gradient(rgba(20, 22, 68, 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 22, 68, 0.6) 1px, transparent 1px);
+  background-size: 20px 20px;
+  position: relative;
+}
+
+/* Comment text styling */
+.retro-text-content {
+  line-height: 1.5;
+  padding: 0.5rem 0;
+}
+
+/* Game Over Effect */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.7; }
+}
+
+.game-over-text {
+  animation: blink 1.2s infinite;
+  color: #ff4d4a;
+  font-family: 'Press Start 2P', 'VT323', monospace;
+  font-size: 1.5rem;
+  text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.8);
+}
+
+/* Bug effect styling */
+.bug-glitch {
+  position: relative;
+  overflow: hidden;
+}
+
+.bug-glitch::before, 
+.bug-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: #0f112a;
+}
+
+.bug-glitch::before {
+  left: 2px;
+  text-shadow: -1px 0 red;
+  animation: glitch-1 2s infinite linear alternate-reverse;
+}
+
+.bug-glitch::after {
+  left: -2px;
+  text-shadow: -1px 0 blue;
+  animation: glitch-2 3s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-1 {
+  0%, 40%, 44%, 58%, 61%, 65%, 69%, 73%, 100% { opacity: 1; transform: skewX(0deg); }
+  41% { opacity: 0.8; transform: skewX(10deg); }
+  42% { opacity: 0.8; transform: skewX(-10deg); }
+  59% { opacity: 0.8; transform: skewX(40deg) skewY(10deg); }
+  60% { opacity: 0.8; transform: skewX(-40deg) skewY(-10deg); }
+}
+
+@keyframes glitch-2 {
+  0%, 40%, 45%, 58%, 59%, 65%, 69%, 73%, 100% { opacity: 0.8; transform: skewY(0deg); }
+  41% { opacity: 1; transform: skewX(10deg); }
+  42% { opacity: 1; transform: skewX(-10deg); }
+  60% { opacity: 1; transform: skewX(-5deg); }
+  66% { opacity: 1; transform: skewX(20deg) skewY(5deg); }
+}
