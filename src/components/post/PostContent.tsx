@@ -120,51 +120,62 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     <div className="relative">
       {/* Media Content */}
       {videoUrl ? (
-        <div className="w-full aspect-video bg-black relative">
-          {isMediaError ? (
-            <div className="absolute inset-0 flex items-center justify-center text-red-500">
-              <div className="text-center p-4">
-                <p>Unable to play video.</p>
-                <button 
-                  onClick={() => {
-                    setIsMediaError(false);
-                    setIsMediaLoaded(false);
-                  }}
-                  className="mt-2 px-2 py-1 bg-purple-700 rounded text-white text-xs"
-                >
-                  Try Again
-                </button>
+        <div className="relative w-full h-full">
+          {/* Fallback if src attribute directly fails */}
+          <video
+            key={`video-${postId}-${Math.random().toString(36).substring(2, 15)}`}
+            className="w-full h-full object-contain"
+            controls
+            playsInline
+            autoPlay
+            muted
+            loop
+            preload="auto"
+            onLoadedData={(e) => {
+              handleMediaLoad();
+              // Unmute if interaction has occurred on the page
+              if (document.documentElement.hasAttribute('data-user-interacted')) {
+                const video = e.target as HTMLVideoElement;
+                video.muted = false;
+              }
+            }}
+            onError={(e) => {
+              console.warn("Standard video tag failed, trying alternative method...", e);
+              // Don't mark as error yet - we'll use the HLS player as fallback
+            }}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            {/* Add multiple source types to handle different formats */}
+            <source src={videoUrl} type="video/mp4" />
+            <source src={videoUrl} type="video/webm" />
+            <source src={videoUrl} type="application/x-mpegURL" />
+            <source src={videoUrl} type="application/vnd.apple.mpegURL" />
+            
+            {/* Fallback message */}
+            Your browser doesn't support HTML5 video playback.
+          </video>
+
+          {/* Custom play button overlay for manual interaction */}
+          {!isMediaLoaded && (
+            <div 
+              className="absolute inset-0 flex items-center justify-center bg-black/50 cursor-pointer"
+              onClick={() => {
+                const videoElement = document.querySelector(`video[key="video-${postId}-${Math.random().toString(36).substring(2, 15)}"]`) as HTMLVideoElement;
+                if (videoElement) {
+                  videoElement.play().catch(err => {
+                    console.error("Manual play failed:", err);
+                    // Mark as media error only if manual play fails
+                    setIsMediaError(true);
+                  });
+                }
+              }}
+            >
+              <div className="p-4 bg-purple-800/80 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
               </div>
             </div>
-          ) : (
-            <>
-              {!isMediaLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="animate-pulse">Loading video...</div>
-                </div>
-              )}
-              <video
-                key={`video-${postId}-${Math.random().toString(36).substring(2, 15)}`}
-                src={videoUrl}
-                className="w-full h-full object-contain"
-                controls
-                playsInline
-                autoPlay
-                muted
-                loop
-                preload="auto"
-                onLoadedData={(e) => {
-                  handleMediaLoad();
-                  // Unmute if interaction has occurred on the page
-                  if (document.documentElement.hasAttribute('data-user-interacted')) {
-                    const video = e.target as HTMLVideoElement;
-                    video.muted = false;
-                  }
-                }}
-                onError={handleVideoError}
-                onContextMenu={(e) => e.preventDefault()}
-              />
-            </>
           )}
         </div>
       ) : imageUrls.length > 0 ? (

@@ -7,6 +7,7 @@ import PostItem from "@/components/PostItem";
 import { Post } from "@/types/post"; 
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
+import { toast } from "sonner";
 
 // Define an extended type that includes our runtime properties
 // This allows us to match the expected structure while adding our own properties
@@ -85,6 +86,25 @@ const Clipts = () => {
       const processedPosts = data
         .filter(post => post.video_url && post.video_url.trim() !== '')
         .map(async post => {
+          // Validate video URL before processing
+          const videoUrl = post.video_url?.trim();
+          let isValidVideo = false;
+
+          if (videoUrl) {
+            // Simple validation check - can be enhanced
+            isValidVideo = videoUrl.startsWith('http') && 
+              (videoUrl.includes('.mp4') || 
+               videoUrl.includes('.webm') || 
+               videoUrl.includes('.m3u8') || 
+               !videoUrl.includes('.'));
+            
+            if (!isValidVideo) {
+              console.warn(`Invalid video URL format for post ${post.id}: ${videoUrl}`);
+            }
+          }
+
+          // Continue with processing even if URL looks invalid - let the player handle it
+          
           // Fetch trophy count for each post
           const { count: trophyCount, error: trophyError } = await supabase
             .from('clip_votes')
@@ -151,18 +171,32 @@ const Clipts = () => {
   useEffect(() => {
     console.log("Clipts page mounted - simplified version");
     
-    // Set a shorter timeout (3 seconds)
+    // Set a longer timeout (5 seconds) to ensure videos have time to load
     const timeoutId = setTimeout(() => {
       if (isLoading) {
         console.log('Fetch timeout');
         setIsLoading(false);
       }
-    }, 3000);
+    }, 5000);
     
     // Only fetch on first load or manual refresh
     fetchPostsDirectly();
+
+    // Initialize user interaction event for autoplay
+    const triggerInteraction = () => {
+      document.documentElement.setAttribute('data-user-interacted', 'true');
+      console.log('User interaction recorded on Clipts page, videos can now autoplay with sound');
+    };
+
+    // Add interaction listeners to help with autoplay
+    document.addEventListener('click', triggerInteraction, { once: true });
+    document.addEventListener('touchstart', triggerInteraction, { once: true });
     
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('click', triggerInteraction);
+      document.removeEventListener('touchstart', triggerInteraction);
+    };
   }, [fetchPostsDirectly, refreshKey]);
 
   // Trophy count updates - now actively refreshes trophy counts
@@ -206,7 +240,12 @@ const Clipts = () => {
         <BackButton />
         <h1 className="text-xl font-bold text-primary">Clipts</h1>
         <Button
-          onClick={refreshPosts}
+          onClick={() => {
+            toast.info("Refreshing videos...");
+            refreshPosts();
+            // Force user interaction for autoplay
+            document.documentElement.setAttribute('data-user-interacted', 'true');
+          }}
           size="icon"
           variant="ghost"
           className="text-primary"
@@ -239,7 +278,14 @@ const Clipts = () => {
         {!isLoading && rawPosts.length > 0 && (
           <div className="space-y-6">
             {rawPosts.map((post) => (
-              <div key={`post-${post.id}-${Math.random().toString(36).substring(2, 15)}`} className="mb-6 bg-card rounded-lg overflow-hidden">
+              <div 
+                key={`post-${post.id}-${Math.random().toString(36).substring(2, 15)}`} 
+                className="mb-6 bg-card rounded-lg overflow-hidden"
+                onClick={() => {
+                  // Ensure user interaction is recorded when clicking on a post
+                  document.documentElement.setAttribute('data-user-interacted', 'true');
+                }}
+              >
                 <PostItem key={post.id} post={post} />
               </div>
             ))}
