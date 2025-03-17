@@ -80,47 +80,44 @@ export default function Streaming() {
   return (
     <div className="container max-w-6xl py-3 px-3 md:px-6 md:py-4 space-y-4 md:space-y-6">
       <div className="streaming-header mb-4 md:mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Streaming</h1>
-            <p className="text-gray-400 text-sm md:text-base mt-1 md:mt-2">Broadcast your gameplay to the world</p>
-          </div>
-          <div className="streaming-dropdown-wrapper">
-            <Select 
-              value={activeTab} 
-              onValueChange={setActiveTab}
-            >
-              <SelectTrigger className="streaming-select-trigger w-[160px]">
-                <SelectValue placeholder="Select option" />
-              </SelectTrigger>
-              <SelectContent className="streaming-select-content">
-                <SelectItem value="live" className="streaming-select-item">
-                  <div className="flex items-center">
-                    <Play className="w-4 h-4 mr-2" />
-                    <span>Live</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="setup" className="streaming-select-item">
-                  <div className="flex items-center">
-                    <Settings2 className="w-4 h-4 mr-2" />
-                    <span>Setup</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="schedule" className="streaming-select-item">
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <span>Schedule</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="dashboard" className="streaming-select-item">
-                  <div className="flex items-center">
-                    <ChartBar className="w-4 h-4 mr-2" />
-                    <span>Dashboard</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Streaming</h1>
+        <p className="text-gray-400 text-sm md:text-base mt-1 md:mt-2">Broadcast your gameplay to the world</p>
+        
+        <div className="streaming-dropdown-wrapper mt-4">
+          <Select 
+            value={activeTab} 
+            onValueChange={setActiveTab}
+          >
+            <SelectTrigger className="streaming-select-trigger w-full md:w-[220px]">
+              <SelectValue placeholder="Select option" />
+            </SelectTrigger>
+            <SelectContent className="streaming-select-content">
+              <SelectItem value="live" className="streaming-select-item">
+                <div className="flex items-center">
+                  <Play className="w-4 h-4 mr-2" />
+                  <span>Live</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="setup" className="streaming-select-item">
+                <div className="flex items-center">
+                  <Settings2 className="w-4 h-4 mr-2" />
+                  <span>Setup</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="schedule" className="streaming-select-item">
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  <span>Schedule</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="dashboard" className="streaming-select-item">
+                <div className="flex items-center">
+                  <ChartBar className="w-4 h-4 mr-2" />
+                  <span>Dashboard</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       
