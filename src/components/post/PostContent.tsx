@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Gamepad2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import PhotoCollage from './PhotoCollage';
+import { debugVideoElement } from '@/utils/debugVideos';
 
 interface PostContentProps {
   imageUrl?: string | null;
@@ -18,6 +19,8 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [hasMultipleImages, setHasMultipleImages] = useState(false);
   const [showFullscreenGallery, setShowFullscreenGallery] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Fetch multiple images if available
   useEffect(() => {
@@ -58,12 +61,24 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
 
   // Debug logging for postId
   useEffect(() => {
-    // Remove debug logging to keep things clean
-  }, [postId]);
+    if (videoUrl) {
+      console.log(`PostContent: Loading video for post ${postId} with URL: ${videoUrl}`);
+    }
+  }, [postId, videoUrl]);
+
+  // Additional check for video URL
+  useEffect(() => {
+    if (videoUrl && !isMediaLoaded && !isMediaError) {
+      // Run initial debugging on the video element
+      debugVideoElement(videoUrl);
+    }
+  }, [videoUrl, isMediaLoaded, isMediaError]);
 
   const handleMediaLoad = () => {
     setIsMediaLoaded(true);
     setIsMediaError(false);
+    // Reset retry count on successful load
+    setRetryCount(0);
   };
 
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
@@ -146,7 +161,8 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
               
               {/* Direct video with src attribute for better playback */}
               <video
-                key={`video-${postId}`}
+                ref={videoRef}
+                key={`video-${postId}-${retryCount}`}
                 src={videoUrl}
                 className="w-full h-full object-contain"
                 controls
@@ -155,6 +171,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 muted
                 loop
                 preload="auto"
+                crossOrigin="anonymous"
                 onLoadedData={(e) => {
                   console.log("Video loaded successfully:", videoUrl);
                   handleMediaLoad();
@@ -166,7 +183,13 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 }}
                 onError={(e) => {
                   console.error("Video error:", (e.target as HTMLVideoElement).error);
-                  handleVideoError(e);
+                  // If we've retried less than 3 times, attempt again with a new key
+                  if (retryCount < 3) {
+                    console.log(`Retry attempt ${retryCount + 1} for video ${postId}`);
+                    setRetryCount(prev => prev + 1);
+                  } else {
+                    handleVideoError(e);
+                  }
                 }}
                 onContextMenu={(e) => e.preventDefault()}
               />
@@ -177,14 +200,24 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                   className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
                   onClick={() => {
                     document.documentElement.setAttribute('data-user-interacted', 'true');
-                    const video = document.querySelector(`video[key="video-${postId}"]`) as HTMLVideoElement;
-                    if (video) {
-                      video.muted = false;
-                      video.play().catch(err => {
+                    if (videoRef.current) {
+                      // Set a random src parameter to bust cache
+                      const randomParam = `?t=${Date.now()}`;
+                      const originalSrc = videoRef.current.src.split('?')[0];
+                      videoRef.current.src = originalSrc + randomParam;
+                      
+                      videoRef.current.muted = false;
+                      videoRef.current.load();
+                      videoRef.current.play().catch(err => {
                         console.error("Manual play failed:", err);
                         // If manual play fails, try again muted
-                        video.muted = true;
-                        video.play().catch(() => setIsMediaError(true));
+                        if (videoRef.current) {
+                          videoRef.current.muted = true;
+                          videoRef.current.play().catch(() => {
+                            console.error("Even muted playback failed");
+                            setIsMediaError(true);
+                          });
+                        }
                       });
                     }
                   }}
