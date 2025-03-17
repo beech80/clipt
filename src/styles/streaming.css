@@ -24,6 +24,8 @@
   padding: 0.5rem;
   border: 1px solid #2a2a45;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  overflow: hidden;
 }
 
 .streaming-tab-button {
@@ -36,6 +38,8 @@
   transition: all 0.3s ease;
   background: #1d1d35;
   border: 1px solid transparent;
+  width: 100%;
+  min-height: 45px;
 }
 
 .streaming-tab-button[data-state="active"] {
@@ -57,6 +61,20 @@
   background: #2a2a45;
 }
 
+/* Card styling for streaming page */
+[data-tabs-content] > .border {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #2a2a45 !important;
+  background: #171727;
+}
+
+[data-tabs-content] .quick-start-guide {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border-radius: 8px;
+}
+
 /* Responsive tabs for mobile */
 .moderation-tabs {
   display: flex;
@@ -68,6 +86,7 @@
   background: #1a1a2e;
   border-radius: 8px;
   padding: 4px;
+  width: 100%;
 }
 
 .moderation-tabs::-webkit-scrollbar {
@@ -113,13 +132,77 @@
     margin-right: 0;
   }
   
+  .streaming-header {
+    padding: 0.5rem 0 0.75rem;
+  }
+  
+  .streaming-header h1 {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+  
+  .streaming-header p {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  
   .streaming-tab-button {
     padding: 0.5rem;
+    font-size: 0.875rem;
+    min-height: 40px;
+  }
+  
+  .streaming-tab-button svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.25rem;
   }
   
   .streaming-tabs-main {
     gap: 4px;
     padding: 4px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .container.max-w-6xl {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  
+  /* Mobile optimized card styling */
+  [data-tabs-content] > .border {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  [data-tabs-content] > .border > [data-orientation="horizontal"] {
+    padding: 0.75rem 1rem;
+  }
+  
+  [data-tabs-content] button {
+    height: 36px !important;
+    min-height: 36px;
+    font-size: 13px;
+  }
+  
+  [data-tabs-content] button svg {
+    height: 16px;
+    width: 16px;
+  }
+  
+  [data-tabs-content] h3 {
+    font-size: 15px;
+  }
+  
+  [data-tabs-content] p {
+    font-size: 13px;
+  }
+  
+  [data-tabs-content] input {
+    height: 36px;
+    font-size: 13px;
   }
 }
 

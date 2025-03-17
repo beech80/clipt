@@ -77,31 +77,31 @@ export default function Streaming() {
   };
 
   return (
-    <div className="container max-w-6xl py-4 px-4 md:px-6 space-y-6">
-      <div className="streaming-header mb-6">
-        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Streaming</h1>
-        <p className="text-gray-400 mt-2">Broadcast your gameplay to the world</p>
+    <div className="container max-w-6xl py-3 px-3 md:px-6 md:py-4 space-y-4 md:space-y-6">
+      <div className="streaming-header mb-4 md:mb-6">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Streaming</h1>
+        <p className="text-gray-400 text-sm md:text-base mt-1 md:mt-2">Broadcast your gameplay to the world</p>
       </div>
       
       <Tabs defaultValue="live" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="streaming-tabs-main grid grid-cols-2 md:grid-cols-4 mb-6 gap-2">
+        <TabsList className="streaming-tabs-main grid grid-cols-2 md:grid-cols-4 mb-4 md:mb-6 gap-1 md:gap-2">
           <TabsTrigger value="live" className="streaming-tab-button">
-            <Play className="w-5 h-5 mr-2" />
+            <Play className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
             <span className="hidden sm:inline">Live</span>
             <span className="sm:hidden">Live</span>
           </TabsTrigger>
           <TabsTrigger value="setup" className="streaming-tab-button">
-            <Settings2 className="w-5 h-5 mr-2" />
+            <Settings2 className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
             <span className="hidden sm:inline">Setup</span>
             <span className="sm:hidden">Setup</span>
           </TabsTrigger>
           <TabsTrigger value="schedule" className="streaming-tab-button">
-            <Calendar className="w-5 h-5 mr-2" />
+            <Calendar className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
             <span className="hidden sm:inline">Schedule</span>
             <span className="sm:hidden">Schedule</span>
           </TabsTrigger>
           <TabsTrigger value="dashboard" className="streaming-tab-button">
-            <ChartBar className="w-5 h-5 mr-2" />
+            <ChartBar className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
             <span className="hidden sm:inline">Dashboard</span>
             <span className="sm:hidden">Stats</span>
           </TabsTrigger>
@@ -109,18 +109,18 @@ export default function Streaming() {
         
         {/* Live Tab */}
         <TabsContent value="live" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Stream Controls</CardTitle>
-              <CardDescription>Start your stream and monitor your viewers</CardDescription>
+          <Card className="border border-slate-800 overflow-hidden">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg md:text-xl">Stream Controls</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Start your stream and monitor your viewers</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-0">
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-lg font-medium">Stream Status</h3>
-                  <p className="text-sm text-gray-400">Offline</p>
+                  <h3 className="text-base md:text-lg font-medium">Stream Status</h3>
+                  <p className="text-xs md:text-sm text-gray-400">Offline</p>
                 </div>
-                <Button onClick={handleInitializeStream} className="bg-purple-600 hover:bg-purple-700 px-2 sm:px-4">
+                <Button onClick={handleInitializeStream} className="bg-purple-600 hover:bg-purple-700 px-2 sm:px-4 h-9">
                   <Play className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Initialize Stream</span>
                   <span className="sm:hidden">Start</span>
@@ -129,9 +129,9 @@ export default function Streaming() {
               
               <Separator />
               
-              <div className="bg-black/20 rounded-md p-5 space-y-5">
-                <h3 className="text-lg font-medium mb-3">Stream Quick-Start Guide</h3>
-                <ol className="list-decimal ml-5 space-y-2 text-gray-200">
+              <div className="quick-start-guide bg-black/20 rounded-md p-4 md:p-5 space-y-4 md:space-y-5">
+                <h3 className="text-md md:text-lg font-medium mb-2 md:mb-3">Stream Quick-Start Guide</h3>
+                <ol className="list-decimal ml-4 md:ml-5 space-y-1 md:space-y-2 text-gray-200 text-sm md:text-base">
                   <li>Click the <span className="text-purple-400 font-medium">"Setup"</span> tab to view your stream key</li>
                   <li>Copy the RTMP URL and Stream Key</li>
                   <li>Open your streaming software (e.g. OBS Studio)</li>
@@ -157,12 +157,12 @@ export default function Streaming() {
         
         {/* Setup Tab */}
         <TabsContent value="setup" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Stream Configuration</CardTitle>
-              <CardDescription>Your personal stream settings</CardDescription>
+          <Card className="border border-slate-800 overflow-hidden">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg md:text-xl">Stream Configuration</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Your personal stream settings</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 pt-0">
               {/* Two-column layout for URL and Key */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Stream URL Section */}
@@ -275,12 +275,12 @@ RECOMMENDED SETTINGS:
         
         {/* Schedule Tab */}
         <TabsContent value="schedule" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Stream Schedule</CardTitle>
-              <CardDescription>Plan and share your upcoming streams</CardDescription>
+          <Card className="border border-slate-800 overflow-hidden">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg md:text-xl">Stream Schedule</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Plan and share your upcoming streams</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-0">
               {!isEditing ? (
                 // Schedule List View
                 <>
@@ -449,12 +449,12 @@ RECOMMENDED SETTINGS:
         
         {/* Dashboard Tab */}
         <TabsContent value="dashboard" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Stream Dashboard</CardTitle>
-              <CardDescription>Monitor your stream performance and analytics</CardDescription>
+          <Card className="border border-slate-800 overflow-hidden">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg md:text-xl">Stream Dashboard</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Monitor your stream performance and analytics</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="bg-blue-950/30 border-blue-600/30">
                   <CardHeader className="pb-2">
