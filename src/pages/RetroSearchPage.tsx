@@ -51,7 +51,7 @@ const RetroSearchPage = () => {
         // Call the improved IGDB service directly
         const games = await igdbService.searchGames(searchTerm, {
           sort: 'popularity desc',
-          limit: 10
+          limit: 12 // Increased from 10 to 12 for more results
         });
         
         console.log('IGDB API returned games:', games?.length || 0);
@@ -63,6 +63,8 @@ const RetroSearchPage = () => {
     },
     enabled: true, // Always enabled to show trending games
     staleTime: 10 * 1000, // 10 seconds
+    retry: 2, // Retry failed requests twice
+    retryDelay: 1000, // Wait 1 second between retries
   });
 
   // Query for top games from our database (as fallback and for "top searched")
@@ -167,9 +169,9 @@ const RetroSearchPage = () => {
     // If search term is entered, prioritize IGDB search results
     if (searchTerm && searchTerm.trim().length > 0) {
       if (igdbGames?.length) {
-        // Return more results for a better browsing experience - up to 8 instead of 3
-        console.log('Returning IGDB search results:', igdbGames.slice(0, 8));
-        return igdbGames.slice(0, 8);
+        // Return more results for a better browsing experience - up to 10 instead of 8
+        console.log('Returning IGDB search results:', igdbGames.slice(0, 10));
+        return igdbGames.slice(0, 10);
       } else {
         // If no IGDB results but we have a search term, return empty
         console.log('No IGDB results found for search term');
@@ -180,7 +182,7 @@ const RetroSearchPage = () => {
     else if (topGames?.length) {
       console.log('Returning top games from database:', topGames);
       // Show more top games for better browsing experience
-      return topGames.slice(0, 6); 
+      return topGames.slice(0, 8); // Show more top games (increased from 6)
     }
     
     // Return empty array if no games available
@@ -482,17 +484,18 @@ const RetroSearchPage = () => {
               {!gamesLoading && !igdbGamesLoading && !topGamesLoading && getFilteredGames().length > 0 && (
                 <div className="bg-blue-950/60 rounded-lg overflow-hidden border-2 border-blue-800">
                   {/* Leaderboard header */}
-                  <div className="grid grid-cols-6 bg-blue-900/80 p-2 border-b-2 border-blue-700">
+                  <div className="grid grid-cols-8 bg-blue-900/80 p-2 border-b-2 border-blue-700">
                     <div className="col-span-1 text-blue-300 text-xs font-bold text-center">#</div>
+                    <div className="col-span-2 text-blue-300 text-xs font-bold text-center">Cover</div>
                     <div className="col-span-5 text-blue-300 text-xs font-bold">Name</div>
                   </div>
                   
-                  {/* Games rows - simplified with only rank and name */}
+                  {/* Games rows - improved with rank, cover image and name */}
                   {getFilteredGames().map((game, index) => (
                     <div 
                       key={game.id}
                       onClick={() => handleGameClick(game)}
-                      className={`grid grid-cols-6 items-center p-3 cursor-pointer hover:bg-blue-900/40 transition-all ${
+                      className={`grid grid-cols-8 items-center p-3 cursor-pointer hover:bg-blue-900/40 transition-all ${
                         index < getFilteredGames().length - 1 ? 'border-b border-blue-800/50' : ''
                       }`}
                     >
@@ -508,9 +511,30 @@ const RetroSearchPage = () => {
                         </div>
                       </div>
                       
-                      {/* Game name */}
-                      <div className="col-span-5 overflow-hidden">
+                      {/* Game cover */}
+                      <div className="col-span-2 flex justify-center">
+                        <div className="w-12 h-16 bg-blue-900/50 rounded overflow-hidden border border-blue-700 shadow-inner">
+                          <img 
+                            src={formatCoverUrl(game)} 
+                            alt={`${game.name} cover`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null; // Prevent infinite callback loop
+                              target.src = '/img/games/default.jpg';
+                            }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Game name and details */}
+                      <div className="col-span-5 overflow-hidden pl-2">
                         <h3 className="text-sm text-yellow-300 truncate font-semibold">{game.name}</h3>
+                        {game.genres && game.genres.length > 0 && (
+                          <p className="text-xs text-blue-300 truncate">
+                            {game.genres.slice(0, 2).map(g => g.name).join(', ')}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
