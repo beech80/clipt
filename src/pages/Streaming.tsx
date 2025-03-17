@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { StreamDashboard } from "@/components/streaming/StreamDashboard";
 import { EnhancedGamingDashboard } from "@/components/streaming/EnhancedGamingDashboard";
 import { ChatModerationDashboard } from "@/components/streaming/moderation/ChatModerationDashboard";
 import '@/styles/streaming.css';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Streaming() {
   const { user } = useAuth();
@@ -79,34 +80,51 @@ export default function Streaming() {
   return (
     <div className="container max-w-6xl py-3 px-3 md:px-6 md:py-4 space-y-4 md:space-y-6">
       <div className="streaming-header mb-4 md:mb-6">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Streaming</h1>
-        <p className="text-gray-400 text-sm md:text-base mt-1 md:mt-2">Broadcast your gameplay to the world</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Streaming</h1>
+            <p className="text-gray-400 text-sm md:text-base mt-1 md:mt-2">Broadcast your gameplay to the world</p>
+          </div>
+          <div className="streaming-dropdown-wrapper">
+            <Select 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+            >
+              <SelectTrigger className="streaming-select-trigger w-[160px]">
+                <SelectValue placeholder="Select option" />
+              </SelectTrigger>
+              <SelectContent className="streaming-select-content">
+                <SelectItem value="live" className="streaming-select-item">
+                  <div className="flex items-center">
+                    <Play className="w-4 h-4 mr-2" />
+                    <span>Live</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="setup" className="streaming-select-item">
+                  <div className="flex items-center">
+                    <Settings2 className="w-4 h-4 mr-2" />
+                    <span>Setup</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="schedule" className="streaming-select-item">
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    <span>Schedule</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="dashboard" className="streaming-select-item">
+                  <div className="flex items-center">
+                    <ChartBar className="w-4 h-4 mr-2" />
+                    <span>Dashboard</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
       
-      <Tabs defaultValue="live" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="streaming-tabs-main grid grid-cols-2 md:grid-cols-4 mb-4 md:mb-6 gap-1 md:gap-2">
-          <TabsTrigger value="live" className="streaming-tab-button">
-            <Play className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">Live</span>
-            <span className="sm:hidden">Live</span>
-          </TabsTrigger>
-          <TabsTrigger value="setup" className="streaming-tab-button">
-            <Settings2 className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">Setup</span>
-            <span className="sm:hidden">Setup</span>
-          </TabsTrigger>
-          <TabsTrigger value="schedule" className="streaming-tab-button">
-            <Calendar className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">Schedule</span>
-            <span className="sm:hidden">Schedule</span>
-          </TabsTrigger>
-          <TabsTrigger value="dashboard" className="streaming-tab-button">
-            <ChartBar className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-            <span className="hidden sm:inline">Dashboard</span>
-            <span className="sm:hidden">Stats</span>
-          </TabsTrigger>
-        </TabsList>
-        
+      <Tabs value={activeTab} className="w-full" defaultValue="live">
         {/* Live Tab */}
         <TabsContent value="live" className="space-y-4">
           <Card className="border border-slate-800 overflow-hidden">
