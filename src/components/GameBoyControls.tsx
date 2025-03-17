@@ -18,7 +18,8 @@ import {
   Bookmark,
   Video,
   Award,
-  Monitor
+  Monitor,
+  Users
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -44,6 +45,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
     { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
     { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' },
+    { name: 'Squads Clipts', icon: <Users className="mr-2 h-4 w-4" />, path: '/squads-clipts' },
     { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
@@ -1482,12 +1484,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                         
                         {/* Game-style menu items in a grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3">
-                          {navigationOptions.map((option) => (
+                          {navigationOptions.map((option, index) => (
                             <button
-                              key={option.path}
-                              className="flex items-center p-4 bg-[#1D1D26] border-2 border-[#3A3A45] rounded-md hover:bg-gradient-to-r hover:from-purple-900/40 hover:to-blue-900/40 text-white text-left transition-all duration-200 group relative overflow-hidden"
-                              onClick={(e) => {
-                                e.stopPropagation();
+                              key={option.name}
+                              className={`flex items-center justify-between border border-[#4a4dff] p-2 hover:bg-[#252968] transition-all duration-200 group relative overflow-hidden ${
+                                option.name === 'Squads Clipts' ? 'bg-[#2e1a4a] border-[#9f7aea] relative' : 'bg-[#1a1d45]'
+                              }`}
+                              onClick={() => {
                                 navigate(option.path);
                                 setMenuOpen(false);
                               }}
@@ -1515,6 +1518,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                                   {option.name === 'Messages' && 'Chat with players'}
                                   {option.name === 'Discovery' && 'Find new games'}
                                   {option.name === 'Top Clipts' && 'Hall of fame'}
+                                  {option.name === 'Squads Clipts' && 'Your squads clipts'}
                                   {option.name === 'Clipts' && 'View all clipts'}
                                 </span>
                               </div>
