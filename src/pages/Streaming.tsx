@@ -80,8 +80,24 @@ export default function Streaming() {
   return (
     <div className="container max-w-6xl py-3 px-3 md:px-6 md:py-4 space-y-4 md:space-y-6">
       <div className="streaming-header mb-4 md:mb-6">
-        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Streaming</h1>
-        <p className="text-gray-400 text-sm md:text-base mt-1 md:mt-2">Broadcast your gameplay to the world</p>
+        <h1 className="streaming-title text-2xl md:text-3xl lg:text-4xl font-bold" data-text="Streaming">Streaming</h1>
+        <div className="streaming-subtitle-wrapper">
+          <p className="streaming-subtitle text-gray-400 text-sm md:text-base mt-1 md:mt-2">
+            Broadcast your gameplay to the world
+            <span className="streaming-subtitle-icon ml-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13 2.07L21.93 11L13 19.93" stroke="url(#broadcast-gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M21.93 11H3" stroke="url(#broadcast-gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <defs>
+                  <linearGradient id="broadcast-gradient" x1="3" y1="11" x2="21.93" y2="11" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#8B5CF6" />
+                    <stop offset="1" stopColor="#3B82F6" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>
+          </p>
+        </div>
         
         <div className="streaming-dropdown-wrapper mt-4">
           <Select 
