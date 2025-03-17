@@ -52,7 +52,6 @@ const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
-const SquadsClipts = React.lazy(() => import('./pages/SquadsClipts'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -73,7 +72,6 @@ function AppContent() {
       <Route path="/games" element={<TopGames />} />
       <Route path="/clipts" element={<Clipts />} />
       <Route path="/top-clipts" element={<TopClipts />} />
-      <Route path="/squads-clipts" element={<SquadsClipts />} />
       <Route path="/profile/:id?" element={<UserProfile />} />
       <Route path="/discovery" element={<Discovery />} />
       <Route path="/menu" element={<Menu />} />
