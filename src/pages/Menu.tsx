@@ -101,8 +101,6 @@ const Menu = () => {
             <LogOut className="h-5 w-5 mr-2" />
             <span className="pixel-font">SIGN OUT</span>
           </button>
-          
-          <p className="text-sm text-gray-500 mt-8 pixel-font">CLIPT 2025 • PRESS X TO CLOSE</p>
         </div>
       </div>
     </div>
