@@ -266,7 +266,7 @@ const Discovery = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1f3c] to-[#0d0f1e]">
       {/* Header with Search */}
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/60 backdrop-blur-lg border-b border-indigo-500/20">
+      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/60 backdrop-blur-lg">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-2">
             <BackButton className="text-indigo-400 hover:text-indigo-300" />
@@ -311,14 +311,8 @@ const Discovery = () => {
             {isSearchActive ? (
               renderSearchResults()
             ) : (
-              // Instagram-style grid without the "Explore" text
+              // Instagram-style grid
               <>
-                <div className="trending-clips-header px-4 pb-4">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-indigo-400" />
-                    <div className="h-px flex-grow bg-gradient-to-r from-indigo-500 to-transparent"></div>
-                  </div>
-                </div>
                 {clips && clips.length > 0 ? renderClipGrid(clips) : (
                   <div className="flex items-center justify-center h-40">
                     <p className="text-indigo-300">No clips found</p>
