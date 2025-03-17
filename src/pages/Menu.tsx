@@ -37,8 +37,8 @@ const Menu = () => {
         { title: 'Top Clipts', icon: <Award className="h-6 w-6 mr-4 text-blue-400" />, path: '/top-clipts', description: 'Hall of fame' },
         { title: 'Squads Clipts', icon: <Users className="h-6 w-6 mr-4 text-purple-400" />, path: '/squads-clipts', description: 'Your squads clipts', className: 'squads-menu-item' },
         { title: 'Clipts', icon: <Film className="h-6 w-6 mr-4 text-blue-400" />, path: '/clipts', description: 'View all clipts' },
-        { title: 'Home', icon: <Home className="h-6 w-6 mr-4 text-blue-400" />, path: '/', description: 'Main screen', className: 'home-menu-item' },
-        { title: 'All Comments', icon: <MessageCircle className="h-6 w-6 mr-4 text-blue-400" />, path: '/comments', description: 'Community chat' }
+        { title: 'All Comments', icon: <MessageCircle className="h-6 w-6 mr-4 text-blue-400" />, path: '/comments', description: 'Community chat' },
+        { title: 'Home', icon: <Home className="h-6 w-6 mr-4 text-blue-400" />, path: '/', description: 'Main screen', className: 'home-menu-item'}
       ]
     }
   ];
@@ -52,6 +52,9 @@ const Menu = () => {
     }
   };
 
+  // Debug output for menu items
+  console.log('Menu items:', menuItems);
+
   return (
     <div className="min-h-screen bg-[#0f112a] text-white">
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-[#141644] border-b-4 border-[#4a4dff] shadow-[0_4px_0_0_#000]">
@@ -64,7 +67,7 @@ const Menu = () => {
         {menuItems.map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-8">
             <h2 className="text-xl font-bold mb-4 text-[#5ce1ff] pixel-font retro-text-shadow">{section.title}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ display: 'grid' }}>
               {section.items.map((item, index) => (
                 <button
                   key={index}
