@@ -167,8 +167,9 @@ const RetroSearchPage = () => {
     // If search term is entered, prioritize IGDB search results
     if (searchTerm && searchTerm.trim().length > 0) {
       if (igdbGames?.length) {
-        console.log('Returning IGDB search results:', igdbGames.slice(0, 3));
-        return igdbGames.slice(0, 3);
+        // Return more results for a better browsing experience - up to 8 instead of 3
+        console.log('Returning IGDB search results:', igdbGames.slice(0, 8));
+        return igdbGames.slice(0, 8);
       } else {
         // If no IGDB results but we have a search term, return empty
         console.log('No IGDB results found for search term');
@@ -177,8 +178,9 @@ const RetroSearchPage = () => {
     } 
     // If no search term, show top games
     else if (topGames?.length) {
-      console.log('Returning top games from database:', topGames.slice(0, 3));
-      return topGames.slice(0, 3);
+      console.log('Returning top games from database:', topGames);
+      // Show more top games for better browsing experience
+      return topGames.slice(0, 6); 
     }
     
     // Return empty array if no games available
@@ -190,8 +192,8 @@ const RetroSearchPage = () => {
   
   // Get the appropriate streamers data based on search state
   const displayStreamers = searchTerm 
-    ? (streamersSearchData || []).slice(0, 3) 
-    : (topStreamersData || []).slice(0, 3);
+    ? (streamersSearchData || []).slice(0, 5)  // Show more streamers in search results
+    : (topStreamersData || []).slice(0, 5);
   
   // Combine loading states for better UI feedback
   const isGamesLoading = gamesLoading || (searchTerm ? (igdbGamesLoading) : topGamesLoading);

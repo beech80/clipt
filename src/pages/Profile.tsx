@@ -441,7 +441,7 @@ const Profile = () => {
               <p className="text-gray-400">Loading achievements...</p>
             </div>
           ) : (
-            /* Force the demo achievements to show */
+            // ALWAYS force demo achievements to show for better user experience
             <AchievementList userId={profileId} forceShowDemo={true} />
           )}
         </div>

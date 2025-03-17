@@ -34,19 +34,24 @@ class IGDBService {
         return this.getPopularGames();
       }
       
-      // Build search query - use a more lenient search to ensure results
-      // Use the cleanQuery in a more fuzzy search to get better results
-      const searchTerm = `where name ~ "${cleanQuery}"* & cover != null;`;
+      // Build search query with improved pattern matching
+      // Use multiple query conditions to ensure we get more comprehensive results
+      // First try exact match, then alternative search patterns
+      const searchTerm = cleanQuery.length > 3 
+        ? `where (name ~ "${cleanQuery}"* | name ~ "*${cleanQuery}*" | alternative_names.name ~ "*${cleanQuery}*") & cover != null;`
+        : `where name ~ "*${cleanQuery}*" & cover != null;`;
       
-      // Set up sorting with proper defaults
-      const sortOption = options.sort ? `sort ${options.sort};` : 'sort popularity desc;';
+      // Set up sorting with proper defaults - prioritize relevance when searching
+      const sortOption = cleanQuery
+        ? 'sort popularity desc;' // Sort by popularity for search results
+        : (options.sort ? `sort ${options.sort};` : 'sort popularity desc;');
       
-      // Set reasonable limit
-      const limitOption = `limit ${options.limit || 20};`;
+      // Set reasonable limit but increase for searches to ensure we find matches
+      const limitOption = `limit ${options.limit || (cleanQuery ? 50 : 20)};`;
       
       // Create a well-formed IGDB query with proper formatting
       const igdbQuery = `
-        fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity;
+        fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity,alternative_names.name;
         ${searchTerm}
         ${sortOption}
         ${limitOption}
