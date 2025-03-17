@@ -247,42 +247,52 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       };
     }
     
-    // Create debounced handler
-    const debouncedDetectPost = debounce(detectAndSelectCurrentPost, 200);
+    // Create debounced handler with much shorter delay for better responsiveness
+    // Use 50ms for more immediate responses while still preventing excessive performance impact
+    const debouncedDetectPost = debounce(detectAndSelectCurrentPost, 50);
     
     // Set up scroll listener
-    window.addEventListener('scroll', debouncedDetectPost);
+    window.addEventListener('scroll', debouncedDetectPost, { passive: true });
     
     // Set up additional events that might indicate content changes
     window.addEventListener('click', debouncedDetectPost);
     window.addEventListener('touchend', debouncedDetectPost);
     
-    // Initial detection with a delay to allow page to render
-    setTimeout(detectAndSelectCurrentPost, 500);
+    // Initial detection with a shorter delay (300ms) to allow page to render but be more responsive
+    setTimeout(detectAndSelectCurrentPost, 300);
     
-    // Set up mutation observer to detect when new posts are added
+    // Add detection on key scrolling events for immediate feedback
+    window.addEventListener('scrollend', detectAndSelectCurrentPost, { passive: true });
+    
+    // Set up mutation observer to detect when new posts are added with optimized detection logic
     const observer = new MutationObserver((mutations) => {
+      // Use a throttle flag to avoid excessive calls
       let shouldDetect = false;
       
       mutations.forEach(mutation => {
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          Array.from(mutation.addedNodes).forEach(node => {
-            if (node instanceof HTMLElement && 
-                (node.hasAttribute('data-post-id') || 
-                 node.classList.contains('post-container') ||
-                 node.classList.contains('post-card') ||
-                 node.classList.contains('post-item') ||
-                 node.classList.contains('post') ||
-                 node.tagName.toLowerCase() === 'article' ||
-                 (node.id && node.id.includes('post')))) {
+        // Only check if we haven't already decided to detect posts
+        if (!shouldDetect && mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          // Fast check - first look at direct added nodes
+          for (let i = 0; i < mutation.addedNodes.length; i++) {
+            const node = mutation.addedNodes[i];
+            if (node instanceof HTMLElement && (
+                node.hasAttribute('data-post-id') || 
+                node.classList.contains('post-container') ||
+                node.classList.contains('post-card') ||
+                node.classList.contains('post-item') ||
+                node.classList.contains('post') ||
+                node.id?.includes('post')
+              )) {
               shouldDetect = true;
+              break; // Exit early once we know we need to detect
             }
-          });
+          }
         }
       });
       
       if (shouldDetect) {
-        setTimeout(detectAndSelectCurrentPost, 300);
+        // Use requestAnimationFrame for more efficient timing on visual updates
+        requestAnimationFrame(() => detectAndSelectCurrentPost());
       }
     });
     
@@ -805,31 +815,38 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   
   const handleScrollFromJoystick = (yPosition: number) => {
-    // Enhanced physics-based scroll with non-linear acceleration for more realistic feel
-    // Use exponential curve for better control at smaller movements and faster scrolling at extremes
-    const deadzone = 0.5; // Smaller deadzone for better responsiveness
+    // Super-responsive physics-based scrolling with even better precision and feedback
+    const deadzone = 0.3; // Smaller deadzone for better responsiveness
     const maxYPosition = 40; // Maximum expected joystick movement
     
-    // Normalize y-position and apply deadzone
+    // Quick deadzone check for performance
     if (Math.abs(yPosition) < deadzone) {
       return; // Within deadzone - no scrolling
     }
     
-    // Apply non-linear curve for more precision - use a cubic curve for smoother acceleration
+    // More responsive curve with variable intensity based on joystick position
+    // This creates a more natural feeling when scrolling small vs large amounts
     const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
-    const curveIntensity = 1.1; // More responsive curve (lower = more linear and smooth)
     const direction = Math.sign(normalizedPosition);
-    const magnitude = Math.pow(Math.abs(normalizedPosition), curveIntensity);
     
-    // Calculate scroll speed with improved physics feel
-    // Significantly increased base speed for very noticeable movement
-    const baseScrollSpeed = 120; // Much higher speed for faster scrolling
+    // Adaptive curve intensity - smoother at lower speeds, more acceleration at higher speeds
+    const adaptiveCurve = Math.abs(normalizedPosition) < 0.5 ? 
+      0.9 : // More linear/responsive for small movements
+      1.2;  // More acceleration for large movements
+    
+    const magnitude = Math.pow(Math.abs(normalizedPosition), adaptiveCurve);
+    
+    // Increased base scroll speed for more immediate feedback
+    const baseScrollSpeed = 140; // Higher speed for faster scrolling
     const scrollSpeed = direction * magnitude * baseScrollSpeed;
     
-    // Always use auto scrolling for more responsive feel
-    console.log(`Scrolling: direction=${direction}, speed=${scrollSpeed.toFixed(2)}px`);
+    // Request a post detection on the next frame if we're scrolling significantly
+    if (Math.abs(scrollSpeed) > 30) {
+      // Schedule post detection at next animation frame for perfect synchronization
+      requestAnimationFrame(detectAndSelectCurrentPost);
+    }
     
-    // Perform immediate scrolling
+    // Use the newer Window.scroll() method with better performance
     window.scrollBy({
       top: scrollSpeed,
       behavior: 'auto' // Always use auto for responsiveness
@@ -906,32 +923,39 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [isDragging, joystickPosition]);
   
-  // Universal action handler
+  // Optimized universal action handler for faster response
   const handlePostAction = (actionType: 'like' | 'comment' | 'follow' | 'trophy') => {
-    // Visual feedback on controller button
+    // Provide immediate visual feedback on controller button
     const controllerButton = document.querySelector(`[data-action="${actionType}"]`);
     if (controllerButton) {
       controllerButton.classList.add('button-press');
+      // Use shorter animation time for faster feedback
       setTimeout(() => {
         controllerButton.classList.remove('button-press');
-      }, 300);
+      }, 200);
     }
     
-    if (!currentPostId) {
+    // Force post detection before taking action to ensure we're using the most current post
+    // This is crucial - detect the post FIRST before acting on it
+    const detectedPostId = detectMostVisiblePost();
+    const targetPostId = detectedPostId || currentPostId;
+    
+    if (!targetPostId) {
       logToDebug(`No post selected for ${actionType} action`);
       toast.error('No post selected. Try scrolling to a post first.');
       return;
     }
     
-    logToDebug(`Handling ${actionType} action for post: ${currentPostId}`);
+    logToDebug(`Handling ${actionType} action for post: ${targetPostId}`);
     
-    // Try multiple selectors to find the target post
+    // Optimized selector list ordered by most common/fastest selectors first
     const postSelectors = [
-      `[data-post-id="${currentPostId}"]`,
-      `#post-${currentPostId}`,
-      `.post-container[data-id="${currentPostId}"]`,
-      `[id="${currentPostId}"]`,
-      `.post-${currentPostId}`
+      `[data-post-id="${targetPostId}"]`,
+      `#post-${targetPostId}`,
+      `.post-item[data-id="${targetPostId}"]`,
+      `.post-container[data-id="${targetPostId}"]`,
+      `[id="${targetPostId}"]`,
+      `.post-${targetPostId}`
     ];
     
     let targetPost: Element | null = null;
@@ -959,7 +983,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       allPosts.forEach(post => {
         const postId = post.getAttribute('data-post-id');
-        if (postId === currentPostId) {
+        if (postId === targetPostId) {
           targetPost = post;
           foundPost = true;
           logToDebug('Found post by iterating through all posts');
@@ -1067,7 +1091,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   actionButton = button;
                   logToDebug(`Found ${actionType} button by proximity`);
                 }
-              } else if (closestPost.getAttribute('data-post-id') === currentPostId) {
+              } else if (closestPost.getAttribute('data-post-id') === targetPostId) {
                 actionButton = button;
                 logToDebug(`Found ${actionType} button via closest post`);
               }
@@ -1099,17 +1123,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         if (actionType === 'comment') {
           logToDebug('Falling back to comment page');
           // Navigate directly to comments page instead of opening the modal
-          if (currentPostId) {
-            setActiveCommentPostId(currentPostId);
+          if (targetPostId) {
+            setActiveCommentPostId(targetPostId);
             setCommentModalOpen(true);
-            console.log(`Opening comment modal for post ID: ${currentPostId}`);
+            console.log(`Opening comment modal for post ID: ${targetPostId}`);
           } else {
             toast.error('No post selected');
           }
           return;
         } else if (actionType === 'like') {
           // Try direct API like
-          handleDirectLike(currentPostId);
+          handleDirectLike(targetPostId);
           return;
         } else {
           toast.error(`Could not find ${actionType} button. Try another post.`);
@@ -1290,9 +1314,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     return detectMostVisiblePost();
   };
 
-  // Helper function to detect the most visible post on screen
+  // Helper function to detect the most visible post on screen with optimized performance
   const detectMostVisiblePost = () => {
-    const allPosts = Array.from(document.querySelectorAll('.post-item, [data-post-id], [id^="post-"]'));
+    // Use a more specific and comprehensive selector to capture all post types
+    // This improves targeting accuracy while maintaining performance
+    const allPosts = Array.from(document.querySelectorAll(
+      '.post-item, [data-post-id], [id^="post-"], .post-container, .post-card, article[id*="post"], .post'
+    ));
     
     if (allPosts.length === 0) {
       return null;
@@ -1301,30 +1329,33 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     let mostVisiblePost = null;
     let maxVisibility = 0;
     
+    // Use viewportHeight once to improve performance
+    const viewportHeight = window.innerHeight;
+    const viewportCenter = viewportHeight / 2;
+    
     allPosts.forEach(post => {
       const rect = post.getBoundingClientRect();
       
-      // Calculate visibility score based on how much of the post is in viewport
-      if (rect.bottom < 0 || rect.top > window.innerHeight) {
-        // Post is not visible at all
+      // Fast check for visibility - post must be at least partially visible
+      if (rect.bottom < 0 || rect.top > viewportHeight) {
         return;
       }
       
-      // Skip very small elements (likely not actual posts)
-      if (rect.height < 50) {
+      // Skip very small elements more aggressively (likely not actual posts)
+      if (rect.height < 40) {
         return;
       }
       
-      // Calculate what percentage of the post is visible
-      const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+      // Calculate what percentage of the post is visible - optimized math
+      const visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
       const percentVisible = visibleHeight / rect.height;
       
-      // Bonus for being in the center of the screen
-      const distanceFromCenter = Math.abs((rect.top + rect.bottom) / 2 - window.innerHeight / 2);
-      const centerFactor = 1 - (distanceFromCenter / window.innerHeight);
+      // Give stronger preference to posts near the center for more intuitive selection
+      const distanceFromCenter = Math.abs((rect.top + rect.bottom) / 2 - viewportCenter);
+      const centerFactor = 1 - (distanceFromCenter / viewportHeight) * 1.5; // Increased center weight
       
-      // Combined score
-      const visibilityScore = percentVisible * (1 + centerFactor);
+      // Enhanced scoring formula that prioritizes posts more clearly in view
+      const visibilityScore = percentVisible * (1 + centerFactor) * (percentVisible > 0.7 ? 1.5 : 1);
       
       if (visibilityScore > maxVisibility) {
         maxVisibility = visibilityScore;
@@ -1613,4 +1644,3 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 };
 
 export default GameBoyControls;
-
