@@ -8,21 +8,26 @@ import { Post } from "@/types/post";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
 import { toast } from "sonner";
+import { debugVideoElement } from "@/utils/debugVideos";
 
 // Define an extended type that includes our runtime properties
 // This allows us to match the expected structure while adding our own properties
-type ExtendedPost = Post & {
+interface ExtendedPost extends Post {
   trophy_count?: number;
   profiles?: {
     username: string;
     display_name: string;
     avatar_url: string | null;
   };
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  // The games property should match the Post type definition
   games?: {
-    id: string;
+    id: string | number;
     name: string;
-  }[];
-};
+  };
+}
 
 const Clipts = () => {
   const navigate = useNavigate();
@@ -91,19 +96,23 @@ const Clipts = () => {
           let isValidVideo = false;
 
           if (videoUrl) {
-            // Simple validation check - can be enhanced
-            isValidVideo = videoUrl.startsWith('http') && 
-              (videoUrl.includes('.mp4') || 
-               videoUrl.includes('.webm') || 
-               videoUrl.includes('.m3u8') || 
-               !videoUrl.includes('.'));
-            
-            if (!isValidVideo) {
-              console.warn(`Invalid video URL format for post ${post.id}: ${videoUrl}`);
+            try {
+              // More reliable validation - test if URL is properly formatted and accessible
+              const url = new URL(videoUrl);
+              isValidVideo = url.protocol === 'http:' || url.protocol === 'https:';
+              
+              // Fix potential MIME type issues by appending proper extension if missing
+              if (isValidVideo && !url.pathname.includes('.')) {
+                // Try to append an extension if it's missing to help browsers determine MIME type
+                post.video_url = `${videoUrl}.mp4`;
+                console.log(`Modified video URL to ensure proper MIME type handling: ${post.video_url}`);
+              }
+            } catch (e) {
+              console.warn(`Invalid URL format for post ${post.id}: ${videoUrl}`);
             }
           }
 
-          // Continue with processing even if URL looks invalid - let the player handle it
+          // Always process posts even with invalid URLs - our player has fallbacks
           
           // Fetch trophy count for each post
           const { count: trophyCount, error: trophyError } = await supabase
@@ -141,7 +150,8 @@ const Clipts = () => {
       
       // Only update state if we still have posts after filtering
       if (completedPosts.length > 0) {
-        setRawPosts(completedPosts);
+        // Cast retrieved data to ExtendedPost[] to ensure type compatibility
+        setRawPosts(completedPosts as unknown as ExtendedPost[]);
         console.log('Posts with trophy counts:', completedPosts);
       } else {
         console.log('No valid video posts from tat123 after filtering');
@@ -186,7 +196,14 @@ const Clipts = () => {
     const triggerInteraction = () => {
       document.documentElement.setAttribute('data-user-interacted', 'true');
       console.log('User interaction recorded on Clipts page, videos can now autoplay with sound');
+      
+      // Trigger a custom event that video elements can listen for
+      const userInteractEvent = new CustomEvent('user-interacted');
+      document.dispatchEvent(userInteractEvent);
     };
+
+    // Force trigger interaction to help with video playback
+    setTimeout(triggerInteraction, 1000);
 
     // Add interaction listeners to help with autoplay
     document.addEventListener('click', triggerInteraction, { once: true });
@@ -223,7 +240,7 @@ const Clipts = () => {
         );
         
         console.log('Updated trophy counts:', updatedPosts.map(p => ({ id: p.id, count: p.trophy_count })));
-        setRawPosts(updatedPosts);
+        setRawPosts(updatedPosts as unknown as ExtendedPost[]);
       }
     };
     
@@ -284,9 +301,19 @@ const Clipts = () => {
                 onClick={() => {
                   // Ensure user interaction is recorded when clicking on a post
                   document.documentElement.setAttribute('data-user-interacted', 'true');
+                  
+                  // Debug this post's video if there's an issue
+                  if (post.video_url) {
+                    console.log(`Debugging video for post ${post.id}`);
+                    debugVideoElement(post.video_url);
+                  }
                 }}
               >
-                <PostItem key={post.id} post={post} />
+                <PostItem 
+                  key={post.id} 
+                  post={post} 
+                  data-post-id={post.id}
+                />
               </div>
             ))}
           </div>
