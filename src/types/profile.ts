@@ -20,7 +20,7 @@ export interface ProfileStats {
   achievements: number;
 }
 
-export type AchievementCategory = 'streaming' | 'social' | 'general' | 'daily' | 'gaming';
+export type AchievementCategory = 'streaming' | 'social' | 'general' | 'daily' | 'gaming' | 'trophy' | 'special';
 export type ProgressType = 'count' | 'value' | 'boolean';
 export type RewardType = 'points' | 'badge' | 'title';
 
