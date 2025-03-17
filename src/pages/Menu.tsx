@@ -62,12 +62,13 @@ const Menu = () => {
         {menuItems.map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-8">
             <h2 className="text-xl font-bold mb-4 text-[#5ce1ff] pixel-font retro-text-shadow">{section.title}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ minHeight: '500px', display: 'grid' }}>
               {section.items.map((item, index) => (
                 <button
                   key={index}
                   onClick={() => navigate(item.path)}
                   className={`retro-menu-item p-4 flex items-center border-2 border-[#4a4dff] bg-[#1a1d45] hover:bg-[#252968] transition-all transform hover:translate-y-[-2px] focus:outline-none focus:ring-2 focus:ring-[#5ce1ff] ${item.className || ''}`}
+                  data-testid={`menu-item-${item.title.toLowerCase()}`}
                 >
                   <div className="bg-[#252968] p-2 rounded-none border border-[#4a4dff]">
                     {item.icon}
