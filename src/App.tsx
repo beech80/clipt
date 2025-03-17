@@ -50,6 +50,7 @@ const RetroSearchPage = React.lazy(() => import('./pages/RetroSearchPage'));
 const CommentsPage = React.lazy(() => import('./pages/CommentsPage'));
 const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
+const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -64,6 +65,7 @@ function AppContent() {
       <Route path="/post/:id" element={<PostPage />} />
       <Route path="/post/:postId/comments" element={<CommentsPage />} />
       <Route path="/comments" element={<AllCommentsPage />} />
+      <Route path="/comments-full/:postId" element={<CommentsFullPage />} />
       <Route path="/group-chat" element={<GroupChat />} />
       <Route path="/game/:id" element={<Game />} />
       <Route path="/games" element={<TopGames />} />

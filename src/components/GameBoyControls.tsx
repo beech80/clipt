@@ -186,7 +186,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         const visibleHeight = Math.max(0, visibleBottom - visibleTop);
         const percentVisible = visibleHeight / rect.height;
         
-        // Give preference to posts that are in the center of the viewport
+        // Bonus for being in the center of the viewport
         const centerFactor = 1 - Math.abs((visibleTop + visibleBottom) / 2 - windowHeight / 2) / windowHeight;
         const visibilityScore = percentVisible * (1 + centerFactor);
         
@@ -353,8 +353,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       // Immediate movement on click
-      joystickRef.current.style.transition = 'none';
-      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      (joystickRef.current as HTMLDivElement).style.transition = 'none';
+      (joystickRef.current as HTMLDivElement).style.transform = `translate(${dx}px, ${dy}px)`;
       setJoystickPosition({ x: dx, y: dy });
       
       // Immediately handle scrolling
@@ -403,10 +403,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Directly update DOM for immediate response
     if (joystickRef.current) {
       // Set CSS variables for animation
-      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      (joystickRef.current as HTMLDivElement).style.transform = `translate(${dx}px, ${dy}px)`;
       
       // Override any transitions during active dragging
-      joystickRef.current.style.transition = 'none';
+      (joystickRef.current as HTMLDivElement).style.transition = 'none';
     }
     
     // Update state for React components (but DOM is already updated)
@@ -438,7 +438,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       joystickHandle.classList.remove('joystick-handle-up', 'joystick-handle-down');
       
       // Preserve the current transform in the style attribute
-      const currentTransform = joystickHandle.style.transform || `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`;
+      const currentTransform = (joystickHandle as HTMLDivElement).style.transform || `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`;
       
       if (direction === 'up' && Math.abs(yPosition) > 2) { // Smaller deadzone for visual feedback
         // Moving up with variable intensity
@@ -446,21 +446,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         joystickHandle.classList.add('joystick-handle-up');
         
         // Apply intensity as a CSS variable while preserving transform
-        upIndicator.style.setProperty('--intensity', `${intensity}`);
-        joystickHandle.style.setProperty('--move-intensity', `${intensity}`);
+        (upIndicator as HTMLElement).style.setProperty('--intensity', `${intensity}%`);
+        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', `${intensity}%`);
       } else if (direction === 'down' && Math.abs(yPosition) > 2) {
         // Moving down with variable intensity
         downIndicator.classList.add('active');
         joystickHandle.classList.add('joystick-handle-down');
         
         // Apply intensity as a CSS variable while preserving transform
-        downIndicator.style.setProperty('--intensity', `${intensity}`);
-        joystickHandle.style.setProperty('--move-intensity', `${intensity}`);
+        (downIndicator as HTMLElement).style.setProperty('--intensity', `${intensity}%`);
+        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', `${intensity}%`);
       } else {
         // Neutral position - reset intensity but keep transform
-        joystickHandle.style.setProperty('--move-intensity', '0');
-        upIndicator.style.setProperty('--intensity', '0');
-        downIndicator.style.setProperty('--intensity', '0');
+        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', '0%');
+        (upIndicator as HTMLElement).style.setProperty('--intensity', '0%');
+        (downIndicator as HTMLElement).style.setProperty('--intensity', '0%');
       }
     }
   };
@@ -482,19 +482,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Apply spring return animation
     if (joystickRef.current) {
       // Set CSS variables for animation
-      joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
-      joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
+      (joystickRef.current as HTMLDivElement).style.setProperty('--last-x', `${lastPosition.x}px`);
+      (joystickRef.current as HTMLDivElement).style.setProperty('--last-y', `${lastPosition.y}px`);
       
       // Add the spring animation class
-      joystickRef.current.classList.add('joystick-spring-return');
+      (joystickRef.current as HTMLDivElement).classList.add('joystick-spring-return');
       
       // Directly set transform for immediate visual feedback
-      joystickRef.current.style.transform = 'translate(0px, 0px)';
+      (joystickRef.current as HTMLDivElement).style.transform = 'translate(0px, 0px)';
       
       // Remove the animation class after it completes
       setTimeout(() => {
         if (joystickRef.current) {
-          joystickRef.current.classList.remove('joystick-spring-return');
+          (joystickRef.current as HTMLDivElement).classList.remove('joystick-spring-return');
         }
       }, 550); // Match the animation duration
     }
@@ -504,7 +504,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Reset indicatorswith all classes for visual cleanup
     if (joystickRef.current) {
-      joystickRef.current.classList.remove(
+      (joystickRef.current as HTMLDivElement).classList.remove(
         'joystick-handle-up', 
         'joystick-handle-down',
         'low-intensity',
@@ -518,12 +518,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     if (upIndicator) {
       upIndicator.classList.remove('active');
-      upIndicator.setAttribute('style', '--intensity: 0%');
+      (upIndicator as HTMLElement).setAttribute('style', '--intensity: 0%');
     }
     
     if (downIndicator) {
       downIndicator.classList.remove('active');
-      downIndicator.setAttribute('style', '--intensity: 0%');
+      (downIndicator as HTMLElement).setAttribute('style', '--intensity: 0%');
     }
     
     // Remove event listeners
@@ -563,16 +563,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       // FORCEFULLY move the joystick with no transition delay
       if (joystickRef.current) {
-        joystickRef.current.style.transition = 'none';
-        joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+        (joystickRef.current as HTMLDivElement).style.transition = 'none';
+        (joystickRef.current as HTMLDivElement).style.transform = `translate(${dx}px, ${dy}px)`;
         
         // Force a reflow to ensure the style changes take effect immediately
-        void joystickRef.current.offsetWidth;
+        void (joystickRef.current as HTMLDivElement).offsetWidth;
         
         console.log('Applied transform:', `translate(${dx}px, ${dy}px)`);
         
         // Add visible highlight to ensure user sees movement
-        joystickRef.current.style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
+        (joystickRef.current as HTMLDivElement).style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
       }
       
       // Update state after DOM change for consistency
@@ -633,14 +633,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // FORCEFULLY update DOM for immediate response
     if (joystickRef.current) {
       // Remove any transition for immediate movement
-      joystickRef.current.style.transition = 'none';
-      joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
+      (joystickRef.current as HTMLDivElement).style.transition = 'none';
+      (joystickRef.current as HTMLDivElement).style.transform = `translate(${dx}px, ${dy}px)`;
       
       // Force a reflow to ensure the style is applied immediately
-      void joystickRef.current.offsetWidth;
+      void (joystickRef.current as HTMLDivElement).offsetWidth;
       
       // Add visible highlight
-      joystickRef.current.style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
+      (joystickRef.current as HTMLDivElement).style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
       
       console.log('Applied touch move transform:', `translate(${dx}px, ${dy}px)`);
     }
@@ -663,14 +663,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       const lastPosition = { ...joystickPosition };
       
       // Set CSS variables for spring animation
-      joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
-      joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
+      (joystickRef.current as HTMLDivElement).style.setProperty('--last-x', `${lastPosition.x}px`);
+      (joystickRef.current as HTMLDivElement).style.setProperty('--last-y', `${lastPosition.y}px`);
       
       // Add spring return animation class
-      joystickRef.current.classList.add('joystick-spring-return');
+      (joystickRef.current as HTMLDivElement).classList.add('joystick-spring-return');
       
       // Remove highlight
-      joystickRef.current.style.boxShadow = '';
+      (joystickRef.current as HTMLDivElement).style.boxShadow = '';
     }
     
     // Stop dragging
@@ -692,19 +692,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Apply spring return animation for touch too
     if (joystickRef.current) {
       // Set CSS variables for animation
-      joystickRef.current.style.setProperty('--last-x', `${lastPosition.x}px`);
-      joystickRef.current.style.setProperty('--last-y', `${lastPosition.y}px`);
+      (joystickRef.current as HTMLDivElement).style.setProperty('--last-x', `${lastPosition.x}px`);
+      (joystickRef.current as HTMLDivElement).style.setProperty('--last-y', `${lastPosition.y}px`);
       
       // Add the spring animation class
-      joystickRef.current.classList.add('joystick-spring-return');
+      (joystickRef.current as HTMLDivElement).classList.add('joystick-spring-return');
       
       // Directly set transform for immediate visual feedback
-      joystickRef.current.style.transform = 'translate(0px, 0px)';
+      (joystickRef.current as HTMLDivElement).style.transform = 'translate(0px, 0px)';
       
       // Remove the animation class after it completes
       setTimeout(() => {
         if (joystickRef.current) {
-          joystickRef.current.classList.remove('joystick-spring-return');
+          (joystickRef.current as HTMLDivElement).classList.remove('joystick-spring-return');
         }
       }, 550); // Match the animation duration
     }
@@ -714,7 +714,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Reset visual indicators
     if (joystickRef.current) {
-      joystickRef.current.classList.remove(
+      (joystickRef.current as HTMLDivElement).classList.remove(
         'joystick-handle-up', 
         'joystick-handle-down',
         'low-intensity',
@@ -728,12 +728,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     if (upIndicator) {
       upIndicator.classList.remove('active');
-      upIndicator.setAttribute('style', '--intensity: 0%');
+      (upIndicator as HTMLElement).setAttribute('style', '--intensity: 0%');
     }
     
     if (downIndicator) {
       downIndicator.classList.remove('active');
-      downIndicator.setAttribute('style', '--intensity: 0%');
+      (downIndicator as HTMLElement).setAttribute('style', '--intensity: 0%');
     }
     
     // Remove event listeners
@@ -765,7 +765,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       // If the joystick ref exists, try to get the transform directly
       if (joystickRef.current) {
-        const transform = joystickRef.current.style.transform;
+        const transform = (joystickRef.current as HTMLDivElement).style.transform;
         if (transform) {
           const match = transform.match(/translate\((.+?)px,\s*(.+?)px\)/);
           if (match && match[2]) {
@@ -835,10 +835,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Make sure the joystick visually stays in the correct position with smoother movement
     if (joystickRef.current) {
-      const currentTransform = joystickRef.current.style.transform;
+      const currentTransform = (joystickRef.current as HTMLDivElement).style.transform;
       if (!currentTransform || !currentTransform.includes(`${yPosition}px`)) {
         const xPos = joystickPosition.x;
-        joystickRef.current.style.transform = `translate(${xPos}px, ${yPosition}px)`;
+        (joystickRef.current as HTMLDivElement).style.transform = `translate(${xPos}px, ${yPosition}px)`;
       }
     }
     
@@ -855,15 +855,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     const intensity = Math.abs(yPosition) / 40; // 0 to 1 range
     
     // Remove all existing intensity classes
-    joystickHandle.classList.remove('low-intensity', 'medium-intensity', 'high-intensity');
+    (joystickHandle as HTMLDivElement).classList.remove('low-intensity', 'medium-intensity', 'high-intensity');
     
     // Add appropriate intensity class
     if (intensity > 0.7) {
-      joystickHandle.classList.add('high-intensity');
+      (joystickHandle as HTMLDivElement).classList.add('high-intensity');
     } else if (intensity > 0.3) {
-      joystickHandle.classList.add('medium-intensity');
+      (joystickHandle as HTMLDivElement).classList.add('medium-intensity');
     } else if (intensity > 0.1) {
-      joystickHandle.classList.add('low-intensity');
+      (joystickHandle as HTMLDivElement).classList.add('low-intensity');
     }
   };
   
@@ -1222,14 +1222,49 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Enhanced comment button handler
   const handleCommentClick = () => {
-    // Navigate to Game Chat page
-    navigate('/group-chat');
+    // Enhanced post detection for comments
+    const currentPostId = getCurrentPostId();
     
-    // Add visual feedback
-    toast.success('Opening Game Chat', {
-      position: 'bottom-center',
-      duration: 2000,
-    });
+    if (currentPostId) {
+      console.log('Comment button clicked for post:', currentPostId);
+      
+      // Add visual feedback - pulse animation on the selected post
+      const postElement = document.querySelector(`[data-post-id="${currentPostId}"], #post-${currentPostId}`);
+      if (postElement) {
+        // Add a pulse effect to indicate the targeted post
+        postElement.classList.add('comment-target-pulse');
+        // Remove it after animation completes
+        setTimeout(() => postElement.classList.remove('comment-target-pulse'), 800);
+      }
+      
+      // Navigate to the full-page comments view
+      navigate(`/comments-full/${currentPostId}`);
+      
+      // Store the last interacted post ID to maintain context
+      try {
+        localStorage.setItem('clipt-last-comment-post', currentPostId);
+      } catch (e) {
+        console.error('Failed to store post ID:', e);
+      }
+    } else {
+      // Fallback - notify user
+      toast.info('Select a post to comment on', {
+        position: 'bottom-center',
+        duration: 2000,
+      });
+      
+      // Try to scroll to the first visible post to help user
+      const firstVisiblePost = Array.from(document.querySelectorAll('.post-item, [data-post-id], [id^="post-"]')).find(
+        post => {
+          const rect = post.getBoundingClientRect();
+          return rect.top >= 0 && rect.bottom <= window.innerHeight;
+        }
+      );
+      
+      if (firstVisiblePost) {
+        firstVisiblePost.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
   };
 
   // Function to get the current post ID with improved reliability
@@ -1270,6 +1305,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Calculate visibility score based on how much of the post is in viewport
       if (rect.bottom < 0 || rect.top > window.innerHeight) {
         // Post is not visible at all
+        return;
+      }
+      
+      // Skip very small elements (likely not actual posts)
+      if (rect.height < 50) {
         return;
       }
       
@@ -1326,14 +1366,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     <>
       {/* Enhanced Comment Modal using the proper component */}
       {commentModalOpen && activeCommentPostId && (
-        <CommentModal
+        <CommentModal 
           isOpen={commentModalOpen}
           onClose={() => {
             setCommentModalOpen(false);
             setActiveCommentPostId(undefined);
           }}
           postId={activeCommentPostId}
-          autoFocusInput={false}
         />
       )}
       
