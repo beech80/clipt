@@ -7,9 +7,9 @@ export interface Profile {
   avatar_url?: string;
   bio?: string;
   website?: string;
-  followers?: number;
-  following?: number;
-  achievements?: number;
+  followers_count?: number;
+  following_count?: number;
+  achievements_count?: number;
   created_at?: string;
   updated_at?: string;
 }

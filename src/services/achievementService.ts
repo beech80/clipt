@@ -581,18 +581,26 @@ export const achievementService = {
   
   // Helper method to generate mock achievements with progress
   getMockAchievements(): (AchievementProgress & { achievement: Achievement })[] {
-    return defaultAchievements.map((achievement, index) => {
+    const mockAchievements = defaultAchievements.map((achievement, index) => {
+      // Find the progress info for this achievement from our sample data
       const progressInfo = sampleUserProgress.find(p => p.achievementName === achievement.name) || {
         currentValue: 0,
         completed: false
       };
       
+      // For trophy achievements, ensure there's always some progress to make them look active
+      let currentValue = progressInfo.currentValue;
+      if (achievement.category === 'trophy' && currentValue === 0) {
+        // Add some default progress for trophy achievements to make them more engaging
+        currentValue = Math.floor(achievement.target_value * 0.3);
+      }
+      
       return {
         id: `mock-${index}`,
         user_id: 'mock-user',
         achievement_id: `achievement-${index}`,
-        current_value: progressInfo.currentValue,
-        completed: progressInfo.completed,
+        current_value: currentValue,
+        completed: progressInfo.completed || currentValue >= achievement.target_value,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         achievement: {
@@ -612,8 +620,43 @@ export const achievementService = {
         }
       };
     });
-  },
 
+    // Sort achievements to prioritize trophy achievements first, then by category
+    return mockAchievements.sort((a, b) => {
+      // First prioritize trophy category
+      if (a.achievement.category === 'trophy' && b.achievement.category !== 'trophy') {
+        return -1;
+      }
+      if (a.achievement.category !== 'trophy' && b.achievement.category === 'trophy') {
+        return 1;
+      }
+      
+      // Then sort by in-progress vs completed
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      
+      // Then sort by category
+      if (a.achievement.category !== b.achievement.category) {
+        // Define category order priority
+        const categoryOrder = {
+          'trophy': 1,
+          'daily': 2,
+          'streaming': 3,
+          'social': 4,
+          'special': 5,
+          'general': 6,
+          'gaming': 7
+        };
+        return (categoryOrder[a.achievement.category as keyof typeof categoryOrder] || 99) - 
+               (categoryOrder[b.achievement.category as keyof typeof categoryOrder] || 99);
+      }
+      
+      // Finally sort by points (highest first)
+      return b.achievement.points - a.achievement.points;
+    });
+  },
+  
   async getGameAchievements(gameId: number): Promise<any[]> {
     // In a real app, this would fetch from the database
     // For now, we'll return mock data based on the game ID
