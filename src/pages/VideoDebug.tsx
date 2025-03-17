@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import FallbackVideoPlayer from "@/components/video/FallbackVideoPlayer";
+import { getVideoUrlWithProperExtension } from "@/utils/videoUtils";
+import VideoProxy from "@/components/post/VideoProxy";
 
 interface VideoDebugInfo {
   id: string;
@@ -19,6 +22,8 @@ const VideoDebug = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [customUrl, setCustomUrl] = useState('');
   const [validationResult, setValidationResult] = useState<{status: string, message: string} | null>(null);
+  const [testUrl, setTestUrl] = useState('');
+  const [standardVideoError, setStandardVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Fetch posts when component mounts
@@ -147,21 +152,17 @@ const VideoDebug = () => {
             <div className="mt-4">
               <h3 className="font-medium mb-2">Video Preview:</h3>
               <div className="relative aspect-video bg-black/10 rounded overflow-hidden">
-                <video
-                  ref={videoRef}
-                  src={customUrl}
+                <FallbackVideoPlayer
+                  videoUrl={customUrl}
                   className="w-full h-full object-contain"
-                  controls
-                  playsInline
-                  preload="auto"
-                  onError={(e) => {
-                    console.error("Video error:", (e.target as HTMLVideoElement).error);
+                  onError={() => {
+                    console.error("Video error:");
                     setValidationResult({
                       status: 'error',
-                      message: `Playback error: ${(e.target as HTMLVideoElement).error?.message || 'Unknown error'}`
+                      message: 'Playback error'
                     });
                   }}
-                  onLoadedData={() => {
+                  onLoad={() => {
                     setValidationResult(prev => prev ? {
                       ...prev,
                       status: 'success',
@@ -175,6 +176,120 @@ const VideoDebug = () => {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+      
+      {/* Video URL tester */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Test Video URL</CardTitle>
+          <CardDescription>Enter a video URL to test its playback and content type</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <h2 className="text-xl font-semibold">Test Video URL</h2>
+          <Input
+            placeholder="Enter video URL to test"
+            value={testUrl}
+            onChange={(e) => setTestUrl(e.target.value)}
+          />
+          
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={() => {
+                if (testUrl) {
+                  const correctedUrl = getVideoUrlWithProperExtension(testUrl);
+                  if (correctedUrl !== testUrl) {
+                    toast.info(`URL corrected to: ${correctedUrl}`);
+                    setTestUrl(correctedUrl);
+                  }
+                }
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Correct URL Format
+            </Button>
+            
+            <Button
+              onClick={() => {
+                if (testUrl) {
+                  setTestUrl(testUrl + (testUrl.includes('?') ? '&' : '?') + 't=' + Date.now());
+                  toast.info("Added cache busting parameter");
+                }
+              }}
+              variant="outline"
+              size="sm"
+            >
+              Add Cache Buster
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h3 className="text-lg font-medium mb-2">Standard HTML Video Element</h3>
+              {testUrl && (
+                <div className="relative aspect-video bg-black">
+                  <video
+                    src={testUrl}
+                    controls
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      console.error("Test video error:", (e.target as HTMLVideoElement).error);
+                      setStandardVideoError(true);
+                    }}
+                    onLoadedData={() => setStandardVideoError(false)}
+                  />
+                  {standardVideoError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-center p-4">
+                      Error loading video with standard element
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="text-lg font-medium mb-2">FallbackVideoPlayer</h3>
+              {testUrl && (
+                <div className="relative aspect-video bg-black">
+                  <FallbackVideoPlayer
+                    videoUrl={testUrl}
+                    className="w-full h-full object-contain"
+                    onError={() => toast.error("All fallback approaches failed")}
+                    onLoad={() => toast.success("Video loaded successfully")}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <h3 className="text-lg font-medium mb-2">VideoProxy Component</h3>
+              {testUrl && (
+                <div className="relative aspect-video bg-black">
+                  <VideoProxy
+                    src={testUrl}
+                    className="w-full h-full object-contain"
+                    onError={() => toast.error("VideoProxy failed to load")}
+                    onLoad={() => toast.success("VideoProxy loaded successfully")}
+                  />
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="text-lg font-medium mb-2">Blob URL Info</h3>
+              {testUrl && (
+                <div className="p-4 bg-gray-100 rounded overflow-auto text-xs">
+                  <p><strong>URL:</strong> {testUrl}</p>
+                  <p><strong>Content Type:</strong> {testUrl.endsWith('.mp4') ? 'video/mp4' : 
+                    testUrl.endsWith('.webm') ? 'video/webm' : 
+                    testUrl.endsWith('.m3u8') ? 'application/x-mpegURL' : 
+                    'Unknown (inferred from URL)'}</p>
+                  <p className="text-xs mt-2 text-gray-500">Note: VideoProxy will try to detect and correct MIME type issues</p>
+                </div>
+              )}
+            </div>
+          </div>
         </CardContent>
       </Card>
       
@@ -203,14 +318,11 @@ const VideoDebug = () => {
               </CardHeader>
               <CardContent>
                 <div className="relative aspect-video bg-black/10 rounded overflow-hidden">
-                  <video
-                    src={post.video_url}
+                  <FallbackVideoPlayer
+                    videoUrl={post.video_url}
                     className="w-full h-full object-contain"
-                    controls
-                    playsInline
-                    preload="auto"
-                    onError={(e) => {
-                      console.error(`Error loading video for post ${post.id}:`, (e.target as HTMLVideoElement).error);
+                    onError={() => {
+                      console.error(`Error loading video for post ${post.id}:`);
                     }}
                   />
                 </div>

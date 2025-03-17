@@ -5,6 +5,7 @@ import { Gamepad2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import PhotoCollage from './PhotoCollage';
 import { debugVideoElement } from '@/utils/debugVideos';
+import FallbackVideoPlayer from '../video/FallbackVideoPlayer';
 
 interface PostContentProps {
   imageUrl?: string | null;
@@ -82,16 +83,54 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
   };
 
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-    const target = e.target as HTMLVideoElement;
-    console.error("Video error:", target.error?.message || "Unknown error", "Code:", target.error?.code);
+    const videoElement = e.target as HTMLVideoElement;
+    const videoUrl = videoElement.src || 'Unknown URL';
     
-    // Attempt video recovery on specific errors
-    if (target.error?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED) {
-      console.log("Source not supported, may be MIME type issue. Attempting recovery...");
+    console.error(`Video error for post ${postId} with URL ${videoUrl}:`, {
+      errorCode: videoElement.error?.code,
+      errorMessage: videoElement.error?.message,
+      networkState: videoElement.networkState,
+      readyState: videoElement.readyState
+    });
+    
+    // Try to diagnose the specific error
+    let errorMessage = "Could not load video";
+    
+    if (videoElement.error) {
+      switch (videoElement.error.code) {
+        case MediaError.MEDIA_ERR_ABORTED:
+          errorMessage = "Video playback was aborted";
+          break;
+        case MediaError.MEDIA_ERR_NETWORK:
+          errorMessage = "Network error while loading video";
+          // Try with CORS disabled as a last resort
+          if (videoElement.hasAttribute('crossorigin')) {
+            console.log("Trying without CORS for URL:", videoUrl);
+            videoElement.removeAttribute('crossorigin');
+            videoElement.load();
+            return; // Don't set error state yet, we're trying a fix
+          }
+          break;
+        case MediaError.MEDIA_ERR_DECODE:
+          errorMessage = "Video format error or corrupted video";
+          break;
+        case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+          errorMessage = "Video format not supported by browser";
+          break;
+      }
+    }
+    
+    // Output additional info to help debug
+    if (videoUrl) {
+      // Check if this is a CORS issue by testing with Image
+      const img = new Image();
+      img.onload = () => console.log("Image load test succeeded for video URL, might be a video format issue");
+      img.onerror = () => console.error("Image load test also failed, likely a CORS or network issue");
+      img.src = videoUrl;
     }
     
     setIsMediaError(true);
-    setIsMediaLoaded(false);
+    toast.error(errorMessage);
   };
 
   const handleImageError = () => {
@@ -159,76 +198,18 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 </div>
               )}
               
-              {/* Direct video with src attribute for better playback */}
-              <video
-                ref={videoRef}
-                key={`video-${postId}-${retryCount}`}
-                src={videoUrl}
+              {/* FallbackVideoPlayer with enhanced error recovery */}
+              <FallbackVideoPlayer
+                videoUrl={videoUrl}
+                postId={postId}
+                onLoad={handleMediaLoad}
+                onError={() => setIsMediaError(true)}
                 className="w-full h-full object-contain"
-                controls
-                playsInline
-                autoPlay
-                muted
-                loop
-                preload="auto"
-                crossOrigin="anonymous"
-                onLoadedData={(e) => {
-                  console.log("Video loaded successfully:", videoUrl);
-                  handleMediaLoad();
-                  // Unmute if interaction has occurred on the page
-                  if (document.documentElement.hasAttribute('data-user-interacted')) {
-                    const video = e.target as HTMLVideoElement;
-                    video.muted = false;
-                  }
-                }}
-                onError={(e) => {
-                  console.error("Video error:", (e.target as HTMLVideoElement).error);
-                  // If we've retried less than 3 times, attempt again with a new key
-                  if (retryCount < 3) {
-                    console.log(`Retry attempt ${retryCount + 1} for video ${postId}`);
-                    setRetryCount(prev => prev + 1);
-                  } else {
-                    handleVideoError(e);
-                  }
-                }}
-                onContextMenu={(e) => e.preventDefault()}
+                autoPlay={true}
+                controls={true}
+                muted={true}
+                loop={true}
               />
-              
-              {/* Manual play button overlay */}
-              {!isMediaLoaded && (
-                <div 
-                  className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
-                  onClick={() => {
-                    document.documentElement.setAttribute('data-user-interacted', 'true');
-                    if (videoRef.current) {
-                      // Set a random src parameter to bust cache
-                      const randomParam = `?t=${Date.now()}`;
-                      const originalSrc = videoRef.current.src.split('?')[0];
-                      videoRef.current.src = originalSrc + randomParam;
-                      
-                      videoRef.current.muted = false;
-                      videoRef.current.load();
-                      videoRef.current.play().catch(err => {
-                        console.error("Manual play failed:", err);
-                        // If manual play fails, try again muted
-                        if (videoRef.current) {
-                          videoRef.current.muted = true;
-                          videoRef.current.play().catch(() => {
-                            console.error("Even muted playback failed");
-                            setIsMediaError(true);
-                          });
-                        }
-                      });
-                    }
-                  }}
-                >
-                  <div className="p-4 bg-purple-800/80 rounded-full hover:bg-purple-700/80 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
