@@ -17,6 +17,73 @@
   background: linear-gradient(90deg, #8b5cf6, #3b82f6);
 }
 
+/* Streaming dropdown styles */
+.streaming-dropdown-wrapper {
+  position: relative;
+  z-index: 10;
+}
+
+.streaming-select-trigger {
+  background: #1d1d35;
+  border: 1px solid #2a2a45;
+  border-radius: 8px;
+  min-height: 42px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  color: white;
+  font-weight: 500;
+  padding: 0 0.75rem;
+}
+
+.streaming-select-trigger:hover {
+  background: #2a2a45;
+  border-color: #3a3a6a;
+}
+
+.streaming-select-trigger:focus {
+  border-color: #5a5ad2;
+  box-shadow: 0 0 0 1px #5a5ad2;
+}
+
+.streaming-select-content {
+  background: #171727;
+  border: 1px solid #2a2a45;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+.streaming-select-item {
+  color: white;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.streaming-select-item:hover {
+  background: #2a2a45;
+}
+
+.streaming-select-item[data-state="checked"] {
+  background: linear-gradient(135deg, #2d2d52 0%, #3a3a6a 100%);
+  font-weight: 600;
+}
+
+.streaming-select-item[data-state="checked"] svg {
+  color: #8b5cf6;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Main streaming tabs */
 .streaming-tabs-main {
   background: #171727;
