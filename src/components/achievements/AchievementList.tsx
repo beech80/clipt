@@ -7,6 +7,7 @@ import { achievementService } from '@/services/achievementService';
 type AchievementListProps = {
   userId: string;
   gameId?: number;
+  forceShowDemo?: boolean;
 };
 
 // Specific order for achievements to match Xbox image
@@ -73,7 +74,7 @@ const achievementOrder = [
   'The Legend of Clipt'
 ];
 
-const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => {
+const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId, forceShowDemo = false }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>('trophy');
   
   const categories = [
@@ -149,8 +150,8 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
     return <div className="p-4 text-center text-red-500">Error loading achievements</div>;
   }
 
-  // Show sample Xbox-style achievements if no achievements are returned or if we want to demo them
-  const showXboxStyleAchievements = !achievements || achievements.length === 0 || true;
+  // Show sample Xbox-style achievements if no achievements are returned or if forceShowDemo is true
+  const showXboxStyleAchievements = !achievements || achievements.length === 0 || forceShowDemo;
   
   if (showXboxStyleAchievements) {
     return (
@@ -177,7 +178,17 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId }) => 
             <h3 className="text-xl font-bold flex items-center gap-2 text-white mb-4">
               <Trophy className="text-yellow-500" />
               Trophy Achievements
+              <span className="text-sm font-normal text-gray-400 ml-2">
+                (Earn these by getting clips in the weekly top 10)
+              </span>
             </h3>
+            
+            <div className="bg-[#111122] p-3 rounded-md mb-6">
+              <p className="text-gray-300 text-sm">
+                Trophy achievements are special rewards earned when your clips rank in the weekly leaderboards.
+                Get your content to the top 10 to unlock these exclusive achievements and show off your content creator skills!
+              </p>
+            </div>
             
             <div className="flex w-full overflow-hidden">
               <AchievementItem 

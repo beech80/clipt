@@ -9,7 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import AchievementList from "@/components/achievements/AchievementList";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { Profile as ProfileType } from "@/types/profile";
+import { Profile as ProfileType, ProfileStats } from "@/types/profile";
 import styled from "styled-components";
 import { UserLink } from '@/components/user/UserLink';
 import PostItem from '@/components/PostItem';
@@ -38,18 +38,20 @@ const Profile = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'clips' | 'achievements'>('clips');
-  const [profile, setProfile] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [achievementsLoading, setAchievementsLoading] = useState(true);
   
   // Stats for displaying counts
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<ProfileStats>({
     followers: 0,
     following: 0,
     achievements: 0
   });
 
+  const [profile, setProfile] = useState<ProfileType | null>(null);
+  
   // Safe profile ID handling
   const profileId = id || user?.id;
   const isOwnProfile = user?.id === profileId;
@@ -60,25 +62,28 @@ const Profile = () => {
   const fetchProfileData = async (userId: string) => {
     try {
       // Try to get the profile by ID
-      const { data: profile, error } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select()
         .eq('id', userId)
         .single();
       
       // If there's an error or no profile for current user, create one
-      if (error || !profile) {
+      if (error || !profileData) {
         if (userId === user?.id) {
           console.log("No profile found for current user, creating one");
           
           // Create a default profile for the current user
-          const defaultProfile = {
+          const defaultProfile: ProfileType = {
             id: userId,
             username: `user_${userId.substring(0, 8)}`,
             display_name: user?.user_metadata?.name || 'New User',
             bio: 'Welcome to my Clipt profile!',
             avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
             created_at: new Date().toISOString(),
+            followers_count: 0,
+            following_count: 0,
+            achievements_count: 0
           };
           
           const { data: newProfile, error: createError } = await supabase
@@ -92,7 +97,7 @@ const Profile = () => {
             throw new Error('Failed to create profile');
           }
           
-          return newProfile;
+          return newProfile as ProfileType;
         } else {
           // Profile doesn't exist and it's not the current user
           console.error("Profile not found for user:", userId);
@@ -100,7 +105,7 @@ const Profile = () => {
         }
       }
       
-      return profile;
+      return profileData as ProfileType;
     } catch (error) {
       console.error("Error fetching profile:", error);
       
@@ -114,7 +119,10 @@ const Profile = () => {
           bio: 'Profile information temporarily unavailable',
           avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
           created_at: new Date().toISOString(),
-        };
+          followers_count: 0,
+          following_count: 0,
+          achievements_count: 0
+        } as ProfileType;
       }
       return null;
     }
@@ -135,6 +143,19 @@ const Profile = () => {
     return () => clearTimeout(timer);
   }, [profileId, user]);
 
+  // Set the achievements to load for a brief period to show loading animation
+  useEffect(() => {
+    if (!loading) {
+      // Reset achievements loading state when profile is loaded
+      setAchievementsLoading(true);
+      const timer = setTimeout(() => {
+        setAchievementsLoading(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
   const loadProfileData = async () => {
     try {
       // Fetch profile data
@@ -151,9 +172,9 @@ const Profile = () => {
       
       // Always ensure we have stats, even if they're zeroed out
       setStats({
-        followers: profileData.followers || 0,
-        following: profileData.following || 0,
-        achievements: profileData.achievements || 0
+        followers: profileData.followers_count || 0,
+        following: profileData.following_count || 0,
+        achievements: profileData.achievements_count || 0
       });
       
       // Fetch user's posts for the clips tab
@@ -191,7 +212,7 @@ const Profile = () => {
       }
       
       // Initialize default achievements for the new user if needed
-      if (profileData.id === user?.id && (!profileData.achievements || profileData.achievements === 0)) {
+      if (profileData.id === user?.id && (!profileData.achievements_count || profileData.achievements_count === 0)) {
         try {
           const { achievementService } = await import('@/services/achievementService');
           await achievementService.createDefaultAchievementsForUser(user.id);
@@ -210,16 +231,16 @@ const Profile = () => {
       // Create a fallback profile if this is the current user
       if (profileId === user?.id) {
         console.log("Creating fallback profile for current user");
-        const fallbackProfile = {
+        const fallbackProfile: ProfileType = {
           id: user.id,
           username: user.email?.split('@')[0] || `user_${user.id.substring(0, 8)}`,
           display_name: user.user_metadata?.name || 'Your Profile',
           bio: 'Welcome to your Clipt profile!',
           avatar_url: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.id}`,
           created_at: new Date().toISOString(),
-          followers: 0,
-          following: 0,
-          achievements: 0
+          followers_count: 0,
+          following_count: 0,
+          achievements_count: 0
         };
         
         setProfile(fallbackProfile);
@@ -406,7 +427,23 @@ const Profile = () => {
         </div>
       ) : (
         <div className="gaming-card p-6">
-          <AchievementList userId={profileId} />
+          <div className="mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-white mb-2">
+              <Trophy className="text-yellow-500" />
+              Achievement Showcase
+            </h2>
+            <p className="text-gray-400">Track your gaming accomplishments and milestones</p>
+          </div>
+          
+          {achievementsLoading ? (
+            <div className="p-8 flex flex-col items-center">
+              <div className="w-16 h-16 border-4 border-t-yellow-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-gray-400">Loading achievements...</p>
+            </div>
+          ) : (
+            /* Force the demo achievements to show */
+            <AchievementList userId={profileId} forceShowDemo={true} />
+          )}
         </div>
       )}
     </ProfileContent>
