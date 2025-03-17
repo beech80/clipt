@@ -75,6 +75,52 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     }
   }, [videoUrl, isMediaLoaded, isMediaError]);
 
+  useEffect(() => {
+    // Check if the video needs to be manually started after loading
+    if (videoRef.current && isMediaLoaded) {
+      videoRef.current.play().catch(error => {
+        console.log('Auto-play prevented in PostContent:', error);
+      });
+    }
+  }, [isMediaLoaded]);
+
+  useEffect(() => {
+    const handleUserInteraction = () => {
+      console.log('User interaction detected in PostContent, trying to play videos');
+      // Find all video elements within this component's DOM tree
+      document.querySelectorAll('video').forEach(video => {
+        if (video.paused) {
+          video.play().catch(() => {});
+        }
+      });
+    };
+
+    const handleScroll = () => {
+      const videos = document.querySelectorAll('video');
+      videos.forEach(video => {
+        const rect = video.getBoundingClientRect();
+        const isInViewport = (
+          rect.top >= 0 &&
+          rect.left >= 0 &&
+          rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+          rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+        );
+        
+        if (isInViewport && video.paused) {
+          video.play().catch(() => {});
+        }
+      });
+    };
+
+    document.addEventListener('user-interacted', handleUserInteraction);
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      document.removeEventListener('user-interacted', handleUserInteraction);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   const handleMediaLoad = () => {
     setIsMediaLoaded(true);
     setIsMediaError(false);
