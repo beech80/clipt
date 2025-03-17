@@ -45,7 +45,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
     { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
     { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' },
-    { name: 'Squads Clipts', icon: <Users className="mr-2 h-4 w-4" />, path: '/squads-clipts' },
+    { name: 'Squads Clipts', icon: <Users className="mr-2 h-4 w-4" />, path: '/' },
     { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
