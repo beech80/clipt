@@ -174,7 +174,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     <div className="relative">
       {/* Media Content */}
       {videoUrl ? (
-        <div className="relative w-full h-full aspect-video bg-black">
+        <div className="relative w-full h-full bg-black" style={{ aspectRatio: '16/9', maxHeight: '90vh' }}>
           {isMediaError ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
               <div className="text-center p-4">
@@ -183,6 +183,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                   onClick={() => {
                     setIsMediaError(false);
                     setIsMediaLoaded(false);
+                    setRetryCount(prev => prev + 1); // Increment retry counter
                   }}
                   className="mt-2 px-2 py-1 bg-purple-700 rounded text-white text-xs"
                 >
@@ -193,7 +194,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
           ) : (
             <>
               {!isMediaLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
                   <div className="animate-pulse text-white">Loading video...</div>
                 </div>
               )}
@@ -204,7 +205,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 postId={postId}
                 onLoad={handleMediaLoad}
                 onError={() => setIsMediaError(true)}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover md:object-contain"
                 autoPlay={true}
                 controls={true}
                 muted={true}

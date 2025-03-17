@@ -128,67 +128,61 @@ const VideoProxy: React.FC<VideoProxyProps> = ({
   }, [src, retryCount, onError, onLoad]);
 
   // Handle retry button click
-  const handleRetry = () => {
+  const retryFetch = () => {
     setRetryCount(0); // This will trigger the useEffect to run again
   };
 
-  if (isLoading) {
-    return (
-      <div className={`flex items-center justify-center bg-black/20 ${className}`}>
-        <div className="animate-pulse text-white">Loading video...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={`flex flex-col items-center justify-center bg-black/20 p-4 ${className}`}>
-        <p className="text-red-500 mb-2 text-sm">{error}</p>
-        <button
-          onClick={handleRetry}
-          className="px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  if (blobUrl) {
-    return (
-      <video
-        src={blobUrl}
-        className={className}
-        controls={controls}
-        autoPlay={autoPlay}
-        muted={muted}
-        loop={loop}
-        playsInline={playsInline}
-        onError={() => {
-          console.error('Video playback error from blob URL');
-          setError('Video playback error');
-          if (onError) onError();
-        }}
-      />
-    );
-  }
-
-  // Fallback to direct video tag if blob creation failed
   return (
-    <video
-      src={src}
-      className={className}
-      controls={controls}
-      autoPlay={autoPlay}
-      muted={muted}
-      loop={loop}
-      playsInline={playsInline}
-      onError={() => {
-        console.error('Direct video playback error');
-        setError('Video playback error');
-        if (onError) onError();
-      }}
-    />
+    <div className="relative w-full h-full">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+          <p className="text-white animate-pulse">Loading video...</p>
+        </div>
+      )}
+      
+      {error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 p-4 z-10">
+          <p className="text-red-500">{error}</p>
+          <button 
+            onClick={retryFetch} 
+            className="mt-2 px-2 py-1 bg-purple-700 rounded text-white text-xs"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+      
+      {blobUrl && (
+        <video
+          src={blobUrl}
+          className={className}
+          controls={controls}
+          autoPlay={autoPlay}
+          muted={muted}
+          loop={loop}
+          playsInline={playsInline}
+          onError={() => {
+            console.error('Video element error in VideoProxy');
+            if (onError) onError();
+          }}
+          onLoadedData={() => {
+            setIsLoading(false);
+            if (onLoad) onLoad();
+            // Force play for mobile devices which sometimes need user interaction
+            const video = document.querySelector('video');
+            if (video && autoPlay) {
+              const playPromise = video.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                  console.log('Auto-play prevented in VideoProxy. User interaction needed:', err);
+                });
+              }
+            }
+          }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', maxHeight: '90vh' }}
+        />
+      )}
+    </div>
   );
 };
 
