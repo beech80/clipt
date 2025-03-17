@@ -402,6 +402,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Directly update DOM for immediate response
     if (joystickRef.current) {
+      // Set CSS variables for animation
       joystickRef.current.style.transform = `translate(${dx}px, ${dy}px)`;
       
       // Override any transitions during active dragging
@@ -1221,59 +1222,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Enhanced comment button handler
   const handleCommentClick = () => {
-    // Enhanced post detection for comments
-    const currentPostId = getCurrentPostId();
+    // Navigate to Game Chat page
+    navigate('/group-chat');
     
-    if (currentPostId) {
-      console.log('Comment button clicked for post:', currentPostId);
-      
-      // Add visual feedback - pulse animation on the selected post
-      const postElement = document.querySelector(`[data-post-id="${currentPostId}"], #post-${currentPostId}`);
-      if (postElement) {
-        // Add a pulse effect to indicate the targeted post
-        postElement.classList.add('comment-target-pulse');
-        // Remove it after animation completes
-        setTimeout(() => postElement.classList.remove('comment-target-pulse'), 800);
-      }
-      
-      // Find if this post is already showing comments
-      const commentSection = document.querySelector(`[data-post-id="${currentPostId}"] .comments-section, #post-${currentPostId} .comments-section`);
-      const isShowingComments = commentSection && window.getComputedStyle(commentSection).display !== 'none';
-      
-      // Use event delegation to find and trigger the comment button on the post
-      const targetPostCommentBtn = document.querySelector(`[data-post-id="${currentPostId}"] .comment-button, #post-${currentPostId} .comment-button`);
-      if (targetPostCommentBtn) {
-        targetPostCommentBtn.click();
-      } else {
-        // Fallback: navigate to the post's dedicated page with comments section
-        navigate(`/post/${currentPostId}`);
-      }
-      
-      // Store the last interacted post ID to maintain context
-      try {
-        localStorage.setItem('clipt-last-comment-post', currentPostId);
-      } catch (e) {
-        console.error('Failed to store post ID:', e);
-      }
-    } else {
-      // Fallback - notify user
-      toast.info('Select a post to comment on', {
-        position: 'bottom-center',
-        duration: 2000,
-      });
-      
-      // Try to scroll to the first visible post to help user
-      const firstVisiblePost = Array.from(document.querySelectorAll('.post-item, [data-post-id], [id^="post-"]')).find(
-        post => {
-          const rect = post.getBoundingClientRect();
-          return rect.top >= 0 && rect.bottom <= window.innerHeight;
-        }
-      );
-      
-      if (firstVisiblePost) {
-        firstVisiblePost.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
+    // Add visual feedback
+    toast.success('Opening Game Chat', {
+      position: 'bottom-center',
+      duration: 2000,
+    });
   };
 
   // Function to get the current post ID with improved reliability
