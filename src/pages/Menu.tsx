@@ -11,7 +11,8 @@ import {
   Film,
   Award,
   LogOut,
-  MessageCircle
+  MessageCircle,
+  Users
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -34,6 +35,7 @@ const Menu = () => {
       items: [
         { title: 'Discovery', icon: <Compass className="h-6 w-6 mr-4 text-blue-400" />, path: '/discovery', description: 'Find new games' },
         { title: 'Top Clipts', icon: <Award className="h-6 w-6 mr-4 text-blue-400" />, path: '/top-clipts', description: 'Hall of fame' },
+        { title: 'Squads Clipts', icon: <Users className="h-6 w-6 mr-4 text-blue-400" />, path: '/squads-clipts', description: 'Your squads clipts' },
         { title: 'Home', icon: <Home className="h-6 w-6 mr-4 text-blue-400" />, path: '/', description: 'Main screen', className: 'home-menu-item' },
         { title: 'Clipts', icon: <Film className="h-6 w-6 mr-4 text-blue-400" />, path: '/clipts', description: 'View all clipts' },
         { title: 'All Comments', icon: <MessageCircle className="h-6 w-6 mr-4 text-blue-400" />, path: '/comments', description: 'Community chat' }
