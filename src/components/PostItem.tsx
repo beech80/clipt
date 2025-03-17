@@ -3,6 +3,7 @@ import PostContent from "./post/PostContent";
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/types/post";
 import { Heart, MessageSquare, Trophy, Trash2, MoreVertical, UserCheck, UserPlus } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,15 +19,27 @@ import InlineComments from "./post/InlineComments";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog';
 import { Textarea } from './ui/textarea';
+import ShareButton from "./ShareButton";
 
 interface PostItemProps {
   post: Post;
   onCommentClick?: () => void;
   highlight?: boolean;
   'data-post-id'?: string;
+  isCliptsPage?: boolean;
 }
 
-const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = false, 'data-post-id': postIdAttr }) => {
+const PostItem: React.FC<PostItemProps> = ({ 
+  post, 
+  onCommentClick, 
+  highlight = false, 
+  'data-post-id': postIdAttr,
+  isCliptsPage = false
+}) => {
+  // Use location to detect if we're on the Clipts page
+  const location = useLocation();
+  const onCliptsPage = isCliptsPage || location.pathname === '/clipts';
+
   const [isLoading, setIsLoading] = useState(true);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
@@ -250,8 +263,10 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
     }
   };
 
-  const handleCommentClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCommentClick = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     
     if (!postId) {
       console.error("Cannot add comment to invalid post ID");
@@ -897,26 +912,31 @@ const PostItem: React.FC<PostItemProps> = ({ post, onCommentClick, highlight = f
           </span>
         </button>
         
-        {/* Adding the follow button with proper controller detection class */}
-        {user && user.id !== post.user_id && (
-          <button 
-            className="follow-button flex items-center text-sm font-medium text-gray-400 hover:text-green-500 transition-all duration-200 group"
-            onClick={handleFollow}
-          >
-            {isFollowing ? (
-              <UserCheck 
-                className="h-6 w-6 text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
-              />
-            ) : (
-              <UserPlus 
-                className="h-6 w-6 text-gray-400 group-hover:text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
-              />
-            )}
-            <span className={`text-base font-medium ${isFollowing ? 'text-green-500' : 'text-gray-400 group-hover:text-green-500'}`}>
-              {isFollowing ? 'Following' : 'Follow'}
-            </span>
-          </button>
+        {/* Show Share button on Clipts page, otherwise show Follow button */}
+        {onCliptsPage ? (
+          <ShareButton postId={postId} />
+        ) : (
+          user && user.id !== post.user_id && (
+            <button 
+              className="follow-button flex items-center text-sm font-medium text-gray-400 hover:text-green-500 transition-all duration-200 group"
+              onClick={handleFollow}
+            >
+              {isFollowing ? (
+                <UserCheck 
+                  className="h-6 w-6 text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
+                />
+              ) : (
+                <UserPlus 
+                  className="h-6 w-6 text-gray-400 group-hover:text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
+                />
+              )}
+              <span className={`text-base font-medium ${isFollowing ? 'text-green-500' : 'text-gray-400 group-hover:text-green-500'}`}>
+                {isFollowing ? 'Following' : 'Follow'}
+              </span>
+            </button>
+          )
         )}
+
       </div>
 
       {/* Caption */}

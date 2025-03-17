@@ -341,6 +341,7 @@ const Clipts = () => {
                   key={post.id} 
                   post={post} 
                   data-post-id={post.id}
+                  isCliptsPage={true}
                 />
               </div>
             ))}

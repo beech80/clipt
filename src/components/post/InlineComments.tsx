@@ -8,7 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 interface InlineCommentsProps {
   postId: string;
   maxComments?: number;
-  onViewAllClick?: () => void;
+  onViewAllClick?: (e?: React.MouseEvent) => void;
 }
 
 const InlineComments: React.FC<InlineCommentsProps> = ({
