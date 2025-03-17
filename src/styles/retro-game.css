@@ -109,6 +109,21 @@
   100% { transform: scale(1); box-shadow: 0 0 8px 2px #5ce1ff, 4px 4px 0px #000000; }
 }
 
+/* Squads Clipts Menu Item Styling */
+button[data-testid="menu-item-squads clipts"] {
+  position: relative;
+  border-color: #9f7aea !important;
+  background: linear-gradient(135deg, #1a1d45 0%, #2e1a4a 100%) !important;
+}
+
+button[data-testid="menu-item-squads clipts"]:hover {
+  box-shadow: 0 0 8px 2px #9f7aea, 4px 4px 0px #000000;
+}
+
+button[data-testid="menu-item-squads clipts"] svg {
+  color: #9f7aea;
+}
+
 /* Retro Game Background */
 .retro-game-bg {
   background-color: #0f112a;
