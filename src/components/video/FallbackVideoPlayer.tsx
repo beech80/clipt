@@ -67,10 +67,23 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
 
   // Handle video load success
   const handleLoadSuccess = () => {
-    console.log(`Video loaded successfully: ${currentUrl}`);
+    console.log('Video loaded successfully');
     setIsLoaded(true);
-    setIsError(false);
     if (onLoad) onLoad();
+    
+    // Add user interaction flag for autoplay
+    document.documentElement.setAttribute('data-user-interacted', 'true');
+    
+    // Force play for mobile devices which sometimes need user interaction
+    if (videoRef.current && autoPlay) {
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log('Auto-play prevented. User interaction needed:', error);
+          // We'll leave the video controls visible for manual play
+        });
+      }
+    }
   };
 
   // Try next fallback approach when current one fails
@@ -213,6 +226,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
         preload="auto"
         key={`video-${postId}-${attemptCount}`}
         onLoadedData={handleLoadSuccess}
+        onCanPlay={handleLoadSuccess}
         onError={() => {
           console.error(`Video error for attempt ${attemptCount}`);
           tryNextFallback();

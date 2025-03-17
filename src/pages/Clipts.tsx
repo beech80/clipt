@@ -278,35 +278,10 @@ const Clipts = () => {
           >
             <RefreshCw className={`h-5 w-5 ${refreshKey > 0 ? 'animate-spin' : ''}`} />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => navigate('/video-debug')}
-          >
-            Debug
-          </Button>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-24 max-w-2xl">
-        {/* Debug section */}
-        <div className="mb-6 p-3 bg-slate-800 rounded text-xs overflow-x-auto">
-          <h2 className="text-white mb-2 font-semibold">Debug Info:</h2>
-          <p className="text-gray-300">
-            Found {rawPosts.length} posts, User interaction: {document.documentElement.hasAttribute('data-user-interacted') ? 'Yes' : 'No'}
-          </p>
-          <details>
-            <summary className="cursor-pointer text-blue-400 hover:text-blue-300">Show Video URLs</summary>
-            <ul className="mt-2 space-y-1">
-              {rawPosts.map(post => (
-                <li key={post.id} className="text-gray-400">
-                  Post {post.id.substring(0, 8)}: {post.video_url || 'No URL'}
-                </li>
-              ))}
-            </ul>
-          </details>
-        </div>
-        
         {isLoading ? (
           <div className="flex justify-center my-8">
             <div className="animate-pulse">Loading videos...</div>
