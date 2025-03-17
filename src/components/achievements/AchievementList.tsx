@@ -141,6 +141,11 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId, force
     });
   }, [filteredAchievements, gameId]);
 
+  // When forceShowDemo is true, we always want to show Xbox-style achievements regardless of loading state
+  if (forceShowDemo) {
+    return renderDemoAchievements();
+  }
+
   if (isLoading) {
     return <div className="p-4 text-center">Loading achievements...</div>;
   }
@@ -150,10 +155,15 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId, force
     return <div className="p-4 text-center text-red-500">Error loading achievements</div>;
   }
 
-  // Show sample Xbox-style achievements if no achievements are returned or if forceShowDemo is true
-  const showXboxStyleAchievements = !achievements || achievements.length === 0 || forceShowDemo;
+  // Show sample Xbox-style achievements if no achievements are returned
+  const showXboxStyleAchievements = !achievements || achievements.length === 0;
   
   if (showXboxStyleAchievements) {
+    return renderDemoAchievements();
+  }
+
+  // Function to render demo Xbox-style achievements
+  function renderDemoAchievements() {
     return (
       <div className="space-y-4">
         {/* Category selector buttons */}
@@ -619,51 +629,49 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId, force
     );
   }
 
-  // Original achievement display logic below
+  // Display real achievements
   return (
     <div className="space-y-4">
-      {/* Category filter tabs */}
-      <div className="flex space-x-2 overflow-x-auto pb-2 categories-scroll">
-        <button
-          onClick={() => setSelectedCategory(null)}
-          className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${
-            selectedCategory === null
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-          }`}
-        >
-          All
-        </button>
-        
-        {categories.map((category) => (
+      {/* Category selector buttons */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {categories.map(category => (
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
-            className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium ${
+            className={`px-4 py-2 rounded text-sm ${
               selectedCategory === category.id
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                ? 'bg-[#012e14] text-[#34dfeb]'
+                : 'bg-[#222222] text-gray-300 hover:bg-[#333333]'
             }`}
           >
             {category.label}
           </button>
         ))}
       </div>
-
-      {/* Achievements List */}
-      <div className="space-y-3">
-        {gameId
-          ? sortedAchievements.map((achievement, index) => (
-              <AchievementItem key={index} gameAchievement={achievement} />
-            ))
-          : sortedAchievements.map((achievementProgress, index) => (
-              <AchievementItem
-                key={index}
-                progress={achievementProgress}
-                achievement={achievementProgress.achievement}
+      
+      {sortedAchievements.length > 0 ? (
+        <div className="space-y-4">
+          {selectedCategory && (
+            <h3 className="text-xl font-bold text-white">
+              {categories.find(c => c.id === selectedCategory)?.label || 'Achievements'}
+            </h3>
+          )}
+          
+          <div className="grid grid-cols-1 gap-4">
+            {sortedAchievements.map(achievement => (
+              <AchievementItem 
+                key={gameId ? achievement.id : achievement.achievement_id}
+                achievement={gameId ? achievement : achievement.achievement}
+                progress={gameId ? null : achievement}
               />
             ))}
-      </div>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center p-8">
+          <p className="text-gray-400">No achievements found in this category</p>
+        </div>
+      )}
     </div>
   );
 };

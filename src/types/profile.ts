@@ -12,6 +12,18 @@ export interface Profile {
   achievements_count?: number;
   created_at?: string;
   updated_at?: string;
+  // Settings-specific properties
+  enable_notifications?: boolean;
+  enable_sounds?: boolean;
+  auto_download_media?: boolean;
+  hardware_acceleration?: boolean;
+  reduce_animations?: boolean;
+  background_processing?: boolean;
+  streaming_url?: string;
+  dark_mode?: boolean;
+  theme_preference?: string;
+  language_preference?: string;
+  timezone_preference?: string;
 }
 
 export interface ProfileStats {
@@ -64,4 +76,30 @@ export interface GameAchievement {
   created_at?: string;
   updated_at?: string;
   game_id?: number;
+}
+
+// Database raw profile type for accurate typing from Supabase
+export interface DatabaseProfile {
+  id: string;
+  username: string;
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  website?: string;
+  followers_count?: number;
+  following_count?: number;
+  achievements_count?: number;
+  created_at?: string;
+  updated_at?: string;
+  enable_notifications?: boolean;
+  enable_sounds?: boolean;
+  auto_download_media?: boolean;
+  hardware_acceleration?: boolean;
+  reduce_animations?: boolean;
+  background_processing?: boolean;
+  streaming_url?: string;
+  dark_mode?: boolean;
+  theme_preference?: string;
+  language_preference?: string;
+  timezone_preference?: string;
 }

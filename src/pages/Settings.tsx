@@ -105,6 +105,24 @@ const Settings = () => {
     }
   });
 
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (updates: Partial<Profile>) => {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user?.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+      toast.success('Settings updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update settings');
+    }
+  });
+
   const handleNotificationToggle = (key: string, value: boolean) => {
     updateNotificationsMutation.mutate({ [key]: value });
   };
