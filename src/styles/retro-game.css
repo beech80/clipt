@@ -81,10 +81,11 @@
 /* Home Menu Item Highlight */
 .home-menu-item {
   position: relative;
-  box-shadow: 0 0 0 2px #5ce1ff, 4px 4px 0px #000000;
+  box-shadow: 0 0 8px 2px #5ce1ff, 4px 4px 0px #000000;
   border-color: #5ce1ff !important;
   z-index: 1;
-  animation: subtle-pulse 2s infinite ease-in-out;
+  animation: home-pulse 2s infinite ease-in-out;
+  background: linear-gradient(135deg, #1a1d45 0%, #2a3070 100%) !important;
 }
 
 .home-menu-item::before {
@@ -95,16 +96,17 @@
   background: #ff3e3e;
   color: white;
   font-size: 10px;
-  padding: 2px 6px;
+  padding: 3px 6px;
   font-family: 'Press Start 2P', monospace;
   transform: rotate(15deg);
   z-index: 2;
+  border: 1px solid #ffffff;
 }
 
-@keyframes subtle-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
+@keyframes home-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 8px 2px #5ce1ff, 4px 4px 0px #000000; }
+  50% { transform: scale(1.03); box-shadow: 0 0 15px 3px #5ce1ff, 4px 4px 0px #000000; }
+  100% { transform: scale(1); box-shadow: 0 0 8px 2px #5ce1ff, 4px 4px 0px #000000; }
 }
 
 /* Retro Game Background */
