@@ -149,9 +149,18 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 className="w-full h-full object-contain"
                 controls
                 playsInline
-                muted={false}
-                preload="metadata"
-                onLoadedData={handleMediaLoad}
+                autoPlay
+                muted
+                loop
+                preload="auto"
+                onLoadedData={(e) => {
+                  handleMediaLoad();
+                  // Unmute if interaction has occurred on the page
+                  if (document.documentElement.hasAttribute('data-user-interacted')) {
+                    const video = e.target as HTMLVideoElement;
+                    video.muted = false;
+                  }
+                }}
                 onError={handleVideoError}
                 onContextMenu={(e) => e.preventDefault()}
               />

@@ -11,6 +11,7 @@ import { MessagesProvider } from '@/contexts/MessagesContext';
 import { CommentsProvider } from '@/contexts/CommentContext';
 import { usePerformanceMonitoring } from '@/lib/performance';
 import { useQueryClient } from '@tanstack/react-query';
+import { initUserInteractionTracking } from '@/utils/userInteraction';
 import '@/index.css';
 import '@/styles/animations.css';
 import '@/styles/retro-game.css';
@@ -101,6 +102,15 @@ function App() {
   const location = useLocation();
   const [currentPostId, setCurrentPostId] = useState<string | undefined>(undefined);
   const queryClient = useQueryClient(); 
+  
+  // Initialize user interaction tracking for video autoplay
+  useEffect(() => {
+    // Set up user interaction tracking for autoplay with sound
+    initUserInteractionTracking();
+    
+    // Debug log to verify it's running
+    console.log("User interaction tracking initialized for autoplay");
+  }, []);
   
   // Extract post ID from URL if on a post page
   useEffect(() => {

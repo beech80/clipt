@@ -42,30 +42,71 @@ const MuxPlayer: React.FC<MuxPlayerProps> = ({
     if (Hls.isSupported()) {
       const hls = new Hls({
         enableWorker: true,
-        lowLatencyMode: true
+        lowLatencyMode: true,
+        xhrSetup: (xhr) => {
+          // Set explicit Accept header to avoid MIME type issues
+          xhr.setRequestHeader('Accept', 'application/vnd.apple.mpegurl, application/x-mpegurl, */*');
+        }
       });
 
-      hls.loadSource(playbackUrl);
-      hls.attachMedia(video);
+      let loadAttempts = 0;
+      const maxAttempts = 2;
+
+      const loadWithRetry = () => {
+        try {
+          hls.loadSource(playbackUrl);
+          hls.attachMedia(video);
+        } catch (err) {
+          console.error('Error loading HLS source:', err);
+          if (loadAttempts < maxAttempts) {
+            loadAttempts++;
+            console.log(`Retrying HLS load (${loadAttempts}/${maxAttempts})...`);
+            setTimeout(loadWithRetry, 1000);
+          } else {
+            onError?.(new Error('Failed to load video after multiple attempts'));
+          }
+        }
+      };
+
+      loadWithRetry();
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setIsLoaded(true);
         if (autoPlay) {
-          video.play().catch(console.error);
+          // Use a more reliable approach for autoplay
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log('Autoplay started successfully');
+              })
+              .catch(err => {
+                console.warn('Autoplay prevented:', err);
+                // If autoplay fails due to browser policy, mute and try again
+                if (err.name === 'NotAllowedError') {
+                  video.muted = true;
+                  video.play().catch(e => console.error('Failed even with muted autoplay:', e));
+                }
+              });
+          }
         }
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
+        console.warn('HLS error:', data);
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
+              console.log('Fatal network error, attempting to recover...');
               hls.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
+              console.log('Fatal media error, attempting to recover...');
               hls.recoverMediaError();
               break;
             default:
-              onError?.(new Error('Fatal HLS error'));
+              console.error('Unrecoverable HLS error:', data);
+              onError?.(new Error(`Fatal HLS error: ${data.details}`));
               break;
           }
         }
