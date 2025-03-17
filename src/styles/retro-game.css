@@ -151,3 +151,60 @@
   60% { opacity: 1; transform: skewX(-5deg); }
   66% { opacity: 1; transform: skewX(20deg) skewY(5deg); }
 }
+
+/* Custom Scrollbars */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Custom Styled Scrollbar - used for desktop scrolling */
+.retro-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #4a4dff #1a1d45;
+}
+
+.retro-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.retro-scrollbar::-webkit-scrollbar-track {
+  background: #1a1d45;
+  border-left: 2px solid #4a4dff;
+}
+
+.retro-scrollbar::-webkit-scrollbar-thumb {
+  background: #4a4dff;
+  border: 2px solid #1a1d45;
+}
+
+.retro-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #5ce1ff;
+}
+
+/* Smooth Scrolling */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+/* Comment Target Highlight Animation */
+@keyframes comment-target-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(92, 225, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(92, 225, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(92, 225, 255, 0);
+  }
+}
+
+.comment-target-pulse {
+  animation: comment-target-pulse 1s ease-out;
+}

@@ -99,7 +99,7 @@ const PostItem = ({ post }: PostItemProps) => {
 
   const handleViewAllComments = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/comments?postId=${post.id}`);
+    navigate(`/comments-full/${post.id}`);
   };
 
   const handleProfileClick = (userId: string) => {

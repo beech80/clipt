@@ -12,7 +12,9 @@ import {
   Smile,
   Trash,
   Edit,
-  X
+  X,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { getPostWithComments } from '@/lib/api/posts';
@@ -64,14 +66,96 @@ const CommentsFullPage = () => {
   const [editingComment, setEditingComment] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const commentsContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollButtons, setShowScrollButtons] = useState(false);
+  const [atTop, setAtTop] = useState(true);
+  const [atBottom, setAtBottom] = useState(false);
 
   // Manually force refetch on mount to ensure comments are up to date
   useEffect(() => {
     if (postId) {
-      queryClient.invalidateQueries(['post-comments-fullpage', postId]);
+      queryClient.invalidateQueries({ queryKey: ['post-comments-fullpage', postId] });
     }
   }, [postId, queryClient]);
+
+  // Monitor scroll position to show/hide scroll buttons
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!commentsContainerRef.current) return;
+      
+      const { scrollTop, scrollHeight, clientHeight } = commentsContainerRef.current;
+      
+      // Show scroll buttons when content is scrollable (more than 1.5 screens)
+      setShowScrollButtons(scrollHeight > clientHeight * 1.5);
+      
+      // Check if we're at the top or bottom
+      setAtTop(scrollTop < 10);
+      setAtBottom(scrollTop + clientHeight >= scrollHeight - 10);
+    };
+
+    // Set up scroll event listener
+    const container = commentsContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      // Initial check
+      handleScroll();
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
+
+  // Add keyboard navigation support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only process if we're on the comments page and not typing in the input
+      const activeElement = document.activeElement;
+      const isInputActive = activeElement instanceof HTMLInputElement || 
+                           activeElement instanceof HTMLTextAreaElement;
+      
+      if (isInputActive) return;
+      
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          scrollToTop();
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          scrollToBottom();
+          break;
+        case 'Home':
+          e.preventDefault();
+          scrollToTop();
+          break;
+        case 'End':
+          e.preventDefault();
+          scrollToBottom();
+          break;
+        case 'c':
+        case 'C':
+          // Focus the comment input
+          e.preventDefault();
+          inputRef.current?.focus();
+          break;
+        case 'Escape':
+          // Go back
+          e.preventDefault();
+          handleBack();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.addEventListener('keydown', handleKeyDown);
+  }, []);
 
   const { data: post, isLoading, refetch } = useQuery<Post>({
     queryKey: ['post-comments-fullpage', postId],
@@ -122,7 +206,7 @@ const CommentsFullPage = () => {
     onSuccess: () => {
       setNewComment('');
       setReplyingTo(null);
-      queryClient.invalidateQueries(['post-comments-fullpage', postId]);
+      queryClient.invalidateQueries({ queryKey: ['post-comments-fullpage', postId] });
       toast.success('Comment added');
     },
     onError: (error) => {
@@ -150,7 +234,7 @@ const CommentsFullPage = () => {
     onSuccess: () => {
       setEditingComment(null);
       setEditContent('');
-      queryClient.invalidateQueries(['post-comments-fullpage', postId]);
+      queryClient.invalidateQueries({ queryKey: ['post-comments-fullpage', postId] });
       toast.success('Comment updated');
     },
     onError: (error) => {
@@ -175,7 +259,7 @@ const CommentsFullPage = () => {
       return commentId;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['post-comments-fullpage', postId]);
+      queryClient.invalidateQueries({ queryKey: ['post-comments-fullpage', postId] });
       toast.success('Comment deleted');
     },
     onError: (error) => {
@@ -184,14 +268,69 @@ const CommentsFullPage = () => {
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addComment.mutate();
+    if (!newComment.trim() || !user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          content: newComment,
+          post_id: postId,
+          user_id: user.id,
+          parent_id: replyingTo
+        })
+        .select(`
+          *,
+          profiles:user_id(id, username, avatar_url)
+        `)
+        .single();
+        
+      if (error) throw error;
+      
+      // Add new comment to the list and reset form
+      setNewComment('');
+      setReplyingTo(null);
+      
+      // Invalidate cache to trigger update
+      queryClient.invalidateQueries({ queryKey: ['post-comments-fullpage', postId] });
+      
+      // Scroll to bottom to see the new comment
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      
+      toast.success('Comment added successfully');
+    } catch (error) {
+      console.error('Error posting comment:', error);
+      toast.error('Failed to post comment');
+    }
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateComment.mutate();
+    if (!editContent.trim() || !editingComment) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .update({ content: editContent })
+        .eq('id', editingComment)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      // Update comments with the edited comment
+      setEditingComment(null);
+      setEditContent('');
+      
+      queryClient.invalidateQueries({ queryKey: ['post-comments-fullpage', postId] });
+      
+      toast.success('Comment updated successfully');
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      toast.error('Failed to update comment');
+    }
   };
   
   const handleEditStart = (comment: Comment) => {
@@ -206,6 +345,37 @@ const CommentsFullPage = () => {
 
   const handleBack = () => {
     navigate(-1);
+  };
+
+  // Scroll functions
+  const scrollToTop = () => {
+    commentsContainerRef.current?.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  const scrollToBottom = () => {
+    if (commentsContainerRef.current) {
+      commentsContainerRef.current.scrollTo({
+        top: commentsContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Custom scroller for paginated scrolling
+  const scrollPage = (direction: 'up' | 'down') => {
+    if (!commentsContainerRef.current) return;
+    
+    const { clientHeight } = commentsContainerRef.current;
+    const currentScroll = commentsContainerRef.current.scrollTop;
+    
+    // Scroll one page (container height) at a time
+    commentsContainerRef.current.scrollTo({
+      top: direction === 'up' ? currentScroll - clientHeight * 0.8 : currentScroll + clientHeight * 0.8,
+      behavior: 'smooth'
+    });
   };
 
   if (isLoading) {
@@ -290,13 +460,25 @@ const CommentsFullPage = () => {
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-xl font-bold pixel-font">COMMENTS</h1>
+        <div className="ml-auto flex items-center gap-1.5">
+          <div className="flex items-center text-gray-400">
+            <MessageCircle className="h-4 w-4 mr-1" />
+            <span className="text-sm">{totalComments}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="px-4">
+      <div ref={topRef} className="h-1"></div>
+
+      {/* Comments content with improved scrolling */}
+      <div 
+        ref={commentsContainerRef}
+        className="h-[calc(100vh-140px)] overflow-y-auto scroll-smooth px-4 hide-scrollbar"
+      >
         {/* Comment Count */}
         <button 
           className="flex items-center gap-2 py-4 text-[#5ce1ff] hover:text-[#00c3ff] transition-colors pixel-font mt-2"
-          onClick={() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={scrollToBottom}
         >
           <MessageCircle className="h-4 w-4" />
           <span>VIEW ALL {totalComments} COMMENTS</span>
@@ -306,7 +488,7 @@ const CommentsFullPage = () => {
         <h2 className="text-xl font-bold mb-6 mt-2 pixel-font retro-text-shadow">COMMENTS</h2>
 
         {/* Comments List */}
-        <div className="space-y-6 mb-8">
+        <div className="space-y-6 mb-32">
           {comments.length === 0 ? (
             <div className="text-center py-12 retro-border p-6">
               <MessageCircle className="h-10 w-10 mx-auto mb-3 opacity-50" />
@@ -351,7 +533,7 @@ const CommentsFullPage = () => {
                           </Button>
                           <Button 
                             type="submit" 
-                            disabled={!editContent.trim() || updateComment.isLoading}
+                            disabled={!editContent.trim()}
                             size="sm"
                             className="h-8 retro-button"
                           >
@@ -430,60 +612,84 @@ const CommentsFullPage = () => {
           )}
           <div ref={bottomRef}></div>
         </div>
+      </div>
 
-        {/* Comment Form */}
-        <div className="fixed bottom-0 left-0 right-0 bg-[#141644] p-3 pb-5 border-t-4 border-[#4a4dff] shadow-[0_-4px_0_0_#000]">
-          <form onSubmit={handleSubmit} className="flex items-center gap-2">
-            <Avatar className="h-10 w-10 rounded-none border-2 border-[#4a4dff]">
-              <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />
-              <AvatarFallback className="bg-[#1a1d45] rounded-none">
-                {user?.user_metadata?.name?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div className="relative flex-1">
-              {replyingTo && (
-                <div className="absolute -top-6 left-0 right-0 bg-[#333a7a] px-3 py-1 rounded-t-none text-xs flex items-center justify-between retro-border-top">
-                  <span className="pixel-font">
-                    REPLYING TO COMMENT
-                  </span>
-                  <button 
-                    type="button" 
-                    onClick={() => setReplyingTo(null)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              )}
-              
-              <Input
-                ref={inputRef}
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add a comment..."
-                className="bg-[#1a1d45] border-[#4a4dff] pr-12 focus:ring-1 focus:ring-[#5ce1ff] rounded-none"
-              />
-              <button 
-                type="button" 
-                className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#5ce1ff] transition-colors"
-              >
-                <Smile className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <Button 
-              type="submit" 
-              size="icon"
-              disabled={!newComment.trim() || addComment.isLoading}
-              className={`bg-[#4a4dff] hover:bg-[#333a7a] h-10 w-10 rounded-none flex items-center justify-center transition-colors retro-button ${
-                !newComment.trim() ? 'opacity-50' : ''
-              }`}
-            >
-              <Send className="h-5 w-5" />
-            </Button>
-          </form>
+      {/* Floating scroll controls for easier navigation */}
+      {showScrollButtons && (
+        <div className="fixed right-4 bottom-24 flex flex-col gap-2 z-10">
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            onClick={() => scrollPage('up')}
+            disabled={atTop}
+            className="h-9 w-9 bg-[#252968] border-2 border-[#4a4dff] rounded-none shadow-[2px_2px_0px_#000] opacity-80 hover:opacity-100"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            onClick={() => scrollPage('down')}
+            disabled={atBottom}
+            className="h-9 w-9 bg-[#252968] border-2 border-[#4a4dff] rounded-none shadow-[2px_2px_0px_#000] opacity-80 hover:opacity-100"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </Button>
         </div>
+      )}
+
+      {/* Comment Form */}
+      <div className="fixed bottom-0 left-0 right-0 bg-[#141644] p-3 pb-5 border-t-4 border-[#4a4dff] shadow-[0_-4px_0_0_#000]">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+          <Avatar className="h-10 w-10 rounded-none border-2 border-[#4a4dff]">
+            <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />
+            <AvatarFallback className="bg-[#1a1d45] rounded-none">
+              {user?.user_metadata?.name?.[0]?.toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div className="relative flex-1">
+            {replyingTo && (
+              <div className="absolute -top-6 left-0 right-0 bg-[#333a7a] px-3 py-1 rounded-t-none text-xs flex items-center justify-between retro-border-top">
+                <span className="pixel-font">
+                  REPLYING TO COMMENT
+                </span>
+                <button 
+                  type="button" 
+                  onClick={() => setReplyingTo(null)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )}
+            
+            <Input
+              ref={inputRef}
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment..."
+              className="bg-[#1a1d45] border-[#4a4dff] pr-12 focus:ring-1 focus:ring-[#5ce1ff] rounded-none"
+            />
+            <button 
+              type="button" 
+              className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#5ce1ff] transition-colors"
+            >
+              <Smile className="h-5 w-5" />
+            </button>
+          </div>
+          
+          <Button 
+            type="submit" 
+            size="icon"
+            disabled={!newComment.trim()}
+            className={`bg-[#4a4dff] hover:bg-[#333a7a] h-10 w-10 rounded-none flex items-center justify-center transition-colors retro-button ${
+              !newComment.trim() ? 'opacity-50' : ''
+            }`}
+          >
+            <Send className="h-5 w-5" />
+          </Button>
+        </form>
       </div>
     </div>
   );
