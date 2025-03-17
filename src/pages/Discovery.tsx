@@ -311,9 +311,14 @@ const Discovery = () => {
             {isSearchActive ? (
               renderSearchResults()
             ) : (
-              // Instagram-style Explore grid
+              // Instagram-style grid without the "Explore" text
               <>
-                <h2 className="text-lg font-semibold text-indigo-300 px-4 pb-2">Explore</h2>
+                <div className="trending-clips-header px-4 pb-4">
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-indigo-400" />
+                    <div className="h-px flex-grow bg-gradient-to-r from-indigo-500 to-transparent"></div>
+                  </div>
+                </div>
                 {clips && clips.length > 0 ? renderClipGrid(clips) : (
                   <div className="flex items-center justify-center h-40">
                     <p className="text-indigo-300">No clips found</p>
