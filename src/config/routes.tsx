@@ -10,6 +10,7 @@ import { userRoutes } from "./routes/userRoutes";
 import { gameRoutes } from "./routes/gameRoutes";
 import { paymentRoutes } from "./routes/paymentRoutes";
 import { moderationRoutes } from "./routes/moderationRoutes";
+import { notificationRoutes } from "./routes/notificationRoutes";
 import Subscription from "@/pages/Subscription";
 
 export const routes: RouteObject[] = [
@@ -41,4 +42,5 @@ export const routes: RouteObject[] = [
   ...gameRoutes,
   ...paymentRoutes,
   ...moderationRoutes,
+  ...notificationRoutes,
 ];
