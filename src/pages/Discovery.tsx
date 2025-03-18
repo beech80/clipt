@@ -110,9 +110,10 @@ const Discovery = () => {
             id, 
             name, 
             cover_url, 
-            posts (id)
+            posts (id),
+            created_at
           `)
-          .order('name');
+          .order('created_at', { ascending: false }); // Order by most recent
         
         // Apply search filter if provided
         if (searchTerm) {
@@ -276,7 +277,7 @@ const Discovery = () => {
     }
 
     if (!games || games.length === 0) {
-      return <div className="text-gray-400 text-sm">No trending games found</div>;
+      return <div className="text-gray-400 text-sm">No recent games found</div>;
     }
 
     return (
@@ -395,13 +396,13 @@ const Discovery = () => {
             <p className="text-gray-300 text-sm">DISCOVER AMAZING GAMES & STREAMERS</p>
           </div>
 
-          {/* Trending Games Section */}
+          {/* Recent Games Section */}
           {!searchTerm && (
             <div className="mb-8">
               <div className="relative">
                 <div className="flex items-center mb-4">
                   <h2 className="text-2xl font-bold text-yellow-400 px-4 py-1 bg-indigo-900/50 rounded-lg inline-flex items-center">
-                    <Gamepad2 className="mr-2 h-5 w-5" /> TRENDING GAMES
+                    <Gamepad2 className="mr-2 h-5 w-5" /> RECENT GAMES
                   </h2>
                 </div>
                 
