@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Input } from '@/components/ui/input';
 import { Search, X, Trophy, Trophy as TrophyIcon, Users as UsersIcon, Star, Gamepad2 } from 'lucide-react';
-import GameCard from '@/components/GameCard';
-import StreamerCard from '@/components/StreamerCard';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PostsGrid from '@/components/PostsGrid';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import PostsGrid from '@/components/PostsGrid';
+import GameCard from '@/components/GameCard';
+import { transformPostsFromDb, transformGamesFromDb, transformStreamersFromDb } from '@/utils/transformers';
 
 interface Game {
   id: string;
@@ -45,15 +45,17 @@ const Discovery = () => {
         const { data, error } = await supabase
           .from('posts')
           .select(`
-            *,
-            profiles:user_id(username, display_name, avatar_url),
-            games:game_id(name, cover_url)
+            id, title, content, created_at, media_url, 
+            user_id, game_id,
+            likes_count, comments_count,
+            profiles (username, display_name, avatar_url),
+            games (name, cover_url)
           `)
           .order('created_at', { ascending: false })
           .limit(20);
           
         if (error) throw error;
-        setPosts(data || []);
+        setPosts(transformPostsFromDb(data || []));
       } catch (error) {
         console.error('Error fetching posts:', error);
         toast.error('Failed to load posts');
@@ -75,10 +77,7 @@ const Discovery = () => {
         console.log('Searching for games with term:', searchTerm);
         let query = supabase
           .from('games')
-          .select(`
-            *,
-            post_count:posts(count)
-          `)
+          .select('id, name, cover_url, post_count')
           .order('name');
         
         // Apply search filter if provided
@@ -96,19 +95,7 @@ const Discovery = () => {
         
         console.log('Supabase games search results:', data?.length || 0);
         
-        // Transform data to fix the count object issue
-        const transformedData = (data || []).map(game => {
-          // Cast game.post_count to any to work around TypeScript restrictions
-          const postCount = game.post_count as any;
-          return {
-            ...game,
-            post_count: typeof postCount === 'object' && postCount !== null 
-              ? (Array.isArray(postCount) 
-                ? (postCount.length > 0 && postCount[0]?.count ? postCount[0].count : 0) 
-                : (postCount?.count || 0)) 
-              : (typeof postCount === 'number' ? postCount : 0)
-          };
-        });
+        const transformedData = transformGamesFromDb(data || []);
         
         // If no data from database, try fetching from IGDB
         if (transformedData.length === 0) {
@@ -167,7 +154,7 @@ const Discovery = () => {
     queryFn: async () => {
       let query = supabase
         .from('profiles')
-        .select('*')
+        .select('id, username, display_name, avatar_url, streaming_url, is_live, follower_count, current_game')
         .not('streaming_url', 'is', null);
       
       // Apply search filter if provided
@@ -179,20 +166,7 @@ const Discovery = () => {
       
       if (error) throw error;
       
-      // Transform the data to match the Streamer interface
-      return (data || []).map(profile => {
-        // Cast the profile to any to bypass TypeScript strict checks
-        const p = profile as any;
-        return {
-          id: p.id,
-          username: p.username || '',
-          display_name: p.display_name || '',
-          avatar_url: p.avatar_url || '',
-          streaming_url: p.streaming_url || '',
-          current_game: p.current_game || '',
-          is_live: Boolean(p.is_live)
-        };
-      });
+      return transformStreamersFromDb(data || []);
     },
     enabled: isSearchMode && activeTab === 'streamers', // Only run when search mode and streamers tab is active
   });
@@ -232,6 +206,100 @@ const Discovery = () => {
   // Handle tab change
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+  };
+
+  const navigateToGame = (gameId: string) => {
+    navigate(`/game/${gameId}`);
+  };
+
+  const navigateToUser = (userId: string) => {
+    navigate(`/profile/${userId}`);
+  };
+
+  const GameLeaderboard = ({ games, isLoading, error }: { games: Game[], isLoading: boolean, error: string | null }) => {
+    if (isLoading) {
+      return (
+        <div className="space-y-2">
+          {[...Array(3)].map((_, index) => (
+            <div key={index} className="animate-pulse flex items-center p-2 rounded">
+              <div className="w-6 h-6 bg-indigo-800/60 rounded flex items-center justify-center text-indigo-300 mr-3">
+                {index + 1}
+              </div>
+              <div className="h-4 bg-indigo-800/60 rounded w-full"></div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (error) {
+      return <div className="text-red-400 text-sm">{error}</div>;
+    }
+
+    if (games.length === 0) {
+      return <div className="text-gray-400 text-sm">No trending games found</div>;
+    }
+
+    return (
+      <div className="space-y-1">
+        {games.slice(0, 3).map((game, index) => (
+          <div 
+            key={game.id} 
+            className="flex items-center p-2 rounded hover:bg-indigo-950/50 transition-colors cursor-pointer"
+            onClick={() => navigateToGame(game.id)}
+          >
+            <div className="w-6 h-6 bg-indigo-900/60 rounded-full flex items-center justify-center text-indigo-300 mr-3">
+              {index + 1}
+            </div>
+            <div className="font-medium text-base">{game.name}</div>
+            <div className="ml-auto text-xs text-indigo-400">{game.post_count || 0} clips</div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const StreamerLeaderboard = ({ streamers, isLoading, error }: { streamers: Streamer[], isLoading: boolean, error: string | null }) => {
+    if (isLoading) {
+      return (
+        <div className="space-y-2">
+          {[...Array(3)].map((_, index) => (
+            <div key={index} className="animate-pulse flex items-center p-2 rounded">
+              <div className="w-6 h-6 bg-indigo-800/60 rounded flex items-center justify-center text-indigo-300 mr-3">
+                {index + 1}
+              </div>
+              <div className="h-4 bg-indigo-800/60 rounded w-full"></div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (error) {
+      return <div className="text-red-400 text-sm">{error}</div>;
+    }
+
+    if (streamers.length === 0) {
+      return <div className="text-gray-400 text-sm">No trending streamers found</div>;
+    }
+
+    return (
+      <div className="space-y-1">
+        {streamers.slice(0, 3).map((streamer, index) => (
+          <div 
+            key={streamer.id} 
+            className="flex items-center p-2 rounded hover:bg-indigo-950/50 transition-colors cursor-pointer"
+            onClick={() => navigateToUser(streamer.id)}
+          >
+            <div className="w-6 h-6 bg-indigo-900/60 rounded-full flex items-center justify-center text-indigo-300 mr-3">
+              {index + 1}
+            </div>
+            <div className="font-medium text-base">{streamer.username}</div>
+            <div className="ml-auto text-xs text-indigo-400">{streamer.follower_count || 0} followers</div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -298,51 +366,11 @@ const Discovery = () => {
                   </h2>
                 </div>
                 
-                {gamesLoading ? (
-                  <div className="grid grid-cols-3 gap-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="animate-pulse">
-                        <div className="aspect-square bg-indigo-900/30 rounded-lg mb-2"></div>
-                        <div className="h-4 bg-indigo-900/30 rounded w-3/4 mb-1"></div>
-                        <div className="h-3 bg-indigo-900/30 rounded w-1/2"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-4">
-                    {games && games.slice(0, 3).map((game: Game) => (
-                      <div 
-                        key={game.id} 
-                        className="cursor-pointer group"
-                        onClick={() => navigate(`/game/${game.id}`)}
-                      >
-                        <div className="relative aspect-square bg-indigo-900/30 rounded-lg mb-2 overflow-hidden group-hover:opacity-90 transition-opacity border-2 border-indigo-400/30">
-                          {game.cover_url ? (
-                            <img 
-                              src={game.cover_url} 
-                              alt={game.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).onerror = null;
-                                (e.target as HTMLImageElement).src = `https://via.placeholder.com/300x400/374151/FFFFFF?text=${encodeURIComponent(game.name?.charAt(0) || 'G')}`;
-                              }}
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full bg-indigo-900/50 text-4xl font-bold text-indigo-300">
-                              {game.name?.charAt(0) || 'G'}
-                            </div>
-                          )}
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2">
-                            <div className="text-xs text-indigo-300">
-                              <span className="text-indigo-400">{game.post_count || 0}</span> clips
-                            </div>
-                          </div>
-                        </div>
-                        <h3 className="font-medium text-white group-hover:text-indigo-300 transition-colors">{game.name}</h3>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <GameLeaderboard 
+                  games={games} 
+                  isLoading={gamesLoading} 
+                  error={gamesError} 
+                />
               </div>
             </div>
           )}
@@ -357,41 +385,11 @@ const Discovery = () => {
                   </h2>
                 </div>
                 
-                {streamersLoading ? (
-                  <div className="grid grid-cols-1 gap-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="animate-pulse bg-indigo-900/30 rounded-lg p-4 flex items-center">
-                        <div className="h-12 w-12 bg-indigo-700/50 rounded-full mr-4"></div>
-                        <div className="flex-1">
-                          <div className="h-4 bg-indigo-700/50 rounded w-1/3 mb-2"></div>
-                          <div className="h-3 bg-indigo-700/50 rounded w-1/2"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {streamers && streamers.slice(0, 3).map((streamer: Streamer) => (
-                      <StreamerCard 
-                        key={streamer.id}
-                        id={streamer.id}
-                        username={streamer.username}
-                        displayName={streamer.display_name}
-                        avatarUrl={streamer.avatar_url}
-                        streamingUrl={streamer.streaming_url}
-                        currentGame={streamer.current_game}
-                        isLive={streamer.is_live}
-                      />
-                    ))}
-                    
-                    {(!streamers || streamers.length === 0) && (
-                      <div className="text-center p-8 bg-indigo-900/20 rounded-lg border border-indigo-500/20">
-                        <p className="text-gray-300">No streamers available right now.</p>
-                        <p className="text-sm text-gray-400 mt-2">Check back later for the latest streamers.</p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <StreamerLeaderboard 
+                  streamers={streamers} 
+                  isLoading={streamersLoading} 
+                  error={streamersError} 
+                />
               </div>
             </div>
           )}
@@ -442,7 +440,7 @@ const Discovery = () => {
                               name={game.name}
                               coverUrl={game.cover_url}
                               postCount={game.post_count}
-                              onClick={() => navigate(`/game/${game.id}`)}
+                              onClick={() => navigateToGame(game.id)}
                             />
                           ))}
                         </div>
@@ -468,16 +466,9 @@ const Discovery = () => {
                       {streamers && streamers.length > 0 ? (
                         <div className="space-y-3">
                           {streamers.map((streamer: Streamer) => (
-                            <StreamerCard 
-                              key={streamer.id}
-                              id={streamer.id}
-                              username={streamer.username}
-                              displayName={streamer.display_name}
-                              avatarUrl={streamer.avatar_url}
-                              streamingUrl={streamer.streaming_url}
-                              currentGame={streamer.current_game}
-                              isLive={streamer.is_live}
-                            />
+                            <div key={streamer.id}>
+                              <p>{streamer.username}</p>
+                            </div>
                           ))}
                         </div>
                       ) : (
