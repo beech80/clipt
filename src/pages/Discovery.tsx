@@ -26,6 +26,7 @@ interface Streamer {
   streaming_url: string;
   current_game: string;
   is_live: boolean;
+  follower_count?: number;
 }
 
 const Discovery = () => {
@@ -149,7 +150,12 @@ const Discovery = () => {
   });
 
   // Streamers Tab
-  const { data: streamers, isLoading: streamersLoading, refetch: refetchStreamers } = useQuery({
+  const { 
+    data: streamers, 
+    isLoading: streamersLoading, 
+    error: streamersError,
+    refetch: refetchStreamers 
+  } = useQuery({
     queryKey: ['streamers', 'discovery', searchTerm],
     queryFn: async () => {
       let query = supabase
@@ -461,13 +467,23 @@ const Discovery = () => {
                         <div key={i} className="h-24 bg-indigo-900/30 rounded-lg"></div>
                       ))}
                     </div>
+                  ) : streamersError ? (
+                    <div className="text-center p-8 bg-indigo-900/20 rounded-lg border border-indigo-500/20">
+                      <p className="text-red-400">Error loading streamers</p>
+                      <p className="text-sm text-gray-400 mt-2">Please try again later</p>
+                    </div>
                   ) : (
                     <>
                       {streamers && streamers.length > 0 ? (
                         <div className="space-y-3">
                           {streamers.map((streamer: Streamer) => (
-                            <div key={streamer.id}>
-                              <p>{streamer.username}</p>
+                            <div 
+                              key={streamer.id}
+                              className="flex items-center p-3 rounded hover:bg-indigo-950/50 transition-colors cursor-pointer bg-indigo-950/30 border border-indigo-500/20"
+                              onClick={() => navigateToUser(streamer.id)}
+                            >
+                              <div className="font-medium text-base">{streamer.username}</div>
+                              <div className="ml-auto text-xs text-indigo-400">{streamer.follower_count || 0} followers</div>
                             </div>
                           ))}
                         </div>
