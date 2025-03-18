@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 import type { StreamChatMessage } from '@/types/chat';
-import { Send, X, MessageSquare, Users, Settings, Trash, User, Shield, Crown } from 'lucide-react';
+import { Send, X, MessageSquare, Users, Settings, Trash, User, Shield, Crown, ArrowDown, Smile } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StreamerDashboardChatProps {
@@ -31,7 +31,18 @@ export const StreamerDashboardChat = ({ streamId, isLive }: StreamerDashboardCha
   const [bannedUsers, setBannedUsers] = useState<string[]>([]);
   const [moderators, setModerators] = useState<string[]>([]);
   const [pinnedMessage, setPinnedMessage] = useState<StreamChatMessage | null>(null);
+  const [atBottom, setAtBottom] = useState(true);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Font size classes for different sizes
+  const fontSizeClasses = {
+    small: 'text-xs',
+    medium: 'text-sm',
+    large: 'text-base'
+  };
 
   useEffect(() => {
     // Simulate viewer count
@@ -112,10 +123,31 @@ export const StreamerDashboardChat = ({ streamId, isLive }: StreamerDashboardCha
   }, [streamId, user?.id]);
 
   useEffect(() => {
+    // Handle scroll to bottom for new messages
+    if (scrollRef.current && atBottom) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    } else if (scrollRef.current && !atBottom && messages.length > 0) {
+      setShowScrollToBottom(true);
+    }
+  }, [messages, atBottom]);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 30;
+      
+      setAtBottom(isAtBottom);
+      setShowScrollToBottom(!isAtBottom);
+    }
+  };
+
+  const scrollToBottom = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      setAtBottom(true);
+      setShowScrollToBottom(false);
     }
-  }, [messages]);
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,7 +234,7 @@ export const StreamerDashboardChat = ({ streamId, isLive }: StreamerDashboardCha
   }
 
   return (
-    <Card className="w-full h-full shadow-lg">
+    <Card className="w-full h-full shadow-md flex flex-col" ref={chatContainerRef}>
       <CardHeader className="py-2 px-3 border-b">
         <div className="flex items-center justify-between">
           <div>
@@ -222,24 +254,44 @@ export const StreamerDashboardChat = ({ streamId, isLive }: StreamerDashboardCha
             </CardDescription>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
-              <Users className="h-4 w-4" />
-            </Button>
+            <div className="flex border rounded-md overflow-hidden">
+              <Button 
+                variant={fontSize === 'small' ? "secondary" : "ghost"} 
+                size="icon" 
+                className="h-7 w-7 rounded-none"
+                onClick={() => setFontSize('small')}
+              >
+                <span className="text-xs">A</span>
+              </Button>
+              <Button 
+                variant={fontSize === 'medium' ? "secondary" : "ghost"} 
+                size="icon" 
+                className="h-7 w-7 rounded-none"
+                onClick={() => setFontSize('medium')}
+              >
+                <span className="text-sm">A</span>
+              </Button>
+              <Button 
+                variant={fontSize === 'large' ? "secondary" : "ghost"} 
+                size="icon" 
+                className="h-7 w-7 rounded-none"
+                onClick={() => setFontSize('large')}
+              >
+                <span className="text-base">A</span>
+              </Button>
+            </div>
           </div>
         </div>
       </CardHeader>
 
-      <Tabs defaultValue="chat" value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-[calc(100%-48px)]">
-        <TabsList className="px-3 pt-1 justify-start border-b rounded-none bg-transparent">
-          <TabsTrigger value="chat" className="text-xs py-1">Chat</TabsTrigger>
-          <TabsTrigger value="activity" className="text-xs py-1">Activity</TabsTrigger>
-          <TabsTrigger value="settings" className="text-xs py-1">Settings</TabsTrigger>
+      <Tabs defaultValue="chat" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
+        <TabsList className="px-3 pt-1 justify-start border-b rounded-none bg-transparent h-auto">
+          <TabsTrigger value="chat" className="text-xs py-1 px-3">Chat</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs py-1 px-3">Activity</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs py-1 px-3">Settings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="chat" className="flex-1 flex flex-col p-0 m-0 data-[state=active]:flex data-[state=inactive]:hidden h-full overflow-hidden">
+        <TabsContent value="chat" className="flex-1 flex flex-col p-0 m-0 data-[state=active]:flex data-[state=inactive]:hidden overflow-hidden">
           {pinnedMessage && (
             <div className="bg-muted/30 border-b px-3 py-2">
               <div className="flex items-center gap-1 mb-1">
@@ -252,89 +304,125 @@ export const StreamerDashboardChat = ({ streamId, isLive }: StreamerDashboardCha
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-4 w-4 ml-auto p-0 hover:bg-red-100 hover:text-red-500"
+                  className="h-4 w-4 ml-auto p-0 hover:bg-red-100 hover:text-red-600"
                   onClick={() => setPinnedMessage(null)}
                 >
                   <X className="h-3 w-3" />
                 </Button>
               </div>
-              <p className="text-xs">{pinnedMessage.message}</p>
+              <p className={fontSizeClasses[fontSize]}>{pinnedMessage.message}</p>
             </div>
           )}
           
-          <div className="p-1 border-b flex items-center gap-1 bg-muted/20">
-            <Button 
-              variant={filter === 'all' ? "default" : "ghost"} 
-              size="sm" 
-              className="h-6 text-xs px-2"
-              onClick={() => setFilter('all')}
-            >
-              All
-            </Button>
-            <Button 
-              variant={filter === 'chat' ? "default" : "ghost"} 
-              size="sm" 
-              className="h-6 text-xs px-2"
-              onClick={() => setFilter('chat')}
-            >
-              Chat
-            </Button>
-            <Button 
-              variant={filter === 'system' ? "default" : "ghost"} 
-              size="sm" 
-              className="h-6 text-xs px-2"
-              onClick={() => setFilter('system')}
-            >
-              System
-            </Button>
-            <Button 
-              variant={filter === 'mod' ? "default" : "ghost"} 
-              size="sm" 
-              className="h-6 text-xs px-2"
-              onClick={() => setFilter('mod')}
-            >
-              Mod
-            </Button>
+          <div className="p-1 border-b flex items-center gap-1 bg-muted/20 justify-between">
+            <div className="flex items-center gap-1">
+              <Button 
+                variant={filter === 'all' ? "default" : "ghost"} 
+                size="sm" 
+                className="h-6 text-xs px-2"
+                onClick={() => setFilter('all')}
+              >
+                All
+              </Button>
+              <Button 
+                variant={filter === 'chat' ? "default" : "ghost"} 
+                size="sm" 
+                className="h-6 text-xs px-2"
+                onClick={() => setFilter('chat')}
+              >
+                Chat
+              </Button>
+              <Button 
+                variant={filter === 'system' ? "default" : "ghost"} 
+                size="sm" 
+                className="h-6 text-xs px-2"
+                onClick={() => setFilter('system')}
+              >
+                System
+              </Button>
+              <Button 
+                variant={filter === 'mod' ? "default" : "ghost"} 
+                size="sm" 
+                className="h-6 text-xs px-2"
+                onClick={() => setFilter('mod')}
+              >
+                Mods
+              </Button>
+            </div>
+            
+            {filteredMessages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs px-2 text-muted-foreground"
+                onClick={() => setMessages([])}
+              >
+                Clear
+              </Button>
+            )}
           </div>
 
-          <ScrollArea className="flex-1 p-3">
-            <div className="space-y-3">
+          <ScrollArea className="flex-1 p-3 relative" onScrollCapture={handleScroll} ref={scrollRef}>
+            <div className="space-y-0.5">
               {filteredMessages.length === 0 ? (
                 <div className="h-full flex items-center justify-center">
-                  <p className="text-xs text-muted-foreground">No messages yet</p>
+                  <p className={fontSizeClasses[fontSize]}>No messages yet</p>
                 </div>
               ) : (
                 filteredMessages.map((msg) => (
                   <div 
                     key={msg.id} 
                     className={cn(
-                      "group flex items-start gap-2 text-sm p-1 rounded hover:bg-muted/40 transition-colors",
-                      msg.user_id === user?.id && "bg-muted/20"
+                      "group flex items-start gap-2 p-2 rounded-md mb-2",
+                      fontSizeClasses[fontSize],
+                      msg.user_id === user?.id ? "bg-muted/20" : "hover:bg-muted/10",
+                      msg.message_type === 'system' && "bg-blue-50/50 border-l-4 border-blue-200",
+                      msg.message_type === 'mod' && "bg-amber-50/50 border-l-4 border-amber-200"
                     )}
                   >
-                    <Avatar className="h-6 w-6 rounded">
+                    <Avatar className={cn(
+                      "rounded-full", 
+                      fontSize === 'small' ? "h-6 w-6" : 
+                      fontSize === 'medium' ? "h-7 w-7" : "h-8 w-8"
+                    )}>
                       <AvatarImage src={msg.profiles?.avatar_url} />
-                      <AvatarFallback className="text-xs">
+                      <AvatarFallback className={cn(
+                        fontSize === 'small' ? "text-xs" : 
+                        fontSize === 'medium' ? "text-sm" : "text-base"
+                      )}>
                         {msg.profiles?.username?.[0]?.toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline gap-1">
+                      <div className="flex items-baseline gap-1 flex-wrap">
                         <span className={cn(
-                          "font-medium text-xs",
+                          "font-semibold",
+                          fontSize === 'small' ? "text-xs" : 
+                          fontSize === 'medium' ? "text-sm" : "text-base",
                           isUserModerator(msg.user_id) && "text-blue-500"
                         )}>
                           {msg.profiles?.username || 'Unknown'}
                           {isUserModerator(msg.user_id) && (
-                            <Shield className="inline-block h-3 w-3 ml-1 text-blue-500" />
+                            <Shield className={cn(
+                              "inline-block ml-1 text-blue-500",
+                              fontSize === 'small' ? "h-3 w-3" : 
+                              fontSize === 'medium' ? "h-3.5 w-3.5" : "h-4 w-4"
+                            )} />
                           )}
                         </span>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className={cn(
+                          "text-muted-foreground", 
+                          fontSize === 'small' ? "text-[10px]" : 
+                          fontSize === 'medium' ? "text-xs" : "text-sm"
+                        )}>
                           {new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </span>
                         {getMessageTypeIcon(msg.message_type)}
                       </div>
-                      <p className="text-xs break-words">{msg.message}</p>
+                      <p className={cn(
+                        "break-words mt-1",
+                        fontSizeClasses[fontSize]
+                      )}>{msg.message}</p>
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 self-start pt-1">
                       <Button 
@@ -366,21 +454,39 @@ export const StreamerDashboardChat = ({ streamId, isLive }: StreamerDashboardCha
                 ))
               )}
             </div>
+            {showScrollToBottom && (
+              <Button
+                variant="secondary"
+                size="icon"
+                className="fixed bottom-20 right-8 h-8 w-8 rounded-full shadow-md z-10 opacity-80 hover:opacity-100"
+                onClick={scrollToBottom}
+              >
+                <ArrowDown className="h-4 w-4" />
+              </Button>
+            )}
           </ScrollArea>
 
           <form onSubmit={handleSendMessage} className="p-2 border-t">
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+              >
+                <Smile className="h-4 w-4" />
+              </Button>
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={isLive ? "Send a message..." : "Stream is offline"}
                 disabled={!isLive || !user}
-                className="h-8 text-sm"
+                className={cn(fontSizeClasses[fontSize], "h-9")}
               />
               <Button 
                 type="submit" 
-                size="sm" 
-                className="h-8 whitespace-nowrap" 
+                size="sm"
+                className="h-9 whitespace-nowrap" 
                 disabled={!isLive || !user || !message.trim()}
               >
                 <Send className="h-4 w-4 mr-1" />
@@ -448,6 +554,36 @@ export const StreamerDashboardChat = ({ streamId, isLive }: StreamerDashboardCha
                     </Badge>
                   ))
                 )}
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <h4 className="text-xs font-medium">Text Size</h4>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant={fontSize === 'small' ? "default" : "outline"} 
+                  size="sm" 
+                  className="h-8"
+                  onClick={() => setFontSize('small')}
+                >
+                  Small
+                </Button>
+                <Button 
+                  variant={fontSize === 'medium' ? "default" : "outline"} 
+                  size="sm" 
+                  className="h-8"
+                  onClick={() => setFontSize('medium')}
+                >
+                  Medium
+                </Button>
+                <Button 
+                  variant={fontSize === 'large' ? "default" : "outline"} 
+                  size="sm" 
+                  className="h-8"
+                  onClick={() => setFontSize('large')}
+                >
+                  Large
+                </Button>
               </div>
             </div>
           </div>
