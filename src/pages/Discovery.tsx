@@ -130,19 +130,28 @@ const Discovery = () => {
         
         console.log('Supabase games search results:', data?.length || 0);
         
-        const transformedData = transformGamesFromDb(data || []);
+        // Remove duplicate games by name
+        const uniqueGamesMap = new Map();
+        data?.forEach(game => {
+          if (!uniqueGamesMap.has(game.name.toLowerCase())) {
+            uniqueGamesMap.set(game.name.toLowerCase(), game);
+          }
+        });
+        
+        const uniqueGames = Array.from(uniqueGamesMap.values());
+        const transformedData = transformGamesFromDb(uniqueGames || []);
         
         // If no data from database, try fetching from IGDB
         if (transformedData.length === 0) {
           try {
             console.log('No games found in database, trying IGDB');
             const { igdbService } = await import('@/services/igdbService');
-            const popularGames = await igdbService.getPopularGames(6);
+            const igdbResults = await igdbService.searchGames(searchTerm);
             
-            console.log('IGDB results:', popularGames?.length || 0);
+            console.log('IGDB results:', igdbResults?.length || 0);
             
-            if (popularGames && popularGames.length > 0) {
-              return popularGames.map((game: any) => {
+            if (igdbResults && igdbResults.length > 0) {
+              return igdbResults.map((game: any) => {
                 // Fix IGDB cover URL formatting
                 let coverUrl = undefined;
                 if (game.cover?.url) {
@@ -277,7 +286,7 @@ const Discovery = () => {
     }
 
     if (!games || games.length === 0) {
-      return <div className="text-gray-400 text-sm">No recent games found</div>;
+      return <div className="text-gray-400 text-sm">No games found</div>;
     }
 
     return (
@@ -342,6 +351,42 @@ const Discovery = () => {
     );
   };
 
+  const handleSearchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) {
+      return;
+    }
+    
+    setIsSearching(true);
+    setActiveTab('games');
+    
+    // If search wasn't triggered automatically, manually trigger it
+    if (searchTerm.trim().length > 0) {
+      // Add a small delay to ensure the search query is processed
+      setTimeout(() => {
+        refetchGames();
+        refetchStreamers();
+      }, 100);
+    
+      // If we have fewer than 3 results, try IGDB
+      if (games?.length < 3) {
+        try {
+          console.log('Few results in database, trying IGDB search...');
+          const { igdbService } = await import('@/services/igdbService');
+          const igdbResults = await igdbService.searchGames(searchTerm);
+          
+          if (igdbResults && igdbResults.length > 0) {
+            // Process and add to database for future searches
+            // This would typically be done server-side, but simulating here
+            console.log('Found additional games in IGDB:', igdbResults.length);
+          }
+        } catch (error) {
+          console.error('Error searching IGDB:', error);
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-black text-white">
       {/* Fixed header */}
@@ -359,13 +404,15 @@ const Discovery = () => {
           
           <div className="flex-1 mx-4">
             <div className="relative">
-              <Input
-                placeholder="Search games or streamers..."
-                value={searchTerm}
-                onChange={handleInputChange}
-                onFocus={handleSearchFocus}
-                className="pl-10 py-5 bg-black/20 border-indigo-500/30 text-white placeholder:text-gray-400 w-full"
-              />
+              <form onSubmit={handleSearchSubmit}>
+                <Input
+                  placeholder="Search games or streamers..."
+                  value={searchTerm}
+                  onChange={handleInputChange}
+                  onFocus={handleSearchFocus}
+                  className="pl-10 py-5 bg-black/20 border-indigo-500/30 text-white placeholder:text-gray-400 w-full"
+                />
+              </form>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400" />
               {isSearching && (
                 <Button
@@ -402,7 +449,7 @@ const Discovery = () => {
               <div className="relative">
                 <div className="flex items-center mb-4">
                   <h2 className="text-2xl font-bold text-yellow-400 px-4 py-1 bg-indigo-900/50 rounded-lg inline-flex items-center">
-                    <Gamepad2 className="mr-2 h-5 w-5" /> RECENT GAMES
+                    <Gamepad2 className="mr-2 h-5 w-5" /> TOP 3 GAMES
                   </h2>
                 </div>
                 
