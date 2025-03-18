@@ -37,38 +37,66 @@ const Discovery = () => {
   const [activeTab, setActiveTab] = useState('games');
   const [posts, setPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(true);
+  const [postsError, setPostsError] = useState(null);
 
   // Fetch posts for the main explore view
   useEffect(() => {
     const fetchPosts = async () => {
-      setPostsLoading(true);
       try {
-        const { data, error } = await supabase
+        setPostsLoading(true);
+        const { data: postsData, error } = await supabase
           .from('posts')
-          .select(`
-            id, title, content, created_at, media_url, 
-            user_id, game_id,
-            likes_count, comments_count,
-            profiles (username, display_name, avatar_url),
-            games (name, cover_url)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(20);
+          .select('id, image_url, video_url, create_at, user_id, game_id')
+          .order('create_at', { ascending: false })
+          .limit(50);
           
-        if (error) throw error;
-        setPosts(transformPostsFromDb(data || []));
+        if (error) {
+          console.error('Error fetching posts:', error);
+          toast.error('Failed to load posts');
+          setPostsError(error);
+          return;
+        }
+        
+        setPosts(postsData);
       } catch (error) {
         console.error('Error fetching posts:', error);
         toast.error('Failed to load posts');
+        setPostsError(error);
       } finally {
         setPostsLoading(false);
       }
     };
-    
-    if (!isSearchMode) {
-      fetchPosts();
+
+    fetchPosts();
+  }, [supabase]);
+
+  // Define fetchPosts as a callable function for retry button
+  const fetchPostsData = async () => {
+    try {
+      setPostsLoading(true);
+      setPostsError(null);
+      const { data: postsData, error } = await supabase
+        .from('posts')
+        .select('id, image_url, video_url, create_at, user_id, game_id')
+        .order('create_at', { ascending: false })
+        .limit(50);
+        
+      if (error) {
+        console.error('Error fetching posts:', error);
+        toast.error('Failed to load posts');
+        setPostsError(error);
+        return;
+      }
+      
+      setPosts(postsData);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts');
+      setPostsError(error);
+    } finally {
+      setPostsLoading(false);
     }
-  }, [isSearchMode]);
+  };
 
   // Games Tab
   const { data: games, isLoading: gamesLoading, error: gamesError, refetch: refetchGames } = useQuery({
@@ -222,7 +250,7 @@ const Discovery = () => {
     navigate(`/profile/${userId}`);
   };
 
-  const GameLeaderboard = ({ games, isLoading, error }: { games: Game[], isLoading: boolean, error: string | null }) => {
+  const GameLeaderboard = ({ games, isLoading, error }: { games: Game[] | undefined, isLoading: boolean, error: Error | null }) => {
     if (isLoading) {
       return (
         <div className="space-y-2">
@@ -239,10 +267,10 @@ const Discovery = () => {
     }
 
     if (error) {
-      return <div className="text-red-400 text-sm">{error}</div>;
+      return <div className="text-red-400 text-sm">{error.message || "An error occurred"}</div>;
     }
 
-    if (games.length === 0) {
+    if (!games || games.length === 0) {
       return <div className="text-gray-400 text-sm">No trending games found</div>;
     }
 
@@ -265,7 +293,7 @@ const Discovery = () => {
     );
   };
 
-  const StreamerLeaderboard = ({ streamers, isLoading, error }: { streamers: Streamer[], isLoading: boolean, error: string | null }) => {
+  const StreamerLeaderboard = ({ streamers, isLoading, error }: { streamers: Streamer[] | undefined, isLoading: boolean, error: Error | null }) => {
     if (isLoading) {
       return (
         <div className="space-y-2">
@@ -282,10 +310,10 @@ const Discovery = () => {
     }
 
     if (error) {
-      return <div className="text-red-400 text-sm">{error}</div>;
+      return <div className="text-red-400 text-sm">{error.message || "An error occurred"}</div>;
     }
 
-    if (streamers.length === 0) {
+    if (!streamers || streamers.length === 0) {
       return <div className="text-gray-400 text-sm">No trending streamers found</div>;
     }
 
@@ -438,9 +466,9 @@ const Discovery = () => {
                   ) : (
                     <>
                       {games && games.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                           {games.map((game: Game) => (
-                            <GameCard
+                            <GameCard 
                               key={game.id}
                               id={game.id}
                               name={game.name}
@@ -506,17 +534,26 @@ const Discovery = () => {
           <h1 className="text-2xl font-bold mb-6">Explore</h1>
           
           {postsLoading ? (
-            <div className="animate-pulse space-y-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-indigo-900/30 rounded-lg aspect-square"></div>
+            <div className="animate-pulse grid grid-cols-3 gap-1">
+              {[...Array(12)].map((_, index) => (
+                <div key={index} className="bg-indigo-900/30 aspect-square rounded"></div>
               ))}
             </div>
-          ) : posts.length > 0 ? (
+          ) : postsError ? (
+            <div className="text-center p-8">
+              <p className="text-red-400">Failed to load posts</p>
+              <button 
+                onClick={fetchPostsData}
+                className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-sm"
+              >
+                Try Again
+              </button>
+            </div>
+          ) : posts && posts.length > 0 ? (
             <PostsGrid posts={posts} />
           ) : (
-            <div className="flex flex-col items-center justify-center h-60 text-center p-8 bg-indigo-900/20 rounded-lg border border-indigo-500/20">
-              <p className="text-gray-300 text-lg mb-2">No clips found</p>
-              <p className="text-sm text-gray-400">Be the first to add some content!</p>
+            <div className="text-center p-8 bg-indigo-900/20 rounded-lg border border-indigo-500/20">
+              <p className="text-gray-400">No posts available</p>
             </div>
           )}
         </div>
