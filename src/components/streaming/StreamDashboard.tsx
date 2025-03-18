@@ -235,14 +235,31 @@ export function StreamDashboard() {
               </CardContent>
             </Card>
 
-            <StreamStats isLive={isLive} />
-          </div>
-          
-          <div>
-            <StreamerDashboardChat 
-              streamId={stream?.id || "temp-stream-id"} 
-              isLive={isLive} 
-            />
+            <div>
+              <StreamStats isLive={isLive} />
+            </div>
+            
+            <div className="flex flex-col xl:flex-row gap-4 w-full">
+              <div className="flex-1">
+                {isLive && (
+                  <Card className="h-[400px] overflow-hidden rounded-lg shadow-md bg-black">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-white text-center">
+                        <h3 className="text-lg font-medium">Your stream is live!</h3>
+                        <p className="text-sm text-gray-400">Preview is only available on the live page</p>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+              </div>
+              
+              <div className="w-full xl:w-[350px]">
+                <StreamerDashboardChat 
+                  streamId={stream?.id || "temp-stream-id"} 
+                  isLive={isLive} 
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}

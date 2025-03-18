@@ -1,9 +1,9 @@
-
 export interface StreamChatMessage {
   id: string;
   stream_id: string;
   user_id: string;
   message: string;
+  message_type?: 'chat' | 'system' | 'mod';
   created_at: string;
   is_deleted?: boolean;
   deleted_by?: string;
