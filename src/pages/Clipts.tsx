@@ -294,11 +294,12 @@ const Clipts = () => {
   }, [rawPosts]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex items-center justify-between p-4 fixed top-0 w-full z-10 bg-background/80 backdrop-blur-sm">
-        <BackButton />
-        <h1 className="text-xl font-bold text-primary">Clipts</h1>
-        <div className="flex space-x-2">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-black text-white pb-20">
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <BackButton />
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Recent Clipts</h1>
           <Button
             variant="ghost"
             size="icon"
@@ -308,71 +309,44 @@ const Clipts = () => {
               // Force user interaction for autoplay
               document.documentElement.setAttribute('data-user-interacted', 'true');
             }}
-            className="text-primary"
+            className={`text-white transition-all duration-300 ${isLoading ? 'animate-spin' : ''}`}
+            disabled={isLoading}
           >
-            <RefreshCw className={`h-5 w-5 ${refreshKey > 0 ? 'animate-spin' : ''}`} />
+            <RefreshCw className="h-5 w-5" />
           </Button>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-24 max-w-2xl">
+      {/* Main content with padding for fixed header */}
+      <div className="pt-16">
         {isLoading ? (
           <div className="flex justify-center my-8">
             <div className="animate-pulse">Loading videos...</div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {rawPosts.map((post) => (
-              <div 
-                key={`post-${post.id}-${Math.random().toString(36).substring(2, 15)}`} 
-                className="mb-6 bg-card rounded-lg overflow-hidden"
-                onClick={() => {
-                  // Ensure user interaction is recorded when clicking on a post
-                  document.documentElement.setAttribute('data-user-interacted', 'true');
-                  
-                  // Debug this post's video if there's an issue
-                  if (post.video_url) {
-                    console.log(`Debugging video for post ${post.id}`);
-                    debugVideoElement(post.video_url);
-                  }
-                }}
-              >
-                <PostItem 
-                  key={post.id} 
-                  post={post} 
-                  data-post-id={post.id}
-                  isCliptsPage={true}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* If no results found */}
-        {!isLoading && rawPosts.length === 0 && !error && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <p className="text-white/60">No videos found from tat123</p>
-              <button 
-                onClick={() => fetchPostsDirectly()} 
-                className="mt-3 px-3 py-1 bg-purple-700 rounded text-white text-xs"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-        )}
-        
-        {error && (
-          <div className="bg-red-500/20 border border-red-500 text-white p-4 rounded-lg mb-6">
-            <h3 className="font-bold">Error:</h3>
-            <p>{error}</p>
-            <button 
-              onClick={() => fetchPostsDirectly()} 
-              className="mt-3 px-3 py-1 bg-purple-700 rounded text-white text-xs"
-            >
+        ) : error ? (
+          <div className="bg-red-900/20 text-red-300 p-4 rounded-lg my-8">
+            <p>Failed to load posts</p>
+            <p className="text-sm mt-2">{error}</p>
+            <Button onClick={refreshPosts} className="mt-4">
               Try Again
-            </button>
+            </Button>
+          </div>
+        ) : rawPosts.length === 0 ? (
+          <div className="text-center my-8">
+            <p className="text-gray-400">No clips found</p>
+            <Button onClick={refreshPosts} className="mt-4">
+              Refresh
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6 container mx-auto px-4 py-8 max-w-2xl">
+            {rawPosts.map((post) => (
+              <PostItem 
+                key={post.id} 
+                post={post}
+                isCliptsPage={true}
+              />
+            ))}
           </div>
         )}
       </div>
