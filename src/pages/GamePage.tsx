@@ -4,7 +4,8 @@ import { supabase } from "@/lib/supabase";
 import PostItem from "@/components/PostItem";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/ui/back-button";
-import { Gamepad2, FilmIcon } from "lucide-react";
+import { Gamepad2, FilmIcon, Trophy } from "lucide-react";
+import AchievementList from "@/components/achievements/AchievementList";
 
 export default function GamePage() {
   const { slug } = useParams();
@@ -103,6 +104,19 @@ export default function GamePage() {
               <p className="text-gray-400">Be the first to share a clip for this game!</p>
             </div>
           )}
+        </div>
+
+        <div className="gaming-card p-6 mt-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-white mb-2">
+              <Trophy className="text-yellow-500" />
+              Game Achievements
+            </h2>
+            <p className="text-gray-400">Track your progress on game achievements</p>
+          </div>
+          
+          {/* Add the game ID to display proper game-specific achievements */}
+          <AchievementList userId={user?.id || ""} gameId={parseInt(game.id)} forceShowDemo={true} />
         </div>
       </div>
     </div>

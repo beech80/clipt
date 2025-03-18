@@ -698,9 +698,11 @@ export const achievementService = {
   },
   
   async getGameAchievements(gameId: number): Promise<any[]> {
-    // In a real app, this would fetch from the database
-    // For now, we'll return mock data based on the game ID
+    console.log('Getting game achievements for gameId:', gameId);
+    
+    // Get the game slug
     const gameSlug = this.getGameSlugFromId(gameId);
+    console.log('Game slug:', gameSlug);
     
     // Get achievements for the specific game if they exist, or use the template
     let achievements = defaultGameAchievements[gameSlug] || [];
@@ -708,15 +710,24 @@ export const achievementService = {
     // If there are no specific achievements for this game, use the template
     // This ensures that every game will show Xbox-style achievements
     if (achievements.length === 0) {
-      // Using our template populated with the exact achievements from the reference image
+      console.log('No specific achievements found, using template');
+      
+      // Deep clone the template to avoid modifying the original
       achievements = JSON.parse(JSON.stringify(defaultGameAchievements['game-template']));
+      
+      // For dynamic games, we can customize the achievements with the game ID
+      achievements = achievements.map(achievement => ({
+        ...achievement,
+        // Add a custom identifier to ensure uniqueness
+        id: `game-${gameId}-${achievement.name.toLowerCase().replace(/\s+/g, '-')}`,
+      }));
     }
     
     // Add game_id to each achievement
     return achievements.map(achievement => ({
       ...achievement,
       game_id: gameId,
-      id: `${gameSlug}-${achievement.name.toLowerCase().replace(/\s+/g, '-')}`,
+      id: achievement.id || `${gameSlug}-${achievement.name.toLowerCase().replace(/\s+/g, '-')}`,
       // Ensure valid image paths (or use placeholder if needed)
       icon_url: achievement.icon_url || `/images/achievements/default-${achievement.rarity || 'common'}.png`,
       category: achievement.category || 'ingame',
