@@ -12,7 +12,8 @@ import {
   Award,
   LogOut,
   MessageCircle,
-  Users
+  Users,
+  Bell
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -28,6 +29,7 @@ const Menu = () => {
         { title: 'Streaming', icon: <Video className="h-6 w-6 mr-4 text-purple-400" />, path: '/streaming', description: 'Live gameplay' },
         { title: 'Profile', icon: <User className="h-6 w-6 mr-4 text-purple-400" />, path: '/profile', description: 'Your player stats' },
         { title: 'Messages', icon: <MessageSquare className="h-6 w-6 mr-4 text-purple-400" />, path: '/messages', description: 'Chat with players' },
+        { title: 'Notifications', icon: <Bell className="h-6 w-6 mr-4 text-purple-400" />, path: '/notifications', description: 'View all notifications' },
         { title: 'Video Debug', icon: <Film className="h-6 w-6 mr-4 text-red-400" />, path: '/video-debug', description: 'Fix video issues [DEV]', className: 'dev-tool' }
       ]
     },
