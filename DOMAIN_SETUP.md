@@ -6,14 +6,14 @@ To ensure your streaming functionality works properly with your domain, configur
 
 ### Required DNS Records
 
-1. **Main domain (example.com)**
+1. **Main domain (cliptgaming.com)**
    - A record pointing to your hosting server IP
 
-2. **Stream subdomain (stream.example.com)**
+2. **Stream subdomain (stream.cliptgaming.com)**
    - A record pointing to your streaming server IP
    - This subdomain will be used for RTMP streaming ingestion
 
-3. **Player subdomain (player.example.com)**
+3. **Player subdomain (player.cliptgaming.com)**
    - A record pointing to your media server IP where stream playback is hosted
    - This subdomain will be used for viewers to watch streams
 
@@ -44,10 +44,10 @@ For a full streaming setup, you'll need:
 ## Testing Your Setup
 
 1. Use OBS Studio or similar broadcasting software
-2. Configure with your RTMP URL: `rtmp://stream.yourdomain.com/live`
+2. Configure with your RTMP URL: `rtmp://stream.cliptgaming.com/live`
 3. Use your stream key from the dashboard
 4. Start streaming
-5. Verify playback at: `https://player.yourdomain.com/[stream-name]`
+5. Verify playback at: `https://player.cliptgaming.com/[stream-name]`
 
 ## Troubleshooting
 
