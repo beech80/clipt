@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Search, Trophy, User } from 'lucide-react';
+import { Home, Search, Trophy, User, Bell } from 'lucide-react';
 
 const GameBoyNavigation: React.FC = () => {
   const navigate = useNavigate();
@@ -10,6 +10,7 @@ const GameBoyNavigation: React.FC = () => {
     { name: 'Home', path: '/', icon: <Home size={20} /> },
     { name: 'Discover', path: '/discover', icon: <Search size={20} /> },
     { name: 'Top Clips', path: '/topclips', icon: <Trophy size={20} /> },
+    { name: 'Notifications', path: '/notifications', icon: <Bell size={20} /> },
     { name: 'Profile', path: '/profile', icon: <User size={20} /> }
   ];
 
