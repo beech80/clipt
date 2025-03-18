@@ -498,6 +498,46 @@ const defaultGameAchievements = {
       total_players: 85,
       completed_players: 10
     }
+  ],
+  // Template for dynamically generated games (as seen in the image)
+  // These are the Xbox-style achievements we want to show for any game
+  'game-template': [
+    {
+      name: 'Souls Saved',
+      description: 'Complete the game on Normal',
+      target_value: 1,
+      points: 25,
+      rarity: 'common',
+      total_players: 1000,
+      completed_players: 217
+    },
+    {
+      name: 'Seeing You Sooner',
+      description: 'Defeat the boss',
+      target_value: 1,
+      points: 50,
+      rarity: 'uncommon',
+      total_players: 1000,
+      completed_players: 75
+    },
+    {
+      name: 'King',
+      description: 'Finish on a Bank or higher on all levels in forward run',
+      target_value: 1,
+      points: 100,
+      rarity: 'rare',
+      total_players: 1000,
+      completed_players: 37
+    },
+    {
+      name: 'Butter and Egg Man',
+      description: 'Hidden achievement',
+      target_value: 1,
+      points: 75,
+      rarity: 'rare',
+      total_players: 1000,
+      completed_players: 21
+    }
   ]
 };
 
@@ -661,15 +701,26 @@ export const achievementService = {
     // In a real app, this would fetch from the database
     // For now, we'll return mock data based on the game ID
     const gameSlug = this.getGameSlugFromId(gameId);
-    const achievements = defaultGameAchievements[gameSlug] || [];
+    
+    // Get achievements for the specific game if they exist, or use the template
+    let achievements = defaultGameAchievements[gameSlug] || [];
+    
+    // If there are no specific achievements for this game, use the template
+    // This ensures that every game will show Xbox-style achievements
+    if (achievements.length === 0) {
+      // Using our template populated with the exact achievements from the reference image
+      achievements = JSON.parse(JSON.stringify(defaultGameAchievements['game-template']));
+    }
     
     // Add game_id to each achievement
     return achievements.map(achievement => ({
       ...achievement,
       game_id: gameId,
       id: `${gameSlug}-${achievement.name.toLowerCase().replace(/\s+/g, '-')}`,
-      icon_url: `/images/achievements/${gameSlug}/${achievement.name.toLowerCase().replace(/\s+/g, '-')}.png`,
-      // Always set progress to 0 as requested
+      // Ensure valid image paths (or use placeholder if needed)
+      icon_url: achievement.icon_url || `/images/achievements/default-${achievement.rarity || 'common'}.png`,
+      category: achievement.category || 'ingame',
+      // Set progress as requested
       currentValue: 0,
       targetValue: achievement.target_value,
       completed: false
@@ -798,12 +849,21 @@ export const achievementService = {
 
   // Helper method to map game IDs to slugs for the mock data
   getGameSlugFromId(gameId: number): string {
-    const gameMap = {
+    // Hardcoded game mappings for demo purposes
+    const gameMap: Record<number, string> = {
       1: 'halo-series',
       2: 'tomb-raider',
       3: 'sea-of-thieves'
     };
-    return gameMap[gameId] || 'unknown-game';
+    
+    // If we have a specific mapping, use it
+    if (gameMap[gameId]) {
+      return gameMap[gameId];
+    }
+    
+    // If it's a new game ID from search results, create a generic slug
+    // This will ensure any game ID can be used
+    return `game-${gameId}`;
   }
 };
 
