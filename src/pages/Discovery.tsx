@@ -141,16 +141,19 @@ const Discovery = () => {
                 // Fix IGDB cover URL formatting
                 let coverUrl = undefined;
                 if (game.cover?.url) {
+                  coverUrl = game.cover.url;
                   // If URL starts with //, add https:
-                  if (game.cover.url.startsWith('//')) {
-                    coverUrl = `https:${game.cover.url}`;
+                  if (coverUrl.startsWith('//')) {
+                    coverUrl = `https:${coverUrl}`;
                   } 
                   // If URL doesn't have protocol or // prefix
-                  else if (!game.cover.url.includes('://') && !game.cover.url.startsWith('//')) {
-                    coverUrl = `https://${game.cover.url}`;
+                  else if (!coverUrl.includes('://') && !coverUrl.startsWith('//')) {
+                    coverUrl = `https://${coverUrl}`;
                   }
                   // Replace t_thumb with t_cover_big for better quality images
-                  coverUrl = coverUrl.replace('t_thumb', 't_cover_big');
+                  if (coverUrl.includes('t_thumb')) {
+                    coverUrl = coverUrl.replace('t_thumb', 't_cover_big');
+                  }
                 }
                 
                 return {
@@ -378,15 +381,15 @@ const Discovery = () => {
                   </div>
                 ))}
               </div>
-            ) : games && games.length > 0 ? (
+            ) : games && Array.isArray(games) && games.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {games.map((game: GameProps) => (
                   <GameCard 
                     key={game.id}
-                    id={game.id.toString()}
-                    name={game.name}
+                    id={game.id ? game.id.toString() : 'unknown'}
+                    name={game.name || 'Unknown Game'}
                     coverUrl={game.cover_url}
-                    postCount={game.post_count}
+                    postCount={game.post_count || 0}
                     onClick={() => navigate(`/game/${game.id}`)}
                   />
                 ))}
@@ -395,9 +398,23 @@ const Discovery = () => {
               <div className="text-center py-8 text-gray-400">
                 <p>No games found matching "{searchTerm}"</p>
                 {gamesError && (
-                  <p className="text-red-400 text-sm mt-1">Error: {gamesError instanceof Error ? gamesError.message : 'Unknown error'}</p>
+                  <p className="text-red-400 text-sm mt-1">Error: {typeof gamesError === 'object' && gamesError !== null ? 
+                    (gamesError as Error).message || JSON.stringify(gamesError) : 
+                    String(gamesError)}</p>
                 )}
                 <p className="text-sm mt-2">Try a different search term or browse popular games below</p>
+                
+                {/* Debug info during development - can be removed in production */}
+                {import.meta.env.DEV && (
+                  <details className="mt-4 text-left p-3 bg-gray-800 rounded">
+                    <summary className="cursor-pointer text-purple-400">Debug Information</summary>
+                    <div className="p-2 mt-2 bg-gray-900 rounded overflow-auto max-h-40">
+                      <p>Search Term: {JSON.stringify(searchTerm)}</p>
+                      <p>Games Data: {JSON.stringify(games)}</p>
+                      <p>Error: {JSON.stringify(gamesError)}</p>
+                    </div>
+                  </details>
+                )}
               </div>
             )}
           </div>

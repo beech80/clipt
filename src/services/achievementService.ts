@@ -563,28 +563,29 @@ const defaultGameAchievements = {
   ]
 };
 
-interface Achievement {
-  id: string;
+export interface Achievement {
+  id?: string;
   name: string;
   description: string;
   category: "streaming" | "social" | "general" | "gaming" | "trophy" | "special" | "daily";
-  image: string;
-  requiredAmount: number;
-  target_value: number;
-  points: number;
-  progress_type: "count" | "value" | "boolean";
-  reward_type: "points" | "badge" | "title";
-  visible: boolean;
-  createdAt: string;
-  updatedAt: string;
+  image?: string;
+  requiredAmount?: number;
+  target_value?: number;
+  points?: number;
+  progress_type?: "count" | "value" | "boolean";
+  reward_type?: "points" | "badge" | "title";
+  visible?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-interface AchievementProgress {
+export interface AchievementProgress {
   id: string;
   userId: string;
   achievementId: string;
   currentValue: number;
   completed: boolean;
+  achievement?: Achievement; 
   createdAt: string;
   updatedAt: string;
 }
@@ -894,30 +895,47 @@ export const achievementService = {
 const transformAchievementProgressFromDb = (
   dbAchievementProgress: any[]
 ): (AchievementProgress & { achievement: Achievement })[] => {
-  return dbAchievementProgress.map(item => ({
-    id: item.id,
-    userId: item.user_id,
-    achievementId: item.achievement_id,
-    currentValue: item.current_value,
-    completed: item.current_value >= item.achievement.required_amount || item.completed,
-    createdAt: item.created_at,
-    updatedAt: item.updated_at,
-    achievement: {
-      id: item.achievement.id,
-      name: item.achievement.name,
-      description: item.achievement.description,
-      category: item.achievement.category as Achievement["category"],
-      image: item.achievement.image,
-      requiredAmount: item.achievement.required_amount,
-      target_value: item.achievement.target_value || item.achievement.required_amount,
-      points: item.achievement.points || 0,
-      progress_type: item.achievement.progress_type as Achievement["progress_type"] || "count",
-      reward_type: item.achievement.reward_type as Achievement["reward_type"] || "points",
-      visible: item.achievement.visible,
-      createdAt: item.achievement.created_at,
-      updatedAt: item.achievement.updated_at
+  if (!dbAchievementProgress || !Array.isArray(dbAchievementProgress)) {
+    console.error('Invalid achievement progress data:', dbAchievementProgress);
+    return [];
+  }
+
+  return dbAchievementProgress.map(item => {
+    // Ensure the item and achievement exist
+    if (!item || !item.achievement) {
+      console.error('Invalid achievement progress item:', item);
+      return null;
     }
-  }));
+
+    return {
+      id: item.id || '',
+      userId: item.user_id || '',
+      achievementId: item.achievement_id || '',
+      currentValue: typeof item.current_value === 'number' ? item.current_value : 0,
+      completed: item.achievement?.required_amount != null 
+        ? (item.current_value >= item.achievement.required_amount) || Boolean(item.completed)
+        : Boolean(item.completed),
+      createdAt: item.created_at || new Date().toISOString(),
+      updatedAt: item.updated_at || new Date().toISOString(),
+      achievement: {
+        id: item.achievement.id || '',
+        name: item.achievement.name || 'Unknown Achievement',
+        description: item.achievement.description || '',
+        category: (item.achievement.category as Achievement["category"]) || 'general',
+        image: item.achievement.image || '/achievements/default.png',
+        requiredAmount: typeof item.achievement.required_amount === 'number' ? item.achievement.required_amount : 1,
+        target_value: typeof item.achievement.target_value === 'number' 
+          ? item.achievement.target_value 
+          : (typeof item.achievement.required_amount === 'number' ? item.achievement.required_amount : 1),
+        points: typeof item.achievement.points === 'number' ? item.achievement.points : 0,
+        progress_type: (item.achievement.progress_type as Achievement["progress_type"]) || "count",
+        reward_type: (item.achievement.reward_type as Achievement["reward_type"]) || "points",
+        visible: item.achievement.visible !== false, // Default to visible if not specified
+        createdAt: item.achievement.created_at || new Date().toISOString(),
+        updatedAt: item.achievement.updated_at || new Date().toISOString()
+      }
+    };
+  }).filter(Boolean) as (AchievementProgress & { achievement: Achievement })[];
 };
 
 export default achievementService;
