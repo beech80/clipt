@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StreamerDashboardChat } from "./chat/StreamerDashboardChat";
 import { streamingConfig, generateRtmpUrl } from "@/config/streamingConfig";
+import { checkAndRepairStreamsSchema, createStreamSafely } from '@/lib/schema-fix';
 
 export function StreamDashboard() {
   const { user } = useAuth();
@@ -35,79 +36,76 @@ export function StreamDashboard() {
 
   // Fetch or create stream on component mount
   useEffect(() => {
+    if (!user) return;
+
     const fetchOrCreateStream = async () => {
-      if (!user) return;
-      
       setIsLoading(true);
       setError(null);
-      
+
       try {
-        console.log("Fetching stream for user:", user.id);
-        
-        // Try to get existing stream
-        const { data: existingStream, error: fetchError } = await supabase
-          .from('streams')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-        
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          console.error("Error fetching stream:", fetchError);
-          throw fetchError;
+        // First check and repair the schema if needed
+        const { success: repairSuccess, error: repairError } = await checkAndRepairStreamsSchema();
+        if (!repairSuccess) {
+          console.warn("Schema repair failed, but continuing with fallback approach:", repairError);
         }
         
-        if (existingStream) {
-          console.log("Existing stream found:", existingStream);
-          // Ensure the RTMP URL is always up to date
-          if (existingStream.rtmp_url !== RTMP_URL) {
-            const { data: updatedStream, error: updateError } = await supabase
-              .from('streams')
-              .update({ rtmp_url: RTMP_URL })
-              .eq('id', existingStream.id)
-              .select()
-              .single();
-              
-            if (updateError) {
-              console.error("Error updating RTMP URL:", updateError);
-            } else {
-              existingStream.rtmp_url = RTMP_URL;
-            }
+        // Try to fetch existing stream
+        try {
+          const { data: existingStream, error: fetchError } = await supabase
+            .from('streams')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            console.error("Error fetching stream:", fetchError);
+            throw fetchError;
           }
-          setStream(existingStream);
-        } else {
-          console.log("No stream found, creating new stream");
+
+          if (existingStream) {
+            console.log("Found existing stream:", existingStream);
+            setStream(existingStream);
+          } else {
+            // Create a new stream using the safe method
+            const streamKey = await generateRandomKey();
+            const { success, stream: newStream, error: createError } = await createStreamSafely(user.id, {
+              title: `${user.user_metadata?.username || user.email}'s Stream`,
+              description: "Welcome to my stream!",
+              stream_key: streamKey,
+              rtmp_url: RTMP_URL,
+            });
+            
+            if (!success || createError) {
+              console.error("Error creating stream:", createError);
+              throw createError;
+            }
+            
+            console.log("New stream created:", newStream);
+            setStream(newStream);
+          }
+        } catch (err: any) {
+          // Last resort fallback - create stream with minimal fields
+          console.error("Using minimal stream creation as fallback:", err);
           
-          // Create new stream with default values
-          const { data: newStream, error: createError } = await supabase
+          const streamKey = await generateRandomKey();
+          const { data: minimalStream, error: minimalError } = await supabase
             .from('streams')
             .insert({
               user_id: user.id,
+              stream_key: streamKey,
               title: `${user.user_metadata?.username || user.email}'s Stream`,
-              description: "Welcome to my stream!",
-              is_live: false,
-              stream_key: await generateRandomKey(),
-              rtmp_url: RTMP_URL,
-              viewer_count: 0,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              stream_path: null,
-              thumbnail_url: null,
-              started_at: null,
-              ended_at: null
-              // Removed the game_id field which is causing the schema error
             })
             .select()
             .single();
           
-          if (createError) {
-            console.error("Error creating stream:", createError);
-            throw createError;
+          if (minimalError) {
+            console.error("Critical failure creating stream:", minimalError);
+            throw minimalError;
           }
           
-          console.log("New stream created:", newStream);
-          setStream(newStream);
+          setStream(minimalStream);
         }
       } catch (err: any) {
         console.error("Failed to setup stream:", err);
