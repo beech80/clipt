@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Clipboard, Play, RefreshCw, Eye, Settings, AlertCircle } from 'lucide-react';
+import { Clipboard, Play, RefreshCw, Eye, EyeOff, Settings, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StreamerDashboardChat } from "./chat/StreamerDashboardChat";
@@ -29,10 +29,12 @@ export function StreamDashboard() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [stream, setStream] = useState<any | null>(null);
-  const [streamKey, setStreamKey] = useState('');
+  const [streamKey, setStreamKey] = useState<string>("");
   const [serverUrl, setServerUrl] = useState(RTMP_URL || 'rtmp://live.cliptgaming.com/live');
+  const [rtmpUrl, setRtmpUrl] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const [isLive, setIsLive] = useState(false);
+  const [isLive, setIsLive] = useState<boolean>(false);
+  const [showStreamKey, setShowStreamKey] = useState<boolean>(false);
 
   // Immediately generate a fake stream on component mount
   useEffect(() => {
@@ -56,6 +58,7 @@ export function StreamDashboard() {
         
         setStream(fakeStream);
         setStreamKey(fakeStream.stream_key);
+        setRtmpUrl(`${serverUrl}/${fakeStream.stream_key}`);
         
         // Try the brutal method in the background
         brutalCreateStream(user.id).catch(err => {
@@ -83,11 +86,9 @@ export function StreamDashboard() {
     if (!user) return;
     const newKey = generateRandomKey();
     setStreamKey(newKey);
+    setRtmpUrl(`${serverUrl}/${newKey}`);
     toast.success("Stream key refreshed");
   };
-
-  // Generate full RTMP URL manually since the config function only takes streamKey
-  const rtmpUrl = `${serverUrl}/${streamKey}`;
 
   if (!user) {
     return (
@@ -147,7 +148,7 @@ export function StreamDashboard() {
                   <h3 className="font-medium mb-1">Stream Key</h3>
                   <div className="flex items-center space-x-2">
                     <Input 
-                      type="password" 
+                      type={showStreamKey ? "text" : "password"} 
                       value={streamKey} 
                       readOnly 
                     />
@@ -162,6 +163,12 @@ export function StreamDashboard() {
                       onClick={refreshStreamKey}
                     >
                       <RefreshCw className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      onClick={() => setShowStreamKey(!showStreamKey)}
+                    >
+                      {showStreamKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
@@ -239,10 +246,10 @@ export function StreamDashboard() {
               <StreamStats isLive={isLive} />
             </div>
             
-            <div className="flex flex-col xl:flex-row gap-4 w-full">
+            <div className="flex flex-col lg:flex-row gap-6 w-full mt-4">
               <div className="flex-1">
                 {isLive && (
-                  <Card className="h-[400px] overflow-hidden rounded-lg shadow-md bg-black">
+                  <Card className="h-[500px] overflow-hidden rounded-lg shadow-md bg-black">
                     <div className="w-full h-full flex items-center justify-center">
                       <div className="text-white text-center">
                         <h3 className="text-lg font-medium">Your stream is live!</h3>
@@ -251,9 +258,70 @@ export function StreamDashboard() {
                     </div>
                   </Card>
                 )}
+                
+                {!isLive && (
+                  <Card className="h-auto overflow-hidden rounded-lg shadow-md bg-muted/30 p-6">
+                    <div className="w-full flex flex-col items-center justify-center gap-6">
+                      <div className="text-center">
+                        <h3 className="text-lg font-medium mb-2">Stream is Offline</h3>
+                        <p className="text-sm text-muted-foreground">Set up your streaming software with the details below</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium">Stream URL</h4>
+                          <div className="flex items-center gap-2">
+                            <Input 
+                              value={rtmpUrl}
+                              readOnly
+                              className="font-mono text-xs bg-muted"
+                            />
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(rtmpUrl);
+                                toast.success("RTMP URL copied to clipboard");
+                              }}
+                            >
+                              Copy
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium">Stream Key</h4>
+                          <div className="flex items-center gap-2">
+                            <Input 
+                              value={streamKey}
+                              type={showStreamKey ? "text" : "password"}
+                              readOnly
+                              className="font-mono text-xs bg-muted"
+                            />
+                            <Button 
+                              size="sm"
+                              variant={showStreamKey ? "outline" : "default"}
+                              onClick={() => setShowStreamKey(!showStreamKey)}
+                            >
+                              {showStreamKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                navigator.clipboard.writeText(streamKey);
+                                toast.success("Stream key copied to clipboard");
+                              }}
+                            >
+                              Copy
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
               </div>
               
-              <div className="w-full xl:w-[350px]">
+              <div className="w-full lg:w-[500px] h-[650px]">
                 <StreamerDashboardChat 
                   streamId={stream?.id || "temp-stream-id"} 
                   isLive={isLive} 
