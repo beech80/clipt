@@ -166,26 +166,37 @@ const RetroSearchPage = () => {
 
   // Better filtering for games that prioritizes search results
   const getFilteredGames = () => {
+    // Explicitly check igdbGames to see if it exists and has elements
+    console.log('getFilteredGames called, igdbGames:', igdbGames);
+    
     // If search term is entered, prioritize IGDB search results
     if (searchTerm && searchTerm.trim().length > 0) {
-      if (igdbGames?.length) {
-        // Return more results for a better browsing experience - up to 10 instead of 8
+      if (igdbGames && igdbGames.length > 0) {
+        // Return more results for a better browsing experience
         console.log('Returning IGDB search results:', igdbGames.slice(0, 10));
         return igdbGames.slice(0, 10);
-      } else {
-        // If no IGDB results but we have a search term, return empty
-        console.log('No IGDB results found for search term');
+      } else if (igdbGamesLoading) {
+        // Show nothing while loading
         return [];
+      } else {
+        // If IGDB failed, fall back to mock data
+        console.log('No IGDB results found, returning mock data');
+        return igdbService.getMockGamesBySearch(searchTerm, 10);
       }
     } 
     // If no search term, show top games
-    else if (topGames?.length) {
+    else if (topGames && topGames.length > 0) {
       console.log('Returning top games from database:', topGames);
       // Show more top games for better browsing experience
       return topGames.slice(0, 8); // Show more top games (increased from 6)
     }
+    // Final fallback - mock data in case we have no results at all
+    else if (!igdbGamesLoading && !topGamesLoading) {
+      console.log('No games available, using fallback');
+      return igdbService.getMockGamesBySearch('', 8);
+    }
     
-    // Return empty array if no games available
+    // Return empty array if loading or no games available
     return [];
   };
 
