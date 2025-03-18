@@ -1,8 +1,18 @@
 import { supabase } from '@/lib/supabase';
-import type { Achievement, AchievementProgress } from '@/types/profile';
 
 // Default achievement data to create for new users
 const defaultAchievements = [
+  {
+    id: 'welcome',
+    name: 'Welcome to Clipt',
+    description: 'Sign up and create your account',
+    category: 'general',
+    image: '/achievements/welcome.png',
+    target_value: 1,
+    points: 10,
+    progress_type: 'boolean',
+    reward_type: 'points',
+  },
   // Daily Quests
   {
     name: 'Complete 4 Daily Quests',
@@ -369,6 +379,17 @@ const defaultAchievements = [
     progress_type: 'boolean',
     reward_type: 'badge',
   },
+  {
+    id: 'social_butterfly',
+    name: 'Social Butterfly',
+    description: 'Follow 10 people',
+    category: 'social',
+    image: '/achievements/social.png',
+    target_value: 10,
+    points: 50,
+    progress_type: 'count',
+    reward_type: 'badge',
+  }
 ];
 
 // Sample user progress data for demo purposes
@@ -429,6 +450,7 @@ const sampleUserProgress = [
     completed: false
   },
   
+
   // Engagement Achievements
   {
     achievementName: 'Hype Squad',
@@ -541,81 +563,71 @@ const defaultGameAchievements = {
   ]
 };
 
+interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  category: "streaming" | "social" | "general" | "gaming" | "trophy" | "special" | "daily";
+  image: string;
+  requiredAmount: number;
+  target_value: number;
+  points: number;
+  progress_type: "count" | "value" | "boolean";
+  reward_type: "points" | "badge" | "title";
+  visible: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface AchievementProgress {
+  id: string;
+  userId: string;
+  achievementId: string;
+  currentValue: number;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const achievementService = {
   async getUserAchievements(userId: string): Promise<(AchievementProgress & { achievement: Achievement })[]> {
     // For demo purposes, we'll return mock data with progress
-    // In a real app, we would fetch from the database
+    if (import.meta.env.VITE_USE_MOCK_DATA === 'true') {
+      return mockUserAchievements;
+    }
+
     try {
-      // First check if we should create default achievements
-      const { data: existingProgress, error } = await supabase
-        .from('achievement_progress')
-        .select('id')
-        .eq('user_id', userId)
-        .limit(1);
-      
-      if (error) {
-        console.error('Error checking achievements:', error);
-        // Fall back to mock data
-        return this.getMockAchievements();
-      }
-      
-      // If no achievements, create defaults
-      if (!existingProgress || existingProgress.length === 0) {
-        try {
-          await this.createDefaultAchievementsForUser(userId);
-        } catch (e) {
-          console.error('Error creating default achievements:', e);
-          // Fall back to mock data
-          return this.getMockAchievements();
-        }
-      }
-      
-      // Fetch real achievements from database
-      const { data, error: fetchError } = await supabase
-        .from('achievement_progress')
+      const { data, error } = await supabase
+        .from('user_achievements')
         .select(`
           *,
-          achievement:achievements(*)
+          achievement (*)
         `)
         .eq('user_id', userId);
 
-      if (fetchError) {
-        console.error('Error fetching user achievements:', fetchError);
-        // Fall back to mock data
-        return this.getMockAchievements();
+      if (error) {
+        console.error('Error fetching user achievements:', error);
+        return [];
       }
 
       if (!data || data.length === 0) {
-        // Fall back to mock data
-        return this.getMockAchievements();
+        console.log('No achievements found for user:', userId);
+        return [];
       }
 
       // Transform and sort the data
-      return (data as any[]).map(progress => ({
-        ...progress,
-        completed: progress.current_value >= progress.achievement.target_value,
-        achievement: {
-          ...progress.achievement,
-          reward_value: {
-            points: progress.achievement.points
-          },
-          progress_type: progress.achievement.progress_type as "count" | "value" | "boolean",
-          reward_type: progress.achievement.reward_type as "points" | "badge" | "title",
-          category: progress.achievement.category as "streaming" | "social" | "general" | "gaming" | "trophy" | "special" | "daily"
-        }
-      })).sort((a, b) => {
+      return transformAchievementProgressFromDb(data).sort((a, b) => {
         if (a.completed === b.completed) {
           if (a.achievement.category === b.achievement.category) {
             return b.achievement.points - a.achievement.points;
           }
           return a.achievement.category.localeCompare(b.achievement.category);
         }
-        return a.completed ? 1 : -1;
+        return a.completed ? -1 : 1;
       });
     } catch (error) {
-      console.error('Error in getUserAchievements:', error);
-      // Fall back to mock data
-      return this.getMockAchievements();
+      console.error('Unexpected error in getUserAchievements:', error);
+      return [];
     }
   },
   
@@ -876,6 +888,36 @@ export const achievementService = {
     // This will ensure any game ID can be used
     return `game-${gameId}`;
   }
+};
+
+// Transform the database achievements to the format expected by the UI
+const transformAchievementProgressFromDb = (
+  dbAchievementProgress: any[]
+): (AchievementProgress & { achievement: Achievement })[] => {
+  return dbAchievementProgress.map(item => ({
+    id: item.id,
+    userId: item.user_id,
+    achievementId: item.achievement_id,
+    currentValue: item.current_value,
+    completed: item.current_value >= item.achievement.required_amount || item.completed,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+    achievement: {
+      id: item.achievement.id,
+      name: item.achievement.name,
+      description: item.achievement.description,
+      category: item.achievement.category as Achievement["category"],
+      image: item.achievement.image,
+      requiredAmount: item.achievement.required_amount,
+      target_value: item.achievement.target_value || item.achievement.required_amount,
+      points: item.achievement.points || 0,
+      progress_type: item.achievement.progress_type as Achievement["progress_type"] || "count",
+      reward_type: item.achievement.reward_type as Achievement["reward_type"] || "points",
+      visible: item.achievement.visible,
+      createdAt: item.achievement.created_at,
+      updatedAt: item.achievement.updated_at
+    }
+  }));
 };
 
 export default achievementService;
