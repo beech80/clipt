@@ -2,6 +2,7 @@ import { RouteObject } from "react-router-dom";
 import Home from "@/pages/Home";
 import Progress from "@/pages/Progress";
 import Messages from "@/pages/Messages";
+import NotFound from "@/pages/NotFound";
 import { authRoutes } from "./routes/authRoutes";
 import { docsRoutes } from "./routes/docsRoutes";
 import { contentRoutes } from "./routes/contentRoutes";
@@ -43,4 +44,9 @@ export const routes: RouteObject[] = [
   ...paymentRoutes,
   ...moderationRoutes,
   ...notificationRoutes,
+  // Catch-all route for undefined paths
+  {
+    path: "*",
+    element: <NotFound />,
+  },
 ];

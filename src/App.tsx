@@ -29,6 +29,7 @@ const Discovery = React.lazy(() => import('./pages/Discovery'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Menu = React.lazy(() => import('./pages/Menu'));
 const Profile = React.lazy(() => import('./pages/Profile'));
+const Notifications = React.lazy(() => import('./pages/Notifications'));
 // Fix the problematic imports with more reliable patterns
 const Streaming = React.lazy(() => 
   import('./pages/Streaming').catch(error => {
@@ -95,6 +96,7 @@ function AppContent() {
       <Route path="/game-streamers/:gameId" element={<GameStreamers />} />
       <Route path="/retro-search" element={<RetroSearchPage />} />
       <Route path="/video-debug" element={<VideoDebug />} />
+      <Route path="/notifications" element={<Notifications />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
