@@ -12,7 +12,8 @@ import GameSearchResult from '@/components/GameSearchResult';
 interface Game {
   id: string;
   name: string;
-  cover_url?: string | null;
+  cover_url?: string;
+  external?: boolean;
 }
 
 interface Post {
@@ -31,10 +32,10 @@ interface Post {
 interface Streamer {
   id: string;
   username: string;
-  display_name?: string;
-  avatar_url?: string;
-  streaming_url?: string;
-  is_live?: boolean;
+  display_name: string;
+  avatar_url: string | null;
+  is_live: boolean;
+  current_game?: string;
 }
 
 const GameDetailsPage = () => {
@@ -221,7 +222,7 @@ const GameDetailsPage = () => {
         // Fetch streamers playing this game
         const { data: streamersData, error: streamersError } = await supabase
           .from('profiles')
-          .select('id, username, display_name, avatar_url, streaming_url, is_live')
+          .select('id, username, display_name, avatar_url, is_live, current_game')
           .eq('current_game', id)
           .eq('is_live', true)
           .order('follower_count', { ascending: false });
@@ -231,7 +232,17 @@ const GameDetailsPage = () => {
           throw streamersError;
         }
 
-        setStreamers(streamersData || []);
+        // Ensure type safety by mapping to Streamer interface
+        const typedStreamers: Streamer[] = streamersData?.map(streamer => ({
+          id: streamer.id,
+          username: streamer.username,
+          display_name: streamer.display_name,
+          avatar_url: streamer.avatar_url,
+          is_live: streamer.is_live,
+          current_game: streamer.current_game
+        })) || [];
+        
+        setStreamers(typedStreamers);
         
       } catch (err) {
         console.error('Error fetching game details:', err);
@@ -253,11 +264,11 @@ const GameDetailsPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
-        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-indigo-950/80 backdrop-blur-sm">
+        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
           <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
             <ArrowLeft className="h-5 w-5 mr-2" />
           </Button>
-          <h1 className="text-xl font-bold">Loading Game Clipts...</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Loading Game Clipts...</h1>
         </div>
         <div className="pt-16 flex justify-center items-center h-[60vh]">
           <div className="animate-pulse">Loading game details...</div>
@@ -269,11 +280,11 @@ const GameDetailsPage = () => {
   if (error || !game) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
-        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-indigo-950/80 backdrop-blur-sm">
+        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
           <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
             <ArrowLeft className="h-5 w-5 mr-2" />
           </Button>
-          <h1 className="text-xl font-bold">Game Clipts</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Game Clipts</h1>
         </div>
         <div className="pt-16 p-4">
           <div className="bg-red-900/20 text-red-300 p-4 rounded-lg">
@@ -295,11 +306,11 @@ const GameDetailsPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
       {/* Header */}
-      <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-indigo-950/80 backdrop-blur-sm">
+      <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
         <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
           <ArrowLeft className="h-5 w-5 mr-2" />
         </Button>
-        <h1 className="text-3xl font-bold">{getPageTitle()}</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">{getPageTitle()}</h1>
         
         {/* Search button */}
         <div className="ml-auto">
@@ -400,9 +411,8 @@ const GameDetailsPage = () => {
                     username={streamer.username}
                     displayName={streamer.display_name}
                     avatarUrl={streamer.avatar_url}
-                    streamingUrl={streamer.streaming_url}
                     isLive={streamer.is_live}
-                    game={game.name}
+                    game={streamer.current_game}
                     onClick={() => navigate(`/profile/${streamer.id}`)}
                   />
                 ))}

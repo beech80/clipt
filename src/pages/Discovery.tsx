@@ -233,25 +233,23 @@ const Discovery = () => {
     }
   };
 
-  // Handle search clear
-  const handleClearSearch = () => {
-    setSearchTerm('');
-    setIsSearching(false);
+  // Handle searching state
+  const handleSearchFocus = () => {
+    setIsSearching(true);
   };
 
-  // Close search mode
   const handleCloseSearch = () => {
-    setSearchTerm('');
     setIsSearching(false);
+    setSearchTerm('');
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
     setIsSearchMode(false);
   };
 
   // Focus on search input
-  const handleSearchFocus = () => {
-    if (!isSearchMode) {
-      setIsSearchMode(true);
-    }
-  };
+  
 
   // Handle tab change
   const handleTabChange = (value: string) => {
@@ -407,7 +405,7 @@ const Discovery = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-black text-white">
       {/* Fixed header */}
-      <div className="fixed top-0 left-0 right-0 z-10 bg-indigo-950/90 backdrop-blur-md border-b border-indigo-900 shadow-lg">
+      <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between max-w-2xl">
           <Button 
             variant="ghost" 
@@ -427,7 +425,7 @@ const Discovery = () => {
                   value={searchTerm}
                   onChange={handleInputChange}
                   onFocus={handleSearchFocus}
-                  className="pl-10 py-5 bg-black/20 border-indigo-500/30 text-white placeholder:text-gray-400 w-full"
+                  className="pl-10 py-5 bg-black/30 border-indigo-500/50 text-white placeholder:text-gray-400 w-full rounded-full"
                 />
               </form>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400" />
@@ -477,12 +475,12 @@ const Discovery = () => {
         <div className="container mx-auto px-4 pt-24 pb-32 max-w-2xl">
           {/* EXPLORE Header */}
           <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Star className="h-6 w-6 text-yellow-400" />
-              <h1 className="text-3xl font-bold text-yellow-400">EXPLORE</h1>
-              <Star className="h-6 w-6 text-yellow-400" />
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <div className="bg-gradient-to-r from-blue-500 via-purple-600 to-pink-500 p-1 rounded-lg shadow-lg transform hover:scale-105 transition-transform">
+                <h1 className="text-4xl font-bold text-white px-4 py-2">CLIPT</h1>
+              </div>
             </div>
-            <p className="text-gray-300 text-sm">DISCOVER AMAZING GAMES & STREAMERS</p>
+            <p className="text-indigo-300 text-sm font-medium tracking-wider">DISCOVER AMAZING GAMES & STREAMERS</p>
           </div>
 
           {/* Recent Games Section */}
