@@ -1,7 +1,12 @@
 // apply-migrations.js
-const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
-const path = require('path');
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get current directory since __dirname isn't available in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Get Supabase credentials from environment or config
 const SUPABASE_URL = process.env.SUPABASE_URL || "https://slnjliheyiiummxhrgmk.supabase.co";
