@@ -18,7 +18,6 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StreamerDashboardChat } from "./chat/StreamerDashboardChat";
 import { streamingConfig, generateRtmpUrl } from "@/config/streamingConfig";
-import { checkAndRepairStreamsSchema, createStreamSafely } from '@/lib/schema-fix';
 import { emergencyCreateStream } from '@/lib/emergency-stream-fix';
 
 export function StreamDashboard() {
@@ -44,9 +43,9 @@ export function StreamDashboard() {
       setError(null);
 
       try {
-        console.log("Attempting to fetch or create stream...");
+        console.log("Using bare minimum stream creation approach");
         
-        // Try the emergency method that should work regardless of schema issues
+        // Using only the emergency method that should work regardless of schema issues
         const { success, stream, error: emergencyError } = await emergencyCreateStream(
           user.id,
           `${user.user_metadata?.username || user.email}'s Stream`
@@ -58,76 +57,12 @@ export function StreamDashboard() {
           return;
         }
         
-        // If emergency method failed (unlikely), try the regular methods
-        console.warn("Emergency stream creation failed, trying fallback methods:", emergencyError);
-        
-        // First check and repair the schema if needed
-        const { success: repairSuccess, error: repairError } = await checkAndRepairStreamsSchema();
-        if (!repairSuccess) {
-          console.warn("Schema repair failed, but continuing with fallback approach:", repairError);
-        }
-        
-        // Try to fetch existing stream
-        try {
-          const { data: existingStream, error: fetchError } = await supabase
-            .from('streams')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-          if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-            console.error("Error fetching stream:", fetchError);
-            throw fetchError;
-          }
-
-          if (existingStream) {
-            console.log("Found existing stream:", existingStream);
-            setStream(existingStream);
-          } else {
-            // Create a new stream using the safe method
-            const streamKey = await generateRandomKey();
-            const { success, stream: newStream, error: createError } = await createStreamSafely(user.id, {
-              title: `${user.user_metadata?.username || user.email}'s Stream`,
-              description: "Welcome to my stream!",
-              stream_key: streamKey,
-              rtmp_url: RTMP_URL,
-            });
-            
-            if (!success || createError) {
-              console.error("Error creating stream:", createError);
-              throw createError;
-            }
-            
-            console.log("New stream created:", newStream);
-            setStream(newStream);
-          }
-        } catch (err: any) {
-          // Last resort fallback - create stream with minimal fields
-          console.error("Using absolutely minimal stream creation as fallback:", err);
-          
-          // Try with absolute minimal fields to avoid any schema issues
-          const { data: minimalStream, error: minimalError } = await supabase
-            .from('streams')
-            .insert({
-              user_id: user.id,
-              // Only include the absolute essentials - don't add any optional fields
-            })
-            .select()
-            .single();
-          
-          if (minimalError) {
-            console.error("All stream creation methods have failed:", minimalError);
-            setError(`All attempts to create a stream failed: ${minimalError.message}`);
-            toast.error("Could not create streaming profile");
-            return;
-          }
-          
-          setStream(minimalStream);
-        }
+        // If emergency method failed (should never happen), show error
+        console.error("Emergency stream creation failed:", emergencyError);
+        setError(`Could not create streaming profile: ${emergencyError?.message || "Unknown error"}`);
+        toast.error("Could not create streaming profile");
       } catch (err: any) {
-        console.error("Failed to setup stream:", err);
+        console.error("Unhandled error in stream creation:", err);
         setError(`Error setting up stream: ${err.message}`);
         toast.error("Failed to set up streaming");
       } finally {
