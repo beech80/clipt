@@ -17,6 +17,7 @@ import { supabase } from "@/lib/supabase";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StreamerDashboardChat } from "./chat/StreamerDashboardChat";
+import { streamingConfig, generateRtmpUrl } from "@/config/streamingConfig";
 
 export function StreamDashboard() {
   const { user } = useAuth();
@@ -27,8 +28,10 @@ export function StreamDashboard() {
   const [showKey, setShowKey] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Define the correct RTMP URL
-  const RTMP_URL = "rtmp://stream.clipt.live/live";
+  // Use config values instead of hardcoded values
+  const RTMP_URL = streamingConfig.RTMP_URL;
+  // Define the streaming server URL for viewers to watch
+  const STREAM_SERVER_URL = streamingConfig.STREAM_SERVER_URL;
 
   // Fetch or create stream on component mount
   useEffect(() => {
