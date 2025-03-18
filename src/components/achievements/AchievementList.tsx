@@ -121,11 +121,29 @@ const AchievementList: React.FC<AchievementListProps> = ({ userId, gameId, force
     if (!filteredAchievements.length) return [];
     
     return [...filteredAchievements].sort((a, b) => {
+      // For game achievements (like the image shows)
       const nameA = gameId ? a.name : a.achievement.name;
       const nameB = gameId ? b.name : b.achievement.name;
       
-      const indexA = achievementOrder.findIndex(name => name === nameA);
-      const indexB = achievementOrder.findIndex(name => name === nameB);
+      // Special handling for the exact achievements from the reference image
+      // This ensures they're displayed in the same order as the image
+      const specialAchievements = ['Souls Saved', 'Seeing You Sooner', 'King', 'Butter and Egg Man'];
+      
+      const specialIndexA = specialAchievements.indexOf(nameA);
+      const specialIndexB = specialAchievements.indexOf(nameB);
+      
+      // If both are in the special achievements list, sort by their positions
+      if (specialIndexA !== -1 && specialIndexB !== -1) {
+        return specialIndexA - specialIndexB;
+      }
+      
+      // If only one is in the special list, prioritize it
+      if (specialIndexA !== -1) return -1;
+      if (specialIndexB !== -1) return 1;
+      
+      // For regular achievements, continue with normal sorting
+      const indexA = achievementOrder.indexOf(nameA);
+      const indexB = achievementOrder.indexOf(nameB);
       
       // If both are in the order array, sort by their positions
       if (indexA !== -1 && indexB !== -1) {
