@@ -3,17 +3,17 @@
 
 export const streamingConfig = {
   // RTMP URL for streaming to the server (used by OBS and other streaming software)
-  RTMP_URL: "rtmp://stream.clipt.live/live",
+  RTMP_URL: "rtmp://stream.cliptgaming.com/live",
   
   // The base URL for the media server that serves the streams to viewers
-  STREAM_SERVER_URL: "https://player.clipt.live",
+  STREAM_SERVER_URL: "https://player.cliptgaming.com",
   
   // The path format for playback URLs (where users can watch streams)
   // {streamId} will be replaced with the actual stream ID
-  PLAYBACK_URL_FORMAT: "https://player.clipt.live/{streamId}/index.m3u8",
+  PLAYBACK_URL_FORMAT: "https://player.cliptgaming.com/{streamId}/index.m3u8",
   
   // WebSocket URL for real-time stream events (chat, viewer count, etc.)
-  WEBSOCKET_URL: "wss://stream.clipt.live/ws",
+  WEBSOCKET_URL: "wss://stream.cliptgaming.com/ws",
   
   // Default streaming settings
   DEFAULT_SETTINGS: {

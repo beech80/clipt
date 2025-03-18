@@ -6,7 +6,7 @@ This guide will help you set up and configure streaming on your domain for Clipt
 
 ## Prerequisites
 
-1. **Domain Registration**: You need a registered domain (e.g., clipt.live)
+1. **Domain Registration**: You need a registered domain (e.g., cliptgaming.com)
 2. **Server Infrastructure**: 
    - Web server for the Clipt application
    - RTMP server for receiving streams
@@ -83,7 +83,7 @@ sudo systemctl restart nginx
 sudo apt install certbot python3-certbot-nginx
 
 # Get SSL certificates
-sudo certbot --nginx -d stream.yourdomain.com -d player.yourdomain.com
+sudo certbot --nginx -d stream.cliptgaming.com -d player.cliptgaming.com
 ```
 
 ### 2. Update Clipt Configuration
@@ -92,10 +92,10 @@ Update the streaming configuration in your codebase:
 
 1. Open `src/config/streamingConfig.ts`
 2. Update the URLs to match your domain:
-   - `RTMP_URL`: `rtmp://stream.yourdomain.com/live`
-   - `STREAM_SERVER_URL`: `https://player.yourdomain.com`
-   - `PLAYBACK_URL_FORMAT`: `https://player.yourdomain.com/{streamId}/index.m3u8`
-   - `WEBSOCKET_URL`: `wss://stream.yourdomain.com/ws`
+   - `RTMP_URL`: `rtmp://stream.cliptgaming.com/live`
+   - `STREAM_SERVER_URL`: `https://player.cliptgaming.com`
+   - `PLAYBACK_URL_FORMAT`: `https://player.cliptgaming.com/{streamId}/index.m3u8`
+   - `WEBSOCKET_URL`: `wss://stream.cliptgaming.com/ws`
 
 ### 3. Firewall Configuration
 
@@ -120,7 +120,7 @@ sudo ufw allow 443/tcp
 2. Go to Settings > Stream
 3. Select "Custom..." for Service
 4. Enter the following:
-   - Server: `rtmp://stream.yourdomain.com/live`
+   - Server: `rtmp://stream.cliptgaming.com/live`
    - Stream Key: (Your stream key from Clipt dashboard)
 5. Set up your scenes, sources, and audio
 6. Click "Start Streaming"
@@ -131,7 +131,7 @@ sudo ufw allow 443/tcp
 2. Go to Settings > Stream
 3. Select "Custom" for Service
 4. Enter the following:
-   - Server: `rtmp://stream.yourdomain.com/live`
+   - Server: `rtmp://stream.cliptgaming.com/live`
    - Stream Key: (Your stream key from Clipt dashboard)
 5. Set up your scenes, sources, and audio
 6. Click "Go Live"
@@ -174,7 +174,7 @@ sudo ufw allow 443/tcp
 
 ## Support
 
-If you encounter any issues, please contact support@clipt.live or open an issue on our GitHub repository.
+If you encounter any issues, please contact support@cliptgaming.com or open an issue on our GitHub repository.
 
 ---
 
