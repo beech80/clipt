@@ -89,10 +89,11 @@ const Discovery = () => {
   });
 
   // Games Search
-  const { data: games, isLoading: gamesLoading } = useQuery({
+  const { data: games, isLoading: gamesLoading, error: gamesError } = useQuery({
     queryKey: ['games', 'search', searchTerm],
     queryFn: async () => {
       try {
+        console.log('Searching for games with term:', searchTerm);
         let query = supabase
           .from('games')
           .select(`
@@ -106,9 +107,15 @@ const Discovery = () => {
           query = query.ilike('name', `%${searchTerm}%`);
         }
         
+        console.log('Executing Supabase query for games search');
         const { data, error } = await query.limit(20); // Increased limit from default 10
         
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase games query error:', error);
+          throw error;
+        }
+        
+        console.log('Supabase games search results:', data?.length || 0);
         
         // Transform data to fix the count object issue
         const transformedData = (data || []).map(game => ({
@@ -123,25 +130,49 @@ const Discovery = () => {
         // If no data from database, try fetching from IGDB
         if (transformedData.length === 0 && searchTerm.length > 0) {
           try {
-            console.log('No games found in database, trying IGDB');
+            console.log('No games found in database, trying IGDB for:', searchTerm);
             const { igdbService } = await import('@/services/igdbService');
             const searchGames = await igdbService.searchGames(searchTerm, { limit: 20 }); // Increased limit
             
+            console.log('IGDB search results:', searchGames?.length || 0);
+            
             if (searchGames && searchGames.length > 0) {
-              return searchGames.map((game: any) => ({
-                id: `igdb-${game.id}`,
-                name: game.name,
-                cover_url: game.cover?.url ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}` : undefined,
-                post_count: 0,
-                genres: game.genres?.map((g: any) => g.name).join(', ') || '',
-                first_release_date: game.first_release_date ? new Date(game.first_release_date * 1000).getFullYear() : null
-              }));
+              const mappedGames = searchGames.map((game: any) => {
+                // Fix IGDB cover URL formatting
+                let coverUrl = undefined;
+                if (game.cover?.url) {
+                  // If URL starts with //, add https:
+                  if (game.cover.url.startsWith('//')) {
+                    coverUrl = `https:${game.cover.url}`;
+                  } 
+                  // If URL doesn't have protocol or // prefix
+                  else if (!game.cover.url.includes('://') && !game.cover.url.startsWith('//')) {
+                    coverUrl = `https://${game.cover.url}`;
+                  }
+                  // Replace t_thumb with t_cover_big for better quality images
+                  coverUrl = coverUrl.replace('t_thumb', 't_cover_big');
+                }
+                
+                return {
+                  id: `igdb-${game.id}`,
+                  name: game.name,
+                  cover_url: coverUrl,
+                  post_count: 0,
+                  genres: game.genres?.map((g: any) => g.name).join(', ') || '',
+                  first_release_date: game.first_release_date ? new Date(game.first_release_date * 1000).getFullYear() : null
+                };
+              });
+              console.log('Mapped IGDB games:', mappedGames.length);
+              return mappedGames;
+            } else {
+              console.log('No games found in IGDB either');
             }
           } catch (igdbError) {
             console.error('IGDB search failed:', igdbError);
           }
         }
         
+        console.log('Returning transformed data:', transformedData.length);
         return transformedData;
       } catch (error) {
         console.error('Error in games query:', error);
@@ -149,6 +180,8 @@ const Discovery = () => {
       }
     },
     enabled: isSearchActive || searchTerm.length > 0, // Always enable if there's a search term
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Clip Search
@@ -245,11 +278,11 @@ const Discovery = () => {
           {games.map((game: any) => (
             <GameCard
               key={game.id}
-              id={game.id}
+              id={game.id.toString()}
               name={game.name}
               coverUrl={game.cover_url}
               postCount={game.post_count}
-              onClick={() => navigate(`/games/${game.id}`)}
+              onClick={() => navigate(`/game/${game.id}`)}
             />
           ))}
         </div>
@@ -349,16 +382,21 @@ const Discovery = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {games.map((game: GameProps) => (
                   <GameCard 
-                    key={game.id} 
-                    game={game} 
-                    onClick={() => navigate(`/game/${game.id}`)} 
-                    showInfo={true}
+                    key={game.id}
+                    id={game.id.toString()}
+                    name={game.name}
+                    coverUrl={game.cover_url}
+                    postCount={game.post_count}
+                    onClick={() => navigate(`/game/${game.id}`)}
                   />
                 ))}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-400">
                 <p>No games found matching "{searchTerm}"</p>
+                {gamesError && (
+                  <p className="text-red-400 text-sm mt-1">Error: {gamesError instanceof Error ? gamesError.message : 'Unknown error'}</p>
+                )}
                 <p className="text-sm mt-2">Try a different search term or browse popular games below</p>
               </div>
             )}
