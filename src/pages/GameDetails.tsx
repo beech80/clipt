@@ -34,17 +34,73 @@ const GameDetailsPage = () => {
     
     setSearchLoading(true);
     try {
-      const { data, error } = await supabase
+      // First try searching in our database
+      const { data: dbData, error: dbError } = await supabase
         .from('games')
         .select('id, name, cover_url')
         .ilike('name', `%${term}%`)
         .order('name')
         .limit(10);
         
-      if (error) throw error;
-      setSearchResults(data || []);
+      if (dbError) throw dbError;
+      
+      // Store the results we found in our DB
+      const dbResults = dbData || [];
+      
+      // If we have few results, try to augment with IGDB results
+      if (dbResults.length < 5) {
+        try {
+          // Import IGDB service dynamically
+          const { igdbService } = await import('@/services/igdbService');
+          
+          // Search for games in IGDB
+          const igdbResults = await igdbService.searchGames(term, 10);
+          
+          // Process IGDB results to match our format
+          const processedIgdbResults = igdbResults.map((game: any) => {
+            let coverUrl = game.cover?.url || null;
+            
+            // Format cover URL if present
+            if (coverUrl) {
+              // If URL starts with //, add https:
+              if (coverUrl.startsWith('//')) {
+                coverUrl = `https:${coverUrl}`;
+              } 
+              // Replace t_thumb with t_cover_big for higher quality
+              if (coverUrl.includes('t_thumb')) {
+                coverUrl = coverUrl.replace('t_thumb', 't_cover_big');
+              }
+            }
+            
+            return {
+              id: `igdb-${game.id}`,
+              name: game.name,
+              cover_url: coverUrl,
+              external: true // Mark as external for navigation handling
+            };
+          });
+          
+          // Create a set of existing game names to avoid duplicates
+          const existingNames = new Set(dbResults.map(game => game.name.toLowerCase()));
+          
+          // Filter out duplicates and combine results
+          const uniqueIgdbResults = processedIgdbResults.filter(
+            (game: any) => !existingNames.has(game.name.toLowerCase())
+          );
+          
+          setSearchResults([...dbResults, ...uniqueIgdbResults]);
+        } catch (igdbError) {
+          console.error('IGDB search failed:', igdbError);
+          // Still show database results if IGDB fails
+          setSearchResults(dbResults);
+        }
+      } else {
+        // If we have enough results from DB, just use those
+        setSearchResults(dbResults);
+      }
     } catch (error) {
       console.error('Error searching games:', error);
+      setSearchResults([]);
     } finally {
       setSearchLoading(false);
     }
@@ -74,8 +130,15 @@ const GameDetailsPage = () => {
   };
 
   // Navigate to a different game
-  const navigateToGame = (gameId: string) => {
-    navigate(`/game/${gameId}`);
+  const navigateToGame = (gameId: string, isExternal = false) => {
+    if (isExternal) {
+      // For IGDB results, we need to create the game first
+      // This would normally be done server-side, but for our demo
+      // we'll just navigate back to discover with the search term
+      navigate(`/discovery?search=${encodeURIComponent(searchTerm)}`);
+    } else {
+      navigate(`/game/${gameId}`);
+    }
     clearSearch();
   };
 
@@ -209,7 +272,7 @@ const GameDetailsPage = () => {
         <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
           <ArrowLeft className="h-5 w-5 mr-2" />
         </Button>
-        <h1 className="text-xl font-bold">Game Details</h1>
+        <h1 className="text-xl font-bold">{game?.name ? `${game.name} Clipts` : 'Game Details'}</h1>
         
         {/* Search button */}
         <div className="ml-auto">
@@ -256,7 +319,7 @@ const GameDetailsPage = () => {
                       <div
                         key={game.id}
                         className="p-3 hover:bg-indigo-900/50 cursor-pointer flex items-center"
-                        onClick={() => navigateToGame(game.id)}
+                        onClick={() => navigateToGame(game.id, game.external)}
                       >
                         {game.cover_url && (
                           <div className="w-10 h-10 mr-3 bg-indigo-800 rounded overflow-hidden">
