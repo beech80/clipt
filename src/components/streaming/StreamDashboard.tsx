@@ -19,6 +19,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StreamerDashboardChat } from "./chat/StreamerDashboardChat";
 import { streamingConfig, generateRtmpUrl } from "@/config/streamingConfig";
 import { checkAndRepairStreamsSchema, createStreamSafely } from '@/lib/schema-fix';
+import { emergencyCreateStream } from '@/lib/emergency-stream-fix';
 
 export function StreamDashboard() {
   const { user } = useAuth();
@@ -43,6 +44,23 @@ export function StreamDashboard() {
       setError(null);
 
       try {
+        console.log("Attempting to fetch or create stream...");
+        
+        // Try the emergency method that should work regardless of schema issues
+        const { success, stream, error: emergencyError } = await emergencyCreateStream(
+          user.id,
+          `${user.user_metadata?.username || user.email}'s Stream`
+        );
+        
+        if (success && stream) {
+          console.log("Stream created/fetched successfully:", stream);
+          setStream(stream);
+          return;
+        }
+        
+        // If emergency method failed (unlikely), try the regular methods
+        console.warn("Emergency stream creation failed, trying fallback methods:", emergencyError);
+        
         // First check and repair the schema if needed
         const { success: repairSuccess, error: repairError } = await checkAndRepairStreamsSchema();
         if (!repairSuccess) {
@@ -87,9 +105,8 @@ export function StreamDashboard() {
           }
         } catch (err: any) {
           // Last resort fallback - create stream with minimal fields
-          console.error("Using minimal stream creation as fallback:", err);
+          console.error("Using absolutely minimal stream creation as fallback:", err);
           
-          const streamKey = await generateRandomKey();
           // Try with absolute minimal fields to avoid any schema issues
           const { data: minimalStream, error: minimalError } = await supabase
             .from('streams')
@@ -101,8 +118,10 @@ export function StreamDashboard() {
             .single();
           
           if (minimalError) {
-            console.error("Critical failure creating stream:", minimalError);
-            throw minimalError;
+            console.error("All stream creation methods have failed:", minimalError);
+            setError(`All attempts to create a stream failed: ${minimalError.message}`);
+            toast.error("Could not create streaming profile");
+            return;
           }
           
           setStream(minimalStream);
