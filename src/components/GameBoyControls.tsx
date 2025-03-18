@@ -19,7 +19,8 @@ import {
   Video,
   Award,
   Monitor,
-  Users
+  Users,
+  Bell
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -43,6 +44,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     { name: 'Streaming', icon: <Video className="mr-2 h-4 w-4" />, path: '/streaming' },
     { name: 'Profile', icon: <User className="mr-2 h-4 w-4" />, path: '/profile' },
     { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
+    { name: 'Notifications', icon: <Bell className="mr-2 h-4 w-4" />, path: '/notifications' },
     { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
     { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' },
     { name: 'Squads Clipts', icon: <Users className="mr-2 h-4 w-4" />, path: '/' },
@@ -1547,6 +1549,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                                   {option.name === 'Streaming' && 'Live gameplay'}
                                   {option.name === 'Profile' && 'Your player stats'}
                                   {option.name === 'Messages' && 'Chat with players'}
+                                  {option.name === 'Notifications' && 'Your notifications'}
                                   {option.name === 'Discovery' && 'Find new games'}
                                   {option.name === 'Top Clipts' && 'Hall of fame'}
                                   {option.name === 'Squads Clipts' && 'Your squads clipts'}
