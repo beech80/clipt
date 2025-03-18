@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PostsGrid from '@/components/PostsGrid';
 import StreamerCard from '@/components/StreamerCard';
 import { Input } from '@/components/ui/input';
+import GameSearchResult from '@/components/GameSearchResult';
 
 interface Game {
   id: string;
@@ -244,8 +245,8 @@ const GameDetailsPage = () => {
   }, [id]);
 
   const getPageTitle = () => {
-    if (loading) return 'Loading...';
-    if (error || !game) return 'Game Details';
+    if (loading) return 'Loading Game Clipts...';
+    if (error || !game) return 'Game Clipts';
     return `${game.name} Clipts`;
   };
 
@@ -256,7 +257,7 @@ const GameDetailsPage = () => {
           <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
             <ArrowLeft className="h-5 w-5 mr-2" />
           </Button>
-          <h1 className="text-xl font-bold">Loading...</h1>
+          <h1 className="text-xl font-bold">Loading Game Clipts...</h1>
         </div>
         <div className="pt-16 flex justify-center items-center h-[60vh]">
           <div className="animate-pulse">Loading game details...</div>
@@ -272,7 +273,7 @@ const GameDetailsPage = () => {
           <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
             <ArrowLeft className="h-5 w-5 mr-2" />
           </Button>
-          <h1 className="text-xl font-bold">Game Details</h1>
+          <h1 className="text-xl font-bold">Game Clipts</h1>
         </div>
         <div className="pt-16 p-4">
           <div className="bg-red-900/20 text-red-300 p-4 rounded-lg">
@@ -298,7 +299,7 @@ const GameDetailsPage = () => {
         <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
           <ArrowLeft className="h-5 w-5 mr-2" />
         </Button>
-        <h1 className="text-xl font-bold">{getPageTitle()}</h1>
+        <h1 className="text-3xl font-bold">{getPageTitle()}</h1>
         
         {/* Search button */}
         <div className="ml-auto">
@@ -342,13 +343,13 @@ const GameDetailsPage = () => {
                 ) : searchResults.length > 0 ? (
                   <div>
                     {searchResults.map(game => (
-                      <div
+                      <GameSearchResult
                         key={game.id}
-                        className="p-3 hover:bg-indigo-900/50 cursor-pointer"
-                        onClick={() => navigateToGame(game.id, game.external)}
-                      >
-                        <div className="font-medium">{game.name}</div>
-                      </div>
+                        id={game.id}
+                        name={game.name}
+                        external={!!game.external}
+                        onClick={navigateToGame}
+                      />
                     ))}
                   </div>
                 ) : (
@@ -361,7 +362,7 @@ const GameDetailsPage = () => {
 
         {/* Game Name */}
         <div className="py-6 text-center">
-          <h1 className="text-3xl font-bold text-white">{game.name}</h1>
+          <h1 className="text-3xl font-bold">{game.name}</h1>
           <p className="text-yellow-400 mt-2">Clips & Streamers</p>
         </div>
 

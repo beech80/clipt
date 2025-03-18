@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import PostsGrid from '@/components/PostsGrid';
 import GameCard from '@/components/GameCard';
+import GameSearchResult from '@/components/GameSearchResult';
 import { transformPostsFromDb, transformGamesFromDb, transformStreamersFromDb } from '@/utils/transformers';
 
 interface Game {
@@ -259,6 +260,9 @@ const Discovery = () => {
 
   const navigateToGame = (gameId: string) => {
     navigate(`/game/${gameId}`);
+    if (isSearching) {
+      setIsSearching(false);
+    }
   };
 
   const navigateToUser = (userId: string) => {
@@ -387,6 +391,19 @@ const Discovery = () => {
     }
   };
 
+  const processSearchResults = () => {
+    if (!searchTerm || !games) return [];
+    
+    // Return only games with search term in name
+    return games
+      .filter(game => game.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      .map(game => ({
+        id: game.id,
+        name: game.name,
+        external: false // Always false for database games
+      }));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-black text-white">
       {/* Fixed header */}
@@ -418,11 +435,36 @@ const Discovery = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={handleClearSearch}
+                  onClick={handleCloseSearch}
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400 hover:text-white"
                 >
                   <X className="h-4 w-4" />
                 </Button>
+              )}
+              
+              {/* Search results dropdown */}
+              {isSearching && searchTerm.trim().length > 0 && (
+                <div className="absolute w-full z-20 bg-indigo-950 border border-indigo-600/40 rounded-md shadow-lg max-h-80 overflow-y-auto mt-1">
+                  {gamesLoading ? (
+                    <div className="p-4 text-center text-sm">Searching...</div>
+                  ) : processSearchResults().length > 0 ? (
+                    <div>
+                      {processSearchResults().map(game => (
+                        <GameSearchResult
+                          key={game.id}
+                          id={game.id}
+                          name={game.name}
+                          external={game.external}
+                          onClick={navigateToGame}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center text-sm">
+                      {searchTerm.length < 2 ? 'Type at least 2 characters to search' : 'No games found'}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
