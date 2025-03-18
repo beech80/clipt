@@ -106,7 +106,12 @@ const Discovery = () => {
         console.log('Searching for games with term:', searchTerm);
         let query = supabase
           .from('games')
-          .select('id, name, cover_url, post_count')
+          .select(`
+            id, 
+            name, 
+            cover_url, 
+            posts (id)
+          `)
           .order('name');
         
         // Apply search filter if provided
