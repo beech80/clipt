@@ -20,7 +20,7 @@ const Home = React.lazy(() => import('./pages/Home'));
 const Auth = React.lazy(() => import('./pages/Auth'));
 const NewPost = React.lazy(() => import('./pages/NewPost'));
 const PostPage = React.lazy(() => import('./pages/PostPage'));
-const Game = React.lazy(() => import('./pages/Game'));
+const GameDetailsPage = React.lazy(() => import('./pages/GameDetails'));
 const TopGames = React.lazy(() => import('./pages/TopGames'));
 const Clipts = React.lazy(() => import('./pages/Clipts'));
 const TopClipts = React.lazy(() => import('./pages/TopClipts'));
@@ -71,7 +71,7 @@ function AppContent() {
       <Route path="/comments" element={<AllCommentsPage />} />
       <Route path="/comments-full/:postId" element={<CommentsFullPage />} />
       <Route path="/group-chat" element={<GroupChat />} />
-      <Route path="/game/:id" element={<Game />} />
+      <Route path="/game/:id" element={<GameDetailsPage />} />
       <Route path="/games" element={<TopGames />} />
       <Route path="/clipts" element={<Clipts />} />
       <Route path="/top-clipts" element={<TopClipts />} />
