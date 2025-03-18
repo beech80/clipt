@@ -8,13 +8,41 @@ import PostsGrid from '@/components/PostsGrid';
 import StreamerCard from '@/components/StreamerCard';
 import { Input } from '@/components/ui/input';
 
+interface Game {
+  id: string;
+  name: string;
+  cover_url?: string | null;
+}
+
+interface Post {
+  id: string;
+  created_at: string;
+  user_id: string;
+  media_url?: string;
+  profiles?: {
+    username?: string;
+    display_name?: string;
+    avatar_url?: string;
+  };
+  game_id: string;
+}
+
+interface Streamer {
+  id: string;
+  username: string;
+  display_name?: string;
+  avatar_url?: string;
+  streaming_url?: string;
+  is_live?: boolean;
+}
+
 const GameDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [game, setGame] = useState<any | null>(null);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [streamers, setStreamers] = useState<any[]>([]);
+  const [game, setGame] = useState<Game | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [streamers, setStreamers] = useState<Streamer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('clips');
@@ -22,7 +50,7 @@ const GameDetailsPage = () => {
   // Search functionality
   const [searchMode, setSearchMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Game[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
   // Game search function
@@ -37,7 +65,7 @@ const GameDetailsPage = () => {
       // First try searching in our database
       const { data: dbData, error: dbError } = await supabase
         .from('games')
-        .select('id, name, cover_url')
+        .select('id, name')
         .ilike('name', `%${term}%`)
         .order('name')
         .limit(10);
@@ -54,28 +82,13 @@ const GameDetailsPage = () => {
           const { igdbService } = await import('@/services/igdbService');
           
           // Search for games in IGDB
-          const igdbResults = await igdbService.searchGames(term, 10);
+          const igdbResults = await igdbService.searchGames(term);
           
           // Process IGDB results to match our format
           const processedIgdbResults = igdbResults.map((game: any) => {
-            let coverUrl = game.cover?.url || null;
-            
-            // Format cover URL if present
-            if (coverUrl) {
-              // If URL starts with //, add https:
-              if (coverUrl.startsWith('//')) {
-                coverUrl = `https:${coverUrl}`;
-              } 
-              // Replace t_thumb with t_cover_big for higher quality
-              if (coverUrl.includes('t_thumb')) {
-                coverUrl = coverUrl.replace('t_thumb', 't_cover_big');
-              }
-            }
-            
             return {
               id: `igdb-${game.id}`,
               name: game.name,
-              cover_url: coverUrl,
               external: true // Mark as external for navigation handling
             };
           });
@@ -154,6 +167,13 @@ const GameDetailsPage = () => {
       setError(null);
       
       try {
+        // Handle IGDB IDs
+        if (id.startsWith('igdb-')) {
+          setError('This game is not yet in our database');
+          setLoading(false);
+          return;
+        }
+
         // Fetch game details from Supabase
         const { data: gameData, error: gameError } = await supabase
           .from('games')
@@ -200,7 +220,7 @@ const GameDetailsPage = () => {
         // Fetch streamers playing this game
         const { data: streamersData, error: streamersError } = await supabase
           .from('profiles')
-          .select('id, username, display_name, avatar_url, streaming_url, follower_count, is_live')
+          .select('id, username, display_name, avatar_url, streaming_url, is_live')
           .eq('current_game', id)
           .eq('is_live', true)
           .order('follower_count', { ascending: false });
@@ -223,6 +243,12 @@ const GameDetailsPage = () => {
     fetchData();
   }, [id]);
 
+  const getPageTitle = () => {
+    if (loading) return 'Loading...';
+    if (error || !game) return 'Game Details';
+    return `${game.name} Clipts`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
@@ -230,10 +256,10 @@ const GameDetailsPage = () => {
           <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
             <ArrowLeft className="h-5 w-5 mr-2" />
           </Button>
-          <h1 className="text-xl font-bold">Game Details</h1>
+          <h1 className="text-xl font-bold">Loading...</h1>
         </div>
         <div className="pt-16 flex justify-center items-center h-[60vh]">
-          <div className="animate-pulse">Loading...</div>
+          <div className="animate-pulse">Loading game details...</div>
         </div>
       </div>
     );
@@ -272,7 +298,7 @@ const GameDetailsPage = () => {
         <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
           <ArrowLeft className="h-5 w-5 mr-2" />
         </Button>
-        <h1 className="text-xl font-bold">{game?.name ? `${game.name} Clipts` : 'Game Details'}</h1>
+        <h1 className="text-xl font-bold">{getPageTitle()}</h1>
         
         {/* Search button */}
         <div className="ml-auto">
@@ -308,7 +334,7 @@ const GameDetailsPage = () => {
               </button>
             </div>
             
-            {/* Search results */}
+            {/* Search results - only showing game names */}
             {searchTerm.trim().length > 0 && (
               <div className="absolute w-full z-20 mt-1 bg-indigo-950 border border-indigo-600/40 rounded-md shadow-lg max-h-80 overflow-y-auto">
                 {searchLoading ? (
@@ -318,18 +344,9 @@ const GameDetailsPage = () => {
                     {searchResults.map(game => (
                       <div
                         key={game.id}
-                        className="p-3 hover:bg-indigo-900/50 cursor-pointer flex items-center"
+                        className="p-3 hover:bg-indigo-900/50 cursor-pointer"
                         onClick={() => navigateToGame(game.id, game.external)}
                       >
-                        {game.cover_url && (
-                          <div className="w-10 h-10 mr-3 bg-indigo-800 rounded overflow-hidden">
-                            <img
-                              src={game.cover_url}
-                              alt={game.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
                         <div className="font-medium">{game.name}</div>
                       </div>
                     ))}
