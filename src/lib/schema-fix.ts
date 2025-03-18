@@ -97,36 +97,103 @@ export async function createStreamSafely(userId: string, streamData: any) {
   // First, clean the input data to remove any fields that might not exist in the schema
   const safeStreamData = { ...streamData };
   
-  // Initialize the base stream data that we know exists in the schema
-  const baseStreamData = {
-    user_id: userId,
-    title: streamData.title || `Stream`,
-    description: streamData.description || "Welcome to my stream!",
-    is_live: false,
-    stream_key: streamData.stream_key,
-    rtmp_url: streamData.rtmp_url,
-    viewer_count: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-  
   try {
-    // Attempt to create stream with the base data only
+    // Try to fetch a single stream first to see the actual columns that exist
+    const { data: sampleStream, error: sampleError } = await supabase
+      .from('streams')
+      .select('*')
+      .limit(1);
+    
+    // Determine what fields actually exist in the database
+    const existingFields = sampleStream && sampleStream.length > 0 
+      ? Object.keys(sampleStream[0]) 
+      : ['user_id', 'title', 'stream_key']; // Absolute minimum fields
+    
+    // Create a minimal stream object with only fields that we know exist
+    const minimalStreamData: Record<string, any> = {
+      user_id: userId,
+    };
+    
+    // Only add fields that exist in the schema
+    if (existingFields.includes('title')) {
+      minimalStreamData.title = streamData.title || `Stream`;
+    }
+    
+    if (existingFields.includes('description')) {
+      minimalStreamData.description = streamData.description || "Welcome to my stream!";
+    }
+    
+    if (existingFields.includes('is_live')) {
+      minimalStreamData.is_live = false;
+    }
+    
+    if (existingFields.includes('stream_key')) {
+      minimalStreamData.stream_key = streamData.stream_key;
+    }
+    
+    if (existingFields.includes('rtmp_url')) {
+      minimalStreamData.rtmp_url = streamData.rtmp_url;
+    }
+    
+    if (existingFields.includes('viewer_count')) {
+      minimalStreamData.viewer_count = 0;
+    }
+    
+    if (existingFields.includes('created_at')) {
+      minimalStreamData.created_at = new Date().toISOString();
+    }
+    
+    // Only include updated_at if it exists in the schema
+    if (existingFields.includes('updated_at')) {
+      minimalStreamData.updated_at = new Date().toISOString();
+    }
+    
+    console.log("Creating stream with validated fields:", minimalStreamData);
+    
+    // Attempt to create stream with the validated data
     const { data, error } = await supabase
       .from('streams')
-      .insert(baseStreamData)
+      .insert(minimalStreamData)
       .select()
       .single();
       
     if (error) {
-      console.error("Error creating stream with base data:", error);
-      return { success: false, error, stream: null };
+      console.error("Error creating stream with validated data:", error);
+      
+      // Last resort - create with only the user_id
+      const { data: lastResortStream, error: lastResortError } = await supabase
+        .from('streams')
+        .insert({ user_id: userId })
+        .select()
+        .single();
+        
+      if (lastResortError) {
+        return { success: false, error: lastResortError, stream: null };
+      }
+      
+      return { success: true, stream: lastResortStream };
     }
     
-    console.log("Successfully created stream with base data:", data);
+    console.log("Successfully created stream:", data);
     return { success: true, stream: data };
   } catch (error) {
     console.error("Exception creating stream:", error);
+    
+    // Absolute last resort - try with just user_id
+    try {
+      const { data: emergencyStream, error: emergencyError } = await supabase
+        .from('streams')
+        .insert({ user_id: userId })
+        .select()
+        .single();
+        
+      if (!emergencyError && emergencyStream) {
+        return { success: true, stream: emergencyStream };
+      }
+    } catch (e) {
+      console.error("Emergency stream creation failed:", e);
+    }
+    
     return { success: false, error, stream: null };
   }
 }

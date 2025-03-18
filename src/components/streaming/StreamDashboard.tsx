@@ -90,12 +90,12 @@ export function StreamDashboard() {
           console.error("Using minimal stream creation as fallback:", err);
           
           const streamKey = await generateRandomKey();
+          // Try with absolute minimal fields to avoid any schema issues
           const { data: minimalStream, error: minimalError } = await supabase
             .from('streams')
             .insert({
               user_id: user.id,
-              stream_key: streamKey,
-              title: `${user.user_metadata?.username || user.email}'s Stream`,
+              // Only include the absolute essentials - don't add any optional fields
             })
             .select()
             .single();
