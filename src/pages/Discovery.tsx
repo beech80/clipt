@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import { BackButton } from "@/components/ui/back-button";
-import { Search, X, TrendingUp } from "lucide-react";
+import { Search, X, TrendingUp, Gamepad, Zap } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import GameCard from '@/components/GameCard';
@@ -75,12 +75,16 @@ const Discovery = () => {
       if (error) throw error;
       
       // Transform data to fix the count object issue
-      return (data || []).map(game => ({
+      const transformedData = (data || []).map(game => ({
         ...game,
         post_count: typeof game.post_count === 'object' && game.post_count !== null 
-          ? Number(game.post_count.count || 0) 
+          ? (Array.isArray(game.post_count) 
+            ? (game.post_count.length > 0 && 'count' in game.post_count[0] ? game.post_count[0].count : 0) 
+            : ('count' in game.post_count ? game.post_count.count : 0)) 
           : (typeof game.post_count === 'number' ? game.post_count : 0)
       }));
+      
+      return transformedData;
     },
   });
 
@@ -102,7 +106,7 @@ const Discovery = () => {
           query = query.ilike('name', `%${searchTerm}%`);
         }
         
-        const { data, error } = await query;
+        const { data, error } = await query.limit(20); // Increased limit from default 10
         
         if (error) throw error;
         
@@ -110,7 +114,9 @@ const Discovery = () => {
         const transformedData = (data || []).map(game => ({
           ...game,
           post_count: typeof game.post_count === 'object' && game.post_count !== null 
-            ? Number(game.post_count.count || 0) 
+            ? (Array.isArray(game.post_count) 
+              ? (game.post_count.length > 0 && 'count' in game.post_count[0] ? game.post_count[0].count : 0) 
+              : ('count' in game.post_count ? game.post_count.count : 0)) 
             : (typeof game.post_count === 'number' ? game.post_count : 0)
         }));
         
@@ -119,14 +125,16 @@ const Discovery = () => {
           try {
             console.log('No games found in database, trying IGDB');
             const { igdbService } = await import('@/services/igdbService');
-            const searchGames = await igdbService.searchGames(searchTerm, { limit: 10 });
+            const searchGames = await igdbService.searchGames(searchTerm, { limit: 20 }); // Increased limit
             
             if (searchGames && searchGames.length > 0) {
               return searchGames.map((game: any) => ({
                 id: `igdb-${game.id}`,
                 name: game.name,
                 cover_url: game.cover?.url ? `https:${game.cover.url.replace('t_thumb', 't_cover_big')}` : undefined,
-                post_count: 0
+                post_count: 0,
+                genres: game.genres?.map((g: any) => g.name).join(', ') || '',
+                first_release_date: game.first_release_date ? new Date(game.first_release_date * 1000).getFullYear() : null
               }));
             }
           } catch (igdbError) {
@@ -140,7 +148,7 @@ const Discovery = () => {
         return [];
       }
     },
-    enabled: isSearchActive,
+    enabled: isSearchActive || searchTerm.length > 0, // Always enable if there's a search term
   });
 
   // Clip Search
@@ -259,70 +267,172 @@ const Discovery = () => {
     );
   };
 
+  interface GameProps {
+    id: string | number;
+    name: string;
+    cover_url?: string;
+    post_count: number;
+    genres?: string;
+    first_release_date?: number | null;
+    [key: string]: any;  // Allow for other properties
+  }
+
   const isLoading = clipsLoading || 
     (isSearchActive && gamesLoading) ||
     (isSearchActive && searchClipsLoading);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1f3c] to-[#0d0f1e]">
-      {/* Header with Search */}
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/60 backdrop-blur-lg">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2">
-            <BackButton className="text-indigo-400 hover:text-indigo-300" />
-            <div className="relative flex-1" ref={searchContainerRef}>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-indigo-400" />
+    <div className="container mx-auto py-4 px-4 md:px-8">
+      {/* Search Bar - Made more prominent */}
+      <div 
+        ref={searchContainerRef}
+        className={`relative mb-8 transition-all duration-300 ${
+          isSearchFocused ? 'scale-105' : 'scale-100'
+        }`}
+      >
+        <div className={`
+          flex items-center p-3 bg-gradient-to-r from-purple-900/30 to-indigo-900/30 
+          backdrop-blur-md rounded-2xl border 
+          ${isSearchFocused ? 'border-purple-400 shadow-lg shadow-purple-500/20' : 'border-purple-800/30'}
+          transition-all duration-300
+        `}>
+          <Search className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0" />
+          <Input
+            ref={searchInputRef}
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              if (e.target.value.length > 0) {
+                setIsSearchActive(true);
+              }
+            }}
+            onFocus={() => setIsSearchFocused(true)}
+            className="border-0 p-0 bg-transparent shadow-none h-8 placeholder:text-gray-500 focus-visible:ring-0 flex-1"
+            placeholder="Find games, streamers, or clips..."
+          />
+          {searchTerm && (
+            <button 
+              onClick={() => {
+                setSearchTerm('');
+                setIsSearchActive(false);
+                if (searchInputRef.current) searchInputRef.current.focus();
+              }}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Search Results or Explore Content */}
+      {isSearchActive || searchTerm ? (
+        <div className="space-y-6">
+          {/* Games Search Results */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Gamepad className="h-5 w-5 text-purple-400" />
+              <h2 className="text-xl font-bold">Games</h2>
+            </div>
+            
+            {gamesLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <AspectRatio ratio={3/4} className="bg-gray-800 rounded-lg mb-2" />
+                    <div className="h-4 bg-gray-800 rounded w-3/4 mb-1" />
+                    <div className="h-3 bg-gray-800 rounded w-1/2" />
+                  </div>
+                ))}
               </div>
-              <Input
-                type="search"
-                placeholder="Search games or streamers..."
-                className="pl-10 pr-10 py-6 bg-indigo-950/50 border-indigo-500/40 text-white placeholder:text-indigo-300/60 w-full"
-                value={searchTerm}
-                onChange={handleSearch}
-                onFocus={() => navigate('/retro-search')}
-                ref={searchInputRef}
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={clearSearch}
-                >
-                  <X className="h-4 w-4 text-indigo-400" />
-                </button>
+            ) : games && games.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {games.map((game: GameProps) => (
+                  <GameCard 
+                    key={game.id} 
+                    game={game} 
+                    onClick={() => navigate(`/game/${game.id}`)} 
+                    showInfo={true}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-400">
+                <p>No games found matching "{searchTerm}"</p>
+                <p className="text-sm mt-2">Try a different search term or browse popular games below</p>
+              </div>
+            )}
+          </div>
+          
+          {/* Streamers Search Results */}
+          {/* ... */}
+          
+          {/* Clips Search Results */}
+          {/* ... */}
+        </div>
+      ) : (
+        <>
+          {/* Trending Games Section - Enhanced with more visuals */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-purple-400" />
+                <h2 className="text-xl font-bold">Trending Games</h2>
+              </div>
+              <Button 
+                variant="link" 
+                className="text-purple-400 hover:text-purple-300 p-0"
+                onClick={() => navigate('/games')}
+              >
+                View All
+              </Button>
+            </div>
+            
+            {/* Top Searched Games */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {topSearchedGames ? (
+                topSearchedGames.map((game) => (
+                  <div 
+                    key={game.id}
+                    onClick={() => navigate(`/game-streamers/${game.id}`)}
+                    className="relative overflow-hidden rounded-xl aspect-square cursor-pointer group transform transition-transform hover:scale-[1.02]"
+                  >
+                    <div className="w-full h-full bg-gradient-to-br from-purple-900/50 to-indigo-900/50 absolute inset-0 z-10" />
+                    <div className="absolute inset-0 z-0">
+                      {game.cover_url ? (
+                        <img 
+                          src={game.cover_url} 
+                          alt={game.name}
+                          className="w-full h-full object-cover transform transition-transform group-hover:scale-110 duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-800 to-indigo-900 flex items-center justify-center">
+                          <Gamepad className="h-12 w-12 text-white/50" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent z-20">
+                      <h3 className="text-lg font-bold text-white mb-1 drop-shadow-md">{game.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-purple-400" />
+                        <span className="text-sm text-purple-300">{game.post_count} posts</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                // Skeletons for loading state
+                [...Array(3)].map((_, i) => (
+                  <div key={i} className="rounded-xl aspect-square bg-gray-800 animate-pulse" />
+                ))
               )}
             </div>
           </div>
-        </div>
-      </div>
-      
-      {/* Content */}
-      <div className="pt-20 pb-24 max-w-4xl mx-auto">
-        {isLoading ? (
-          // Loading grid skeleton
-          <div className="grid grid-cols-3 gap-1 md:gap-2 p-2">
-            {Array(12).fill(0).map((_, i) => (
-              <Skeleton key={i} className="aspect-square w-full bg-indigo-950/60" />
-            ))}
-          </div>
-        ) : (
-          <>
-            {isSearchActive ? (
-              renderSearchResults()
-            ) : (
-              // Instagram-style grid
-              <>
-                {clips && clips.length > 0 ? renderClipGrid(clips) : (
-                  <div className="flex items-center justify-center h-40">
-                    <p className="text-indigo-300">No clips found</p>
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </div>
+          
+          {/* Recent Clips Grid */}
+          {/* ... */}
+        </>
+      )}
     </div>
   );
 };
