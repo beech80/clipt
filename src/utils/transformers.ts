@@ -39,9 +39,7 @@ export const transformGamesFromDb = (dbGames: any[] = []) => {
     id: game.id || '',
     name: game.name || 'Unknown Game',
     cover_url: game.cover_url || null,
-    post_count: typeof game.post_count === 'number' 
-      ? game.post_count 
-      : (game._count?.posts || 0),
+    post_count: game.posts ? game.posts.length : 0,
   }));
 };
 
