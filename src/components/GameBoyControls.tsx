@@ -19,8 +19,7 @@ import {
   Video,
   Award,
   Monitor,
-  Users,
-  Bell
+  Users
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
