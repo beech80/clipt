@@ -95,8 +95,8 @@ export function StreamDashboard() {
               stream_path: null,
               thumbnail_url: null,
               started_at: null,
-              ended_at: null,
-              game_id: null
+              ended_at: null
+              // Removed the game_id field which is causing the schema error
             })
             .select()
             .single();
