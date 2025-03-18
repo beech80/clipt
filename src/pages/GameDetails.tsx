@@ -1,25 +1,83 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { igdbService } from '@/services/igdbService';
-import { Game } from '@/types/game';
-import { Post } from '@/types/post';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Calendar } from 'lucide-react';
-import PostItem from '@/components/PostItem';
-import { gameIdToUuid, uuidToGameId } from '@/utils/idUtils';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { ArrowLeft, Gamepad2, Users, Search, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PostsGrid from '@/components/PostsGrid';
+import StreamerCard from '@/components/StreamerCard';
+import { Input } from '@/components/ui/input';
 
 const GameDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [game, setGame] = useState<Game | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [game, setGame] = useState<any | null>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [streamers, setStreamers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [activeTab, setActiveTab] = useState('clips');
+  
+  // Search functionality
+  const [searchMode, setSearchMode] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Game search function
+  const searchGames = async (term: string) => {
+    if (!term.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setSearchLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('games')
+        .select('id, name, cover_url')
+        .ilike('name', `%${term}%`)
+        .order('name')
+        .limit(10);
+        
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error) {
+      console.error('Error searching games:', error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Handle search input
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    
+    if (term.trim().length > 2) {
+      const debounce = setTimeout(() => {
+        searchGames(term);
+      }, 300);
+      
+      return () => clearTimeout(debounce);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  // Clear search
+  const clearSearch = () => {
+    setSearchTerm('');
+    setSearchResults([]);
+    setSearchMode(false);
+  };
+
+  // Navigate to a different game
+  const navigateToGame = (gameId: string) => {
+    navigate(`/game/${gameId}`);
+    clearSearch();
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,59 +91,63 @@ const GameDetailsPage = () => {
       setError(null);
       
       try {
-        // Ensure we have a numeric game ID
-        const numericGameId = uuidToGameId(id);
-        console.log(`Fetching game details for ID: ${id} (numeric: ${numericGameId})`);
-        
-        // Fetch game details from IGDB
-        const gameData = await igdbService.getGameById(numericGameId);
-        
-        if (!gameData) {
+        // Fetch game details from Supabase
+        const { data: gameData, error: gameError } = await supabase
+          .from('games')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
+        if (gameError) {
+          console.error('Error fetching game:', gameError);
           setError('Game not found');
           setLoading(false);
           return;
         }
         
-        console.log('Game data received:', JSON.stringify(gameData));
+        setGame(gameData);
         
-        // Ensure all game data properties are safe to render
-        const safeGameData = {
-          ...gameData,
-          genres: gameData.genres ? gameData.genres.map(g => 
-            typeof g === 'string' ? g : (g.name || String(g.id))
-          ) : [],
-          platforms: gameData.platforms ? gameData.platforms.map(p => 
-            typeof p === 'string' ? p : (p.name || String(p.id))
-          ) : [],
-          developers: gameData.developers ? gameData.developers.map(d => 
-            typeof d === 'string' ? d : (d.name || String(d.id))
-          ) : []
-        };
-        
-        setGame(safeGameData);
-        
-        // Create a UUID-compatible version of the game ID for database queries
-        const uuidCompatibleId = gameIdToUuid(numericGameId);
-        console.log(`Using UUID-compatible ID for database queries: ${uuidCompatibleId}`);
-        
-        // Fetch posts for this game using the UUID-compatible ID
+        // Fetch posts for this game
         const { data: postsData, error: postsError } = await supabase
           .from('posts')
           .select(`
-            *,
-            user:profiles(*)
+            id, image_url, video_url, created_at, user_id,
+            profiles (username, display_name, avatar_url)
           `)
-          .eq('game_id', uuidCompatibleId)
-          .order('created_at', { ascending: false })
-          .limit(5);
+          .eq('game_id', id)
+          .order('created_at', { ascending: false });
           
         if (postsError) {
           console.error('Error fetching posts:', postsError);
           throw postsError;
         }
         
-        console.log('Posts data:', postsData);
-        setPosts(postsData || []);
+        // Transform posts data to match PostsGrid component expectations
+        const transformedPosts = (postsData || []).map(post => ({
+          id: post.id,
+          created_at: post.created_at,
+          user_id: post.user_id,
+          media_url: post.video_url || post.image_url,
+          profiles: post.profiles,
+          game_id: id
+        }));
+        
+        setPosts(transformedPosts);
+
+        // Fetch streamers playing this game
+        const { data: streamersData, error: streamersError } = await supabase
+          .from('profiles')
+          .select('id, username, display_name, avatar_url, streaming_url, follower_count, is_live')
+          .eq('current_game', id)
+          .eq('is_live', true)
+          .order('follower_count', { ascending: false });
+
+        if (streamersError) {
+          console.error('Error fetching streamers:', streamersError);
+          throw streamersError;
+        }
+
+        setStreamers(streamersData || []);
         
       } catch (err) {
         console.error('Error fetching game details:', err);
@@ -98,15 +160,10 @@ const GameDetailsPage = () => {
     fetchData();
   }, [id]);
 
-  const toggleFollow = () => {
-    setIsFollowing(!isFollowing);
-    // Here you would add real follow functionality
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#14163a] text-white">
-        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-[#0c0e26]">
+      <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
+        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-indigo-950/80 backdrop-blur-sm">
           <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
             <ArrowLeft className="h-5 w-5 mr-2" />
           </Button>
@@ -121,8 +178,8 @@ const GameDetailsPage = () => {
 
   if (error || !game) {
     return (
-      <div className="min-h-screen bg-[#14163a] text-white">
-        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-[#0c0e26]">
+      <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
+        <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-indigo-950/80 backdrop-blur-sm">
           <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
             <ArrowLeft className="h-5 w-5 mr-2" />
           </Button>
@@ -145,117 +202,138 @@ const GameDetailsPage = () => {
     );
   }
 
-  const releaseYear = game.first_release_date 
-    ? new Date(game.first_release_date).getFullYear() 
-    : 'Unknown';
-
   return (
-    <div className="min-h-screen bg-[#14163a] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-blue-950 text-white">
       {/* Header */}
-      <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-[#0c0e26]">
+      <div className="p-4 fixed top-0 left-0 right-0 z-50 flex items-center bg-indigo-950/80 backdrop-blur-sm">
         <Button variant="ghost" onClick={() => navigate(-1)} className="text-white">
           <ArrowLeft className="h-5 w-5 mr-2" />
         </Button>
         <h1 className="text-xl font-bold">Game Details</h1>
+        
+        {/* Search button */}
+        <div className="ml-auto">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setSearchMode(!searchMode)}
+            className="text-white"
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
-      <div className="pt-16 pb-20">
-        {/* Game Banner */}
-        <div className="w-full aspect-[21/9] bg-[#1a1a2e] flex items-center justify-center">
-          {game.screenshots && game.screenshots.length > 0 ? (
-            <img 
-              src={game.screenshots[0].url.replace('t_thumb', 't_screenshot_big')} 
-              alt={`${game.name} screenshot`} 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="text-center text-gray-400">Game Banner</div>
-          )}
-        </div>
-
-        {/* Game Info */}
-        <div className="bg-[#1a1c38] p-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-2xl font-bold">{game.name}</h2>
-              <p className="text-gray-400 mt-1">
-                {game.developers && game.developers.length > 0 ? game.developers[0] : 'Developer'} • {' '}
-                {game.publishers && game.publishers ? game.publishers[0] : 'Publisher'}
-              </p>
-
-              <div className="flex items-center mt-4 space-x-6">
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>{Math.floor(Math.random() * 50) + 5}K players</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="mr-2">🏆</span>
-                  <span>{Math.floor(Math.random() * 100)} tournaments</span>
-                </div>
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>Released {releaseYear}</span>
-                </div>
-              </div>
+      <div className="pt-16 pb-20 px-4">
+        {/* Search bar */}
+        {searchMode && (
+          <div className="my-4 relative">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Search for games..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-full pr-10 pl-4 py-2 bg-indigo-950/60 border-indigo-600/40 text-white"
+                autoFocus
+              />
+              <button
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                onClick={clearSearch}
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
             
-            <Button 
-              className={cn(
-                "border border-white/20 px-4 py-2 rounded",
-                isFollowing ? "bg-white/20" : "bg-transparent hover:bg-white/10"
-              )}
-              onClick={toggleFollow}
-            >
-              {isFollowing ? "Following" : "Follow"}
-            </Button>
+            {/* Search results */}
+            {searchTerm.trim().length > 0 && (
+              <div className="absolute w-full z-20 mt-1 bg-indigo-950 border border-indigo-600/40 rounded-md shadow-lg max-h-80 overflow-y-auto">
+                {searchLoading ? (
+                  <div className="p-4 text-center text-sm">Searching...</div>
+                ) : searchResults.length > 0 ? (
+                  <div>
+                    {searchResults.map(game => (
+                      <div
+                        key={game.id}
+                        className="p-3 hover:bg-indigo-900/50 cursor-pointer flex items-center"
+                        onClick={() => navigateToGame(game.id)}
+                      >
+                        {game.cover_url && (
+                          <div className="w-10 h-10 mr-3 bg-indigo-800 rounded overflow-hidden">
+                            <img
+                              src={game.cover_url}
+                              alt={game.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="font-medium">{game.name}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-sm">No games found</div>
+                )}
+              </div>
+            )}
           </div>
+        )}
 
-          {/* About Section */}
-          <div className="mt-6">
-            <h3 className="text-xl font-bold mb-2">About</h3>
-            <p className="text-gray-300 leading-relaxed">
-              {game.summary || `This is a sample description for ${game.name}. Here we would display information about the game, including its genre, gameplay features, and other relevant details that would interest players.`}
-            </p>
-          </div>
+        {/* Game Name */}
+        <div className="py-6 text-center">
+          <h1 className="text-3xl font-bold text-white">{game.name}</h1>
+          <p className="text-yellow-400 mt-2">Clips & Streamers</p>
         </div>
 
-        {/* Recent Clipts */}
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold">Recent Clipts</h3>
-            <Link to={`/game/${id}/clipts`} className="text-blue-400 text-sm">
-              View All
-            </Link>
-          </div>
+        {/* Tabs for Clips and Streamers */}
+        <Tabs defaultValue="clips" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-2 w-full max-w-md mx-auto mb-6">
+            <TabsTrigger value="clips" className="flex items-center gap-2">
+              <Gamepad2 className="h-4 w-4" />
+              Clips
+            </TabsTrigger>
+            <TabsTrigger value="streamers" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Streamers
+            </TabsTrigger>
+          </TabsList>
 
-          {posts.length === 0 ? (
-            <div className="text-center p-8 bg-[#1a1c38] rounded-lg">
-              <p className="text-gray-400">No clipts for this game yet. Be the first to share one!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {posts.map((post) => (
-                <div key={post.id} className="bg-[#1a1c38] rounded-lg overflow-hidden">
-                  <div className="aspect-video bg-black flex items-center justify-center">
-                    {post.thumbnail_url ? (
-                      <img 
-                        src={post.thumbnail_url} 
-                        alt="Clipt Thumbnail" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="text-center text-gray-400">Clipt Thumbnail</div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <h4 className="font-medium truncate">{post.title || 'Untitled Clipt'}</h4>
-                    <p className="text-sm text-gray-400 mt-1">{post.user.username || 'Anonymous'}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          <TabsContent value="clips">
+            {posts.length > 0 ? (
+              <PostsGrid posts={posts} />
+            ) : (
+              <div className="text-center py-10 bg-indigo-900/20 rounded-lg">
+                <p className="text-lg text-gray-300">No clips available for this game yet</p>
+                <p className="text-sm text-gray-400 mt-2">Be the first to share a clip!</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="streamers">
+            {streamers.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {streamers.map((streamer) => (
+                  <StreamerCard
+                    key={streamer.id}
+                    id={streamer.id}
+                    username={streamer.username}
+                    displayName={streamer.display_name}
+                    avatarUrl={streamer.avatar_url}
+                    streamingUrl={streamer.streaming_url}
+                    isLive={streamer.is_live}
+                    game={game.name}
+                    onClick={() => navigate(`/profile/${streamer.id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 bg-indigo-900/20 rounded-lg">
+                <p className="text-lg text-gray-300">No streamers are playing this game right now</p>
+                <p className="text-sm text-gray-400 mt-2">Check back later!</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
