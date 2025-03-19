@@ -39,17 +39,7 @@ const TopClipts = () => {
     // Start fetching leaderboard data
     fetchLeaderboard();
 
-    // Set up real-time listener for updates
-    setupRealtimeUpdates();
-
-    // Cleanup function to remove listeners
-    return () => {
-      // Remove Supabase subscription when component unmounts
-      const supabaseClient = supabase;
-      if (supabaseClient) {
-        supabaseClient.removeAllChannels();
-      }
-    };
+    // No real-time updates for now - keeping all scores at zero
   }, [activeTab]); // Refetch when tab changes
 
   // Function to fetch leaderboard data
@@ -60,7 +50,7 @@ const TopClipts = () => {
       // Different queries based on activeTab (daily, weekly, all-time)
       
       /*
-      // Example of how you would fetch real data:
+      // Example of how you would fetch real data when ready to implement:
       let query = supabase
         .from('clipt_votes')
         .select('clipt_id, count(*)')
@@ -92,7 +82,7 @@ const TopClipts = () => {
       setLeaderboard(formattedData);
       */
 
-      // For demo, just show empty leaderboard after a short delay
+      // For now, just show empty leaderboard after a short delay
       setTimeout(() => {
         setLeaderboard(emptyLeaderboard);
         setLoading(false);
@@ -102,52 +92,6 @@ const TopClipts = () => {
       toast.error('Failed to load leaderboard');
       setLoading(false);
     }
-  };
-
-  // Function to set up real-time updates from Supabase
-  const setupRealtimeUpdates = () => {
-    // In a real app, this would subscribe to Supabase changes
-    
-    /*
-    // Example of real-time subscription:
-    const supabaseClient = supabase;
-    
-    supabaseClient
-      .channel('clipt-votes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'clipt_votes' 
-        }, 
-        (payload) => {
-          // When vote changes, refetch the leaderboard
-          fetchLeaderboard();
-        }
-      )
-      .subscribe();
-    */
-    
-    // For demo purposes, simulate periodic updates
-    const updateInterval = setInterval(() => {
-      if (!loading) {
-        // Simulate votes coming in by randomly incrementing some positions
-        setLeaderboard(prevLeaderboard => {
-          return prevLeaderboard.map(spot => {
-            // 30% chance of updating each spot
-            if (Math.random() < 0.3) {
-              // Increment by 1-5 points
-              const increment = Math.floor(Math.random() * 5) + 1;
-              return { ...spot, points: spot.points + increment };
-            }
-            return spot;
-          });
-        });
-      }
-    }, 3000); // Update every 3 seconds
-    
-    // Clean up interval on component unmount
-    return () => clearInterval(updateInterval);
   };
 
   // Function to get medal color based on rank
