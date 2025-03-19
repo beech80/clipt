@@ -797,6 +797,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       cancelAnimationFrame(scrollAnimationRef.current);
     }
     
+    // Don't start scroll animation on the comments page
+    if (location.pathname.includes('/comments/')) {
+      return;
+    }
+    
     // Get timestamp for smooth animation
     let lastTimestamp: number | null = null;
     
@@ -822,7 +827,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       // Perform scrolling if needed with deltaTime for smooth consistent speed
-      if (isDragging && Math.abs(yPosition) > 0) {
+      if (isDragging && Math.abs(yPosition) > 0 && !location.pathname.includes('/comments/')) {
         // Apply deltaTime to normalize speed across different frame rates
         const normalizedYPosition = yPosition * (deltaTime || 1);
         handleScrollFromJoystick(normalizedYPosition);
@@ -857,6 +862,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Quick deadzone check for performance
     if (Math.abs(yPosition) < deadzone) {
       return; // Within deadzone - no scrolling
+    }
+    
+    // Don't scroll on certain pages where native scrolling is preferred
+    const currentPath = location.pathname;
+    if (currentPath.includes('/comments/')) {
+      return; // Don't use joystick scrolling on comments page
     }
     
     // More responsive curve with variable intensity based on joystick position
@@ -937,7 +948,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         lastTimestamp = timestamp;
         
         // Apply the joystick scrolling with frame-rate independent speed
-        if (joystickPosition.y !== 0) {
+        if (joystickPosition.y !== 0 && !location.pathname.includes('/comments/')) {
           handleScrollFromJoystick(joystickPosition.y);
         }
       }
@@ -1714,11 +1725,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                             >
                               {/* Icon container with gameboy-like button effect */}
                               <div className="flex items-center justify-center h-10 w-10 bg-gradient-to-br from-[#333339] to-[#1F1F25] rounded-md mr-4 shadow-inner relative group-hover:from-purple-700 group-hover:to-blue-700 transition-colors duration-300">
-                                <div className="absolute inset-[2px] bg-[#0D0D18] rounded-sm flex items-center justify-center">
-                                  {React.cloneElement(option.icon as React.ReactElement, { 
-                                    className: "h-5 w-5 text-purple-400 group-hover:text-white transition-colors duration-300" 
-                                  })}
-                                </div>
+                                <div className="absolute inset-[2px] bg-[#0D0D18] rounded-sm"></div>
+                                {React.cloneElement(option.icon as React.ReactElement, { 
+                                  className: "h-5 w-5 text-purple-400 group-hover:text-white transition-colors duration-300" 
+                                })}
                               </div>
                               
                               <div className="flex flex-col">
