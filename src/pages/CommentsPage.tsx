@@ -35,7 +35,7 @@ const CommentsPage = () => {
 
   // Handle invalidating queries when a new comment is added
   const refreshComments = () => {
-    queryClient.invalidateQueries(['post-details', postId]);
+    queryClient.invalidateQueries({ queryKey: ['post-details', postId] });
   };
 
   const handleBackClick = () => {
@@ -154,8 +154,8 @@ const CommentsPage = () => {
   console.log('Organized comments:', organizedComments);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      <div className="flex items-center mb-6">
+    <div className="comments-page-container">
+      <div className="comments-header">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -168,75 +168,65 @@ const CommentsPage = () => {
       </div>
 
       {/* Post */}
-      <Card className="mb-6 p-4 border border-gaming-700 bg-gaming-800">
-        <div className="flex items-start mb-4">
-          <Link to={`/profile/${post.profiles.username}`}>
-            <Avatar className="h-10 w-10">
-              <AvatarImage 
-                src={post.profiles.avatar_url || ''} 
-                alt={post.profiles.username || 'User'} 
-              />
-              <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
-                {post.profiles.username?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
-          <div className="ml-3 flex-grow">
-            <Link to={`/profile/${post.profiles.username}`} className="font-medium text-white hover:underline">
-              {post.profiles.username}
+      <div className="comments-content custom-scrollbar">
+        <Card className="mb-6 p-4 border border-gaming-700 bg-gaming-800">
+          <div className="flex items-start mb-4">
+            <Link to={`/profile/${post.profiles.username}`}>
+              <Avatar className="h-10 w-10">
+                <AvatarImage 
+                  src={post.profiles.avatar_url || ''} 
+                  alt={post.profiles.username || 'User'} 
+                />
+                <AvatarFallback className="bg-gradient-to-br from-purple-700 to-blue-500 text-white">
+                  {post.profiles.username?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
             </Link>
-            <p className="text-sm text-gray-400">
-              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-            </p>
+            <div className="ml-3 flex-grow">
+              <Link to={`/profile/${post.profiles.username}`} className="font-medium text-white hover:underline">
+                {post.profiles.username}
+              </Link>
+              <p className="text-sm text-gray-400">
+                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+              </p>
+            </div>
           </div>
-        </div>
-        
-        <p className="mb-4 text-white">{post.content}</p>
-        
-        {post.image_url && (
-          <div className="relative aspect-video mb-4 overflow-hidden rounded-lg">
-            <img 
-              src={post.image_url} 
-              alt="Post" 
-              className="object-cover w-full h-full"
-            />
+          
+          <p className="mb-4 text-white">{post.content}</p>
+          
+          {post.image_url && (
+            <div className="relative aspect-video mb-4 overflow-hidden rounded-lg">
+              <img 
+                src={post.image_url} 
+                alt="Post" 
+                className="object-cover w-full h-full"
+              />
+            </div>
+          )}
+          
+          <div className="flex items-center justify-between mt-2">
+            <div className="flex space-x-4">
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                <Heart className="h-5 w-5 mr-1" />
+                <span>{post.likes_count || 0}</span>
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                <MessageCircle className="h-5 w-5 mr-1" />
+                <span>{post.comments?.length || 0}</span>
+              </Button>
+            </div>
+            <div className="flex space-x-2">
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                <Share2 className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                <Bookmark className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
-        )}
-        
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex space-x-4">
-            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-              <Heart className="h-5 w-5 mr-1" />
-              <span>{post.likes_count || 0}</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-              <MessageCircle className="h-5 w-5 mr-1" />
-              <span>{post.comments?.length || 0}</span>
-            </Button>
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-              <Share2 className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-              <Bookmark className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </Card>
+        </Card>
 
-      {/* Add Comment Form */}
-      <div className="mb-6">
-        <CommentForm 
-          postId={postId as string}
-          onReplyComplete={refreshComments}
-        />
-      </div>
-
-      {/* Comments */}
-      <div className="space-y-6">
-        <h2 className="text-lg font-medium">Comments ({post.comments?.length || 0})</h2>
-        
+        {/* Comments */}
         {organizedComments.length > 0 ? (
           <div className="space-y-4">
             {organizedComments.map(comment => (
@@ -251,15 +241,20 @@ const CommentsPage = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 bg-gaming-800 border border-gaming-700 rounded-lg">
+          <div className="text-center py-8 bg-[#1e1f2e] border border-[#3b3d4d] rounded-lg">
             <MessageCircle className="h-12 w-12 mx-auto text-gray-400 mb-2" />
             <p className="text-gray-400">No comments yet. Be the first to comment!</p>
           </div>
         )}
       </div>
 
-      {/* Add padding at the bottom for better spacing */}
-      <div className="h-12"></div>
+      {/* Comment Form at bottom */}
+      <div className="comments-input">
+        <CommentForm 
+          postId={postId as string}
+          onReplyComplete={refreshComments}
+        />
+      </div>
     </div>
   );
 };
