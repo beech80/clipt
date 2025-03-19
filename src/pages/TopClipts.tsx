@@ -41,7 +41,7 @@ const TopClipts = () => {
             <span className="text-yellow-400 mr-2">
               <Trophy className="h-6 w-6" />
             </span>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 to-purple-400 bg-clip-text text-transparent">Leaderboard</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-300 to-purple-400 bg-clip-text text-transparent">Top Clipts</h1>
           </div>
           <div className="w-10"></div> {/* Empty div for spacing */}
         </div>
