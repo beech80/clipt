@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Menu, 
@@ -63,6 +63,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const baseRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const scrollAnimationRef = useRef<number | null>(null); // For animation frame
+  const lastScrollPosition = useRef<number | null>(null); // Track last scroll position
   
   // Helper function to log to debug (console only)
   const logToDebug = (message: string) => {
@@ -80,9 +81,27 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
-  
-  // Add post detection on mount and page changes
+
   useEffect(() => {
+    // Detect when the user manually scrolls the page to keep joystick in sync
+    const handleWindowScroll = () => {
+      // Only track manual scrolling when the joystick is not in use
+      if (!isDragging && typeof lastScrollPosition.current === 'number') {
+        // Store the updated scroll position
+        lastScrollPosition.current = window.scrollY;
+      }
+    };
+
+    // Add scroll event listener for synchronization
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleWindowScroll);
+    };
+  }, [isDragging]);
+
+  useEffect(() => {
+    // Add post detection on mount and page changes
     logToDebug('Setting up post detection');
     
     // Function to ensure all posts have data-post-id attributes
@@ -675,6 +694,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     const maxDistance = baseRect.width / 3;
     
     if (distance > maxDistance) {
+      // Scale the position to stay within the max distance
       dx = (dx / distance) * maxDistance;
       dy = (dy / distance) * maxDistance;
     }
@@ -804,7 +824,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       if (joystickRef.current) {
         const transform = (joystickRef.current as HTMLDivElement).style.transform;
         if (transform) {
-          const match = transform.match(/translate\((.+?)px,\s*(.+?)px\)/);
+          // Updated regex to match translate3d format
+          const match = transform.match(/translate3d\((.+?)px,\s*(.+?)px/);
           if (match && match[2]) {
             yPosition = parseFloat(match[2]);
           }
@@ -840,20 +861,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   
   const handleScrollFromJoystick = (yPosition: number) => {
-    // Super-responsive physics-based scrolling with even better precision and feedback
-    const deadzone = 0.3; // Smaller deadzone for better responsiveness
-    const maxYPosition = 40; // Maximum expected joystick movement
-    
-    // Quick deadzone check for performance
-    if (Math.abs(yPosition) < deadzone) {
-      return; // Within deadzone - no scrolling
-    }
+    // Early return if not enabled
+    if (!isScrollingEnabled || !isDragging) return;
     
     // Don't scroll on certain pages where native scrolling is preferred
     const currentPath = location.pathname;
     if (currentPath.includes('/comments/')) {
       return; // Don't use joystick scrolling on comments page
     }
+    
+    // Define constants for calculations
+    const maxYPosition = 40; // Maximum expected joystick movement
     
     // More responsive curve with variable intensity based on joystick position
     // This creates a more natural feeling when scrolling small vs large amounts
@@ -877,6 +895,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       requestAnimationFrame(detectMostVisiblePost);
     }
     
+    // Save the current scroll position to synchronize with regular scrolling
+    const currentScrollY = window.scrollY;
+    
     // Use the newer Window.scroll() method with better performance
     window.scrollBy({
       top: scrollSpeed,
@@ -892,8 +913,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
     }
     
+    // Store the new scroll position to keep track of where we are
+    lastScrollPosition.current = window.scrollY;
+    
     // Update visual feedback for better user experience
-    updateJoystickFeedback(yPosition);
+    updateDirectionIndicators(yPosition);
   };
   
   // Additional function for enhanced visual feedback
@@ -953,7 +977,36 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
     };
   }, [isDragging, joystickPosition]);
-  
+
+  // Function to sync the joystick UI with the current scroll position
+  const syncJoystickWithScroll = useCallback(() => {
+    if (!isDragging && joystickRef.current) {
+      // Reset to center position when not dragging
+      (joystickRef.current as HTMLDivElement).style.transform = 'translate3d(0px, 0px, 0px)';
+      setJoystickPosition({ x: 0, y: 0 });
+    }
+  }, [isDragging, setJoystickPosition]);
+
+  // Call the sync function on scroll end
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+    
+    const handleScrollEnd = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        // When scrolling stops, sync the joystick position
+        syncJoystickWithScroll();
+      }, 150); // Delay to ensure scroll has fully stopped
+    };
+    
+    window.addEventListener('scroll', handleScrollEnd, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScrollEnd);
+      clearTimeout(scrollTimeout);
+    };
+  }, [syncJoystickWithScroll]);
+
   // Optimized universal action handler for faster response
   const handlePostAction = (actionType: 'like' | 'comment' | 'follow' | 'trophy') => {
     // Provide immediate visual feedback on controller button
