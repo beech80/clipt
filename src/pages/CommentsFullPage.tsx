@@ -28,6 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import '@/styles/background-pattern.css';
 
 interface Comment {
   id: string;
@@ -380,8 +381,10 @@ const CommentsFullPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#1e1f2e] text-white pb-20">
-        <div className="bg-[#1e1f2e] py-4 px-6 flex items-center sticky top-0 z-10 border-b border-[#3b3d4d] shadow-[0_4px_0_0_#000]">
+      <div className="min-h-screen bg-[#141644] text-white pb-20 relative overflow-hidden retro-bg-pattern">
+        {/* Full page background overlay */}
+        
+        <div className="bg-[#141644] py-4 px-6 flex items-center sticky top-0 z-10 border-b-4 border-[#4a4dff] shadow-[0_4px_0_0_#000] relative">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -418,8 +421,10 @@ const CommentsFullPage = () => {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-[#1e1f2e] text-white pb-20">
-        <div className="bg-[#1e1f2e] py-4 px-6 flex items-center sticky top-0 z-10 border-b border-[#3b3d4d] shadow-[0_4px_0_0_#000]">
+      <div className="min-h-screen bg-[#141644] text-white pb-20 relative overflow-hidden retro-bg-pattern">
+        {/* Full page background overlay */}
+        
+        <div className="bg-[#141644] py-4 px-6 flex items-center sticky top-0 z-10 border-b-4 border-[#4a4dff] shadow-[0_4px_0_0_#000] relative">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -448,9 +453,11 @@ const CommentsFullPage = () => {
   const totalComments = comments.length;
 
   return (
-    <div className="min-h-screen bg-[#1e1f2e] text-white pb-20 retro-game-bg">
+    <div className="min-h-screen bg-[#141644] text-white pb-20 relative overflow-hidden retro-bg-pattern">
+      {/* Full page background overlay */}
+      
       {/* Header */}
-      <div className="bg-[#1e1f2e] py-4 px-6 flex items-center sticky top-0 z-10 border-b border-[#3b3d4d] shadow-[0_4px_0_0_#000]">
+      <div className="bg-[#141644] py-4 px-6 flex items-center sticky top-0 z-10 border-b-4 border-[#4a4dff] shadow-[0_4px_0_0_#000] relative">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -473,7 +480,7 @@ const CommentsFullPage = () => {
       {/* Comments content with improved scrolling */}
       <div 
         ref={commentsContainerRef}
-        className="h-[calc(100vh-140px)] overflow-y-auto scroll-smooth px-4 hide-scrollbar bg-[#1e1f2e]"
+        className="h-[calc(100vh-140px)] overflow-y-auto scroll-smooth px-4 hide-scrollbar relative z-1"
       >
         {/* Comment Count */}
         <button 
@@ -639,7 +646,7 @@ const CommentsFullPage = () => {
       )}
 
       {/* Comment Form */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#1e1f2e] p-3 pb-5 border-t border-[#3b3d4d] shadow-[0_-4px_0_0_#000]">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#141644] p-3 pb-5 border-t-4 border-[#4a4dff] shadow-[0_-4px_0_0_#000] relative z-10">
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <Avatar className="h-10 w-10 rounded-none border-2 border-[#4a4dff]">
             <AvatarImage src={user?.user_metadata?.avatar_url || undefined} />
