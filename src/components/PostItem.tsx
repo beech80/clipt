@@ -912,30 +912,24 @@ const PostItem: React.FC<PostItemProps> = ({
           </span>
         </button>
         
-        {/* Show Share button on Clipts page, otherwise show Follow button */}
-        {onCliptsPage ? (
-          <ShareButton postId={postId} />
-        ) : (
-          user && user.id !== post.user_id && (
-            <button 
-              className="follow-button flex items-center text-sm font-medium text-gray-400 hover:text-green-500 transition-all duration-200 group"
-              onClick={handleFollow}
-            >
-              {isFollowing ? (
-                <UserCheck 
-                  className="h-6 w-6 text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
-                />
-              ) : (
-                <UserPlus 
-                  className="h-6 w-6 text-gray-400 group-hover:text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
-                />
-              )}
-              <span className={`text-base font-medium ${isFollowing ? 'text-green-500' : 'text-gray-400 group-hover:text-green-500'}`}>
-                {isFollowing ? 'Following' : 'Follow'}
-              </span>
-            </button>
-          )
-        )}
+        {/* Always show follow button regardless of page */}
+        <button 
+          className="follow-button flex items-center text-sm font-medium text-gray-400 hover:text-green-500 transition-all duration-200 group"
+          onClick={handleFollow}
+        >
+          {isFollowing ? (
+            <UserCheck 
+              className="h-6 w-6 text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
+            />
+          ) : (
+            <UserPlus 
+              className="h-6 w-6 text-gray-400 group-hover:text-green-500 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
+            />
+          )}
+          <span className={`text-base font-medium ${isFollowing ? 'text-green-500' : 'text-gray-400 group-hover:text-green-500'}`}>
+            {isFollowing ? 'Following' : 'Follow'}
+          </span>
+        </button>
 
       </div>
 
