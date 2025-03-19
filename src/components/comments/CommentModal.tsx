@@ -130,6 +130,7 @@ export const CommentModal: React.FC<CommentModalProps> = ({
     try {
       const commentData = {
         post_id: postId,
+        user_id: user.id,
         content: comment.trim(),
         parent_id: replyingTo ? replyingTo.id : null,
       };
@@ -259,7 +260,7 @@ export const CommentModal: React.FC<CommentModalProps> = ({
 
   const handleDeleteComment = async (commentId: string) => {
     try {
-      await deleteComment(commentId);
+      await deleteComment(commentId, user?.id);
       
       refetch();
       
@@ -281,86 +282,17 @@ export const CommentModal: React.FC<CommentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-full h-[95vh] sm:max-w-[900px] p-0 m-0 bg-gradient-to-b from-[#1a1b26] to-[#282a36] border-[#3b3d4d] rounded-lg overflow-hidden">
-        {/* Console-style header */}
-        <div className="bg-[#1e1f2e] px-6 py-4 border-b border-[#3b3d4d] flex items-center justify-between sticky top-0 z-10">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={onClose}
-              className="text-gray-300 hover:text-white transition-colors"
-            >
-              <ChevronLeft className="h-6 w-6" />
+      <DialogContent className="p-0 max-w-md h-[80vh] max-h-[600px] bg-[#1e1f2e] border-[#3b3d4d] text-white rounded-lg overflow-hidden">
+        <div className="flex flex-col h-full">
+          <div className="px-4 py-3 border-b border-[#3b3d4d] flex items-center gap-2">
+            <button onClick={onClose} className="text-gray-400 hover:text-white">
+              <X className="h-5 w-5" />
             </button>
-            <h2 className="text-white text-xl font-semibold tracking-wide">
-              Game Chat
-            </h2>
+            <DialogTitle className="text-xl font-bold">Comments</DialogTitle>
           </div>
           
-          <div className="flex items-center gap-3">
-            {user && (
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8 border-2 border-[#6366f1]">
-                  <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-                  <AvatarFallback className="bg-[#2d2e3d]">
-                    {user.user_metadata?.username?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-white font-medium hidden sm:block">
-                  {user.user_metadata?.username || 'User'}
-                </span>
-              </div>
-            )}
-            <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="flex h-[calc(100%-8rem)]">
-          {/* Left sidebar - would contain friends/chats in a real console UI */}
-          <div className="hidden lg:block w-64 border-r border-[#3b3d4d] p-4 bg-[#1c1d2b]">
-            <div className="mb-4">
-              <h3 className="text-gray-300 uppercase text-xs font-bold tracking-wider mb-3">
-                Active Discussions
-              </h3>
-              {post && (
-                <div className="bg-[#2d2e3d] rounded-lg p-3 mb-2 cursor-pointer border-l-4 border-indigo-500">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={post.profiles?.avatar_url || ''} />
-                      <AvatarFallback className="bg-[#3d3e4d]">
-                        {post.profiles?.username?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium text-white truncate">
-                      {post.profiles?.username}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 truncate">
-                    {post.content || 'Post content'}
-                  </p>
-                </div>
-              )}
-              <div className="bg-[#2d2e3d] rounded-lg p-3 opacity-50 cursor-not-allowed">
-                <div className="flex items-center gap-2">
-                  <div className="h-6 w-6 rounded-full bg-[#3d3e4d]"></div>
-                  <span className="text-sm font-medium text-gray-400">
-                    Other discussions
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Main chat area */}
-          <div className="flex-1 flex flex-col h-full">
-            {/* Message list with enhanced scrolling */}
-            <div className="flex-1 overflow-y-auto p-4 bg-[#1a1b26] custom-scrollbar" 
-              style={{
-                scrollBehavior: 'smooth', 
-                overscrollBehavior: 'contain'
-              }}
-            >
+          <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100% - 80px)' }}>
               {isLoading ? (
                 <div className="flex items-center justify-center h-24">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
@@ -533,7 +465,7 @@ export const CommentModal: React.FC<CommentModalProps> = ({
                                             <Textarea
                                               value={editContent}
                                               onChange={(e) => setEditContent(e.target.value)}
-                                              className="min-h-[60px] flex-1 bg-[#232433] border-[#3b3d4d] focus:border-indigo-500 rounded-lg text-white resize-none text-sm"
+                                              className="min-h-[60px] flex-1 bg-[#232433] border-[#3b3d4d] focus:border-indigo-500 rounded text-white text-sm resize-none"
                                               autoFocus
                                             />
                                             <div className="flex gap-2 mt-2 justify-end">
@@ -645,7 +577,7 @@ export const CommentModal: React.FC<CommentModalProps> = ({
             
             {/* Message input */}
             {!replyingTo && (
-              <div className="p-4 bg-[#1e1f2e] border-t border-[#3b3d4d]">
+              <div className="p-4 bg-[#1e1f2e] border-t border-[#3b3d4d] sticky bottom-0">
                 <form onSubmit={handleSubmitComment} className="flex gap-3 items-end">
                   <div className="flex-1">
                     <Textarea

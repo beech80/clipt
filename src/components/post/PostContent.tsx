@@ -220,7 +220,12 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     <div className="relative">
       {/* Media Content */}
       {videoUrl ? (
-        <div className="relative w-full h-full bg-black" style={{ aspectRatio: '16/9', maxHeight: '90vh', display: 'block' }}>
+        <div className="relative w-full h-full bg-black" style={{ 
+          aspectRatio: '16/9', 
+          maxHeight: '90vh', 
+          display: 'block', 
+          minHeight: '300px' /* Ensure a minimum height for the video container */
+        }}>
           {isMediaError ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
               <div className="text-center p-4">
