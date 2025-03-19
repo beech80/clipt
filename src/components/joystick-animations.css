@@ -17,29 +17,36 @@
   100% { box-shadow: 0 3px 8px rgba(135, 106, 245, 0.4); }
 }
 
-/* Smoother Xbox-style spring physics animation with improved elastic feel */
+/* Improved spring animation with more natural bounce and physics */
 @keyframes xbox-spring-return {
   0% { transform: translate(var(--last-x, 0), var(--last-y, 0)); box-shadow: 0 0 20px rgba(135, 106, 245, 0.6); }
-  10% { transform: translate(calc(var(--last-x, 0) * 0.7), calc(var(--last-y, 0) * 0.7)); box-shadow: 0 0 18px rgba(135, 106, 245, 0.55); }
-  20% { transform: translate(calc(var(--last-x, 0) * 0.45), calc(var(--last-y, 0) * 0.45)); box-shadow: 0 0 16px rgba(135, 106, 245, 0.5); }
-  30% { transform: translate(calc(var(--last-x, 0) * 0.25), calc(var(--last-y, 0) * 0.25)); box-shadow: 0 0 14px rgba(135, 106, 245, 0.45); }
-  40% { transform: translate(calc(var(--last-x, 0) * 0.1), calc(var(--last-y, 0) * 0.1)); box-shadow: 0 0 12px rgba(135, 106, 245, 0.4); }
-  50% { transform: translate(calc(var(--last-x, 0) * 0), calc(var(--last-y, 0) * 0)); box-shadow: 0 0 10px rgba(135, 106, 245, 0.35); }
-  60% { transform: translate(calc(var(--last-x, 0) * -0.05), calc(var(--last-y, 0) * -0.05)); box-shadow: 0 0 9px rgba(135, 106, 245, 0.3); }
-  70% { transform: translate(calc(var(--last-x, 0) * -0.03), calc(var(--last-y, 0) * -0.03)); box-shadow: 0 0 8px rgba(135, 106, 245, 0.25); }
-  80% { transform: translate(calc(var(--last-x, 0) * -0.01), calc(var(--last-y, 0) * -0.01)); box-shadow: 0 0 7px rgba(135, 106, 245, 0.2); }
-  90% { transform: translate(calc(var(--last-x, 0) * 0.005), calc(var(--last-y, 0) * 0.005)); box-shadow: 0 0 6px rgba(135, 106, 245, 0.15); }
+  15% { transform: translate(calc(var(--last-x, 0) * 0.6), calc(var(--last-y, 0) * 0.6)); box-shadow: 0 0 18px rgba(135, 106, 245, 0.55); }
+  30% { transform: translate(calc(var(--last-x, 0) * 0.25), calc(var(--last-y, 0) * 0.25)); box-shadow: 0 0 16px rgba(135, 106, 245, 0.5); }
+  45% { transform: translate(calc(var(--last-x, 0) * 0.05), calc(var(--last-y, 0) * 0.05)); box-shadow: 0 0 14px rgba(135, 106, 245, 0.45); }
+  60% { transform: translate(calc(var(--last-x, 0) * -0.03), calc(var(--last-y, 0) * -0.03)); box-shadow: 0 0 12px rgba(135, 106, 245, 0.4); }
+  75% { transform: translate(calc(var(--last-x, 0) * -0.01), calc(var(--last-y, 0) * -0.01)); box-shadow: 0 0 10px rgba(135, 106, 245, 0.35); }
+  85% { transform: translate(calc(var(--last-x, 0) * 0.005), calc(var(--last-y, 0) * 0.005)); box-shadow: 0 0 8px rgba(135, 106, 245, 0.3); }
   100% { transform: translate(0, 0); box-shadow: 0 0 5px rgba(135, 106, 245, 0.1); }
 }
 
-/* Enhanced joystick movement with physical resistance and improved performance */
+/* Enhanced joystick movement with improved smoothness */
 .joystick-handle {
-  transition: transform 0.01s cubic-bezier(0.3, 0.9, 0.2, 1), 
+  /* Use hardware acceleration for smoother movement */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  
+  /* Smooth out transition */
+  transition: transform 0.008s cubic-bezier(0.17, 0.84, 0.44, 1), 
               box-shadow 0.06s ease, 
               filter 0.06s ease;
+  
+  /* Improve performance with will-change */
   will-change: transform, box-shadow, filter;
+  
   /* Improved 3D feel with subtle shadow during movement */
   filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.7));
+  
   /* Add a subtle glow effect when moving */
   box-shadow: 0 0 12px rgba(135, 106, 245, 0.5), inset 0 0 4px rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(2px);
@@ -47,14 +54,14 @@
 
 /* Enhance touch visibility - scale up slightly when active */
 .joystick-handle:active {
-  transform: scale(1.18); /* Slightly larger scale */
+  transform: scale3d(1.18, 1.18, 1); /* Using scale3d for hardware acceleration */
   box-shadow: 0 0 25px rgba(135, 106, 245, 0.95), inset 0 0 8px rgba(255, 255, 255, 0.4);
   filter: brightness(1.4) contrast(1.1);
   transition: transform 0.04s ease-out, box-shadow 0.04s ease-out, filter 0.04s ease-out;
 }
 
 .joystick-spring-return {
-  animation: xbox-spring-return 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: xbox-spring-return 0.5s cubic-bezier(0.25, 1.2, 0.5, 1) forwards;
   /* Disable transition during spring animation */
   transition: none !important;
 }

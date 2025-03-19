@@ -447,10 +447,22 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       dy = (dy / distance) * maxDistance;
     }
     
+    // Apply some smooth interpolation for more natural movement
+    const previousX = joystickPosition.x;
+    const previousY = joystickPosition.y;
+    
+    // Smooth interpolation factor (0-1)
+    // Lower = more smoothing but more lag, higher = less smoothing but more responsive
+    const smoothingFactor = 0.7;
+    
+    // Apply smoothing
+    dx = previousX + (dx - previousX) * smoothingFactor;
+    dy = previousY + (dy - previousY) * smoothingFactor;
+    
     // Directly update DOM for immediate response
     if (joystickRef.current) {
       // Set CSS variables for animation
-      (joystickRef.current as HTMLDivElement).style.transform = `translate(${dx}px, ${dy}px)`;
+      (joystickRef.current as HTMLDivElement).style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
       
       // Override any transitions during active dragging
       (joystickRef.current as HTMLDivElement).style.transition = 'none';
@@ -532,18 +544,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       (joystickRef.current as HTMLDivElement).style.setProperty('--last-x', `${lastPosition.x}px`);
       (joystickRef.current as HTMLDivElement).style.setProperty('--last-y', `${lastPosition.y}px`);
       
+      // Force GPU acceleration for smoother animation
+      (joystickRef.current as HTMLDivElement).style.willChange = 'transform';
+      
       // Add the spring animation class
       (joystickRef.current as HTMLDivElement).classList.add('joystick-spring-return');
       
       // Directly set transform for immediate visual feedback
-      (joystickRef.current as HTMLDivElement).style.transform = 'translate(0px, 0px)';
+      (joystickRef.current as HTMLDivElement).style.transform = 'translate3d(0px, 0px, 0px)';
       
       // Remove the animation class after it completes
       setTimeout(() => {
         if (joystickRef.current) {
           (joystickRef.current as HTMLDivElement).classList.remove('joystick-spring-return');
+          // Reset willChange after animation to free up resources
+          (joystickRef.current as HTMLDivElement).style.willChange = 'auto';
         }
-      }, 550); // Match the animation duration
+      }, 500); // Match the animation duration in joystick-animations.css
     }
     
     // Return joystick to center in state
@@ -579,123 +596,110 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   
   const handleJoystickTouchStart = (e: React.TouchEvent) => {
-    // CRITICAL: These prevent statements were blocking touch events from registering properly
-    // Allow default behavior but still stop propagation to prevent other elements from capturing the event
-    // e.preventDefault(); - REMOVED
+    // Prevent default to avoid browser gestures
+    e.preventDefault();
     e.stopPropagation();
     
-    console.log('Touch start detected');
+    // Set dragging state
     setIsDragging(true);
     
-    // Initial joystick movement on first touch - ENHANCED
+    // Initial joystick movement when first touched
     if (joystickRef.current && baseRef.current && e.touches[0]) {
       const baseRect = baseRef.current.getBoundingClientRect();
       const baseCenterX = baseRect.left + baseRect.width / 2;
       const baseCenterY = baseRect.top + baseRect.height / 2;
       
-      // Calculate relative position
+      // Calculate initial position relative to center
       let dx = e.touches[0].clientX - baseCenterX;
       let dy = e.touches[0].clientY - baseCenterY;
       
-      // Log touch position for debugging
-      console.log(`Touch position: dx=${dx}, dy=${dy}`);
-      
-      // Limit movement
+      // Limit to circle
       const distance = Math.sqrt(dx * dx + dy * dy);
       const maxDistance = baseRect.width / 3;
+      
       if (distance > maxDistance) {
         dx = (dx / distance) * maxDistance;
         dy = (dy / distance) * maxDistance;
       }
       
-      // FORCEFULLY move the joystick with no transition delay
-      if (joystickRef.current) {
-        (joystickRef.current as HTMLDivElement).style.transition = 'none';
-        (joystickRef.current as HTMLDivElement).style.transform = `translate(${dx}px, ${dy}px)`;
-        
-        // Force a reflow to ensure the style changes take effect immediately
-        void (joystickRef.current as HTMLDivElement).offsetWidth;
-        
-        console.log('Applied transform:', `translate(${dx}px, ${dy}px)`);
-        
-        // Add visible highlight to ensure user sees movement
-        (joystickRef.current as HTMLDivElement).style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
-      }
+      // Immediate movement on touch
+      (joystickRef.current as HTMLDivElement).style.transition = 'none';
+      (joystickRef.current as HTMLDivElement).style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
       
-      // Update state after DOM change for consistency
+      // Update state
       setJoystickPosition({ x: dx, y: dy });
       
-      // Immediately handle scrolling
+      // Handle scroll immediately for responsive feel
       handleScrollFromJoystick(dy);
+      
+      // Update visual feedback
       updateDirectionIndicators(dy);
     }
     
-    // Clean up any existing event listeners first
+    // Clean up previous listeners
     window.removeEventListener('touchmove', handleJoystickTouchMove);
     window.removeEventListener('touchend', handleJoystickTouchEnd);
+    window.removeEventListener('touchcancel', handleJoystickTouchEnd);
     
-    // Add event listeners to window for touch movement and release
-    // CRITICAL: passive:false allows preventDefault() in the move handler
+    // Add event listeners to window
     window.addEventListener('touchmove', handleJoystickTouchMove, { passive: false });
     window.addEventListener('touchend', handleJoystickTouchEnd);
+    window.addEventListener('touchcancel', handleJoystickTouchEnd);
     
-    // Start the scroll animation loop
+    // Start the scrolling animation
     startScrollAnimation();
   };
   
   const handleJoystickTouchMove = (e: TouchEvent) => {
-    // Prevent default to stop scrolling of the page
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Early return if conditions aren't met
+    // Skip if not actively dragging or missing references
     if (!isDragging || !joystickRef.current || !baseRef.current || !e.touches[0]) {
-      console.log('Touch move conditions not met');
       return;
     }
     
-    console.log('Touch move detected');
+    // Prevent default browser behavior to avoid scrolling the page
+    e.preventDefault();
+    e.stopPropagation();
     
-    // Get joystick base position and dimensions
+    // Calculate joystick position relative to its base
+    const touch = e.touches[0];
     const baseRect = baseRef.current.getBoundingClientRect();
     const baseCenterX = baseRect.left + baseRect.width / 2;
     const baseCenterY = baseRect.top + baseRect.height / 2;
     
-    // Calculate relative position
-    let dx = e.touches[0].clientX - baseCenterX;
-    let dy = e.touches[0].clientY - baseCenterY;
+    // Get touch position relative to joystick center
+    let dx = touch.clientX - baseCenterX;
+    let dy = touch.clientY - baseCenterY;
     
-    console.log(`Touch move: dx=${dx}, dy=${dy}`);
-    
-    // Limit joystick movement to a circle with better physics feel
+    // Limit the movement to a circle
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const maxDistance = baseRect.width / 3; // Limit to 1/3 of base width
+    const maxDistance = baseRect.width / 3;
     
     if (distance > maxDistance) {
-      // Scale the position to stay within the max distance
       dx = (dx / distance) * maxDistance;
       dy = (dy / distance) * maxDistance;
     }
     
-    // FORCEFULLY update DOM for immediate response
+    // Apply some smooth interpolation for more natural movement
+    const previousX = joystickPosition.x;
+    const previousY = joystickPosition.y;
+    
+    // Smooth interpolation factor (0-1)
+    const smoothingFactor = 0.7;
+    
+    // Apply smoothing
+    dx = previousX + (dx - previousX) * smoothingFactor;
+    dy = previousY + (dy - previousY) * smoothingFactor;
+    
+    // Update joystick position with immediate DOM update
     if (joystickRef.current) {
-      // Remove any transition for immediate movement
+      (joystickRef.current as HTMLDivElement).style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
       (joystickRef.current as HTMLDivElement).style.transition = 'none';
-      (joystickRef.current as HTMLDivElement).style.transform = `translate(${dx}px, ${dy}px)`;
-      
-      // Force a reflow to ensure the style is applied immediately
-      void (joystickRef.current as HTMLDivElement).offsetWidth;
-      
-      // Add visible highlight
-      (joystickRef.current as HTMLDivElement).style.boxShadow = '0 0 15px rgba(135, 106, 245, 0.8)';
-      
-      console.log('Applied touch move transform:', `translate(${dx}px, ${dy}px)`);
     }
     
-    // Update joystick position in state
+    // Update state (though visual is already updated)
     setJoystickPosition({ x: dx, y: dy });
     
-    // Immediately trigger scroll for responsive feel
+    // Apply scrolling based on vertical movement
     handleScrollFromJoystick(dy);
     
     // Update visual indicators
@@ -703,65 +707,53 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   
   const handleJoystickTouchEnd = () => {
-    console.log('Touch end detected');
-    
-    // Store last position before resetting for spring animation
-    if (joystickRef.current) {
-      const lastPosition = { ...joystickPosition };
-      
-      // Set CSS variables for spring animation
-      (joystickRef.current as HTMLDivElement).style.setProperty('--last-x', `${lastPosition.x}px`);
-      (joystickRef.current as HTMLDivElement).style.setProperty('--last-y', `${lastPosition.y}px`);
-      
-      // Add spring return animation class
-      (joystickRef.current as HTMLDivElement).classList.add('joystick-spring-return');
-      
-      // Remove highlight
-      (joystickRef.current as HTMLDivElement).style.boxShadow = '';
-    }
-    
     // Stop dragging
     setIsDragging(false);
     
-    // Reset joystick position in state
-    setJoystickPosition({ x: 0, y: 0 });
-    
-    // Remove event listeners
+    // Prevent ghost touches by removing listeners
     window.removeEventListener('touchmove', handleJoystickTouchMove);
     window.removeEventListener('touchend', handleJoystickTouchEnd);
+    window.removeEventListener('touchcancel', handleJoystickTouchEnd);
     
-    // Stop the scrolling animation
+    // Stop scrolling animation
     stopScrollAnimation();
     
-    // Store the last position for spring animation
+    // Save current position for physics-based return animation
     const lastPosition = { ...joystickPosition };
     
-    // Apply spring return animation for touch too
+    // Apply smooth spring return animation
     if (joystickRef.current) {
       // Set CSS variables for animation
       (joystickRef.current as HTMLDivElement).style.setProperty('--last-x', `${lastPosition.x}px`);
       (joystickRef.current as HTMLDivElement).style.setProperty('--last-y', `${lastPosition.y}px`);
       
-      // Add the spring animation class
+      // Optimize rendering with GPU acceleration
+      (joystickRef.current as HTMLDivElement).style.willChange = 'transform';
+      
+      // Add spring animation class
       (joystickRef.current as HTMLDivElement).classList.add('joystick-spring-return');
       
-      // Directly set transform for immediate visual feedback
-      (joystickRef.current as HTMLDivElement).style.transform = 'translate(0px, 0px)';
+      // Set initial transform for smooth return
+      (joystickRef.current as HTMLDivElement).style.transform = 'translate3d(0px, 0px, 0px)';
       
-      // Remove the animation class after it completes
+      // Clean up after animation completes
       setTimeout(() => {
         if (joystickRef.current) {
           (joystickRef.current as HTMLDivElement).classList.remove('joystick-spring-return');
+          (joystickRef.current as HTMLDivElement).style.willChange = 'auto';
         }
-      }, 550); // Match the animation duration
+      }, 500); // Match animation duration
     }
     
-    // Return joystick to center in state
+    // Reset joystick position in state
     setJoystickPosition({ x: 0, y: 0 });
     
-    // Reset visual indicators
+    // Reset UI indicators
+    const upIndicator = document.querySelector('.joystick-up-indicator');
+    const downIndicator = document.querySelector('.joystick-down-indicator');
+    
     if (joystickRef.current) {
-      (joystickRef.current as HTMLDivElement).classList.remove(
+      joystickRef.current.classList.remove(
         'joystick-handle-up', 
         'joystick-handle-down',
         'low-intensity',
@@ -769,9 +761,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         'high-intensity'
       );
     }
-    
-    const upIndicator = document.querySelector('.joystick-up-indicator');
-    const downIndicator = document.querySelector('.joystick-down-indicator');
     
     if (upIndicator) {
       upIndicator.classList.remove('active');
@@ -782,10 +771,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       downIndicator.classList.remove('active');
       (downIndicator as HTMLElement).setAttribute('style', '--intensity: 0%');
     }
-    
-    // Remove event listeners
-    window.removeEventListener('touchmove', handleJoystickTouchMove);
-    window.removeEventListener('touchend', handleJoystickTouchEnd);
   };
   
   // Animation loop for smooth scrolling
@@ -1644,11 +1629,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                     ref={joystickRef}
                     className="joystick-handle w-14 h-14 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-[#3A3A45] absolute z-10 cursor-grab active:cursor-grabbing select-none"
                     style={{
-                      transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
+                      transform: `translate3d(${joystickPosition.x}px, ${joystickPosition.y}px, 0)`,
                       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.7)', 
                       willChange: 'transform',
                       touchAction: 'none', /* Prevent default touch actions */
-                      transition: isDragging ? 'none' : 'transform 0.05s ease-out'
+                      transition: isDragging ? 'none' : 'transform 0.08s cubic-bezier(0.17, 0.84, 0.44, 1)'
                     }}
                   >
                     {/* Realistic concave thumbstick surface */}
