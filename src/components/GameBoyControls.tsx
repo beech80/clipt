@@ -59,6 +59,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false); // Track if currently scrolling
+  const [isScrollingEnabled, setIsScrollingEnabled] = useState(true);
   const joystickRef = useRef<HTMLDivElement>(null);
   const baseRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -493,7 +494,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Immediately trigger scroll for responsive feel
     handleScrollFromJoystick(dy);
     
-    // Update visual indicators for feedback
+    // Update visual indicators
     updateDirectionIndicators(dy);
   };
   // Enhanced direction indicators with smoother transitions and variable intensity
@@ -585,7 +586,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Return joystick to center in state
     setJoystickPosition({ x: 0, y: 0 });
     
-    // Reset indicatorswith all classes for visual cleanup
+    // Reset UI indicators
     if (joystickRef.current) {
       (joystickRef.current as HTMLDivElement).classList.remove(
         'joystick-handle-up', 
@@ -608,10 +609,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       downIndicator.classList.remove('active');
       (downIndicator as HTMLElement).setAttribute('style', '--intensity: 0%');
     }
-    
-    // Remove event listeners
-    window.removeEventListener('mousemove', handleJoystickMouseMove);
-    window.removeEventListener('mouseup', handleJoystickMouseUp);
   };
   
   const handleJoystickTouchStart = (e: React.TouchEvent) => {
@@ -807,24 +804,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return;
     }
     
-    // Get timestamp for smooth animation
+    // Reset timestamp for fresh animation
     let lastTimestamp: number | null = null;
     
-    // Start the scrolling animation loop with timing control for smoother movement
+    // Animation function with improved timing
     const animateScroll = (timestamp: number) => {
       // Calculate delta time for smoother animation
       if (!lastTimestamp) lastTimestamp = timestamp;
       const deltaTime = (timestamp - lastTimestamp) / 16.67; // Normalize to 60fps
       lastTimestamp = timestamp;
       
-      // Get current joystick Y position directly from the DOM for most up-to-date value
+      // Get current joystick Y position directly
       let yPosition = joystickPosition.y;
       
-      // If the joystick ref exists, try to get the transform directly
+      // Get position from DOM for most accurate value
       if (joystickRef.current) {
         const transform = (joystickRef.current as HTMLDivElement).style.transform;
         if (transform) {
-          // Updated regex to match translate3d format
           const match = transform.match(/translate3d\((.+?)px,\s*(.+?)px/);
           if (match && match[2]) {
             yPosition = parseFloat(match[2]);
@@ -832,20 +828,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         }
       }
       
-      // Perform scrolling if needed with deltaTime for smooth consistent speed
-      if (isDragging && Math.abs(yPosition) > 0 && !location.pathname.includes('/comments/')) {
-        // Apply deltaTime to normalize speed across different frame rates
-        const normalizedYPosition = yPosition * (deltaTime || 1);
-        handleScrollFromJoystick(normalizedYPosition);
+      // Always perform scrolling when there's vertical movement, even if not dragging
+      // This is crucial for responsive joystick control
+      if (Math.abs(yPosition) > 1.5 && !location.pathname.includes('/comments/')) {
+        handleScrollFromJoystick(yPosition);
       }
       
-      // Continue the animation loop if still dragging
-      if (isDragging) {
-        scrollAnimationRef.current = requestAnimationFrame(animateScroll);
-      }
+      // Continue animation loop
+      scrollAnimationRef.current = requestAnimationFrame(animateScroll);
     };
     
-    // Start the animation loop
+    // Start the animation loop immediately
     scrollAnimationRef.current = requestAnimationFrame(animateScroll);
   };
   
@@ -861,8 +854,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   
   const handleScrollFromJoystick = (yPosition: number) => {
-    // Early return if not enabled
-    if (!isScrollingEnabled || !isDragging) return;
+    // Early return only if scrolling is explicitly disabled
+    if (!isScrollingEnabled) return;
     
     // Don't scroll on certain pages where native scrolling is preferred
     const currentPath = location.pathname;
@@ -878,106 +871,44 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
     const direction = Math.sign(normalizedPosition);
     
-    // Adaptive curve intensity - smoother at lower speeds, more acceleration at higher speeds
-    const adaptiveCurve = Math.abs(normalizedPosition) < 0.5 ? 
-      0.9 : // More linear/responsive for small movements
-      1.2;  // More acceleration for large movements
+    // Enhanced adaptive curve - even more natural feeling
+    const adaptiveCurve = Math.abs(normalizedPosition) < 0.4 ? 
+      0.8 : // More linear/responsive for small movements
+      1.5;  // Stronger acceleration for larger movements
     
     const magnitude = Math.pow(Math.abs(normalizedPosition), adaptiveCurve);
     
     // Increased base scroll speed for more immediate feedback
-    const baseScrollSpeed = 140; // Higher speed for faster scrolling
+    const baseScrollSpeed = 180; // Higher speed for faster scrolling
     const scrollSpeed = direction * magnitude * baseScrollSpeed;
     
-    // Request a post detection on the next frame if we're scrolling significantly
-    if (Math.abs(scrollSpeed) > 30) {
-      // Schedule post detection at next animation frame for perfect synchronization
+    // Immediately request a post detection for responsive UI
+    if (Math.abs(scrollSpeed) > 15) {
       requestAnimationFrame(detectMostVisiblePost);
     }
     
-    // Save the current scroll position to synchronize with regular scrolling
-    const currentScrollY = window.scrollY;
-    
-    // Use the newer Window.scroll() method with better performance
+    // Directly apply scrolling for maximum responsiveness
     window.scrollBy({
       top: scrollSpeed,
-      behavior: 'auto' // Always use auto for responsiveness
+      behavior: 'auto' // Always use auto for responsive feel
     });
     
-    // Make sure the joystick visually stays in the correct position with smoother movement
+    // Make sure the joystick visually stays in the correct position
     if (joystickRef.current) {
       const currentTransform = (joystickRef.current as HTMLDivElement).style.transform;
       if (!currentTransform || !currentTransform.includes(`${yPosition}px`)) {
         const xPos = joystickPosition.x;
-        (joystickRef.current as HTMLDivElement).style.transform = `translate(${xPos}px, ${yPosition}px)`;
+        (joystickRef.current as HTMLDivElement).style.transform = `translate3d(${xPos}px, ${yPosition}px, 0)`;
       }
     }
     
-    // Store the new scroll position to keep track of where we are
+    // Store scroll position
     lastScrollPosition.current = window.scrollY;
     
-    // Update visual feedback for better user experience
+    // Update visual feedback
     updateDirectionIndicators(yPosition);
   };
   
-  // Additional function for enhanced visual feedback
-  const updateJoystickFeedback = (yPosition: number) => {
-    const joystickHandle = joystickRef.current;
-    if (!joystickHandle) return;
-    
-    // Add intensity classes based on how far the joystick is pushed
-    const intensity = Math.abs(yPosition) / 40; // 0 to 1 range
-    
-    // Remove all existing intensity classes
-    (joystickHandle as HTMLDivElement).classList.remove('low-intensity', 'medium-intensity', 'high-intensity');
-    
-    // Add appropriate intensity class
-    if (intensity > 0.7) {
-      (joystickHandle as HTMLDivElement).classList.add('high-intensity');
-    } else if (intensity > 0.3) {
-      (joystickHandle as HTMLDivElement).classList.add('medium-intensity');
-    } else if (intensity > 0.1) {
-      (joystickHandle as HTMLDivElement).classList.add('low-intensity');
-    }
-  };
-  
-  // Enhanced continuous scrolling with adaptive frame rate for smoother experience
-  useEffect(() => {
-    let lastTimestamp = 0;
-    let animationFrameId: number;
-    
-    const scrollAnimation = (timestamp: number) => {
-      if (!isDragging) return;
-      
-      // Calculate delta time for consistent scrolling regardless of frame rate
-      const deltaTime = timestamp - lastTimestamp;
-      
-      // Only update on appropriate intervals (targeting ~60fps)
-      if (deltaTime > 16) {
-        lastTimestamp = timestamp;
-        
-        // Apply the joystick scrolling with frame-rate independent speed
-        if (joystickPosition.y !== 0 && !location.pathname.includes('/comments/')) {
-          handleScrollFromJoystick(joystickPosition.y);
-        }
-      }
-      
-      // Continue the animation loop
-      animationFrameId = requestAnimationFrame(scrollAnimation);
-    };
-    
-    if (isDragging) {
-      // Start the animation frame loop for smoother performance
-      animationFrameId = requestAnimationFrame(scrollAnimation);
-    }
-    
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [isDragging, joystickPosition]);
-
   // Function to sync the joystick UI with the current scroll position
   const syncJoystickWithScroll = useCallback(() => {
     if (!isDragging && joystickRef.current) {
@@ -1684,9 +1615,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                     style={{
                       transform: `translate3d(${joystickPosition.x}px, ${joystickPosition.y}px, 0)`,
                       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.7)', 
-                      willChange: 'transform',
+                      willChange: 'transform, box-shadow', // Optimize both properties
                       touchAction: 'none', /* Prevent default touch actions */
-                      transition: isDragging ? 'none' : 'transform 0.08s cubic-bezier(0.17, 0.84, 0.44, 1)'
+                      transition: isDragging ? 'none' : 'transform 0.15s cubic-bezier(0.17, 0.84, 0.44, 1), box-shadow 0.1s ease'
                     }}
                   >
                     {/* Realistic concave thumbstick surface */}
