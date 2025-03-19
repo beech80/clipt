@@ -1598,7 +1598,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       <div 
         className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
       >
-        <div className="bg-[#0D0D18] w-full pointer-events-auto py-3">
+        <div className="bg-[#0D0D18] w-full pointer-events-auto py-3 shadow-lg">
           <div className="flex justify-between items-center px-10 max-w-5xl mx-auto">
             
               {/* Left - Modern Xbox-style Joystick */}
