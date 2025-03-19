@@ -220,7 +220,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
     <div className="relative">
       {/* Media Content */}
       {videoUrl ? (
-        <div className="relative w-full h-full bg-black" style={{ aspectRatio: '16/9', maxHeight: '90vh' }}>
+        <div className="relative w-full h-full bg-black" style={{ aspectRatio: '16/9', maxHeight: '90vh', display: 'block' }}>
           {isMediaError ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
               <div className="text-center p-4">
@@ -254,7 +254,7 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
                 className="w-full h-full object-cover md:object-contain"
                 autoPlay={true}
                 controls={true}
-                muted={true}
+                muted={false}
                 loop={true}
               />
             </>

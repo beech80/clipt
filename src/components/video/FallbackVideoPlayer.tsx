@@ -277,6 +277,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
         playsInline
         preload="auto"
         key={`video-${postId}-${attemptCount}`}
+        style={{ display: 'block', maxWidth: '100%', width: '100%', height: '100%', objectFit: 'contain' }}
         onLoadedData={handleLoadSuccess}
         onCanPlay={handleLoadSuccess}
         onPlay={() => setShowPlayButton(false)}
