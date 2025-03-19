@@ -210,6 +210,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     let animationFrameId: number | null = null;
     let lastScrollY = window.scrollY;
     let scrollTimer: number | null = null;
+    let lastJoystickDirection = 0;
+    let lastPostIndex = -1;
     
     const runAnimationLoop = () => {
       // Get current joystick position
@@ -217,7 +219,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       // Check for joystick movement
       if (Math.abs(yPosition) > 1.5 && !location.pathname.includes('/comments/')) {
-        handleScrollFromJoystick(yPosition);
+        const currentDirection = Math.sign(yPosition);
+        
+        // Check if direction changed, reset last post index
+        if (currentDirection !== lastJoystickDirection && currentDirection !== 0) {
+          lastJoystickDirection = currentDirection;
+          lastPostIndex = -1;
+        }
+        
+        // Use post-by-post scrolling for more controlled navigation
+        if (Math.abs(yPosition) > 5) { // Only act on more intentional movements
+          handlePostByPostScrolling(currentDirection);
+        } else {
+          // For very small movements, use regular scrolling logic
+          handleScrollFromJoystick(yPosition);
+        }
         
         // Check if user has released joystick but page is still scrolling
         if (Math.abs(yPosition) < 2 && Math.abs(window.scrollY - lastScrollY) > 5) {
@@ -225,7 +241,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           if (scrollTimer) clearTimeout(scrollTimer);
           scrollTimer = window.setTimeout(() => {
             // Find nearest post to snap to after scrolling stops
-            snapToNearestPost();
+            handlePostByPostScrolling(0); // 0 means stay on current post
           }, 300);
         }
       }
@@ -237,67 +253,109 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       animationFrameId = requestAnimationFrame(runAnimationLoop);
     };
     
-    // Helper to snap to the nearest post center after scrolling
-    const snapToNearestPost = () => {
-      const posts = document.querySelectorAll('[data-post-id]');
+    // New function to handle scrolling post by post
+    const handlePostByPostScrolling = (direction: number) => {
+      // Find all posts
+      const posts = Array.from(document.querySelectorAll('[data-post-id]'));
       if (!posts.length) return;
       
-      let closestPost = null;
-      let minDistance = Infinity;
-      const viewportCenter = window.innerHeight / 2;
-      
       // Find the post closest to the center of the viewport
-      posts.forEach(post => {
+      const viewportCenter = window.innerHeight / 2;
+      let closestPostIndex = 0;
+      let minDistance = Infinity;
+      
+      posts.forEach((post, index) => {
         const rect = post.getBoundingClientRect();
         const postCenter = rect.top + (rect.height / 2);
         const distance = Math.abs(postCenter - viewportCenter);
         
         if (distance < minDistance) {
           minDistance = distance;
-          closestPost = post;
+          closestPostIndex = index;
         }
       });
       
-      // Determine first and last post for boundary checking
-      const firstPost = posts[0];
-      const lastPost = posts[posts.length - 1];
-      const firstPostRect = firstPost.getBoundingClientRect();
-      const lastPostRect = lastPost.getBoundingClientRect();
-      
-      // If last post is partially visible and below center, snap to it
-      if (lastPostRect.top < viewportCenter && lastPostRect.bottom < window.innerHeight * 1.2) {
-        closestPost = lastPost;
-      }
-      
-      // If first post is partially visible and above center, snap to it
-      if (firstPostRect.bottom > viewportCenter && firstPostRect.top > -window.innerHeight * 0.2) {
-        closestPost = firstPost;
-      }
-      
-      // Snap to the closest post if it's within a reasonable distance
-      if (closestPost) {
-        const rect = closestPost.getBoundingClientRect();
-        const postCenter = rect.top + (rect.height / 2);
-        let scrollAdjustment = postCenter - viewportCenter;
+      // Check if we've already processed this post index
+      if (lastPostIndex === closestPostIndex && direction !== 0) {
+        // Already processed this post, move to next/prev post
+        const targetIndex = closestPostIndex + direction;
         
-        // Special case for last post: Always try to show it completely
-        if (closestPost === lastPost && lastPostRect.bottom < window.innerHeight) {
-          // If last post fits on screen, align it to bottom edge
-          const spaceBelow = window.innerHeight - lastPostRect.bottom;
-          if (spaceBelow > 0) {
-            scrollAdjustment = -spaceBelow; // Scroll down exactly to edge
+        // Ensure target index is within bounds
+        if (targetIndex >= 0 && targetIndex < posts.length) {
+          const targetPost = posts[targetIndex];
+          scrollToPost(targetPost);
+          lastPostIndex = targetIndex;
+        } else if (targetIndex < 0) {
+          // Trying to scroll before first post
+          scrollToPost(posts[0]);
+          lastPostIndex = 0;
+        } else if (targetIndex >= posts.length) {
+          // Trying to scroll after last post
+          scrollToPost(posts[posts.length - 1]);
+          lastPostIndex = posts.length - 1;
+        }
+      } else {
+        // First time seeing this post, update and center it
+        lastPostIndex = closestPostIndex;
+        
+        // If joystick is pushed strongly, immediately move to next post
+        if (Math.abs(joystickPosition.y) > 25 && direction !== 0) {
+          const targetIndex = closestPostIndex + direction;
+          if (targetIndex >= 0 && targetIndex < posts.length) {
+            scrollToPost(posts[targetIndex]);
+            lastPostIndex = targetIndex;
           }
+        } else {
+          // Otherwise, center the current post
+          scrollToPost(posts[closestPostIndex]);
         }
-        
-        // Special case for first post: Always show it from the top
-        if (closestPost === firstPost && firstPostRect.top > 0) {
-          scrollAdjustment = firstPostRect.top; // Scroll up exactly to top
+      }
+    };
+    
+    // Helper to scroll to a specific post
+    const scrollToPost = (post: Element) => {
+      const rect = post.getBoundingClientRect();
+      const postCenter = rect.top + (rect.height / 2);
+      const viewportCenter = window.innerHeight / 2;
+      const scrollAdjustment = postCenter - viewportCenter;
+      
+      // Handle special cases for first and last posts
+      const posts = document.querySelectorAll('[data-post-id]');
+      const isFirstPost = post === posts[0];
+      const isLastPost = post === posts[posts.length - 1];
+      
+      if (isFirstPost && rect.top > 0) {
+        // First post - align to top
+        window.scrollBy({
+          top: rect.top,
+          behavior: 'smooth'
+        });
+      } else if (isLastPost && rect.bottom < window.innerHeight) {
+        // Last post - ensure it's visible at bottom
+        const spaceBelow = window.innerHeight - rect.bottom;
+        if (spaceBelow > 0) {
+          window.scrollBy({
+            top: -spaceBelow,
+            behavior: 'smooth'
+          });
+        } else {
+          window.scrollBy({
+            top: scrollAdjustment,
+            behavior: 'smooth'
+          });
         }
-        
+      } else {
+        // Normal post - center it
         window.scrollBy({
           top: scrollAdjustment,
           behavior: 'smooth'
         });
+      }
+      
+      // Update current post ID
+      const postId = post.getAttribute('data-post-id');
+      if (postId) {
+        setCurrentPostId(postId);
       }
     };
     
@@ -541,7 +599,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Immediately trigger scroll for responsive feel
     handleScrollFromJoystick(dy);
     
-    // Update visual indicators
+    // Update visual feedback
     updateDirectionIndicators(dy);
   };
   // Enhanced direction indicators with smoother transitions and variable intensity
@@ -553,7 +611,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (joystickHandle && upIndicator && downIndicator) {
       // Normalize the position to calculate intensity (0-100%)
       const maxYPosition = 40; // Maximum expected joystick movement
-      const intensity = Math.min(Math.abs(yPosition) / maxYPosition * 100, 100);
       
       // Apply intensity as a CSS variable for smoother visual feedback
       const direction = yPosition < 0 ? 'up' : yPosition > 0 ? 'down' : 'neutral';
@@ -572,16 +629,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         joystickHandle.classList.add('joystick-handle-up');
         
         // Apply intensity as a CSS variable while preserving transform
-        (upIndicator as HTMLElement).style.setProperty('--intensity', `${intensity}%`);
-        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', `${intensity}%`);
+        (upIndicator as HTMLElement).style.setProperty('--intensity', `${Math.abs(yPosition) / maxYPosition * 100}%`);
+        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', `${Math.abs(yPosition) / maxYPosition * 100}%`);
       } else if (direction === 'down' && Math.abs(yPosition) > 2) {
         // Moving down with variable intensity
         downIndicator.classList.add('active');
         joystickHandle.classList.add('joystick-handle-down');
         
         // Apply intensity as a CSS variable while preserving transform
-        (downIndicator as HTMLElement).style.setProperty('--intensity', `${intensity}%`);
-        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', `${intensity}%`);
+        (downIndicator as HTMLElement).style.setProperty('--intensity', `${Math.abs(yPosition) / maxYPosition * 100}%`);
+        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', `${Math.abs(yPosition) / maxYPosition * 100}%`);
       } else {
         // Neutral position - reset intensity but keep transform
         (joystickHandle as HTMLElement).style.setProperty('--move-intensity', '0%');
