@@ -310,130 +310,80 @@ const PostItem: React.FC<PostItemProps> = ({
   };
 
   const handleTrophyVote = async (e: React.MouseEvent) => {
-    // Prevent event propagation to avoid triggering parent elements
     e.stopPropagation();
-    e.preventDefault();
     
     if (!user) {
-      toast.error('Please sign in to vote');
+      toast.error("Login to vote for this clip");
       return;
     }
-
-    if (!postId) {
-      console.error('Cannot vote on post with no ID');
-      toast.error('Cannot vote on this post');
-      return;
-    }
-
-    // If we're already processing, don't allow another click
-    if (trophyLoading) {
-      return;
-    }
-
+    
+    if (trophyLoading) return;
+    
+    setTrophyLoading(true);
+    
     try {
-      setTrophyLoading(true);
-      console.log('Trophy vote attempt for post:', postId);
-
-      // Check if the user has already voted (simplified query)
-      const { data: existingVotes, error: checkError } = await supabase
+      console.log(`Voting for post ${postId} with trophy`);
+      
+      // First, check if user has already voted
+      const { data: existingVote, error: checkError } = await supabase
         .from('clip_votes')
         .select('id')
         .eq('post_id', postId)
-        .eq('user_id', user.id);
-        
-      if (checkError) {
-        console.error('Error checking for existing trophy:', checkError);
-        toast.error('Could not check trophy status');
-        return;
-      }
+        .eq('user_id', user.id)
+        .maybeSingle();
       
-      const hasVote = existingVotes && existingVotes.length > 0;
-      console.log('Current trophy status:', hasVote ? 'Has trophy' : 'No trophy');
+      if (checkError) throw checkError;
       
-      if (hasVote) {
-        // Remove the trophy
-        console.log('Removing trophy from post', postId);
+      if (existingVote) {
+        // Remove vote
         const { error: removeError } = await supabase
           .from('clip_votes')
           .delete()
-          .eq('post_id', postId)
-          .eq('user_id', user.id);
-          
-        if (removeError) {
-          console.error('Error removing trophy:', removeError);
-          toast.error('Failed to remove trophy');
-          return;
-        }
+          .eq('id', existingVote.id);
         
-        console.log('Trophy successfully removed');
-        toast.success('Trophy removed');
+        if (removeError) throw removeError;
+        
         setHasTrophy(false);
         setTrophyCount(prev => Math.max(0, prev - 1));
+        
+        // Also follow the post creator automatically
+        handleFollow();
+        
       } else {
-        // Add a trophy
-        console.log('Adding trophy to post', postId, 'by user', user.id);
-        
-        // Create a properly formatted trophy vote object
-        const voteObject = {
-          post_id: postId,
-          user_id: user.id,
-          created_at: new Date().toISOString()
-        };
-        
-        console.log('Trophy vote object:', voteObject);
-        
-        const { data: insertData, error: addError } = await supabase
+        // Add vote
+        const { error: addError } = await supabase
           .from('clip_votes')
-          .insert(voteObject)
-          .select();
-          
-        if (addError) {
-          console.error('Error adding trophy:', addError.message, addError.details, addError.hint);
-          toast.error('Failed to add trophy: ' + addError.message);
-          return;
-        }
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            created_at: new Date().toISOString()
+          });
         
-        console.log('Trophy added successfully, response:', insertData);
-        toast.success('Trophy awarded!');
+        if (addError) throw addError;
+        
         setHasTrophy(true);
         setTrophyCount(prev => prev + 1);
+        
+        // Also follow the post creator automatically
+        handleFollow();
       }
       
-      // Get fresh count after operation to ensure accuracy
-      const { count, error: countError } = await supabase
-        .from('clip_votes')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', postId);
-        
-      if (!countError) {
-        console.log('Updated trophy count for post', postId, ':', count);
-        setTrophyCount(count || 0);
-        
-        // Dispatch trophy update event
-        const detail = {
+      // Invalidate cache for this post
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      
+      // Dispatch trophy update event
+      const trophyUpdateEvent = new CustomEvent('trophy-update', {
+        detail: {
           postId,
-          count: count || 0,
-          active: !hasVote
-        };
-        console.log('Dispatching trophy update event:', detail);
-        
-        window.dispatchEvent(new CustomEvent('trophy-update', { detail }));
-        
-        // Additional event for global count updates with short delay
-        setTimeout(() => {
-          console.log('Dispatching global trophy count update');
-          window.dispatchEvent(new Event('trophy-count-update'));
-        }, 200);
-      } else {
-        console.error('Error getting updated count:', countError);
-      }
+          count: trophyCount + (hasTrophy ? -1 : 1),
+          active: !hasTrophy
+        }
+      });
+      window.dispatchEvent(trophyUpdateEvent);
       
     } catch (error) {
-      console.error('Error handling trophy vote:', error);
-      if (error instanceof Error) {
-        console.error('Error details:', error.message, error.stack);
-      }
-      toast.error('An error occurred with trophy voting');
+      console.error("Error voting for clip:", error);
+      toast.error("Failed to update vote");
     } finally {
       setTrophyLoading(false);
     }
