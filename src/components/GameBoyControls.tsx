@@ -258,11 +258,41 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         }
       });
       
+      // Determine first and last post for boundary checking
+      const firstPost = posts[0];
+      const lastPost = posts[posts.length - 1];
+      const firstPostRect = firstPost.getBoundingClientRect();
+      const lastPostRect = lastPost.getBoundingClientRect();
+      
+      // If last post is partially visible and below center, snap to it
+      if (lastPostRect.top < viewportCenter && lastPostRect.bottom < window.innerHeight * 1.2) {
+        closestPost = lastPost;
+      }
+      
+      // If first post is partially visible and above center, snap to it
+      if (firstPostRect.bottom > viewportCenter && firstPostRect.top > -window.innerHeight * 0.2) {
+        closestPost = firstPost;
+      }
+      
       // Snap to the closest post if it's within a reasonable distance
-      if (closestPost && minDistance < window.innerHeight * 0.4) {
+      if (closestPost) {
         const rect = closestPost.getBoundingClientRect();
         const postCenter = rect.top + (rect.height / 2);
-        const scrollAdjustment = postCenter - viewportCenter;
+        let scrollAdjustment = postCenter - viewportCenter;
+        
+        // Special case for last post: Always try to show it completely
+        if (closestPost === lastPost && lastPostRect.bottom < window.innerHeight) {
+          // If last post fits on screen, align it to bottom edge
+          const spaceBelow = window.innerHeight - lastPostRect.bottom;
+          if (spaceBelow > 0) {
+            scrollAdjustment = -spaceBelow; // Scroll down exactly to edge
+          }
+        }
+        
+        // Special case for first post: Always show it from the top
+        if (closestPost === firstPost && firstPostRect.top > 0) {
+          scrollAdjustment = firstPostRect.top; // Scroll up exactly to top
+        }
         
         window.scrollBy({
           top: scrollAdjustment,
@@ -271,7 +301,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
     };
     
-    // Start animation loop
+    // Start the animation loop immediately
     animationFrameId = requestAnimationFrame(runAnimationLoop);
     
     // Clean up on unmount
@@ -298,6 +328,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Define constants for calculations
     const maxYPosition = 40; // Maximum expected joystick movement
     
+    // Scroll boundary detection - prevent scrolling past content
+    const scrollTop = window.scrollY;
+    const scrollHeight = document.documentElement.scrollHeight;
+    const clientHeight = document.documentElement.clientHeight;
+    const maxScroll = scrollHeight - clientHeight;
+    
+    // Check if we're at the boundary and prevent scrolling further in that direction
+    const atTop = scrollTop <= 0;
+    const atBottom = scrollTop >= maxScroll - 10; // Add a small buffer
+    
+    // Prevent scrolling up if at top or down if at bottom
+    if ((yPosition < 0 && atTop) || (yPosition > 0 && atBottom)) {
+      return;
+    }
+    
     // More responsive curve with variable intensity based on joystick position
     // This creates a more natural feeling when scrolling small vs large amounts
     const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
@@ -319,10 +364,43 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       scrollSpeed *= 0.5; // Further reduce for very small movements
     }
     
-    // Check if we're close to the center of a post - if so, slow down scrolling
+    // Get all posts on page for boundary detection
     const posts = document.querySelectorAll('[data-post-id]');
+    if (posts.length === 0) return; // No posts, no scrolling
+    
+    // Check if we're close to the center of a post - if so, slow down scrolling
     const viewportCenter = window.innerHeight / 2;
     
+    // Determine first and last post
+    const firstPost = posts[0];
+    const lastPost = posts[posts.length - 1];
+    
+    // Get positions of first and last posts
+    const firstPostRect = firstPost.getBoundingClientRect();
+    const lastPostRect = lastPost.getBoundingClientRect();
+    
+    // Check if we're trying to scroll past first or last post
+    if (direction < 0 && firstPostRect.top > -50 && firstPostRect.top < 100) {
+      // First post is near top, reduce scrolling speed significantly
+      scrollSpeed *= 0.3;
+      
+      // If very close to top position, stop scrolling up
+      if (firstPostRect.top > 0 && firstPostRect.top < 60) {
+        scrollSpeed = Math.min(scrollSpeed, 0); // Only allow scrolling down
+      }
+    }
+    
+    if (direction > 0 && lastPostRect.bottom < window.innerHeight + 50 && lastPostRect.bottom > window.innerHeight - 100) {
+      // Last post is near bottom, reduce scrolling speed significantly
+      scrollSpeed *= 0.3;
+      
+      // If very close to bottom position, stop scrolling down
+      if (lastPostRect.bottom < window.innerHeight && lastPostRect.bottom > window.innerHeight - 60) {
+        scrollSpeed = Math.max(scrollSpeed, 0); // Only allow scrolling up
+      }
+    }
+    
+    // Check for posts near center to create "magnetic" effect
     for (let i = 0; i < posts.length; i++) {
       const post = posts[i];
       const rect = post.getBoundingClientRect();
@@ -339,7 +417,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Always do post detection for responsive UI
     detectMostVisiblePost();
     
-    // Directly apply scrolling for maximum responsiveness
+    // Apply scrolling with boundary awareness
     window.scrollBy({
       top: scrollSpeed,
       behavior: 'auto' // Always use auto for responsive feel
