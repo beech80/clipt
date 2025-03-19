@@ -844,7 +844,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Request a post detection on the next frame if we're scrolling significantly
     if (Math.abs(scrollSpeed) > 30) {
       // Schedule post detection at next animation frame for perfect synchronization
-      requestAnimationFrame(detectAndSelectCurrentPost);
+      requestAnimationFrame(detectMostVisiblePost);
     }
     
     // Use the newer Window.scroll() method with better performance
@@ -1204,6 +1204,81 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
   
+  // Direct API follow when button click fails
+  const handleDirectFollow = async (postId: string) => {
+    try {
+      logToDebug('Attempting direct API follow for post: ' + postId);
+      
+      const { data: currentUser } = await supabase.auth.getUser();
+      const userId = currentUser?.user?.id;
+      
+      if (!userId) {
+        toast.error('You need to be logged in to follow users');
+        return;
+      }
+      
+      // First, get the post to find the creator's ID
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', postId)
+        .single();
+      
+      if (postError || !postData) {
+        console.error('Error fetching post data:', postError);
+        toast.error('Error finding post creator');
+        return;
+      }
+      
+      const creatorId = postData.user_id;
+      
+      if (creatorId === userId) {
+        toast.info('You cannot follow yourself');
+        return;
+      }
+      
+      // Check if already following
+      const { data: existingFollow, error: followError } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('follower_id', userId)
+        .eq('following_id', creatorId)
+        .maybeSingle();
+      
+      if (followError) {
+        console.error('Error checking follow status:', followError);
+      }
+      
+      if (existingFollow) {
+        // Already following, show a message but keep the follow
+        toast.success('Already following this creator');
+      } else {
+        // Follow the creator
+        await supabase
+          .from('follows')
+          .insert({
+            follower_id: userId,
+            following_id: creatorId,
+            created_at: new Date().toISOString()
+          });
+          
+        toast.success('Now following this creator');
+      }
+      
+      // Trigger a refresh for the post's follow status
+      document.dispatchEvent(new CustomEvent('refresh-follow-status', {
+        detail: { userId: creatorId }
+      }));
+      
+      // Invalidate any React Query caches
+      queryClient.invalidateQueries({ queryKey: ['follows'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', creatorId] });
+    } catch (error) {
+      console.error('Error following user:', error);
+      toast.error('Failed to follow user');
+    }
+  };
+  
   // Individual action handlers that use the universal handler
   const handleLike = () => handlePostAction('like');
   const handleComment = () => {
@@ -1244,7 +1319,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }, 1000);
     }
   };
-  const handleFollow = () => handlePostAction('follow');
+  const handleFollow = () => {
+    // Try the universal approach first
+    handlePostAction('follow');
+    
+    // Get the current post ID with improved reliability
+    const detectedPostId = detectMostVisiblePost();
+    const targetPostId = detectedPostId || currentPostId;
+    
+    if (targetPostId) {
+      // If the post is found but the button click failed, try direct API follow
+      setTimeout(() => {
+        handleDirectFollow(targetPostId);
+      }, 500);
+    } else {
+      toast.error('No post selected. Try scrolling to a post first.');
+    }
+  };
   const handleTrophy = () => handlePostAction('trophy');
 
   // Enhanced comment button handler
