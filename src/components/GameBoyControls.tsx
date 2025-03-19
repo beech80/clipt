@@ -7,6 +7,7 @@ import {
   MessageCircle, 
   Trophy, 
   UserPlus, 
+  UserCheck,
   X, 
   Home, 
   Search, 
@@ -52,6 +53,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | undefined>(undefined);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
   
   // Joystick states
   const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
@@ -337,7 +339,39 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       clearInterval(intervalId);
     };
   }, [currentPath]);
-  
+
+  useEffect(() => {
+    // Add post detection on each navigation
+    if (currentPath !== location.pathname) {
+      setCurrentPath(location.pathname);
+      console.log('Path changed to:', location.pathname);
+      
+      // Reset current post ID when navigating away from posts page
+      if (!location.pathname.includes('/post/') && !location.pathname.includes('/clipts')) {
+        setCurrentPostId(null);
+      }
+    }
+    
+    // Check for current post at regular intervals when on relevant pages
+    const shouldDetectPosts = location.pathname.includes('/clipts') || 
+                              location.pathname.includes('/top-clipts') || 
+                              location.pathname.includes('/discover') || 
+                              location.pathname === '/';
+    
+    if (shouldDetectPosts) {
+      const timer = setInterval(() => {
+        const detectedPostId = detectMostVisiblePost();
+        if (detectedPostId && detectedPostId !== currentPostId) {
+          setCurrentPostId(detectedPostId);
+          // Check follow status whenever current post changes
+          checkFollowStatus(detectedPostId);
+        }
+      }, 1000); // Check every second for post changes
+      
+      return () => clearInterval(timer);
+    }
+  }, [location, currentPath]);
+
   // Joystick movement handlers
   const handleJoystickMouseDown = (e: React.MouseEvent) => {
     // Prevent default actions and bubbling
@@ -970,8 +1004,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           logToDebug(`Found target post with selector: ${selector}`);
           break;
         }
-      } catch (error) {
-        console.error(`Error finding target post with selector:`, selector, error);
+      } catch (err) {
+        console.error(`Error finding target post with selector:`, selector, err);
       }
     }
     
@@ -1250,11 +1284,24 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       if (existingFollow) {
-        // Already following, show a message but keep the follow
-        toast.success('Already following this creator');
+        // Already following, so unfollow
+        const { error: unfollowError } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', userId)
+          .eq('following_id', creatorId);
+          
+        if (unfollowError) {
+          console.error('Error unfollowing user:', unfollowError);
+          toast.error('Failed to unfollow user');
+          return;
+        }
+          
+        toast.success('Unfollowed creator');
+        setIsFollowing(false);
       } else {
         // Follow the creator
-        await supabase
+        const { error: followInsertError } = await supabase
           .from('follows')
           .insert({
             follower_id: userId,
@@ -1262,7 +1309,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             created_at: new Date().toISOString()
           });
           
+        if (followInsertError) {
+          console.error('Error following user:', followInsertError);
+          toast.error('Failed to follow user');
+          return;
+        }
+          
         toast.success('Now following this creator');
+        setIsFollowing(true);
       }
       
       // Trigger a refresh for the post's follow status
@@ -1279,6 +1333,43 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
   
+  // Check if user is following a post creator
+  const checkFollowStatus = async (postId: string) => {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      const userId = currentUser?.user?.id;
+      
+      if (!userId) return false;
+      
+      // First, get the post creator's ID
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', postId)
+        .single();
+      
+      if (postError || !postData) return false;
+      
+      const creatorId = postData.user_id;
+      
+      // Check if already following
+      const { data: existingFollow, error: followError } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('follower_id', userId)
+        .eq('following_id', creatorId)
+        .maybeSingle();
+      
+      if (followError) return false;
+      
+      setIsFollowing(!!existingFollow);
+      return !!existingFollow;
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      return false;
+    }
+  };
+
   // Individual action handlers that use the universal handler
   const handleLike = () => handlePostAction('like');
   const handleComment = () => {
@@ -1328,6 +1419,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     const targetPostId = detectedPostId || currentPostId;
     
     if (targetPostId) {
+      // Update follow status for UI feedback
+      checkFollowStatus(targetPostId);
+      
       // If the post is found but the button click failed, try direct API follow
       setTimeout(() => {
         handleDirectFollow(targetPostId);
@@ -1717,13 +1811,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   <Trophy className="text-yellow-500 h-5 w-5" />
                 </button>
                 
-                {/* Bottom button (Follow) */}
+                {/* Bottom button (Follow/Unfollow) */}
                 <button 
                   data-action="follow"
                   onClick={handleFollow}
                   className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-green-500 flex items-center justify-center"
                 >
-                  <UserPlus className="text-green-500 h-5 w-5" />
+                  {isFollowing ? (
+                    <UserCheck className="text-green-500 h-5 w-5" />
+                  ) : (
+                    <UserPlus className="text-green-500 h-5 w-5" />
+                  )}
                 </button>
               </div>
               
