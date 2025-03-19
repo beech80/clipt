@@ -14,6 +14,7 @@ interface Game {
   name: string;
   cover_url?: string;
   external?: boolean;
+  created_at?: string;
 }
 
 interface Post {
@@ -67,10 +68,10 @@ const GameDetailsPage = () => {
       // First try searching in our database
       const { data: dbData, error: dbError } = await supabase
         .from('games')
-        .select('id, name')
+        .select('id, name, created_at')
         .ilike('name', `%${term}%`)
-        .order('name')
-        .limit(10);
+        .order('created_at', { ascending: false }) // Show most recent games first
+        .limit(20); // Increased limit for more comprehensive results
         
       if (dbError) throw dbError;
       
@@ -78,7 +79,7 @@ const GameDetailsPage = () => {
       const dbResults = dbData || [];
       
       // If we have few results, try to augment with IGDB results
-      if (dbResults.length < 5) {
+      if (dbResults.length < 10) {
         try {
           // Import IGDB service dynamically
           const { igdbService } = await import('@/services/igdbService');
@@ -196,7 +197,12 @@ const GameDetailsPage = () => {
         const { data: postsData, error: postsError } = await supabase
           .from('posts')
           .select(`
-            id, image_url, video_url, created_at, user_id,
+            id,
+            content,
+            created_at,
+            user_id,
+            image_url,
+            video_url,
             profiles (username, display_name, avatar_url)
           `)
           .eq('game_id', id)
@@ -213,36 +219,45 @@ const GameDetailsPage = () => {
           created_at: post.created_at,
           user_id: post.user_id,
           media_url: post.video_url || post.image_url,
-          profiles: post.profiles,
+          profiles: post.profiles as {
+            username?: string;
+            display_name?: string;
+            avatar_url?: string;
+          },
           game_id: id
         }));
         
         setPosts(transformedPosts);
 
         // Fetch streamers playing this game
-        const { data: streamersData, error: streamersError } = await supabase
-          .from('profiles')
-          .select('id, username, display_name, avatar_url, is_live, current_game')
-          .eq('current_game', id)
-          .eq('is_live', true)
-          .order('follower_count', { ascending: false });
-
-        if (streamersError) {
-          console.error('Error fetching streamers:', streamersError);
-          throw streamersError;
+        try {
+          const { data: streamersData, error: streamersError } = await supabase
+            .from('profiles')
+            .select('id, username, display_name, avatar_url, is_live, current_game');
+            
+          // Use more specific typing and handle errors
+          if (streamersError) {
+            console.error('Error fetching streamers:', streamersError);
+            setStreamers([]);
+          } else {
+            // Filter streamers who are playing this game
+            const relevantStreamers = (streamersData || [])
+              .filter(streamer => streamer.current_game === id)
+              .map(streamer => ({
+                id: String(streamer.id),
+                username: String(streamer.username || ''),
+                display_name: String(streamer.display_name || ''),
+                avatar_url: streamer.avatar_url,
+                is_live: Boolean(streamer.is_live),
+                current_game: streamer.current_game
+              }));
+            
+            setStreamers(relevantStreamers);
+          }
+        } catch (streamerErr) {
+          console.error('Error processing streamers:', streamerErr);
+          setStreamers([]);
         }
-
-        // Ensure type safety by mapping to Streamer interface
-        const typedStreamers: Streamer[] = streamersData?.map(streamer => ({
-          id: streamer.id,
-          username: streamer.username,
-          display_name: streamer.display_name,
-          avatar_url: streamer.avatar_url,
-          is_live: streamer.is_live,
-          current_game: streamer.current_game
-        })) || [];
-        
-        setStreamers(typedStreamers);
         
       } catch (err) {
         console.error('Error fetching game details:', err);
@@ -335,7 +350,7 @@ const GameDetailsPage = () => {
                 placeholder="Search for games..."
                 value={searchTerm}
                 onChange={handleSearchChange}
-                className="w-full pr-10 pl-4 py-2 bg-indigo-950/60 border-indigo-600/40 text-white"
+                className="w-full pr-10 pl-4 py-2 bg-indigo-950/60 border-indigo-600/40 text-white rounded-lg"
                 autoFocus
               />
               <button
@@ -348,11 +363,18 @@ const GameDetailsPage = () => {
             
             {/* Search results - only showing game names */}
             {searchTerm.trim().length > 0 && (
-              <div className="absolute w-full z-20 mt-1 bg-indigo-950 border border-indigo-600/40 rounded-md shadow-lg max-h-80 overflow-y-auto">
+              <div className="absolute w-full z-20 mt-1 bg-indigo-950 border border-indigo-600/40 rounded-md shadow-lg max-h-96 overflow-y-auto">
                 {searchLoading ? (
-                  <div className="p-4 text-center text-sm">Searching...</div>
+                  <div className="p-4 text-center text-sm">
+                    <div className="animate-pulse flex space-x-4 justify-center">
+                      <div className="h-3 w-3 bg-indigo-400 rounded-full"></div>
+                      <div className="h-3 w-3 bg-indigo-400 rounded-full"></div>
+                      <div className="h-3 w-3 bg-indigo-400 rounded-full"></div>
+                    </div>
+                    <p className="mt-2">Searching...</p>
+                  </div>
                 ) : searchResults.length > 0 ? (
-                  <div>
+                  <div className="max-h-96 overflow-y-auto">
                     {searchResults.map(game => (
                       <GameSearchResult
                         key={game.id}

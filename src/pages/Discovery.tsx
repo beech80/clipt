@@ -114,7 +114,7 @@ const Discovery = () => {
             posts (id),
             created_at
           `)
-          .order('created_at', { ascending: false }); // Order by most recent
+          .order('created_at', { ascending: false }); // Order by most recent first
         
         // Apply search filter if provided
         if (searchTerm) {
@@ -122,7 +122,7 @@ const Discovery = () => {
         }
         
         console.log('Executing Supabase query for games search');
-        const { data, error } = await query.limit(20); // Increased limit from default
+        const { data, error } = await query.limit(50); // Increased limit to find more games
         
         if (error) {
           console.error('Supabase games query error:', error);
@@ -131,15 +131,19 @@ const Discovery = () => {
         
         console.log('Supabase games search results:', data?.length || 0);
         
-        // Remove duplicate games by name
+        // Remove duplicate games by name but preserve the most recent ones
         const uniqueGamesMap = new Map();
         data?.forEach(game => {
-          if (!uniqueGamesMap.has(game.name.toLowerCase())) {
+          if (!uniqueGamesMap.has(game.name.toLowerCase()) || 
+              new Date(game.created_at) > new Date(uniqueGamesMap.get(game.name.toLowerCase()).created_at)) {
             uniqueGamesMap.set(game.name.toLowerCase(), game);
           }
         });
         
         const uniqueGames = Array.from(uniqueGamesMap.values());
+        // Sort by created_at to ensure most recent games appear first
+        uniqueGames.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        
         const transformedData = transformGamesFromDb(uniqueGames || []);
         
         // If no data from database, try fetching from IGDB
@@ -560,7 +564,7 @@ const Discovery = () => {
                     <>
                       {games && games.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {games.map((game: Game) => (
+                          {games.slice(0, 20).map((game: Game) => (
                             <GameCard 
                               key={game.id}
                               id={game.id}
