@@ -4,7 +4,7 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(26, 31, 44, 0.8);
+  background: rgba(30, 31, 46, 1); /* Match the exact background color */
   border-radius: 8px;
   margin: 4px 0; /* Add some margin for better appearance */
 }
@@ -12,7 +12,7 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(135, 106, 245, 0.6);
   border-radius: 8px;
-  border: 2px solid rgba(26, 31, 44, 0.8); /* Add border for better visibility */
+  border: 2px solid rgba(30, 31, 46, 1); /* Match the exact background color */
   min-height: 60px; /* Ensure scroll thumb is big enough to interact with */
   transition: background 0.2s ease;
 }
@@ -24,7 +24,7 @@
 /* Ensure scrolling works well on all browsers */
 .custom-scrollbar {
   scrollbar-width: auto; /* For Firefox */
-  scrollbar-color: rgba(135, 106, 245, 0.6) rgba(26, 31, 44, 0.8); /* For Firefox */
+  scrollbar-color: rgba(135, 106, 245, 0.6) rgba(30, 31, 46, 1); /* For Firefox */
   -webkit-overflow-scrolling: touch; /* For iOS Safari */
 }
 
@@ -42,12 +42,12 @@
 
 .custom-scrollbar::before {
   top: 0;
-  background: linear-gradient(to bottom, rgba(26, 31, 44, 0.8) 0%, transparent 100%);
+  background: linear-gradient(to bottom, rgba(30, 31, 46, 1) 0%, transparent 100%);
 }
 
 .custom-scrollbar::after {
   bottom: 0;
-  background: linear-gradient(to top, rgba(26, 31, 44, 0.8) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(30, 31, 46, 1) 0%, transparent 100%);
 }
 
 /* Comment animation effects */
@@ -104,4 +104,38 @@
 @keyframes highlight-new {
   0%, 100% { background-color: transparent; }
   30% { background-color: rgba(135, 106, 245, 0.15); }
+}
+
+/* Add these new styles for the comments page */
+.comments-page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #1e1f2e;
+  overflow: hidden;
+}
+
+.comments-header {
+  padding: 1rem;
+  border-bottom: 1px solid #3b3d4d;
+  position: sticky;
+  top: 0;
+  background-color: #1e1f2e;
+  z-index: 10;
+}
+
+.comments-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background-color: #1e1f2e;
+  overscroll-behavior: contain;
+}
+
+.comments-input {
+  padding: 1rem;
+  background-color: #1e1f2e;
+  border-top: 1px solid #3b3d4d;
+  position: sticky;
+  bottom: 0;
 }

@@ -283,8 +283,8 @@ export const CommentModal: React.FC<CommentModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="p-0 max-w-md h-[80vh] max-h-[600px] bg-[#1e1f2e] border-[#3b3d4d] text-white rounded-lg overflow-hidden">
-        <div className="flex flex-col h-full">
-          <div className="px-4 py-3 border-b border-[#3b3d4d] flex items-center gap-2">
+        <div className="flex flex-col h-full bg-[#1e1f2e]">
+          <div className="p-4 border-b border-[#3b3d4d] sticky top-0 bg-[#1e1f2e] z-10">
             <button onClick={onClose} className="text-gray-400 hover:text-white">
               <X className="h-5 w-5" />
             </button>
@@ -292,7 +292,7 @@ export const CommentModal: React.FC<CommentModalProps> = ({
           </div>
           
           <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100% - 80px)' }}>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 bg-[#1e1f2e]" style={{ overscrollBehavior: 'contain' }}>
               {isLoading ? (
                 <div className="flex items-center justify-center h-24">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
