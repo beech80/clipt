@@ -227,12 +227,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           lastPostIndex = -1;
         }
         
-        // Use post-by-post scrolling for more controlled navigation
-        if (Math.abs(yPosition) > 5) { // Only act on more intentional movements
+        // For larger movements, switch between post-by-post and continuous scrolling
+        if (Math.abs(yPosition) > 20) { // Strong movement = post-by-post
           handlePostByPostScrolling(currentDirection);
-        } else {
-          // For very small movements, use regular scrolling logic
+        } else if (Math.abs(yPosition) > 5) { // Medium movement = continuous scroll
           handleScrollFromJoystick(yPosition);
+        } else {
+          // For very small movements, use lighter scrolling
+          handleScrollFromJoystick(yPosition * 0.5);
         }
         
         // Check if user has released joystick but page is still scrolling
@@ -253,7 +255,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       animationFrameId = requestAnimationFrame(runAnimationLoop);
     };
     
-    // New function to handle scrolling post by post
+    // Function to handle scrolling post by post
     const handlePostByPostScrolling = (direction: number) => {
       // Find all posts
       const posts = Array.from(document.querySelectorAll('[data-post-id]'));
@@ -275,15 +277,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         }
       });
       
-      // Check if we've already processed this post index
-      if (lastPostIndex === closestPostIndex && direction !== 0) {
+      // For direction = 0, just center the current post
+      if (direction === 0) {
+        scrollToPost(posts[closestPostIndex]);
+        lastPostIndex = closestPostIndex;
+        return;
+      }
+      
+      // Check if we're already on a post index
+      if (lastPostIndex === closestPostIndex) {
         // Already processed this post, move to next/prev post
         const targetIndex = closestPostIndex + direction;
         
         // Ensure target index is within bounds
         if (targetIndex >= 0 && targetIndex < posts.length) {
-          const targetPost = posts[targetIndex];
-          scrollToPost(targetPost);
+          scrollToPost(posts[targetIndex]);
           lastPostIndex = targetIndex;
         } else if (targetIndex < 0) {
           // Trying to scroll before first post
@@ -298,8 +306,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         // First time seeing this post, update and center it
         lastPostIndex = closestPostIndex;
         
-        // If joystick is pushed strongly, immediately move to next post
-        if (Math.abs(joystickPosition.y) > 25 && direction !== 0) {
+        // If joystick is pushed strongly, move to next post
+        if (Math.abs(joystickPosition.y) > 30) {
           const targetIndex = closestPostIndex + direction;
           if (targetIndex >= 0 && targetIndex < posts.length) {
             scrollToPost(posts[targetIndex]);
@@ -413,8 +421,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     const magnitude = Math.pow(Math.abs(normalizedPosition), adaptiveCurve);
     
-    // Reduced base scroll speed for more controlled scrolling
-    const baseScrollSpeed = 120; // Lower speed for more controlled scrolling
+    // Increased base scroll speed for better visibility of content
+    const baseScrollSpeed = 200; // Higher speed for more visible scrolling
     let scrollSpeed = direction * magnitude * baseScrollSpeed;
     
     // When joystick is nearly still, slow scrolling even more
@@ -425,55 +433,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Get all posts on page for boundary detection
     const posts = document.querySelectorAll('[data-post-id]');
     if (posts.length === 0) return; // No posts, no scrolling
-    
-    // Check if we're close to the center of a post - if so, slow down scrolling
-    const viewportCenter = window.innerHeight / 2;
-    
-    // Determine first and last post
-    const firstPost = posts[0];
-    const lastPost = posts[posts.length - 1];
-    
-    // Get positions of first and last posts
-    const firstPostRect = firstPost.getBoundingClientRect();
-    const lastPostRect = lastPost.getBoundingClientRect();
-    
-    // Check if we're trying to scroll past first or last post
-    if (direction < 0 && firstPostRect.top > -50 && firstPostRect.top < 100) {
-      // First post is near top, reduce scrolling speed significantly
-      scrollSpeed *= 0.3;
-      
-      // If very close to top position, stop scrolling up
-      if (firstPostRect.top > 0 && firstPostRect.top < 60) {
-        scrollSpeed = Math.min(scrollSpeed, 0); // Only allow scrolling down
-      }
-    }
-    
-    if (direction > 0 && lastPostRect.bottom < window.innerHeight + 50 && lastPostRect.bottom > window.innerHeight - 100) {
-      // Last post is near bottom, reduce scrolling speed significantly
-      scrollSpeed *= 0.3;
-      
-      // If very close to bottom position, stop scrolling down
-      if (lastPostRect.bottom < window.innerHeight && lastPostRect.bottom > window.innerHeight - 60) {
-        scrollSpeed = Math.max(scrollSpeed, 0); // Only allow scrolling up
-      }
-    }
-    
-    // Check for posts near center to create "magnetic" effect
-    for (let i = 0; i < posts.length; i++) {
-      const post = posts[i];
-      const rect = post.getBoundingClientRect();
-      const postCenter = rect.top + (rect.height / 2);
-      
-      // If a post is near the center of viewport, reduce scroll speed
-      if (Math.abs(postCenter - viewportCenter) < rect.height * 0.3) {
-        // Reduce speed when near center of a post
-        scrollSpeed *= 0.7;
-        break;
-      }
-    }
-    
-    // Always do post detection for responsive UI
-    detectMostVisiblePost();
     
     // Apply scrolling with boundary awareness
     window.scrollBy({
@@ -599,49 +558,42 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Update visual feedback
     updateDirectionIndicators(dy);
   };
+  
   // Enhanced direction indicators with smoother transitions and variable intensity
   const updateDirectionIndicators = (yPosition: number) => {
-    const joystickHandle = joystickRef.current;
+    if (!joystickRef.current) return;
+    
+    const handle = joystickRef.current.querySelector('.joystick-nub');
     const upIndicator = document.querySelector('.joystick-up-indicator');
     const downIndicator = document.querySelector('.joystick-down-indicator');
     
-    if (joystickHandle && upIndicator && downIndicator) {
-      // Normalize the position to calculate intensity (0-100%)
-      const maxYPosition = 40; // Maximum expected joystick movement
+    // Remove all direction classes first
+    handle?.classList.remove('joystick-handle-up', 'joystick-handle-down');
+    
+    // Add appropriate classes based on direction
+    if (yPosition < -10) {
+      upIndicator?.classList.add('active');
+      downIndicator?.classList.remove('active');
+      handle?.classList.add('joystick-handle-up');
+    } else if (yPosition > 10) {
+      downIndicator?.classList.add('active');
+      upIndicator?.classList.remove('active');
+      handle?.classList.add('joystick-handle-down');
+    } else {
+      upIndicator?.classList.remove('active');
+      downIndicator?.classList.remove('active');
+    }
+    
+    // Update shadow position for 3D effect
+    const shadow = joystickRef.current.querySelector('.joystick-shadow');
+    if (shadow) {
+      const offsetY = Math.abs(yPosition) * 0.1;
+      const scale = Math.max(0.6, 1 - Math.abs(yPosition) * 0.005);
+      const opacity = Math.max(0.3, 0.6 - Math.abs(yPosition) * 0.007);
+      const direction = yPosition < 0 ? -1 : 1;
       
-      // Apply intensity as a CSS variable for smoother visual feedback
-      const direction = yPosition < 0 ? 'up' : yPosition > 0 ? 'down' : 'neutral';
-      
-      // Reset all states first
-      upIndicator.classList.remove('active');
-      downIndicator.classList.remove('active');
-      joystickHandle.classList.remove('joystick-handle-up', 'joystick-handle-down');
-      
-      // Preserve the current transform in the style attribute
-      const currentTransform = (joystickHandle as HTMLDivElement).style.transform || `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`;
-      
-      if (direction === 'up' && Math.abs(yPosition) > 2) { // Smaller deadzone for visual feedback
-        // Moving up with variable intensity
-        upIndicator.classList.add('active');
-        joystickHandle.classList.add('joystick-handle-up');
-        
-        // Apply intensity as a CSS variable while preserving transform
-        (upIndicator as HTMLElement).style.setProperty('--intensity', `${Math.abs(yPosition) / maxYPosition * 100}%`);
-        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', `${Math.abs(yPosition) / maxYPosition * 100}%`);
-      } else if (direction === 'down' && Math.abs(yPosition) > 2) {
-        // Moving down with variable intensity
-        downIndicator.classList.add('active');
-        joystickHandle.classList.add('joystick-handle-down');
-        
-        // Apply intensity as a CSS variable while preserving transform
-        (downIndicator as HTMLElement).style.setProperty('--intensity', `${Math.abs(yPosition) / maxYPosition * 100}%`);
-        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', `${Math.abs(yPosition) / maxYPosition * 100}%`);
-      } else {
-        // Neutral position - reset intensity but keep transform
-        (joystickHandle as HTMLElement).style.setProperty('--move-intensity', '0%');
-        (upIndicator as HTMLElement).style.setProperty('--intensity', '0%');
-        (downIndicator as HTMLElement).style.setProperty('--intensity', '0%');
-      }
+      (shadow as HTMLElement).style.transform = `translate(calc(-50% + ${yPosition * 0.1}px), ${offsetY * direction}px) scale(${scale})`;
+      (shadow as HTMLElement).style.opacity = `${opacity}`;
     }
   };
   
@@ -1652,7 +1604,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   {/* Xbox-like thumbstick */}
                   <div 
                     ref={joystickRef}
-                    className="joystick-handle w-14 h-14 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-[#3A3A45] absolute z-10 cursor-grab active:cursor-grabbing select-none"
+                    className="joystick-nub w-14 h-14 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-[#3A3A45] absolute z-10 cursor-grab active:cursor-grabbing select-none"
                     style={{
                       transform: `translate3d(${joystickPosition.x}px, ${joystickPosition.y}px, 0)`,
                       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.7)', 
@@ -1669,6 +1621,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                       {/* Center dot for Xbox-like appearance */}
                       <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#3A3A45]"></div>
                     </div>
+                    {/* Shadow element */}
+                    <div className="joystick-shadow absolute inset-0 rounded-full bg-[#0D0D18] opacity-0 transition-opacity duration-200"></div>
                   </div>
                 </div>
                 {/* Outer ring highlight to enhance 3D effect */}
