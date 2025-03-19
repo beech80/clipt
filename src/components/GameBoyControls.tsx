@@ -257,7 +257,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     const handlePostByPostScrolling = (direction: number) => {
       // Find all posts
       const posts = Array.from(document.querySelectorAll('[data-post-id]'));
-      if (!posts.length) return;
+      if (!posts.length) return; // No posts, no scrolling
       
       // Find the post closest to the center of the viewport
       const viewportCenter = window.innerHeight / 2;
@@ -352,9 +352,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         });
       }
       
-      // Update current post ID
+      // Update current post ID if it exists
       const postId = post.getAttribute('data-post-id');
-      if (postId) {
+      if (postId && typeof setCurrentPostId === 'function') {
         setCurrentPostId(postId);
       }
     };
@@ -584,16 +584,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     dx = previousX + (dx - previousX) * smoothingFactor;
     dy = previousY + (dy - previousY) * smoothingFactor;
     
-    // Directly update DOM for immediate response
+    // Update joystick position with immediate DOM update
     if (joystickRef.current) {
-      // Set CSS variables for animation
       (joystickRef.current as HTMLDivElement).style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-      
-      // Override any transitions during active dragging
       (joystickRef.current as HTMLDivElement).style.transition = 'none';
     }
     
-    // Update state for React components (but DOM is already updated)
+    // Update state (though visual is already updated)
     setJoystickPosition({ x: dx, y: dy });
     
     // Immediately trigger scroll for responsive feel
