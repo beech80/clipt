@@ -208,6 +208,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Make the animation loop run continuously for smoother scrolling response
   useEffect(() => {
     let animationFrameId: number | null = null;
+    let lastScrollY = window.scrollY;
+    let scrollTimer: number | null = null;
     
     const runAnimationLoop = () => {
       // Get current joystick position
@@ -216,10 +218,57 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Check for joystick movement
       if (Math.abs(yPosition) > 1.5 && !location.pathname.includes('/comments/')) {
         handleScrollFromJoystick(yPosition);
+        
+        // Check if user has released joystick but page is still scrolling
+        if (Math.abs(yPosition) < 2 && Math.abs(window.scrollY - lastScrollY) > 5) {
+          // Slow down scrolling momentum gradually
+          if (scrollTimer) clearTimeout(scrollTimer);
+          scrollTimer = window.setTimeout(() => {
+            // Find nearest post to snap to after scrolling stops
+            snapToNearestPost();
+          }, 300);
+        }
       }
+      
+      // Track scroll position
+      lastScrollY = window.scrollY;
       
       // Continue animation loop
       animationFrameId = requestAnimationFrame(runAnimationLoop);
+    };
+    
+    // Helper to snap to the nearest post center after scrolling
+    const snapToNearestPost = () => {
+      const posts = document.querySelectorAll('[data-post-id]');
+      if (!posts.length) return;
+      
+      let closestPost = null;
+      let minDistance = Infinity;
+      const viewportCenter = window.innerHeight / 2;
+      
+      // Find the post closest to the center of the viewport
+      posts.forEach(post => {
+        const rect = post.getBoundingClientRect();
+        const postCenter = rect.top + (rect.height / 2);
+        const distance = Math.abs(postCenter - viewportCenter);
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestPost = post;
+        }
+      });
+      
+      // Snap to the closest post if it's within a reasonable distance
+      if (closestPost && minDistance < window.innerHeight * 0.4) {
+        const rect = closestPost.getBoundingClientRect();
+        const postCenter = rect.top + (rect.height / 2);
+        const scrollAdjustment = postCenter - viewportCenter;
+        
+        window.scrollBy({
+          top: scrollAdjustment,
+          behavior: 'smooth'
+        });
+      }
     };
     
     // Start animation loop
@@ -230,9 +279,88 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
+      if (scrollTimer) {
+        clearTimeout(scrollTimer);
+      }
     };
   }, [joystickPosition, location.pathname]);
 
+  const handleScrollFromJoystick = (yPosition: number) => {
+    // Early return only if scrolling is explicitly disabled
+    if (isScrollingEnabled === false) return;
+    
+    // Don't scroll on certain pages where native scrolling is preferred
+    const currentPath = location.pathname;
+    if (currentPath.includes('/comments/')) {
+      return; // Don't use joystick scrolling on comments page
+    }
+    
+    // Define constants for calculations
+    const maxYPosition = 40; // Maximum expected joystick movement
+    
+    // More responsive curve with variable intensity based on joystick position
+    // This creates a more natural feeling when scrolling small vs large amounts
+    const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
+    const direction = Math.sign(normalizedPosition);
+    
+    // Enhanced adaptive curve - more controlled for post-by-post scrolling
+    const adaptiveCurve = Math.abs(normalizedPosition) < 0.3 ? 
+      0.7 : // More linear/responsive for small movements
+      1.2;  // Less aggressive acceleration for larger movements
+    
+    const magnitude = Math.pow(Math.abs(normalizedPosition), adaptiveCurve);
+    
+    // Reduced base scroll speed for more controlled scrolling
+    const baseScrollSpeed = 120; // Lower speed for more controlled scrolling
+    let scrollSpeed = direction * magnitude * baseScrollSpeed;
+    
+    // When joystick is nearly still, slow scrolling even more
+    if (Math.abs(normalizedPosition) < 0.15) {
+      scrollSpeed *= 0.5; // Further reduce for very small movements
+    }
+    
+    // Check if we're close to the center of a post - if so, slow down scrolling
+    const posts = document.querySelectorAll('[data-post-id]');
+    const viewportCenter = window.innerHeight / 2;
+    
+    for (let i = 0; i < posts.length; i++) {
+      const post = posts[i];
+      const rect = post.getBoundingClientRect();
+      const postCenter = rect.top + (rect.height / 2);
+      
+      // If a post is near the center of viewport, reduce scroll speed
+      if (Math.abs(postCenter - viewportCenter) < rect.height * 0.3) {
+        // Reduce speed when near center of a post
+        scrollSpeed *= 0.7;
+        break;
+      }
+    }
+    
+    // Always do post detection for responsive UI
+    detectMostVisiblePost();
+    
+    // Directly apply scrolling for maximum responsiveness
+    window.scrollBy({
+      top: scrollSpeed,
+      behavior: 'auto' // Always use auto for responsive feel
+    });
+    
+    // Make sure the joystick visually stays in the correct position
+    if (joystickRef.current) {
+      const currentTransform = (joystickRef.current as HTMLDivElement).style.transform;
+      if (!currentTransform || !currentTransform.includes(`${yPosition}px`)) {
+        const xPos = joystickPosition.x;
+        (joystickRef.current as HTMLDivElement).style.transform = `translate3d(${xPos}px, ${yPosition}px, 0)`;
+      }
+    }
+    
+    // Store scroll position
+    lastScrollPosition.current = window.scrollY;
+    
+    // Update visual feedback
+    updateDirectionIndicators(yPosition);
+  };
+  
   // Joystick movement handlers
   const handleJoystickMouseDown = (e: React.MouseEvent) => {
     // Prevent default actions and bubbling
@@ -694,63 +822,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
   
-  const handleScrollFromJoystick = (yPosition: number) => {
-    // Early return only if scrolling is explicitly disabled
-    if (isScrollingEnabled === false) return;
-    
-    // Don't scroll on certain pages where native scrolling is preferred
-    const currentPath = location.pathname;
-    if (currentPath.includes('/comments/')) {
-      return; // Don't use joystick scrolling on comments page
-    }
-    
-    // Define constants for calculations
-    const maxYPosition = 40; // Maximum expected joystick movement
-    
-    // More responsive curve with variable intensity based on joystick position
-    // This creates a more natural feeling when scrolling small vs large amounts
-    const normalizedPosition = yPosition / maxYPosition; // Normalize to -1 to 1 range
-    const direction = Math.sign(normalizedPosition);
-    
-    // Enhanced adaptive curve - even more natural feeling
-    const adaptiveCurve = Math.abs(normalizedPosition) < 0.4 ? 
-      0.8 : // More linear/responsive for small movements
-      1.5;  // Stronger acceleration for larger movements
-    
-    const magnitude = Math.pow(Math.abs(normalizedPosition), adaptiveCurve);
-    
-    // Increased base scroll speed for more immediate feedback
-    const baseScrollSpeed = 180; // Higher speed for faster scrolling
-    const scrollSpeed = direction * magnitude * baseScrollSpeed;
-    
-    // Always do post detection for responsive UI
-    if (Math.abs(scrollSpeed) > 5) {
-      detectMostVisiblePost();
-    }
-    
-    // Directly apply scrolling for maximum responsiveness
-    window.scrollBy({
-      top: scrollSpeed,
-      behavior: 'auto' // Always use auto for responsive feel
-    });
-    
-    // Make sure the joystick visually stays in the correct position
-    if (joystickRef.current) {
-      const currentTransform = (joystickRef.current as HTMLDivElement).style.transform;
-      if (!currentTransform || !currentTransform.includes(`${yPosition}px`)) {
-        const xPos = joystickPosition.x;
-        (joystickRef.current as HTMLDivElement).style.transform = `translate3d(${xPos}px, ${yPosition}px, 0)`;
-      }
-    }
-    
-    // Store scroll position
-    lastScrollPosition.current = window.scrollY;
-    
-    // Update visual feedback
-    updateDirectionIndicators(yPosition);
-  };
-  
-  // Function to sync the joystick UI with the current scroll position
   const syncJoystickWithScroll = useCallback(() => {
     if (!isDragging && joystickRef.current) {
       // Reset to center position when not dragging
