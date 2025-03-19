@@ -5,8 +5,9 @@ import { BackButton } from '@/components/ui/back-button';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
-// Simple structure for top clipts points
+// Simple structure for leaderboard spots
 interface LeaderboardSpot {
   id: string;
   points: number;
@@ -17,39 +18,137 @@ const TopClipts = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardSpot[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock data for leaderboard spots
-  const mockLeaderboard = [
-    { id: '1', points: 9875 },
-    { id: '2', points: 8932 },
-    { id: '3', points: 7854 },
-    { id: '4', points: 7632 },
-    { id: '5', points: 6943 },
-    { id: '6', points: 6521 },
-    { id: '7', points: 5987 },
-    { id: '8', points: 5432 },
-    { id: '9', points: 4987 },
-    { id: '10', points: 4532 },
+  // Initialize empty leaderboard spots with 0 points
+  const emptyLeaderboard = [
+    { id: '1', points: 0 },
+    { id: '2', points: 0 },
+    { id: '3', points: 0 },
+    { id: '4', points: 0 },
+    { id: '5', points: 0 },
+    { id: '6', points: 0 },
+    { id: '7', points: 0 },
+    { id: '8', points: 0 },
+    { id: '9', points: 0 },
+    { id: '10', points: 0 },
   ];
 
   useEffect(() => {
-    // Simulate API fetch
-    const fetchLeaderboard = async () => {
-      setLoading(true);
-      try {
-        // Just use mock data for now
-        setTimeout(() => {
-          setLeaderboard(mockLeaderboard);
-          setLoading(false);
-        }, 800);
-      } catch (error) {
-        console.error('Error fetching leaderboard:', error);
-        toast.error('Failed to load leaderboard');
-        setLoading(false);
+    // Initialize with empty leaderboard
+    setLeaderboard(emptyLeaderboard);
+    
+    // Start fetching leaderboard data
+    fetchLeaderboard();
+
+    // Set up real-time listener for updates
+    setupRealtimeUpdates();
+
+    // Cleanup function to remove listeners
+    return () => {
+      // Remove Supabase subscription when component unmounts
+      const supabaseClient = supabase;
+      if (supabaseClient) {
+        supabaseClient.removeAllChannels();
       }
     };
-
-    fetchLeaderboard();
   }, [activeTab]); // Refetch when tab changes
+
+  // Function to fetch leaderboard data
+  const fetchLeaderboard = async () => {
+    setLoading(true);
+    try {
+      // In a real app, this would fetch from Supabase
+      // Different queries based on activeTab (daily, weekly, all-time)
+      
+      /*
+      // Example of how you would fetch real data:
+      let query = supabase
+        .from('clipt_votes')
+        .select('clipt_id, count(*)')
+        .group('clipt_id')
+        .order('count', { ascending: false })
+        .limit(10);
+      
+      // Add time filter based on activeTab
+      if (activeTab === 'daily') {
+        const oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+        query = query.gte('created_at', oneDayAgo.toISOString());
+      } else if (activeTab === 'weekly') {
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        query = query.gte('created_at', oneWeekAgo.toISOString());
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      // Transform the data to leaderboard format
+      const formattedData = data.map((item, index) => ({
+        id: (index + 1).toString(),
+        points: item.count
+      }));
+      
+      setLeaderboard(formattedData);
+      */
+
+      // For demo, just show empty leaderboard after a short delay
+      setTimeout(() => {
+        setLeaderboard(emptyLeaderboard);
+        setLoading(false);
+      }, 800);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      toast.error('Failed to load leaderboard');
+      setLoading(false);
+    }
+  };
+
+  // Function to set up real-time updates from Supabase
+  const setupRealtimeUpdates = () => {
+    // In a real app, this would subscribe to Supabase changes
+    
+    /*
+    // Example of real-time subscription:
+    const supabaseClient = supabase;
+    
+    supabaseClient
+      .channel('clipt-votes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'clipt_votes' 
+        }, 
+        (payload) => {
+          // When vote changes, refetch the leaderboard
+          fetchLeaderboard();
+        }
+      )
+      .subscribe();
+    */
+    
+    // For demo purposes, simulate periodic updates
+    const updateInterval = setInterval(() => {
+      if (!loading) {
+        // Simulate votes coming in by randomly incrementing some positions
+        setLeaderboard(prevLeaderboard => {
+          return prevLeaderboard.map(spot => {
+            // 30% chance of updating each spot
+            if (Math.random() < 0.3) {
+              // Increment by 1-5 points
+              const increment = Math.floor(Math.random() * 5) + 1;
+              return { ...spot, points: spot.points + increment };
+            }
+            return spot;
+          });
+        });
+      }
+    }, 3000); // Update every 3 seconds
+    
+    // Clean up interval on component unmount
+    return () => clearInterval(updateInterval);
+  };
 
   // Function to get medal color based on rank
   const getMedalColor = (rank) => {
@@ -90,6 +189,16 @@ const TopClipts = () => {
     return <span className={`${style} text-indigo-300 w-12 inline-block text-center`}>{rank}</span>;
   };
 
+  // Get tab title based on activeTab
+  const getTabTitle = () => {
+    switch(activeTab) {
+      case 'daily': return 'Today\'s Top Clipts';
+      case 'weekly': return 'This Week\'s Top Clipts';
+      case 'all-time': return 'All-Time Top Clipts';
+      default: return 'Top 10 Clipts';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-black text-white pb-20">
       {/* Header */}
@@ -123,7 +232,7 @@ const TopClipts = () => {
                 <div className="p-4 pb-3">
                   <div className="flex items-center gap-2 mb-3">
                     <Trophy className="h-6 w-6 text-yellow-400" />
-                    <h2 className="text-xl font-bold text-indigo-300">Top 10 Clipts</h2>
+                    <h2 className="text-xl font-bold text-indigo-300">{getTabTitle()}</h2>
                   </div>
                 </div>
                 
@@ -173,7 +282,7 @@ const TopClipts = () => {
                 <div className="p-4 pb-3">
                   <div className="flex items-center gap-2 mb-3">
                     <Trophy className="h-6 w-6 text-yellow-400" />
-                    <h2 className="text-xl font-bold text-indigo-300">Top 10 Clipts</h2>
+                    <h2 className="text-xl font-bold text-indigo-300">{getTabTitle()}</h2>
                   </div>
                 </div>
                 
@@ -223,7 +332,7 @@ const TopClipts = () => {
                 <div className="p-4 pb-3">
                   <div className="flex items-center gap-2 mb-3">
                     <Trophy className="h-6 w-6 text-yellow-400" />
-                    <h2 className="text-xl font-bold text-indigo-300">Top 10 Clipts</h2>
+                    <h2 className="text-xl font-bold text-indigo-300">{getTabTitle()}</h2>
                   </div>
                 </div>
                 
