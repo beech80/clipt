@@ -299,25 +299,14 @@ const Clipts = () => {
       <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <BackButton />
-          <div className="flex items-center">
-            <span className="text-yellow-400 mr-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                <path d="M4 22h16" />
-                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-              </svg>
-            </span>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">Top 10 Clipts</h1>
-          </div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Clipts</h1>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => {
-              toast.info("Refreshing...");
+              toast.info("Refreshing videos...");
               refreshPosts();
+              // Force user interaction for autoplay
               document.documentElement.setAttribute('data-user-interacted', 'true');
             }}
             className={`text-white transition-all duration-300 ${isLoading ? 'animate-spin' : ''}`}
@@ -329,45 +318,26 @@ const Clipts = () => {
       </div>
 
       {/* Main content with padding for fixed header */}
-      <div className="pt-20">
+      <div className="pt-16">
         {isLoading ? (
           <div className="flex justify-center items-center h-[60vh]">
             <Button variant="outline" size="icon" className="animate-spin">
               <RefreshCw className="h-5 w-5" />
             </Button>
           </div>
+        ) : rawPosts.length > 0 ? (
+          <div className="container mx-auto px-4 py-8 max-w-2xl">
+            {rawPosts.map((post) => (
+              <PostItem 
+                key={post.id} 
+                post={post}
+                isCliptsPage={true}
+              />
+            ))}
+          </div>
         ) : (
-          <div className="container mx-auto px-4 py-4 max-w-7xl">
-            {/* Tabs - similar to Image 1 */}
-            <div className="bg-indigo-950/30 rounded-lg p-2 mb-6 inline-flex">
-              <button className="px-4 py-1 rounded-md bg-indigo-700/70 text-white flex items-center mr-2">
-                <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 12L7 8M7 8L11 12M7 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M13 16L17 12M17 12L21 16M17 12V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                Trending
-              </button>
-              <button className="px-4 py-1 rounded-md text-indigo-300 flex items-center mr-2">
-                <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                This Week
-              </button>
-              <button className="px-4 py-1 rounded-md text-indigo-300 flex items-center">
-                <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 15L8.5 8L15.5 8L12 15Z" fill="currentColor"/>
-                  <path d="M3 21H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M12 3L19 10H5L12 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                All-Time
-              </button>
-            </div>
-            
-            {/* Empty grid - just the structure without content */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Intentionally empty per user request */}
-            </div>
+          <div className="flex justify-center items-center h-[60vh]">
+            <p className="text-gray-400">No clips found</p>
           </div>
         )}
       </div>
