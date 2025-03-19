@@ -102,265 +102,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   }, [isDragging]);
 
   useEffect(() => {
-    // Add post detection on mount and page changes
-    logToDebug('Setting up post detection');
-    
-    // Function to ensure all posts have data-post-id attributes
-    const addDataAttributes = () => {
-      logToDebug('Adding data-post-id attributes to posts...');
-      
-      // Add data-post-id to all post-container divs
-      const postContainers = document.querySelectorAll('.post-container, .post-card, .post-item, [id*="post"], .post, article');
-      let attributesAdded = 0;
-      
-      postContainers.forEach((post, index) => {
-        if (!post.hasAttribute('data-post-id')) {
-          // Check if the post has an ID we can use
-          let postId = '';
-          
-          // Try to find ID from various sources
-          if (post.hasAttribute('id') && post.getAttribute('id')?.includes('post')) {
-            postId = post.getAttribute('id')?.replace(/post-?/i, '') || '';
-          } else {
-            // Look for ID in child elements
-            const postIdElement = post.querySelector('[data-post-id]');
-            if (postIdElement) {
-              postId = postIdElement.getAttribute('data-post-id') || '';
-            } else {
-              // Try to find in href if there's a link to post
-              const postLink = post.querySelector('a[href*="/post/"]');
-              if (postLink) {
-                const href = postLink.getAttribute('href') || '';
-                const match = href.match(/\/post\/([^\/]+)/);
-                if (match && match[1]) {
-                  postId = match[1];
-                }
-              } else {
-                // Look for hidden input fields that might contain post IDs
-                const hiddenInput = post.querySelector('input[type="hidden"][name*="post"]');
-                if (hiddenInput) {
-                  postId = hiddenInput.getAttribute('value') || '';
-                } else {
-                  // Generate a temporary ID
-                  postId = `temp-post-${index}-${Date.now()}`;
-                }
-              }
-            }
-          }
-          
-          // Set the attribute
-          post.setAttribute('data-post-id', postId);
-          attributesAdded++;
-        }
-      });
-      
-      logToDebug(`Added data-post-id to ${attributesAdded} posts`);
-    };
-    
-    // Function to detect and select the most visible post
-    const detectAndSelectCurrentPost = () => {
-      // First ensure all posts have data-post-id
-      addDataAttributes();
-      
-      // Check if we're on a single post page
-      const isSinglePostPage = location.pathname.includes('/post/');
-      if (isSinglePostPage) {
-        // Extract post ID from URL
-        const match = location.pathname.match(/\/post\/([^\/]+)/);
-        if (match && match[1]) {
-          const postId = match[1];
-          logToDebug(`Single post page detected. Using post ID from URL: ${postId}`);
-          setCurrentPostId(postId);
-          return;
-        }
-      }
-      
-      // Find all posts on the page with multiple selectors to work across different pages
-      const allPosts = Array.from(document.querySelectorAll(
-        '[data-post-id], .post-container, .post-card, .post-item, [id*="post"], .post, article'
-      ));
-      
-      if (allPosts.length === 0) {
-        logToDebug('No posts found on current page');
-        return;
-      }
-      
-      logToDebug(`Found ${allPosts.length} posts on the page`);
-      
-      // Find the post most visible in the viewport
-      let mostVisiblePost: Element | null = null;
-      let maxVisibility = 0;
-      
-      allPosts.forEach(post => {
-        const rect = post.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        
-        // Skip posts that are not in the viewport at all
-        if (rect.bottom < 0 || rect.top > windowHeight) {
-          return;
-        }
-        
-        // Skip very small elements (likely not actual posts)
-        if (rect.height < 50) {
-          return;
-        }
-        
-        // Calculate how much of the post is visible
-        const visibleTop = Math.max(0, rect.top);
-        const visibleBottom = Math.min(windowHeight, rect.bottom);
-        const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-        const percentVisible = visibleHeight / rect.height;
-        
-        // Bonus for being in the center of the viewport
-        const centerFactor = 1 - Math.abs((visibleTop + visibleBottom) / 2 - windowHeight / 2) / windowHeight;
-        const visibilityScore = percentVisible * (1 + centerFactor);
-        
-        if (visibilityScore > maxVisibility) {
-          maxVisibility = visibilityScore;
-          mostVisiblePost = post;
-        }
-      });
-      
-      if (mostVisiblePost) {
-        // Get the post ID - try multiple attributes
-        const postId = mostVisiblePost.getAttribute('data-post-id') || 
-                       mostVisiblePost.getAttribute('id')?.replace(/post-?/i, '') ||
-                       mostVisiblePost.getAttribute('data-id');
-        
-        if (postId) {
-          logToDebug(`Selected post: ${postId} (${(maxVisibility * 100).toFixed(1)}% visible)`);
-          setCurrentPostId(postId);
-          
-          // Add a subtle indicator to the selected post
-          allPosts.forEach(post => post.classList.remove('gameboy-selected-post'));
-          mostVisiblePost.classList.add('gameboy-selected-post');
-          
-          // Store the post ID in a session variable for backup
-          try {
-            sessionStorage.setItem('clipt-last-selected-post', postId);
-          } catch (e) {
-            console.error('Failed to store post ID in session storage:', e);
-          }
-        }
-      } else {
-        logToDebug('No visible posts found');
-        
-        // Try to get last selected post from session storage
-        try {
-          const lastSelectedPost = sessionStorage.getItem('clipt-last-selected-post');
-          if (lastSelectedPost) {
-            logToDebug(`Using last selected post from session storage: ${lastSelectedPost}`);
-            setCurrentPostId(lastSelectedPost);
-          }
-        } catch (e) {
-          console.error('Failed to retrieve post ID from session storage:', e);
-        }
-      }
-    };
-
-    // Debounce function to prevent too many calls
-    function debounce(func: Function, wait: number) {
-      let timeout: any = null;
-      return function(...args: any) {
-        const context = this;
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          func.apply(context, args);
-        }, wait);
-      };
-    }
-    
-    // Create debounced handler with much shorter delay for better responsiveness
-    // Use 50ms for more immediate responses while still preventing excessive performance impact
-    const debouncedDetectPost = debounce(detectAndSelectCurrentPost, 50);
-    
-    // Set up scroll listener
-    window.addEventListener('scroll', debouncedDetectPost, { passive: true });
-    
-    // Set up additional events that might indicate content changes
-    window.addEventListener('click', debouncedDetectPost);
-    window.addEventListener('touchend', debouncedDetectPost);
-    
-    // Initial detection with a shorter delay (300ms) to allow page to render but be more responsive
-    setTimeout(detectAndSelectCurrentPost, 300);
-    
-    // Add detection on key scrolling events for immediate feedback
-    window.addEventListener('scrollend', detectAndSelectCurrentPost, { passive: true });
-    
-    // Set up mutation observer to detect when new posts are added with optimized detection logic
-    const observer = new MutationObserver((mutations) => {
-      // Use a throttle flag to avoid excessive calls
-      let shouldDetect = false;
-      
-      mutations.forEach(mutation => {
-        // Only check if we haven't already decided to detect posts
-        if (!shouldDetect && mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          // Fast check - first look at direct added nodes
-          for (let i = 0; i < mutation.addedNodes.length; i++) {
-            const node = mutation.addedNodes[i];
-            if (node instanceof HTMLElement && (
-                node.hasAttribute('data-post-id') || 
-                node.classList.contains('post-container') ||
-                node.classList.contains('post-card') ||
-                node.classList.contains('post-item') ||
-                node.classList.contains('post') ||
-                node.id?.includes('post')
-              )) {
-              shouldDetect = true;
-              break; // Exit early once we know we need to detect
-            }
-          }
-        }
-      });
-      
-      if (shouldDetect) {
-        // Use requestAnimationFrame for more efficient timing on visual updates
-        requestAnimationFrame(() => detectAndSelectCurrentPost());
-      }
-    });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    // Add subtle styling for selected posts (more subdued than before)
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .gameboy-selected-post {
-        position: relative;
-        box-shadow: 0 0 0 2px rgba(108, 77, 196, 0.3) !important;
-      }
-      
-      .button-press {
-        transform: scale(0.9) !important;
-        opacity: 0.8 !important;
-        transition: transform 0.15s, opacity 0.15s !important;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    // Detect page changes
-    const handlePathChange = () => {
-      if (location.pathname !== currentPath) {
-        setCurrentPath(location.pathname);
-        // Re-detect posts after path change
-        setTimeout(detectAndSelectCurrentPost, 1000);
-      }
-    };
-    
-    // Check location periodically
-    const intervalId = setInterval(handlePathChange, 500);
-    
-    // Clean up
-    return () => {
-      window.removeEventListener('scroll', debouncedDetectPost);
-      window.removeEventListener('click', debouncedDetectPost);
-      window.removeEventListener('touchend', debouncedDetectPost);
-      observer.disconnect();
-      document.head.removeChild(style);
-      clearInterval(intervalId);
-    };
-  }, [currentPath]);
-
-  useEffect(() => {
     // Add post detection on each navigation
     if (currentPath !== location.pathname) {
       setCurrentPath(location.pathname);
@@ -381,6 +122,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (shouldDetectPosts) {
       const timer = setInterval(() => {
         const detectedPostId = detectMostVisiblePost();
+        // Check if we detected a post and it's different from current
         if (detectedPostId && detectedPostId !== currentPostId) {
           setCurrentPostId(detectedPostId);
           // Check follow status whenever current post changes
@@ -391,6 +133,105 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return () => clearInterval(timer);
     }
   }, [location, currentPath]);
+
+  // Use effect to ensure all posts have proper data attributes
+  useEffect(() => {
+    // Add post detection on mount and page changes
+    logToDebug('Setting up post detection');
+    
+    // Function to ensure all posts have data-post-id attributes
+    const addPostDataAttributes = () => {
+      // Find all post containers
+      const postItems = document.querySelectorAll('.post-item-container, .post-container, .post-card, .post-item, [id*="post"], .post, article');
+      
+      postItems.forEach((post, index) => {
+        // Check if post already has an ID
+        if (!post.hasAttribute('data-post-id')) {
+          // Try to find the post ID in a child element
+          const idElement = post.querySelector('[data-post-id]');
+          if (idElement) {
+            const postId = idElement.getAttribute('data-post-id');
+            post.setAttribute('data-post-id', postId || 'unknown');
+          } else {
+            // Generate temporary ID if needed
+            post.setAttribute('data-post-id', `post-${index}-${Date.now()}`);
+          }
+        }
+      });
+      
+      // Initial detection
+      detectMostVisiblePost();
+    };
+    
+    // Run initially
+    addPostDataAttributes();
+    
+    // Setup mutation observer to watch for new posts
+    const observer = new MutationObserver((mutations) => {
+      let shouldDetect = false;
+      
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          // Check if any added nodes might be posts
+          for (let i = 0; i < mutation.addedNodes.length; i++) {
+            const node = mutation.addedNodes[i];
+            if (node instanceof HTMLElement && 
+                (node.classList.contains('post-item-container') || 
+                 node.classList.contains('post-container') ||
+                 node.classList.contains('post'))) {
+              shouldDetect = true;
+              break;
+            }
+          }
+        }
+      });
+      
+      if (shouldDetect) {
+        // Only run if we potentially added new posts
+        addPostDataAttributes();
+      }
+    });
+    
+    // Observe the main content area for changes
+    const contentArea = document.querySelector('main') || document.body;
+    observer.observe(contentArea, { childList: true, subtree: true });
+    
+    // Add scroll event listener to detect most visible post while scrolling
+    window.addEventListener('scroll', detectMostVisiblePost, { passive: true });
+    
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', detectMostVisiblePost);
+    };
+  }, [location.pathname]);
+
+  // Make the animation loop run continuously for smoother scrolling response
+  useEffect(() => {
+    let animationFrameId: number | null = null;
+    
+    const runAnimationLoop = () => {
+      // Get current joystick position
+      const yPosition = joystickPosition.y;
+      
+      // Check for joystick movement
+      if (Math.abs(yPosition) > 1.5 && !location.pathname.includes('/comments/')) {
+        handleScrollFromJoystick(yPosition);
+      }
+      
+      // Continue animation loop
+      animationFrameId = requestAnimationFrame(runAnimationLoop);
+    };
+    
+    // Start animation loop
+    animationFrameId = requestAnimationFrame(runAnimationLoop);
+    
+    // Clean up on unmount
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [joystickPosition, location.pathname]);
 
   // Joystick movement handlers
   const handleJoystickMouseDown = (e: React.MouseEvent) => {
@@ -808,11 +649,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     let lastTimestamp: number | null = null;
     
     // Animation function with improved timing
-    const animateScroll = (timestamp: number) => {
+    const animateScroll = () => {
       // Calculate delta time for smoother animation
-      if (!lastTimestamp) lastTimestamp = timestamp;
-      const deltaTime = (timestamp - lastTimestamp) / 16.67; // Normalize to 60fps
-      lastTimestamp = timestamp;
+      if (!lastTimestamp) lastTimestamp = performance.now();
+      const deltaTime = (performance.now() - lastTimestamp) / 16.67; // Normalize to 60fps
+      lastTimestamp = performance.now();
       
       // Get current joystick Y position directly
       let yPosition = joystickPosition.y;
@@ -855,7 +696,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   
   const handleScrollFromJoystick = (yPosition: number) => {
     // Early return only if scrolling is explicitly disabled
-    if (!isScrollingEnabled) return;
+    if (isScrollingEnabled === false) return;
     
     // Don't scroll on certain pages where native scrolling is preferred
     const currentPath = location.pathname;
@@ -882,9 +723,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     const baseScrollSpeed = 180; // Higher speed for faster scrolling
     const scrollSpeed = direction * magnitude * baseScrollSpeed;
     
-    // Immediately request a post detection for responsive UI
-    if (Math.abs(scrollSpeed) > 15) {
-      requestAnimationFrame(detectMostVisiblePost);
+    // Always do post detection for responsive UI
+    if (Math.abs(scrollSpeed) > 5) {
+      detectMostVisiblePost();
     }
     
     // Directly apply scrolling for maximum responsiveness
@@ -1481,59 +1322,56 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Helper function to detect the most visible post on screen with optimized performance
-  const detectMostVisiblePost = () => {
-    // Use a more specific and comprehensive selector to capture all post types
-    // This improves targeting accuracy while maintaining performance
-    const allPosts = Array.from(document.querySelectorAll(
-      '.post-item, [data-post-id], [id^="post-"], .post-container, .post-card, article[id*="post"], .post'
-    ));
+  const detectMostVisiblePost = (): string | null => {
+    // Get all post elements that have a data-post-id attribute
+    const posts = document.querySelectorAll('[data-post-id]');
+    if (!posts.length) return null;
     
-    if (allPosts.length === 0) {
-      return null;
-    }
+    let maxVisiblePost = null;
+    let maxVisibleArea = 0;
     
-    let mostVisiblePost = null;
-    let maxVisibility = 0;
-    
-    // Use viewportHeight once to improve performance
+    // Calculate viewport dimensions
     const viewportHeight = window.innerHeight;
-    const viewportCenter = viewportHeight / 2;
+    const viewportTop = window.scrollY;
+    const viewportBottom = viewportTop + viewportHeight;
+    const viewportCenter = viewportTop + (viewportHeight / 2);
     
-    allPosts.forEach(post => {
+    // Find the post with the largest visible area
+    posts.forEach((post) => {
       const rect = post.getBoundingClientRect();
+      const postTop = rect.top + window.scrollY;
+      const postBottom = postTop + rect.height;
       
-      // Fast check for visibility - post must be at least partially visible
-      if (rect.bottom < 0 || rect.top > viewportHeight) {
-        return;
-      }
+      // Skip if post is not visible at all
+      if (postBottom < viewportTop || postTop > viewportBottom) return;
       
-      // Skip very small elements more aggressively (likely not actual posts)
-      if (rect.height < 40) {
-        return;
-      }
+      // Calculate visible area of the post
+      const visibleTop = Math.max(postTop, viewportTop);
+      const visibleBottom = Math.min(postBottom, viewportBottom);
+      const visibleHeight = visibleBottom - visibleTop;
       
-      // Calculate what percentage of the post is visible - optimized math
-      const visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
-      const percentVisible = visibleHeight / rect.height;
+      // Give bonus points for posts closer to the center of the viewport
+      const distanceToCenter = Math.abs((postTop + postBottom) / 2 - viewportCenter);
+      const centerBonus = 1 - (distanceToCenter / viewportHeight);
       
-      // Give stronger preference to posts near the center for more intuitive selection
-      const distanceFromCenter = Math.abs((rect.top + rect.bottom) / 2 - viewportCenter);
-      const centerFactor = 1 - (distanceFromCenter / viewportHeight) * 1.5; // Increased center weight
+      // Combine visible area and center bonus
+      const visibleArea = visibleHeight * centerBonus;
       
-      // Enhanced scoring formula that prioritizes posts more clearly in view
-      const visibilityScore = percentVisible * (1 + centerFactor) * (percentVisible > 0.7 ? 1.5 : 1);
-      
-      if (visibilityScore > maxVisibility) {
-        maxVisibility = visibilityScore;
-        mostVisiblePost = post;
+      if (visibleArea > maxVisibleArea) {
+        maxVisibleArea = visibleArea;
+        maxVisiblePost = post;
       }
     });
     
-    if (mostVisiblePost) {
-      // Get post ID from various possible attributes
-      const postId = mostVisiblePost.getAttribute('data-post-id') || 
-                     mostVisiblePost.getAttribute('id')?.replace(/post-?/i, '') ||
-                     mostVisiblePost.getAttribute('data-id');
+    // Get postId if a visible post was found
+    if (maxVisiblePost) {
+      const postId = maxVisiblePost.getAttribute('data-post-id');
+      
+      // Update current post ID if it changed
+      if (postId && postId !== currentPostId) {
+        setCurrentPostId(postId);
+        console.log('Current post changed to:', postId);
+      }
       
       return postId || null;
     }
