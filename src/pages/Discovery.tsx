@@ -118,11 +118,11 @@ const Discovery = () => {
         
         // Apply search filter if provided
         if (searchTerm) {
-          query = query.ilike('name', `%${searchTerm}%`);
+          query = query.or(`name.ilike.%${searchTerm}%, name.eq.${searchTerm}`);
         }
         
         console.log('Executing Supabase query for games search');
-        const { data, error } = await query.limit(50); // Increased limit to find more games
+        const { data, error } = await query.limit(100); // Significantly increased limit to find more games
         
         if (error) {
           console.error('Supabase games query error:', error);

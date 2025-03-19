@@ -320,32 +320,24 @@ const Clipts = () => {
       {/* Main content with padding for fixed header */}
       <div className="pt-16">
         {isLoading ? (
-          <div className="flex justify-center my-8">
-            <div className="animate-pulse">Loading videos...</div>
-          </div>
-        ) : error ? (
-          <div className="bg-red-900/20 text-red-300 p-4 rounded-lg my-8">
-            <p>Failed to load posts</p>
-            <p className="text-sm mt-2">{error}</p>
-            <Button onClick={refreshPosts} className="mt-4">
-              Try Again
-            </Button>
-          </div>
-        ) : rawPosts.length === 0 ? (
-          <div className="text-center my-8">
-            <p className="text-gray-400">No clips found</p>
-            <Button onClick={refreshPosts} className="mt-4">
-              Refresh
+          <div className="flex justify-center items-center h-[60vh]">
+            <Button variant="outline" size="icon" className="animate-spin">
+              <RefreshCw className="h-5 w-5" />
             </Button>
           </div>
         ) : (
           <div className="space-y-6 container mx-auto px-4 py-8 max-w-2xl">
             {rawPosts.map((post) => (
-              <PostItem 
-                key={post.id} 
-                post={post}
-                isCliptsPage={true}
-              />
+              <div key={post.id} className="border border-gaming-400/20 rounded-lg shadow-md bg-indigo-950/20">
+                <div className="py-6 flex justify-center">
+                  <div className="trophy-container flex flex-col items-center">
+                    <div className="trophy-badge flex items-center justify-center bg-yellow-500 text-yellow-900 font-bold rounded-full w-20 h-20 mb-2">
+                      <span className="text-2xl">TOP 10</span>
+                    </div>
+                    <p className="text-yellow-400 text-sm">Trophy Winner</p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}

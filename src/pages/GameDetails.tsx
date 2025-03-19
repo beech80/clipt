@@ -9,6 +9,13 @@ import StreamerCard from '@/components/StreamerCard';
 import { Input } from '@/components/ui/input';
 import GameSearchResult from '@/components/GameSearchResult';
 
+// Add a declaration for the window object to include our searchTimeout
+declare global {
+  interface Window {
+    searchTimeout: ReturnType<typeof setTimeout> | null;
+  }
+}
+
 interface Game {
   id: string;
   name: string;
@@ -65,27 +72,36 @@ const GameDetailsPage = () => {
     
     setSearchLoading(true);
     try {
-      // First try searching in our database
+      console.log('Searching for games with term:', term);
+      
+      // First try searching in our database - use a more comprehensive approach
       const { data: dbData, error: dbError } = await supabase
         .from('games')
         .select('id, name, created_at')
-        .ilike('name', `%${term}%`)
+        .or(`name.ilike.%${term}%, name.eq.${term}`)
         .order('created_at', { ascending: false }) // Show most recent games first
-        .limit(20); // Increased limit for more comprehensive results
+        .limit(50); // Increased limit significantly for more comprehensive results
         
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database search error:', dbError);
+        throw dbError;
+      }
+      
+      console.log('Database search results:', dbData?.length || 0);
       
       // Store the results we found in our DB
       const dbResults = dbData || [];
       
-      // If we have few results, try to augment with IGDB results
-      if (dbResults.length < 10) {
+      // If we have few results or specifically want to augment with IGDB results
+      if (dbResults.length < 15) {
         try {
           // Import IGDB service dynamically
           const { igdbService } = await import('@/services/igdbService');
           
+          console.log('Searching IGDB for:', term);
           // Search for games in IGDB
           const igdbResults = await igdbService.searchGames(term);
+          console.log('IGDB search results:', igdbResults?.length || 0);
           
           // Process IGDB results to match our format
           const processedIgdbResults = igdbResults.map((game: any) => {
@@ -96,7 +112,7 @@ const GameDetailsPage = () => {
             };
           });
           
-          // Create a set of existing game names to avoid duplicates
+          // Create a set of existing game names (case insensitive) to avoid duplicates
           const existingNames = new Set(dbResults.map(game => game.name.toLowerCase()));
           
           // Filter out duplicates and combine results
@@ -104,6 +120,9 @@ const GameDetailsPage = () => {
             (game: any) => !existingNames.has(game.name.toLowerCase())
           );
           
+          console.log('Unique IGDB results:', uniqueIgdbResults.length);
+          
+          // Combine and set results - putting DB results first as they're already in our system
           setSearchResults([...dbResults, ...uniqueIgdbResults]);
         } catch (igdbError) {
           console.error('IGDB search failed:', igdbError);
@@ -127,12 +146,17 @@ const GameDetailsPage = () => {
     const term = e.target.value;
     setSearchTerm(term);
     
-    if (term.trim().length > 2) {
-      const debounce = setTimeout(() => {
-        searchGames(term);
-      }, 300);
+    // Start search with just 2 characters to be more responsive
+    if (term.trim().length >= 2) {
+      // Clear any existing timeout
+      if (window.searchTimeout) {
+        clearTimeout(window.searchTimeout);
+      }
       
-      return () => clearTimeout(debounce);
+      // Set a shorter debounce for better responsiveness
+      window.searchTimeout = setTimeout(() => {
+        searchGames(term);
+      }, 200);
     } else {
       setSearchResults([]);
     }
