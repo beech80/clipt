@@ -299,7 +299,7 @@ const Clipts = () => {
       <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <BackButton />
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Recent Clipts</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Clipts</h1>
           <Button
             variant="ghost"
             size="icon"
@@ -325,20 +325,28 @@ const Clipts = () => {
               <RefreshCw className="h-5 w-5" />
             </Button>
           </div>
+        ) : rawPosts.length > 0 ? (
+          <div className="container mx-auto px-4 py-8 max-w-2xl">
+            {/* Display the videos normally */}
+            <div className="mb-8">
+              {rawPosts.map((post) => (
+                <PostItem 
+                  key={post.id} 
+                  post={post}
+                  isCliptsPage={true}
+                />
+              ))}
+            </div>
+            
+            {/* Top 10 Section - Just a heading with no content */}
+            <div className="mt-12 text-center pb-10">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent mb-6">Top 10 Clipts</h2>
+              {/* Intentionally left blank per user request */}
+            </div>
+          </div>
         ) : (
-          <div className="space-y-6 container mx-auto px-4 py-8 max-w-2xl">
-            {rawPosts.map((post) => (
-              <div key={post.id} className="border border-gaming-400/20 rounded-lg shadow-md bg-indigo-950/20">
-                <div className="py-6 flex justify-center">
-                  <div className="trophy-container flex flex-col items-center">
-                    <div className="trophy-badge flex items-center justify-center bg-yellow-500 text-yellow-900 font-bold rounded-full w-20 h-20 mb-2">
-                      <span className="text-2xl">TOP 10</span>
-                    </div>
-                    <p className="text-yellow-400 text-sm">Trophy Winner</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex justify-center items-center h-[60vh]">
+            <p className="text-gray-400">No clips found</p>
           </div>
         )}
       </div>
