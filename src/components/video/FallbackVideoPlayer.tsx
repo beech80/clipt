@@ -266,7 +266,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
 
   // Render HTML5 video with multiple sources
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full bg-black">
       <video
         ref={videoRef}
         className={className}
@@ -277,7 +277,14 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
         playsInline
         preload="auto"
         key={`video-${postId}-${attemptCount}`}
-        style={{ display: 'block', maxWidth: '100%', width: '100%', height: '100%', objectFit: 'contain' }}
+        style={{ 
+          display: 'block', 
+          maxWidth: '100%', 
+          width: '100%', 
+          height: '100%', 
+          objectFit: 'contain',
+          visibility: 'visible' /* Ensure video is visible */
+        }}
         onLoadedData={handleLoadSuccess}
         onCanPlay={handleLoadSuccess}
         onPlay={() => setShowPlayButton(false)}
