@@ -3,10 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import './gameboy-controller.css';
 import './joystick-animations.css';
 import CommentModal from './comments/CommentModal';
-import { toast } from 'sonner';
 import {
   Heart,
   MessageCircle,
@@ -82,6 +83,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const startXRef = useRef<number>(0); // Track the start X position of D-pad
   const dPadCenterXRef = useRef<number | null>(null);
   const dPadCenterYRef = useRef<number | null>(null);
+  const currentScrollSpeed = useRef<number>(0);
 
   // Helper function to log to debug (console only)
   const logToDebug = (message: string) => {
@@ -222,253 +224,114 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [window.location.pathname]);
 
-  // Make the animation loop run continuously for smoother scrolling response
-  useEffect(() => {
-    let animationFrameId: number | null = null;
-    let lastScrollY = window.scrollY;
-    let scrollTimer: number | null = null;
-    let lastDPadDirection = 0;
-    
-    const runAnimationLoop = () => {
-      // Calculate delta time for smoother animation
-      if (!lastScrollY) lastScrollY = window.scrollY;
-      const deltaTime = (window.scrollY - lastScrollY) / 16.67; // Normalize to 60fps
-      lastScrollY = window.scrollY;
-      
-      // Get current D-pad Y position directly
-      let yPosition = dPadDirection.y;
-      
-      // Get position from DOM for most accurate value
-      if (dPadRef.current) {
-        const transform = (dPadRef.current as HTMLDivElement).style.transform;
-        if (transform) {
-          const match = transform.match(/translate3d\((.+?)px,\s*(.+?)px/);
-          if (match && match[2]) {
-            yPosition = parseFloat(match[2]);
-          }
-        }
-      }
-      
-      // Always perform scrolling when there's vertical movement, even if not dragging
-      // This is crucial for responsive D-pad control
-      if (Math.abs(yPosition) > 1.5) {
-        handleScrollFromJoystick(yPosition);
-      }
-      
-      // Continue animation loop
-      scrollAnimationRef.current = requestAnimationFrame(runAnimationLoop);
-    };
-    
-    // Start the animation loop immediately
-    scrollAnimationRef.current = requestAnimationFrame(runAnimationLoop);
-    
-    // Clean up on unmount
-    return () => {
+  // Handler for animation frame - apply scrolling effect
+  const handleAnimationFrame = () => {
+    // Don't animate on comments page
+    if (window.location.pathname.includes('/comments')) {
       if (scrollAnimationRef.current) {
         cancelAnimationFrame(scrollAnimationRef.current);
+        scrollAnimationRef.current = null;
       }
-      if (scrollTimer) {
-        clearTimeout(scrollTimer);
+      return;
+    }
+    
+    // Get current Y position if available
+    const yPosition = dPadDirection.y;
+    
+    if (Math.abs(yPosition) > 1.5) {
+      // Calculate scroll speed based on joystick position
+      // Use non-linear curve for more precise control
+      const normalizedPosition = yPosition / 40; // Normalize to -1 to 1 range
+      
+      // Calculate a non-linear curve for better small movement control
+      const scrollFactor = Math.pow(Math.abs(normalizedPosition), 1.5) * Math.sign(normalizedPosition);
+      
+      // Faster scrolling for larger movements, slower for precise movements
+      const scrollAmount = scrollFactor * 15;
+      
+      // Always perform scrolling when there's vertical movement
+      // This ensures responsive joystick control
+      window.scrollBy(0, scrollAmount);
+      
+      // Check boundaries to prevent scrolling past content
+      const scrollTop = window.scrollY;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      const maxScroll = scrollHeight - clientHeight;
+      
+      // Prevent scrolling past top or bottom
+      if ((scrollAmount < 0 && scrollTop <= 0) || 
+          (scrollAmount > 0 && scrollTop >= maxScroll - 10)) {
+        // At boundary - stop animation
+        if (scrollAnimationRef.current) {
+          cancelAnimationFrame(scrollAnimationRef.current);
+          scrollAnimationRef.current = null;
+        }
+        return;
+      }
+    }
+    
+    // Continue animation loop
+    scrollAnimationRef.current = requestAnimationFrame(handleAnimationFrame);
+  };
+
+  // Make the animation loop start when dpad is used
+  useEffect(() => {
+    // Start animation when dpad position changes
+    if (Math.abs(dPadDirection.y) > 1.5 && !scrollAnimationRef.current) {
+      scrollAnimationRef.current = requestAnimationFrame(handleAnimationFrame);
+    }
+    
+    return () => {
+      // Cleanup only if component unmounts
+      if (scrollAnimationRef.current) {
+        cancelAnimationFrame(scrollAnimationRef.current);
+        scrollAnimationRef.current = null;
       }
     };
   }, [dPadDirection]);
 
-  const handleScrollFromDPad = (yPosition: number) => {
-    // Early return only if scrolling is explicitly disabled
-    if (isDPadPressed === false) return;
-    
-    // Don't scroll on certain pages where native scrolling is preferred
-    const currentPath = window.location.pathname;
-    if (currentPath.includes('/comments/')) {
-      return; // Don't use D-pad scrolling on comments page
-    }
-    
-    // Constants for calculations
-    const maxYPosition = 40; // Maximum expected D-pad movement
-    
-    // Normalize D-pad position to get values between -1 and 1
-    const normalizedPosition = yPosition / maxYPosition;
-    const direction = Math.sign(normalizedPosition);
-    
-    // Boundary detection
-    const scrollTop = window.scrollY;
-    const scrollHeight = document.documentElement.scrollHeight;
-    const clientHeight = document.documentElement.clientHeight;
-    const maxScroll = scrollHeight - clientHeight;
-    
-    // Prevent scrolling past boundaries
-    if ((direction < 0 && scrollTop <= 0) || (direction > 0 && scrollTop >= maxScroll - 10)) {
+  const handleScrollFromJoystick = (amount: number) => {
+    // Don't scroll on certain pages like comments
+    if (window.location.pathname.includes('/comments')) {
       return;
     }
-    
-    // Determine if this is a strong or light movement
-    const isStrongMovement = Math.abs(normalizedPosition) > 0.5;
-    
-    if (isStrongMovement) {
-      // For strong movements, use post-by-post navigation
+
+    // Determine if we should do post-by-post navigation or smooth scrolling
+    // For larger movements (higher amount), do post-by-post
+    if (Math.abs(amount) > 25) {
+      const direction = amount > 0 ? 1 : -1;
       handlePostByPostScrolling(direction);
     } else {
-      // For lighter movements, use continuous scrolling with adaptive speed
-      // Use a non-linear curve for better control
-      const intensity = Math.pow(Math.abs(normalizedPosition), 1.5); 
+      // For smaller movements, do smooth scrolling
+      const scrollAmount = amount * 5; // Adjust multiplier for scrolling speed
       
-      // Adaptive base speed - slower when near posts
-      const isNearPost = checkIfNearPost();
-      const baseScrollSpeed = isNearPost ? 150 : 200;
-      
-      // Calculate final scroll speed
-      const scrollSpeed = direction * intensity * baseScrollSpeed;
-      
-      // Perform the scroll with smoother behavior
-      window.scrollBy({
-        top: scrollSpeed,
-        behavior: 'auto' // Use 'auto' for responsive feel
-      });
-    }
-    
-    // Update the D-pad visual position
-    if (dPadRef.current) {
-      (dPadRef.current as HTMLDivElement).style.transform = 
-        `translate3d(${dPadDirection.x}px, ${yPosition}px, 0) rotate(${rotationDegree}deg)`;
-    }
-    
-    // Store scroll position for momentum calculations
-    lastScrollPosition.current = window.scrollY;
-    
-    // Update direction indicators
-    updateDirectionIndicators(yPosition);
-  };
-
-  // Check if we're near a post to adjust scrolling speed
-  const checkIfNearPost = () => {
-    const viewportCenter = window.innerHeight / 2;
-    const elements = document.elementsFromPoint(window.innerWidth / 2, viewportCenter);
-    
-    // Find the first element that could be a content item
-    const contentSelectors = [
-      '[data-post-id]', '.post-item', '.clip-item', 
-      '.streamer-card', '.video-card', '.content-card',
-      'article', '.feed-item', '.list-item'
-    ];
-    
-    const contentItem = elements.find(el => {
-      return contentSelectors.some(selector => {
-        return el.matches(selector) || el.closest(selector);
-      });
-    });
-    
-    if (!contentItem) return false;
-    
-    // If found, check how close to center
-    const targetElement = contentItem.matches(contentSelectors.join(',')) 
-      ? contentItem 
-      : contentItem.closest(contentSelectors.join(','));
-      
-    if (targetElement) {
-      const rect = targetElement.getBoundingClientRect();
-      const elementCenter = rect.top + rect.height / 2;
-      
-      // If we're within 50px of the element center, consider it "near"
-      return Math.abs(elementCenter - viewportCenter) < 50;
-    }
-    
-    return false;
-  };
-
-  // Handle post-by-post navigation
-  const handlePostByPostScrolling = (direction: number) => {
-    // Find all scrollable elements using a broad range of selectors
-    const allScrollableSelectors = [
-      '[data-post-id]', // Main post items
-      '.post-item',      // Post items 
-      '.clip-item',      // Clip items
-      '.streamer-card',  // Streamer cards
-      '.video-card',     // Video cards
-      '.clickable-card', // Generic clickable cards
-      '.feed-item',      // Feed items
-      '.list-item',      // List items
-      'article',         // Articles
-      '.content-card'    // Content cards
-    ];
-    
-    const selector = allScrollableSelectors.join(', ');
-    const elementList = Array.from(document.querySelectorAll(selector));
-    
-    // If no suitable elements are found, fall back to regular scrolling
-    if (elementList.length === 0) {
-      const scrollAmount = direction * window.innerHeight * 0.7;
+      // Apply scroll directly for immediate response
       window.scrollBy({
         top: scrollAmount,
-        behavior: 'smooth'
+        behavior: 'auto'
       });
-      return;
-    }
-    
-    // Find the element closest to the center of the viewport
-    const viewportCenter = window.innerHeight / 2;
-    const visibleElements = elementList.filter(el => {
-      const rect = el.getBoundingClientRect();
-      return rect.top < window.innerHeight && rect.bottom > 0;
-    });
-    
-    if (visibleElements.length === 0) return;
-    
-    // Sort by distance from the center of the viewport
-    visibleElements.sort((a, b) => {
-      const rectA = a.getBoundingClientRect();
-      const rectB = b.getBoundingClientRect();
-      const centerA = rectA.top + rectA.height / 2;
-      const centerB = rectB.top + rectB.height / 2;
-      return Math.abs(centerA - viewportCenter) - Math.abs(centerB - viewportCenter);
-    });
-    
-    // Get the closest element
-    const currentElement = visibleElements[0];
-    const currentIndex = elementList.indexOf(currentElement);
-    
-    // Determine the target element
-    let targetIndex = currentIndex + direction;
-    
-    // Ensure the target index is within bounds
-    if (targetIndex < 0) targetIndex = 0;
-    if (targetIndex >= elementList.length) targetIndex = elementList.length - 1;
-    
-    // If we're already at the edge, don't try to scroll further
-    if (targetIndex === currentIndex) return;
-    
-    // Get the target element and scroll to it
-    const targetElement = elementList[targetIndex];
-    scrollToElement(targetElement);
-  };
-  
-  // Helper function to scroll to a specific element
-  const scrollToElement = (element: Element) => {
-    if (!element) return;
-    
-    const rect = element.getBoundingClientRect();
-    const elementTop = rect.top + window.scrollY;
-    const elementCenter = elementTop + rect.height / 2;
-    const windowCenter = window.innerHeight / 2;
-    const scrollTarget = elementCenter - windowCenter;
-    
-    // Smooth scroll to the element
-    window.scrollTo({
-      top: scrollTarget,
-      behavior: 'smooth'
-    });
-    
-    // Visual feedback for selection
-    element.classList.add('joystick-selected-item');
-    setTimeout(() => {
-      element.classList.remove('joystick-selected-item');
-    }, 800);
-    
-    // Update current post ID if available
-    const postId = element.getAttribute('data-post-id');
-    if (postId && typeof setCurrentPostId === 'function') {
-      setCurrentPostId(postId);
+      
+      // Also start the animation for continuous scrolling feel
+      startScrollAnimation(scrollAmount);
     }
   };
+
+  // 
+  // const startScrollAnimation = (scrollAmount: number) => {
+  //   // Don't scroll on comments pages
+  //   if (window.location.pathname.includes('/comments')) {
+  //     return;
+  //   }
+  //   
+  //   // Store the scroll amount for animation
+  //   currentScrollSpeed.current = scrollAmount;
+  //   
+  //   // If no animation is running, start one
+  //   if (!scrollAnimationRef.current) {
+  //     scrollAnimationRef.current = requestAnimationFrame(handleAnimationFrame);
+  //   }
+  // };
 
   // D-pad movement handlers
   const handleDPadMouseDown = (e: React.MouseEvent) => {
@@ -1339,105 +1202,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
-  // Add subtle styling for the comment target pulse animation
-  const style = document.createElement('style');
-  style.innerHTML = `
-    .gameboy-selected-post {
-      outline: 2px solid rgba(61, 90, 254, 0.3);
-      transition: outline 0.3s ease;
-    }
-    
-    .comment-target-pulse {
-      animation: comment-pulse 0.8s ease;
-    }
-    
-    @keyframes comment-pulse {
-      0% { box-shadow: 0 0 0 0 rgba(61, 90, 254, 0.4); }
-      50% { box-shadow: 0 0 0 8px rgba(61, 90, 254, 0.1); }
-      100% { box-shadow: 0 0 0 0 rgba(61, 90, 254, 0); }
-    }
-  `;
-  
-  // Add handlers for D-pad
-  const handleDPadDirection = (direction: 'up' | 'down' | 'left' | 'right') => {
-    console.log(`D-pad pressed: ${direction}`);
-    setIsDPadPressed(true);
-    
-    switch (direction) {
-      case 'up':
-        setDPadDirection({ x: 0, y: -20 });
-        // Only vertical movements affect scrolling
-        handleScrollFromJoystick(-30);
-        break;
-      case 'down':
-        setDPadDirection({ x: 0, y: 20 });
-        // Only vertical movements affect scrolling
-        handleScrollFromJoystick(30);
-        break;
-      case 'left':
-        setDPadDirection({ x: -20, y: 0 });
-        // Left moves the joystick but doesn't scroll
-        // You can use this for other UI interactions if needed
-        break;
-      case 'right':
-        setDPadDirection({ x: 20, y: 0 });
-        // Right moves the joystick but doesn't scroll
-        // You can use this for other UI interactions if needed
-        break;
-      default:
-        break;
-    }
-  };
-
-  // Handle scrolling based on joystick input
-  const handleScrollFromJoystick = (amount: number) => {
-    // Don't scroll on certain pages like comments
-    if (window.location.pathname.includes('/comments')) {
-      return;
-    }
-
-    // Determine if we should do post-by-post navigation or smooth scrolling
-    // For larger movements (higher amount), do post-by-post
-    if (Math.abs(amount) > 25) {
-      const direction = amount > 0 ? 1 : -1;
-      handlePostByPostScrolling(direction);
-    } else {
-      // For smaller movements, do smooth scrolling
-      const scrollAmount = amount * 5; // Adjust multiplier for scrolling speed
-      startScrollAnimation(scrollAmount);
-    }
-  };
-
-  // Handler for the main CLIPT button in the center
-  const handleMainButtonClick = () => {
-    // Navigate to the home page (which shows the squad clipts)
-    navigate('/');
-  };
-
-  // Handlers for the select and start buttons
-  const handleSelectPress = () => {
-    // Menu button opens menu
-    toggleMenu();
-  };
-
-  const handleStartPress = () => {
-    // Camera button navigates to post creation page
-    navigate('/post/new');
-  };
-
-  // Handlers for the action buttons
-  const handleXButtonPress = () => {
-    // Comment functionality
-    console.log('X button pressed - Comment');
-    handleCommentClick();
-  };
-
-  const handleYButtonPress = () => {
-    // Navigate to Clipts page with videos
-    console.log('Y button pressed - Navigate to Clipts');
-    navigate('/clipts');
-  };
-
   // Menu options
   const menuOptions = [
     { 
@@ -1518,16 +1282,164 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     navigate('/post/new');
   };
 
+  // Add subtle styling for the comment target pulse animation
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .gameboy-selected-post {
+      outline: 2px solid rgba(61, 90, 254, 0.3);
+      transition: outline 0.3s ease;
+    }
+    
+    .comment-target-pulse {
+      animation: comment-pulse 0.8s ease;
+    }
+    
+    @keyframes comment-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(61, 90, 254, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(61, 90, 254, 0.1); }
+      100% { box-shadow: 0 0 0 0 rgba(61, 90, 254, 0); }
+    }
+  `;
+  
+  // Add handlers for D-pad
+  const handleDPadDirection = (direction: 'up' | 'down' | 'left' | 'right') => {
+    console.log(`D-pad pressed: ${direction}`);
+    setIsDPadPressed(true);
+    
+    switch (direction) {
+      case 'up':
+        setDPadDirection({ x: 0, y: -20 });
+        // Only vertical movements affect scrolling
+        handleScrollFromJoystick(-30);
+        break;
+      case 'down':
+        setDPadDirection({ x: 0, y: 20 });
+        // Only vertical movements affect scrolling
+        handleScrollFromJoystick(30);
+        break;
+      case 'left':
+        setDPadDirection({ x: -20, y: 0 });
+        // Left moves the joystick but doesn't scroll
+        // You can use this for other UI interactions if needed
+        break;
+      case 'right':
+        setDPadDirection({ x: 20, y: 0 });
+        // Right moves the joystick but doesn't scroll
+        // You can use this for other UI interactions if needed
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Handler for the main CLIPT button in the center
+  const handleMainButtonClick = () => {
+    // Navigate to the home page (which shows the squad clipts)
+    navigate('/');
+  };
+
+  // Handlers for the select and start buttons
+  const handleSelectPress = () => {
+    // Menu button opens menu
+    toggleMenu();
+  };
+
+  const handleStartPress = () => {
+    // Camera button navigates to post creation page
+    navigate('/post/new');
+  };
+
+  // Handlers for the action buttons
+  const handleXButtonPress = () => {
+    // Comment functionality
+    console.log('X button pressed - Comment');
+    handleCommentClick();
+  };
+
+  const handleYButtonPress = () => {
+    // Navigate to Clipts page with videos
+    console.log('Y button pressed - Navigate to Clipts');
+    navigate('/clipts');
+  };
+
+  // Function to handle Collection action (B button)
+  const handleCollection = async () => {
+    if (!user || !user.id) {
+      toast.error("Please sign in to add to your collection");
+      return;
+    }
+
+    if (!currentPostId) {
+      toast.error("No clip selected to add to collection");
+      return;
+    }
+
+    try {
+      // Check if clip is already in collection
+      const { data: existingCollection, error: checkError } = await supabase
+        .from('collections')
+        .select()
+        .eq('user_id', user.id)
+        .eq('post_id', currentPostId)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error("Error checking collection:", checkError);
+        toast.error("Failed to check collection status");
+        return;
+      }
+
+      if (existingCollection) {
+        // Remove from collection
+        const { error: removeError } = await supabase
+          .from('collections')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('post_id', currentPostId);
+
+        if (removeError) {
+          console.error("Error removing from collection:", removeError);
+          toast.error("Failed to remove from collection");
+          return;
+        }
+
+        toast.success("Removed from your collection");
+      } else {
+        // Add to collection
+        const { error: addError } = await supabase
+          .from('collections')
+          .insert({
+            user_id: user.id,
+            post_id: currentPostId,
+            created_at: new Date().toISOString()
+          });
+
+        if (addError) {
+          console.error("Error adding to collection:", addError);
+          toast.error("Failed to add to collection");
+          return;
+        }
+
+        toast.success("Added to your collection");
+      }
+
+      // Update the UI or state as needed
+      // This could be context state updates or other UI changes
+    } catch (error) {
+      console.error("Collection action failed:", error);
+      toast.error("Collection action failed");
+    }
+  };
+
   const handleAButtonPress = () => {
-    console.log('A button pressed - Comment');
+    // Green (top) button - Comments
+    // This toggles the comments modal
     handleCommentClick();
   };
 
   const handleBButtonPress = () => {
-    // Trophy/Follow functionality (moved from Y button)
-    console.log('B button pressed - Follow');
-    setIsFollowing(!isFollowing);
-    handleFollowClick();
+    // Red (right) button - Collection
+    handleCollection();
   };
 
   const handleFollowButtonPress = () => {
@@ -1624,7 +1536,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setCommentModalOpen(true);
   };
 
-  // Action button handlers
   const handleButtonAPress = () => {
     // Green (top) button - Comments
     // This toggles the comments modal
@@ -1632,8 +1543,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   const handleButtonBPress = () => {
-    // Red (right) button - Follow/Trophy
-    handleFollow();
+    // Red (right) button - Collection
+    handleCollection();
   };
 
   const handleButtonXPress = () => {
@@ -1649,6 +1560,101 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleButtonYPress = () => {
     // Yellow (bottom) button - Trophy
     handleTrophy();
+  };
+
+  // Handle post-by-post navigation
+  const handlePostByPostScrolling = (direction: number) => {
+    // Find all scrollable elements using a broad range of selectors
+    const allScrollableSelectors = [
+      '[data-post-id]', // Main post items
+      '.post-item',      // Post items 
+      '.clip-item',      // Clip items
+      '.streamer-card',  // Streamer cards
+      '.video-card',     // Video cards
+      '.clickable-card', // Generic clickable cards
+      '.feed-item',      // Feed items
+      '.list-item',      // List items
+      'article',         // Articles
+      '.content-card'    // Content cards
+    ];
+    
+    const selector = allScrollableSelectors.join(', ');
+    const elementList = Array.from(document.querySelectorAll(selector));
+    
+    // If no suitable elements are found, fall back to regular scrolling
+    if (elementList.length === 0) {
+      const scrollAmount = direction * window.innerHeight * 0.7;
+      window.scrollBy({
+        top: scrollAmount,
+        behavior: 'smooth'
+      });
+      return;
+    }
+    
+    // Find the element closest to the center of the viewport
+    const viewportCenter = window.innerHeight / 2;
+    const visibleElements = elementList.filter(el => {
+      const rect = el.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    });
+    
+    if (visibleElements.length === 0) return;
+    
+    // Sort by distance from the center of the viewport
+    visibleElements.sort((a, b) => {
+      const rectA = a.getBoundingClientRect();
+      const rectB = b.getBoundingClientRect();
+      const centerA = rectA.top + rectA.height / 2;
+      const centerB = rectB.top + rectB.height / 2;
+      return Math.abs(centerA - viewportCenter) - Math.abs(centerB - viewportCenter);
+    });
+    
+    // Get the closest element
+    const currentElement = visibleElements[0];
+    const currentIndex = elementList.indexOf(currentElement);
+    
+    // Determine the target element
+    let targetIndex = currentIndex + direction;
+    
+    // Ensure the target index is within bounds
+    if (targetIndex < 0) targetIndex = 0;
+    if (targetIndex >= elementList.length) targetIndex = elementList.length - 1;
+    
+    // If we're already at the edge, don't try to scroll further
+    if (targetIndex === currentIndex) return;
+    
+    // Get the target element and scroll to it
+    const targetElement = elementList[targetIndex];
+    scrollToElement(targetElement);
+  };
+  
+  // Helper function to scroll to a specific element
+  const scrollToElement = (element: Element) => {
+    if (!element) return;
+    
+    const rect = element.getBoundingClientRect();
+    const elementTop = rect.top + window.scrollY;
+    const elementCenter = elementTop + rect.height / 2;
+    const windowCenter = window.innerHeight / 2;
+    const scrollTarget = elementCenter - windowCenter;
+    
+    // Smooth scroll to the element
+    window.scrollTo({
+      top: scrollTarget,
+      behavior: 'smooth'
+    });
+    
+    // Visual feedback for selection
+    element.classList.add('joystick-selected-item');
+    setTimeout(() => {
+      element.classList.remove('joystick-selected-item');
+    }, 800);
+    
+    // Update current post ID if available
+    const postId = element.getAttribute('data-post-id');
+    if (postId && typeof setCurrentPostId === 'function') {
+      setCurrentPostId(postId);
+    }
   };
 
   // Function to animate the scrolling with physics

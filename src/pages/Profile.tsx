@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, Settings, UserX } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, Settings, UserX, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -37,10 +37,11 @@ const Profile = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'clips' | 'achievements'>('clips');
+  const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collection'>('clips');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [userCollection, setUserCollection] = useState<any[]>([]);
   const [achievementsLoading, setAchievementsLoading] = useState(true);
   
   // Stats for displaying counts
@@ -201,11 +202,92 @@ const Profile = () => {
       const profileData = await fetchProfileData(profileId);
       
       if (!profileData) {
-        throw new Error("Failed to fetch profile data");
+        setError("Profile not found");
+        setLoading(false);
+        return;
       }
       
-      console.log('Profile data loaded successfully:', profileData);
       setProfile(profileData);
+      
+      // Get user posts (clips)
+      const { data: userPostsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          title,
+          content,
+          image_url,
+          video_url,
+          created_at,
+          likes_count,
+          comments_count,
+          game_id,
+          profile_id,
+          profiles (
+            id,
+            username,
+            avatar_url,
+            display_name
+          ),
+          games (
+            id,
+            name,
+            cover_url
+          )
+        `)
+        .eq('profile_id', profileId)
+        .order('created_at', { ascending: false });
+      
+      if (postsError) {
+        console.error("Error fetching user posts:", postsError);
+      } else {
+        setUserPosts(userPostsData || []);
+      }
+      
+      // Get collection posts if it's the user's own profile
+      if (user && user.id === profileId) {
+        // Fetch posts that the user has added to their collection
+        const { data: collectionData, error: collectionError } = await supabase
+          .from('collections')
+          .select(`
+            id,
+            created_at,
+            post_id,
+            posts:post_id(
+              id,
+              title,
+              content,
+              image_url,
+              video_url,
+              created_at,
+              likes_count,
+              comments_count,
+              game_id,
+              profile_id,
+              profiles(
+                id,
+                username,
+                avatar_url,
+                display_name
+              ),
+              games(
+                id,
+                name,
+                cover_url
+              )
+            )
+          `)
+          .eq('user_id', profileId)
+          .order('created_at', { ascending: false });
+        
+        if (collectionError) {
+          console.error("Error fetching user collection:", collectionError);
+        } else {
+          // Extract the posts from the collection data
+          const collectionPosts = collectionData?.map(item => item.posts) || [];
+          setUserCollection(collectionPosts.filter(Boolean));
+        }
+      }
       
       // Update stats based on profile data
       setStats({
@@ -213,19 +295,6 @@ const Profile = () => {
         following: profileData.following_count || 0,
         achievements: profileData.achievements_count || 0,
       });
-      
-      // Fetch user posts
-      const { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select('*, profiles(username, display_name, avatar_url), games(name, cover_url)')
-        .eq('user_id', profileId)
-        .order('created_at', { ascending: false });
-      
-      if (postsError) {
-        console.error("Error fetching posts:", postsError);
-      } else {
-        setUserPosts(postsData || []);
-      }
       
       // Get detailed follow stats if needed
       try {
@@ -436,6 +505,15 @@ const Profile = () => {
               <span>Clips</span>
             </Toggle>
             <Toggle
+              pressed={activeTab === 'collection'}
+              onPressedChange={() => setActiveTab('collection')}
+              variant="outline"
+              className="flex gap-2 items-center"
+            >
+              <Bookmark className="w-4 h-4" />
+              <span>Collection</span>
+            </Toggle>
+            <Toggle
               pressed={activeTab === 'achievements'}
               onPressedChange={() => setActiveTab('achievements')}
               variant="outline"
@@ -463,7 +541,7 @@ const Profile = () => {
             </Card>
           )}
         </div>
-      ) : (
+      ) : activeTab === 'achievements' ? (
         <div className="gaming-card p-6">
           <div className="mb-4">
             <h2 className="text-xl font-bold flex items-center gap-2 text-white mb-2">
@@ -482,6 +560,29 @@ const Profile = () => {
             // ALWAYS force demo achievements to show for better user experience
             <AchievementList userId={profileId} forceShowDemo={true} />
           )}
+        </div>
+      ) : (
+        <div className="gaming-card p-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-white mb-2">
+              <Bookmark className="text-blue-500" />
+              Collection
+            </h2>
+            <p className="text-gray-400">Your saved gaming clips</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {userCollection.length > 0 ? (
+              userCollection.map(post => (
+                <PostItem key={post.id} post={post} />
+              ))
+            ) : (
+              <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60">
+                <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Collection Items Yet</h3>
+                <p className="text-gaming-400">Use the B button on a post to add it to your collection</p>
+              </Card>
+            )}
+          </div>
         </div>
       )}
     </ProfileContent>
