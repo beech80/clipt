@@ -1320,9 +1320,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   
   const handleAButtonPress = () => {
     console.log('A button pressed - Comment');
-    if (currentPostId) {
-      setShowCommentModal(true);
-    }
+    handleCommentClick();
   };
   
   const handleBButtonPress = () => {
@@ -1585,7 +1583,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           <div className="action-buttons">
             <button 
               className="action-button a-button" 
-              onClick={handleCommentClick}
+              onClick={handleAButtonPress}
             >
               <MessageCircle size={16} color="white" />
             </button>
