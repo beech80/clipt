@@ -11,7 +11,7 @@
   overflow: hidden;
 }
 
-/* D-Pad Styling - Modern circular joystick */
+/* D-Pad Styling - Textured joystick */
 .d-pad-container {
   position: relative;
   width: 100px;
@@ -23,51 +23,46 @@
   width: 100%;
   height: 100%;
   position: relative;
-  background: #272730;
+  background: #222;
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
 }
 
+/* Textured mesh pattern for joystick */
 .d-pad::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at center, transparent 0%, transparent 30%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.3) 31%, transparent 31%),
+    repeating-linear-gradient(0deg, transparent 0px, transparent 2px, rgba(50, 50, 50, 0.5) 2px, rgba(50, 50, 50, 0.5) 3px),
+    repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(50, 50, 50, 0.5) 2px, rgba(50, 50, 50, 0.5) 3px);
+  background-color: #222;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* Central dome of joystick */
+.d-pad::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 35%;
-  height: 35%;
-  background: #222;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(circle at center, #333 0%, #222 80%, #1a1a1a 100%);
   border-radius: 50%;
-  z-index: 1;
-}
-
-.d-pad-corner {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background-color: #6366f1;
-  border-radius: 50%;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8);
   z-index: 2;
 }
 
-.d-pad-corner.top-left {
-  top: 15%;
-  left: 15%;
-}
-
-.d-pad-corner.top-right {
-  top: 15%;
-  right: 15%;
-}
-
-.d-pad-corner.bottom-left {
-  bottom: 15%;
-  left: 15%;
-}
-
-.d-pad-corner.bottom-right {
-  bottom: 15%;
-  right: 15%;
+.d-pad-corner {
+  display: none; /* Hide corners for this style */
 }
 
 .d-pad button {
@@ -101,15 +96,7 @@
 }
 
 .d-pad-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  background: #333;
-  border-radius: 50%;
-  z-index: 2;
+  display: none; /* Hide center for this style */
 }
 
 .d-pad button:active,
@@ -144,16 +131,18 @@
   font-weight: bold;
   font-size: 16px;
   z-index: 3;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
+/* Cool gradient animation for main button */
 .main-button::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: conic-gradient(#4a68f9, #6366f1, #4a68f9);
+  background: conic-gradient(#ff3366, #ff6633, #ffcc33, #33cc33, #3366ff, #cc33ff, #ff3366);
   opacity: 0.8;
   border-radius: 50%;
-  animation: rotate 4s linear infinite;
+  animation: rotate 3s linear infinite;
 }
 
 .main-button::after {
@@ -199,7 +188,7 @@
   background-color: #2b2b36;
 }
 
-/* Action Buttons - Diamond pattern */
+/* Action Buttons - Diamond pattern with updated colors */
 .action-buttons {
   display: flex;
   justify-content: center;
@@ -232,8 +221,8 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #3b82f6; /* Blue */
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+  background-color: #22c55e; /* Green */
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
 }
 
 .b-button {
@@ -248,16 +237,16 @@
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  background-color: #10b981; /* Green */
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+  background-color: #3b82f6; /* Blue */
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
 }
 
 .y-button {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #f59e0b; /* Yellow */
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+  background-color: #eab308; /* Yellow */
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.5);
 }
 
 .action-button:active {

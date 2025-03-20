@@ -1491,11 +1491,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           {/* D-Pad */}
           <div className="d-pad-container">
             <div className="d-pad" ref={dPadRef}>
-              <div className="d-pad-corner top-left"></div>
-              <div className="d-pad-corner top-right"></div>
-              <div className="d-pad-corner bottom-left"></div>
-              <div className="d-pad-corner bottom-right"></div>
-              <div className="d-pad-center"></div>
+              {/* No need for corner elements with the new joystick design */}
               <button
                 className={`d-pad-up ${isDPadActive('up') ? 'active' : ''}`}
                 onClick={() => handleDPadDirection('up')}
