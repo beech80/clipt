@@ -311,27 +311,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         top: scrollAmount,
         behavior: 'auto'
       });
-      
-      // Also start the animation for continuous scrolling feel
-      startScrollAnimation(scrollAmount);
     }
   };
-
-  // 
-  // const startScrollAnimation = (scrollAmount: number) => {
-  //   // Don't scroll on comments pages
-  //   if (window.location.pathname.includes('/comments')) {
-  //     return;
-  //   }
-  //   
-  //   // Store the scroll amount for animation
-  //   currentScrollSpeed.current = scrollAmount;
-  //   
-  //   // If no animation is running, start one
-  //   if (!scrollAnimationRef.current) {
-  //     scrollAnimationRef.current = requestAnimationFrame(handleAnimationFrame);
-  //   }
-  // };
 
   // D-pad movement handlers
   const handleDPadMouseDown = (e: React.MouseEvent) => {
@@ -549,52 +530,47 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Update direction indicators to provide visual feedback
-  const updateDirectionIndicators = (yPosition: number) => {
+  const updateDirectionIndicators = (values: {x: number, y: number} | number) => {
+    // Get direction indicators
     const upArrow = document.querySelector('.direction-up');
     const downArrow = document.querySelector('.direction-down');
+    const leftArrow = document.querySelector('.direction-left');
+    const rightArrow = document.querySelector('.direction-right');
     
-    if (!upArrow || !downArrow) return;
+    if (!upArrow || !downArrow || !leftArrow || !rightArrow) return;
     
     // Clear existing classes
-    upArrow.classList.remove('active');
-    downArrow.classList.remove('active');
-    upArrow.classList.remove('disabled');
-    downArrow.classList.remove('disabled');
+    upArrow.classList.remove('direction-active');
+    downArrow.classList.remove('direction-active');
+    leftArrow.classList.remove('direction-active');
+    rightArrow.classList.remove('direction-active');
     
-    // Add active class based on D-pad position
-    if (yPosition < -5) {
-      upArrow.classList.add('active');
-    } else if (yPosition > 5) {
-      downArrow.classList.add('active');
-    }
-    
-    // Check if we can scroll further in each direction
-    const isAtPageTop = window.scrollY <= 5;
-    const isAtPageBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 5;
-    
-    // Disable indicators if we can't scroll further
-    if (isAtPageTop) {
-      upArrow.classList.add('disabled');
-    }
-    
-    if (isAtPageBottom) {
-      downArrow.classList.add('disabled');
-    }
-    
-    // Get intensity based on D-pad position for visual feedback
-    const normalizedY = Math.min(Math.abs(yPosition) / 40, 1);
-    const intensity = Math.round(normalizedY * 100);
-    
-    // Add visual intensity indicator
-    if (yPosition < -5) {
-      (upArrow as HTMLElement).style.setProperty('--intensity', `${intensity}%`);
-      (downArrow as HTMLElement).style.setProperty('--intensity', '0%');
-    } else if (yPosition > 5) {
-      (downArrow as HTMLElement).style.setProperty('--intensity', `${intensity}%`);
-      (upArrow as HTMLElement).style.setProperty('--intensity', '0%');
+    // If it's a number, it's just vertical position
+    if (typeof values === 'number') {
+      // Add active class based on vertical position
+      if (values < -5) {
+        upArrow.classList.add('direction-active');
+      } else if (values > 5) {
+        downArrow.classList.add('direction-active');
+      }
     } else {
-      (upArrow as HTMLElement).style.setProperty('--intensity', '0%');
-      (downArrow as HTMLElement).style.setProperty('--intensity', '0%');
+      // It's an object with x and y values
+      // Add active class based on direction
+      if (values.y < -10) {
+        upArrow.classList.add('direction-active');
+      }
+      
+      if (values.x > 10) {
+        rightArrow.classList.add('direction-active');
+      }
+      
+      if (values.y > 10) {
+        downArrow.classList.add('direction-active');
+      }
+      
+      if (values.x < -10) {
+        leftArrow.classList.add('direction-active');
+      }
     }
   };
 
@@ -1364,33 +1340,27 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Function to handle Collection action (B button)
   const handleCollection = async () => {
-    if (!user || !user.id) {
-      toast.error("Please sign in to add to your collection");
-      return;
-    }
-
-    if (!currentPostId) {
-      toast.error("No clip selected to add to collection");
+    if (!user || !currentPostId) {
+      toast.error("Login to add this clip to your collection");
       return;
     }
 
     try {
-      // Check if clip is already in collection
-      const { data: existingCollection, error: checkError } = await supabase
+      // Check if the post is already in the collection
+      const { data: existingCollections, error: checkError } = await supabase
         .from('collections')
-        .select()
+        .select('id')
         .eq('user_id', user.id)
-        .eq('post_id', currentPostId)
-        .single();
+        .eq('post_id', currentPostId);
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error("Error checking collection:", checkError);
-        toast.error("Failed to check collection status");
+      if (checkError) {
+        console.error('Error checking collection status:', checkError);
+        toast.error('Could not check collection status');
         return;
       }
 
-      if (existingCollection) {
-        // Remove from collection
+      if (existingCollections && existingCollections.length > 0) {
+        // Post is in collection, remove it
         const { error: removeError } = await supabase
           .from('collections')
           .delete()
@@ -1398,36 +1368,33 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           .eq('post_id', currentPostId);
 
         if (removeError) {
-          console.error("Error removing from collection:", removeError);
-          toast.error("Failed to remove from collection");
+          console.error('Error removing from collection:', removeError);
+          toast.error('Could not remove from collection');
           return;
         }
 
-        toast.success("Removed from your collection");
+        toast.success('Removed from your collection');
       } else {
-        // Add to collection
+        // Post not in collection, add it
         const { error: addError } = await supabase
           .from('collections')
-          .insert({
+          .insert([{
             user_id: user.id,
             post_id: currentPostId,
             created_at: new Date().toISOString()
-          });
+          }]);
 
         if (addError) {
-          console.error("Error adding to collection:", addError);
-          toast.error("Failed to add to collection");
+          console.error('Error adding to collection:', addError);
+          toast.error('Could not add to collection');
           return;
         }
 
-        toast.success("Added to your collection");
+        toast.success('Added to your collection!');
       }
-
-      // Update the UI or state as needed
-      // This could be context state updates or other UI changes
     } catch (error) {
-      console.error("Collection action failed:", error);
-      toast.error("Collection action failed");
+      console.error('Collection operation failed:', error);
+      toast.error('Collection operation failed');
     }
   };
 
@@ -1704,6 +1671,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
+  const handleJoystickChange = (values: { x: number, y: number }) => {
+    // Update the d-pad position for visual feedback
+    setDPadDirection(values);
+    
+    // Exit early if the joystick is barely moved
+    if (Math.abs(values.y) < 5) return;
+    
+    // For vertical movement, handle scrolling
+    const verticalAmount = values.y;
+    
+    // Call the scroll handler with the vertical amount
+    handleScrollFromJoystick(verticalAmount);
+    
+    // Apply visual feedback for direction indicators
+    updateDirectionIndicators(values);
+  };
+  
   // Your return JSX - the UI for the GameBoy controller
   return (
     <>
