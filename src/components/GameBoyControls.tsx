@@ -1,39 +1,42 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useAuth } from '../hooks/useAuth';
+import './gameboy-controller.css';
+import './joystick-animations.css';
+import CommentModal from './comments/CommentModal';
 import { toast } from 'sonner';
-import { 
-  Menu, 
-  Heart, 
+import {
+  Heart,
+  MessageCircle,
   Camera,
-  MessageCircle, 
-  Trophy, 
-  UserPlus, 
-  UserCheck,
-  X, 
-  Home, 
-  Search, 
-  Bell, 
-  Upload, 
-  User,
-  TrendingUp,
-  Settings,
-  Bookmark,
-  Video,
   Award,
+  Bell,
+  Settings,
+  Menu,
+  User,
+  UserCheck,
+  UserPlus,
+  Video,
+  Trophy,
   Monitor,
   Users,
   Grid,
-  Compass
+  Compass,
+  Share
 } from 'lucide-react';
-// Using the supabase client from hooks instead of direct import
-// import { supabase } from '@/lib/supabase';
-import './joystick-animations.css'; // Import joystick animations
-import './gameboy-controller.css'; // Import GameBoy controller styles
-import CommentModal from './comments/CommentModal';
-import { FiSettings, FiUser, FiBell, FiVideo, FiMessageCircle, FiSearch, FiAward, FiUsers, FiMonitor, FiChevronRight } from 'react-icons/fi';
+import { 
+  FiSettings, 
+  FiUser, 
+  FiBell, 
+  FiVideo, 
+  FiMessageCircle, 
+  FiAward, 
+  FiUsers, 
+  FiMonitor,
+  FiChevronRight
+} from 'react-icons/fi';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -50,15 +53,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string | null>(null);
   const [navigationOptions] = useState([
-    { id: 'clipts', name: 'Clipts', icon: <Grid size={18} />, path: '/clipts' },
+    { id: 'clips', name: 'Clipts', icon: <Grid size={18} />, path: '/' },
     { id: 'top-clipts', name: 'Top Clipts', icon: <Trophy size={18} />, path: '/top-clipts' },
-    { id: 'discover', name: 'Discovery', icon: <Compass size={18} />, path: '/discover' },
+    { id: 'squads-clipts', name: 'Squads Clipts', icon: <Users size={18} />, path: '/squads' },
     { id: 'profile', name: 'Profile', icon: <User size={18} />, path: '/profile' },
     { id: 'messages', name: 'Messages', icon: <MessageCircle size={18} />, path: '/messages' },
-    { id: 'notifications', name: 'Notifications', icon: <Bell size={18} />, path: '/notifications' },
-    { id: 'streaming', name: 'Streaming', icon: <Video size={18} />, path: '/streaming' },
-    { id: 'squads', name: 'Squads Clipts', icon: <Users size={18} />, path: '/squads/clipts' },
-    { id: 'settings', name: 'Settings', icon: <Settings size={18} />, path: '/settings' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | undefined>(undefined);
@@ -1266,6 +1265,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }, 200);
   };
   
+  const handleDPadDirection = (direction: string) => {
+    handleDPadPress(direction);
+  };
+  
   const handleDPadTouchEnd = () => {
     setIsDPadPressed(false);
   };
@@ -1380,19 +1383,44 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setCommentModalOpen(true);
   };
 
+  // Handler for the main CLIPT button in the center
+  const handleMainButtonClick = () => {
+    toggleMenu();
+  };
+
+  // Handlers for the select and start buttons
+  const handleSelectPress = () => {
+    handleCameraClick();
+  };
+
+  const handleStartPress = () => {
+    toggleMenu();
+  };
+
+  // Handlers for the action buttons
+  const handleXButtonPress = () => {
+    handleFollowButtonPress();
+  };
+
+  const handleYButtonPress = () => {
+    // Share functionality
+    console.log('Share functionality');
+    navigate('/share');
+  };
+
   // Menu options
   const menuOptions = [
     { 
       id: 'settings', 
       name: 'Settings', 
-      description: 'Configure your game',
+      description: 'Game preferences',
       icon: <FiSettings />, 
-      action: () => console.log('Settings clicked') 
+      action: () => navigate('/settings') 
     },
     { 
       id: 'profile', 
       name: 'Profile', 
-      description: 'Your player stats',
+      description: 'View your profile',
       icon: <FiUser />, 
       action: () => navigate('/profile') 
     },
@@ -1418,30 +1446,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       action: () => navigate('/messages') 
     },
     { 
-      id: 'discovery', 
-      name: 'Discovery', 
-      description: 'Find new games',
-      icon: <FiSearch />, 
-      action: () => navigate('/discovery') 
-    },
-    { 
-      id: 'top-clips', 
-      name: 'Top Clips', 
+      id: 'top-clipts', 
+      name: 'Top Clipts', 
       description: 'Hall of fame',
       icon: <FiAward />, 
-      action: () => navigate('/top-clips') 
+      action: () => navigate('/top-clipts') 
     },
     { 
-      id: 'squads-clips', 
-      name: 'Squads Clips', 
-      description: 'Your squads clips',
+      id: 'squads-clipts', 
+      name: 'Squads Clipts', 
+      description: 'Your squads clipts',
       icon: <FiUsers />, 
       action: () => navigate('/squads') 
     },
     { 
-      id: 'clips', 
-      name: 'Clips', 
-      description: 'View all clips',
+      id: 'clipts', 
+      name: 'Clipts', 
+      description: 'View all clipts',
       icon: <FiMonitor />, 
       action: () => navigate('/') 
     }
@@ -1465,147 +1486,93 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Your return JSX - the UI for the GameBoy controller
   return (
     <>
-      {/* Enhanced Comment Modal using the proper component */}
-      {commentModalOpen && activeCommentPostId && (
-        <CommentModal 
-          isOpen={commentModalOpen}
-          onClose={() => {
-            setCommentModalOpen(false);
-            setActiveCommentPostId(undefined);
-          }}
-          postId={activeCommentPostId}
-        />
-      )}
-      
-      <div 
-        className="fixed bottom-0 left-0 right-0 z-50"
-      >
-        <div className="game-boy-controls">
-          {/* GameBoy D-pad section (left side) */}
-          <div className="d-pad-container">
-            <div className="d-pad" ref={dPadRef}>
-              {/* Purple corner indicators */}
-              <div className="d-pad-corner top-left"></div>
-              <div className="d-pad-corner top-right"></div>
-              <div className="d-pad-corner bottom-left"></div>
-              <div className="d-pad-corner bottom-right"></div>
-              
-              <button 
-                className={`d-pad-up ${isDPadActive('up') ? 'active' : ''}`}
-                onClick={() => handleDPadPress('up')}
-                onTouchStart={() => handleDPadPress('up')}
-                onTouchEnd={handleDPadTouchEnd}
-              ></button>
-              <button 
-                className={`d-pad-right ${isDPadActive('right') ? 'active' : ''}`}
-                onClick={() => handleDPadPress('right')}
-                onTouchStart={() => handleDPadPress('right')}
-                onTouchEnd={handleDPadTouchEnd}
-              ></button>
-              <button 
-                className={`d-pad-down ${isDPadActive('down') ? 'active' : ''}`}
-                onClick={() => handleDPadPress('down')}
-                onTouchStart={() => handleDPadPress('down')}
-                onTouchEnd={handleDPadTouchEnd}
-              ></button>
-              <button 
-                className={`d-pad-left ${isDPadActive('left') ? 'active' : ''}`}
-                onClick={() => handleDPadPress('left')}
-                onTouchStart={() => handleDPadPress('left')}
-                onTouchEnd={handleDPadTouchEnd}
-              ></button>
-              <div className="d-pad-center"></div>
-            </div>
-          </div>
-
-          {/* Center Control Section */}
-          <div className="center-section">
-            <button 
-              className="main-button"
-              onClick={toggleMenu}
-            >
-              <span>CLIPT</span>
-            </button>
-            <div className="select-start-buttons">
-              <button className="select-button" onClick={() => handleCameraClick()}>
-                <Camera size={16} />
-              </button>
-              <button className="start-button" onClick={toggleMenu}>
-                <Menu size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* Action Buttons (right side) */}
-          <div className="action-buttons">
-            <button 
-              className="action-button a-button" 
-              onClick={handleAButtonPress}
-            >
-              <MessageCircle size={16} color="white" />
-            </button>
-            <button 
-              className="action-button b-button" 
-              onClick={handleBButtonPress}
-            >
-              <Heart size={16} color="white" />
-            </button>
-            <button 
-              className="action-button x-button" 
-              onClick={handleFollowButtonPress}
-            >
-              {isFollowing ? <UserCheck size={16} color="white" /> : <UserPlus size={16} color="white" />}
-            </button>
-            <button 
-              className="action-button y-button" 
-              onClick={() => navigate('/top-clips')}
-            >
-              <Trophy size={16} color="white" />
-            </button>
+      <div className="game-boy-controls">
+        {/* D-Pad */}
+        <div className="d-pad-container">
+          <div className="d-pad" ref={dPadRef}>
+            <div className="d-pad-corner top-left"></div>
+            <div className="d-pad-corner top-right"></div>
+            <div className="d-pad-corner bottom-left"></div>
+            <div className="d-pad-corner bottom-right"></div>
+            <div className="d-pad-center"></div>
+            <button
+              className={`d-pad-up ${isDPadActive('up') ? 'active' : ''}`}
+              onClick={() => handleDPadDirection('up')}
+            ></button>
+            <button
+              className={`d-pad-right ${isDPadActive('right') ? 'active' : ''}`}
+              onClick={() => handleDPadDirection('right')}
+            ></button>
+            <button
+              className={`d-pad-down ${isDPadActive('down') ? 'active' : ''}`}
+              onClick={() => handleDPadDirection('down')}
+            ></button>
+            <button
+              className={`d-pad-left ${isDPadActive('left') ? 'active' : ''}`}
+              onClick={() => handleDPadDirection('left')}
+            ></button>
           </div>
         </div>
+
+        {/* Center Section */}
+        <div className="center-section">
+          <button className="main-button" onClick={handleMainButtonClick}>
+            <span>CLIPT</span>
+          </button>
+          <div className="select-start-buttons">
+            <button className="select-button" onClick={handleSelectPress}></button>
+            <button className="start-button" onClick={handleStartPress}></button>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="action-buttons">
+          <button className="action-button a-button" onClick={handleAButtonPress}>
+            <Heart size={20} />
+          </button>
+          <button className="action-button b-button" onClick={handleBButtonPress}>
+            <Award size={20} />
+          </button>
+          <button className="action-button x-button" onClick={handleXButtonPress}>
+            <MessageCircle size={20} />
+          </button>
+          <button className="action-button y-button" onClick={handleYButtonPress}>
+            <Share size={20} />
+          </button>
+        </div>
+
+        {/* Menu Modal */}
+        {isMenuOpen && (
+          <div className="menu-modal">
+            <div className="menu-container">
+              <div className="menu-header">
+                <div className="menu-title">Game Menu</div>
+                <button className="close-menu" onClick={() => setIsMenuOpen(false)}>×</button>
+              </div>
+              <div className="menu-options">
+                {menuOptions.map((option) => (
+                  <div
+                    key={option.id}
+                    className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
+                    onClick={() => {
+                      setSelectedMenuOption(option.id);
+                      option.action();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <div className="menu-option-icon">{option.icon}</div>
+                    <div className="menu-option-content">
+                      <div className="menu-option-title">{option.name}</div>
+                      <div className="menu-option-description">{option.description}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Menu Modal */}
-      {isMenuOpen && (
-        <div className="menu-modal" onClick={() => setIsMenuOpen(false)}>
-          <div className="menu-container" onClick={(e) => e.stopPropagation()}>
-            <div className="menu-header">
-              GAME MENU
-            </div>
-            <div className="menu-options">
-              {menuOptions.map((option) => (
-                <button
-                  key={option.id}
-                  className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
-                  onClick={() => {
-                    setSelectedMenuOption(option.id);
-                    option.action();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <div className="menu-option-icon">
-                    {option.icon}
-                  </div>
-                  <div className="menu-option-content">
-                    <div className="menu-option-name">{option.name}</div>
-                    <div className="menu-option-description">{option.description}</div>
-                  </div>
-                  <div className="menu-option-arrow">
-                    <FiChevronRight />
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="menu-footer">
-              <button className="menu-close-button" onClick={() => setIsMenuOpen(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      
       {/* Comment Modal */}
       {commentModalOpen && currentPostId && (
         <CommentModal 
