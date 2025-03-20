@@ -1205,6 +1205,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     console.log('Start button pressed');
   };
 
+  // Handle select button press - used in the JSX
+  const handleSelectPress = () => {
+    handleSelectButton();
+  };
+
+  // Handle start button press - used in the JSX
+  const handleStartPress = () => {
+    handleStartButton();
+  };
+
+  // Handle main CLIPT button press
+  const handleMainButtonClick = () => {
+    console.log('Main CLIPT button pressed');
+    // Navigate to home feed or toggle main menu
+    navigate('/');
+  };
+
   // Handle selecting a menu option
   const handleMenuSelect = (optionId: string) => {
     if (!isMenuOpen) return;
