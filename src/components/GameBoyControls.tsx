@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '@/lib/supabase';
+import { supabase as supabaseClient } from '@/lib/supabase';
 import { toast } from 'sonner';
 import './gameboy-controller.css';
 import './joystick-animations.css';
@@ -55,7 +55,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const supabase = useSupabaseClient();
+  const supabaseSession = useSupabaseClient();
   const { user } = useAuth();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
@@ -239,7 +239,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       if (!user || !currentPostId) return;
       
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('collections')
           .select('id')
           .eq('user_id', user.id)
@@ -869,7 +869,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     try {
       logToDebug('Attempting direct API like for post: ' + postId);
       
-      const { data: currentUser } = await supabase.auth.getUser();
+      const { data: currentUser } = await supabaseSession.auth.getUser();
       const userId = currentUser?.user?.id;
       
       if (!userId) {
@@ -878,7 +878,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       // Check if already liked
-      const { data: existingLike, error: likeError } = await supabase
+      const { data: existingLike, error: likeError } = await supabaseSession
         .from('likes')
         .select('*')
         .eq('post_id', postId)
@@ -891,7 +891,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       if (existingLike) {
         // Unlike
-        await supabase
+        await supabaseSession
           .from('likes')
           .delete()
           .eq('post_id', postId)
@@ -900,7 +900,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         toast.success('Removed like from post');
       } else {
         // Like
-        await supabase
+        await supabaseSession
           .from('likes')
           .insert({
             post_id: postId,
@@ -930,7 +930,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     try {
       logToDebug('Attempting direct API follow for post: ' + postId);
       
-      const { data: currentUser } = await supabase.auth.getUser();
+      const { data: currentUser } = await supabaseSession.auth.getUser();
       const userId = currentUser?.user?.id;
       
       if (!userId) {
@@ -939,7 +939,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       // First, get the post to find the creator's ID
-      const { data: postData, error: postError } = await supabase
+      const { data: postData, error: postError } = await supabaseSession
         .from('posts')
         .select('user_id')
         .eq('id', postId)
@@ -959,7 +959,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       // Check if already following
-      const { data: existingFollow, error: followError } = await supabase
+      const { data: existingFollow, error: followError } = await supabaseSession
         .from('follows')
         .select('*')
         .eq('follower_id', userId)
@@ -972,7 +972,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       if (existingFollow) {
         // Already following, so unfollow
-        const { error: unfollowError } = await supabase
+        const { error: unfollowError } = await supabaseSession
           .from('follows')
           .delete()
           .eq('follower_id', userId)
@@ -988,7 +988,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         setIsFollowing(false);
       } else {
         // Follow the creator
-        const { error: followInsertError } = await supabase
+        const { error: followInsertError } = await supabaseSession
           .from('follows')
           .insert({
             follower_id: userId,
@@ -1023,13 +1023,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Check if user is following a post creator
   const checkFollowStatus = async (postId: string) => {
     try {
-      const { data: currentUser } = await supabase.auth.getUser();
+      const { data: currentUser } = await supabaseSession.auth.getUser();
       const userId = currentUser?.user?.id;
       
       if (!userId) return false;
       
       // First, get the post creator's ID
-      const { data: postData, error: postError } = await supabase
+      const { data: postData, error: postError } = await supabaseSession
         .from('posts')
         .select('user_id')
         .eq('id', postId)
@@ -1040,7 +1040,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       const creatorId = postData.user_id;
       
       // Check if already following
-      const { data: existingFollow, error: followError } = await supabase
+      const { data: existingFollow, error: followError } = await supabaseSession
         .from('follows')
         .select('*')
         .eq('follower_id', userId)
@@ -1325,14 +1325,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       toast.loading("Processing collection action...");
       
       // Use the Supabase client from props or hooks
-      if (!supabase) {
+      if (!supabaseSession) {
         console.error('No Supabase client available');
         toast.error('Could not connect to database. Please try again later.');
         return;
       }
       
       // Check if the post is already in the collection
-      const { data: existingCollections, error: checkError } = await supabase
+      const { data: existingCollections, error: checkError } = await supabaseSession
         .from('collections')
         .select('id')
         .eq('user_id', user.id)
@@ -1346,7 +1346,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
       if (existingCollections && existingCollections.length > 0) {
         // Post is in collection, remove it
-        const { error: removeError } = await supabase
+        const { error: removeError } = await supabaseSession
           .from('collections')
           .delete()
           .eq('user_id', user.id)
@@ -1362,7 +1362,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         toast.success('Removed from your collection');
       } else {
         // Post not in collection, add it
-        const { error: addError } = await supabase
+        const { error: addError } = await supabaseSession
           .from('collections')
           .insert([{
             user_id: user.id,
@@ -1399,7 +1399,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setLikeLoading(true);
     
     try {
-      const response = await supabase
+      const response = await supabaseSession
         .from('likes')
         .select('*')
         .eq('user_id', user.id)
@@ -1408,7 +1408,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       if (response.data) {
         // Unlike
-        await supabase
+        await supabaseSession
           .from('likes')
           .delete()
           .eq('user_id', user.id)
@@ -1418,7 +1418,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         toast.success("Removed like");
       } else {
         // Like
-        await supabase
+        await supabaseSession
           .from('likes')
           .insert({
             user_id: user.id,
