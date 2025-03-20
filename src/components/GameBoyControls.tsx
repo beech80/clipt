@@ -1355,6 +1355,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           {/* GameBoy D-pad section (left side) */}
           <div className="d-pad-container">
             <div className="d-pad" ref={dPadRef}>
+              {/* Purple corner indicators */}
+              <div className="d-pad-corner top-left"></div>
+              <div className="d-pad-corner top-right"></div>
+              <div className="d-pad-corner bottom-left"></div>
+              <div className="d-pad-corner bottom-right"></div>
+              
               <button 
                 className="d-pad-up" 
                 onClick={() => handleDPadPress('up')}
