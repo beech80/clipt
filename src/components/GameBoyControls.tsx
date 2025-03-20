@@ -1236,59 +1236,191 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   `;
   
   // Add handlers for D-pad
-  const handleDPadPress = (direction: 'up' | 'down' | 'left' | 'right') => {
+  const handleDPadDirection = (direction: 'up' | 'down' | 'left' | 'right') => {
     console.log(`D-pad pressed: ${direction}`);
+    setIsDPadPressed(true);
     
     switch (direction) {
       case 'up':
         setDPadDirection({ x: 0, y: -20 });
-        handleScrollFromDPad(-20);
+        handleScrollFromJoystick(-30);
         break;
       case 'down':
         setDPadDirection({ x: 0, y: 20 });
-        handleScrollFromDPad(20);
+        handleScrollFromJoystick(30);
         break;
       case 'left':
         setDPadDirection({ x: -20, y: 0 });
-        // Handle left navigation
+        // Navigate back in history
+        if (window.history.length > 1) {
+          navigate(-1);
+        }
         break;
       case 'right':
         setDPadDirection({ x: 20, y: 0 });
-        // Handle right navigation
+        // Handle right navigation - could be used for next/forward
+        if (currentPostId) {
+          // For example, navigate to next post if available
+          const allPosts = Array.from(document.querySelectorAll('[data-post-id]'));
+          const currentIndex = allPosts.findIndex(post => post.getAttribute('data-post-id') === currentPostId);
+          if (currentIndex !== -1 && currentIndex < allPosts.length - 1) {
+            const nextPost = allPosts[currentIndex + 1];
+            const nextPostId = nextPost.getAttribute('data-post-id');
+            if (nextPostId) {
+              handleScrollToPost(nextPostId);
+            }
+          }
+        }
         break;
       default:
         break;
     }
-    
-    setTimeout(() => {
-      resetDPad();
-    }, 200);
   };
-  
-  const handleDPadDirection = (direction: 'up' | 'down' | 'left' | 'right') => {
-    handleDPadPress(direction);
+
+  // Handle scrolling based on joystick input
+  const handleScrollFromJoystick = (amount: number) => {
+    // Don't scroll on certain pages like comments
+    if (window.location.pathname.includes('/comments')) {
+      return;
+    }
+
+    // Determine if we should do post-by-post navigation or smooth scrolling
+    // For larger movements (higher amount), do post-by-post
+    if (Math.abs(amount) > 25) {
+      const direction = amount > 0 ? 1 : -1;
+      handlePostByPostScrolling(direction);
+    } else {
+      // For smaller movements, do smooth scrolling
+      const scrollAmount = amount * 5; // Adjust multiplier for scrolling speed
+      startScrollAnimation(scrollAmount);
+    }
   };
-  
+
+  // Handler for the main CLIPT button in the center
+  const handleMainButtonClick = () => {
+    // Navigate to Squads Clipts page
+    navigate('/squad-clipts');
+  };
+
+  // Handlers for the select and start buttons
+  const handleSelectPress = () => {
+    // Menu button opens menu
+    toggleMenu();
+  };
+
+  const handleStartPress = () => {
+    // Camera button navigates to post creation page
+    navigate('/post/new');
+  };
+
+  // Handlers for the action buttons
+  const handleXButtonPress = () => {
+    // Comment functionality
+    console.log('X button pressed - Comment');
+    handleCommentClick();
+  };
+
+  const handleYButtonPress = () => {
+    // Trophy/Achievement functionality
+    console.log('Y button pressed - Trophy');
+    handleFollowButtonPress();
+  };
+
+  // Menu options
+  const menuOptions = [
+    { 
+      id: 'settings', 
+      name: 'Settings', 
+      description: 'Game preferences',
+      icon: <FiSettings />, 
+      action: () => navigate('/settings') 
+    },
+    { 
+      id: 'profile', 
+      name: 'Profile', 
+      description: 'View your profile',
+      icon: <FiUser />, 
+      action: () => navigate('/profile') 
+    },
+    { 
+      id: 'notifications', 
+      name: 'Notifications', 
+      description: 'Your notifications',
+      icon: <FiBell />, 
+      action: () => navigate('/notifications') 
+    },
+    { 
+      id: 'streaming', 
+      name: 'Streaming', 
+      description: 'Live gameplay',
+      icon: <FiVideo />, 
+      action: () => navigate('/streaming') 
+    },
+    { 
+      id: 'messages', 
+      name: 'Messages', 
+      description: 'Chat with players',
+      icon: <FiMessageCircle />, 
+      action: () => navigate('/messages') 
+    },
+    { 
+      id: 'top-clipts', 
+      name: 'Top Clipts', 
+      description: 'Hall of fame',
+      icon: <FiAward />, 
+      action: () => navigate('/top-clipts') 
+    },
+    { 
+      id: 'squads-clipts', 
+      name: 'Squads Clipts', 
+      description: 'Your squads clipts',
+      icon: <FiUsers />, 
+      action: () => navigate('/squads') 
+    },
+    { 
+      id: 'clipts', 
+      name: 'Clipts', 
+      description: 'View all clipts',
+      icon: <FiMonitor />, 
+      action: () => navigate('/') 
+    }
+  ];
+
+  const isDPadActive = (direction: 'up' | 'down' | 'left' | 'right') => {
+    switch (direction) {
+      case 'up':
+        return dPadDirection.y < -5;
+      case 'down':
+        return dPadDirection.y > 5;
+      case 'left':
+        return dPadDirection.x < -5;
+      case 'right':
+        return dPadDirection.x > 5;
+      default:
+        return false;
+    }
+  };
+
   const handleDPadTouchEnd = () => {
     setIsDPadPressed(false);
   };
-  
+
   const handleCameraClick = () => {
     console.log('Camera clicked');
     navigate('/post/new');
   };
-  
+
   const handleAButtonPress = () => {
     console.log('A button pressed - Comment');
     handleCommentClick();
   };
-  
+
   const handleBButtonPress = () => {
     console.log('B button pressed - Like');
     setHasLiked(!hasLiked);
     handleLikeClick();
   };
-  
+
   const handleFollowButtonPress = () => {
     console.log('Follow button pressed');
     setIsFollowing(!isFollowing);
@@ -1381,108 +1513,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
     
     setCommentModalOpen(true);
-  };
-
-  // Handler for the main CLIPT button in the center
-  const handleMainButtonClick = () => {
-    toggleMenu();
-  };
-
-  // Handlers for the select and start buttons
-  const handleSelectPress = () => {
-    handleCameraClick();
-  };
-
-  const handleStartPress = () => {
-    toggleMenu();
-  };
-
-  // Handlers for the action buttons
-  const handleXButtonPress = () => {
-    // Comment functionality
-    console.log('X button pressed - Comment');
-    handleCommentClick();
-  };
-
-  const handleYButtonPress = () => {
-    // Trophy/Achievement functionality
-    console.log('Y button pressed - Trophy');
-    handleFollowButtonPress();
-  };
-
-  // Menu options
-  const menuOptions = [
-    { 
-      id: 'settings', 
-      name: 'Settings', 
-      description: 'Game preferences',
-      icon: <FiSettings />, 
-      action: () => navigate('/settings') 
-    },
-    { 
-      id: 'profile', 
-      name: 'Profile', 
-      description: 'View your profile',
-      icon: <FiUser />, 
-      action: () => navigate('/profile') 
-    },
-    { 
-      id: 'notifications', 
-      name: 'Notifications', 
-      description: 'Your notifications',
-      icon: <FiBell />, 
-      action: () => navigate('/notifications') 
-    },
-    { 
-      id: 'streaming', 
-      name: 'Streaming', 
-      description: 'Live gameplay',
-      icon: <FiVideo />, 
-      action: () => navigate('/streaming') 
-    },
-    { 
-      id: 'messages', 
-      name: 'Messages', 
-      description: 'Chat with players',
-      icon: <FiMessageCircle />, 
-      action: () => navigate('/messages') 
-    },
-    { 
-      id: 'top-clipts', 
-      name: 'Top Clipts', 
-      description: 'Hall of fame',
-      icon: <FiAward />, 
-      action: () => navigate('/top-clipts') 
-    },
-    { 
-      id: 'squads-clipts', 
-      name: 'Squads Clipts', 
-      description: 'Your squads clipts',
-      icon: <FiUsers />, 
-      action: () => navigate('/squads') 
-    },
-    { 
-      id: 'clipts', 
-      name: 'Clipts', 
-      description: 'View all clipts',
-      icon: <FiMonitor />, 
-      action: () => navigate('/') 
-    }
-  ];
-
-  const isDPadActive = (direction: 'up' | 'down' | 'left' | 'right') => {
-    switch (direction) {
-      case 'up':
-        return dPadDirection.y < -5;
-      case 'down':
-        return dPadDirection.y > 5;
-      case 'left':
-        return dPadDirection.x < -5;
-      case 'right':
-        return dPadDirection.x > 5;
-      default:
-        return false;
-    }
   };
 
   // Your return JSX - the UI for the GameBoy controller
