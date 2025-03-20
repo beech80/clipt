@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useAuth } from '../hooks/useAuth';
+import { toast } from 'sonner';
 import { 
   Menu, 
   Heart, 
@@ -24,9 +28,8 @@ import {
   Grid,
   Compass
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+// Using the supabase client from hooks instead of direct import
+// import { supabase } from '@/lib/supabase';
 import './joystick-animations.css'; // Import joystick animations
 import './gameboy-controller.css'; // Import GameBoy controller styles
 import CommentModal from './comments/CommentModal';
@@ -40,6 +43,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const supabase = useSupabaseClient();
+  const { user } = useAuth();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -63,7 +68,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [likeLoading, setLikeLoading] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [currentPostCreatorId, setCurrentPostCreatorId] = useState<string | null>(null);
-  const [showCommentModal, setShowCommentModal] = useState(false);
   const [rotationDegree, setRotationDegree] = useState<number>(0);
   
   // D-pad states
@@ -1092,53 +1096,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   const handleTrophy = () => handlePostAction('trophy');
 
-  // Enhanced comment button handler
-  const handleCommentClick = () => {
-    // Enhanced post detection for comments
-    const currentPostId = getCurrentPostId();
-    
-    if (currentPostId) {
-      console.log('Comment button clicked for post:', currentPostId);
-      
-      // Add visual feedback - pulse animation on the selected post
-      const postElement = document.querySelector(`[data-post-id="${currentPostId}"], #post-${currentPostId}`);
-      if (postElement) {
-        // Add a pulse effect to indicate the targeted post
-        postElement.classList.add('comment-target-pulse');
-        // Remove it after animation completes
-        setTimeout(() => postElement.classList.remove('comment-target-pulse'), 800);
-      }
-      
-      // Navigate to the full-page comments view
-      navigate(`/comments-full/${currentPostId}`);
-      
-      // Store the last interacted post ID to maintain context
-      try {
-        localStorage.setItem('clipt-last-comment-post', currentPostId);
-      } catch (e) {
-        console.error('Failed to store post ID:', e);
-      }
-    } else {
-      // Fallback - notify user
-      toast.info('Select a post to comment on', {
-        position: 'bottom-center',
-        duration: 2000,
-      });
-      
-      // Try to scroll to the first visible post to help user
-      const firstVisiblePost = Array.from(document.querySelectorAll('.post-item, [data-post-id], [id^="post-"]')).find(
-        post => {
-          const rect = post.getBoundingClientRect();
-          return rect.top >= 0 && rect.bottom <= window.innerHeight;
-        }
-      );
-      
-      if (firstVisiblePost) {
-        firstVisiblePost.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-  };
-
   // Function to get the current post ID with improved reliability
   const getCurrentPostId = () => {
     // First check if we have a selected post ID in state
@@ -1376,7 +1333,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       // Invalidate posts query to update like count
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
     } catch (error) {
       console.error('Error toggling like:', error);
       toast.error("Failed to like the clip");
@@ -1420,7 +1377,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return;
     }
     
-    setShowCommentModal(true);
+    setCommentModalOpen(true);
   };
 
   // Menu options
@@ -1650,11 +1607,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       )}
 
       {/* Comment Modal */}
-      {showCommentModal && currentPostId && (
+      {commentModalOpen && currentPostId && (
         <CommentModal 
           postId={currentPostId} 
-          onClose={() => setShowCommentModal(false)}
-          isOpen={showCommentModal}
+          onClose={() => setCommentModalOpen(false)}
+          isOpen={commentModalOpen}
         />
       )}
     </>
