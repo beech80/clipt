@@ -44,6 +44,13 @@ interface GameBoyControlsProps {
   currentPostId?: string;
 }
 
+// Define the direction indicators interface to include limitReached
+interface DirectionIndicatorValues {
+  x: number;
+  y: number;
+  limitReached?: 'top' | 'bottom' | 'none';
+}
+
 const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCurrentPostId }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -340,6 +347,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         top: scrollAmount,
         behavior: 'auto'
       });
+      
+      // Check if we're at the boundaries
+      const scrollPosition = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      
+      // Update visual indicators if at boundaries
+      if (scrollPosition <= 0 && amount < 0) {
+        // At top and trying to scroll up
+        updateDirectionIndicators({ x: 0, y: -20, limitReached: 'top' });
+      } else if (scrollPosition >= maxScroll - 5 && amount > 0) {
+        // At bottom and trying to scroll down
+        updateDirectionIndicators({ x: 0, y: 20, limitReached: 'bottom' });
+      }
     }
   };
 
@@ -442,6 +462,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       const rect = dPadRef.current.getBoundingClientRect();
       dPadCenterXRef.current = rect.left + rect.width / 2;
       dPadCenterYRef.current = rect.top + rect.height / 2;
+      
+      // Visual feedback - add pressed class
+      dPadRef.current.classList.add('pressed');
+    }
+    
+    // Clear any existing animations
+    if (scrollAnimationRef.current) {
+      cancelAnimationFrame(scrollAnimationRef.current);
+      scrollAnimationRef.current = null;
     }
   };
 
@@ -465,7 +494,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Constrain to maximum displacement
     const MAX_DISPLACEMENT = 40;
-    const displacementRatio = Math.min(1, MAX_DISPLACEMENT / distance);
+    const displacementRatio = Math.min(1, MAX_DISPLACEMENT / Math.max(1, distance));
     
     // Calculate constrained position
     const constrainedX = deltaX * displacementRatio;
@@ -474,11 +503,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Update joystick position
     setDPadDirection({ x: constrainedX, y: constrainedY });
     
-    // Handle scrolling based on Y displacement
-    if (Math.abs(constrainedY) > 10) {
-      const scrollAmount = constrainedY * 0.5;
+    // Update visual position - makes the joystick move visually when touched
+    if (dPadRef.current) {
+      dPadRef.current.style.transform = `translate3d(${constrainedX/3}px, ${constrainedY/3}px, 0)`;
+    }
+    
+    // Handle scrolling with more sensitivity for mobile
+    if (Math.abs(constrainedY) > 5) { // Lower threshold for better response
+      const scrollAmount = constrainedY * 1.0; // Higher multiplier for better mobile response
       handleScrollFromJoystick(scrollAmount);
     }
+    
+    // Update direction indicators for visual feedback
+    updateDirectionIndicators({ x: constrainedX, y: constrainedY });
   };
 
   const handleDPadTouchEnd = (e: React.TouchEvent) => {
@@ -496,6 +533,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Reset direction
     setDPadDirection({ x: 0, y: 0 });
+    
+    // Snap to nearest post for better UX
+    setTimeout(() => snapToNearestPost(), 200);
+    
+    // Clear direction indicators
+    updateDirectionIndicators({ x: 0, y: 0, limitReached: 'none' });
   };
 
   // Reset D-pad position and visual effects
@@ -559,7 +602,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Update direction indicators to provide visual feedback
-  const updateDirectionIndicators = (values: {x: number, y: number} | number) => {
+  const updateDirectionIndicators = (values: DirectionIndicatorValues) => {
     // Get direction indicators
     const upArrow = document.querySelector('.direction-up');
     const downArrow = document.querySelector('.direction-down');
@@ -569,37 +612,36 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (!upArrow || !downArrow || !leftArrow || !rightArrow) return;
     
     // Clear existing classes
-    upArrow.classList.remove('direction-active');
-    downArrow.classList.remove('direction-active');
-    leftArrow.classList.remove('direction-active');
-    rightArrow.classList.remove('direction-active');
+    upArrow.classList.remove('direction-active', 'direction-limit');
+    downArrow.classList.remove('direction-active', 'direction-limit');
+    leftArrow.classList.remove('direction-active', 'direction-limit');
+    rightArrow.classList.remove('direction-active', 'direction-limit');
     
-    // If it's a number, it's just vertical position
-    if (typeof values === 'number') {
-      // Add active class based on vertical position
-      if (values < -5) {
-        upArrow.classList.add('direction-active');
-      } else if (values > 5) {
-        downArrow.classList.add('direction-active');
-      }
-    } else {
-      // It's an object with x and y values
-      // Add active class based on direction
-      if (values.y < -10) {
-        upArrow.classList.add('direction-active');
-      }
+    // Add active class based on direction
+    if (values.y < -10) {
+      upArrow.classList.add('direction-active');
       
-      if (values.x > 10) {
-        rightArrow.classList.add('direction-active');
+      // If we've reached the top limit
+      if (values.limitReached === 'top') {
+        upArrow.classList.add('direction-limit');
       }
+    }
+    
+    if (values.x > 10) {
+      rightArrow.classList.add('direction-active');
+    }
+    
+    if (values.y > 10) {
+      downArrow.classList.add('direction-active');
       
-      if (values.y > 10) {
-        downArrow.classList.add('direction-active');
+      // If we've reached the bottom limit
+      if (values.limitReached === 'bottom') {
+        downArrow.classList.add('direction-limit');
       }
-      
-      if (values.x < -10) {
-        leftArrow.classList.add('direction-active');
-      }
+    }
+    
+    if (values.x < -10) {
+      leftArrow.classList.add('direction-active');
     }
   };
 
@@ -1015,154 +1057,121 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
-  // Individual action handlers that use the universal handler
-  const handleLike = () => handlePostAction('like');
-  const handleComment = () => {
-    // First check if we have a current post ID
-    if (!currentPostId) {
-      // Try to detect post if we don't have one
-      const isSinglePostPage = window.location.pathname.includes('/post/');
-      if (isSinglePostPage) {
-        // Extract post ID from URL
-        const match = window.location.pathname.match(/\/post\/([^\/]+)/);
-        if (match && match[1]) {
-          const newPostId = match[1];
-          console.log(`Detected post ID from URL: ${newPostId}`);
-          setActiveCommentPostId(newPostId);
-          setCommentModalOpen(true);
-          return;
-        }
-      }
-      
-      toast.error("No post selected. Try scrolling to a post first.");
+  // Handle post-by-post navigation
+  const handlePostByPostScrolling = (direction: number) => {
+    // Don't perform post scrolling on the comments page
+    if (window.location.pathname.includes('/comments')) {
       return;
     }
     
-    // We have a currentPostId, now try to open comments
-    console.log(`Opening comment modal for post: ${currentPostId}`);
-    setActiveCommentPostId(currentPostId);
-    setCommentModalOpen(true);
+    const viewportCenter = window.innerHeight / 2;
     
-    // For better UX, show a visual indication of which post is selected
-    const selectedPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
-    if (selectedPost) {
-      // Add a pulsing effect to show which post was selected
-      selectedPost.classList.add('comment-target-pulse');
-      
-      // Remove the effect after animation completes
-      setTimeout(() => {
-        selectedPost.classList.remove('comment-target-pulse');
-      }, 1000);
-    }
-  };
-  const handleFollow = () => {
-    // Try the universal approach first
-    handlePostAction('follow');
+    // Find all potential post elements - more comprehensive selectors
+    const contentSelectors = [
+      '[data-post-id]', '.post-item', '.clip-item', 
+      '.post-card', '.video-card', '.feed-item',
+      'article', '.content-item', '.streamer-card'
+    ];
     
-    // Get the current post ID with improved reliability
-    const detectedPostId = detectMostVisiblePost();
-    const targetPostId = detectedPostId || currentPostId;
+    // Combine selectors for a more efficient query
+    const allPosts = Array.from(document.querySelectorAll(contentSelectors.join(',')));
     
-    if (targetPostId) {
-      // Update follow status for UI feedback
-      checkFollowStatus(targetPostId);
-      
-      // If the post is found but the button click failed, try direct API follow
-      setTimeout(() => {
-        handleDirectFollow(targetPostId);
-      }, 500);
-    } else {
-      toast.error('No post selected. Try scrolling to a post first.');
-    }
-  };
-  const handleTrophy = () => {
-    if (!user || !currentPostId) {
-      toast.error("Login to give trophy");
+    if (allPosts.length === 0) {
+      console.log('No posts found for post-by-post navigation');
       return;
     }
     
-    // Trophy logic
-    toast.success("Trophy given! 🏆");
-    console.log("Trophy given to post", currentPostId);
-  };
-
-  // Function to get the current post ID with improved reliability
-  const getCurrentPostId = () => {
-    // First check if we have a selected post ID in state
-    if (currentPostId) {
-      return currentPostId;
-    }
+    // Find which post is closest to the center viewport
+    let closestPost = null;
+    let closestIndex = -1;
+    let minDistance = Infinity;
     
-    // Then check session storage as backup
-    try {
-      const storedPostId = sessionStorage.getItem('clipt-last-selected-post');
-      if (storedPostId) {
-        return storedPostId;
-      }
-    } catch (e) {
-      console.error('Failed to access session storage:', e);
-    }
-    
-    // Last resort - find the most visible post on screen
-    return detectMostVisiblePost();
-  };
-
-  // Helper function to detect the most visible post on screen with optimized performance
-  const detectMostVisiblePost = (): string | null => {
-    // Get all post elements that have a data-post-id attribute
-    const posts = document.querySelectorAll('[data-post-id]');
-    if (!posts.length) return null;
-    
-    let maxVisiblePost = null;
-    let maxVisibleArea = 0;
-    
-    // Calculate viewport dimensions
-    const viewportHeight = window.innerHeight;
-    const viewportTop = window.scrollY;
-    const viewportBottom = viewportTop + viewportHeight;
-    const viewportCenter = viewportTop + (viewportHeight / 2);
-    
-    // Find the post with the largest visible area
-    posts.forEach((post) => {
+    allPosts.forEach((post, index) => {
       const rect = post.getBoundingClientRect();
-      const postTop = rect.top + window.scrollY;
-      const postBottom = postTop + rect.height;
+      const elementCenter = rect.top + rect.height / 2;
+      const distance = Math.abs(elementCenter - viewportCenter);
       
-      // Skip if post is not visible at all
-      if (postBottom < viewportTop || postTop > viewportBottom) return;
-      
-      // Calculate visible area of the post
-      const visibleTop = Math.max(postTop, viewportTop);
-      const visibleBottom = Math.min(postBottom, viewportBottom);
-      const visibleHeight = visibleBottom - visibleTop;
-      
-      // Give bonus points for posts closer to the center of the viewport
-      const distanceToCenter = Math.abs((postTop + postBottom) / 2 - viewportCenter);
-      const centerBonus = 1 - (distanceToCenter / viewportHeight);
-      
-      // Combine visible area and center bonus
-      const visibleArea = visibleHeight * centerBonus;
-      
-      if (visibleArea > maxVisibleArea) {
-        maxVisibleArea = visibleArea;
-        maxVisiblePost = post;
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPost = post;
+        closestIndex = index;
       }
     });
     
-    // Get postId if a visible post was found
-    if (maxVisiblePost) {
-      const postId = maxVisiblePost.getAttribute('data-post-id');
+    // If we found the closest post, find the next or previous one
+    if (closestIndex !== -1) {
+      // Calculate the target index based on direction
+      const targetIndex = closestIndex + direction;
       
-      // Update current post ID if it changed
-      if (postId && postId !== currentPostId) {
-        setCurrentPostId(postId);
-        console.log('Current post changed to:', postId);
+      // Make sure the target index is valid
+      if (targetIndex >= 0 && targetIndex < allPosts.length) {
+        const targetPost = allPosts[targetIndex];
+        
+        // Add a visual highlight for feedback
+        targetPost.classList.add('gameboy-selected-post');
+        
+        // Smooth scroll to the target post
+        targetPost.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+        
+        // If the post has a post ID, update the current post ID state
+        const postId = targetPost.getAttribute('data-post-id');
+        if (postId) {
+          setCurrentPostId(postId);
+          // Store in session for state persistence
+          try {
+            sessionStorage.setItem('clipt-last-selected-post', postId);
+          } catch (e) {
+            console.error('Failed to save post ID to session:', e);
+          }
+        }
+        
+        // Clear the visual highlight after animation completes
+        setTimeout(() => {
+          targetPost.classList.remove('gameboy-selected-post');
+        }, 1000);
+      } else {
+        // If we're at the boundary, provide feedback
+        if (targetIndex < 0) {
+          // At first post, show top boundary reached
+          updateDirectionIndicators({ x: 0, y: -20, limitReached: 'top' });
+        } else {
+          // At last post, show bottom boundary reached
+          updateDirectionIndicators({ x: 0, y: 20, limitReached: 'bottom' });
+        }
       }
-      
-      return postId || null;
     }
+  };
+
+  // Helper function to scroll to a specific element
+  const scrollToElement = (element: Element) => {
+    if (!element) return;
     
-    return null;
+    const rect = element.getBoundingClientRect();
+    const elementTop = rect.top + window.scrollY;
+    const elementCenter = elementTop + rect.height / 2;
+    const windowCenter = window.innerHeight / 2;
+    const scrollTarget = elementCenter - windowCenter;
+    
+    // Smooth scroll to the element
+    window.scrollTo({
+      top: scrollTarget,
+      behavior: 'smooth'
+    });
+    
+    // Visual feedback for selection
+    element.classList.add('joystick-selected-item');
+    setTimeout(() => {
+      element.classList.remove('joystick-selected-item');
+    }, 800);
+    
+    // Update current post ID if available
+    const postId = element.getAttribute('data-post-id');
+    if (postId && typeof setCurrentPostId === 'function') {
+      setCurrentPostId(postId);
+    }
   };
 
   // Handle menu navigation with D-pad
@@ -1287,86 +1296,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     navigate('/post/new');
   };
 
-  // Add subtle styling for the comment target pulse animation
-  const style = document.createElement('style');
-  style.innerHTML = `
-    .gameboy-selected-post {
-      outline: 2px solid rgba(61, 90, 254, 0.3);
-      transition: outline 0.3s ease;
-    }
-    
-    .comment-target-pulse {
-      animation: comment-pulse 0.8s ease;
-    }
-    
-    @keyframes comment-pulse {
-      0% { box-shadow: 0 0 0 0 rgba(61, 90, 254, 0.4); }
-      50% { box-shadow: 0 0 0 8px rgba(61, 90, 254, 0.1); }
-      100% { box-shadow: 0 0 0 0 rgba(61, 90, 254, 0); }
-    }
-  `;
-  
-  // Add handlers for D-pad
-  const handleDPadDirection = (direction: 'up' | 'down' | 'left' | 'right') => {
-    console.log(`D-pad pressed: ${direction}`);
-    setIsDPadPressed(true);
-    
-    switch (direction) {
-      case 'up':
-        setDPadDirection({ x: 0, y: -20 });
-        // Only vertical movements affect scrolling
-        handleScrollFromJoystick(-30);
-        break;
-      case 'down':
-        setDPadDirection({ x: 0, y: 20 });
-        // Only vertical movements affect scrolling
-        handleScrollFromJoystick(30);
-        break;
-      case 'left':
-        setDPadDirection({ x: -20, y: 0 });
-        // Left moves the joystick but doesn't scroll
-        // You can use this for other UI interactions if needed
-        break;
-      case 'right':
-        setDPadDirection({ x: 20, y: 0 });
-        // Right moves the joystick but doesn't scroll
-        // You can use this for other UI interactions if needed
-        break;
-      default:
-        break;
-    }
-  };
-
-  // Handler for the main CLIPT button in the center
-  const handleMainButtonClick = () => {
-    // Navigate to the home page (which shows the squad clipts)
-    navigate('/');
-  };
-
-  // Handlers for the select and start buttons
-  const handleSelectPress = () => {
-    // Menu button opens menu
-    toggleMenu();
-  };
-
-  const handleStartPress = () => {
-    // Camera button navigates to post creation page
-    navigate('/post/new');
-  };
-
-  // Handlers for the action buttons
-  const handleXButtonPress = () => {
-    // Comment functionality
-    console.log('X button pressed - Comment');
-    handleCommentClick();
-  };
-
-  const handleYButtonPress = () => {
-    // Navigate to Clipts page with videos
-    console.log('Y button pressed - Navigate to Clipts');
-    navigate('/clipts');
-  };
-
   // Function to handle Collection action (B button)
   const handleCollection = async () => {
     if (!user || !currentPostId) {
@@ -1375,6 +1304,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
 
     try {
+      // Show immediate feedback
+      toast.loading("Processing collection action...");
+      
+      // Use the Supabase client from props or hooks
+      if (!supabase) {
+        console.error('No Supabase client available');
+        toast.error('Could not connect to database. Please try again later.');
+        return;
+      }
+      
       // Check if the post is already in the collection
       const { data: existingCollections, error: checkError } = await supabase
         .from('collections')
@@ -1384,7 +1323,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
       if (checkError) {
         console.error('Error checking collection status:', checkError);
-        toast.error('Could not check collection status');
+        toast.error('Could not check collection status: ' + checkError.message);
         return;
       }
 
@@ -1398,7 +1337,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
         if (removeError) {
           console.error('Error removing from collection:', removeError);
-          toast.error('Could not remove from collection');
+          toast.error('Could not remove from collection: ' + removeError.message);
           return;
         }
 
@@ -1416,34 +1355,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
         if (addError) {
           console.error('Error adding to collection:', addError);
-          toast.error('Could not add to collection');
+          toast.error('Could not add to collection: ' + addError.message);
           return;
         }
 
         setInCollection(true);
         toast.success('Added to your collection!');
+        
+        // Refresh collections data
+        queryClient.invalidateQueries(['collections']);
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Collection operation failed:', error);
-      toast.error('Collection operation failed');
+      toast.error(`Collection operation failed: ${errorMessage}`);
     }
-  };
-
-  const handleAButtonPress = () => {
-    // Green (top) button - Comments
-    // This toggles the comments modal
-    handleCommentClick();
-  };
-
-  const handleBButtonPress = () => {
-    // Red (right) button - Collection
-    handleCollection();
-  };
-
-  const handleFollowButtonPress = () => {
-    console.log('Follow button pressed');
-    setIsFollowing(!isFollowing);
-    handleFollowClick();
   };
 
   const handleLikeClick = async () => {
@@ -1560,165 +1486,213 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     handleTrophy();
   };
 
-  // Handle post-by-post navigation
-  const handlePostByPostScrolling = (direction: number) => {
-    // Find all scrollable elements using a broad range of selectors
-    const allScrollableSelectors = [
-      '[data-post-id]', // Main post items
-      '.post-item',      // Post items 
-      '.clip-item',      // Clip items
-      '.streamer-card',  // Streamer cards
-      '.video-card',     // Video cards
-      '.clickable-card', // Generic clickable cards
-      '.feed-item',      // Feed items
-      '.list-item',      // List items
-      'article',         // Articles
-      '.content-card'    // Content cards
-    ];
-    
-    const selector = allScrollableSelectors.join(', ');
-    const elementList = Array.from(document.querySelectorAll(selector));
-    
-    // If no suitable elements are found, fall back to regular scrolling
-    if (elementList.length === 0) {
-      const scrollAmount = direction * window.innerHeight * 0.7;
-      window.scrollBy({
-        top: scrollAmount,
-        behavior: 'smooth'
-      });
-      return;
+  // Function to get the current post ID with improved reliability
+  const getCurrentPostId = () => {
+    // First check if we have a selected post ID in state
+    if (currentPostId) {
+      return currentPostId;
     }
     
-    // Find the element closest to the center of the viewport
-    const viewportCenter = window.innerHeight / 2;
-    const visibleElements = elementList.filter(el => {
-      const rect = el.getBoundingClientRect();
-      return rect.top < window.innerHeight && rect.bottom > 0;
-    });
-    
-    if (visibleElements.length === 0) return;
-    
-    // Sort by distance from the center of the viewport
-    visibleElements.sort((a, b) => {
-      const rectA = a.getBoundingClientRect();
-      const rectB = b.getBoundingClientRect();
-      const centerA = rectA.top + rectA.height / 2;
-      const centerB = rectB.top + rectB.height / 2;
-      return Math.abs(centerA - viewportCenter) - Math.abs(centerB - viewportCenter);
-    });
-    
-    // Get the closest element
-    const currentElement = visibleElements[0];
-    const currentIndex = elementList.indexOf(currentElement);
-    
-    // Determine the target element
-    let targetIndex = currentIndex + direction;
-    
-    // Ensure the target index is within bounds
-    if (targetIndex < 0) targetIndex = 0;
-    if (targetIndex >= elementList.length) targetIndex = elementList.length - 1;
-    
-    // If we're already at the edge, don't try to scroll further
-    if (targetIndex === currentIndex) return;
-    
-    // Get the target element and scroll to it
-    const targetElement = elementList[targetIndex];
-    scrollToElement(targetElement);
-  };
-  
-  // Helper function to scroll to a specific element
-  const scrollToElement = (element: Element) => {
-    if (!element) return;
-    
-    const rect = element.getBoundingClientRect();
-    const elementTop = rect.top + window.scrollY;
-    const elementCenter = elementTop + rect.height / 2;
-    const windowCenter = window.innerHeight / 2;
-    const scrollTarget = elementCenter - windowCenter;
-    
-    // Smooth scroll to the element
-    window.scrollTo({
-      top: scrollTarget,
-      behavior: 'smooth'
-    });
-    
-    // Visual feedback for selection
-    element.classList.add('joystick-selected-item');
-    setTimeout(() => {
-      element.classList.remove('joystick-selected-item');
-    }, 800);
-    
-    // Update current post ID if available
-    const postId = element.getAttribute('data-post-id');
-    if (postId && typeof setCurrentPostId === 'function') {
-      setCurrentPostId(postId);
+    // Then check session storage as backup
+    try {
+      const storedPostId = sessionStorage.getItem('clipt-last-selected-post');
+      if (storedPostId) {
+        return storedPostId;
+      }
+    } catch (e) {
+      console.error('Failed to access session storage:', e);
     }
+    
+    // Last resort - find the most visible post on screen
+    return detectMostVisiblePost();
   };
 
-  // Function to animate the scrolling with physics
-  const startScrollAnimation = (initialVelocity: number) => {
-    // Don't scroll on certain pages
+  // Helper function to detect the most visible post on screen with optimized performance
+  const detectMostVisiblePost = (): string | null => {
+    // Get all post elements that have a data-post-id attribute
+    const posts = document.querySelectorAll('[data-post-id]');
+    if (!posts.length) return null;
+    
+    let maxVisiblePost = null;
+    let maxVisibleArea = 0;
+    
+    // Calculate viewport dimensions
+    const viewportHeight = window.innerHeight;
+    const viewportTop = window.scrollY;
+    const viewportBottom = viewportTop + viewportHeight;
+    const viewportCenter = viewportTop + (viewportHeight / 2);
+    
+    // Find the post with the largest visible area
+    posts.forEach((post) => {
+      const rect = post.getBoundingClientRect();
+      const postTop = rect.top + window.scrollY;
+      const postBottom = postTop + rect.height;
+      
+      // Skip if post is not visible at all
+      if (postBottom < viewportTop || postTop > viewportBottom) return;
+      
+      // Calculate visible area of the post
+      const visibleTop = Math.max(postTop, viewportTop);
+      const visibleBottom = Math.min(postBottom, viewportBottom);
+      const visibleHeight = visibleBottom - visibleTop;
+      
+      // Give bonus points for posts closer to the center of the viewport
+      const distanceToCenter = Math.abs((postTop + postBottom) / 2 - viewportCenter);
+      const centerBonus = 1 - (distanceToCenter / viewportHeight);
+      
+      // Combine visible area and center bonus
+      const visibleArea = visibleHeight * centerBonus;
+      
+      if (visibleArea > maxVisibleArea) {
+        maxVisibleArea = visibleArea;
+        maxVisiblePost = post;
+      }
+    });
+    
+    // Get postId if a visible post was found
+    if (maxVisiblePost) {
+      const postId = maxVisiblePost.getAttribute('data-post-id');
+      
+      // Update current post ID if it changed
+      if (postId && postId !== currentPostId) {
+        setCurrentPostId(postId);
+        console.log('Current post changed to:', postId);
+      }
+      
+      return postId || null;
+    }
+    
+    return null;
+  };
+
+  // Function to snap to the nearest post for better UX
+  const snapToNearestPost = () => {
+    // Only snap if we're not on the comments page
     if (window.location.pathname.includes('/comments')) {
       return;
     }
-
-    // Set initial velocity
-    const velocity = initialVelocity;
     
-    // Apply the scroll
-    window.scrollBy(0, velocity);
-    
-    // Snap to the nearest post when significant movement
-    if (Math.abs(velocity) > 20) {
-      setTimeout(() => snapToNearestPost(), 300);
-    }
-  };
-  
-  // Snap to the nearest post when scrolling stops
-  const snapToNearestPost = () => {
-    // Find visible posts
-    const posts = document.querySelectorAll('.post-item, [data-post-id], article, .feed-item');
-    if (!posts.length) return;
-    
-    // Find the one closest to viewport center
     const viewportCenter = window.innerHeight / 2;
-    let closestPost = null;
+    
+    // Find all potential post elements - more comprehensive selectors
+    const postSelectors = [
+      '[data-post-id]', '.post-item', '.clip-item', 
+      '.post-card', '.video-card', '.feed-item',
+      'article', '.content-item', '.streamer-card'
+    ];
+    
+    // Combine selectors for a more efficient query
+    const allPosts = Array.from(document.querySelectorAll(postSelectors.join(',')));
+    
+    if (allPosts.length === 0) {
+      console.log('No posts found to snap to');
+      return;
+    }
+    
+    // Find the post nearest to the viewport center
+    let nearestPost = null;
     let minDistance = Infinity;
     
-    posts.forEach(post => {
+    allPosts.forEach(post => {
       const rect = post.getBoundingClientRect();
       const postCenter = rect.top + rect.height / 2;
       const distance = Math.abs(postCenter - viewportCenter);
       
       if (distance < minDistance) {
         minDistance = distance;
-        closestPost = post;
+        nearestPost = post;
       }
     });
     
-    // Snap to it if we found one and it's not already centered
-    if (closestPost && minDistance > 10) {
-      scrollToElement(closestPost);
+    // Snap to the nearest post if found and not already centered
+    if (nearestPost && minDistance > 10) {
+      // Highlight the post for visual feedback
+      nearestPost.classList.add('gameboy-selected-post');
+      
+      // Smooth scroll to center it
+      nearestPost.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+      
+      // Remove highlight after animation completes
+      setTimeout(() => {
+        nearestPost?.classList.remove('gameboy-selected-post');
+      }, 1000);
     }
   };
 
-  const handleJoystickChange = (values: { x: number, y: number }) => {
-    // Update the d-pad position for visual feedback
-    setDPadDirection(values);
+  // Individual action handlers that use the universal handler
+  const handleLike = () => handlePostAction('like');
+  const handleComment = () => {
+    // First check if we have a current post ID
+    if (!currentPostId) {
+      // Try to detect post if we don't have one
+      const isSinglePostPage = window.location.pathname.includes('/post/');
+      if (isSinglePostPage) {
+        // Extract post ID from URL
+        const match = window.location.pathname.match(/\/post\/([^\/]+)/);
+        if (match && match[1]) {
+          const newPostId = match[1];
+          console.log(`Detected post ID from URL: ${newPostId}`);
+          setActiveCommentPostId(newPostId);
+          setCommentModalOpen(true);
+          return;
+        }
+      }
+      
+      toast.error("No post selected. Try scrolling to a post first.");
+      return;
+    }
     
-    // Exit early if the joystick is barely moved
-    if (Math.abs(values.y) < 5) return;
+    // We have a currentPostId, now try to open comments
+    console.log(`Opening comment modal for post: ${currentPostId}`);
+    setActiveCommentPostId(currentPostId);
+    setCommentModalOpen(true);
     
-    // For vertical movement, handle scrolling
-    const verticalAmount = values.y;
-    
-    // Call the scroll handler with the vertical amount
-    handleScrollFromJoystick(verticalAmount);
-    
-    // Apply visual feedback for direction indicators
-    updateDirectionIndicators(values);
+    // For better UX, show a visual indication of which post is selected
+    const selectedPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
+    if (selectedPost) {
+      // Add a pulsing effect to show which post was selected
+      selectedPost.classList.add('comment-target-pulse');
+      
+      // Remove the effect after animation completes
+      setTimeout(() => {
+        selectedPost.classList.remove('comment-target-pulse');
+      }, 1000);
+    }
   };
-  
+  const handleFollow = () => {
+    // Try the universal approach first
+    handlePostAction('follow');
+    
+    // Get the current post ID with improved reliability
+    const detectedPostId = detectMostVisiblePost();
+    const targetPostId = detectedPostId || currentPostId;
+    
+    if (targetPostId) {
+      // Update follow status for UI feedback
+      checkFollowStatus(targetPostId);
+      
+      // If the post is found but the button click failed, try direct API follow
+      setTimeout(() => {
+        handleDirectFollow(targetPostId);
+      }, 500);
+    } else {
+      toast.error('No post selected. Try scrolling to a post first.');
+    }
+  };
+  const handleTrophy = () => {
+    if (!user || !currentPostId) {
+      toast.error("Login to give trophy");
+      return;
+    }
+    
+    // Trophy logic
+    toast.success("Trophy given! 🏆");
+    console.log("Trophy given to post", currentPostId);
+  };
+
   // Your return JSX - the UI for the GameBoy controller
   return (
     <>
