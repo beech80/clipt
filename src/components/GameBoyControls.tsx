@@ -59,6 +59,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | undefined>(undefined);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [currentPostCreatorId, setCurrentPostCreatorId] = useState<string | null>(null);
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [rotationDegree, setRotationDegree] = useState<number>(0);
   
   // D-pad states
   const [dPadDirection, setDPadDirection] = useState({ x: 0, y: 0 });
@@ -70,9 +76,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const lastScrollPosition = useRef<number | null>(null); // For momentum scrolling
   const lastPostIndexRef = useRef<number>(-1); // Track the last post we interacted with
   const startYRef = useRef<number>(0); // Track the start Y position of D-pad
-  const rotationDegree = useRef<number>(0);
-  const [hasLiked, setHasLiked] = useState(false);
-  const [showCommentModal, setShowCommentModal] = useState(false);
   
   // Helper function to log to debug (console only)
   const logToDebug = (message: string) => {
@@ -320,7 +323,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Update the D-pad visual position
     if (dPadRef.current) {
       (dPadRef.current as HTMLDivElement).style.transform = 
-        `translate3d(${dPadDirection.x}px, ${yPosition}px, 0) rotate(${rotationDegree.current}deg)`;
+        `translate3d(${dPadDirection.x}px, ${yPosition}px, 0) rotate(${rotationDegree}deg)`;
     }
     
     // Store scroll position for momentum calculations
@@ -497,7 +500,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Calculate D-pad rotation based on movement
     const angle = constrainedY * 0.75; // Max 30 degrees rotation
-    rotationDegree.current = angle;
+    setRotationDegree(angle);
   };
   
   const handleDPadMouseUp = () => {
@@ -515,7 +518,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Reset D-pad position with smooth animation
     setDPadDirection({ x: 0, y: 0 });
-    rotationDegree.current = 0;
+    setRotationDegree(0);
     
     // Apply the transform directly for immediate visual feedback
     if (dPadRef.current) {
@@ -1325,13 +1328,101 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleBButtonPress = () => {
     console.log('B button pressed - Like');
     setHasLiked(!hasLiked);
-    // Implement like functionality here
+    handleLikeClick();
   };
   
   const handleFollowButtonPress = () => {
     console.log('Follow button pressed');
     setIsFollowing(!isFollowing);
-    // Implement follow functionality here
+    handleFollowClick();
+  };
+
+  const handleLikeClick = async () => {
+    if (!user || !currentPostId) {
+      toast.error("Login to like this clip");
+      return;
+    }
+    // Like logic
+    if (likeLoading) return;
+    setLikeLoading(true);
+    
+    try {
+      const response = await supabase
+        .from('likes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('post_id', currentPostId)
+        .single();
+      
+      if (response.data) {
+        // Unlike
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('post_id', currentPostId);
+        
+        setHasLiked(false);
+        toast.success("Removed like");
+      } else {
+        // Like
+        await supabase
+          .from('likes')
+          .insert({
+            user_id: user.id,
+            post_id: currentPostId,
+          });
+        
+        setHasLiked(true);
+        toast.success("Liked the clip!");
+      }
+      
+      // Invalidate posts query to update like count
+      queryClient.invalidateQueries(['posts']);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast.error("Failed to like the clip");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  const handleFollowClick = () => {
+    if (!user || !currentPostCreatorId) {
+      toast.error("Login to follow this user");
+      return;
+    }
+    
+    if (followLoading) return;
+    setFollowLoading(true);
+    
+    try {
+      if (isFollowing) {
+        // Unfollow logic
+        console.log(`Unfollowing user ${currentPostCreatorId}`);
+        setIsFollowing(false);
+        toast.success("Unfollowed user");
+      } else {
+        // Follow logic
+        console.log(`Following user ${currentPostCreatorId}`);
+        setIsFollowing(true);
+        toast.success("Following user");
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      toast.error("Failed to update follow status");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleCommentClick = () => {
+    if (!user || !currentPostId) {
+      toast.error("Login to comment on this clip");
+      return;
+    }
+    
+    setShowCommentModal(true);
   };
 
   // Menu options
@@ -1383,23 +1474,38 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       name: 'Top Clips', 
       description: 'Hall of fame',
       icon: <FiAward />, 
-      action: () => navigate('/') 
+      action: () => navigate('/top-clips') 
     },
     { 
-      id: 'squad-clips', 
+      id: 'squads-clips', 
       name: 'Squads Clips', 
       description: 'Your squads clips',
       icon: <FiUsers />, 
       action: () => navigate('/squads') 
     },
     { 
-      id: 'all-clips', 
+      id: 'clips', 
       name: 'Clips', 
       description: 'View all clips',
       icon: <FiMonitor />, 
       action: () => navigate('/') 
     }
   ];
+
+  const isDPadActive = (direction: string) => {
+    switch (direction) {
+      case 'up':
+        return dPadDirection.y < -5;
+      case 'down':
+        return dPadDirection.y > 5;
+      case 'left':
+        return dPadDirection.x < -5;
+      case 'right':
+        return dPadDirection.x > 5;
+      default:
+        return false;
+    }
+  };
 
   // Your return JSX - the UI for the GameBoy controller
   return (
@@ -1430,25 +1536,25 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               <div className="d-pad-corner bottom-right"></div>
               
               <button 
-                className="d-pad-up" 
+                className={`d-pad-up ${isDPadActive('up') ? 'active' : ''}`}
                 onClick={() => handleDPadPress('up')}
                 onTouchStart={() => handleDPadPress('up')}
                 onTouchEnd={handleDPadTouchEnd}
               ></button>
               <button 
-                className="d-pad-right" 
+                className={`d-pad-right ${isDPadActive('right') ? 'active' : ''}`}
                 onClick={() => handleDPadPress('right')}
                 onTouchStart={() => handleDPadPress('right')}
                 onTouchEnd={handleDPadTouchEnd}
               ></button>
               <button 
-                className="d-pad-down" 
+                className={`d-pad-down ${isDPadActive('down') ? 'active' : ''}`}
                 onClick={() => handleDPadPress('down')}
                 onTouchStart={() => handleDPadPress('down')}
                 onTouchEnd={handleDPadTouchEnd}
               ></button>
               <button 
-                className="d-pad-left" 
+                className={`d-pad-left ${isDPadActive('left') ? 'active' : ''}`}
                 onClick={() => handleDPadPress('left')}
                 onTouchStart={() => handleDPadPress('left')}
                 onTouchEnd={handleDPadTouchEnd}
@@ -1479,27 +1585,27 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           <div className="action-buttons">
             <button 
               className="action-button a-button" 
-              onClick={handleAButtonPress}
+              onClick={handleCommentClick}
             >
-              <MessageCircle size={16} />
+              <MessageCircle size={16} color="white" />
             </button>
             <button 
               className="action-button b-button" 
               onClick={handleBButtonPress}
             >
-              <Heart size={16} fill={hasLiked ? "#ff0080" : "transparent"} color={hasLiked ? "#ff0080" : "currentColor"} />
-            </button>
-            <button 
-              className="action-button y-button" 
-              onClick={() => navigate('/top-clipts')}
-            >
-              <Trophy size={16} />
+              <Heart size={16} color="white" />
             </button>
             <button 
               className="action-button x-button" 
               onClick={handleFollowButtonPress}
             >
-              {isFollowing ? <UserCheck size={16} /> : <UserPlus size={16} />}
+              {isFollowing ? <UserCheck size={16} color="white" /> : <UserPlus size={16} color="white" />}
+            </button>
+            <button 
+              className="action-button y-button" 
+              onClick={() => navigate('/top-clips')}
+            >
+              <Trophy size={16} color="white" />
             </button>
           </div>
         </div>
