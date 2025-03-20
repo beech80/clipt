@@ -255,8 +255,8 @@
   justify-content: center;
   align-items: center;
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 120px;
+  height: 120px;
   margin-right: 20px;
 }
 
@@ -286,7 +286,7 @@
 }
 
 .a-button {
-  top: -5px;
+  top: -2px;
   left: 50%;
   transform: translateX(-50%);
   border: 2px solid rgba(34, 197, 94, 0.5);
@@ -294,7 +294,7 @@
 }
 
 .b-button {
-  right: -5px;
+  right: -2px;
   top: 50%;
   transform: translateY(-50%);
   border: 2px solid rgba(239, 68, 68, 0.5);
@@ -302,7 +302,7 @@
 }
 
 .x-button {
-  left: -5px;
+  left: -2px;
   top: 50%;
   transform: translateY(-50%);
   border: 2px solid rgba(59, 130, 246, 0.5);
@@ -310,7 +310,7 @@
 }
 
 .y-button {
-  bottom: -5px;
+  bottom: -2px;
   left: 50%;
   transform: translateX(-50%);
   border: 2px solid rgba(234, 179, 8, 0.5);

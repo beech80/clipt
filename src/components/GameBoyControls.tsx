@@ -25,7 +25,8 @@ import {
   Users,
   Grid,
   Compass,
-  Share
+  Share,
+  Bookmark
 } from 'lucide-react';
 import { 
   FiSettings, 
@@ -67,6 +68,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [hasLiked, setHasLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [inCollection, setInCollection] = useState(false);
   const [currentPostCreatorId, setCurrentPostCreatorId] = useState<string | null>(null);
   const [rotationDegree, setRotationDegree] = useState<number>(0);
   
@@ -224,6 +226,32 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [window.location.pathname]);
 
+  // Check if post is in collection initially
+  useEffect(() => {
+    const checkCollection = async () => {
+      if (!user || !currentPostId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('collections')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('post_id', currentPostId);
+          
+        if (error) {
+          console.error('Error checking collection status:', error);
+          return;
+        }
+        
+        setInCollection(data && data.length > 0);
+      } catch (err) {
+        console.error('Failed to check collection status:', err);
+      }
+    };
+    
+    checkCollection();
+  }, [user, currentPostId]);
+
   // Handler for animation frame - apply scrolling effect
   const handleAnimationFrame = () => {
     // Don't animate on comments page
@@ -304,7 +332,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       handlePostByPostScrolling(direction);
     } else {
       // For smaller movements, do smooth scrolling
-      const scrollAmount = amount * 5; // Adjust multiplier for scrolling speed
+      // Increase scrolling speed to make it more responsive
+      const scrollAmount = amount * 8; // Increased from 5 to 8 for faster scrolling
       
       // Apply scroll directly for immediate response
       window.scrollBy({
@@ -1373,6 +1402,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           return;
         }
 
+        setInCollection(false);
         toast.success('Removed from your collection');
       } else {
         // Post not in collection, add it
@@ -1390,6 +1420,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           return;
         }
 
+        setInCollection(true);
         toast.success('Added to your collection!');
       }
     } catch (error) {
@@ -1741,10 +1772,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               <MessageCircle size={20} />
             </button>
             <button 
-              className={`action-button b-button ${isFollowing ? 'active' : ''}`}
+              className={`action-button b-button ${inCollection ? 'active' : ''}`}
               onClick={handleButtonBPress}
             >
-              <UserPlus size={20} />
+              <Bookmark size={20} />
             </button>
             <button 
               className={`action-button x-button ${commentModalOpen ? 'active' : ''}`} 
