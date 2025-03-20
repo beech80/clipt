@@ -354,6 +354,19 @@
   @apply absolute w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-transparent transition-all duration-200;
 }
 
+/* Joystick selected item highlight */
+.joystick-selected-item {
+  outline: 2px solid rgba(76, 217, 100, 0.8) !important;
+  box-shadow: 0 0 15px rgba(76, 217, 100, 0.5) !important;
+  animation: pulse 0.8s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 5px rgba(76, 217, 100, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(76, 217, 100, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(76, 217, 100, 0.5); }
+}
+
 /* Gaming theme colors for the GameChat component */
 .bg-gaming-900 {
   background-color: #0f111a;
