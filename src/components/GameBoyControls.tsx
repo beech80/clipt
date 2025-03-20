@@ -79,7 +79,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const lastScrollPosition = useRef<number | null>(null); // For momentum scrolling
   const lastPostIndexRef = useRef<number>(-1); // Track the last post we interacted with
   const startYRef = useRef<number>(0); // Track the start Y position of D-pad
-  
+  const startXRef = useRef<number>(0); // Track the start X position of D-pad
+  const dPadCenterXRef = useRef<number | null>(null);
+  const dPadCenterYRef = useRef<number | null>(null);
+
   // Helper function to log to debug (console only)
   const logToDebug = (message: string) => {
     console.log(message);
@@ -249,7 +252,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Always perform scrolling when there's vertical movement, even if not dragging
       // This is crucial for responsive D-pad control
       if (Math.abs(yPosition) > 1.5) {
-        handleScrollFromDPad(yPosition);
+        handleScrollFromJoystick(yPosition);
       }
       
       // Continue animation loop
@@ -475,7 +478,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     // Start pressing and record initial position
     setIsDPadPressed(true);
-    startYRef.current = e.clientY;
+    
+    // Calculate the D-pad center
+    if (dPadRef.current) {
+      const rect = dPadRef.current.getBoundingClientRect();
+      dPadCenterXRef.current = rect.left + rect.width / 2;
+      dPadCenterYRef.current = rect.top + rect.height / 2;
+      
+      // Add pressed class for visual feedback
+      dPadRef.current.classList.add('pressed');
+    }
     
     // Clear any existing animations
     if (scrollAnimationRef.current) {
@@ -491,24 +503,126 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     e.preventDefault();
     e.stopPropagation();
     
-    // Calculate position and constrain to D-pad range
-    const deltaY = e.clientY - startYRef.current;
-    const constrainedY = Math.max(-40, Math.min(40, deltaY));
+    // Calculate position relative to center
+    const deltaX = e.clientX - dPadCenterXRef.current;
+    const deltaY = e.clientY - dPadCenterYRef.current;
+    
+    // Calculate distance from center
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Constrain to maximum displacement
+    const MAX_DISPLACEMENT = 40;
+    const ratio = Math.min(1, MAX_DISPLACEMENT / distance);
+    
+    // Calculate constrained position
+    const constrainedX = deltaX * ratio;
+    const constrainedY = deltaY * ratio;
     
     // Update D-pad position state
-    setDPadDirection(prev => ({ ...prev, y: constrainedY }));
+    setDPadDirection({ x: constrainedX, y: constrainedY });
     
-    // Handle scrolling directly
-    handleScrollFromDPad(constrainedY);
+    // Update visual position
+    if (dPadRef.current) {
+      dPadRef.current.style.transform = `translate3d(${constrainedX/3}px, ${constrainedY/3}px, 0)`;
+    }
     
-    // Calculate D-pad rotation based on movement
-    const angle = constrainedY * 0.75; // Max 30 degrees rotation
-    setRotationDegree(angle);
+    // Handle scrolling directly for Y movement
+    if (Math.abs(constrainedY) > 5) {
+      const scrollAmount = constrainedY * 0.5;
+      handleScrollFromJoystick(scrollAmount);
+    }
   };
   
-  const handleDPadMouseUp = () => {
+  const handleDPadMouseUp = (e: React.MouseEvent) => {
     if (!isDPadPressed) return;
-    resetDPad();
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Reset D-pad visual state
+    if (dPadRef.current) {
+      dPadRef.current.classList.remove('pressed');
+      dPadRef.current.style.transform = '';
+    }
+    
+    // Stop pressing
+    setIsDPadPressed(false);
+    
+    // Reset direction
+    setDPadDirection({ x: 0, y: 0 });
+  };
+
+  const handleDPadTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Start tracking touch
+    setIsDPadPressed(true);
+    
+    // Get the touch coordinates
+    const touch = e.touches[0];
+    startXRef.current = touch.clientX;
+    startYRef.current = touch.clientY;
+    
+    // Calculate the D-pad center
+    if (dPadRef.current) {
+      const rect = dPadRef.current.getBoundingClientRect();
+      dPadCenterXRef.current = rect.left + rect.width / 2;
+      dPadCenterYRef.current = rect.top + rect.height / 2;
+    }
+  };
+
+  const handleDPadTouchMove = (e: React.TouchEvent) => {
+    if (!isDPadPressed) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Get current touch coordinates
+    const touch = e.touches[0];
+    const currentX = touch.clientX;
+    const currentY = touch.clientY;
+    
+    // Calculate displacement from center
+    const deltaX = currentX - dPadCenterXRef.current;
+    const deltaY = currentY - dPadCenterYRef.current;
+    
+    // Calculate distance from center
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Constrain to maximum displacement
+    const MAX_DISPLACEMENT = 40;
+    const displacementRatio = Math.min(1, MAX_DISPLACEMENT / distance);
+    
+    // Calculate constrained position
+    const constrainedX = deltaX * displacementRatio;
+    const constrainedY = deltaY * displacementRatio;
+    
+    // Update joystick position
+    setDPadDirection({ x: constrainedX, y: constrainedY });
+    
+    // Handle scrolling based on Y displacement
+    if (Math.abs(constrainedY) > 10) {
+      const scrollAmount = constrainedY * 0.5;
+      handleScrollFromJoystick(scrollAmount);
+    }
+  };
+
+  const handleDPadTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Reset D-pad visual state
+    if (dPadRef.current) {
+      dPadRef.current.classList.remove('pressed');
+      dPadRef.current.style.transform = '';
+    }
+    
+    // Stop pressing
+    setIsDPadPressed(false);
+    
+    // Reset direction
+    setDPadDirection({ x: 0, y: 0 });
   };
 
   // Reset D-pad position and visual effects
@@ -1093,7 +1207,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       toast.error('No post selected. Try scrolling to a post first.');
     }
   };
-  const handleTrophy = () => handlePostAction('trophy');
+  const handleTrophy = () => {
+    if (!user || !currentPostId) {
+      toast.error("Login to give trophy");
+      return;
+    }
+    
+    // Trophy logic
+    toast.success("Trophy given! 🏆");
+    console.log("Trophy given to post", currentPostId);
+  };
 
   // Function to get the current post ID with improved reliability
   const getCurrentPostId = () => {
@@ -1390,10 +1513,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
-  const handleDPadTouchEnd = () => {
-    setIsDPadPressed(false);
-  };
-
   const handleCameraClick = () => {
     console.log('Camera clicked');
     navigate('/post/new');
@@ -1509,12 +1628,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleButtonAPress = () => {
     // Green (top) button - Comments
     // This toggles the comments modal
-    if (currentPostId) {
-      navigate(`/post/${currentPostId}/comments`);
-    } else {
-      console.log('No post selected to comment on');
-      toast.info('Navigate to a post to comment');
-    }
+    handleCommentClick();
   };
 
   const handleButtonBPress = () => {
@@ -1533,8 +1647,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   const handleButtonYPress = () => {
-    // Yellow (bottom) button - Navigate to Clipts page (videos)
-    navigate('/clipts');
+    // Yellow (bottom) button - Trophy
+    handleTrophy();
   };
 
   // Function to animate the scrolling with physics
@@ -1591,32 +1705,25 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         <div className="game-boy-controls">
           {/* D-Pad */}
           <div className="d-pad-container">
-            <div className="d-pad" ref={dPadRef}>
+            <div 
+              className="d-pad" 
+              ref={dPadRef} 
+              onTouchStart={handleDPadTouchStart} 
+              onTouchMove={handleDPadTouchMove}
+              onTouchEnd={handleDPadTouchEnd}
+              onMouseDown={handleDPadMouseDown}
+              onMouseMove={handleDPadMouseMove}
+              onMouseUp={handleDPadMouseUp}
+              onMouseLeave={handleDPadMouseUp}
+            >
               <div className="d-pad-ring"></div>
-              <button
-                className={`d-pad-up ${isDPadActive('up') ? 'active' : ''}`}
-                onClick={() => handleDPadDirection('up')}
-                onTouchStart={() => handleDPadDirection('up')}
-                onTouchEnd={handleDPadTouchEnd}
-              ></button>
-              <button
-                className={`d-pad-right ${isDPadActive('right') ? 'active' : ''}`}
-                onClick={() => handleDPadDirection('right')}
-                onTouchStart={() => handleDPadDirection('right')}
-                onTouchEnd={handleDPadTouchEnd}
-              ></button>
-              <button
-                className={`d-pad-down ${isDPadActive('down') ? 'active' : ''}`}
-                onClick={() => handleDPadDirection('down')}
-                onTouchStart={() => handleDPadDirection('down')}
-                onTouchEnd={handleDPadTouchEnd}
-              ></button>
-              <button
-                className={`d-pad-left ${isDPadActive('left') ? 'active' : ''}`}
-                onClick={() => handleDPadDirection('left')}
-                onTouchStart={() => handleDPadDirection('left')}
-                onTouchEnd={handleDPadTouchEnd}
-              ></button>
+              <div className="joystick-indicator"></div>
+              <div className="direction-indicators">
+                <div className={`direction-indicator direction-up ${isDPadActive('up') ? 'direction-active' : ''}`}></div>
+                <div className={`direction-indicator direction-right ${isDPadActive('right') ? 'direction-active' : ''}`}></div>
+                <div className={`direction-indicator direction-down ${isDPadActive('down') ? 'direction-active' : ''}`}></div>
+                <div className={`direction-indicator direction-left ${isDPadActive('left') ? 'direction-active' : ''}`}></div>
+              </div>
             </div>
           </div>
 
