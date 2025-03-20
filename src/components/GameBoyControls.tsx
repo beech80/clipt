@@ -28,6 +28,7 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import './joystick-animations.css'; // Import joystick animations
+import './gameboy-controller.css'; // Import GameBoy controller styles
 import CommentModal from './comments/CommentModal';
 
 interface GameBoyControlsProps {
@@ -58,19 +59,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   
-  // Joystick states
-  const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [isScrolling, setIsScrolling] = useState(false); // Track if currently scrolling
-  const [isScrollingEnabled, setIsScrollingEnabled] = useState(true);
-  const joystickRef = useRef<HTMLDivElement | null>(null);
+  // D-pad states
+  const [dPadDirection, setDPadDirection] = useState({ x: 0, y: 0 });
+  const [isDPadPressed, setIsDPadPressed] = useState(false);
+  const dPadRef = useRef<HTMLDivElement | null>(null);
   const baseRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const scrollAnimationRef = useRef<number | null>(null); // For animation frame
-  const lastScrollPosition = useRef<number>(0); // Track last scroll position
+  const lastScrollPosition = useRef<number | null>(null); // For momentum scrolling
   const lastPostIndexRef = useRef<number>(-1); // Track the last post we interacted with
-  const startYRef = useRef<number>(0); // Track the start Y position of joystick
+  const startYRef = useRef<number>(0); // Track the start Y position of D-pad
   const rotationDegree = useRef<number>(0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
   
   // Helper function to log to debug (console only)
   const logToDebug = (message: string) => {
@@ -90,10 +91,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   }, [menuOpen]);
 
   useEffect(() => {
-    // Detect when the user manually scrolls the page to keep joystick in sync
+    // Detect when the user manually scrolls the page to keep D-pad in sync
     const handleWindowScroll = () => {
-      // Only track manual scrolling when the joystick is not in use
-      if (!isDragging && typeof lastScrollPosition.current === 'number') {
+      // Only track manual scrolling when the D-pad is not in use
+      if (!isDPadPressed && typeof lastScrollPosition.current === 'number') {
         // Store the updated scroll position
         lastScrollPosition.current = window.scrollY;
       }
@@ -105,7 +106,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     return () => {
       window.removeEventListener('scroll', handleWindowScroll);
     };
-  }, [isDragging]);
+  }, [isDPadPressed]);
 
   useEffect(() => {
     // Add post detection on each navigation
@@ -216,7 +217,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     let animationFrameId: number | null = null;
     let lastScrollY = window.scrollY;
     let scrollTimer: number | null = null;
-    let lastJoystickDirection = 0;
+    let lastDPadDirection = 0;
     
     const runAnimationLoop = () => {
       // Calculate delta time for smoother animation
@@ -224,12 +225,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       const deltaTime = (window.scrollY - lastScrollY) / 16.67; // Normalize to 60fps
       lastScrollY = window.scrollY;
       
-      // Get current joystick Y position directly
-      let yPosition = joystickPosition.y;
+      // Get current D-pad Y position directly
+      let yPosition = dPadDirection.y;
       
       // Get position from DOM for most accurate value
-      if (joystickRef.current) {
-        const transform = (joystickRef.current as HTMLDivElement).style.transform;
+      if (dPadRef.current) {
+        const transform = (dPadRef.current as HTMLDivElement).style.transform;
         if (transform) {
           const match = transform.match(/translate3d\((.+?)px,\s*(.+?)px/);
           if (match && match[2]) {
@@ -239,9 +240,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       // Always perform scrolling when there's vertical movement, even if not dragging
-      // This is crucial for responsive joystick control
+      // This is crucial for responsive D-pad control
       if (Math.abs(yPosition) > 1.5) {
-        handleScrollFromJoystick(yPosition);
+        handleScrollFromDPad(yPosition);
       }
       
       // Continue animation loop
@@ -260,22 +261,22 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         clearTimeout(scrollTimer);
       }
     };
-  }, [joystickPosition]);
+  }, [dPadDirection]);
 
-  const handleScrollFromJoystick = (yPosition: number) => {
+  const handleScrollFromDPad = (yPosition: number) => {
     // Early return only if scrolling is explicitly disabled
-    if (isScrollingEnabled === false) return;
+    if (isDPadPressed === false) return;
     
     // Don't scroll on certain pages where native scrolling is preferred
     const currentPath = window.location.pathname;
     if (currentPath.includes('/comments/')) {
-      return; // Don't use joystick scrolling on comments page
+      return; // Don't use D-pad scrolling on comments page
     }
     
     // Constants for calculations
-    const maxYPosition = 40; // Maximum expected joystick movement
+    const maxYPosition = 40; // Maximum expected D-pad movement
     
-    // Normalize joystick position to get values between -1 and 1
+    // Normalize D-pad position to get values between -1 and 1
     const normalizedPosition = yPosition / maxYPosition;
     const direction = Math.sign(normalizedPosition);
     
@@ -315,10 +316,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       });
     }
     
-    // Update the joystick visual position
-    if (joystickRef.current) {
-      (joystickRef.current as HTMLDivElement).style.transform = 
-        `translate3d(${joystickPosition.x}px, ${yPosition}px, 0) rotate(${rotationDegree.current}deg)`;
+    // Update the D-pad visual position
+    if (dPadRef.current) {
+      (dPadRef.current as HTMLDivElement).style.transform = 
+        `translate3d(${dPadDirection.x}px, ${yPosition}px, 0) rotate(${rotationDegree.current}deg)`;
     }
     
     // Store scroll position for momentum calculations
@@ -459,14 +460,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
 
-  // Joystick movement handlers
-  const handleJoystickMouseDown = (e: React.MouseEvent) => {
+  // D-pad movement handlers
+  const handleDPadMouseDown = (e: React.MouseEvent) => {
     // Prevent default actions and bubbling
     e.preventDefault();
     e.stopPropagation();
     
-    // Start dragging and record initial position
-    setIsDragging(true);
+    // Start pressing and record initial position
+    setIsDPadPressed(true);
     startYRef.current = e.clientY;
     
     // Clear any existing animations
@@ -476,91 +477,48 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
   
-  const handleJoystickTouchStart = (e: React.TouchEvent) => {
-    // Prevent default actions and bubbling
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Start dragging and record initial position
-    setIsDragging(true);
-    startYRef.current = e.touches[0].clientY;
-    
-    // Clear any existing animations
-    if (scrollAnimationRef.current) {
-      cancelAnimationFrame(scrollAnimationRef.current);
-      scrollAnimationRef.current = null;
-    }
-  };
-  
-  const handleJoystickMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
+  const handleDPadMouseMove = (e: React.MouseEvent) => {
+    if (!isDPadPressed) return;
     
     // Prevent default actions and bubbling
     e.preventDefault();
     e.stopPropagation();
     
-    // Calculate position and constrain to joystick range
+    // Calculate position and constrain to D-pad range
     const deltaY = e.clientY - startYRef.current;
     const constrainedY = Math.max(-40, Math.min(40, deltaY));
     
-    // Update joystick position state
-    setJoystickPosition(prev => ({ ...prev, y: constrainedY }));
+    // Update D-pad position state
+    setDPadDirection(prev => ({ ...prev, y: constrainedY }));
     
     // Handle scrolling directly
-    handleScrollFromJoystick(constrainedY);
+    handleScrollFromDPad(constrainedY);
     
-    // Calculate joystick rotation based on movement
+    // Calculate D-pad rotation based on movement
     const angle = constrainedY * 0.75; // Max 30 degrees rotation
     rotationDegree.current = angle;
   };
   
-  const handleJoystickTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
-    
-    // Prevent default actions and bubbling
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Calculate position and constrain to joystick range
-    const deltaY = e.touches[0].clientY - startYRef.current;
-    const constrainedY = Math.max(-40, Math.min(40, deltaY));
-    
-    // Update joystick position
-    setJoystickPosition(prev => ({ ...prev, y: constrainedY }));
-    
-    // Handle scrolling directly
-    handleScrollFromJoystick(constrainedY);
-    
-    // Calculate rotation based on movement
-    const angle = constrainedY * 0.75; // Max 30 degrees rotation
-    rotationDegree.current = angle;
+  const handleDPadMouseUp = () => {
+    if (!isDPadPressed) return;
+    resetDPad();
   };
-  
-  const handleJoystickMouseUp = () => {
-    if (!isDragging) return;
-    resetJoystick();
-  };
-  
-  const handleJoystickTouchEnd = () => {
-    if (!isDragging) return;
-    resetJoystick();
-  };
-  
-  // Reset joystick position and visual effects
-  const resetJoystick = () => {
-    // Only reset if we were dragging
-    if (!isDragging) return;
+
+  // Reset D-pad position and visual effects
+  const resetDPad = () => {
+    // Only reset if we were pressing
+    if (!isDPadPressed) return;
     
-    // Reset dragging state
-    setIsDragging(false);
+    // Reset pressing state
+    setIsDPadPressed(false);
     
-    // Reset joystick position with smooth animation
-    setJoystickPosition({ x: 0, y: 0 });
+    // Reset D-pad position with smooth animation
+    setDPadDirection({ x: 0, y: 0 });
     rotationDegree.current = 0;
     
     // Apply the transform directly for immediate visual feedback
-    if (joystickRef.current) {
-      joystickRef.current.style.transform = 'translate3d(0px, 0px, 0) rotate(0deg)';
+    if (dPadRef.current) {
+      dPadRef.current.style.transform = 'translate3d(0px, 0px, 0) rotate(0deg)';
     }
     
     // Reset direction indicators
@@ -619,7 +577,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     upArrow.classList.remove('disabled');
     downArrow.classList.remove('disabled');
     
-    // Add active class based on joystick position
+    // Add active class based on D-pad position
     if (yPosition < -5) {
       upArrow.classList.add('active');
     } else if (yPosition > 5) {
@@ -639,7 +597,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       downArrow.classList.add('disabled');
     }
     
-    // Get intensity based on joystick position for visual feedback
+    // Get intensity based on D-pad position for visual feedback
     const normalizedY = Math.min(Math.abs(yPosition) / 40, 1);
     const intensity = Math.round(normalizedY * 100);
     
@@ -1317,6 +1275,64 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   `;
   
+  // Add handlers for D-pad
+  const handleDPadPress = (direction: string) => {
+    console.log(`D-pad pressed: ${direction}`);
+    
+    switch (direction) {
+      case 'up':
+        setDPadDirection({ x: 0, y: -20 });
+        handleScrollFromDPad(-20);
+        break;
+      case 'down':
+        setDPadDirection({ x: 0, y: 20 });
+        handleScrollFromDPad(20);
+        break;
+      case 'left':
+        setDPadDirection({ x: -20, y: 0 });
+        // Handle left navigation
+        break;
+      case 'right':
+        setDPadDirection({ x: 20, y: 0 });
+        // Handle right navigation
+        break;
+      default:
+        break;
+    }
+    
+    setTimeout(() => {
+      resetDPad();
+    }, 200);
+  };
+  
+  const handleDPadTouchEnd = () => {
+    setIsDPadPressed(false);
+  };
+  
+  const handleCameraClick = () => {
+    console.log('Camera clicked');
+    navigate('/post/new');
+  };
+  
+  const handleAButtonPress = () => {
+    console.log('A button pressed - Comment');
+    if (currentPostId) {
+      setShowCommentModal(true);
+    }
+  };
+  
+  const handleBButtonPress = () => {
+    console.log('B button pressed - Like');
+    setHasLiked(!hasLiked);
+    // Implement like functionality here
+  };
+  
+  const handleFollowButtonPress = () => {
+    console.log('Follow button pressed');
+    setIsFollowing(!isFollowing);
+    // Implement follow functionality here
+  };
+
   // Your return JSX - the UI for the GameBoy controller
   return (
     <>
@@ -1333,216 +1349,121 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       )}
       
       <div 
-        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
+        className="fixed bottom-0 left-0 right-0 z-50"
       >
-        <div className="bg-[#0D0D18] w-full pointer-events-auto py-3 shadow-lg">
-          <div className="flex justify-between items-center px-10 max-w-5xl mx-auto">
-            
-              {/* Left - Modern Xbox-style Joystick */}
-              <div 
-                className="gameboy-container"
-                onMouseDown={handleJoystickMouseDown}
-                onTouchStart={handleJoystickTouchStart}
-                onMouseMove={handleJoystickMouseMove}
-                onTouchMove={handleJoystickTouchMove}
-                onMouseUp={handleJoystickMouseUp}
-                onTouchEnd={handleJoystickTouchEnd}
-                onMouseLeave={handleJoystickMouseUp}
-              >
-                <div className="joystick-controls">
-                  {/* Base shadow for 3D effect */}
-                  <div className="joystick-base-shadow"></div>
-                  
-                  {/* Main base of joystick */}
-                  <div className="joystick-base" ref={baseRef}>
-                    
-                    {/* Joystick handle */}
-                    <div 
-                      className="joystick-handle"
-                      ref={joystickRef}
-                      style={{
-                        transform: `translate3d(${joystickPosition.x}px, ${joystickPosition.y}px, 0) rotate(${rotationDegree.current}deg)`,
-                      }}
-                    >
-                      <div className="joystick-center"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            
-            {/* Center */}
-            <div className="flex flex-col items-center space-y-3">
-              {/* CLIPT button with gradient border */}
-              <div 
-                onClick={() => navigate('/clipts')}
-                className="w-16 h-16 bg-[#0D0D18] rounded-full cursor-pointer flex items-center justify-center relative"
-              >
-                {/* Gradient border using pseudo-element */}
-                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 animate-pulse" style={{ opacity: 0.7 }}></span>
-                <span className="absolute inset-[2px] bg-[#0D0D18] rounded-full"></span>
-                <span className="relative text-white font-bold text-sm z-10">CLIPT</span>
-              </div>
-              
-              {/* Menu and Camera buttons */}
-              <div className="flex space-x-6">
-                {/* Navigation menu button */}
-                <div 
-                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative navigation-menu-container"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  ref={menuRef}
-                >
-                  <Menu className="text-white h-4 w-4" />
-                  
-                  {/* Navigation menu popup */}
-                  {menuOpen && (
-                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                      {/* Close button */}
-                      <button 
-                        onClick={() => setMenuOpen(false)} 
-                        className="absolute top-8 right-8 w-10 h-10 rounded-full bg-[#1D1D26] flex items-center justify-center border border-[#3A3A45]"
-                      >
-                        <X className="h-5 w-5 text-white" />
-                      </button>
-                      
-                      {/* Game-style menu container */}
-                      <div className="w-[90%] max-w-md bg-[#0D0D18] border-4 border-[#3A3A45] rounded-lg p-1 animate-in fade-in-90 zoom-in-90 duration-300">
-                        {/* Menu header with pixel-like border - GameBoy style window */}
-                        <div className="relative bg-[#0D0D18] border-b-4 border-dashed border-[#3A3A45] mb-2">
-                          <div className="absolute top-0 left-0 w-3 h-3 bg-[#3A3A45] rounded-sm -translate-x-1 -translate-y-1"></div>
-                          <div className="absolute top-0 right-0 w-3 h-3 bg-[#3A3A45] rounded-sm translate-x-1 -translate-y-1"></div>
-                          <h2 className="text-center py-4 text-lg font-bold text-white bg-gradient-to-r from-purple-500/20 to-blue-500/20">
-                            GAME MENU
-                          </h2>
-                        </div>
-                        
-                        {/* Game-style menu items in a grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3">
-                          {navigationOptions.map((option, index) => (
-                            <button
-                              key={option.name}
-                              className={`flex items-center justify-between border border-[#4a4dff] p-2 hover:bg-[#252968] transition-all duration-200 group relative overflow-hidden ${
-                                option.name === 'Squads Clipts' ? 'bg-[#2e1a4a] border-[#9f7aea] relative' : 'bg-[#1a1d45]'
-                              }`}
-                              onClick={() => {
-                                navigate(option.path);
-                                setMenuOpen(false);
-                              }}
-                            >
-                              {/* Icon container with gameboy-like button effect */}
-                              <div className="flex items-center justify-center h-10 w-10 bg-gradient-to-br from-[#333339] to-[#1F1F25] rounded-md mr-4 shadow-inner relative group-hover:from-purple-700 group-hover:to-blue-700 transition-colors duration-300">
-                                <div className="absolute inset-[2px] bg-[#0D0D18] rounded-sm"></div>
-                                {React.cloneElement(option.icon as React.ReactElement, { 
-                                  className: "h-5 w-5 text-purple-400 group-hover:text-white transition-colors duration-300" 
-                                })}
-                              </div>
-                              
-                              <div className="flex flex-col">
-                                {/* Menu text with subtle glow effect on hover */}
-                                <span className="group-hover:text-purple-300 font-medium transition-all duration-300 text-base">
-                                  {option.name}
-                                </span>
-                                
-                                {/* Description line - optional */}
-                                <span className="text-xs text-gray-400 group-hover:text-blue-300 transition-colors">
-                                  {option.name === 'Settings' && 'Configure your game'}
-                                  {option.name === 'Streaming' && 'Live gameplay'}
-                                  {option.name === 'Profile' && 'Your player stats'}
-                                  {option.name === 'Messages' && 'Chat with players'}
-                                  {option.name === 'Notifications' && 'Your notifications'}
-                                  {option.name === 'Discovery' && 'Find new games'}
-                                  {option.name === 'Top Clipts' && 'Hall of fame'}
-                                  {option.name === 'Squads Clipts' && 'Your squads clipts'}
-                                  {option.name === 'Clipts' && 'View all clipts'}
-                                </span>
-                              </div>
-                              
-                              {/* Arrow indicator */}
-                              <span className="ml-auto opacity-70 group-hover:opacity-100 transition-opacity text-purple-400 text-lg">►</span>
-                              
-                              {/* Pixel dots in corners */}
-                              <div className="absolute bottom-1 left-1 w-1 h-1 bg-[#3A3A45]"></div>
-                              <div className="absolute bottom-1 right-1 w-1 h-1 bg-[#3A3A45]"></div>
-                              <div className="absolute top-1 left-1 w-1 h-1 bg-[#3A3A45]"></div>
-                              <div className="absolute top-1 right-1 w-1 h-1 bg-[#3A3A45]"></div>
-                              
-                              {/* Subtle highlight effect on hover */}
-                              <div className="absolute bottom-0 left-0 h-[3px] w-0 bg-gradient-to-r from-purple-500 to-blue-500 group-hover:w-full transition-all duration-300"></div>
-                            </button>
-                          ))}
-                        </div>
-                        
-                        {/* Footer with game-like credits */}
-                        <div className="mt-4 border-t-2 border-dashed border-[#3A3A45] py-3 px-4 text-center">
-                          
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Post button (Camera icon) - Enhanced with purple highlight */}
-                <div 
-                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative group"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/post/new');
-                    // Log for debugging
-                    console.log('Navigating to post creation page');
-                  }}
-                >
-                  <div className="absolute inset-0 rounded-full bg-purple-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                  <Camera className="text-white h-4 w-4 group-hover:text-purple-300 transition-colors duration-300" />
-                </div>
-              </div>
+        <div className="game-boy-controls">
+          {/* GameBoy D-pad section (left side) */}
+          <div className="d-pad-container">
+            <div className="d-pad" ref={dPadRef}>
+              <button 
+                className="d-pad-up" 
+                onClick={() => handleDPadPress('up')}
+                onTouchStart={() => handleDPadPress('up')}
+                onTouchEnd={handleDPadTouchEnd}
+              ></button>
+              <button 
+                className="d-pad-right" 
+                onClick={() => handleDPadPress('right')}
+                onTouchStart={() => handleDPadPress('right')}
+                onTouchEnd={handleDPadTouchEnd}
+              ></button>
+              <button 
+                className="d-pad-down" 
+                onClick={() => handleDPadPress('down')}
+                onTouchStart={() => handleDPadPress('down')}
+                onTouchEnd={handleDPadTouchEnd}
+              ></button>
+              <button 
+                className="d-pad-left" 
+                onClick={() => handleDPadPress('left')}
+                onTouchStart={() => handleDPadPress('left')}
+                onTouchEnd={handleDPadTouchEnd}
+              ></button>
+              <div className="d-pad-center"></div>
             </div>
-            
-            {/* Right - Action Buttons in diamond shape (Xbox style) */}
-            <div className="flex flex-col items-center">
-              <div className="relative w-32 h-32 mb-3">
-                {/* Top button (Comment) */}
-                <button 
-                  data-action="comment"
-                  onClick={handleCommentClick}
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-blue-500 flex items-center justify-center"
-                >
-                  <MessageCircle className="text-blue-500 h-5 w-5" />
-                </button>
-                
-                {/* Left button (Like) */}
-                <button 
-                  data-action="like"
-                  onClick={handleLike}
-                  className="absolute left-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-red-500 flex items-center justify-center"
-                >
-                  <Heart className="text-red-500 h-5 w-5" fill="#ef4444" />
-                </button>
-                
-                {/* Right button (Trophy) */}
-                <button 
-                  data-action="trophy"
-                  onClick={handleTrophy}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-yellow-500 flex items-center justify-center"
-                >
-                  <Trophy className="text-yellow-500 h-5 w-5" />
-                </button>
-                
-                {/* Bottom button (Follow/Unfollow) */}
-                <button 
-                  data-action="follow"
-                  onClick={handleFollow}
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-green-500 flex items-center justify-center"
-                >
-                  {isFollowing ? (
-                    <UserCheck className="text-green-500 h-5 w-5" />
-                  ) : (
-                    <UserPlus className="text-green-500 h-5 w-5" />
-                  )}
-                </button>
-              </div>
+          </div>
+
+          {/* Center Control Section */}
+          <div className="center-section">
+            <button 
+              className="main-button"
+              onClick={toggleMenu}
+            >
+              <span>CLIPT</span>
+            </button>
+            <div className="select-start-buttons">
+              <button className="select-button" onClick={() => handleCameraClick()}>
+                <Camera size={16} />
+              </button>
+              <button className="start-button" onClick={toggleMenu}>
+                <Menu size={16} />
+              </button>
             </div>
+          </div>
+
+          {/* Action Buttons (right side) */}
+          <div className="action-buttons">
+            <button 
+              className="action-button a-button" 
+              onClick={handleAButtonPress}
+            >
+              <MessageCircle size={16} />
+            </button>
+            <button 
+              className="action-button b-button" 
+              onClick={handleBButtonPress}
+            >
+              <Heart size={16} fill={hasLiked ? "#ff0080" : "transparent"} color={hasLiked ? "#ff0080" : "currentColor"} />
+            </button>
+            <button 
+              className="action-button y-button" 
+              onClick={() => navigate('/top-clipts')}
+            >
+              <Trophy size={16} />
+            </button>
+            <button 
+              className="action-button x-button" 
+              onClick={handleFollowButtonPress}
+            >
+              {isFollowing ? <UserCheck size={16} /> : <UserPlus size={16} />}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Menu Modal */}
+      {menuOpen && (
+        <div className="menu-modal">
+          <div className="menu-header">
+            <h2>Navigation Menu</h2>
+            <button onClick={toggleMenu}><X size={24} /></button>
+          </div>
+          <div className="menu-options">
+            {navigationOptions.map((option, index) => (
+              <button
+                key={option.id}
+                className={`menu-option ${selectedOptionIndex === index ? 'selected' : ''}`}
+                onClick={() => {
+                  navigate(option.path);
+                  toggleMenu();
+                }}
+              >
+                <span className="menu-option-icon">{option.icon}</span>
+                <span className="menu-option-name">{option.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Comment Modal */}
+      {showCommentModal && currentPostId && (
+        <CommentModal 
+          postId={currentPostId} 
+          onClose={() => setShowCommentModal(false)}
+          isOpen={showCommentModal}
+        />
+      )}
     </>
   );
 };
