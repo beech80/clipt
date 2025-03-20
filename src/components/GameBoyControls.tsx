@@ -55,7 +55,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [navigationOptions] = useState([
     { id: 'clips', name: 'Clipts', icon: <Grid size={18} />, path: '/' },
     { id: 'top-clipts', name: 'Top Clipts', icon: <Trophy size={18} />, path: '/top-clipts' },
-    { id: 'squads-clipts', name: 'Squads Clipts', icon: <Users size={18} />, path: '/squads' },
+    { id: 'squads-clipts', name: 'Squads Clipts', icon: <Users size={18} />, path: '/squads-clipts' },
     { id: 'profile', name: 'Profile', icon: <User size={18} />, path: '/profile' },
     { id: 'messages', name: 'Messages', icon: <MessageCircle size={18} />, path: '/messages' },
   ]);
@@ -1364,14 +1364,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       name: 'Squads Clipts', 
       description: 'Your squads clipts',
       icon: <FiUsers />, 
-      action: () => navigate('/squads') 
+      action: () => navigate('/squads-clipts') 
     },
     { 
       id: 'clipts', 
       name: 'Clipts', 
-      description: 'View all clipts',
+      description: 'View all clipts (videos)',
       icon: <FiMonitor />, 
-      action: () => navigate('/') 
+      action: () => navigate('/clipts') 
     }
   ];
 
@@ -1505,6 +1505,85 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setCommentModalOpen(true);
   };
 
+  // Action button handlers
+  const handleButtonAPress = () => {
+    // Green (top) button - Comments
+    // This toggles the comments modal
+    if (currentPostId) {
+      navigate(`/post/${currentPostId}/comments`);
+    } else {
+      console.log('No post selected to comment on');
+      toast.info('Navigate to a post to comment');
+    }
+  };
+
+  const handleButtonBPress = () => {
+    // Red (right) button - Follow/Trophy
+    handleFollow();
+  };
+
+  const handleButtonXPress = () => {
+    // Blue (left) button - Like
+    if (currentPostId) {
+      handleLike();
+    } else {
+      console.log('No post selected to like');
+      toast.info('Navigate to a post to like');
+    }
+  };
+
+  const handleButtonYPress = () => {
+    // Yellow (bottom) button - Navigate to Clipts page (videos)
+    navigate('/clipts');
+  };
+
+  // Function to animate the scrolling with physics
+  const startScrollAnimation = (initialVelocity: number) => {
+    // Don't scroll on certain pages
+    if (window.location.pathname.includes('/comments')) {
+      return;
+    }
+
+    // Set initial velocity
+    const velocity = initialVelocity;
+    
+    // Apply the scroll
+    window.scrollBy(0, velocity);
+    
+    // Snap to the nearest post when significant movement
+    if (Math.abs(velocity) > 20) {
+      setTimeout(() => snapToNearestPost(), 300);
+    }
+  };
+  
+  // Snap to the nearest post when scrolling stops
+  const snapToNearestPost = () => {
+    // Find visible posts
+    const posts = document.querySelectorAll('.post-item, [data-post-id], article, .feed-item');
+    if (!posts.length) return;
+    
+    // Find the one closest to viewport center
+    const viewportCenter = window.innerHeight / 2;
+    let closestPost = null;
+    let minDistance = Infinity;
+    
+    posts.forEach(post => {
+      const rect = post.getBoundingClientRect();
+      const postCenter = rect.top + rect.height / 2;
+      const distance = Math.abs(postCenter - viewportCenter);
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPost = post;
+      }
+    });
+    
+    // Snap to it if we found one and it's not already centered
+    if (closestPost && minDistance > 10) {
+      scrollToElement(closestPost);
+    }
+  };
+
   // Your return JSX - the UI for the GameBoy controller
   return (
     <>
@@ -1560,25 +1639,25 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           <div className="action-buttons">
             <button 
               className={`action-button a-button ${hasLiked ? 'active' : ''}`} 
-              onClick={handleAButtonPress}
+              onClick={handleButtonAPress}
             >
-              <Heart size={20} />
+              <MessageCircle size={20} />
             </button>
             <button 
               className={`action-button b-button ${isFollowing ? 'active' : ''}`}
-              onClick={handleBButtonPress}
+              onClick={handleButtonBPress}
             >
               <UserPlus size={20} />
             </button>
             <button 
               className={`action-button x-button ${commentModalOpen ? 'active' : ''}`} 
-              onClick={handleXButtonPress}
+              onClick={handleButtonXPress}
             >
-              <MessageCircle size={20} />
+              <Heart size={20} />
             </button>
             <button 
               className={`action-button y-button`}
-              onClick={handleYButtonPress}
+              onClick={handleButtonYPress}
             >
               <Trophy size={20} />
             </button>
