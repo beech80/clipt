@@ -1236,7 +1236,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   `;
   
   // Add handlers for D-pad
-  const handleDPadPress = (direction: string) => {
+  const handleDPadPress = (direction: 'up' | 'down' | 'left' | 'right') => {
     console.log(`D-pad pressed: ${direction}`);
     
     switch (direction) {
@@ -1265,7 +1265,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }, 200);
   };
   
-  const handleDPadDirection = (direction: string) => {
+  const handleDPadDirection = (direction: 'up' | 'down' | 'left' | 'right') => {
     handleDPadPress(direction);
   };
   
@@ -1468,7 +1468,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   ];
 
-  const isDPadActive = (direction: string) => {
+  const isDPadActive = (direction: 'up' | 'down' | 'left' | 'right') => {
     switch (direction) {
       case 'up':
         return dPadDirection.y < -5;
@@ -1486,92 +1486,106 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Your return JSX - the UI for the GameBoy controller
   return (
     <>
-      <div className="game-boy-controls">
-        {/* D-Pad */}
-        <div className="d-pad-container">
-          <div className="d-pad" ref={dPadRef}>
-            <div className="d-pad-corner top-left"></div>
-            <div className="d-pad-corner top-right"></div>
-            <div className="d-pad-corner bottom-left"></div>
-            <div className="d-pad-corner bottom-right"></div>
-            <div className="d-pad-center"></div>
-            <button
-              className={`d-pad-up ${isDPadActive('up') ? 'active' : ''}`}
-              onClick={() => handleDPadDirection('up')}
-            ></button>
-            <button
-              className={`d-pad-right ${isDPadActive('right') ? 'active' : ''}`}
-              onClick={() => handleDPadDirection('right')}
-            ></button>
-            <button
-              className={`d-pad-down ${isDPadActive('down') ? 'active' : ''}`}
-              onClick={() => handleDPadDirection('down')}
-            ></button>
-            <button
-              className={`d-pad-left ${isDPadActive('left') ? 'active' : ''}`}
-              onClick={() => handleDPadDirection('left')}
-            ></button>
-          </div>
-        </div>
-
-        {/* Center Section */}
-        <div className="center-section">
-          <button className="main-button" onClick={handleMainButtonClick}>
-            <span>CLIPT</span>
-          </button>
-          <div className="select-start-buttons">
-            <button className="select-button" onClick={handleSelectPress}></button>
-            <button className="start-button" onClick={handleStartPress}></button>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          <button className="action-button a-button" onClick={handleAButtonPress}>
-            <Heart size={20} />
-          </button>
-          <button className="action-button b-button" onClick={handleBButtonPress}>
-            <Award size={20} />
-          </button>
-          <button className="action-button x-button" onClick={handleXButtonPress}>
-            <MessageCircle size={20} />
-          </button>
-          <button className="action-button y-button" onClick={handleYButtonPress}>
-            <Share size={20} />
-          </button>
-        </div>
-
-        {/* Menu Modal */}
-        {isMenuOpen && (
-          <div className="menu-modal">
-            <div className="menu-container">
-              <div className="menu-header">
-                <div className="menu-title">Game Menu</div>
-                <button className="close-menu" onClick={() => setIsMenuOpen(false)}>×</button>
-              </div>
-              <div className="menu-options">
-                {menuOptions.map((option) => (
-                  <div
-                    key={option.id}
-                    className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
-                    onClick={() => {
-                      setSelectedMenuOption(option.id);
-                      option.action();
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    <div className="menu-option-icon">{option.icon}</div>
-                    <div className="menu-option-content">
-                      <div className="menu-option-title">{option.name}</div>
-                      <div className="menu-option-description">{option.description}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="game-boy-controls">
+          {/* D-Pad */}
+          <div className="d-pad-container">
+            <div className="d-pad" ref={dPadRef}>
+              <div className="d-pad-corner top-left"></div>
+              <div className="d-pad-corner top-right"></div>
+              <div className="d-pad-corner bottom-left"></div>
+              <div className="d-pad-corner bottom-right"></div>
+              <div className="d-pad-center"></div>
+              <button
+                className={`d-pad-up ${isDPadActive('up') ? 'active' : ''}`}
+                onClick={() => handleDPadDirection('up')}
+                onTouchStart={() => handleDPadDirection('up')}
+                onTouchEnd={handleDPadTouchEnd}
+              ></button>
+              <button
+                className={`d-pad-right ${isDPadActive('right') ? 'active' : ''}`}
+                onClick={() => handleDPadDirection('right')}
+                onTouchStart={() => handleDPadDirection('right')}
+                onTouchEnd={handleDPadTouchEnd}
+              ></button>
+              <button
+                className={`d-pad-down ${isDPadActive('down') ? 'active' : ''}`}
+                onClick={() => handleDPadDirection('down')}
+                onTouchStart={() => handleDPadDirection('down')}
+                onTouchEnd={handleDPadTouchEnd}
+              ></button>
+              <button
+                className={`d-pad-left ${isDPadActive('left') ? 'active' : ''}`}
+                onClick={() => handleDPadDirection('left')}
+                onTouchStart={() => handleDPadDirection('left')}
+                onTouchEnd={handleDPadTouchEnd}
+              ></button>
             </div>
           </div>
-        )}
+
+          {/* Center Section */}
+          <div className="center-section">
+            <button className="main-button" onClick={handleMainButtonClick}>
+              <span>CLIPT</span>
+            </button>
+            <div className="select-start-buttons">
+              <button className="select-button" onClick={handleSelectPress}>
+                <Menu size={16} />
+              </button>
+              <button className="start-button" onClick={handleStartPress}>
+                <Camera size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="action-buttons">
+            <button className="action-button a-button" onClick={handleAButtonPress}>
+              <Heart size={20} />
+            </button>
+            <button className="action-button b-button" onClick={handleBButtonPress}>
+              <Award size={20} />
+            </button>
+            <button className="action-button x-button" onClick={handleXButtonPress}>
+              <MessageCircle size={20} />
+            </button>
+            <button className="action-button y-button" onClick={handleYButtonPress}>
+              <Trophy size={20} />
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Menu Modal */}
+      {isMenuOpen && (
+        <div className="menu-modal" onClick={() => setIsMenuOpen(false)}>
+          <div className="menu-container" onClick={(e) => e.stopPropagation()}>
+            <div className="menu-header">
+              <div className="menu-title">Game Menu</div>
+              <button className="close-menu" onClick={() => setIsMenuOpen(false)}>×</button>
+            </div>
+            <div className="menu-options">
+              {menuOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
+                  onClick={() => {
+                    setSelectedMenuOption(option.id);
+                    option.action();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <div className="menu-option-icon">{option.icon}</div>
+                  <div className="menu-option-content">
+                    <div className="menu-option-title">{option.name}</div>
+                    <div className="menu-option-description">{option.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Comment Modal */}
       {commentModalOpen && currentPostId && (
