@@ -1243,34 +1243,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     switch (direction) {
       case 'up':
         setDPadDirection({ x: 0, y: -20 });
+        // Only vertical movements affect scrolling
         handleScrollFromJoystick(-30);
         break;
       case 'down':
         setDPadDirection({ x: 0, y: 20 });
+        // Only vertical movements affect scrolling
         handleScrollFromJoystick(30);
         break;
       case 'left':
         setDPadDirection({ x: -20, y: 0 });
-        // Navigate back in history
-        if (window.history.length > 1) {
-          navigate(-1);
-        }
+        // Left moves the joystick but doesn't scroll
+        // You can use this for other UI interactions if needed
         break;
       case 'right':
         setDPadDirection({ x: 20, y: 0 });
-        // Handle right navigation - could be used for next/forward
-        if (currentPostId) {
-          // For example, navigate to next post if available
-          const allPosts = Array.from(document.querySelectorAll('[data-post-id]'));
-          const currentIndex = allPosts.findIndex(post => post.getAttribute('data-post-id') === currentPostId);
-          if (currentIndex !== -1 && currentIndex < allPosts.length - 1) {
-            const nextPost = allPosts[currentIndex + 1];
-            const nextPostId = nextPost.getAttribute('data-post-id');
-            if (nextPostId) {
-              handleScrollToPost(nextPostId);
-            }
-          }
-        }
+        // Right moves the joystick but doesn't scroll
+        // You can use this for other UI interactions if needed
         break;
       default:
         break;
@@ -1298,8 +1287,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Handler for the main CLIPT button in the center
   const handleMainButtonClick = () => {
-    // Navigate to Squads Clipts page
-    navigate('/squad-clipts');
+    // Navigate to the home page (which shows the squad clipts)
+    navigate('/');
   };
 
   // Handlers for the select and start buttons
@@ -1321,9 +1310,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   const handleYButtonPress = () => {
-    // Trophy/Achievement functionality
-    console.log('Y button pressed - Trophy');
-    handleFollowButtonPress();
+    // Navigate to Clipts page with videos
+    console.log('Y button pressed - Navigate to Clipts');
+    navigate('/clipts');
   };
 
   // Menu options
@@ -1416,9 +1405,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   const handleBButtonPress = () => {
-    console.log('B button pressed - Like');
-    setHasLiked(!hasLiked);
-    handleLikeClick();
+    // Trophy/Follow functionality (moved from Y button)
+    console.log('B button pressed - Follow');
+    setIsFollowing(!isFollowing);
+    handleFollowClick();
   };
 
   const handleFollowButtonPress = () => {
@@ -1575,10 +1565,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               <Heart size={20} />
             </button>
             <button 
-              className={`action-button b-button ${currentPostId ? '' : ''}`} 
+              className={`action-button b-button ${isFollowing ? 'active' : ''}`}
               onClick={handleBButtonPress}
             >
-              <Award size={20} />
+              <UserPlus size={20} />
             </button>
             <button 
               className={`action-button x-button ${commentModalOpen ? 'active' : ''}`} 
@@ -1587,7 +1577,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               <MessageCircle size={20} />
             </button>
             <button 
-              className={`action-button y-button ${isFollowing ? 'active' : ''}`}
+              className={`action-button y-button`}
               onClick={handleYButtonPress}
             >
               <Trophy size={20} />
