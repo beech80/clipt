@@ -1399,13 +1399,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Handlers for the action buttons
   const handleXButtonPress = () => {
-    handleFollowButtonPress();
+    // Comment functionality
+    console.log('X button pressed - Comment');
+    handleCommentClick();
   };
 
   const handleYButtonPress = () => {
-    // Share functionality
-    console.log('Share functionality');
-    navigate('/share');
+    // Trophy/Achievement functionality
+    console.log('Y button pressed - Trophy');
+    handleFollowButtonPress();
   };
 
   // Menu options
@@ -1491,7 +1493,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           {/* D-Pad */}
           <div className="d-pad-container">
             <div className="d-pad" ref={dPadRef}>
-              {/* No need for corner elements with the new joystick design */}
+              <div className="d-pad-ring"></div>
               <button
                 className={`d-pad-up ${isDPadActive('up') ? 'active' : ''}`}
                 onClick={() => handleDPadDirection('up')}
@@ -1536,16 +1538,28 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
           {/* Action Buttons */}
           <div className="action-buttons">
-            <button className="action-button a-button" onClick={handleAButtonPress}>
+            <button 
+              className={`action-button a-button ${hasLiked ? 'active' : ''}`} 
+              onClick={handleAButtonPress}
+            >
               <Heart size={20} />
             </button>
-            <button className="action-button b-button" onClick={handleBButtonPress}>
+            <button 
+              className={`action-button b-button ${currentPostId ? '' : ''}`} 
+              onClick={handleBButtonPress}
+            >
               <Award size={20} />
             </button>
-            <button className="action-button x-button" onClick={handleXButtonPress}>
+            <button 
+              className={`action-button x-button ${commentModalOpen ? 'active' : ''}`} 
+              onClick={handleXButtonPress}
+            >
               <MessageCircle size={20} />
             </button>
-            <button className="action-button y-button" onClick={handleYButtonPress}>
+            <button 
+              className={`action-button y-button ${isFollowing ? 'active' : ''}`}
+              onClick={handleYButtonPress}
+            >
               <Trophy size={20} />
             </button>
           </div>
