@@ -3,18 +3,15 @@
 export interface Profile {
   id: string;
   username: string;
-  display_name?: string;
-  avatar_url?: string;
-  bio?: string;
-  website?: string;
-  followers_count?: number;
-  following_count?: number;
-  achievements_count?: number;
-  created_at?: string;
-  updated_at?: string;
-  // Settings-specific properties
-  enable_notifications?: boolean;
-  enable_sounds?: boolean;
+  display_name: string;
+  bio: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  followers_count: number;
+  following_count: number;
+  achievements_count: number;
+  enable_notifications: boolean;
+  enable_sounds: boolean;
   auto_download_media?: boolean;
   hardware_acceleration?: boolean;
   reduce_animations?: boolean;
@@ -24,6 +21,8 @@ export interface Profile {
   theme_preference?: string;
   language_preference?: string;
   timezone_preference?: string;
+  website?: string;
+  updated_at?: string;
 }
 
 export interface ProfileStats {
@@ -82,17 +81,17 @@ export interface GameAchievement {
 export interface DatabaseProfile {
   id: string;
   username: string;
-  display_name?: string;
-  avatar_url?: string;
-  bio?: string;
+  display_name: string;
+  bio: string | null;
+  avatar_url: string | null;
   website?: string;
-  followers_count?: number;
-  following_count?: number;
-  achievements_count?: number;
-  created_at?: string;
+  followers_count: number;
+  following_count: number;
+  achievements_count: number;
+  created_at: string;
   updated_at?: string;
-  enable_notifications?: boolean;
-  enable_sounds?: boolean;
+  enable_notifications: boolean;
+  enable_sounds: boolean;
   auto_download_media?: boolean;
   hardware_acceleration?: boolean;
   reduce_animations?: boolean;
