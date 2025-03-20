@@ -30,6 +30,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import './joystick-animations.css'; // Import joystick animations
 import './gameboy-controller.css'; // Import GameBoy controller styles
 import CommentModal from './comments/CommentModal';
+import { FiSettings, FiUser, FiBell, FiVideo, FiMessageCircle, FiSearch, FiAward, FiUsers, FiMonitor, FiChevronRight } from 'react-icons/fi';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -41,8 +42,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const queryClient = useQueryClient();
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [selectedMenuOption, setSelectedMenuOption] = useState<string | null>(null);
   const [navigationOptions] = useState([
     { id: 'clipts', name: 'Clipts', icon: <Grid size={18} />, path: '/clipts' },
     { id: 'top-clipts', name: 'Top Clipts', icon: <Trophy size={18} />, path: '/top-clipts' },
@@ -81,14 +82,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Effect to close the menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuOpen && menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
+      if (isMenuOpen && menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
       }
     };
     
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [menuOpen]);
+  }, [isMenuOpen]);
 
   useEffect(() => {
     // Detect when the user manually scrolls the page to keep D-pad in sync
@@ -1216,21 +1217,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Handle menu navigation with D-pad
   const handleMenuNavigation = (direction: 'up' | 'down' | 'left' | 'right') => {
-    if (!menuOpen) {
-      setMenuOpen(true);
+    if (!isMenuOpen) {
+      setIsMenuOpen(true);
       return;
     }
     
-    if (direction === 'up' && selectedOptionIndex > 0) {
-      setSelectedOptionIndex(selectedOptionIndex - 1);
-    } else if (direction === 'down' && selectedOptionIndex < navigationOptions.length - 1) {
-      setSelectedOptionIndex(selectedOptionIndex + 1);
+    if (direction === 'up' && selectedMenuOption !== null && menuOptions.findIndex(option => option.id === selectedMenuOption) > 0) {
+      setSelectedMenuOption(menuOptions[menuOptions.findIndex(option => option.id === selectedMenuOption) - 1].id);
+    } else if (direction === 'down' && selectedMenuOption !== null && menuOptions.findIndex(option => option.id === selectedMenuOption) < menuOptions.length - 1) {
+      setSelectedMenuOption(menuOptions[menuOptions.findIndex(option => option.id === selectedMenuOption) + 1].id);
     }
   };
 
   // Toggle menu open/closed
   const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
+    setIsMenuOpen(!isMenuOpen);
   };
 
   // Handle select button press
@@ -1247,12 +1248,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Handle selecting a menu option
   const handleMenuSelect = (optionId: string) => {
-    if (!menuOpen) return;
+    if (!isMenuOpen) return;
     
-    const option = navigationOptions.find(opt => opt.id === optionId);
+    const option = menuOptions.find(opt => opt.id === optionId);
     if (option) {
-      navigate(option.path);
-      setMenuOpen(false);
+      option.action();
+      setIsMenuOpen(false);
     }
   };
 
@@ -1332,6 +1333,73 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setIsFollowing(!isFollowing);
     // Implement follow functionality here
   };
+
+  // Menu options
+  const menuOptions = [
+    { 
+      id: 'settings', 
+      name: 'Settings', 
+      description: 'Configure your game',
+      icon: <FiSettings />, 
+      action: () => console.log('Settings clicked') 
+    },
+    { 
+      id: 'profile', 
+      name: 'Profile', 
+      description: 'Your player stats',
+      icon: <FiUser />, 
+      action: () => navigate('/profile') 
+    },
+    { 
+      id: 'notifications', 
+      name: 'Notifications', 
+      description: 'Your notifications',
+      icon: <FiBell />, 
+      action: () => navigate('/notifications') 
+    },
+    { 
+      id: 'streaming', 
+      name: 'Streaming', 
+      description: 'Live gameplay',
+      icon: <FiVideo />, 
+      action: () => navigate('/streaming') 
+    },
+    { 
+      id: 'messages', 
+      name: 'Messages', 
+      description: 'Chat with players',
+      icon: <FiMessageCircle />, 
+      action: () => navigate('/messages') 
+    },
+    { 
+      id: 'discovery', 
+      name: 'Discovery', 
+      description: 'Find new games',
+      icon: <FiSearch />, 
+      action: () => navigate('/discovery') 
+    },
+    { 
+      id: 'top-clips', 
+      name: 'Top Clips', 
+      description: 'Hall of fame',
+      icon: <FiAward />, 
+      action: () => navigate('/') 
+    },
+    { 
+      id: 'squad-clips', 
+      name: 'Squads Clips', 
+      description: 'Your squads clips',
+      icon: <FiUsers />, 
+      action: () => navigate('/squads') 
+    },
+    { 
+      id: 'all-clips', 
+      name: 'Clips', 
+      description: 'View all clips',
+      icon: <FiMonitor />, 
+      action: () => navigate('/') 
+    }
+  ];
 
   // Your return JSX - the UI for the GameBoy controller
   return (
@@ -1438,26 +1506,41 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       </div>
 
       {/* Menu Modal */}
-      {menuOpen && (
-        <div className="menu-modal">
-          <div className="menu-header">
-            <h2>Navigation Menu</h2>
-            <button onClick={toggleMenu}><X size={24} /></button>
-          </div>
-          <div className="menu-options">
-            {navigationOptions.map((option, index) => (
-              <button
-                key={option.id}
-                className={`menu-option ${selectedOptionIndex === index ? 'selected' : ''}`}
-                onClick={() => {
-                  navigate(option.path);
-                  toggleMenu();
-                }}
-              >
-                <span className="menu-option-icon">{option.icon}</span>
-                <span className="menu-option-name">{option.name}</span>
+      {isMenuOpen && (
+        <div className="menu-modal" onClick={() => setIsMenuOpen(false)}>
+          <div className="menu-container" onClick={(e) => e.stopPropagation()}>
+            <div className="menu-header">
+              GAME MENU
+            </div>
+            <div className="menu-options">
+              {menuOptions.map((option) => (
+                <button
+                  key={option.id}
+                  className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
+                  onClick={() => {
+                    setSelectedMenuOption(option.id);
+                    option.action();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <div className="menu-option-icon">
+                    {option.icon}
+                  </div>
+                  <div className="menu-option-content">
+                    <div className="menu-option-name">{option.name}</div>
+                    <div className="menu-option-description">{option.description}</div>
+                  </div>
+                  <div className="menu-option-arrow">
+                    <FiChevronRight />
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="menu-footer">
+              <button className="menu-close-button" onClick={() => setIsMenuOpen(false)}>
+                Close
               </button>
-            ))}
+            </div>
           </div>
         </div>
       )}
