@@ -38,7 +38,6 @@ import {
   FiMonitor,
   FiChevronRight
 } from 'react-icons/fi';
-import { FaHeartbeat, FaComment, FaBookmark, FaThumbsUp, FaTimes } from 'react-icons/fa';
 
 interface GameBoyControlsProps {
   currentPostId?: string;
@@ -74,7 +73,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // D-pad states
   const [dPadDirection, setDPadDirection] = useState({ x: 0, y: 0 });
   const [isDPadPressed, setIsDPadPressed] = useState(false);
-  const joystickBaseRef = useRef<HTMLDivElement | null>(null);
+  const dPadRef = useRef<HTMLDivElement | null>(null);
   const baseRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const scrollAnimationRef = useRef<number | null>(null); // For animation frame
@@ -305,7 +304,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       handlePostByPostScrolling(direction);
     } else {
       // For smaller movements, do smooth scrolling
-      const scrollAmount = amount * 10; // Increased multiplier for faster scrolling
+      const scrollAmount = amount * 5; // Adjust multiplier for scrolling speed
       
       // Apply scroll directly for immediate response
       window.scrollBy({
@@ -325,13 +324,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setIsDPadPressed(true);
     
     // Calculate the D-pad center
-    if (joystickBaseRef.current) {
-      const rect = joystickBaseRef.current.getBoundingClientRect();
+    if (dPadRef.current) {
+      const rect = dPadRef.current.getBoundingClientRect();
       dPadCenterXRef.current = rect.left + rect.width / 2;
       dPadCenterYRef.current = rect.top + rect.height / 2;
       
       // Add pressed class for visual feedback
-      joystickBaseRef.current.classList.add('pressed');
+      dPadRef.current.classList.add('pressed');
     }
     
     // Clear any existing animations
@@ -367,8 +366,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setDPadDirection({ x: constrainedX, y: constrainedY });
     
     // Update visual position
-    if (joystickBaseRef.current) {
-      joystickBaseRef.current.style.transform = `translate3d(${constrainedX/3}px, ${constrainedY/3}px, 0)`;
+    if (dPadRef.current) {
+      dPadRef.current.style.transform = `translate3d(${constrainedX/3}px, ${constrainedY/3}px, 0)`;
     }
     
     // Handle scrolling directly for Y movement
@@ -385,9 +384,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     e.stopPropagation();
     
     // Reset D-pad visual state
-    if (joystickBaseRef.current) {
-      joystickBaseRef.current.classList.remove('pressed');
-      joystickBaseRef.current.style.transform = '';
+    if (dPadRef.current) {
+      dPadRef.current.classList.remove('pressed');
+      dPadRef.current.style.transform = '';
     }
     
     // Stop pressing
@@ -410,8 +409,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     startYRef.current = touch.clientY;
     
     // Calculate the D-pad center
-    if (joystickBaseRef.current) {
-      const rect = joystickBaseRef.current.getBoundingClientRect();
+    if (dPadRef.current) {
+      const rect = dPadRef.current.getBoundingClientRect();
       dPadCenterXRef.current = rect.left + rect.width / 2;
       dPadCenterYRef.current = rect.top + rect.height / 2;
     }
@@ -458,9 +457,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     e.stopPropagation();
 
     // Reset D-pad visual state
-    if (joystickBaseRef.current) {
-      joystickBaseRef.current.classList.remove('pressed');
-      joystickBaseRef.current.style.transform = '';
+    if (dPadRef.current) {
+      dPadRef.current.classList.remove('pressed');
+      dPadRef.current.style.transform = '';
     }
     
     // Stop pressing
@@ -483,8 +482,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setRotationDegree(0);
     
     // Apply the transform directly for immediate visual feedback
-    if (joystickBaseRef.current) {
-      joystickBaseRef.current.style.transform = 'translate3d(0px, 0px, 0) rotate(0deg)';
+    if (dPadRef.current) {
+      dPadRef.current.style.transform = 'translate3d(0px, 0px, 0) rotate(0deg)';
     }
     
     // Reset direction indicators
@@ -988,8 +987,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Individual action handlers that use the universal handler
-  const handleLikeOld = () => handlePostAction('like');
-  const handleCommentOld = () => {
+  const handleLike = () => handlePostAction('like');
+  const handleComment = () => {
     // First check if we have a current post ID
     if (!currentPostId) {
       // Try to detect post if we don't have one
@@ -1027,7 +1026,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }, 1000);
     }
   };
-  const handleFollowOld = () => {
+  const handleFollow = () => {
     // Try the universal approach first
     handlePostAction('follow');
     
@@ -1047,7 +1046,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       toast.error('No post selected. Try scrolling to a post first.');
     }
   };
-  const handleTrophyOld = () => {
+  const handleTrophy = () => {
     if (!user || !currentPostId) {
       toast.error("Login to give trophy");
       return;
@@ -1328,8 +1327,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Handlers for the action buttons
   const handleXButtonPress = () => {
-    // Blue (left) button - Comment
-    handleCommentOld();
+    // Comment functionality
+    console.log('X button pressed - Comment');
+    handleCommentClick();
   };
 
   const handleYButtonPress = () => {
@@ -1339,17 +1339,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Function to handle Collection action (B button)
-  const handleBButton = () => {
-    // In comments view, go back to post
-    if (window.location.pathname.includes('/comments')) {
-      navigate(-1);
-      return;
-    }
-
-    // In other places, toggle collection status
-    handleCollection();
-  };
-
   const handleCollection = async () => {
     if (!user || !currentPostId) {
       toast.error("Login to add this clip to your collection");
@@ -1364,45 +1353,171 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         .eq('user_id', user.id)
         .eq('post_id', currentPostId);
 
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error('Error checking collection status:', checkError);
+        toast.error('Could not check collection status');
+        return;
+      }
 
       if (existingCollections && existingCollections.length > 0) {
-        // Remove from collection if it exists
-        const { error: deleteError } = await supabase
+        // Post is in collection, remove it
+        const { error: removeError } = await supabase
           .from('collections')
           .delete()
           .eq('user_id', user.id)
           .eq('post_id', currentPostId);
 
-        if (deleteError) throw deleteError;
-        toast.success("Removed from your collection");
-      } else {
-        // Add to collection if it doesn't exist
-        const { error: insertError } = await supabase
-          .from('collections')
-          .insert([
-            { user_id: user.id, post_id: currentPostId }
-          ]);
+        if (removeError) {
+          console.error('Error removing from collection:', removeError);
+          toast.error('Could not remove from collection');
+          return;
+        }
 
-        if (insertError) throw insertError;
-        toast.success("Added to your collection");
+        toast.success('Removed from your collection');
+      } else {
+        // Post not in collection, add it
+        const { error: addError } = await supabase
+          .from('collections')
+          .insert([{
+            user_id: user.id,
+            post_id: currentPostId,
+            created_at: new Date().toISOString()
+          }]);
+
+        if (addError) {
+          console.error('Error adding to collection:', addError);
+          toast.error('Could not add to collection');
+          return;
+        }
+
+        toast.success('Added to your collection!');
       }
     } catch (error) {
-      console.error("Error managing collection:", error);
-      toast.error("Failed to update collection");
+      console.error('Collection operation failed:', error);
+      toast.error('Collection operation failed');
     }
   };
 
   const handleAButtonPress = () => {
     // Green (top) button - Comments
     // This toggles the comments modal
-    handleCommentOld();
+    handleCommentClick();
+  };
+
+  const handleBButtonPress = () => {
+    // Red (right) button - Collection
+    handleCollection();
+  };
+
+  const handleFollowButtonPress = () => {
+    console.log('Follow button pressed');
+    setIsFollowing(!isFollowing);
+    handleFollowClick();
+  };
+
+  const handleLikeClick = async () => {
+    if (!user || !currentPostId) {
+      toast.error("Login to like this clip");
+      return;
+    }
+    // Like logic
+    if (likeLoading) return;
+    setLikeLoading(true);
+    
+    try {
+      const response = await supabase
+        .from('likes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('post_id', currentPostId)
+        .single();
+      
+      if (response.data) {
+        // Unlike
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('post_id', currentPostId);
+        
+        setHasLiked(false);
+        toast.success("Removed like");
+      } else {
+        // Like
+        await supabase
+          .from('likes')
+          .insert({
+            user_id: user.id,
+            post_id: currentPostId,
+          });
+        
+        setHasLiked(true);
+        toast.success("Liked the clip!");
+      }
+      
+      // Invalidate posts query to update like count
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast.error("Failed to like the clip");
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  const handleFollowClick = () => {
+    if (!user || !currentPostCreatorId) {
+      toast.error("Login to follow this user");
+      return;
+    }
+    
+    if (followLoading) return;
+    setFollowLoading(true);
+    
+    try {
+      if (isFollowing) {
+        // Unfollow logic
+        console.log(`Unfollowing user ${currentPostCreatorId}`);
+        setIsFollowing(false);
+        toast.success("Unfollowed user");
+      } else {
+        // Follow logic
+        console.log(`Following user ${currentPostCreatorId}`);
+        setIsFollowing(true);
+        toast.success("Following user");
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      toast.error("Failed to update follow status");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleCommentClick = () => {
+    if (!user || !currentPostId) {
+      toast.error("Login to comment on this clip");
+      return;
+    }
+    
+    setCommentModalOpen(true);
+  };
+
+  const handleButtonAPress = () => {
+    // Green (top) button - Comments
+    // This toggles the comments modal
+    handleCommentClick();
+  };
+
+  const handleButtonBPress = () => {
+    // Red (right) button - Collection
+    handleCollection();
   };
 
   const handleButtonXPress = () => {
     // Blue (left) button - Like
     if (currentPostId) {
-      handleLikeOld();
+      handleLike();
     } else {
       console.log('No post selected to like');
       toast.info('Navigate to a post to like');
@@ -1411,7 +1526,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   const handleButtonYPress = () => {
     // Yellow (bottom) button - Trophy
-    handleTrophyOld();
+    handleTrophy();
   };
 
   // Handle post-by-post navigation
@@ -1421,22 +1536,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       '[data-post-id]', // Main post items
       '.post-item',      // Post items 
       '.clip-item',      // Clip items
-      'article',         // Generic articles
+      '.streamer-card',  // Streamer cards
+      '.video-card',     // Video cards
+      '.clickable-card', // Generic clickable cards
       '.feed-item',      // Feed items
-      '.content-card',   // Content cards
-      '.post-container', // Post containers
+      '.list-item',      // List items
+      'article',         // Articles
+      '.content-card'    // Content cards
     ];
     
-    // Query for all the elements matching the selectors
-    const elementList: Element[] = [];
-    allScrollableSelectors.forEach(selector => {
-      const elements = document.querySelectorAll(selector);
-      elements.forEach(el => elementList.push(el));
-    });
+    const selector = allScrollableSelectors.join(', ');
+    const elementList = Array.from(document.querySelectorAll(selector));
     
-    // If no elements found, try standard scrolling
-    if (!elementList.length) {
-      const scrollAmount = direction * 300; // Standard scroll amount
+    // If no suitable elements are found, fall back to regular scrolling
+    if (elementList.length === 0) {
+      const scrollAmount = direction * window.innerHeight * 0.7;
       window.scrollBy({
         top: scrollAmount,
         behavior: 'smooth'
@@ -1444,25 +1558,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return;
     }
     
-    // Find elements that are currently visible in the viewport
-    const visibleElements = elementList.filter(element => {
-      const rect = element.getBoundingClientRect();
-      // Element is at least partially in viewport
+    // Find the element closest to the center of the viewport
+    const viewportCenter = window.innerHeight / 2;
+    const visibleElements = elementList.filter(el => {
+      const rect = el.getBoundingClientRect();
       return rect.top < window.innerHeight && rect.bottom > 0;
-    }).sort((a, b) => {
-      // Sort by position in viewport
-      return a.getBoundingClientRect().top - b.getBoundingClientRect().top;
     });
     
-    // If no visible elements, just scroll in the requested direction
-    if (!visibleElements.length) {
-      const scrollAmount = direction * 300;
-      window.scrollBy({
-        top: scrollAmount,
-        behavior: 'smooth'
-      });
-      return;
-    }
+    if (visibleElements.length === 0) return;
+    
+    // Sort by distance from the center of the viewport
+    visibleElements.sort((a, b) => {
+      const rectA = a.getBoundingClientRect();
+      const rectB = b.getBoundingClientRect();
+      const centerA = rectA.top + rectA.height / 2;
+      const centerB = rectB.top + rectB.height / 2;
+      return Math.abs(centerA - viewportCenter) - Math.abs(centerB - viewportCenter);
+    });
     
     // Get the closest element
     const currentElement = visibleElements[0];
@@ -1475,21 +1587,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (targetIndex < 0) targetIndex = 0;
     if (targetIndex >= elementList.length) targetIndex = elementList.length - 1;
     
-    // If we're already at the edge, do a standard scroll to show more content
-    if (targetIndex === currentIndex) {
-      const scrollAmount = direction * 300;
-      window.scrollBy({
-        top: scrollAmount,
-        behavior: 'smooth'
-      });
-      return;
-    }
+    // If we're already at the edge, don't try to scroll further
+    if (targetIndex === currentIndex) return;
     
     // Get the target element and scroll to it
     const targetElement = elementList[targetIndex];
     scrollToElement(targetElement);
   };
-
+  
   // Helper function to scroll to a specific element
   const scrollToElement = (element: Element) => {
     if (!element) return;
@@ -1583,164 +1688,103 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     updateDirectionIndicators(values);
   };
   
-  // Handle comment creation/viewing
-  const handleCommentEnhanced = () => {
-    if (!user || !currentPostId) {
-      toast.error("Login to comment on this clip");
-      return;
-    }
-    
-    // If we're on comments page, no action needed
-    if (window.location.pathname.includes('/comments')) {
-      return;
-    }
-    
-    // Otherwise navigate to comments page
-    navigate(`/comments/${currentPostId}`);
-  };
-
-  // Handle like functionality
-  const handleLikeEnhanced = async () => {
-    if (!user || !currentPostId) {
-      toast.error("Login to like this clip");
-      return;
-    }
-    // Like logic
-    if (likeLoading) return;
-    setLikeLoading(true);
-    
-    try {
-      const response = await supabase
-        .from('likes')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('post_id', currentPostId)
-        .single();
-      
-      if (response.data) {
-        // Unlike
-        await supabase
-          .from('likes')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('post_id', currentPostId);
-          
-        setHasLiked(false);
-        toast.success("Removed like");
-      } else {
-        // Like
-        await supabase
-          .from('likes')
-          .insert({
-            user_id: user.id,
-            post_id: currentPostId,
-          });
-        
-        setHasLiked(true);
-        toast.success("Liked the clip!");
-      }
-      
-      // Invalidate posts query to update like count
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      toast.error("Failed to like the clip");
-    } finally {
-      setLikeLoading(false);
-    }
-  };
-
-  // Button handler hooks for the UI
-  const handleAButtonPressEnhanced = () => {
-    // A button - Like
-    handleLikeEnhanced();
-  };
-
   // Your return JSX - the UI for the GameBoy controller
   return (
     <>
-      <div className="game-boy-controls">
-        {/* GameBoy Logo */}
-        <div className="center-logo">
-          <h2 className="clipt-logo">CLIPT</h2>
-        </div>
-
-        {/* Joystick */}
-        <div className="joystick-container">
-          <div 
-            className="joystick-base"
-            ref={joystickBaseRef}
-          >
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="game-boy-controls">
+          {/* D-Pad */}
+          <div className="d-pad-container">
             <div 
-              className={`joystick ${isDPadPressed ? 'pressed' : ''}`}
+              className="d-pad" 
+              ref={dPadRef} 
+              onTouchStart={handleDPadTouchStart} 
+              onTouchMove={handleDPadTouchMove}
+              onTouchEnd={handleDPadTouchEnd}
               onMouseDown={handleDPadMouseDown}
-              onTouchStart={handleDPadTouchStart}
+              onMouseMove={handleDPadMouseMove}
+              onMouseUp={handleDPadMouseUp}
+              onMouseLeave={handleDPadMouseUp}
             >
+              <div className="d-pad-ring"></div>
+              <div className="joystick-indicator"></div>
               <div className="direction-indicators">
-                <div className={`direction-indicator direction-up ${dPadDirection.y < -5 ? 'direction-active' : ''}`}></div>
-                <div className={`direction-indicator direction-right ${dPadDirection.x > 5 ? 'direction-active' : ''}`}></div>
-                <div className={`direction-indicator direction-down ${dPadDirection.y > 5 ? 'direction-active' : ''}`}></div>
-                <div className={`direction-indicator direction-left ${dPadDirection.x < -5 ? 'direction-active' : ''}`}></div>
+                <div className={`direction-indicator direction-up ${isDPadActive('up') ? 'direction-active' : ''}`}></div>
+                <div className={`direction-indicator direction-right ${isDPadActive('right') ? 'direction-active' : ''}`}></div>
+                <div className={`direction-indicator direction-down ${isDPadActive('down') ? 'direction-active' : ''}`}></div>
+                <div className={`direction-indicator direction-left ${isDPadActive('left') ? 'direction-active' : ''}`}></div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          <div
-            className="button button-y"
-            onClick={handleButtonYPress}
-          >
-            <span className="button-text">Y</span>
-            <FaHeartbeat />
+          {/* Center Section */}
+          <div className="center-section">
+            <button className="main-button" onClick={handleMainButtonClick}>
+              <span>CLIPT</span>
+            </button>
+            <div className="select-start-buttons">
+              <button className="select-button" onClick={handleSelectPress}>
+                <Menu size={16} />
+              </button>
+              <button className="start-button" onClick={handleStartPress}>
+                <Camera size={16} />
+              </button>
+            </div>
           </div>
-          <div
-            className="button button-x"
-            onClick={handleButtonXPress}
-          >
-            <span className="button-text">X</span>
-            <FaComment />
-          </div>
-          <div
-            className="button button-b"
-            onClick={handleBButton}
-          >
-            <span className="button-text">B</span>
-            <FaBookmark />
-          </div>
-          <div
-            className="button button-a"
-            onClick={handleAButtonPressEnhanced}
-          >
-            <span className="button-text">A</span>
-            <FaThumbsUp />
+
+          {/* Action Buttons */}
+          <div className="action-buttons">
+            <button 
+              className={`action-button a-button ${hasLiked ? 'active' : ''}`} 
+              onClick={handleButtonAPress}
+            >
+              <MessageCircle size={20} />
+            </button>
+            <button 
+              className={`action-button b-button ${isFollowing ? 'active' : ''}`}
+              onClick={handleButtonBPress}
+            >
+              <UserPlus size={20} />
+            </button>
+            <button 
+              className={`action-button x-button ${commentModalOpen ? 'active' : ''}`} 
+              onClick={handleButtonXPress}
+            >
+              <Heart size={20} />
+            </button>
+            <button 
+              className={`action-button y-button`}
+              onClick={handleButtonYPress}
+            >
+              <Trophy size={20} />
+            </button>
           </div>
         </div>
       </div>
 
       {/* Menu Modal */}
       {isMenuOpen && (
-        <div className="menu-modal">
-          <div className="menu-content">
-            <button className="menu-close" onClick={toggleMenu}>
-              <FaTimes />
-            </button>
-            <h2>Menu</h2>
-            <div className="menu-items">
-              {menuOptions.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="menu-item"
+        <div className="menu-modal" onClick={() => setIsMenuOpen(false)}>
+          <div className="menu-container" onClick={(e) => e.stopPropagation()}>
+            <div className="menu-header">
+              <div className="menu-title">Game Menu</div>
+              <button className="close-menu" onClick={() => setIsMenuOpen(false)}>×</button>
+            </div>
+            <div className="menu-options">
+              {menuOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
                   onClick={() => {
-                    item.action();
-                    toggleMenu();
+                    setSelectedMenuOption(option.id);
+                    option.action();
+                    setIsMenuOpen(false);
                   }}
                 >
-                  <div className="menu-icon">{item.icon}</div>
-                  <div className="menu-item-info">
-                    <h3>{item.name}</h3>
-                    <p>{item.description}</p>
+                  <div className="menu-option-icon">{option.icon}</div>
+                  <div className="menu-option-content">
+                    <div className="menu-option-title">{option.name}</div>
+                    <div className="menu-option-description">{option.description}</div>
                   </div>
                 </div>
               ))}
