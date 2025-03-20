@@ -665,3 +665,15 @@ article.joystick-selected-item,
   right: 5px;
   top: calc(50% - 4px);
 }
+
+/* Remove direction indicators */
+.direction-indicator {
+  display: none;
+}
+
+.joystick-up-indicator,
+.joystick-down-indicator,
+.joystick-left-indicator,
+.joystick-right-indicator {
+  display: none;
+}

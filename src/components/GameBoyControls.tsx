@@ -1355,11 +1355,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                   
                   {/* Main base of joystick */}
                   <div className="joystick-base" ref={baseRef}>
-                    {/* Direction indicators */}
-                    <div className="direction-indicator direction-up"></div>
-                    <div className="direction-indicator direction-down"></div>
-                    <div className="direction-indicator direction-left"></div>
-                    <div className="direction-indicator direction-right"></div>
                     
                     {/* Joystick handle */}
                     <div 
