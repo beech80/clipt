@@ -20,7 +20,9 @@ import {
   Video,
   Award,
   Monitor,
-  Users
+  Users,
+  Grid,
+  Compass
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -39,16 +41,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [currentPath, setCurrentPath] = useState(location.pathname);
   const [currentPostId, setCurrentPostId] = useState<string | null>(propCurrentPostId || null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedOptionIndex, setSelectedOptionIndex] = useState<number>(0);
   const [navigationOptions] = useState([
-    { name: 'Settings', icon: <Settings className="mr-2 h-4 w-4" />, path: '/settings' },
-    { name: 'Streaming', icon: <Video className="mr-2 h-4 w-4" />, path: '/streaming' },
-    { name: 'Profile', icon: <User className="mr-2 h-4 w-4" />, path: '/profile' },
-    { name: 'Messages', icon: <MessageCircle className="mr-2 h-4 w-4" />, path: '/messages' },
-    { name: 'Notifications', icon: <Bell className="mr-2 h-4 w-4" />, path: '/notifications' },
-    { name: 'Discovery', icon: <Search className="mr-2 h-4 w-4" />, path: '/discovery' },
-    { name: 'Top Clipts', icon: <Award className="mr-2 h-4 w-4" />, path: '/top-clipts' },
-    { name: 'Squads Clipts', icon: <Users className="mr-2 h-4 w-4" />, path: '/' },
-    { name: 'Clipts', icon: <Monitor className="mr-2 h-4 w-4" />, path: '/clipts' }
+    { id: 'clipts', name: 'Clipts', icon: <Grid size={18} />, path: '/clipts' },
+    { id: 'top-clipts', name: 'Top Clipts', icon: <Trophy size={18} />, path: '/top-clipts' },
+    { id: 'discover', name: 'Discovery', icon: <Compass size={18} />, path: '/discover' },
+    { id: 'profile', name: 'Profile', icon: <User size={18} />, path: '/profile' },
+    { id: 'messages', name: 'Messages', icon: <MessageCircle size={18} />, path: '/messages' },
+    { id: 'notifications', name: 'Notifications', icon: <Bell size={18} />, path: '/notifications' },
+    { id: 'streaming', name: 'Streaming', icon: <Video size={18} />, path: '/streaming' },
+    { id: 'squads', name: 'Squads Clipts', icon: <Users size={18} />, path: '/squads/clipts' },
+    { id: 'settings', name: 'Settings', icon: <Settings size={18} />, path: '/settings' }
   ]);
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | undefined>(undefined);
@@ -1253,6 +1256,48 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     return null;
   };
 
+  // Handle menu navigation with D-pad
+  const handleMenuNavigation = (direction: 'up' | 'down' | 'left' | 'right') => {
+    if (!menuOpen) {
+      setMenuOpen(true);
+      return;
+    }
+    
+    if (direction === 'up' && selectedOptionIndex > 0) {
+      setSelectedOptionIndex(selectedOptionIndex - 1);
+    } else if (direction === 'down' && selectedOptionIndex < navigationOptions.length - 1) {
+      setSelectedOptionIndex(selectedOptionIndex + 1);
+    }
+  };
+
+  // Toggle menu open/closed
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  // Handle select button press
+  const handleSelectButton = () => {
+    // Optional: Add select button functionality
+    console.log('Select button pressed');
+  };
+
+  // Handle start button press
+  const handleStartButton = () => {
+    // Optional: Add start button functionality
+    console.log('Start button pressed');
+  };
+
+  // Handle selecting a menu option
+  const handleMenuSelect = (optionId: string) => {
+    if (!menuOpen) return;
+    
+    const option = navigationOptions.find(opt => opt.id === optionId);
+    if (option) {
+      navigate(option.path);
+      setMenuOpen(false);
+    }
+  };
+
   // Add subtle styling for the comment target pulse animation
   const style = document.createElement('style');
   style.innerHTML = `
@@ -1274,28 +1319,54 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   
   // Your return JSX - the UI for the GameBoy controller
   return (
-    <>
-      {/* Enhanced Comment Modal using the proper component */}
-      {commentModalOpen && activeCommentPostId && (
-        <CommentModal 
-          isOpen={commentModalOpen}
-          onClose={() => {
-            setCommentModalOpen(false);
-            setActiveCommentPostId(undefined);
-          }}
-          postId={activeCommentPostId}
-        />
-      )}
-      
+    <div className="game-boy-controls">
       <div 
-        className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
+        className={`gameboy-container ${isDragging ? 'dragging' : ''}`}
       >
-        <div className="bg-[#0D0D18] w-full pointer-events-auto py-3 shadow-lg">
-          <div className="flex justify-between items-center px-10 max-w-5xl mx-auto">
+        <div className="flex flex-col gameboy px-8 py-5 rounded-3xl bg-gradient-to-b from-gray-500 via-gray-600 to-gray-700 shadow-2xl">
+          <div className="flex justify-between items-center gap-3 mt-1 mb-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+              <div className="text-xs font-bold text-white drop-shadow-md">CLIPT GAME CONSOLE</div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            </div>
+          </div>
+          
+          <div className="screen bg-black/90 rounded-lg relative overflow-hidden min-h-[90px] flex justify-center items-center mb-3 px-2 py-2">
+            {menuOpen ? (
+              <div className="menu-container" ref={menuRef}>
+                <div className={`menu-header text-white/90 text-sm font-bold mb-2 ${menuOpen ? 'active' : ''}`}>
+                  Menu Options
+                </div>
+                <ul className="menu-options space-y-1">
+                  {navigationOptions.map((option, index) => (
+                    <li 
+                      key={option.id} 
+                      className={`menu-option text-xs ${index === selectedOptionIndex ? 'selected text-blue-400' : 'text-white/80'} cursor-pointer`}
+                      onClick={() => handleMenuSelect(option.id)}
+                    >
+                      {option.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div className="text-green-400 text-center text-xs">
+                {currentPostId ? `Selected Post: ${currentPostId}` : "Use the controls to navigate"}
+              </div>
+            )}
+          </div>
+          
+          <div className="controls flex justify-between">
+            <div className="left-controls flex flex-col items-center justify-center gap-3">
             
               {/* Left - Modern Xbox-style Joystick */}
               <div 
-                className="gameboy-container"
+                ref={baseRef}
+                className="w-24 h-24 bg-gradient-to-b from-[#1A1A24] to-[#0D0D18] rounded-full flex items-center justify-center cursor-pointer relative shadow-lg select-none"
                 onMouseDown={handleJoystickMouseDown}
                 onTouchStart={handleJoystickTouchStart}
                 onMouseMove={handleJoystickMouseMove}
@@ -1304,208 +1375,137 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 onTouchEnd={handleJoystickTouchEnd}
                 onMouseLeave={handleJoystickMouseUp}
               >
-                <div className="joystick-controls">
-                  {/* Base shadow for 3D effect */}
-                  <div className="joystick-base-shadow"></div>
+                {/* Joystick base with realistic grooves */}
+                <div className="w-20 h-20 bg-gradient-to-b from-[#272733] to-[#1D1D26] rounded-full flex items-center justify-center relative overflow-hidden">
+                  {/* Circular groove effect - more pronounced */}
+                  <div className="absolute inset-1 rounded-full border-[3px] border-[#0D0D18] opacity-70"></div>
+                  <div className="absolute inset-3 rounded-full border-[1px] border-[#3A3A45] opacity-30"></div>
                   
-                  {/* Main base of joystick */}
-                  <div className="joystick-base" ref={baseRef}>
-                    {/* Direction indicators */}
-                    <div className="direction-indicator direction-up"></div>
-                    <div className="direction-indicator direction-down"></div>
-                    <div className="direction-indicator direction-left"></div>
-                    <div className="direction-indicator direction-right"></div>
-                    
-                    {/* Joystick handle */}
-                    <div 
-                      className="joystick-handle"
-                      ref={joystickRef}
-                      style={{
-                        transform: `translate3d(${joystickPosition.x}px, ${joystickPosition.y}px, 0) rotate(${rotationDegree.current}deg)`,
-                      }}
-                    >
-                      <div className="joystick-center"></div>
+                  {/* Directional indicators with glow effect */}
+                  <div className="joystick-up-indicator absolute -top-1 left-1/2 transform -translate-x-1/2 opacity-80 text-white">
+                    <div className="w-2 h-3 bg-gradient-to-b from-[#876AF5] to-[#6A4EDB] rounded"></div>
+                  </div>
+                  <div className="joystick-down-indicator absolute -bottom-1 left-1/2 transform -translate-x-1/2 opacity-80 text-white">
+                    <div className="w-2 h-3 bg-gradient-to-b from-[#876AF5] to-[#6A4EDB] rounded"></div>
+                  </div>
+                  <div className="absolute -left-1 top-1/2 transform -translate-y-1/2 opacity-80 text-white">
+                    <div className="h-2 w-3 bg-gradient-to-r from-[#876AF5] to-[#6A4EDB] rounded"></div>
+                  </div>
+                  <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 opacity-80 text-white">
+                    <div className="h-2 w-3 bg-gradient-to-r from-[#876AF5] to-[#6A4EDB] rounded"></div>
+                  </div>
+                  
+                  {/* Xbox-like thumbstick */}
+                  <div 
+                    ref={joystickRef}
+                    className="joystick-nub w-14 h-14 bg-gradient-to-b from-[#2A2A36] to-[#151520] rounded-full border border-[#3A3A45] absolute z-10 cursor-grab active:cursor-grabbing select-none"
+                    style={{
+                      transform: `translate3d(${joystickPosition.x}px, ${joystickPosition.y}px, 0) rotate(${rotationDegree.current}deg)`,
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.7)', 
+                      willChange: 'transform, box-shadow', // Optimize both properties
+                      transition: isDragging ? 'none' : 'transform 0.15s cubic-bezier(0.17, 0.84, 0.44, 1), box-shadow 0.1s ease'
+                    }}
+                  >
+                    {/* Realistic concave thumbstick surface */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#151520] to-[#272733] opacity-80">
+                      {/* Texture circles for grip */}
+                      <div className="absolute inset-[4px] rounded-full border-[1px] border-[#3A3A45] opacity-40"></div>
+                      <div className="absolute inset-[8px] rounded-full border-[1px] border-[#3A3A45] opacity-40"></div>
+                      {/* Center dot for Xbox-like appearance */}
+                      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#3A3A45]"></div>
                     </div>
+                    {/* Shadow element */}
+                    <div className="joystick-shadow absolute inset-0 rounded-full bg-[#0D0D18] opacity-0 transition-opacity"></div>
                   </div>
                 </div>
+                {/* Outer ring highlight to enhance 3D effect */}
+                <div className="absolute inset-[-1px] rounded-full border border-[#3A3A45] opacity-20"></div>
+                
+                {/* Direction indicators */}
+                <div className="direction-indicator direction-up" style={{ top: '5px', left: 'calc(50% - 6px)' }}></div>
+                <div className="direction-indicator direction-down" style={{ bottom: '5px', left: 'calc(50% - 6px)' }}></div>
+                <div className="direction-indicator direction-left" style={{ left: '5px', top: 'calc(50% - 6px)' }}></div>
+                <div className="direction-indicator direction-right" style={{ right: '5px', top: 'calc(50% - 6px)' }}></div>
               </div>
             
             {/* Center */}
-            <div className="flex flex-col items-center space-y-3">
-              {/* CLIPT button with gradient border */}
-              <div 
-                onClick={() => navigate('/clipts')}
-                className="w-16 h-16 bg-[#0D0D18] rounded-full cursor-pointer flex items-center justify-center relative"
-              >
-                {/* Gradient border using pseudo-element */}
-                <span className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 animate-pulse" style={{ opacity: 0.7 }}></span>
-                <span className="absolute inset-[2px] bg-[#0D0D18] rounded-sm"></span>
-                <span className="relative text-white font-bold text-sm z-10">CLIPT</span>
-              </div>
-              
-              {/* Menu and Camera buttons */}
-              <div className="flex space-x-6">
-                {/* Navigation menu button */}
-                <div 
-                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative navigation-menu-container"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  ref={menuRef}
-                >
-                  <Menu className="text-white h-4 w-4" />
-                  
-                  {/* Navigation menu popup */}
-                  {menuOpen && (
-                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                      {/* Close button */}
-                      <button 
-                        onClick={() => setMenuOpen(false)} 
-                        className="absolute top-8 right-8 w-10 h-10 rounded-full bg-[#1D1D26] flex items-center justify-center border border-[#3A3A45]"
-                      >
-                        <X className="h-5 w-5 text-white" />
-                      </button>
-                      
-                      {/* Game-style menu container */}
-                      <div className="w-[90%] max-w-md bg-[#0D0D18] border-4 border-[#3A3A45] rounded-lg p-1 animate-in fade-in-90 zoom-in-90 duration-300">
-                        {/* Menu header with pixel-like border - GameBoy style window */}
-                        <div className="relative bg-[#0D0D18] border-b-4 border-dashed border-[#3A3A45] mb-2">
-                          <div className="absolute top-0 left-0 w-3 h-3 bg-[#3A3A45] rounded-sm -translate-x-1 -translate-y-1"></div>
-                          <div className="absolute top-0 right-0 w-3 h-3 bg-[#3A3A45] rounded-sm translate-x-1 -translate-y-1"></div>
-                          <h2 className="text-center py-4 text-lg font-bold text-white bg-gradient-to-r from-purple-500/20 to-blue-500/20">
-                            GAME MENU
-                          </h2>
-                        </div>
-                        
-                        {/* Game-style menu items in a grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3">
-                          {navigationOptions.map((option, index) => (
-                            <button
-                              key={option.name}
-                              className={`flex items-center justify-between border border-[#4a4dff] p-2 hover:bg-[#252968] transition-all duration-200 group relative overflow-hidden ${
-                                option.name === 'Squads Clipts' ? 'bg-[#2e1a4a] border-[#9f7aea] relative' : 'bg-[#1a1d45]'
-                              }`}
-                              onClick={() => {
-                                navigate(option.path);
-                                setMenuOpen(false);
-                              }}
-                            >
-                              {/* Icon container with gameboy-like button effect */}
-                              <div className="flex items-center justify-center h-10 w-10 bg-gradient-to-br from-[#333339] to-[#1F1F25] rounded-md mr-4 shadow-inner relative group-hover:from-purple-700 group-hover:to-blue-700 transition-colors duration-300">
-                                <div className="absolute inset-[2px] bg-[#0D0D18] rounded-sm"></div>
-                                {React.cloneElement(option.icon as React.ReactElement, { 
-                                  className: "h-5 w-5 text-purple-400 group-hover:text-white transition-colors duration-300" 
-                                })}
-                              </div>
-                              
-                              <div className="flex flex-col">
-                                {/* Menu text with subtle glow effect on hover */}
-                                <span className="group-hover:text-purple-300 font-medium transition-all duration-300 text-base">
-                                  {option.name}
-                                </span>
-                                
-                                {/* Description line - optional */}
-                                <span className="text-xs text-gray-400 group-hover:text-blue-300 transition-colors">
-                                  {option.name === 'Settings' && 'Configure your game'}
-                                  {option.name === 'Streaming' && 'Live gameplay'}
-                                  {option.name === 'Profile' && 'Your player stats'}
-                                  {option.name === 'Messages' && 'Chat with players'}
-                                  {option.name === 'Notifications' && 'Your notifications'}
-                                  {option.name === 'Discovery' && 'Find new games'}
-                                  {option.name === 'Top Clipts' && 'Hall of fame'}
-                                  {option.name === 'Squads Clipts' && 'Your squads clipts'}
-                                  {option.name === 'Clipts' && 'View all clipts'}
-                                </span>
-                              </div>
-                              
-                              {/* Arrow indicator */}
-                              <span className="ml-auto opacity-70 group-hover:opacity-100 transition-opacity text-purple-400 text-lg">►</span>
-                              
-                              {/* Pixel dots in corners */}
-                              <div className="absolute bottom-1 left-1 w-1 h-1 bg-[#3A3A45]"></div>
-                              <div className="absolute bottom-1 right-1 w-1 h-1 bg-[#3A3A45]"></div>
-                              <div className="absolute top-1 left-1 w-1 h-1 bg-[#3A3A45]"></div>
-                              <div className="absolute top-1 right-1 w-1 h-1 bg-[#3A3A45]"></div>
-                              
-                              {/* Subtle highlight effect on hover */}
-                              <div className="absolute bottom-0 left-0 h-[3px] w-0 bg-gradient-to-r from-purple-500 to-blue-500 group-hover:w-full transition-all duration-300"></div>
-                            </button>
-                          ))}
-                        </div>
-                        
-                        {/* Footer with game-like credits */}
-                        <div className="mt-4 border-t-2 border-dashed border-[#3A3A45] py-3 px-4 text-center">
-                          
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Post button (Camera icon) - Enhanced with purple highlight */}
-                <div 
-                  className="w-10 h-10 bg-[#1D1D26] rounded-full flex items-center justify-center cursor-pointer relative group"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/post/new');
-                    // Log for debugging
-                    console.log('Navigating to post creation page');
-                  }}
-                >
-                  <div className="absolute inset-0 rounded-full bg-purple-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                  <Camera className="text-white h-4 w-4 group-hover:text-purple-300 transition-colors duration-300" />
-                </div>
-              </div>
+            <div className="flex justify-center">
+              {/* Logo and center button*/}
+              <div className="text-white text-[0.65rem] transform rotate-180 -mt-2 write-vertical font-bold opacity-80">LEVEL UP</div>
+            </div>
             </div>
             
-            {/* Right - Action Buttons in diamond shape (Xbox style) */}
-            <div className="flex flex-col items-center">
-              <div className="relative w-32 h-32 mb-3">
-                {/* Top button (Comment) */}
-                <button 
-                  data-action="comment"
-                  onClick={handleCommentClick}
-                  className="absolute top-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-blue-500 flex items-center justify-center"
+            <div className="right-controls flex flex-col justify-center items-center space-y-4">
+              {/* D-pad */}
+              <div className="d-pad relative w-20 h-20">
+                <div 
+                  className="d-pad-button absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gradient-to-b from-[#272733] to-[#1D1D26] rounded-md flex justify-center items-center cursor-pointer shadow-md active:shadow-inner active:from-[#1D1D26] active:to-[#272733]"
+                  onClick={() => handleMenuNavigation('up')}
                 >
-                  <MessageCircle className="text-blue-500 h-5 w-5" />
-                </button>
-                
-                {/* Left button (Like) */}
-                <button 
-                  data-action="like"
-                  onClick={handleLike}
-                  className="absolute left-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-red-500 flex items-center justify-center"
+                  <div className="text-white/80 text-xs transform rotate-180">▼</div>
+                </div>
+                <div 
+                  className="d-pad-button absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gradient-to-b from-[#272733] to-[#1D1D26] rounded-md flex justify-center items-center cursor-pointer shadow-md active:shadow-inner active:from-[#1D1D26] active:to-[#272733]"
+                  onClick={() => handleMenuNavigation('down')}
                 >
-                  <Heart className="text-red-500 h-5 w-5" fill="#ef4444" />
-                </button>
-                
-                {/* Right button (Trophy) */}
-                <button 
-                  data-action="trophy"
-                  onClick={handleTrophy}
-                  className="absolute right-0 top-1/2 transform -translate-y-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-yellow-500 flex items-center justify-center"
+                  <div className="text-white/80 text-xs">▼</div>
+                </div>
+                <div 
+                  className="d-pad-button absolute left-0 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-gradient-to-b from-[#272733] to-[#1D1D26] rounded-md flex justify-center items-center cursor-pointer shadow-md active:shadow-inner active:from-[#1D1D26] active:to-[#272733]"
+                  onClick={() => handleMenuNavigation('left')}
                 >
-                  <Trophy className="text-yellow-500 h-5 w-5" />
-                </button>
-                
-                {/* Bottom button (Follow/Unfollow) */}
-                <button 
-                  data-action="follow"
-                  onClick={handleFollow}
-                  className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-11 h-11 bg-[#151520] rounded-full border-2 border-green-500 flex items-center justify-center"
+                  <div className="text-white/80 text-xs">◀</div>
+                </div>
+                <div 
+                  className="d-pad-button absolute right-0 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-gradient-to-b from-[#272733] to-[#1D1D26] rounded-md flex justify-center items-center cursor-pointer shadow-md active:shadow-inner active:from-[#1D1D26] active:to-[#272733]"
+                  onClick={() => handleMenuNavigation('right')}
                 >
-                  {isFollowing ? (
-                    <UserCheck className="text-green-500 h-5 w-5" />
-                  ) : (
-                    <UserPlus className="text-green-500 h-5 w-5" />
-                  )}
-                </button>
+                  <div className="text-white/80 text-xs">▶</div>
+                </div>
+                <div className="absolute inset-6 bg-[#0D0D18] rounded-sm shadow-inner"></div>
               </div>
               
-
+              {/* Action buttons (A, B) */}
+              <div className="action-buttons grid grid-cols-2 gap-2">
+                <div 
+                  className="action-button bg-red-500 hover:bg-red-600 active:bg-red-700 w-10 h-10 rounded-full flex justify-center items-center cursor-pointer shadow-md active:shadow-inner active:translate-y-0.5 transform transition-all"
+                  onClick={() => handleMenuSelect(navigationOptions[selectedOptionIndex].id)}
+                >
+                  <div className="text-white font-bold">A</div>
+                </div>
+                <div 
+                  className="action-button bg-blue-500 hover:bg-blue-600 active:bg-blue-700 w-10 h-10 rounded-full flex justify-center items-center cursor-pointer shadow-md active:shadow-inner active:translate-y-0.5 transform transition-all"
+                  onClick={toggleMenu}
+                >
+                  <div className="text-white font-bold">B</div>
+                </div>
+              </div>
             </div>
+          </div>
+          
+          {/* Controller bottom buttons */}
+          <div className="mt-4 flex justify-center space-x-5">
+            <div 
+              className="select-btn w-12 h-4 bg-gradient-to-b from-[#272733] to-[#1D1D26] rounded-sm flex justify-center items-center cursor-pointer shadow-md active:shadow-inner active:translate-y-0.5 transform transition-all"
+              onClick={handleSelectButton}
+            >
+              <div className="text-white text-[0.5rem]">SELECT</div>
+            </div>
+            <div 
+              className="start-btn w-12 h-4 bg-gradient-to-b from-[#272733] to-[#1D1D26] rounded-sm flex justify-center items-center cursor-pointer shadow-md active:shadow-inner active:translate-y-0.5 transform transition-all"
+              onClick={handleStartButton}
+            >
+              <div className="text-white text-[0.5rem]">START</div>
+            </div>
+          </div>
+          
+          {/* Power light indicator */}
+          <div className="absolute top-7 right-5">
+            <div className="w-2 h-2 bg-red-500 rounded-full shadow-[0_0_5px_rgba(239,68,68,0.7)]"></div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
