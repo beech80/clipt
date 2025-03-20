@@ -11,7 +11,7 @@
   overflow: hidden;
 }
 
-/* D-Pad Styling - Xbox-like joystick */
+/* Joystick Styling - Xbox-like analog stick */
 .d-pad-container {
   position: relative;
   width: 100px;
@@ -26,7 +26,11 @@
   background: #1a1a1a;
   border-radius: 50%;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
+  overflow: visible;
+  cursor: grab;
+  touch-action: none;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Xbox-like joystick texture */
@@ -76,47 +80,89 @@
   z-index: 2;
 }
 
-.d-pad-corner {
-  display: none; /* Hide corners for this style */
-}
-
-.d-pad button {
+/* Joystick indicator dot */
+.joystick-indicator {
   position: absolute;
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-  width: 40%;
-  height: 40%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background-color: rgba(76, 217, 100, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(76, 217, 100, 0.6);
   z-index: 3;
+  pointer-events: none;
 }
 
-.d-pad-up {
-  top: 0;
-  left: 30%;
+/* Joystick pressed state */
+.d-pad.pressed {
+  cursor: grabbing;
+  transform: scale(0.96);
 }
 
-.d-pad-right {
-  top: 30%;
-  right: 0;
+/* Joystick animation */
+@keyframes bobAnimation {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -3px, 0); }
 }
 
-.d-pad-down {
-  bottom: 0;
-  left: 30%;
+.d-pad:not(.pressed) {
+  animation: bobAnimation 3s ease-in-out infinite;
 }
 
-.d-pad-left {
-  top: 30%;
-  left: 0;
+/* Direction indicators */
+.direction-indicators {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
 }
 
-.d-pad-center {
-  display: none; /* Hide center for this style */
+.direction-indicator {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
-.d-pad button:active,
-.d-pad button.active {
-  background-color: rgba(76, 217, 100, 0.3);
+.direction-up {
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(76, 217, 100, 0.8);
+}
+
+.direction-right {
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  background-color: rgba(76, 217, 100, 0.8);
+}
+
+.direction-down {
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(76, 217, 100, 0.8);
+}
+
+.direction-left {
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+  background-color: rgba(76, 217, 100, 0.8);
+}
+
+.direction-active {
+  opacity: 1;
+  box-shadow: 0 0 8px rgba(76, 217, 100, 0.6);
 }
 
 /* Center Section */
