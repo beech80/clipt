@@ -1285,15 +1285,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return;
     }
 
-    // Add animation to the collection button
-    const collectionButton = document.querySelector('.a-button');
-    if (collectionButton) {
-      collectionButton.classList.add('button-press-animation');
-      setTimeout(() => {
-        collectionButton.classList.remove('button-press-animation');
-      }, 500);
-    }
-
     try {
       // Show immediate feedback
       toast.loading("Processing collection action...");
@@ -1402,15 +1393,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return;
     }
     
-    // Add animation to the like button
-    const likeButton = document.querySelector('.x-button');
-    if (likeButton) {
-      likeButton.classList.add('button-press-animation');
-      setTimeout(() => {
-        likeButton.classList.remove('button-press-animation');
-      }, 500);
-    }
-    
     // Like logic
     if (likeLoading) return;
     setLikeLoading(true);
@@ -1515,24 +1497,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Green (top) button - Comments
     console.log('Comment button pressed');
     
-    // Add animation to the A button
-    const aButton = document.querySelector('.a-button');
-    if (aButton) {
-      // Remove any existing animation class first
-      aButton.classList.remove('button-press-animation');
-      
-      // Force a reflow to restart the animation
-      void aButton.offsetWidth;
-      
-      // Add the animation class
-      aButton.classList.add('button-press-animation');
-      
-      // Remove after animation completes
-      setTimeout(() => {
-        aButton.classList.remove('button-press-animation');
-      }, 400);
-    }
-    
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
     const targetPostId = detectedPostId || currentPostId;
@@ -1548,24 +1512,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleButtonBPress = () => {
     // Red (right) button - Collection
     console.log('Collection button pressed');
-    
-    // Add animation to the B button
-    const bButton = document.querySelector('.b-button');
-    if (bButton) {
-      // Remove any existing animation class first
-      bButton.classList.remove('button-press-animation');
-      
-      // Force a reflow to restart the animation
-      void bButton.offsetWidth;
-      
-      // Add the animation class
-      bButton.classList.add('button-press-animation');
-      
-      // Remove after animation completes
-      setTimeout(() => {
-        bButton.classList.remove('button-press-animation');
-      }, 400);
-    }
     
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
@@ -1583,24 +1529,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Blue (left) button - Like
     console.log('Like button pressed');
     
-    // Add animation to the X button
-    const xButton = document.querySelector('.x-button');
-    if (xButton) {
-      // Remove any existing animation class first
-      xButton.classList.remove('button-press-animation');
-      
-      // Force a reflow to restart the animation
-      void xButton.offsetWidth;
-      
-      // Add the animation class
-      xButton.classList.add('button-press-animation');
-      
-      // Remove after animation completes
-      setTimeout(() => {
-        xButton.classList.remove('button-press-animation');
-      }, 400);
-    }
-    
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
     const targetPostId = detectedPostId || currentPostId;
@@ -1616,24 +1544,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleButtonYPress = () => {
     // Yellow (bottom) button - Trophy
     console.log('Trophy button pressed');
-    
-    // Add animation to the Y button
-    const yButton = document.querySelector('.y-button');
-    if (yButton) {
-      // Remove any existing animation class first
-      yButton.classList.remove('button-press-animation');
-      
-      // Force a reflow to restart the animation
-      void yButton.offsetWidth;
-      
-      // Add the animation class
-      yButton.classList.add('button-press-animation');
-      
-      // Remove after animation completes
-      setTimeout(() => {
-        yButton.classList.remove('button-press-animation');
-      }, 400);
-    }
     
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
@@ -1790,15 +1700,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return;
     }
     
-    // Add animation to the like button
-    const likeButton = document.querySelector('.x-button');
-    if (likeButton) {
-      likeButton.classList.add('button-press-animation');
-      setTimeout(() => {
-        likeButton.classList.remove('button-press-animation');
-      }, 500);
-    }
-    
     // Try the direct like method first (more reliable)
     handleLikeClick();
     
@@ -1809,15 +1710,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (!user) {
       toast.error("Login to comment on this post");
       return;
-    }
-    
-    // Add animation to the comment button
-    const commentButton = document.querySelector('.b-button');
-    if (commentButton) {
-      commentButton.classList.add('button-press-animation');
-      setTimeout(() => {
-        commentButton.classList.remove('button-press-animation');
-      }, 500);
     }
     
     // First check if we have a current post ID
@@ -1872,15 +1764,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return;
     }
     
-    // Add animation to the trophy button
-    const trophyButton = document.querySelector('.y-button');
-    if (trophyButton) {
-      trophyButton.classList.add('button-press-animation');
-      setTimeout(() => {
-        trophyButton.classList.remove('button-press-animation');
-      }, 500);
-    }
-    
     // Try the universal approach first
     handlePostAction('follow');
     
@@ -1904,15 +1787,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     if (!user || !currentPostId) {
       toast.error("Login to give trophy");
       return;
-    }
-    
-    // Add animation to the trophy button
-    const trophyButton = document.querySelector('.y-button');
-    if (trophyButton) {
-      trophyButton.classList.add('button-press-animation');
-      setTimeout(() => {
-        trophyButton.classList.remove('button-press-animation');
-      }, 500);
     }
     
     try {
