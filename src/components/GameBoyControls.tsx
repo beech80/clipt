@@ -1530,7 +1530,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Remove after animation completes
       setTimeout(() => {
         aButton.classList.remove('button-press-animation');
-      }, 500);
+      }, 400);
     }
     
     // Get the current post ID with enhanced detection
@@ -1564,7 +1564,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Remove after animation completes
       setTimeout(() => {
         bButton.classList.remove('button-press-animation');
-      }, 500);
+      }, 400);
     }
     
     // Get the current post ID with enhanced detection
@@ -1598,7 +1598,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Remove after animation completes
       setTimeout(() => {
         xButton.classList.remove('button-press-animation');
-      }, 500);
+      }, 400);
     }
     
     // Get the current post ID with enhanced detection
@@ -1632,7 +1632,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Remove after animation completes
       setTimeout(() => {
         yButton.classList.remove('button-press-animation');
-      }, 500);
+      }, 400);
     }
     
     // Get the current post ID with enhanced detection
