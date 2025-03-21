@@ -26,7 +26,8 @@ import {
   Grid,
   Compass,
   Share,
-  Bookmark
+  Bookmark,
+  Save
 } from 'lucide-react';
 import { 
   FiSettings, 
@@ -223,9 +224,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Observe the main content area for changes
     const contentArea = document.querySelector('main') || document.body;
     observer.observe(contentArea, { childList: true, subtree: true });
-    
-    // Add scroll event listener to detect most visible post while scrolling
-    window.addEventListener('scroll', detectMostVisiblePost, { passive: true });
     
     return () => {
       observer.disconnect();
@@ -1793,44 +1791,70 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Show loading state
       toast.loading("Giving trophy...");
       
-      // Use direct API query to check if the trophies table exists first
-      const { data, error: schemaError } = await supabaseClient
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_name', 'trophies')
+      // First, get the post owner's ID to handle follow functionality
+      const { data: postData, error: postError } = await supabaseClient
+        .from('posts')
+        .select('profile_id')
+        .eq('id', currentPostId)
         .single();
-        
-      if (schemaError || !data) {
-        console.error('Trophy table may not exist:', schemaError);
-        
-        // Try to create the trophies table
-        const { error: createError } = await supabaseClient.rpc('create_trophies_table');
-        if (createError) {
-          console.error('Error creating trophies table:', createError);
-          toast.error('Trophies feature not available yet');
-          return;
-        }
-        
-        toast.success('Trophy given!');
+      
+      if (postError) {
+        console.error('Error fetching post details:', postError);
+        toast.error('Could not fetch post details');
+        return;
+      }
+      
+      const postOwnerId = postData.profile_id;
+      
+      // Don't allow self-trophies
+      if (postOwnerId === user.id) {
+        toast.error("You can't give a trophy to your own post");
         return;
       }
       
       // Check if we've already given a trophy to this post
       const { data: existingTrophy, error: checkError } = await supabaseClient
-        .from('post_trophies') // Using the correct table name
+        .from('post_trophies')
         .select('id')
         .eq('user_id', user.id)
         .eq('post_id', currentPostId);
       
       if (checkError) {
+        console.error('Error checking trophy status:', checkError);
+        
+        // If the table doesn't exist, create it
         if (checkError.message.includes('does not exist')) {
-          // Table doesn't exist, which means trophies are not implemented yet
-          toast.info('Trophy feature coming soon!');
+          const { error: createTableError } = await supabaseClient.rpc('create_post_trophies_table');
+          if (createTableError) {
+            console.error('Error creating post_trophies table:', createTableError);
+            toast.error('Trophy feature not available yet');
+            return;
+          }
+          
+          // After creating the table, insert the new trophy
+          const { error: addError } = await supabaseClient
+            .from('post_trophies')
+            .insert([{
+              user_id: user.id,
+              post_id: currentPostId,
+              created_at: new Date().toISOString()
+            }]);
+          
+          if (addError) {
+            console.error('Error giving trophy:', addError);
+            toast.error('Could not give trophy');
+            return;
+          }
+          
+          // Also automatically follow the post creator
+          await handleAutoFollowCreator(postOwnerId);
+          
+          toast.success("Trophy given! You're now following this creator.");
+          return;
         } else {
-          console.error('Error checking trophy status:', checkError);
           toast.error('Could not check trophy status');
+          return;
         }
-        return;
       }
       
       if (existingTrophy && existingTrophy.length > 0) {
@@ -1864,7 +1888,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           return;
         }
         
-        toast.success("Trophy given! ");
+        // Also automatically follow the post creator
+        await handleAutoFollowCreator(postOwnerId);
+        
+        toast.success("Trophy given! You're now following this creator.");
       }
       
       // Refresh queries to update UI
@@ -1875,6 +1902,181 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       toast.error('Could not process trophy action');
     }
   };
+
+  // Helper function to auto-follow creator when giving a trophy
+  const handleAutoFollowCreator = async (creatorId: string) => {
+    if (!user || creatorId === user.id) return; // Don't follow yourself
+    
+    try {
+      // Check if already following
+      const { data: existingFollow, error: followCheckError } = await supabaseClient
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', creatorId);
+      
+      if (followCheckError) {
+        console.error('Error checking follow status:', followCheckError);
+        return;
+      }
+      
+      // If not already following, create follow relationship
+      if (!existingFollow || existingFollow.length === 0) {
+        await supabaseClient
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            following_id: creatorId,
+            created_at: new Date().toISOString()
+          });
+          
+        // Update creator's follower count
+        await supabaseClient.rpc('increment_followers_count', {
+          profile_id: creatorId
+        });
+        
+        // Update current user's following count
+        await supabaseClient.rpc('increment_following_count', {
+          profile_id: user.id
+        });
+      }
+    } catch (error) {
+      console.error('Error in auto-follow:', error);
+    }
+  };
+
+  // Function to handle saving videos
+  const handleSaveVideo = async () => {
+    if (!user || !currentPostId) {
+      toast.error("Login to save this video");
+      return;
+    }
+    
+    try {
+      // First, get the video URL from the post
+      const { data: postData, error: postError } = await supabaseClient
+        .from('posts')
+        .select('video_url, title')
+        .eq('id', currentPostId)
+        .single();
+      
+      if (postError) {
+        console.error('Error fetching post data:', postError);
+        toast.error('Could not fetch post data');
+        return;
+      }
+      
+      if (!postData.video_url) {
+        toast.error('This post does not have a video to save');
+        return;
+      }
+      
+      // Check if the saved_videos table exists
+      const { error: tableCheckError } = await supabaseClient
+        .from('saved_videos')
+        .select('id')
+        .limit(1);
+      
+      // Create the table if it doesn't exist
+      if (tableCheckError && tableCheckError.message.includes('does not exist')) {
+        await supabaseClient.rpc('create_saved_videos_table').catch(error => {
+          console.error('Error creating saved_videos table:', error);
+          toast.error('Could not initialize video saving feature');
+          return;
+        });
+      }
+      
+      // Check if the video is already saved
+      const { data: savedVideo, error: checkError } = await supabaseClient
+        .from('saved_videos')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('post_id', currentPostId);
+      
+      if (checkError && !checkError.message.includes('does not exist')) {
+        console.error('Error checking saved video status:', checkError);
+        toast.error('Could not check if video is already saved');
+        return;
+      }
+      
+      if (savedVideo && savedVideo.length > 0) {
+        // Remove from saved videos
+        const { error: removeError } = await supabaseClient
+          .from('saved_videos')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('post_id', currentPostId);
+        
+        if (removeError) {
+          console.error('Error removing saved video:', removeError);
+          toast.error('Could not remove video from saved videos');
+          return;
+        }
+        
+        toast.success('Video removed from saved videos');
+      } else {
+        // Save the video
+        const { error: saveError } = await supabaseClient
+          .from('saved_videos')
+          .insert({
+            user_id: user.id,
+            post_id: currentPostId,
+            video_url: postData.video_url,
+            title: postData.title || 'Saved Video',
+            saved_at: new Date().toISOString()
+          });
+        
+        if (saveError) {
+          console.error('Error saving video:', saveError);
+          toast.error('Could not save video');
+          return;
+        }
+        
+        toast.success('Video saved to your profile');
+      }
+      
+      // Refresh relevant queries
+      queryClient.invalidateQueries({ queryKey: ['saved_videos'] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
+    } catch (error) {
+      console.error('Error saving video:', error);
+      toast.error('Could not process video save action');
+    }
+  };
+
+  // Update the keyboard event handler to map a key for saving videos
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Using 'S' key to save videos
+      if (event.key === 's' || event.key === 'S') {
+        handleSaveVideo();
+      } else if (event.key === 'ArrowUp') {
+        handleDPadDirection({ x: 0, y: -50 });
+      } else if (event.key === 'ArrowDown') {
+        handleDPadDirection({ x: 0, y: 50 });
+      } else if (event.key === 'ArrowLeft') {
+        handleDPadDirection({ x: -50, y: 0 });
+      } else if (event.key === 'ArrowRight') {
+        handleDPadDirection({ x: 50, y: 0 });
+      } else if (event.key === 'Enter') {
+        handleMainButtonClick();
+      } else if (event.key === 'a' || event.key === 'A') {
+        handleButtonAPress();
+      } else if (event.key === 'b' || event.key === 'B') {
+        handleButtonBPress();
+      } else if (event.key === 'x' || event.key === 'X') {
+        handleButtonXPress();
+      } else if (event.key === 'y' || event.key === 'Y' || event.key === 't' || event.key === 'T') {
+        handleButtonYPress();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dPadDirection.x, dPadDirection.y, currentPostId, user]);
 
   // Your return JSX - the UI for the GameBoy controller
   return (
@@ -1949,6 +2151,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               data-action="trophy"
             >
               <Trophy size={20} />
+            </button>
+            {/* Save Video Button */}
+            <button 
+              className="save-video-button"
+              onClick={handleSaveVideo}
+              data-action="save-video"
+            >
+              <Save size={20} />
             </button>
           </div>
         </div>

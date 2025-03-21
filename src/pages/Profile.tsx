@@ -37,11 +37,12 @@ const Profile = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collection'>('clips');
+  const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collection' | 'saved_videos'>('clips');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userCollection, setUserCollection] = useState<any[]>([]);
+  const [savedVideos, setSavedVideos] = useState<any[]>([]);
   const [achievementsLoading, setAchievementsLoading] = useState(true);
   
   // Stats for displaying counts
@@ -251,21 +252,85 @@ const Profile = () => {
           const { data: allUserPosts, error: allPostsError } = await supabase
             .from('posts')
             .select('*')
-            .eq('profile_id', profileId);
+            .eq('profile_id', profileId)
+            .order('created_at', { ascending: false });
             
           if (allPostsError) {
-            console.error("Error fetching all user posts:", allPostsError);
+            console.error("Error fetching all posts:", allPostsError);
+          } else if (allUserPosts && allUserPosts.length > 0) {
+            setUserPosts(allUserPosts);
           } else {
-            console.log("Total posts by user (including unpublished):", allUserPosts?.length || 0);
-            // If we have posts but they might be unpublished, show them anyway for the user's own profile
-            if (allUserPosts && allUserPosts.length > 0 && user && user.id === profileId) {
-              setUserPosts(allUserPosts);
-            } else {
-              setUserPosts([]);
-            }
+            setUserPosts([]);
           }
         } else {
           setUserPosts(userPostsData);
+        }
+      }
+      
+      // Get saved videos if it's the user's own profile or if the profile is not private
+      if (isOwnProfile || (profile && !profile.is_private)) {
+        try {
+          // First check if the saved_videos table exists
+          const { error: tableCheckError } = await supabase
+            .from('saved_videos')
+            .select('id')
+            .limit(1);
+          
+          // If the table doesn't exist or there's another error, don't show an error to the user
+          if (!tableCheckError) {
+            // Get the saved videos
+            const { data: savedVideosData, error: savedVideosError } = await supabase
+              .from('saved_videos')
+              .select(`
+                id,
+                post_id,
+                saved_at,
+                posts (
+                  id,
+                  title,
+                  content,
+                  image_url,
+                  video_url,
+                  created_at,
+                  likes_count,
+                  comments_count,
+                  game_id,
+                  profile_id,
+                  is_published,
+                  profiles (
+                    id,
+                    username,
+                    avatar_url,
+                    display_name
+                  ),
+                  games (
+                    id,
+                    name,
+                    cover_url
+                  )
+                )
+              `)
+              .eq('user_id', profileId)
+              .order('saved_at', { ascending: false });
+            
+            if (savedVideosError) {
+              console.error("Error fetching saved videos:", savedVideosError);
+            } else if (savedVideosData && savedVideosData.length > 0) {
+              // Transform the data to match the PostItem component expectations
+              const formattedSavedVideos = savedVideosData.map(item => {
+                return {
+                  ...item.posts,
+                  saved_at: item.saved_at
+                };
+              }).filter(Boolean); // Remove any null entries
+              
+              setSavedVideos(formattedSavedVideos);
+            } else {
+              setSavedVideos([]);
+            }
+          }
+        } catch (e) {
+          console.error("Error processing saved videos:", e);
         }
       }
       
@@ -557,6 +622,15 @@ const Profile = () => {
               <Trophy className="w-4 h-4" />
               <span>Achievements</span>
             </Toggle>
+            <Toggle
+              pressed={activeTab === 'saved_videos'}
+              onPressedChange={() => setActiveTab('saved_videos')}
+              variant="outline"
+              className="flex gap-2 items-center"
+            >
+              <Bookmark className="w-4 h-4" />
+              <span>Saved Videos</span>
+            </Toggle>
           </div>
         </div>
       </div>
@@ -605,6 +679,39 @@ const Profile = () => {
             // ALWAYS force demo achievements to show for better user experience
             <AchievementList userId={profileId} forceShowDemo={true} />
           )}
+        </div>
+      ) : activeTab === 'saved_videos' ? (
+        <div className="gaming-card p-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-white mb-2">
+              <Bookmark className="text-blue-500" />
+              Saved Videos
+            </h2>
+            <p className="text-gray-400">Your saved gaming videos</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {savedVideos.length > 0 ? (
+              savedVideos.map(post => (
+                <PostItem key={post.id} post={post} />
+              ))
+            ) : (
+              <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
+                <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Saved Videos Yet</h3>
+                <p className="text-gaming-400">Use the A button on a post to add it to your saved videos</p>
+                {isOwnProfile && (
+                  <div className="mt-4">
+                    <Button 
+                      onClick={() => navigate('/browse')}
+                      className="bg-blue-600 hover:bg-blue-700 mt-4"
+                    >
+                      Browse Videos to Add
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            )}
+          </div>
         </div>
       ) : (
         <div className="gaming-card p-6">
