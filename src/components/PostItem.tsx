@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import PostContent from "./post/PostContent";
-import { supabase } from "@/lib/supabase";
-import { Post } from "@/types/post";
-import { Heart, MessageSquare, Trophy, Trash2, MoreVertical, UserCheck, UserPlus } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import PostContent from "./post/PostContent";
+import { supabase } from "@/lib/supabase";
+import { Post } from "@/types/post";
+import { Heart, MessageSquare, Trophy, Trash2, MoreVertical, UserCheck, UserPlus, Save, Bookmark } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +52,8 @@ const PostItem: React.FC<PostItemProps> = ({
   const [trophyCount, setTrophyCount] = useState(0);
   const [hasTrophy, setHasTrophy] = useState(false);
   const [trophyLoading, setTrophyLoading] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
   const queryClient = useQueryClient();
@@ -313,7 +315,7 @@ const PostItem: React.FC<PostItemProps> = ({
     e.stopPropagation();
     
     if (!user) {
-      toast.error("Login to vote for this clip");
+      toast.error("Login to rank this clip");
       return;
     }
     
@@ -322,9 +324,20 @@ const PostItem: React.FC<PostItemProps> = ({
     setTrophyLoading(true);
     
     try {
-      console.log(`Voting for post ${postId} with trophy`);
+      console.log(`Ranking post ${postId}`);
       
-      // First, check if user has already voted
+      // First, check if post already has a rank
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .select('rank')
+        .eq('id', postId)
+        .single();
+      
+      if (postError) throw postError;
+      
+      const currentRank = postData?.rank || 0;
+      
+      // Check if user has already voted
       const { data: existingVote, error: checkError } = await supabase
         .from('clip_votes')
         .select('id')
@@ -335,7 +348,7 @@ const PostItem: React.FC<PostItemProps> = ({
       if (checkError) throw checkError;
       
       if (existingVote) {
-        // Remove vote
+        // User already voted, so removing the vote should decrease rank
         const { error: removeError } = await supabase
           .from('clip_votes')
           .delete()
@@ -343,14 +356,21 @@ const PostItem: React.FC<PostItemProps> = ({
         
         if (removeError) throw removeError;
         
+        // Decrease the post rank
+        const { error: updateError } = await supabase
+          .from('posts')
+          .update({ rank: Math.max(0, currentRank - 1) })
+          .eq('id', postId);
+        
+        if (updateError) throw updateError;
+        
         setHasTrophy(false);
         setTrophyCount(prev => Math.max(0, prev - 1));
         
-        // Also follow the post creator automatically
-        handleFollow();
+        toast.success("Ranking removed");
         
       } else {
-        // Add vote
+        // Add vote and increase rank
         const { error: addError } = await supabase
           .from('clip_votes')
           .insert({
@@ -361,11 +381,23 @@ const PostItem: React.FC<PostItemProps> = ({
         
         if (addError) throw addError;
         
+        // Increase the post rank
+        const { error: updateError } = await supabase
+          .from('posts')
+          .update({ rank: currentRank + 1 })
+          .eq('id', postId);
+        
+        if (updateError) throw updateError;
+        
         setHasTrophy(true);
         setTrophyCount(prev => prev + 1);
         
+        toast.success("Clip ranked up!");
+        
         // Also follow the post creator automatically
-        handleFollow();
+        if (post.user_id !== user.id) {
+          handleFollow();
+        }
       }
       
       // Invalidate cache for this post
@@ -376,14 +408,15 @@ const PostItem: React.FC<PostItemProps> = ({
         detail: {
           postId,
           count: trophyCount + (hasTrophy ? -1 : 1),
-          active: !hasTrophy
+          active: !hasTrophy,
+          rank: hasTrophy ? currentRank - 1 : currentRank + 1
         }
       });
       window.dispatchEvent(trophyUpdateEvent);
       
     } catch (error) {
-      console.error("Error voting for clip:", error);
-      toast.error("Failed to update vote");
+      console.error("Error ranking clip:", error);
+      toast.error("Failed to update rank");
     } finally {
       setTrophyLoading(false);
     }
@@ -714,6 +747,103 @@ const PostItem: React.FC<PostItemProps> = ({
     };
   }, [postId, user]);
 
+  // Check if the current post is saved by the user
+  useEffect(() => {
+    const checkSaveStatus = async () => {
+      if (!user || !postId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('saved_videos')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('post_id', postId)
+          .maybeSingle();
+          
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking save status:', error);
+          return;
+        }
+        
+        setIsSaved(!!data);
+      } catch (error) {
+        console.error('Error checking if video is saved:', error);
+      }
+    };
+    
+    checkSaveStatus();
+  }, [user, postId]);
+
+  // Handle saving and unsaving videos
+  const handleSaveVideo = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error("Please log in to save videos");
+      return;
+    }
+    
+    if (!postId) {
+      toast.error("Cannot save this video");
+      return;
+    }
+    
+    if (saveLoading) return;
+    setSaveLoading(true);
+    
+    try {
+      // Check if video is already saved
+      const { data: existingSave, error: checkError } = await supabase
+        .from('saved_videos')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('post_id', postId)
+        .maybeSingle();
+        
+      if (checkError && !checkError.message.includes('does not exist')) {
+        throw checkError;
+      }
+      
+      if (existingSave) {
+        // Unsave the video
+        const { error: removeError } = await supabase
+          .from('saved_videos')
+          .delete()
+          .eq('id', existingSave.id);
+          
+        if (removeError) throw removeError;
+        
+        setIsSaved(false);
+        toast.success("Video removed from saved clips");
+      } else {
+        // Save the video
+        const { error: saveError } = await supabase
+          .from('saved_videos')
+          .insert({
+            user_id: user.id,
+            post_id: postId,
+            video_url: post.video_url || '',
+            title: post.title || 'Saved Video',
+            saved_at: new Date().toISOString()
+          });
+          
+        if (saveError) throw saveError;
+        
+        setIsSaved(true);
+        toast.success("Video saved to your profile");
+      }
+      
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['saved_videos'] });
+      
+    } catch (error) {
+      console.error('Error saving/unsaving video:', error);
+      toast.error("Failed to save video");
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
@@ -853,18 +983,32 @@ const PostItem: React.FC<PostItemProps> = ({
           className="trophy-button flex items-center text-sm font-medium text-gray-400 hover:text-yellow-500 transition-all duration-200 group"
           onClick={handleTrophyVote}
           disabled={trophyLoading}
+          aria-label={hasTrophy ? "Remove rank" : "Rank up clip"}
         >
           <Trophy 
             className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all ${trophyLoading ? 'opacity-50' : ''}`}
           />
           <span className={`text-base font-medium ml-1 ${hasTrophy ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
-            {trophyCount || 0}
+            {post.rank || trophyCount || 0}
           </span>
         </button>
         
         {/* Always show the share button */}
         <ShareButton postId={post.id} className="share-button" />
         
+        <button 
+          className="save-button flex items-center text-sm font-medium text-gray-400 hover:text-blue-500 transition-all duration-200 group"
+          onClick={handleSaveVideo}
+          disabled={saveLoading}
+          aria-label={isSaved ? "Remove from saved videos" : "Save video"}
+        >
+          <Save 
+            className={`h-6 w-6 ${isSaved ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
+          />
+          <span className={`text-base font-medium ${isSaved ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'}`}>
+            {isSaved ? 'Saved' : 'Save'}
+          </span>
+        </button>
       </div>
 
       {/* Caption */}
