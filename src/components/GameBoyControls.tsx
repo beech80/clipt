@@ -1518,7 +1518,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Add animation to the A button
     const aButton = document.querySelector('.a-button');
     if (aButton) {
+      // Remove any existing animation class first
+      aButton.classList.remove('button-press-animation');
+      
+      // Force a reflow to restart the animation
+      void aButton.offsetWidth;
+      
+      // Add the animation class
       aButton.classList.add('button-press-animation');
+      
+      // Remove after animation completes
       setTimeout(() => {
         aButton.classList.remove('button-press-animation');
       }, 500);
@@ -1543,7 +1552,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Add animation to the B button
     const bButton = document.querySelector('.b-button');
     if (bButton) {
+      // Remove any existing animation class first
+      bButton.classList.remove('button-press-animation');
+      
+      // Force a reflow to restart the animation
+      void bButton.offsetWidth;
+      
+      // Add the animation class
       bButton.classList.add('button-press-animation');
+      
+      // Remove after animation completes
       setTimeout(() => {
         bButton.classList.remove('button-press-animation');
       }, 500);
@@ -1568,7 +1586,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Add animation to the X button
     const xButton = document.querySelector('.x-button');
     if (xButton) {
+      // Remove any existing animation class first
+      xButton.classList.remove('button-press-animation');
+      
+      // Force a reflow to restart the animation
+      void xButton.offsetWidth;
+      
+      // Add the animation class
       xButton.classList.add('button-press-animation');
+      
+      // Remove after animation completes
       setTimeout(() => {
         xButton.classList.remove('button-press-animation');
       }, 500);
@@ -1593,7 +1620,16 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Add animation to the Y button
     const yButton = document.querySelector('.y-button');
     if (yButton) {
+      // Remove any existing animation class first
+      yButton.classList.remove('button-press-animation');
+      
+      // Force a reflow to restart the animation
+      void yButton.offsetWidth;
+      
+      // Add the animation class
       yButton.classList.add('button-press-animation');
+      
+      // Remove after animation completes
       setTimeout(() => {
         yButton.classList.remove('button-press-animation');
       }, 500);
