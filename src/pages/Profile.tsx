@@ -223,6 +223,7 @@ const Profile = () => {
           comments_count,
           game_id,
           profile_id,
+          is_published,
           profiles (
             id,
             username,
@@ -241,18 +242,43 @@ const Profile = () => {
       if (postsError) {
         console.error("Error fetching user posts:", postsError);
       } else {
-        setUserPosts(userPostsData || []);
+        // Log for debugging purposes
+        console.log("User posts fetched:", userPostsData?.length || 0);
+        
+        // If there are no posts, it could be due to them being unpublished
+        if (!userPostsData || userPostsData.length === 0) {
+          // Try fetching without the is_published filter
+          const { data: allUserPosts, error: allPostsError } = await supabase
+            .from('posts')
+            .select('*')
+            .eq('profile_id', profileId);
+            
+          if (allPostsError) {
+            console.error("Error fetching all user posts:", allPostsError);
+          } else {
+            console.log("Total posts by user (including unpublished):", allUserPosts?.length || 0);
+            // If we have posts but they might be unpublished, show them anyway for the user's own profile
+            if (allUserPosts && allUserPosts.length > 0 && user && user.id === profileId) {
+              setUserPosts(allUserPosts);
+            } else {
+              setUserPosts([]);
+            }
+          }
+        } else {
+          setUserPosts(userPostsData);
+        }
       }
       
       // Get collection posts if it's the user's own profile
       if (user && user.id === profileId) {
         // Fetch posts that the user has added to their collection
         const { data: collectionData, error: collectionError } = await supabase
-          .from('collections')
+          .from('collection_posts')
           .select(`
             id,
-            created_at,
+            collection_id,
             post_id,
+            added_at,
             posts:post_id(
               id,
               title,
@@ -277,8 +303,17 @@ const Profile = () => {
               )
             )
           `)
-          .eq('user_id', profileId)
-          .order('created_at', { ascending: false });
+          .eq('collection_id', async () => {
+            // Get user's default collection ID
+            const { data: collections } = await supabase
+              .from('collections')
+              .select('id')
+              .eq('user_id', profileId)
+              .eq('name', 'Saved Clips')
+              .single();
+            return collections?.id;
+          })
+          .order('added_at', { ascending: false });
         
         if (collectionError) {
           console.error("Error fetching user collection:", collectionError);
@@ -534,10 +569,20 @@ const Profile = () => {
               <PostItem key={post.id} post={post} />
             ))
           ) : (
-            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60">
+            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
               <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
               <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Clips Yet</h3>
               <p className="text-gaming-400">User hasn't posted any gaming clips</p>
+              {isOwnProfile && (
+                <div className="mt-4">
+                  <Button 
+                    onClick={() => navigate('/create')}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Create Your First Clip
+                  </Button>
+                </div>
+              )}
             </Card>
           )}
         </div>
@@ -576,10 +621,20 @@ const Profile = () => {
                 <PostItem key={post.id} post={post} />
               ))
             ) : (
-              <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60">
+              <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
                 <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
                 <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Collection Items Yet</h3>
-                <p className="text-gaming-400">Use the B button on a post to add it to your collection</p>
+                <p className="text-gaming-400">Use the A button on a post to add it to your collection</p>
+                {isOwnProfile && (
+                  <div className="mt-4">
+                    <Button 
+                      onClick={() => navigate('/browse')}
+                      className="bg-blue-600 hover:bg-blue-700 mt-4"
+                    >
+                      Browse Clips to Add
+                    </Button>
+                  </div>
+                )}
               </Card>
             )}
           </div>
