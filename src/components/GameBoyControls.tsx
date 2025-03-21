@@ -1482,22 +1482,47 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleButtonAPress = () => {
     // Green (top) button - Comments
     console.log('Comment button pressed');
-    handleComment();
+    
+    // Get the current post ID with enhanced detection
+    const detectedPostId = detectMostVisiblePost();
+    const targetPostId = detectedPostId || currentPostId;
+    
+    if (targetPostId) {
+      setCurrentPostId(targetPostId);
+      handleComment();
+    } else {
+      toast.info('Navigate to a post to comment');
+    }
   };
 
   const handleButtonBPress = () => {
     // Red (right) button - Collection
     console.log('Collection button pressed');
-    handleCollection();
+    
+    // Get the current post ID with enhanced detection
+    const detectedPostId = detectMostVisiblePost();
+    const targetPostId = detectedPostId || currentPostId;
+    
+    if (targetPostId) {
+      setCurrentPostId(targetPostId);
+      handleCollection();
+    } else {
+      toast.info('Navigate to a post to add to collection');
+    }
   };
 
   const handleButtonXPress = () => {
     // Blue (left) button - Like
     console.log('Like button pressed');
-    if (currentPostId) {
+    
+    // Get the current post ID with enhanced detection
+    const detectedPostId = detectMostVisiblePost();
+    const targetPostId = detectedPostId || currentPostId;
+    
+    if (targetPostId) {
+      setCurrentPostId(targetPostId);
       handleLikeClick();
     } else {
-      console.log('No post selected to like');
       toast.info('Navigate to a post to like');
     }
   };
@@ -1505,7 +1530,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleButtonYPress = () => {
     // Yellow (bottom) button - Trophy
     console.log('Trophy button pressed');
-    handleTrophy();
+    
+    // Get the current post ID with enhanced detection
+    const detectedPostId = detectMostVisiblePost();
+    const targetPostId = detectedPostId || currentPostId;
+    
+    if (targetPostId) {
+      setCurrentPostId(targetPostId);
+      handleTrophy();
+    } else {
+      toast.info('Navigate to a post to give a trophy');
+    }
   };
 
   // Function to get the current post ID with improved reliability
@@ -1647,6 +1682,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Individual action handlers that use the universal handler
   const handleLike = () => handlePostAction('like');
   const handleComment = () => {
+    if (!user) {
+      toast.error("Login to comment on this post");
+      return;
+    }
+    
     // First check if we have a current post ID
     if (!currentPostId) {
       // Try to detect post if we don't have one
@@ -1661,6 +1701,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           setCommentModalOpen(true);
           return;
         }
+      }
+      
+      // Last attempt - try to detect the most visible post
+      const detectedPostId = detectMostVisiblePost();
+      if (detectedPostId) {
+        setCurrentPostId(detectedPostId);
+        setActiveCommentPostId(detectedPostId);
+        setCommentModalOpen(true);
+        return;
       }
       
       toast.error("No post selected. Try scrolling to a post first.");
@@ -1704,15 +1753,70 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       toast.error('No post selected. Try scrolling to a post first.');
     }
   };
-  const handleTrophy = () => {
+  const handleTrophy = async () => {
     if (!user || !currentPostId) {
       toast.error("Login to give trophy");
       return;
     }
     
-    // Trophy logic
-    toast.success("Trophy given! 🏆");
-    console.log("Trophy given to post", currentPostId);
+    try {
+      // Show loading state
+      toast.loading("Giving trophy...");
+      
+      // Check if we've already given a trophy to this post
+      const { data: existingTrophy, error: checkError } = await supabaseSession
+        .from('trophies')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('post_id', currentPostId);
+      
+      if (checkError) {
+        console.error('Error checking trophy status:', checkError);
+        toast.error('Could not check trophy status');
+        return;
+      }
+      
+      if (existingTrophy && existingTrophy.length > 0) {
+        // Already gave a trophy, remove it
+        const { error: removeError } = await supabaseSession
+          .from('trophies')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('post_id', currentPostId);
+        
+        if (removeError) {
+          console.error('Error removing trophy:', removeError);
+          toast.error('Could not remove trophy');
+          return;
+        }
+        
+        toast.success('Trophy removed!');
+      } else {
+        // Give a new trophy
+        const { error: addError } = await supabaseSession
+          .from('trophies')
+          .insert([{
+            user_id: user.id,
+            post_id: currentPostId,
+            created_at: new Date().toISOString()
+          }]);
+        
+        if (addError) {
+          console.error('Error giving trophy:', addError);
+          toast.error('Could not give trophy');
+          return;
+        }
+        
+        toast.success("Trophy given! 🏆");
+      }
+      
+      // Refresh queries to update UI
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
+    } catch (error) {
+      console.error('Trophy operation failed:', error);
+      toast.error('Could not process trophy action');
+    }
   };
 
   // Your return JSX - the UI for the GameBoy controller
@@ -1762,26 +1866,30 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           {/* Action Buttons */}
           <div className="action-buttons">
             <button 
-              className={`action-button a-button ${hasLiked ? 'active' : ''}`} 
+              className={`action-button a-button ${commentModalOpen ? 'active' : ''}`} 
               onClick={handleButtonAPress}
+              data-action="comment"
             >
               <MessageCircle size={20} />
             </button>
             <button 
               className={`action-button b-button ${inCollection ? 'active' : ''}`}
               onClick={handleButtonBPress}
+              data-action="collection"
             >
               <Bookmark size={20} />
             </button>
             <button 
-              className={`action-button x-button ${commentModalOpen ? 'active' : ''}`} 
+              className={`action-button x-button ${hasLiked ? 'active' : ''}`} 
               onClick={handleButtonXPress}
+              data-action="like"
             >
               <Heart size={20} />
             </button>
             <button 
               className={`action-button y-button`}
               onClick={handleButtonYPress}
+              data-action="trophy"
             >
               <Trophy size={20} />
             </button>
