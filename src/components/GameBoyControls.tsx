@@ -762,34 +762,95 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         case 'trophy':
           // Trophy logic
           if (!user || !currentPostId) {
-            toast.error("Login to give trophy");
+            toast.error("Login to rank this clip");
             return;
           }
           
           try {
             // Show loading state
-            toast.loading("Giving trophy...");
+            toast.loading("Ranking clip...");
             
-            // Check if we've already given a trophy to this post
+            // First, get the post owner's ID to handle follow functionality
+            const { data: postData, error: postError } = await supabaseClient
+              .from('posts')
+              .select('profile_id, rank')
+              .eq('id', currentPostId)
+              .single();
+            
+            if (postError) {
+              console.error('Error fetching post details:', postError);
+              toast.error('Could not fetch post details');
+              return;
+            }
+            
+            const postOwnerId = postData.profile_id;
+            const currentRank = postData.rank || 0;
+            
+            // Don't allow self-ranking
+            if (postOwnerId === user.id) {
+              toast.error("You can't rank your own post");
+              return;
+            }
+            
+            // Check if we've already ranked this post
             const { data: existingTrophy, error: checkError } = await supabaseClient
-              .from('post_trophies') // Using the correct table name
+              .from('post_trophies')
               .select('id')
               .eq('user_id', user.id)
               .eq('post_id', currentPostId);
             
             if (checkError) {
+              console.error('Error checking trophy status:', checkError);
+              
+              // If the table doesn't exist, create it
               if (checkError.message.includes('does not exist')) {
-                // Table doesn't exist, which means trophies are not implemented yet
-                toast.info('Trophy feature coming soon!');
+                const { error: createTableError } = await supabaseClient.rpc('create_post_trophies_table');
+                if (createTableError) {
+                  console.error('Error creating post_trophies table:', createTableError);
+                  toast.error('Ranking feature not available yet');
+                  return;
+                }
+                
+                // After creating the table, insert the new trophy and update post rank
+                const { error: addError } = await supabaseClient
+                  .from('post_trophies')
+                  .insert([{
+                    user_id: user.id,
+                    post_id: currentPostId,
+                    created_at: new Date().toISOString()
+                  }]);
+                
+                if (addError) {
+                  console.error('Error ranking post:', addError);
+                  toast.error('Could not rank clip');
+                  return;
+                }
+                
+                // Update the post's rank
+                const { error: updateError } = await supabaseClient
+                  .from('posts')
+                  .update({ rank: currentRank + 1 })
+                  .eq('id', currentPostId);
+                  
+                if (updateError) {
+                  console.error('Error updating post rank:', updateError);
+                  toast.error('Could not update rank');
+                  return;
+                }
+                
+                // Also automatically follow the post creator
+                await handleAutoFollowCreator(postOwnerId);
+                
+                toast.success("Clip ranked! You're now following this creator.");
+                return;
               } else {
-                console.error('Error checking trophy status:', checkError);
-                toast.error('Could not check trophy status');
+                toast.error('Could not check ranking status');
+                return;
               }
-              return;
             }
             
             if (existingTrophy && existingTrophy.length > 0) {
-              // Already gave a trophy, remove it
+              // Already gave a trophy, remove it and decrease rank
               const { error: removeError } = await supabaseClient
                 .from('post_trophies')
                 .delete()
@@ -797,14 +858,26 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 .eq('post_id', currentPostId);
               
               if (removeError) {
-                console.error('Error removing trophy:', removeError);
-                toast.error('Could not remove trophy');
+                console.error('Error removing rank:', removeError);
+                toast.error('Could not remove ranking');
                 return;
               }
               
-              toast.success('Trophy removed!');
+              // Update the post's rank (decrease)
+              const { error: updateError } = await supabaseClient
+                .from('posts')
+                .update({ rank: Math.max(0, currentRank - 1) }) // Ensure rank doesn't go below 0
+                .eq('id', currentPostId);
+                
+              if (updateError) {
+                console.error('Error updating post rank:', updateError);
+                toast.error('Could not update rank');
+                return;
+              }
+              
+              toast.success('Ranking removed!');
             } else {
-              // Give a new trophy
+              // Give a new trophy and increase rank
               const { error: addError } = await supabaseClient
                 .from('post_trophies')
                 .insert([{
@@ -814,20 +887,35 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                 }]);
               
               if (addError) {
-                console.error('Error giving trophy:', addError);
-                toast.error('Could not give trophy');
+                console.error('Error ranking post:', addError);
+                toast.error('Could not rank clip');
                 return;
               }
               
-              toast.success("Trophy given! ");
+              // Update the post's rank (increase)
+              const { error: updateError } = await supabaseClient
+                .from('posts')
+                .update({ rank: currentRank + 1 })
+                .eq('id', currentPostId);
+                
+              if (updateError) {
+                console.error('Error updating post rank:', updateError);
+                toast.error('Could not update rank');
+                return;
+              }
+              
+              // Also automatically follow the post creator
+              await handleAutoFollowCreator(postOwnerId);
+              
+              toast.success('Clip ranked up! Now following creator');
             }
             
-            // Refresh queries to update UI
+            // Invalidate queries to update UI
             queryClient.invalidateQueries({ queryKey: ['posts'] });
             
           } catch (error) {
-            console.error('Trophy operation failed:', error);
-            toast.error('Could not process trophy action');
+            console.error('Error in trophy action:', error);
+            toast.error('Failed to rank clip');
           }
           break;
       }
@@ -1508,8 +1596,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   const handleButtonBPress = () => {
-    // Red (right) button - Collection
-    console.log('Collection button pressed');
+    // Red (right) button - Save Video
+    console.log('Save Video button pressed');
     
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
@@ -1517,9 +1605,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     if (targetPostId) {
       setCurrentPostId(targetPostId);
-      handleCollection();
+      handleSaveVideo();
     } else {
-      toast.info('Navigate to a post to add to collection');
+      toast.info('Navigate to a post to save video');
     }
   };
 
@@ -1540,8 +1628,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   const handleButtonYPress = () => {
-    // Yellow (bottom) button - Trophy
-    console.log('Trophy button pressed');
+    // Yellow (bottom) button - Trophy/Rank
+    console.log('Trophy/Rank button pressed');
     
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
@@ -1549,9 +1637,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     
     if (targetPostId) {
       setCurrentPostId(targetPostId);
-      handleFollow();
+      handleTrophy();
     } else {
-      toast.info('Navigate to a post to give a trophy');
+      toast.error('No post selected. Try scrolling to a post first.');
     }
   };
 
@@ -1783,18 +1871,18 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
   const handleTrophy = async () => {
     if (!user || !currentPostId) {
-      toast.error("Login to give trophy");
+      toast.error("Login to rank this clip");
       return;
     }
     
     try {
       // Show loading state
-      toast.loading("Giving trophy...");
+      toast.loading("Ranking clip...");
       
       // First, get the post owner's ID to handle follow functionality
       const { data: postData, error: postError } = await supabaseClient
         .from('posts')
-        .select('profile_id')
+        .select('profile_id, rank')
         .eq('id', currentPostId)
         .single();
       
@@ -1805,14 +1893,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       }
       
       const postOwnerId = postData.profile_id;
+      const currentRank = postData.rank || 0;
       
-      // Don't allow self-trophies
+      // Don't allow self-ranking
       if (postOwnerId === user.id) {
-        toast.error("You can't give a trophy to your own post");
+        toast.error("You can't rank your own post");
         return;
       }
       
-      // Check if we've already given a trophy to this post
+      // Check if we've already ranked this post
       const { data: existingTrophy, error: checkError } = await supabaseClient
         .from('post_trophies')
         .select('id')
@@ -1827,11 +1916,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           const { error: createTableError } = await supabaseClient.rpc('create_post_trophies_table');
           if (createTableError) {
             console.error('Error creating post_trophies table:', createTableError);
-            toast.error('Trophy feature not available yet');
+            toast.error('Ranking feature not available yet');
             return;
           }
           
-          // After creating the table, insert the new trophy
+          // After creating the table, insert the new trophy and update post rank
           const { error: addError } = await supabaseClient
             .from('post_trophies')
             .insert([{
@@ -1841,24 +1930,36 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             }]);
           
           if (addError) {
-            console.error('Error giving trophy:', addError);
-            toast.error('Could not give trophy');
+            console.error('Error ranking post:', addError);
+            toast.error('Could not rank clip');
+            return;
+          }
+          
+          // Update the post's rank
+          const { error: updateError } = await supabaseClient
+            .from('posts')
+            .update({ rank: currentRank + 1 })
+            .eq('id', currentPostId);
+            
+          if (updateError) {
+            console.error('Error updating post rank:', updateError);
+            toast.error('Could not update rank');
             return;
           }
           
           // Also automatically follow the post creator
           await handleAutoFollowCreator(postOwnerId);
           
-          toast.success("Trophy given! You're now following this creator.");
+          toast.success("Clip ranked! You're now following this creator.");
           return;
         } else {
-          toast.error('Could not check trophy status');
+          toast.error('Could not check ranking status');
           return;
         }
       }
       
       if (existingTrophy && existingTrophy.length > 0) {
-        // Already gave a trophy, remove it
+        // Already gave a trophy, remove it and decrease rank
         const { error: removeError } = await supabaseClient
           .from('post_trophies')
           .delete()
@@ -1866,14 +1967,26 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           .eq('post_id', currentPostId);
         
         if (removeError) {
-          console.error('Error removing trophy:', removeError);
-          toast.error('Could not remove trophy');
+          console.error('Error removing rank:', removeError);
+          toast.error('Could not remove ranking');
           return;
         }
         
-        toast.success('Trophy removed!');
+        // Update the post's rank (decrease)
+        const { error: updateError } = await supabaseClient
+          .from('posts')
+          .update({ rank: Math.max(0, currentRank - 1) }) // Ensure rank doesn't go below 0
+          .eq('id', currentPostId);
+          
+        if (updateError) {
+          console.error('Error updating post rank:', updateError);
+          toast.error('Could not update rank');
+          return;
+        }
+        
+        toast.success('Ranking removed!');
       } else {
-        // Give a new trophy
+        // Give a new trophy and increase rank
         const { error: addError } = await supabaseClient
           .from('post_trophies')
           .insert([{
@@ -1883,23 +1996,35 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           }]);
         
         if (addError) {
-          console.error('Error giving trophy:', addError);
-          toast.error('Could not give trophy');
+          console.error('Error ranking post:', addError);
+          toast.error('Could not rank clip');
+          return;
+        }
+        
+        // Update the post's rank (increase)
+        const { error: updateError } = await supabaseClient
+          .from('posts')
+          .update({ rank: currentRank + 1 })
+          .eq('id', currentPostId);
+          
+        if (updateError) {
+          console.error('Error updating post rank:', updateError);
+          toast.error('Could not update rank');
           return;
         }
         
         // Also automatically follow the post creator
         await handleAutoFollowCreator(postOwnerId);
         
-        toast.success("Trophy given! You're now following this creator.");
+        toast.success('Clip ranked up! Now following creator');
       }
       
-      // Refresh queries to update UI
+      // Invalidate queries to update UI
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       
     } catch (error) {
-      console.error('Trophy operation failed:', error);
-      toast.error('Could not process trophy action');
+      console.error('Error in trophy action:', error);
+      toast.error('Failed to rank clip');
     }
   };
 
@@ -2025,7 +2150,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             title: postData.title || 'Saved Video',
             saved_at: new Date().toISOString()
           });
-        
+
         if (saveError) {
           console.error('Error saving video:', saveError);
           toast.error('Could not save video');
@@ -2109,14 +2234,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
           {/* Center Section */}
           <div className="center-section">
-            <button className="main-button" onClick={handleMainButtonClick}>
+            <button className="main-button" onClick={handleMainButtonClick} aria-label="Navigate to home feed">
               <span>CLIPT</span>
             </button>
             <div className="select-start-buttons">
-              <button className="select-button" onClick={handleSelectPress}>
+              <button className="select-button" onClick={handleSelectPress} aria-label="Toggle menu">
                 <Menu size={16} />
               </button>
-              <button className="start-button" onClick={handleStartPress}>
+              <button className="start-button" onClick={handleStartPress} aria-label="Create new post">
                 <Camera size={16} />
               </button>
             </div>
@@ -2128,20 +2253,23 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               className={`action-button a-button ${commentModalOpen ? 'active' : ''}`} 
               onClick={handleButtonAPress}
               data-action="comment"
+              aria-label="Comment on post"
             >
               <MessageCircle size={20} />
             </button>
             <button 
-              className={`action-button b-button ${inCollection ? 'active' : ''}`}
-              onClick={handleButtonBPress}
-              data-action="collection"
+              className={`action-button b-button`}
+              onClick={handleSaveVideo}
+              data-action="save-video"
+              aria-label="Save clip"
             >
-              <Bookmark size={20} />
+              <Save size={20} />
             </button>
             <button 
               className={`action-button x-button ${hasLiked ? 'active' : ''}`} 
               onClick={handleButtonXPress}
               data-action="like"
+              aria-label="Like post"
             >
               <Heart size={20} />
             </button>
@@ -2149,16 +2277,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               className={`action-button y-button`}
               onClick={handleButtonYPress}
               data-action="trophy"
+              aria-label="Rank post"
             >
               <Trophy size={20} />
-            </button>
-            {/* Save Video Button */}
-            <button 
-              className="save-video-button"
-              onClick={handleSaveVideo}
-              data-action="save-video"
-            >
-              <Save size={20} />
             </button>
           </div>
         </div>
@@ -2182,6 +2303,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                     option.action();
                     setIsMenuOpen(false);
                   }}
+                  aria-label={option.name}
                 >
                   <div className="menu-option-icon">{option.icon}</div>
                   <div className="menu-option-content">
