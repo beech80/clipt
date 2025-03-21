@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -135,50 +135,50 @@ const PostItem: React.FC<PostItemProps> = ({
     }
   };
 
-  const handleLike = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleLike = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     
     if (!user) {
-      toast.error("Please log in to like posts");
+      toast.error("Please login to like posts");
       return;
     }
     
-    if (!postId) {
-      console.error("Cannot like post with invalid ID");
-      toast.error("Unable to like this post");
-      return;
-    }
-
+    if (likeLoading) return;
+    
+    // Optimistically update UI state
+    setLiked(!liked);
+    setLikesCount(prev => liked ? Math.max(0, prev - 1) : prev + 1);
+    setLikeLoading(true);
+    
     try {
-      setLikeLoading(true);
+      console.log(`Liking post ${postId}`);
       
-      // Log the action for debugging
-      console.log(`Liking post ID: ${postId}`);
-      
-      // Check if already liked
-      const { data: existingLike } = await supabase
+      // Check if user already liked the post
+      const { data: existingLike, error: checkError } = await supabase
         .from('likes')
         .select('*')
         .eq('post_id', postId)
         .eq('user_id', user.id)
         .maybeSingle();
       
+      if (checkError) throw checkError;
+      
+      let count;
+      
       if (existingLike) {
-        // Unlike the post
-        const { error } = await supabase
+        // Remove like
+        const { error: removeError } = await supabase
           .from('likes')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', user.id);
           
-        if (error) throw error;
-        
-        setLiked(false);
-        setLikesCount(prev => Math.max(0, prev - 1));
-        toast.success("Unliked post");
+        if (removeError) throw removeError;
       } else {
-        // Like the post
-        const { error } = await supabase
+        // Add like
+        const { error: addError } = await supabase
           .from('likes')
           .insert({
             post_id: postId,
@@ -186,20 +186,18 @@ const PostItem: React.FC<PostItemProps> = ({
             created_at: new Date().toISOString()
           });
           
-        if (error) throw error;
-        
-        setLiked(true);
-        setLikesCount(prev => prev + 1);
-        toast.success("Liked post");
+        if (addError) throw addError;
       }
       
-      // Get accurate count from database
-      const { count } = await supabase
+      // Get updated count (only if needed for analytics, not for UI update)
+      // This query is optional and could be removed to speed up the response
+      const { count: updatedCount, error: countError } = await supabase
         .from('likes')
-        .select('*', { count: 'exact', head: true})
+        .select('*', { count: 'exact', head: true })
         .eq('post_id', postId);
-      
-      setLikesCount(count || 0);
+        
+      if (countError) throw countError;
+      count = updatedCount;
       
       // Dispatch event to notify other components
       const likeUpdateEvent = new CustomEvent('like-update', {
@@ -211,12 +209,15 @@ const PostItem: React.FC<PostItemProps> = ({
       });
       window.dispatchEvent(likeUpdateEvent);
       
-      // Invalidate cache for this post
+      // Only invalidate the specific post query, not all queries
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
       
     } catch (error) {
       console.error("Error liking post:", error);
       toast.error("Failed to update like status");
+      // Revert optimistic update on error
+      setLiked(liked);
+      setLikesCount(prev => liked ? prev + 1 : Math.max(0, prev - 1));
     } finally {
       setLikeLoading(false);
     }
@@ -321,95 +322,98 @@ const PostItem: React.FC<PostItemProps> = ({
     
     if (trophyLoading) return;
     
+    // Optimistically update UI
+    const newHasTrophy = !hasTrophy;
+    const currentDisplayedRank = post.rank || trophyCount || 0;
+    const newRank = newHasTrophy ? currentDisplayedRank + 1 : Math.max(0, currentDisplayedRank - 1);
+    
+    setHasTrophy(newHasTrophy);
+    setTrophyCount(prev => newHasTrophy ? prev + 1 : Math.max(0, prev - 1));
     setTrophyLoading(true);
     
     try {
       console.log(`Ranking post ${postId}`);
       
-      // First, check if post already has a rank
-      const { data: postData, error: postError } = await supabase
-        .from('posts')
-        .select('rank')
-        .eq('id', postId)
-        .single();
+      // Run queries in parallel for better performance
+      const [postResult, voteResult] = await Promise.all([
+        // Get current rank
+        supabase
+          .from('posts')
+          .select('rank')
+          .eq('id', postId)
+          .single(),
+          
+        // Check if user already voted
+        supabase
+          .from('clip_votes')
+          .select('*')
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+      ]);
       
-      if (postError) throw postError;
+      if (postResult.error) throw postResult.error;
+      if (voteResult.error) throw voteResult.error;
       
-      const currentRank = postData?.rank || 0;
-      
-      // Check if user has already voted
-      const { data: existingVote, error: checkError } = await supabase
-        .from('clip_votes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (checkError) throw checkError;
+      const currentRank = postResult.data?.rank || 0;
+      const existingVote = voteResult.data;
       
       if (existingVote) {
         // User already voted, so removing the vote should decrease rank
-        const { error: removeError } = await supabase
-          .from('clip_votes')
-          .delete()
-          .eq('id', existingVote.id);
-        
-        if (removeError) throw removeError;
-        
-        // Decrease the post rank
-        const { error: updateError } = await supabase
-          .from('posts')
-          .update({ rank: Math.max(0, currentRank - 1) })
-          .eq('id', postId);
-        
-        if (updateError) throw updateError;
-        
-        setHasTrophy(false);
-        setTrophyCount(prev => Math.max(0, prev - 1));
+        await Promise.all([
+          // Remove vote
+          supabase
+            .from('clip_votes')
+            .delete()
+            .eq('id', existingVote.id),
+            
+          // Decrease post rank
+          supabase
+            .from('posts')
+            .update({ rank: Math.max(0, currentRank - 1) })
+            .eq('id', postId)
+        ]);
         
         toast.success("Ranking removed");
         
       } else {
         // Add vote and increase rank
-        const { error: addError } = await supabase
-          .from('clip_votes')
-          .insert({
-            post_id: postId,
-            user_id: user.id,
-            created_at: new Date().toISOString()
-          });
-        
-        if (addError) throw addError;
-        
-        // Increase the post rank
-        const { error: updateError } = await supabase
-          .from('posts')
-          .update({ rank: currentRank + 1 })
-          .eq('id', postId);
-        
-        if (updateError) throw updateError;
-        
-        setHasTrophy(true);
-        setTrophyCount(prev => prev + 1);
+        await Promise.all([
+          // Add vote
+          supabase
+            .from('clip_votes')
+            .insert({
+              post_id: postId,
+              user_id: user.id,
+              created_at: new Date().toISOString()
+            }),
+            
+          // Increase post rank
+          supabase
+            .from('posts')
+            .update({ rank: currentRank + 1 })
+            .eq('id', postId)
+        ]);
         
         toast.success("Clip ranked up!");
         
-        // Also follow the post creator automatically
+        // Optionally follow the post creator (if it's not the user's own post)
         if (post.user_id !== user.id) {
+          // Don't await this, let it happen in the background
           handleFollow();
         }
       }
       
-      // Invalidate cache for this post
+      // Only invalidate necessary queries
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
       
       // Dispatch trophy update event
       const trophyUpdateEvent = new CustomEvent('trophy-update', {
         detail: {
           postId,
-          count: trophyCount + (hasTrophy ? -1 : 1),
-          active: !hasTrophy,
-          rank: hasTrophy ? currentRank - 1 : currentRank + 1
+          count: newHasTrophy ? trophyCount + 1 : Math.max(0, trophyCount - 1),
+          active: newHasTrophy,
+          rank: newHasTrophy ? currentRank + 1 : Math.max(0, currentRank - 1)
         }
       });
       window.dispatchEvent(trophyUpdateEvent);
@@ -417,6 +421,10 @@ const PostItem: React.FC<PostItemProps> = ({
     } catch (error) {
       console.error("Error ranking clip:", error);
       toast.error("Failed to update rank");
+      
+      // Revert the optimistic updates on error
+      setHasTrophy(!newHasTrophy);
+      setTrophyCount(prev => !newHasTrophy ? prev + 1 : Math.max(0, prev - 1));
     } finally {
       setTrophyLoading(false);
     }
@@ -495,6 +503,85 @@ const PostItem: React.FC<PostItemProps> = ({
     checkFollowStatus();
   }, [user, post.user_id]);
 
+  // Debounce function to prevent excessive rerenders
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout | null = null;
+    return (...args: any[]) => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
+  // Memoize often used functions
+  const updateTrophyCount = useCallback(async () => {
+    if (!postId) return;
+    
+    try {
+      const { count, error: countError } = await supabase
+        .from('clip_votes')
+        .select('*', { count: 'exact', head: true})
+        .eq('post_id', postId);
+      
+      if (countError) {
+        console.error('Error updating trophy count:', countError);
+        return;
+      }
+      
+      setTrophyCount(count || 0);
+      
+      // Also update trophy status if user is logged in
+      if (user) {
+        const { data, error } = await supabase
+          .from('clip_votes')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+          
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking trophy status:', error);
+          return;
+        }
+        
+        setHasTrophy(!!data);
+      }
+    } catch (error) {
+      console.error('Error in updateTrophyCount:', error);
+    }
+  }, [postId, user, supabase]);
+
+  // Combined trophy update listener
+  useEffect(() => {
+    const handleTrophyUpdate = debounce((e: CustomEvent) => {
+      const detail = (e as any).detail;
+      if (detail?.postId === postId) {
+        console.log('Trophy update event received', detail);
+        
+        // Use event detail for immediate UI feedback
+        if (detail.active !== undefined) {
+          setHasTrophy(detail.active);
+        }
+        
+        if (detail.count !== undefined) {
+          setTrophyCount(detail.count);
+        }
+        
+        // Also refresh data from the server for consistency
+        updateTrophyCount();
+        
+        // Refresh the post data in the cache
+        queryClient.invalidateQueries({ queryKey: ['post', postId] });
+      }
+    }, 300);
+    
+    window.addEventListener('trophy-update', handleTrophyUpdate as EventListener);
+    window.addEventListener('trophy-count-update', updateTrophyCount);
+    
+    return () => {
+      window.removeEventListener('trophy-update', handleTrophyUpdate as EventListener);
+      window.removeEventListener('trophy-count-update', updateTrophyCount);
+    };
+  }, [postId, queryClient, updateTrophyCount]);
+
   // Fetch and track likes/trophies whenever post ID changes
   useEffect(() => {
     const fetchLikeStatus = async () => {
@@ -567,37 +654,45 @@ const PostItem: React.FC<PostItemProps> = ({
       }
     };
     
-    // Run all fetch operations
-    fetchLikeStatus();
-    fetchLikesCount();
-    fetchTrophyStatus();
-    fetchTrophyCount();
+    // Run all fetch operations in parallel
+    Promise.all([
+      fetchLikeStatus(),
+      fetchLikesCount(),
+      fetchTrophyStatus(),
+      fetchTrophyCount()
+    ]).catch(error => {
+      console.error("Error in parallel fetches:", error);
+    });
     
-    // Set up event listeners for real-time updates
-    const handleLikeUpdate = (e: CustomEvent) => {
+    // Set up debounced event listeners for real-time updates
+    const handleLikeUpdate = debounce((e: CustomEvent) => {
       const detail = (e as any).detail;
       if (detail?.postId === postId) {
         console.log('Like update event received', detail);
         setLiked(detail.active);
         setLikesCount(detail.count);
       }
-    };
+    }, 500);
     
-    const handleTrophyUpdate = (e: CustomEvent) => {
+    const handleTrophyUpdate = debounce((e: CustomEvent) => {
       const detail = (e as any).detail;
       if (detail?.postId === postId) {
         console.log('Trophy update event received', detail);
         setHasTrophy(detail.active);
         setTrophyCount(detail.count);
       }
-    };
+    }, 500);
     
     // Global refresh event
-    const handleGlobalUpdate = () => {
+    const handleGlobalUpdate = debounce(() => {
       console.log('Global update triggered, refreshing counts');
-      fetchLikesCount();
-      fetchTrophyCount();
-    };
+      Promise.all([
+        fetchLikesCount(),
+        fetchTrophyCount()
+      ]).catch(error => {
+        console.error("Error in refresh:", error);
+      });
+    }, 500);
     
     window.addEventListener('like-update', handleLikeUpdate as EventListener);
     window.addEventListener('trophy-update', handleTrophyUpdate as EventListener);
@@ -654,99 +749,6 @@ const PostItem: React.FC<PostItemProps> = ({
     showTrophyCount();
   }, [postId, user]);
 
-  useEffect(() => {
-    const handleTrophyUpdate = (e: CustomEvent) => {
-      if (e.detail.postId === postId) {
-        console.log('Trophy update event received for this post:', e.detail);
-        
-        // Trigger a full refresh of the post data
-        queryClient.invalidateQueries({ queryKey: ['posts'] });
-        
-        // Get trophy count directly from the database for accuracy
-        const updateTrophyCount = async () => {
-          try {
-            const { count, error: countError } = await supabase
-              .from('clip_votes')
-              .select('*', { count: 'exact', head: true})
-              .eq('post_id', postId);
-            
-            if (countError) {
-              console.error('Error updating trophy count:', countError);
-              return;
-            }
-            
-            setTrophyCount(count || 0);
-            
-            // Update the trophy status
-            setHasTrophy(e.detail.active);
-          } catch (error) {
-            console.error('Error updating trophy count:', error);
-          }
-        };
-        
-        updateTrophyCount();
-      }
-    };
-
-    window.addEventListener('trophy-update', handleTrophyUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('trophy-update', handleTrophyUpdate as EventListener);
-    };
-  }, [postId, queryClient, supabase]);
-
-  useEffect(() => {
-    const handleTrophyUpdate = (e: CustomEvent) => {
-      if (e.detail.postId === postId) {
-        console.log('Trophy refresh triggered for post:', postId);
-        
-        // Reload trophy status
-        if (user) {
-          // Check if user has voted
-          Promise.all([
-            // Check clip_votes
-            supabase
-              .from('clip_votes')
-              .select('id')
-              .eq('post_id', postId)
-              .eq('user_id', user.id)
-              .single(),
-            
-            // Get counts from both tables
-            supabase
-              .from('clip_votes')
-              .select('*', { count: 'exact', head: true })
-              .eq('post_id', postId),
-          ]).then(([clipVote, clipCount]) => {
-            // Update has trophy state
-            setHasTrophy(!!clipVote.data);
-            
-            // Update trophy count
-            setTrophyCount(clipCount.count || 0);
-          }).catch(error => {
-            console.error('Error refreshing trophy state:', error);
-          });
-        }
-      }
-    };
-    
-    // Listen for global trophy updates
-    const handleRefreshEvent = (e: Event) => {
-      handleTrophyUpdate(e as CustomEvent);
-    };
-    
-    const postElement = document.querySelector(`[data-post-id="${postId}"]`);
-    if (postElement) {
-      postElement.addEventListener('refresh-post-data', handleRefreshEvent);
-    }
-    
-    return () => {
-      if (postElement) {
-        postElement.removeEventListener('refresh-post-data', handleRefreshEvent);
-      }
-    };
-  }, [postId, user]);
-
   // Check if the current post is saved by the user
   useEffect(() => {
     const checkSaveStatus = async () => {
@@ -789,6 +791,10 @@ const PostItem: React.FC<PostItemProps> = ({
     }
     
     if (saveLoading) return;
+    
+    // Optimistically update UI
+    const newSaveState = !isSaved;
+    setIsSaved(newSaveState);
     setSaveLoading(true);
     
     try {
@@ -813,7 +819,6 @@ const PostItem: React.FC<PostItemProps> = ({
           
         if (removeError) throw removeError;
         
-        setIsSaved(false);
         toast.success("Video removed from saved clips");
       } else {
         // Save the video
@@ -829,16 +834,18 @@ const PostItem: React.FC<PostItemProps> = ({
           
         if (saveError) throw saveError;
         
-        setIsSaved(true);
         toast.success("Video saved to your profile");
       }
       
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['saved_videos'] });
+      // Only invalidate necessary queries
+      queryClient.invalidateQueries({ queryKey: ['saved_videos', user.id] });
       
     } catch (error) {
       console.error('Error saving/unsaving video:', error);
       toast.error("Failed to save video");
+      
+      // Revert optimistic update on error
+      setIsSaved(!newSaveState);
     } finally {
       setSaveLoading(false);
     }
@@ -879,7 +886,7 @@ const PostItem: React.FC<PostItemProps> = ({
           <div className="flex flex-col">
             <span 
               onClick={() => handleProfileClick(post.user_id)}
-              className="text-base font-semibold text-gaming-100 hover:text-gaming-200 transition-all duration-200 cursor-pointer"
+              className="text-base font-semibold text-gaming-100 hover:text-gaming-200 cursor-pointer"
             >
               {username}
             </span>
@@ -927,6 +934,7 @@ const PostItem: React.FC<PostItemProps> = ({
         <button 
           className="like-button flex items-center text-sm font-medium transition-all duration-200 group"
           onClick={handleLike}
+          disabled={likeLoading}
         >
           <Heart 
             className={`h-6 w-6 ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
@@ -1002,12 +1010,10 @@ const PostItem: React.FC<PostItemProps> = ({
           disabled={saveLoading}
           aria-label={isSaved ? "Remove from saved videos" : "Save video"}
         >
-          <Save 
-            className={`h-6 w-6 ${isSaved ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
+          <Bookmark 
+            className={`h-6 w-6 ${isSaved ? 'text-blue-500 fill-blue-500' : 'text-gray-400 group-hover:text-blue-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
+            fill={isSaved ? "currentColor" : "none"}
           />
-          <span className={`text-base font-medium ${isSaved ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'}`}>
-            {isSaved ? 'Saved' : 'Save'}
-          </span>
         </button>
       </div>
 
