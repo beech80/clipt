@@ -334,73 +334,82 @@ const PostItem: React.FC<PostItemProps> = ({
     try {
       console.log(`Ranking post ${postId}`);
       
-      // Run queries in parallel for better performance
-      const [postResult, voteResult] = await Promise.all([
-        // Get current rank
-        supabase
-          .from('posts')
-          .select('rank')
-          .eq('id', postId)
-          .single(),
-          
-        // Check if user already voted
-        supabase
-          .from('clip_votes')
-          .select('*')
-          .eq('post_id', postId)
-          .eq('user_id', user.id)
-          .maybeSingle()
-      ]);
+      // Check if user already voted
+      const { data: existingVote, error: voteError } = await supabase
+        .from('clip_votes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (voteError) throw voteError;
       
-      if (postResult.error) throw postResult.error;
-      if (voteResult.error) throw voteResult.error;
+      // Get current rank
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .select('rank')
+        .eq('id', postId)
+        .single();
+        
+      if (postError) {
+        console.error("Error fetching post rank:", postError);
+        toast.error("Could not update post rank");
+        // Revert optimistic updates
+        setHasTrophy(!newHasTrophy);
+        setTrophyCount(prev => !newHasTrophy ? prev + 1 : Math.max(0, prev - 1));
+        setTrophyLoading(false);
+        return;
+      }
       
-      const currentRank = postResult.data?.rank || 0;
-      const existingVote = voteResult.data;
+      const currentRank = postData?.rank || 0;
       
       if (existingVote) {
         // User already voted, so removing the vote should decrease rank
-        await Promise.all([
-          // Remove vote
-          supabase
-            .from('clip_votes')
-            .delete()
-            .eq('id', existingVote.id),
-            
-          // Decrease post rank
-          supabase
-            .from('posts')
-            .update({ rank: Math.max(0, currentRank - 1) })
-            .eq('id', postId)
-        ]);
+        const { error: removeError } = await supabase
+          .from('clip_votes')
+          .delete()
+          .eq('id', existingVote.id);
+          
+        if (removeError) throw removeError;
+        
+        // Decrease post rank
+        const { error: updateError } = await supabase
+          .from('posts')
+          .update({ rank: Math.max(0, currentRank - 1) })
+          .eq('id', postId);
+          
+        if (updateError) throw updateError;
         
         toast.success("Ranking removed");
         
       } else {
         // Add vote and increase rank
-        await Promise.all([
-          // Add vote
-          supabase
-            .from('clip_votes')
-            .insert({
-              post_id: postId,
-              user_id: user.id,
-              created_at: new Date().toISOString()
-            }),
-            
-          // Increase post rank
-          supabase
-            .from('posts')
-            .update({ rank: currentRank + 1 })
-            .eq('id', postId)
-        ]);
+        const { error: addError } = await supabase
+          .from('clip_votes')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            created_at: new Date().toISOString()
+          });
+          
+        if (addError) throw addError;
+        
+        // Increase post rank
+        const { error: updateError } = await supabase
+          .from('posts')
+          .update({ rank: currentRank + 1 })
+          .eq('id', postId);
+          
+        if (updateError) throw updateError;
         
         toast.success("Clip ranked up!");
         
         // Optionally follow the post creator (if it's not the user's own post)
         if (post.user_id !== user.id) {
           // Don't await this, let it happen in the background
-          handleFollow();
+          handleFollow().catch(err => {
+            console.error("Error following user:", err);
+          });
         }
       }
       
@@ -517,6 +526,7 @@ const PostItem: React.FC<PostItemProps> = ({
     if (!postId) return;
     
     try {
+      console.log(`Updating trophy count for post ${postId}`);
       const { count, error: countError } = await supabase
         .from('clip_votes')
         .select('*', { count: 'exact', head: true})
@@ -527,6 +537,7 @@ const PostItem: React.FC<PostItemProps> = ({
         return;
       }
       
+      console.log(`Trophy count for post ${postId}: ${count}`);
       setTrophyCount(count || 0);
       
       // Also update trophy status if user is logged in
@@ -535,13 +546,17 @@ const PostItem: React.FC<PostItemProps> = ({
           .from('clip_votes')
           .select('id')
           .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .maybeSingle();
           
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
           console.error('Error checking trophy status:', error);
-          return;
+          if (!error.message.includes('does not exist')) {
+            return;
+          }
         }
         
+        console.log(`User has trophy for post ${postId}: ${!!data}`);
         setHasTrophy(!!data);
       }
     } catch (error) {
@@ -565,6 +580,10 @@ const PostItem: React.FC<PostItemProps> = ({
           setTrophyCount(detail.count);
         }
         
+        if (detail.rank !== undefined && post) {
+          post.rank = detail.rank;
+        }
+        
         // Also refresh data from the server for consistency
         updateTrophyCount();
         
@@ -573,14 +592,16 @@ const PostItem: React.FC<PostItemProps> = ({
       }
     }, 300);
     
+    console.log(`Setting up trophy event listeners for post ${postId}`);
     window.addEventListener('trophy-update', handleTrophyUpdate as EventListener);
     window.addEventListener('trophy-count-update', updateTrophyCount);
     
     return () => {
+      console.log(`Removing trophy event listeners for post ${postId}`);
       window.removeEventListener('trophy-update', handleTrophyUpdate as EventListener);
       window.removeEventListener('trophy-count-update', updateTrophyCount);
     };
-  }, [postId, queryClient, updateTrophyCount]);
+  }, [postId, queryClient, updateTrophyCount, post]);
 
   // Fetch and track likes/trophies whenever post ID changes
   useEffect(() => {
@@ -624,12 +645,17 @@ const PostItem: React.FC<PostItemProps> = ({
       
       try {
         console.log(`Checking trophy status for post ${postId}`);
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('clip_votes')
           .select('*')
           .eq('post_id', postId)
           .eq('user_id', user.id)
           .maybeSingle();
+          
+        if (error && !error.message.includes('does not exist')) {
+          console.error("Error fetching trophy status:", error);
+          return;
+        }
         
         setHasTrophy(!!data);
       } catch (error) {
@@ -647,8 +673,28 @@ const PostItem: React.FC<PostItemProps> = ({
           .select('*', { count: 'exact', head: true})
           .eq('post_id', postId);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching trophy count:", error);
+          return;
+        }
+        
         setTrophyCount(count || 0);
+        
+        // Also fetch the post's rank to keep it in sync
+        if (post) {
+          const { data: postData, error: postError } = await supabase
+            .from('posts')
+            .select('rank')
+            .eq('id', postId)
+            .single();
+            
+          if (postError) {
+            console.error("Error fetching post rank:", postError);
+          } else if (postData) {
+            console.log(`Post ${postId} rank from DB: ${postData.rank}`);
+            post.rank = postData.rank;
+          }
+        }
       } catch (error) {
         console.error("Error fetching trophy count:", error);
       }
@@ -755,26 +801,27 @@ const PostItem: React.FC<PostItemProps> = ({
       if (!user || !postId) return;
       
       try {
+        console.log(`Checking save status for post ${postId}`);
         const { data, error } = await supabase
           .from('saved_videos')
           .select('id')
-          .eq('user_id', user.id)
           .eq('post_id', postId)
+          .eq('user_id', user.id)
           .maybeSingle();
-          
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error checking save status:', error);
+        
+        if (error && !error.message.includes('does not exist')) {
+          console.error("Error checking save status:", error);
           return;
         }
         
         setIsSaved(!!data);
       } catch (error) {
-        console.error('Error checking if video is saved:', error);
+        console.error("Error checking if video is saved:", error);
       }
     };
     
     checkSaveStatus();
-  }, [user, postId]);
+  }, [postId, user, supabase]);
 
   // Handle saving and unsaving videos
   const handleSaveVideo = async (e: React.MouseEvent) => {
@@ -792,6 +839,8 @@ const PostItem: React.FC<PostItemProps> = ({
     
     if (saveLoading) return;
     
+    console.log(`Attempting to ${isSaved ? 'unsave' : 'save'} video with postId ${postId}`);
+    
     // Optimistically update UI
     const newSaveState = !isSaved;
     setIsSaved(newSaveState);
@@ -806,9 +855,14 @@ const PostItem: React.FC<PostItemProps> = ({
         .eq('post_id', postId)
         .maybeSingle();
         
-      if (checkError && !checkError.message.includes('does not exist')) {
-        throw checkError;
+      if (checkError) {
+        console.error("Error checking save status:", checkError);
+        if (!checkError.message.includes('does not exist')) {
+          throw checkError;
+        }
       }
+      
+      console.log("Existing save check:", existingSave);
       
       if (existingSave) {
         // Unsave the video
@@ -817,23 +871,39 @@ const PostItem: React.FC<PostItemProps> = ({
           .delete()
           .eq('id', existingSave.id);
           
-        if (removeError) throw removeError;
+        if (removeError) {
+          console.error("Error removing save:", removeError);
+          throw removeError;
+        }
         
+        console.log("Video successfully unsaved");
         toast.success("Video removed from saved clips");
       } else {
-        // Save the video
+        // Save the video - ensure we have all required fields
+        if (!post) {
+          throw new Error("Post data is missing");
+        }
+        
+        const saveData = {
+          user_id: user.id,
+          post_id: postId,
+          video_url: post.video_url || '',
+          title: post.title || 'Saved Video',
+          saved_at: new Date().toISOString()
+        };
+        
+        console.log("Saving video with data:", saveData);
+        
         const { error: saveError } = await supabase
           .from('saved_videos')
-          .insert({
-            user_id: user.id,
-            post_id: postId,
-            video_url: post.video_url || '',
-            title: post.title || 'Saved Video',
-            saved_at: new Date().toISOString()
-          });
+          .insert(saveData);
           
-        if (saveError) throw saveError;
+        if (saveError) {
+          console.error("Error saving video:", saveError);
+          throw saveError;
+        }
         
+        console.log("Video successfully saved");
         toast.success("Video saved to your profile");
       }
       
