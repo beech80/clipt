@@ -1207,12 +1207,14 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   // Handle select button press - used in the JSX
   const handleSelectPress = () => {
-    handleSelectButton();
+    console.log('Menu button pressed');
+    setIsMenuOpen(prevState => !prevState);
   };
 
   // Handle start button press - used in the JSX
   const handleStartPress = () => {
-    handleStartButton();
+    console.log('Camera button pressed');
+    navigate('/post/new');
   };
 
   // Handle main CLIPT button press
@@ -1479,19 +1481,21 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   const handleButtonAPress = () => {
     // Green (top) button - Comments
-    // This toggles the comments modal
-    handleCommentClick();
+    console.log('Comment button pressed');
+    handleComment();
   };
 
   const handleButtonBPress = () => {
     // Red (right) button - Collection
+    console.log('Collection button pressed');
     handleCollection();
   };
 
   const handleButtonXPress = () => {
     // Blue (left) button - Like
+    console.log('Like button pressed');
     if (currentPostId) {
-      handleLike();
+      handleLikeClick();
     } else {
       console.log('No post selected to like');
       toast.info('Navigate to a post to like');
@@ -1500,6 +1504,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
   const handleButtonYPress = () => {
     // Yellow (bottom) button - Trophy
+    console.log('Trophy button pressed');
     handleTrophy();
   };
 
