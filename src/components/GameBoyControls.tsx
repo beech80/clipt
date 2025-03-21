@@ -1515,6 +1515,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Green (top) button - Comments
     console.log('Comment button pressed');
     
+    // Add animation to the A button
+    const aButton = document.querySelector('.a-button');
+    if (aButton) {
+      aButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        aButton.classList.remove('button-press-animation');
+      }, 500);
+    }
+    
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
     const targetPostId = detectedPostId || currentPostId;
@@ -1530,6 +1539,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleButtonBPress = () => {
     // Red (right) button - Collection
     console.log('Collection button pressed');
+    
+    // Add animation to the B button
+    const bButton = document.querySelector('.b-button');
+    if (bButton) {
+      bButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        bButton.classList.remove('button-press-animation');
+      }, 500);
+    }
     
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
@@ -1547,13 +1565,22 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Blue (left) button - Like
     console.log('Like button pressed');
     
+    // Add animation to the X button
+    const xButton = document.querySelector('.x-button');
+    if (xButton) {
+      xButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        xButton.classList.remove('button-press-animation');
+      }, 500);
+    }
+    
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
     const targetPostId = detectedPostId || currentPostId;
     
     if (targetPostId) {
       setCurrentPostId(targetPostId);
-      handleLikeClick();
+      handleLike();
     } else {
       toast.info('Navigate to a post to like');
     }
@@ -1563,13 +1590,22 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     // Yellow (bottom) button - Trophy
     console.log('Trophy button pressed');
     
+    // Add animation to the Y button
+    const yButton = document.querySelector('.y-button');
+    if (yButton) {
+      yButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        yButton.classList.remove('button-press-animation');
+      }, 500);
+    }
+    
     // Get the current post ID with enhanced detection
     const detectedPostId = detectMostVisiblePost();
     const targetPostId = detectedPostId || currentPostId;
     
     if (targetPostId) {
       setCurrentPostId(targetPostId);
-      handleTrophy();
+      handleFollow();
     } else {
       toast.info('Navigate to a post to give a trophy');
     }
@@ -1712,11 +1748,40 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Individual action handlers that use the universal handler
-  const handleLike = () => handlePostAction('like');
+  const handleLike = () => {
+    if (!user) {
+      toast.error("Login to like this post");
+      return;
+    }
+    
+    // Add animation to the like button
+    const likeButton = document.querySelector('.x-button');
+    if (likeButton) {
+      likeButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        likeButton.classList.remove('button-press-animation');
+      }, 500);
+    }
+    
+    // Try the direct like method first (more reliable)
+    handleLikeClick();
+    
+    // Fallback to the universal approach
+    handlePostAction('like');
+  };
   const handleComment = () => {
     if (!user) {
       toast.error("Login to comment on this post");
       return;
+    }
+    
+    // Add animation to the comment button
+    const commentButton = document.querySelector('.b-button');
+    if (commentButton) {
+      commentButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        commentButton.classList.remove('button-press-animation');
+      }, 500);
     }
     
     // First check if we have a current post ID
@@ -1766,6 +1831,20 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
   const handleFollow = () => {
+    if (!user) {
+      toast.error("Login to follow this creator");
+      return;
+    }
+    
+    // Add animation to the trophy button
+    const trophyButton = document.querySelector('.y-button');
+    if (trophyButton) {
+      trophyButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        trophyButton.classList.remove('button-press-animation');
+      }, 500);
+    }
+    
     // Try the universal approach first
     handlePostAction('follow');
     
