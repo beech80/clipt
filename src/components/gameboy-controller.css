@@ -270,6 +270,35 @@
   z-index: 1;
 }
 
+.save-video-button {
+  position: absolute;
+  width: 42px;
+  height: 38px;
+  border-radius: 20px;
+  border: 2px solid rgba(139, 92, 246, 0.7); /* Purple border */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #1a1a24, #232330);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
+  z-index: 1;
+  /* Position it below the diamond formation */
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.save-video-button svg {
+  color: white;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+}
+
+.save-video-button:active {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  transform: translateX(-50%) scale(0.95);
+}
+
 .action-button svg {
   color: white;
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
