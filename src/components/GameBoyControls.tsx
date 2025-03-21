@@ -646,221 +646,191 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Optimized universal action handler for faster response
-  const handlePostAction = (actionType: 'like' | 'comment' | 'follow' | 'trophy') => {
-    // Provide immediate visual feedback on controller button
-    const controllerButton = document.querySelector(`[data-action="${actionType}"]`);
-    if (controllerButton) {
-      controllerButton.classList.add('button-press');
-      // Use shorter animation time for faster feedback
-      setTimeout(() => {
-        controllerButton.classList.remove('button-press');
-      }, 200);
-    }
-    
-    // Force post detection before taking action to ensure we're using the most current post
-    // This is crucial - detect the post FIRST before acting on it
-    const detectedPostId = detectMostVisiblePost();
-    const targetPostId = detectedPostId || currentPostId;
-    
-    if (!targetPostId) {
-      logToDebug(`No post selected for ${actionType} action`);
-      toast.error('No post selected. Try scrolling to a post first.');
+  const handlePostAction = async (actionType: 'like' | 'comment' | 'follow' | 'trophy') => {
+    if (!user) {
+      toast.error(`Login to ${actionType} this post`);
       return;
     }
-    
-    logToDebug(`Handling ${actionType} action for post: ${targetPostId}`);
-    
-    // Optimized selector list ordered by most common/fastest selectors first
-    const postSelectors = [
-      `[data-post-id="${targetPostId}"]`,
-      `#post-${targetPostId}`,
-      `.post-item[data-id="${targetPostId}"]`,
-      `.post-container[data-id="${targetPostId}"]`,
-      `[id="${targetPostId}"]`,
-      `.post-${targetPostId}`
-    ];
-    
-    let targetPost: Element | null = null;
-    
-    // Try each selector until we find a match
-    for (const selector of postSelectors) {
-      try {
-        const post = document.querySelector(selector);
-        if (post) {
-          targetPost = post;
-          logToDebug(`Found target post with selector: ${selector}`);
-          break;
-        }
-      } catch (err) {
-        console.error(`Error finding target post with selector:`, selector, err);
-      }
+
+    // Get the current post ID for this action
+    if (!currentPostId) {
+      toast.error(`No post selected. Please scroll to a post first.`);
+      return;
     }
-    
-    if (!targetPost) {
-      logToDebug('Target post not found, looking at all posts...');
-      
-      // Try to find post among all posts with data-post-id
-      const allPosts = document.querySelectorAll('[data-post-id]');
-      let foundPost = false;
-      
-      allPosts.forEach(post => {
-        const postId = post.getAttribute('data-post-id');
-        if (postId === targetPostId) {
-          targetPost = post;
-          foundPost = true;
-          logToDebug('Found post by iterating through all posts');
-        }
-      });
-      
-      if (!foundPost) {
-        logToDebug('Post not found with any method');
-        toast.error('Post not found. Try scrolling to make it visible.');
-        return;
-      }
-    }
-    
-    if (targetPost) {
-      // Determine button selectors based on action type
-      let buttonSelectors: string[] = [];
-      
+
+    console.log(`Handling ${actionType} action for post: ${currentPostId}`);
+
+    try {
       switch (actionType) {
         case 'like':
-          buttonSelectors = [
-            '.like-button', 
-            'button:has(svg[data-feather="heart"])',
-            'button:has(.heart-icon)',
-            'button:has(.lucide-heart)',
-            'button[aria-label*="like" i]',
-            'button[title*="like" i]',
-            '[data-action="like"]'
-          ];
+          // Like logic
+          const { data: existingLike, error: likeError } = await supabaseClient
+            .from('likes')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('post_id', currentPostId);
+          
+          if (likeError) {
+            throw new Error(`Like check failed: ${likeError.message}`);
+          }
+
+          if (existingLike && existingLike.length > 0) {
+            // Already liked, unlike it
+            await supabaseClient
+              .from('likes')
+              .delete()
+              .eq('user_id', user.id)
+              .eq('post_id', currentPostId);
+            toast.success("Unliked post");
+          } else {
+            // Not liked, like it
+            await supabaseClient
+              .from('likes')
+              .insert([{
+                user_id: user.id,
+                post_id: currentPostId,
+                created_at: new Date().toISOString()
+              }]);
+            toast.success("Liked post!");
+          }
           break;
         case 'comment':
-          buttonSelectors = [
-            '.comment-button', 
-            'button:has(svg[data-feather="message-circle"])',
-            'button:has(.comment-icon)',
-            'button:has(.lucide-message-circle)',
-            'button[aria-label*="comment" i]',
-            'button[title*="comment" i]',
-            '[data-action="comment"]'
-          ];
+          // Comment logic
+          // First check if we have a current post ID
+          if (!currentPostId) {
+            // Try to detect post if we don't have one
+            const isSinglePostPage = window.location.pathname.includes('/post/');
+            if (isSinglePostPage) {
+              // Extract post ID from URL
+              const match = window.location.pathname.match(/\/post\/([^\/]+)/);
+              if (match && match[1]) {
+                const newPostId = match[1];
+                console.log(`Detected post ID from URL: ${newPostId}`);
+                setActiveCommentPostId(newPostId);
+                setCommentModalOpen(true);
+                return;
+              }
+            }
+            
+            // Last attempt - try to detect the most visible post
+            const detectedPostId = detectMostVisiblePost();
+            if (detectedPostId) {
+              setCurrentPostId(detectedPostId);
+              setActiveCommentPostId(detectedPostId);
+              setCommentModalOpen(true);
+              return;
+            }
+            
+            toast.error("No post selected. Try scrolling to a post first.");
+            return;
+          }
+          
+          // We have a currentPostId, now try to open comments
+          console.log(`Opening comment modal for post: ${currentPostId}`);
+          setActiveCommentPostId(currentPostId);
+          setCommentModalOpen(true);
+          
+          // For better UX, show a visual indication of which post is selected
+          const selectedPost = document.querySelector(`[data-post-id="${currentPostId}"]`);
+          if (selectedPost) {
+            // Add a pulsing effect to show which post was selected
+            selectedPost.classList.add('comment-target-pulse');
+            
+            // Remove the effect after animation completes
+            setTimeout(() => {
+              selectedPost.classList.remove('comment-target-pulse');
+            }, 1000);
+          }
           break;
         case 'follow':
-          buttonSelectors = [
-            '.follow-button', 
-            'button:has(svg[data-feather="user-plus"])',
-            'button:has(.follow-icon)',
-            'button:has(.lucide-user-plus)',
-            'button[aria-label*="follow" i]',
-            'button[title*="follow" i]',
-            '[data-action="follow"]'
-          ];
+          // Follow logic
+          // Try the universal approach first
+          // Get the current post ID with improved reliability
+          const detectedPostId = detectMostVisiblePost();
+          const targetPostId = detectedPostId || currentPostId;
+          
+          if (targetPostId) {
+            // Update follow status for UI feedback
+            checkFollowStatus(targetPostId);
+            
+            // If the post is found but the button click failed, try direct API follow
+            setTimeout(() => {
+              handleDirectFollow(targetPostId);
+            }, 500);
+          } else {
+            toast.error('No post selected. Try scrolling to a post first.');
+          }
           break;
         case 'trophy':
-          buttonSelectors = [
-            '.trophy-button', 
-            'button:has(svg[data-feather="trophy"])',
-            'button:has(.trophy-icon)',
-            'button:has(.lucide-trophy)',
-            'button[aria-label*="trophy" i]',
-            'button[title*="trophy" i]',
-            '[data-action="trophy"]'
-          ];
+          // Trophy logic
+          if (!user || !currentPostId) {
+            toast.error("Login to give trophy");
+            return;
+          }
+          
+          try {
+            // Show loading state
+            toast.loading("Giving trophy...");
+            
+            // Check if we've already given a trophy to this post
+            const { data: existingTrophy, error: checkError } = await supabaseClient
+              .from('trophies')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('post_id', currentPostId);
+            
+            if (checkError) {
+              console.error('Error checking trophy status:', checkError);
+              toast.error('Could not check trophy status');
+              return;
+            }
+            
+            if (existingTrophy && existingTrophy.length > 0) {
+              // Already gave a trophy, remove it
+              const { error: removeError } = await supabaseClient
+                .from('trophies')
+                .delete()
+                .eq('user_id', user.id)
+                .eq('post_id', currentPostId);
+              
+              if (removeError) {
+                console.error('Error removing trophy:', removeError);
+                toast.error('Could not remove trophy');
+                return;
+              }
+              
+              toast.success('Trophy removed!');
+            } else {
+              // Give a new trophy
+              const { error: addError } = await supabaseClient
+                .from('trophies')
+                .insert([{
+                  user_id: user.id,
+                  post_id: currentPostId,
+                  created_at: new Date().toISOString()
+                }]);
+              
+              if (addError) {
+                console.error('Error giving trophy:', addError);
+                toast.error('Could not give trophy');
+                return;
+              }
+              
+              toast.success("Trophy given! ");
+            }
+            
+            // Refresh queries to update UI
+            queryClient.invalidateQueries({ queryKey: ['posts'] });
+            
+          } catch (error) {
+            console.error('Trophy operation failed:', error);
+            toast.error('Could not process trophy action');
+          }
           break;
       }
-      
-      let actionButton: Element | null = null;
-      
-      // Try each selector within the post first
-      for (const selector of buttonSelectors) {
-        try {
-          const buttons = targetPost.querySelectorAll(selector);
-          if (buttons.length > 0) {
-            actionButton = buttons[0];
-            logToDebug(`Found ${actionType} button within post using selector: ${selector}`);
-            break;
-          }
-        } catch (err) {
-          console.error(`Error finding ${actionType} button with selector:`, selector, err);
-        }
-      }
-      
-      // If we couldn't find in the target post, look globally with proximity check
-      if (!actionButton) {
-        logToDebug('Button not found in post, looking globally...');
-        
-        for (const selector of buttonSelectors) {
-          try {
-            // Find all buttons of this type in the document
-            const allButtons = document.querySelectorAll(selector);
-            
-            allButtons.forEach(button => {
-              // Check if this button is in or near our target post
-              let closestPost = button.closest('[data-post-id]');
-              if (!closestPost) {
-                // Try to find post by proximity if it's not a direct parent
-                const buttonRect = button.getBoundingClientRect();
-                const postRect = targetPost!.getBoundingClientRect();
-                
-                // Check if button is near our target post
-                const horizontalOverlap = 
-                  (buttonRect.left <= postRect.right && buttonRect.right >= postRect.left);
-                const verticalOverlap = 
-                  (buttonRect.top <= postRect.bottom && buttonRect.bottom >= postRect.top);
-                
-                if (horizontalOverlap && verticalOverlap) {
-                  actionButton = button;
-                  logToDebug(`Found ${actionType} button by proximity`);
-                }
-              } else if (closestPost.getAttribute('data-post-id') === targetPostId) {
-                actionButton = button;
-                logToDebug(`Found ${actionType} button via closest post`);
-              }
-            });
-            
-            if (actionButton) break;
-          } catch (err) {
-            console.error(`Error finding global ${actionType} button:`, err);
-          }
-        }
-      }
-      
-      if (actionButton) {
-        logToDebug(`Clicking ${actionType} button`);
-        
-        // Actually trigger the button's click event
-        actionButton.dispatchEvent(new MouseEvent('click', {
-          view: window,
-          bubbles: true,
-          cancelable: true
-        }));
-        
-        toast.success(`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} action triggered`);
-        return;
-      } else {
-        logToDebug(`${actionType} button not found on post`);
-        
-        // Fallback for different actions
-        if (actionType === 'comment') {
-          logToDebug('Falling back to comment page');
-          // Navigate directly to comments page instead of opening the modal
-          if (targetPostId) {
-            setActiveCommentPostId(targetPostId);
-            setCommentModalOpen(true);
-            console.log(`Opening comment modal for post ID: ${targetPostId}`);
-          } else {
-            toast.error('No post selected');
-          }
-          return;
-        } else if (actionType === 'like') {
-          // Try direct API like
-          handleDirectLike(targetPostId);
-          return;
-        } else {
-          toast.error(`Could not find ${actionType} button. Try another post.`);
-        }
-      }
+    } catch (error) {
+      console.error('Error handling post action:', error);
+      toast.error('Failed to handle post action');
     }
   };
   
@@ -925,98 +895,86 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
   };
   
-  // Direct API follow when button click fails
+  // Direct follow API call when button click fails
   const handleDirectFollow = async (postId: string) => {
+    if (!user) {
+      toast.error("Login to follow creator");
+      return;
+    }
+    
     try {
-      logToDebug('Attempting direct API follow for post: ' + postId);
+      // Show visual feedback
+      toast.loading("Processing follow action...");
       
-      const { data: currentUser } = await supabaseSession.auth.getUser();
-      const userId = currentUser?.user?.id;
-      
-      if (!userId) {
-        toast.error('You need to be logged in to follow users');
-        return;
-      }
-      
-      // First, get the post to find the creator's ID
-      const { data: postData, error: postError } = await supabaseSession
+      // First get the post to identify the creator
+      const { data: postData, error: postError } = await supabaseClient
         .from('posts')
-        .select('user_id')
+        .select('creator_id')
         .eq('id', postId)
         .single();
       
       if (postError || !postData) {
-        console.error('Error fetching post data:', postError);
-        toast.error('Error finding post creator');
+        console.error('Error fetching post for follow:', postError);
+        toast.error('Could not find post creator');
         return;
       }
       
-      const creatorId = postData.user_id;
-      
-      if (creatorId === userId) {
-        toast.info('You cannot follow yourself');
-        return;
-      }
+      const creatorId = postData.creator_id;
       
       // Check if already following
-      const { data: existingFollow, error: followError } = await supabaseSession
+      const { data: existingFollow, error: followError } = await supabaseClient
         .from('follows')
-        .select('*')
-        .eq('follower_id', userId)
-        .eq('following_id', creatorId)
-        .maybeSingle();
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', creatorId);
       
       if (followError) {
         console.error('Error checking follow status:', followError);
+        toast.error('Could not check follow status');
+        return;
       }
       
-      if (existingFollow) {
-        // Already following, so unfollow
-        const { error: unfollowError } = await supabaseSession
+      // Already following, unfollow
+      if (existingFollow && existingFollow.length > 0) {
+        const { error: unfollowError } = await supabaseClient
           .from('follows')
           .delete()
-          .eq('follower_id', userId)
+          .eq('follower_id', user.id)
           .eq('following_id', creatorId);
-          
+        
         if (unfollowError) {
-          console.error('Error unfollowing user:', unfollowError);
-          toast.error('Failed to unfollow user');
+          console.error('Error unfollowing:', unfollowError);
+          toast.error('Could not unfollow creator');
           return;
         }
-          
+        
         toast.success('Unfollowed creator');
-        setIsFollowing(false);
       } else {
-        // Follow the creator
-        const { error: followInsertError } = await supabaseSession
+        // Not following, follow
+        const { error: followInsertError } = await supabaseClient
           .from('follows')
-          .insert({
-            follower_id: userId,
+          .insert([{
+            follower_id: user.id,
             following_id: creatorId,
             created_at: new Date().toISOString()
-          });
-          
+          }]);
+        
         if (followInsertError) {
-          console.error('Error following user:', followInsertError);
-          toast.error('Failed to follow user');
+          console.error('Error following:', followInsertError);
+          toast.error('Could not follow creator');
           return;
         }
-          
-        toast.success('Now following this creator');
-        setIsFollowing(true);
+        
+        toast.success('Now following creator!');
       }
       
-      // Trigger a refresh for the post's follow status
-      document.dispatchEvent(new CustomEvent('refresh-follow-status', {
-        detail: { userId: creatorId }
-      }));
+      // Update user data in cache
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.invalidateQueries({ queryKey: ['following'] });
       
-      // Invalidate any React Query caches
-      queryClient.invalidateQueries({ queryKey: ['follows'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', creatorId] });
     } catch (error) {
-      console.error('Error following user:', error);
-      toast.error('Failed to follow user');
+      console.error('Follow operation failed:', error);
+      toast.error('Could not process follow action');
     }
   };
   
@@ -1326,15 +1284,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       // Show immediate feedback
       toast.loading("Processing collection action...");
       
-      // Use the Supabase client from props or hooks
-      if (!supabaseSession) {
-        console.error('No Supabase client available');
-        toast.error('Could not connect to database. Please try again later.');
-        return;
-      }
+      // Use the direct Supabase client instead of the hook
+      // This is more reliable for direct DB operations
       
       // Check if the post is already in the collection
-      const { data: existingCollections, error: checkError } = await supabaseSession
+      const { data: existingCollections, error: checkError } = await supabaseClient
         .from('collections')
         .select('id')
         .eq('user_id', user.id)
@@ -1348,7 +1302,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
       if (existingCollections && existingCollections.length > 0) {
         // Post is in collection, remove it
-        const { error: removeError } = await supabaseSession
+        const { error: removeError } = await supabaseClient
           .from('collections')
           .delete()
           .eq('user_id', user.id)
@@ -1364,7 +1318,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         toast.success('Removed from your collection');
       } else {
         // Post not in collection, add it
-        const { error: addError } = await supabaseSession
+        const { error: addError } = await supabaseClient
           .from('collections')
           .insert([{
             user_id: user.id,
@@ -1401,7 +1355,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     setLikeLoading(true);
     
     try {
-      const response = await supabaseSession
+      const response = await supabaseClient
         .from('likes')
         .select('*')
         .eq('user_id', user.id)
@@ -1410,7 +1364,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       if (response.data) {
         // Unlike
-        await supabaseSession
+        await supabaseClient
           .from('likes')
           .delete()
           .eq('user_id', user.id)
@@ -1420,11 +1374,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         toast.success("Removed like");
       } else {
         // Like
-        await supabaseSession
+        await supabaseClient
           .from('likes')
           .insert({
             user_id: user.id,
             post_id: currentPostId,
+            created_at: new Date().toISOString()
           });
         
         setHasLiked(true);
@@ -1764,7 +1719,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       toast.loading("Giving trophy...");
       
       // Check if we've already given a trophy to this post
-      const { data: existingTrophy, error: checkError } = await supabaseSession
+      const { data: existingTrophy, error: checkError } = await supabaseClient
         .from('trophies')
         .select('id')
         .eq('user_id', user.id)
@@ -1778,7 +1733,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       if (existingTrophy && existingTrophy.length > 0) {
         // Already gave a trophy, remove it
-        const { error: removeError } = await supabaseSession
+        const { error: removeError } = await supabaseClient
           .from('trophies')
           .delete()
           .eq('user_id', user.id)
@@ -1793,7 +1748,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         toast.success('Trophy removed!');
       } else {
         // Give a new trophy
-        const { error: addError } = await supabaseSession
+        const { error: addError } = await supabaseClient
           .from('trophies')
           .insert([{
             user_id: user.id,
@@ -1807,7 +1762,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           return;
         }
         
-        toast.success("Trophy given! 🏆");
+        toast.success("Trophy given! ");
       }
       
       // Refresh queries to update UI
