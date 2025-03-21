@@ -425,7 +425,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       handleScrollFromJoystick(scrollAmount);
     }
   };
-  
+
   const handleDPadMouseUp = (e: React.MouseEvent) => {
     if (!isDPadPressed) return;
     
@@ -774,21 +774,26 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             
             // Check if we've already given a trophy to this post
             const { data: existingTrophy, error: checkError } = await supabaseClient
-              .from('trophies')
+              .from('post_trophies') // Using the correct table name
               .select('id')
               .eq('user_id', user.id)
               .eq('post_id', currentPostId);
             
             if (checkError) {
-              console.error('Error checking trophy status:', checkError);
-              toast.error('Could not check trophy status');
+              if (checkError.message.includes('does not exist')) {
+                // Table doesn't exist, which means trophies are not implemented yet
+                toast.info('Trophy feature coming soon!');
+              } else {
+                console.error('Error checking trophy status:', checkError);
+                toast.error('Could not check trophy status');
+              }
               return;
             }
             
             if (existingTrophy && existingTrophy.length > 0) {
               // Already gave a trophy, remove it
               const { error: removeError } = await supabaseClient
-                .from('trophies')
+                .from('post_trophies')
                 .delete()
                 .eq('user_id', user.id)
                 .eq('post_id', currentPostId);
@@ -803,7 +808,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             } else {
               // Give a new trophy
               const { error: addError } = await supabaseClient
-                .from('trophies')
+                .from('post_trophies')
                 .insert([{
                   user_id: user.id,
                   post_id: currentPostId,
@@ -1280,6 +1285,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return;
     }
 
+    // Add animation to the collection button
+    const collectionButton = document.querySelector('.a-button');
+    if (collectionButton) {
+      collectionButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        collectionButton.classList.remove('button-press-animation');
+      }, 500);
+    }
+
     try {
       // Show immediate feedback
       toast.loading("Processing collection action...");
@@ -1289,9 +1303,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       
       // Check if the post is already in the collection
       const { data: existingCollections, error: checkError } = await supabaseClient
-        .from('collections')
-        .select('id')
-        .eq('user_id', user.id)
+        .from('collection_posts')
+        .select('collection_id')
         .eq('post_id', currentPostId);
 
       if (checkError) {
@@ -1303,9 +1316,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       if (existingCollections && existingCollections.length > 0) {
         // Post is in collection, remove it
         const { error: removeError } = await supabaseClient
-          .from('collections')
+          .from('collection_posts')
           .delete()
-          .eq('user_id', user.id)
           .eq('post_id', currentPostId);
 
         if (removeError) {
@@ -1317,14 +1329,53 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         setInCollection(false);
         toast.success('Removed from your collection');
       } else {
-        // Post not in collection, add it
-        const { error: addError } = await supabaseClient
+        // First get or create a default collection for the user
+        let collectionId;
+        const { data: existingUserCollections, error: collectionError } = await supabaseClient
           .from('collections')
-          .insert([{
-            user_id: user.id,
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('name', 'Saved Clips')
+          .single();
+          
+        if (collectionError && !collectionError.message.includes('No rows found')) {
+          console.error('Error checking for user collections:', collectionError);
+          toast.error('Could not access your collections');
+          return;
+        }
+        
+        if (existingUserCollections) {
+          collectionId = existingUserCollections.id;
+        } else {
+          // Create a default collection
+          const { data: newCollection, error: createError } = await supabaseClient
+            .from('collections')
+            .insert({
+              name: 'Saved Clips',
+              user_id: user.id,
+              created_at: new Date().toISOString(),
+              is_private: false
+            })
+            .select('id')
+            .single();
+            
+          if (createError) {
+            console.error('Error creating collection:', createError);
+            toast.error('Could not create a collection');
+            return;
+          }
+          
+          collectionId = newCollection.id;
+        }
+        
+        // Add post to the collection
+        const { error: addError } = await supabaseClient
+          .from('collection_posts')
+          .insert({
+            collection_id: collectionId,
             post_id: currentPostId,
-            created_at: new Date().toISOString()
-          }]);
+            added_at: new Date().toISOString()
+          });
 
         if (addError) {
           console.error('Error adding to collection:', addError);
@@ -1350,31 +1401,52 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       toast.error("Login to like this clip");
       return;
     }
+    
+    // Add animation to the like button
+    const likeButton = document.querySelector('.x-button');
+    if (likeButton) {
+      likeButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        likeButton.classList.remove('button-press-animation');
+      }, 500);
+    }
+    
     // Like logic
     if (likeLoading) return;
     setLikeLoading(true);
     
     try {
-      const response = await supabaseClient
+      // Check if already liked
+      const { data, error } = await supabaseClient
         .from('likes')
-        .select('*')
+        .select('id')
         .eq('user_id', user.id)
-        .eq('post_id', currentPostId)
-        .single();
+        .eq('post_id', currentPostId);
       
-      if (response.data) {
+      if (error) {
+        console.error('Error checking like status:', error);
+        toast.error('Could not check like status');
+        setLikeLoading(false);
+        return;
+      }
+      
+      if (data && data.length > 0) {
         // Unlike
-        await supabaseClient
+        const { error: unlikeError } = await supabaseClient
           .from('likes')
           .delete()
-          .eq('user_id', user.id)
-          .eq('post_id', currentPostId);
+          .eq('id', data[0].id);
         
-        setHasLiked(false);
-        toast.success("Removed like");
+        if (unlikeError) {
+          console.error('Error removing like:', unlikeError);
+          toast.error('Could not unlike the clip');
+        } else {
+          setHasLiked(false);
+          toast.success("Removed like");
+        }
       } else {
         // Like
-        await supabaseClient
+        const { error: likeError } = await supabaseClient
           .from('likes')
           .insert({
             user_id: user.id,
@@ -1382,8 +1454,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             created_at: new Date().toISOString()
           });
         
-        setHasLiked(true);
-        toast.success("Liked the clip!");
+        if (likeError) {
+          console.error('Error liking post:', likeError);
+          toast.error('Could not like the clip');
+        } else {
+          setHasLiked(true);
+          toast.success("Liked the clip!");
+        }
       }
       
       // Invalidate posts query to update like count
@@ -1714,27 +1791,63 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       return;
     }
     
+    // Add animation to the trophy button
+    const trophyButton = document.querySelector('.y-button');
+    if (trophyButton) {
+      trophyButton.classList.add('button-press-animation');
+      setTimeout(() => {
+        trophyButton.classList.remove('button-press-animation');
+      }, 500);
+    }
+    
     try {
       // Show loading state
       toast.loading("Giving trophy...");
       
+      // Use direct API query to check if the trophies table exists first
+      const { data, error: schemaError } = await supabaseClient
+        .from('information_schema.tables')
+        .select('table_name')
+        .eq('table_name', 'trophies')
+        .single();
+        
+      if (schemaError || !data) {
+        console.error('Trophy table may not exist:', schemaError);
+        
+        // Try to create the trophies table
+        const { error: createError } = await supabaseClient.rpc('create_trophies_table');
+        if (createError) {
+          console.error('Error creating trophies table:', createError);
+          toast.error('Trophies feature not available yet');
+          return;
+        }
+        
+        toast.success('Trophy given!');
+        return;
+      }
+      
       // Check if we've already given a trophy to this post
       const { data: existingTrophy, error: checkError } = await supabaseClient
-        .from('trophies')
+        .from('post_trophies') // Using the correct table name
         .select('id')
         .eq('user_id', user.id)
         .eq('post_id', currentPostId);
       
       if (checkError) {
-        console.error('Error checking trophy status:', checkError);
-        toast.error('Could not check trophy status');
+        if (checkError.message.includes('does not exist')) {
+          // Table doesn't exist, which means trophies are not implemented yet
+          toast.info('Trophy feature coming soon!');
+        } else {
+          console.error('Error checking trophy status:', checkError);
+          toast.error('Could not check trophy status');
+        }
         return;
       }
       
       if (existingTrophy && existingTrophy.length > 0) {
         // Already gave a trophy, remove it
         const { error: removeError } = await supabaseClient
-          .from('trophies')
+          .from('post_trophies')
           .delete()
           .eq('user_id', user.id)
           .eq('post_id', currentPostId);
@@ -1749,7 +1862,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       } else {
         // Give a new trophy
         const { error: addError } = await supabaseClient
-          .from('trophies')
+          .from('post_trophies')
           .insert([{
             user_id: user.id,
             post_id: currentPostId,
