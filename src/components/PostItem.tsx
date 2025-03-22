@@ -875,6 +875,38 @@ const PostItem: React.FC<PostItemProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (!postId) return;
+    
+    // Handle trophy button event from GameBoyControls
+    const handleTrophyButtonEvent = (e: Event) => {
+      const detail = (e as any).detail;
+      if (detail && detail.postId === postId) {
+        console.log('Trophy button event received for post:', postId);
+        handleTrophyVote(new MouseEvent('click') as any);
+      }
+    };
+    
+    // Handle save button event from GameBoyControls
+    const handleSaveButtonEvent = (e: Event) => {
+      const detail = (e as any).detail;
+      if (detail && detail.postId === postId) {
+        console.log('Save button event received for post:', postId);
+        handleSaveVideo(new MouseEvent('click') as any);
+      }
+    };
+    
+    // Add event listeners
+    document.addEventListener('trophy-button-click', handleTrophyButtonEvent);
+    document.addEventListener('save-button-click', handleSaveButtonEvent);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('trophy-button-click', handleTrophyButtonEvent);
+      document.removeEventListener('save-button-click', handleSaveButtonEvent);
+    };
+  }, [postId, handleTrophyVote, handleSaveVideo]);
+
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
   const gameName = post.games?.name;
