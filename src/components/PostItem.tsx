@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -54,6 +54,7 @@ const PostItem: React.FC<PostItemProps> = ({
   const [trophyLoading, setTrophyLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const isMounted = useRef(true);
   const { user } = useAuth();
   const isOwner = user?.id === post.user_id;
   const queryClient = useQueryClient();
@@ -312,79 +313,37 @@ const PostItem: React.FC<PostItemProps> = ({
     }
   };
 
+  // Super simplified trophy handling
   const handleTrophyVote = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     
     if (!user) {
       toast.error("Login to rank this clip");
       return;
     }
     
+    if (!postId) {
+      toast.error("Cannot rank this clip");
+      return;
+    }
+    
     if (trophyLoading) return;
     
-    // Optimistically update UI
-    const newHasTrophy = !hasTrophy;
-    const currentDisplayedRank = post.rank || trophyCount || 0;
-    const newRank = newHasTrophy ? currentDisplayedRank + 1 : Math.max(0, currentDisplayedRank - 1);
-    
-    setHasTrophy(newHasTrophy);
-    setTrophyCount(prev => newHasTrophy ? prev + 1 : Math.max(0, prev - 1));
-    setTrophyLoading(true);
+    // Show immediate feedback
+    if (isMounted.current) {
+      setTrophyLoading(true);
+      // Toggle the trophy state optimistically
+      setHasTrophy(!hasTrophy);
+      setTrophyCount(prev => hasTrophy ? Math.max(0, prev - 1) : prev + 1);
+    }
     
     try {
-      console.log(`Ranking post ${postId}`);
+      console.log(`Trophy vote for post ${postId}:`, !hasTrophy ? "Adding" : "Removing");
       
-      // Check if user already voted
-      const { data: existingVote, error: voteError } = await supabase
-        .from('clip_votes')
-        .select('id')
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-        
-      if (voteError) throw voteError;
-      
-      // Get current rank
-      const { data: postData, error: postError } = await supabase
-        .from('posts')
-        .select('rank')
-        .eq('id', postId)
-        .single();
-        
-      if (postError) {
-        console.error("Error fetching post rank:", postError);
-        toast.error("Could not update post rank");
-        // Revert optimistic updates
-        setHasTrophy(!newHasTrophy);
-        setTrophyCount(prev => !newHasTrophy ? prev + 1 : Math.max(0, prev - 1));
-        setTrophyLoading(false);
-        return;
-      }
-      
-      const currentRank = postData?.rank || 0;
-      
-      if (existingVote) {
-        // User already voted, so removing the vote should decrease rank
-        const { error: removeError } = await supabase
-          .from('clip_votes')
-          .delete()
-          .eq('id', existingVote.id);
-          
-        if (removeError) throw removeError;
-        
-        // Decrease post rank
-        const { error: updateError } = await supabase
-          .from('posts')
-          .update({ rank: Math.max(0, currentRank - 1) })
-          .eq('id', postId);
-          
-        if (updateError) throw updateError;
-        
-        toast.success("Ranking removed");
-        
-      } else {
-        // Add vote and increase rank
-        const { error: addError } = await supabase
+      if (!hasTrophy) {
+        // Add a vote
+        const { error } = await supabase
           .from('clip_votes')
           .insert({
             post_id: postId,
@@ -392,50 +351,106 @@ const PostItem: React.FC<PostItemProps> = ({
             created_at: new Date().toISOString()
           });
           
-        if (addError) throw addError;
-        
-        // Increase post rank
-        const { error: updateError } = await supabase
-          .from('posts')
-          .update({ rank: currentRank + 1 })
-          .eq('id', postId);
-          
-        if (updateError) throw updateError;
+        if (error) {
+          console.error("Error adding trophy vote:", error);
+          // Revert optimistic update on error
+          if (isMounted.current) {
+            setHasTrophy(false);
+            setTrophyCount(prev => Math.max(0, prev - 1));
+          }
+          toast.error("Could not rank clip");
+          return;
+        }
         
         toast.success("Clip ranked up!");
+      } else {
+        // Find and remove the vote
+        const { data: voteData, error: findError } = await supabase
+          .from('clip_votes')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (findError) {
+          console.error("Error finding vote to remove:", findError);
+          // Revert optimistic update on error
+          if (isMounted.current) {
+            setHasTrophy(true);
+            setTrophyCount(prev => prev + 1);
+          }
+          toast.error("Could not remove rank");
+          return;
+        }
         
-        // Optionally follow the post creator (if it's not the user's own post)
-        if (post.user_id !== user.id) {
-          // Don't await this, let it happen in the background
-          handleFollow().catch(err => {
-            console.error("Error following user:", err);
-          });
+        if (voteData?.id) {
+          const { error: removeError } = await supabase
+            .from('clip_votes')
+            .delete()
+            .eq('id', voteData.id);
+            
+          if (removeError) {
+            console.error("Error removing vote:", removeError);
+            // Revert optimistic update on error
+            if (isMounted.current) {
+              setHasTrophy(true);
+              setTrophyCount(prev => prev + 1);
+            }
+            toast.error("Could not remove rank");
+            return;
+          }
+          
+          toast.success("Rank removed");
         }
       }
       
-      // Only invalidate necessary queries
+      // Update the post rank
+      try {
+        // Get current rank
+        const { data: postData } = await supabase
+          .from('posts')
+          .select('rank')
+          .eq('id', postId)
+          .single();
+          
+        if (postData) {
+          // Calculate new rank based on our action
+          const newRank = !hasTrophy 
+            ? (postData.rank || 0) + 1
+            : Math.max(0, (postData.rank || 0) - 1);
+            
+          await supabase
+            .from('posts')
+            .update({ rank: newRank })
+            .eq('id', postId);
+            
+          console.log(`Updated post rank to ${newRank}`);
+          
+          // Update local post object
+          if (post) {
+            post.rank = newRank;
+          }
+        }
+      } catch (error) {
+        console.error("Error updating post rank:", error);
+        // Non-critical error, don't show to user
+      }
+      
+      // Invalidate cache
       queryClient.invalidateQueries({ queryKey: ['post', postId] });
       
-      // Dispatch trophy update event
-      const trophyUpdateEvent = new CustomEvent('trophy-update', {
-        detail: {
-          postId,
-          count: newHasTrophy ? trophyCount + 1 : Math.max(0, trophyCount - 1),
-          active: newHasTrophy,
-          rank: newHasTrophy ? currentRank + 1 : Math.max(0, currentRank - 1)
-        }
-      });
-      window.dispatchEvent(trophyUpdateEvent);
-      
     } catch (error) {
-      console.error("Error ranking clip:", error);
-      toast.error("Failed to update rank");
-      
-      // Revert the optimistic updates on error
-      setHasTrophy(!newHasTrophy);
-      setTrophyCount(prev => !newHasTrophy ? prev + 1 : Math.max(0, prev - 1));
+      console.error("Trophy vote error:", error);
+      // Revert optimistic updates on error
+      if (isMounted.current) {
+        setHasTrophy(!hasTrophy);
+        setTrophyCount(prev => !hasTrophy ? Math.max(0, prev - 1) : prev + 1);
+      }
+      toast.error("Could not process your vote");
     } finally {
-      setTrophyLoading(false);
+      if (isMounted.current) {
+        setTrophyLoading(false);
+      }
     }
   };
 
@@ -527,18 +542,20 @@ const PostItem: React.FC<PostItemProps> = ({
     
     try {
       console.log(`Updating trophy count for post ${postId}`);
-      const { count, error: countError } = await supabase
+      const { count, error } = await supabase
         .from('clip_votes')
         .select('*', { count: 'exact', head: true})
         .eq('post_id', postId);
       
-      if (countError) {
-        console.error('Error updating trophy count:', countError);
+      if (error) {
+        console.error('Error updating trophy count:', error);
         return;
       }
       
       console.log(`Trophy count for post ${postId}: ${count}`);
-      setTrophyCount(count || 0);
+      if (isMounted.current) {
+        setTrophyCount(count || 0);
+      }
       
       // Also update trophy status if user is logged in
       if (user) {
@@ -557,7 +574,9 @@ const PostItem: React.FC<PostItemProps> = ({
         }
         
         console.log(`User has trophy for post ${postId}: ${!!data}`);
-        setHasTrophy(!!data);
+        if (isMounted.current) {
+          setHasTrophy(!!data);
+        }
       }
     } catch (error) {
       console.error('Error in updateTrophyCount:', error);
@@ -573,11 +592,15 @@ const PostItem: React.FC<PostItemProps> = ({
         
         // Use event detail for immediate UI feedback
         if (detail.active !== undefined) {
-          setHasTrophy(detail.active);
+          if (isMounted.current) {
+            setHasTrophy(detail.active);
+          }
         }
         
         if (detail.count !== undefined) {
-          setTrophyCount(detail.count);
+          if (isMounted.current) {
+            setTrophyCount(detail.count);
+          }
         }
         
         if (detail.rank !== undefined && post) {
@@ -617,7 +640,9 @@ const PostItem: React.FC<PostItemProps> = ({
           .eq('user_id', user.id)
           .maybeSingle();
         
-        setLiked(!!data);
+        if (isMounted.current) {
+          setLiked(!!data);
+        }
       } catch (error) {
         console.error("Error fetching like status:", error);
       }
@@ -634,7 +659,9 @@ const PostItem: React.FC<PostItemProps> = ({
           .eq('post_id', postId);
         
         if (error) throw error;
-        setLikesCount(count || 0);
+        if (isMounted.current) {
+          setLikesCount(count || 0);
+        }
       } catch (error) {
         console.error("Error fetching likes count:", error);
       }
@@ -652,12 +679,17 @@ const PostItem: React.FC<PostItemProps> = ({
           .eq('user_id', user.id)
           .maybeSingle();
           
-        if (error && !error.message.includes('does not exist')) {
+        if (error) {
           console.error("Error fetching trophy status:", error);
-          return;
+          if (!error.message.includes('does not exist')) {
+            return;
+          }
         }
         
-        setHasTrophy(!!data);
+        console.log(`User has trophy for post ${postId}: ${!!data}`);
+        if (isMounted.current) {
+          setHasTrophy(!!data);
+        }
       } catch (error) {
         console.error("Error fetching trophy status:", error);
       }
@@ -678,7 +710,9 @@ const PostItem: React.FC<PostItemProps> = ({
           return;
         }
         
-        setTrophyCount(count || 0);
+        if (isMounted.current) {
+          setTrophyCount(count || 0);
+        }
         
         // Also fetch the post's rank to keep it in sync
         if (post) {
@@ -715,8 +749,10 @@ const PostItem: React.FC<PostItemProps> = ({
       const detail = (e as any).detail;
       if (detail?.postId === postId) {
         console.log('Like update event received', detail);
-        setLiked(detail.active);
-        setLikesCount(detail.count);
+        if (isMounted.current) {
+          setLiked(detail.active);
+          setLikesCount(detail.count);
+        }
       }
     }, 500);
     
@@ -724,8 +760,10 @@ const PostItem: React.FC<PostItemProps> = ({
       const detail = (e as any).detail;
       if (detail?.postId === postId) {
         console.log('Trophy update event received', detail);
-        setHasTrophy(detail.active);
-        setTrophyCount(detail.count);
+        if (isMounted.current) {
+          setHasTrophy(detail.active);
+          setTrophyCount(detail.count);
+        }
       }
     }, 500);
     
@@ -770,7 +808,9 @@ const PostItem: React.FC<PostItemProps> = ({
         
         const totalCount = clipCount || 0;
         console.log(`Trophy count for post ${postId}:`, totalCount);
-        setTrophyCount(totalCount);
+        if (isMounted.current) {
+          setTrophyCount(totalCount);
+        }
         
         // Check if the user has voted for this post
         if (user) {
@@ -785,7 +825,9 @@ const PostItem: React.FC<PostItemProps> = ({
             return;
           }
           
-          setHasTrophy(userVote && userVote.length > 0);
+          if (isMounted.current) {
+            setHasTrophy(userVote && userVote.length > 0);
+          }
         }
       } catch (error) {
         console.error('Error in showTrophyCount:', error);
@@ -795,7 +837,7 @@ const PostItem: React.FC<PostItemProps> = ({
     showTrophyCount();
   }, [postId, user]);
 
-  // Check if the current post is saved by the user
+  // Check if post is saved
   useEffect(() => {
     const checkSaveStatus = async () => {
       if (!user || !postId) return;
@@ -809,23 +851,27 @@ const PostItem: React.FC<PostItemProps> = ({
           .eq('user_id', user.id)
           .maybeSingle();
         
-        if (error && !error.message.includes('does not exist')) {
+        if (error) {
           console.error("Error checking save status:", error);
           return;
         }
         
-        setIsSaved(!!data);
+        console.log(`Post ${postId} saved status:`, !!data);
+        if (isMounted.current) {
+          setIsSaved(!!data);
+        }
       } catch (error) {
-        console.error("Error checking if video is saved:", error);
+        console.error("Error checking save status:", error);
       }
     };
     
     checkSaveStatus();
   }, [postId, user, supabase]);
 
-  // Handle saving and unsaving videos
+  // Super simplified save video function
   const handleSaveVideo = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     
     if (!user) {
       toast.error("Please log in to save videos");
@@ -839,51 +885,18 @@ const PostItem: React.FC<PostItemProps> = ({
     
     if (saveLoading) return;
     
-    console.log(`Attempting to ${isSaved ? 'unsave' : 'save'} video with postId ${postId}`);
-    
-    // Optimistically update UI
-    const newSaveState = !isSaved;
-    setIsSaved(newSaveState);
-    setSaveLoading(true);
+    // Show immediate feedback
+    if (isMounted.current) {
+      setSaveLoading(true);
+      // Toggle saved state optimistically
+      setIsSaved(!isSaved);
+    }
     
     try {
-      // Check if video is already saved
-      const { data: existingSave, error: checkError } = await supabase
-        .from('saved_videos')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('post_id', postId)
-        .maybeSingle();
-        
-      if (checkError) {
-        console.error("Error checking save status:", checkError);
-        if (!checkError.message.includes('does not exist')) {
-          throw checkError;
-        }
-      }
+      console.log(`Save action for post ${postId}:`, !isSaved ? "Saving" : "Unsaving");
       
-      console.log("Existing save check:", existingSave);
-      
-      if (existingSave) {
-        // Unsave the video
-        const { error: removeError } = await supabase
-          .from('saved_videos')
-          .delete()
-          .eq('id', existingSave.id);
-          
-        if (removeError) {
-          console.error("Error removing save:", removeError);
-          throw removeError;
-        }
-        
-        console.log("Video successfully unsaved");
-        toast.success("Video removed from saved clips");
-      } else {
-        // Save the video - ensure we have all required fields
-        if (!post) {
-          throw new Error("Post data is missing");
-        }
-        
+      if (!isSaved) {
+        // Save the video
         const saveData = {
           user_id: user.id,
           post_id: postId,
@@ -892,34 +905,83 @@ const PostItem: React.FC<PostItemProps> = ({
           saved_at: new Date().toISOString()
         };
         
-        console.log("Saving video with data:", saveData);
-        
-        const { error: saveError } = await supabase
+        const { error } = await supabase
           .from('saved_videos')
           .insert(saveData);
           
-        if (saveError) {
-          console.error("Error saving video:", saveError);
-          throw saveError;
+        if (error) {
+          console.error("Error saving video:", error);
+          // Revert optimistic update
+          if (isMounted.current) {
+            setIsSaved(false);
+          }
+          toast.error("Could not save video");
+          return;
         }
         
-        console.log("Video successfully saved");
         toast.success("Video saved to your profile");
+      } else {
+        // Find and remove the save
+        const { data, error: findError } = await supabase
+          .from('saved_videos')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+          
+        if (findError) {
+          console.error("Error finding save to remove:", findError);
+          // Revert optimistic update
+          if (isMounted.current) {
+            setIsSaved(true);
+          }
+          toast.error("Could not unsave video");
+          return;
+        }
+        
+        if (data?.id) {
+          const { error: removeError } = await supabase
+            .from('saved_videos')
+            .delete()
+            .eq('id', data.id);
+            
+          if (removeError) {
+            console.error("Error removing save:", removeError);
+            // Revert optimistic update
+            if (isMounted.current) {
+              setIsSaved(true);
+            }
+            toast.error("Could not unsave video");
+            return;
+          }
+          
+          toast.success("Video removed from saved clips");
+        }
       }
       
-      // Only invalidate necessary queries
+      // Update the cache
       queryClient.invalidateQueries({ queryKey: ['saved_videos', user.id] });
       
     } catch (error) {
-      console.error('Error saving/unsaving video:', error);
-      toast.error("Failed to save video");
-      
-      // Revert optimistic update on error
-      setIsSaved(!newSaveState);
+      console.error("Save video error:", error);
+      // Revert optimistic update
+      if (isMounted.current) {
+        setIsSaved(!isSaved);
+      }
+      toast.error("Could not process your request");
     } finally {
-      setSaveLoading(false);
+      if (isMounted.current) {
+        setSaveLoading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
