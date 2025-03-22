@@ -4,7 +4,7 @@ import { Search, MessageSquare, Plus, Users, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, createMessagesTable, checkTableExists } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ const Messages = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { userId } = useParams();
+  const location = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [groupName, setGroupName] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -25,6 +26,7 @@ const Messages = () => {
   const [message, setMessage] = useState("");
   const [showNewChatDialog, setShowNewChatDialog] = useState(false);
   const [showCreateGroupChat, setShowCreateGroupChat] = useState(false);
+  const [sharedPostId, setSharedPostId] = useState<string | null>(null);
 
   useEffect(() => {
     const setupMessagingTables = async () => {
@@ -49,6 +51,27 @@ const Messages = () => {
       startOrContinueChat(userId);
     }
   }, [user, userId]);
+
+  // Check for shared post in URL parameters
+  useEffect(() => {
+    // Extract query parameters
+    const queryParams = new URLSearchParams(location.search);
+    const shareParam = queryParams.get('share');
+    
+    if (shareParam) {
+      console.log("Found shared post ID:", shareParam);
+      setSharedPostId(shareParam);
+      
+      // Auto open the new chat dialog if we have a post to share
+      if (!userId) {
+        setShowNewChatDialog(true);
+      } else if (selectedChat) {
+        // If we already have a chat selected, prepare message with shared post
+        const shareUrl = `${window.location.origin}/post/${shareParam}`;
+        setMessage(`Check out this Clipt: ${shareUrl}`);
+      }
+    }
+  }, [location.search, userId, selectedChat]);
 
   // Fetch active chats when component mounts
   useEffect(() => {
@@ -338,7 +361,7 @@ const Messages = () => {
       await ensureMessagesTableExists();
       
       // Generate chat ID
-      const chatId = `chat_${user.id}_${targetUserId}`;
+      const chatId = `chat_${Math.min(user.id, targetUserId)}_${Math.max(user.id, targetUserId)}`;
       
       // Initialize chat with empty messages array for now
       setSelectedChat({
@@ -351,20 +374,26 @@ const Messages = () => {
       });
       
       // Fetch any existing messages
-      fetchMessages(chatId, targetUserId);
+      await fetchMessages(chatId, targetUserId);
+      
+      // If there's a shared post, prepare the message
+      if (sharedPostId) {
+        const shareUrl = `${window.location.origin}/post/${sharedPostId}`;
+        setMessage(`Check out this Clipt: ${shareUrl}`);
+        
+        // Auto-focus the input field
+        setTimeout(() => {
+          const messageInput = document.querySelector('input[placeholder="Type your message..."]') as HTMLInputElement;
+          if (messageInput) {
+            messageInput.focus();
+          }
+        }, 300);
+      }
       
       // Clear search results and dialog
       setSearchResults([]);
       setSearchTerm("");
       setShowNewChatDialog(false);
-      
-      // Focus on the message input field
-      setTimeout(() => {
-        const messageInput = document.querySelector('input[placeholder="Type your message..."]') as HTMLInputElement;
-        if (messageInput) {
-          messageInput.focus();
-        }
-      }, 300);
     } catch (error) {
       console.error("Error starting chat:", error);
       toast.error("Error starting conversation");
