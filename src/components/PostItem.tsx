@@ -313,144 +313,78 @@ const PostItem: React.FC<PostItemProps> = ({
     }
   };
 
-  // Super simplified trophy handling
+  // Trophy handler - emergency fix with explicit checks
   const handleTrophyVote = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     
+    // Make sure user is logged in
     if (!user) {
       toast.error("Login to rank this clip");
       return;
     }
     
+    // Verify post ID is available
     if (!postId) {
-      toast.error("Cannot rank this clip");
+      toast.error("Post data unavailable");
       return;
     }
     
+    // Prevent multiple clicks
     if (trophyLoading) return;
     
-    // Show immediate feedback
-    if (isMounted.current) {
-      setTrophyLoading(true);
-      // Toggle the trophy state optimistically
-      setHasTrophy(!hasTrophy);
-      setTrophyCount(prev => hasTrophy ? Math.max(0, prev - 1) : prev + 1);
-    }
+    // Immediate UI feedback
+    setTrophyLoading(true);
     
     try {
-      console.log(`Trophy vote for post ${postId}:`, !hasTrophy ? "Adding" : "Removing");
-      
-      if (!hasTrophy) {
-        // Add a vote
-        const { error } = await supabase
-          .from('clip_votes')
-          .insert({
-            post_id: postId,
-            user_id: user.id,
-            created_at: new Date().toISOString()
-          });
-          
-        if (error) {
-          console.error("Error adding trophy vote:", error);
-          // Revert optimistic update on error
-          if (isMounted.current) {
-            setHasTrophy(false);
-            setTrophyCount(prev => Math.max(0, prev - 1));
-          }
-          toast.error("Could not rank clip");
-          return;
-        }
+      // Verify post exists first with a direct query
+      const { data: postCheck } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('id', postId)
+        .single();
         
+      if (!postCheck) {
+        toast.error("Couldn't find post data");
+        setTrophyLoading(false);
+        return;
+      }
+      
+      // Continue with trophy action
+      if (!hasTrophy) {
+        // Add trophy
+        await supabase.from('clip_votes').insert({
+          post_id: postId,
+          user_id: user.id,
+          created_at: new Date().toISOString()
+        });
+        setHasTrophy(true);
+        setTrophyCount(prev => prev + 1);
         toast.success("Clip ranked up!");
       } else {
-        // Find and remove the vote
-        const { data: voteData, error: findError } = await supabase
+        // Remove trophy
+        const { data } = await supabase
           .from('clip_votes')
           .select('id')
           .eq('post_id', postId)
           .eq('user_id', user.id)
           .maybeSingle();
           
-        if (findError) {
-          console.error("Error finding vote to remove:", findError);
-          // Revert optimistic update on error
-          if (isMounted.current) {
-            setHasTrophy(true);
-            setTrophyCount(prev => prev + 1);
-          }
-          toast.error("Could not remove rank");
-          return;
-        }
-        
-        if (voteData?.id) {
-          const { error: removeError } = await supabase
+        if (data?.id) {
+          await supabase
             .from('clip_votes')
             .delete()
-            .eq('id', voteData.id);
-            
-          if (removeError) {
-            console.error("Error removing vote:", removeError);
-            // Revert optimistic update on error
-            if (isMounted.current) {
-              setHasTrophy(true);
-              setTrophyCount(prev => prev + 1);
-            }
-            toast.error("Could not remove rank");
-            return;
-          }
-          
-          toast.success("Rank removed");
+            .eq('id', data.id);
         }
+        setHasTrophy(false);
+        setTrophyCount(prev => Math.max(0, prev - 1));
+        toast.success("Rank removed");
       }
-      
-      // Update the post rank
-      try {
-        // Get current rank
-        const { data: postData } = await supabase
-          .from('posts')
-          .select('rank')
-          .eq('id', postId)
-          .single();
-          
-        if (postData) {
-          // Calculate new rank based on our action
-          const newRank = !hasTrophy 
-            ? (postData.rank || 0) + 1
-            : Math.max(0, (postData.rank || 0) - 1);
-            
-          await supabase
-            .from('posts')
-            .update({ rank: newRank })
-            .eq('id', postId);
-            
-          console.log(`Updated post rank to ${newRank}`);
-          
-          // Update local post object
-          if (post) {
-            post.rank = newRank;
-          }
-        }
-      } catch (error) {
-        console.error("Error updating post rank:", error);
-        // Non-critical error, don't show to user
-      }
-      
-      // Invalidate cache
-      queryClient.invalidateQueries({ queryKey: ['post', postId] });
-      
     } catch (error) {
-      console.error("Trophy vote error:", error);
-      // Revert optimistic updates on error
-      if (isMounted.current) {
-        setHasTrophy(!hasTrophy);
-        setTrophyCount(prev => !hasTrophy ? Math.max(0, prev - 1) : prev + 1);
-      }
-      toast.error("Could not process your vote");
+      console.error("Trophy operation failed:", error);
+      toast.error("Could not update rank");
     } finally {
-      if (isMounted.current) {
-        setTrophyLoading(false);
-      }
+      setTrophyLoading(false);
     }
   };
 
@@ -837,142 +771,100 @@ const PostItem: React.FC<PostItemProps> = ({
     showTrophyCount();
   }, [postId, user]);
 
-  // Check if post is saved
+  // Check if post is saved by current user
   useEffect(() => {
+    if (!user || !postId) return;
+    
     const checkSaveStatus = async () => {
-      if (!user || !postId) return;
-      
       try {
-        console.log(`Checking save status for post ${postId}`);
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('saved_videos')
           .select('id')
           .eq('post_id', postId)
           .eq('user_id', user.id)
           .maybeSingle();
         
-        if (error) {
-          console.error("Error checking save status:", error);
-          return;
-        }
-        
-        console.log(`Post ${postId} saved status:`, !!data);
-        if (isMounted.current) {
-          setIsSaved(!!data);
-        }
+        setIsSaved(!!data);
       } catch (error) {
         console.error("Error checking save status:", error);
       }
     };
     
     checkSaveStatus();
-  }, [postId, user, supabase]);
+  }, [postId, user]);
 
-  // Super simplified save video function
+  // Save handler - emergency fix with explicit checks
   const handleSaveVideo = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     
+    // Make sure user is logged in
     if (!user) {
       toast.error("Please log in to save videos");
       return;
     }
     
+    // Verify post ID is available
     if (!postId) {
-      toast.error("Cannot save this video");
+      toast.error("Post data unavailable");
       return;
     }
     
+    // Prevent multiple clicks
     if (saveLoading) return;
     
-    // Show immediate feedback
-    if (isMounted.current) {
-      setSaveLoading(true);
-      // Toggle saved state optimistically
-      setIsSaved(!isSaved);
-    }
+    // Immediate UI feedback
+    setSaveLoading(true);
     
     try {
-      console.log(`Save action for post ${postId}:`, !isSaved ? "Saving" : "Unsaving");
+      // Verify post exists first with a direct query
+      const { data: postCheck } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('id', postId)
+        .single();
+        
+      if (!postCheck) {
+        toast.error("Couldn't find post data");
+        setSaveLoading(false);
+        return;
+      }
       
+      // Continue with save action
       if (!isSaved) {
-        // Save the video
-        const saveData = {
+        // Save video
+        await supabase.from('saved_videos').insert({
           user_id: user.id,
           post_id: postId,
           video_url: post.video_url || '',
           title: post.title || 'Saved Video',
           saved_at: new Date().toISOString()
-        };
-        
-        const { error } = await supabase
-          .from('saved_videos')
-          .insert(saveData);
-          
-        if (error) {
-          console.error("Error saving video:", error);
-          // Revert optimistic update
-          if (isMounted.current) {
-            setIsSaved(false);
-          }
-          toast.error("Could not save video");
-          return;
-        }
-        
+        });
+        setIsSaved(true);
         toast.success("Video saved to your profile");
       } else {
-        // Find and remove the save
-        const { data, error: findError } = await supabase
+        // Unsave video
+        const { data } = await supabase
           .from('saved_videos')
           .select('id')
           .eq('post_id', postId)
           .eq('user_id', user.id)
           .maybeSingle();
           
-        if (findError) {
-          console.error("Error finding save to remove:", findError);
-          // Revert optimistic update
-          if (isMounted.current) {
-            setIsSaved(true);
-          }
-          toast.error("Could not unsave video");
-          return;
-        }
-        
         if (data?.id) {
-          const { error: removeError } = await supabase
+          await supabase
             .from('saved_videos')
             .delete()
             .eq('id', data.id);
-            
-          if (removeError) {
-            console.error("Error removing save:", removeError);
-            // Revert optimistic update
-            if (isMounted.current) {
-              setIsSaved(true);
-            }
-            toast.error("Could not unsave video");
-            return;
-          }
-          
-          toast.success("Video removed from saved clips");
         }
+        setIsSaved(false);
+        toast.success("Video removed from saved clips");
       }
-      
-      // Update the cache
-      queryClient.invalidateQueries({ queryKey: ['saved_videos', user.id] });
-      
     } catch (error) {
-      console.error("Save video error:", error);
-      // Revert optimistic update
-      if (isMounted.current) {
-        setIsSaved(!isSaved);
-      }
-      toast.error("Could not process your request");
+      console.error("Save operation failed:", error);
+      toast.error("Could not update saved status");
     } finally {
-      if (isMounted.current) {
-        setSaveLoading(false);
-      }
+      setSaveLoading(false);
     }
   };
 
