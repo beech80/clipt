@@ -644,24 +644,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Optimized universal action handler for faster response
-  const handlePostAction = async (actionType: 'like' | 'comment' | 'follow' | 'trophy') => {
-    if (!user) {
-      toast.error(`Login to ${actionType} this post`);
-      return;
-    }
-
-    // Get the current post ID for this action
-    if (!currentPostId) {
-      toast.error(`No post selected. Please scroll to a post first.`);
-      return;
-    }
-
-    console.log(`Handling ${actionType} action for post: ${currentPostId}`);
-
+  const handlePostAction = async (action: string) => {
     try {
-      switch (actionType) {
+      console.log(`Handling post action: ${action} for post: ${currentPostId}`);
+      
+      switch(action) {
         case 'like':
-          // Like logic
+          // Like logic (keep existing implementation)
           const { data: existingLike, error: likeError } = await supabaseClient
             .from('likes')
             .select('*')
@@ -693,7 +682,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           }
           break;
         case 'comment':
-          // Comment logic
+          // Comment logic (keep existing implementation)
           // First check if we have a current post ID
           if (!currentPostId) {
             // Try to detect post if we don't have one
@@ -741,7 +730,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           }
           break;
         case 'follow':
-          // Follow logic
+          // Follow logic (keep existing implementation)
           // Try the universal approach first
           // Get the current post ID with improved reliability
           const detectedPostId = detectMostVisiblePost();
@@ -760,164 +749,25 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           }
           break;
         case 'trophy':
-          // Trophy logic
-          if (!user || !currentPostId) {
+          // Instead of direct implementation, dispatch a custom event
+          if (!currentPostId) {
+            toast.error("No post selected. Try scrolling to a post first.");
+            return;
+          }
+          
+          if (!user) {
             toast.error("Login to rank this clip");
             return;
           }
           
-          try {
-            // Show loading state
-            toast.loading("Ranking clip...");
-            
-            // First, get the post owner's ID to handle follow functionality
-            const { data: postData, error: postError } = await supabaseClient
-              .from('posts')
-              .select('profile_id, rank')
-              .eq('id', currentPostId)
-              .single();
-            
-            if (postError) {
-              console.error('Error fetching post details:', postError);
-              toast.error('Could not fetch post details');
-              return;
-            }
-            
-            const postOwnerId = postData.profile_id;
-            const currentRank = postData.rank || 0;
-            
-            // Don't allow self-ranking
-            if (postOwnerId === user.id) {
-              toast.error("You can't rank your own post");
-              return;
-            }
-            
-            // Check if we've already ranked this post
-            const { data: existingTrophy, error: checkError } = await supabaseClient
-              .from('post_trophies')
-              .select('id')
-              .eq('user_id', user.id)
-              .eq('post_id', currentPostId);
-            
-            if (checkError) {
-              console.error('Error checking trophy status:', checkError);
-              
-              // If the table doesn't exist, create it
-              if (checkError.message.includes('does not exist')) {
-                const { error: createTableError } = await supabaseClient.rpc('create_post_trophies_table');
-                if (createTableError) {
-                  console.error('Error creating post_trophies table:', createTableError);
-                  toast.error('Ranking feature not available yet');
-                  return;
-                }
-                
-                // After creating the table, insert the new trophy and update post rank
-                const { error: addError } = await supabaseClient
-                  .from('post_trophies')
-                  .insert([{
-                    user_id: user.id,
-                    post_id: currentPostId,
-                    created_at: new Date().toISOString()
-                  }]);
-                
-                if (addError) {
-                  console.error('Error ranking post:', addError);
-                  toast.error('Could not rank clip');
-                  return;
-                }
-                
-                // Update the post's rank
-                const { error: updateError } = await supabaseClient
-                  .from('posts')
-                  .update({ rank: currentRank + 1 })
-                  .eq('id', currentPostId);
-                  
-                if (updateError) {
-                  console.error('Error updating post rank:', updateError);
-                  toast.error('Could not update rank');
-                  return;
-                }
-                
-                // Also automatically follow the post creator
-                await handleAutoFollowCreator(postOwnerId);
-                
-                toast.success("Clip ranked! You're now following this creator.");
-                return;
-              } else {
-                toast.error('Could not check ranking status');
-                return;
-              }
-            }
-            
-            if (existingTrophy && existingTrophy.length > 0) {
-              // Already gave a trophy, remove it and decrease rank
-              const { error: removeError } = await supabaseClient
-                .from('post_trophies')
-                .delete()
-                .eq('user_id', user.id)
-                .eq('post_id', currentPostId);
-              
-              if (removeError) {
-                console.error('Error removing rank:', removeError);
-                toast.error('Could not remove ranking');
-                return;
-              }
-              
-              // Update the post's rank (decrease)
-              const { error: updateError } = await supabaseClient
-                .from('posts')
-                .update({ rank: Math.max(0, currentRank - 1) }) // Ensure rank doesn't go below 0
-                .eq('id', currentPostId);
-                
-              if (updateError) {
-                console.error('Error updating post rank:', updateError);
-                toast.error('Could not update rank');
-                return;
-              }
-              
-              toast.success('Ranking removed!');
-            } else {
-              // Give a new trophy and increase rank
-              const { error: addError } = await supabaseClient
-                .from('post_trophies')
-                .insert([{
-                  user_id: user.id,
-                  post_id: currentPostId,
-                  created_at: new Date().toISOString()
-                }]);
-              
-              if (addError) {
-                console.error('Error ranking post:', addError);
-                toast.error('Could not rank clip');
-                return;
-              }
-              
-              // Update the post's rank (increase)
-              const { error: updateError } = await supabaseClient
-                .from('posts')
-                .update({ rank: currentRank + 1 })
-                .eq('id', currentPostId);
-                
-              if (updateError) {
-                console.error('Error updating post rank:', updateError);
-                toast.error('Could not update rank');
-                return;
-              }
-              
-              // Also automatically follow the post creator
-              await handleAutoFollowCreator(postOwnerId);
-              
-              toast.success('Clip ranked up! Now following creator');
-            }
-            
-            // Invalidate queries to update UI
-            queryClient.invalidateQueries({ queryKey: ['posts'] });
-            
-          } catch (error) {
-            console.error('Error in trophy action:', error);
-            toast.error('Failed to rank clip');
-          }
+          // Dispatch a trophy button event for the PostItem component to detect
+          console.log(`Dispatching trophy event for post: ${currentPostId}`);
+          document.dispatchEvent(new CustomEvent('trophy-button-click', {
+            detail: { postId: currentPostId }
+          }));
           break;
+        default:
+          console.error(`Unknown post action: ${action}`);
       }
     } catch (error) {
       console.error('Error handling post action:', error);
@@ -1365,111 +1215,25 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   };
 
   // Function to handle Collection action (B button)
-  const handleCollection = async () => {
+  const handleSaveVideo = async () => {
     if (!user || !currentPostId) {
-      toast.error("Login to add this clip to your collection");
+      toast.error("Login to save this video");
       return;
     }
-
+    
     try {
+      // Dispatch a save button event for the PostItem component to detect
+      console.log(`Dispatching save video event for post: ${currentPostId}`);
+      document.dispatchEvent(new CustomEvent('save-button-click', {
+        detail: { postId: currentPostId }
+      }));
+      
       // Show immediate feedback
-      toast.loading("Processing collection action...");
+      toast.success('Processing save request...');
       
-      // Use the direct Supabase client instead of the hook
-      // This is more reliable for direct DB operations
-      
-      // Check if the post is already in the collection
-      const { data: existingCollections, error: checkError } = await supabaseClient
-        .from('collection_posts')
-        .select('collection_id')
-        .eq('post_id', currentPostId);
-
-      if (checkError) {
-        console.error('Error checking collection status:', checkError);
-        toast.error('Could not check collection status: ' + checkError.message);
-        return;
-      }
-
-      if (existingCollections && existingCollections.length > 0) {
-        // Post is in collection, remove it
-        const { error: removeError } = await supabaseClient
-          .from('collection_posts')
-          .delete()
-          .eq('post_id', currentPostId);
-
-        if (removeError) {
-          console.error('Error removing from collection:', removeError);
-          toast.error('Could not remove from collection: ' + removeError.message);
-          return;
-        }
-
-        setInCollection(false);
-        toast.success('Removed from your collection');
-      } else {
-        // First get or create a default collection for the user
-        let collectionId;
-        const { data: existingUserCollections, error: collectionError } = await supabaseClient
-          .from('collections')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('name', 'Saved Clips')
-          .single();
-          
-        if (collectionError && !collectionError.message.includes('No rows found')) {
-          console.error('Error checking for user collections:', collectionError);
-          toast.error('Could not access your collections');
-          return;
-        }
-        
-        if (existingUserCollections) {
-          collectionId = existingUserCollections.id;
-        } else {
-          // Create a default collection
-          const { data: newCollection, error: createError } = await supabaseClient
-            .from('collections')
-            .insert({
-              name: 'Saved Clips',
-              user_id: user.id,
-              created_at: new Date().toISOString(),
-              is_private: false
-            })
-            .select('id')
-            .single();
-            
-          if (createError) {
-            console.error('Error creating collection:', createError);
-            toast.error('Could not create a collection');
-            return;
-          }
-          
-          collectionId = newCollection.id;
-        }
-        
-        // Add post to the collection
-        const { error: addError } = await supabaseClient
-          .from('collection_posts')
-          .insert({
-            collection_id: collectionId,
-            post_id: currentPostId,
-            added_at: new Date().toISOString()
-          });
-
-        if (addError) {
-          console.error('Error adding to collection:', addError);
-          toast.error('Could not add to collection: ' + addError.message);
-          return;
-        }
-
-        setInCollection(true);
-        toast.success('Added to your collection!');
-        
-        // Refresh collections data
-        queryClient.invalidateQueries(['collections']);
-      }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Collection operation failed:', error);
-      toast.error(`Collection operation failed: ${errorMessage}`);
+      console.error('Error dispatching save event:', error);
+      toast.error('Could not save video');
     }
   };
 
@@ -1876,297 +1640,18 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
     
     try {
-      // Show loading state
-      toast.loading("Ranking clip...");
+      // Dispatch a trophy button event for the PostItem component to detect
+      console.log(`Dispatching trophy event for post: ${currentPostId}`);
+      document.dispatchEvent(new CustomEvent('trophy-button-click', {
+        detail: { postId: currentPostId }
+      }));
       
-      // First, get the post owner's ID to handle follow functionality
-      const { data: postData, error: postError } = await supabaseClient
-        .from('posts')
-        .select('profile_id, rank')
-        .eq('id', currentPostId)
-        .single();
-      
-      if (postError) {
-        console.error('Error fetching post details:', postError);
-        toast.error('Could not fetch post details');
-        return;
-      }
-      
-      const postOwnerId = postData.profile_id;
-      const currentRank = postData.rank || 0;
-      
-      // Don't allow self-ranking
-      if (postOwnerId === user.id) {
-        toast.error("You can't rank your own post");
-        return;
-      }
-      
-      // Check if we've already ranked this post
-      const { data: existingTrophy, error: checkError } = await supabaseClient
-        .from('post_trophies')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('post_id', currentPostId);
-      
-      if (checkError) {
-        console.error('Error checking trophy status:', checkError);
-        
-        // If the table doesn't exist, create it
-        if (checkError.message.includes('does not exist')) {
-          const { error: createTableError } = await supabaseClient.rpc('create_post_trophies_table');
-          if (createTableError) {
-            console.error('Error creating post_trophies table:', createTableError);
-            toast.error('Ranking feature not available yet');
-            return;
-          }
-          
-          // After creating the table, insert the new trophy and update post rank
-          const { error: addError } = await supabaseClient
-            .from('post_trophies')
-            .insert([{
-              user_id: user.id,
-              post_id: currentPostId,
-              created_at: new Date().toISOString()
-            }]);
-          
-          if (addError) {
-            console.error('Error ranking post:', addError);
-            toast.error('Could not rank clip');
-            return;
-          }
-          
-          // Update the post's rank
-          const { error: updateError } = await supabaseClient
-            .from('posts')
-            .update({ rank: currentRank + 1 })
-            .eq('id', currentPostId);
-            
-          if (updateError) {
-            console.error('Error updating post rank:', updateError);
-            toast.error('Could not update rank');
-            return;
-          }
-          
-          // Also automatically follow the post creator
-          await handleAutoFollowCreator(postOwnerId);
-          
-          toast.success("Clip ranked! You're now following this creator.");
-          return;
-        } else {
-          toast.error('Could not check ranking status');
-          return;
-        }
-      }
-      
-      if (existingTrophy && existingTrophy.length > 0) {
-        // Already gave a trophy, remove it and decrease rank
-        const { error: removeError } = await supabaseClient
-          .from('post_trophies')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('post_id', currentPostId);
-        
-        if (removeError) {
-          console.error('Error removing rank:', removeError);
-          toast.error('Could not remove ranking');
-          return;
-        }
-        
-        // Update the post's rank (decrease)
-        const { error: updateError } = await supabaseClient
-          .from('posts')
-          .update({ rank: Math.max(0, currentRank - 1) }) // Ensure rank doesn't go below 0
-          .eq('id', currentPostId);
-          
-        if (updateError) {
-          console.error('Error updating post rank:', updateError);
-          toast.error('Could not update rank');
-          return;
-        }
-        
-        toast.success('Ranking removed!');
-      } else {
-        // Give a new trophy and increase rank
-        const { error: addError } = await supabaseClient
-          .from('post_trophies')
-          .insert([{
-            user_id: user.id,
-            post_id: currentPostId,
-            created_at: new Date().toISOString()
-          }]);
-        
-        if (addError) {
-          console.error('Error ranking post:', addError);
-          toast.error('Could not rank clip');
-          return;
-        }
-        
-        // Update the post's rank (increase)
-        const { error: updateError } = await supabaseClient
-          .from('posts')
-          .update({ rank: currentRank + 1 })
-          .eq('id', currentPostId);
-          
-        if (updateError) {
-          console.error('Error updating post rank:', updateError);
-          toast.error('Could not update rank');
-          return;
-        }
-        
-        // Also automatically follow the post creator
-        await handleAutoFollowCreator(postOwnerId);
-        
-        toast.success('Clip ranked up! Now following creator');
-      }
-      
-      // Invalidate queries to update UI
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      // Show immediate feedback
+      toast.success('Processing rank request...');
       
     } catch (error) {
-      console.error('Error in trophy action:', error);
+      console.error('Error dispatching trophy event:', error);
       toast.error('Failed to rank clip');
-    }
-  };
-
-  // Helper function to auto-follow creator when giving a trophy
-  const handleAutoFollowCreator = async (creatorId: string) => {
-    if (!user || creatorId === user.id) return; // Don't follow yourself
-    
-    try {
-      // Check if already following
-      const { data: existingFollow, error: followCheckError } = await supabaseClient
-        .from('follows')
-        .select('id')
-        .eq('follower_id', user.id)
-        .eq('following_id', creatorId);
-      
-      if (followCheckError) {
-        console.error('Error checking follow status:', followCheckError);
-        return;
-      }
-      
-      // If not already following, create follow relationship
-      if (!existingFollow || existingFollow.length === 0) {
-        await supabaseClient
-          .from('follows')
-          .insert({
-            follower_id: user.id,
-            following_id: creatorId,
-            created_at: new Date().toISOString()
-          });
-          
-        // Update creator's follower count
-        await supabaseClient.rpc('increment_followers_count', {
-          profile_id: creatorId
-        });
-        
-        // Update current user's following count
-        await supabaseClient.rpc('increment_following_count', {
-          profile_id: user.id
-        });
-      }
-    } catch (error) {
-      console.error('Error in auto-follow:', error);
-    }
-  };
-
-  // Function to handle saving videos
-  const handleSaveVideo = async () => {
-    if (!user || !currentPostId) {
-      toast.error("Login to save this video");
-      return;
-    }
-    
-    try {
-      // First, get the video URL from the post
-      const { data: postData, error: postError } = await supabaseClient
-        .from('posts')
-        .select('video_url, title')
-        .eq('id', currentPostId)
-        .single();
-      
-      if (postError) {
-        console.error('Error fetching post data:', postError);
-        toast.error('Could not fetch post data');
-        return;
-      }
-      
-      if (!postData.video_url) {
-        toast.error('This post does not have a video to save');
-        return;
-      }
-      
-      // Check if the saved_videos table exists
-      const { error: tableCheckError } = await supabaseClient
-        .from('saved_videos')
-        .select('id')
-        .limit(1);
-      
-      // Create the table if it doesn't exist
-      if (tableCheckError && tableCheckError.message.includes('does not exist')) {
-        await supabaseClient.rpc('create_saved_videos_table').catch(error => {
-          console.error('Error creating saved_videos table:', error);
-          toast.error('Could not initialize video saving feature');
-          return;
-        });
-      }
-      
-      // Check if the video is already saved
-      const { data: savedVideo, error: checkError } = await supabaseClient
-        .from('saved_videos')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('post_id', currentPostId);
-      
-      if (checkError && !checkError.message.includes('does not exist')) {
-        console.error('Error checking saved video status:', checkError);
-        toast.error('Could not check if video is already saved');
-        return;
-      }
-      
-      if (savedVideo && savedVideo.length > 0) {
-        // Remove from saved videos
-        const { error: removeError } = await supabaseClient
-          .from('saved_videos')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('post_id', currentPostId);
-        
-        if (removeError) {
-          console.error('Error removing saved video:', removeError);
-          toast.error('Could not remove video from saved videos');
-          return;
-        }
-        
-        toast.success('Video removed from saved videos');
-      } else {
-        // Save the video
-        const { error: saveError } = await supabaseClient
-          .from('saved_videos')
-          .insert({
-            user_id: user.id,
-            post_id: currentPostId,
-            video_url: postData.video_url,
-            title: postData.title || 'Saved Video',
-            saved_at: new Date().toISOString()
-          });
-
-        if (saveError) {
-          console.error('Error saving video:', saveError);
-          toast.error('Could not save video');
-          return;
-        }
-        
-        toast.success('Video saved to your profile');
-      }
-      
-      // Refresh relevant queries
-      queryClient.invalidateQueries({ queryKey: ['saved_videos'] });
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-      
-    } catch (error) {
-      console.error('Error saving video:', error);
-      toast.error('Could not process video save action');
     }
   };
 
