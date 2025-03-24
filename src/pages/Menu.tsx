@@ -43,6 +43,12 @@ const Menu = () => {
         { title: 'All Comments', icon: <MessageCircle className="h-6 w-6 mr-4 text-blue-400" />, path: '/comments', description: 'Community chat' },
         { title: 'Home', icon: <Home className="h-6 w-6 mr-4 text-blue-400" />, path: '/', description: 'Main screen', className: 'home-menu-item'}
       ]
+    },
+    {
+      title: 'SOCIAL',
+      items: [
+        { title: 'Invite Friends', icon: <Users className="h-6 w-6 mr-4 text-green-400" />, path: '/invite', description: 'Share with friends' }
+      ]
     }
   ];
 
