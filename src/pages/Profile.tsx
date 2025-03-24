@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, Settings, UserX, Bookmark } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, Settings, UserX, Bookmark, FilmIcon, ImageIcon, DocumentTextIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -247,7 +247,19 @@ const Profile = () => {
           // Try fetching without any filters to see if posts exist at all
           const { data: allPosts, error: allPostsError } = await supabase
             .from('posts')
-            .select('*')
+            .select(`
+              id,
+              title,
+              content,
+              image_url,
+              video_url,
+              created_at,
+              likes_count,
+              comments_count,
+              game_id,
+              profile_id,
+              is_published
+            `)
             .eq('profile_id', profileId);
             
           console.log("Fallback - All posts for user:", allPosts?.length || 0, allPosts);
@@ -255,7 +267,20 @@ const Profile = () => {
           if (!allPostsError && allPosts && allPosts.length > 0) {
             setUserPosts(allPosts);
           } else {
-            setUserPosts([]);
+            // Last attempt - try to fetch posts with minimal restrictions
+            const { data: lastAttemptPosts, error: lastAttemptError } = await supabase
+              .from('posts')
+              .select('*')
+              .eq('profile_id', profileId);
+              
+            console.log("Last attempt - Simple posts query:", lastAttemptPosts?.length || 0, lastAttemptPosts);
+            
+            if (!lastAttemptError && lastAttemptPosts && lastAttemptPosts.length > 0) {
+              setUserPosts(lastAttemptPosts);
+            } else {
+              setUserPosts([]);
+              console.log("No posts found for profile ID:", profileId);
+            }
           }
         } else {
           setUserPosts(userPostsData);
@@ -621,23 +646,48 @@ const Profile = () => {
         <div className="grid grid-cols-3 gap-2">
           {userPosts.length > 0 ? (
             userPosts.map(post => (
-              <div key={post.id} className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity">
+              <div 
+                key={post.id} 
+                className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity cursor-pointer"
+                onClick={() => navigate(`/post/${post.id}`)}
+              >
                 {post.video_url ? (
-                  <video 
-                    src={post.video_url} 
-                    className="w-full h-full object-cover"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  />
+                  <div className="relative w-full h-full">
+                    <video 
+                      src={post.video_url} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
+                      <p className="text-xs text-white truncate">{post.title || post.content || 'Video clip'}</p>
+                    </div>
+                    <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
+                      <FilmIcon className="w-3 h-3 inline mr-1" />
+                    </div>
+                  </div>
                 ) : post.image_url ? (
-                  <img 
-                    src={post.image_url} 
-                    alt={post.content || 'Post image'} 
-                    className="w-full h-full object-cover"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  />
+                  <div className="relative w-full h-full">
+                    <img 
+                      src={post.image_url} 
+                      alt={post.content || 'Post image'} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        console.log(`Image failed to load: ${target.src}`);
+                        // Set a fallback image
+                        target.src = 'https://placehold.co/300x300/121212/404040?text=No+Image';
+                      }}
+                    />
+                    <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
+                      <p className="text-xs text-white truncate">{post.title || post.content || 'Image post'}</p>
+                    </div>
+                    <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
+                      <ImageIcon className="w-3 h-3 inline mr-1" />
+                    </div>
+                  </div>
                 ) : (
-                  <div className="w-full h-full bg-gaming-800 flex items-center justify-center text-gaming-400">
-                    No media
+                  <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
+                    <DocumentTextIcon className="w-6 h-6 mb-2" />
+                    <p className="text-xs text-center">{post.title || post.content || 'Text post'}</p>
                   </div>
                 )}
               </div>
@@ -661,23 +711,48 @@ const Profile = () => {
         <div className="grid grid-cols-3 gap-2">
           {userCollection.length > 0 ? (
             userCollection.map(post => (
-              <div key={post.id} className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity">
+              <div 
+                key={post.id} 
+                className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity cursor-pointer"
+                onClick={() => navigate(`/post/${post.id}`)}
+              >
                 {post.video_url ? (
-                  <video 
-                    src={post.video_url} 
-                    className="w-full h-full object-cover"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  />
+                  <div className="relative w-full h-full">
+                    <video 
+                      src={post.video_url} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
+                      <p className="text-xs text-white truncate">{post.title || post.content || 'Video clip'}</p>
+                    </div>
+                    <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
+                      <FilmIcon className="w-3 h-3 inline mr-1" />
+                    </div>
+                  </div>
                 ) : post.image_url ? (
-                  <img 
-                    src={post.image_url} 
-                    alt={post.content || 'Post image'} 
-                    className="w-full h-full object-cover"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  />
+                  <div className="relative w-full h-full">
+                    <img 
+                      src={post.image_url} 
+                      alt={post.content || 'Post image'} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        console.log(`Image failed to load: ${target.src}`);
+                        // Set a fallback image
+                        target.src = 'https://placehold.co/300x300/121212/404040?text=No+Image';
+                      }}
+                    />
+                    <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
+                      <p className="text-xs text-white truncate">{post.title || post.content || 'Image post'}</p>
+                    </div>
+                    <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
+                      <ImageIcon className="w-3 h-3 inline mr-1" />
+                    </div>
+                  </div>
                 ) : (
-                  <div className="w-full h-full bg-gaming-800 flex items-center justify-center text-gaming-400">
-                    No media
+                  <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
+                    <DocumentTextIcon className="w-6 h-6 mb-2" />
+                    <p className="text-xs text-center">{post.title || post.content || 'Text post'}</p>
                   </div>
                 )}
               </div>
@@ -700,28 +775,59 @@ const Profile = () => {
       ) : activeTab === 'saved_videos' ? (
         <div className="grid grid-cols-3 gap-2">
           {savedVideos.length > 0 ? (
-            savedVideos.map(post => (
-              <div key={post.id} className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity">
-                {post.video_url ? (
-                  <video 
-                    src={post.video_url} 
-                    className="w-full h-full object-cover"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  />
-                ) : post.image_url ? (
-                  <img 
-                    src={post.image_url} 
-                    alt={post.content || 'Post image'} 
-                    className="w-full h-full object-cover"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gaming-800 flex items-center justify-center text-gaming-400">
-                    No media
-                  </div>
-                )}
-              </div>
-            ))
+            savedVideos.map(item => {
+              // Extract the post from the joined data
+              const post = item;
+              if (!post) return null;
+              
+              return (
+                <div 
+                  key={post.id} 
+                  className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity cursor-pointer"
+                  onClick={() => navigate(`/post/${post.id}`)}
+                >
+                  {post.video_url ? (
+                    <div className="relative w-full h-full">
+                      <video 
+                        src={post.video_url} 
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
+                        <p className="text-xs text-white truncate">{post.title || post.content || 'Video clip'}</p>
+                      </div>
+                      <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
+                        <FilmIcon className="w-3 h-3 inline mr-1" />
+                      </div>
+                    </div>
+                  ) : post.image_url ? (
+                    <div className="relative w-full h-full">
+                      <img 
+                        src={post.image_url} 
+                        alt={post.content || 'Post image'} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          console.log(`Image failed to load: ${target.src}`);
+                          // Set a fallback image
+                          target.src = 'https://placehold.co/300x300/121212/404040?text=No+Image';
+                        }}
+                      />
+                      <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
+                        <p className="text-xs text-white truncate">{post.title || post.content || 'Image post'}</p>
+                      </div>
+                      <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
+                        <ImageIcon className="w-3 h-3 inline mr-1" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
+                      <DocumentTextIcon className="w-6 h-6 mb-2" />
+                      <p className="text-xs text-center">{post.title || post.content || 'Text post'}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })
           ) : (
             <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
               <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
