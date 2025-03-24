@@ -43,7 +43,7 @@ const Profile = () => {
   const [savedVideos, setSavedVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collection' | 'saved_videos'>('clips');
+  const [activeTab, setActiveTab] = useState<'posts' | 'achievements' | 'collection' | 'saved_videos'>('posts');
   const [stats, setStats] = useState<ProfileStats>({
     followers: 0,
     following: 0,
@@ -218,84 +218,98 @@ const Profile = () => {
       setProfile(profileData);
       
       // Get user posts (clips)
-      const { data: userPostsData, error: postsError } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          title,
-          content,
-          image_url,
-          video_url,
-          created_at,
-          likes_count,
-          comments_count,
-          game_id,
-          profile_id,
-          is_published,
-          profiles (
-            id,
-            username,
-            avatar_url,
-            display_name
-          ),
-          games (
-            id,
-            name,
-            cover_url
-          )
-        `)
-        .eq('profile_id', profileId)
-        .order('created_at', { ascending: false });
-      
-      if (postsError) {
-        console.error("Error fetching user posts:", postsError);
-        setUserPosts([]);
-      } else {
-        // Log for debugging purposes
-        console.log("User posts fetched:", userPostsData?.length || 0, userPostsData);
+      try {
+        console.log(`Attempting to fetch posts for profile ID: ${profileId}`);
         
-        if (!userPostsData || userPostsData.length === 0) {
-          // Try fetching without any filters to see if posts exist at all
-          const { data: allPosts, error: allPostsError } = await supabase
-            .from('posts')
-            .select(`
-              id,
-              title,
-              content,
-              image_url,
-              video_url,
-              created_at,
-              likes_count,
-              comments_count,
-              game_id,
-              profile_id,
-              is_published
-            `)
-            .eq('profile_id', profileId);
-            
-          console.log("Fallback - All posts for user:", allPosts?.length || 0, allPosts);
+        // First try with a simple query to see what data we can get
+        const { data: simplePostsData, error: simplePostsError } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('profile_id', profileId);
+        
+        console.log("Simple posts query results:", simplePostsData?.length || 0, simplePostsData);
+        
+        if (simplePostsError) {
+          console.error("Error with simple posts query:", simplePostsError);
+        }
+        
+        // Now try the full query
+        const { data: userPostsData, error: postsError } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            title,
+            content,
+            image_url,
+            video_url,
+            created_at,
+            likes_count,
+            comments_count,
+            game_id,
+            profile_id,
+            is_published
+          `)
+          .eq('profile_id', profileId)
+          .order('created_at', { ascending: false });
+        
+        console.log("Detailed posts query results:", userPostsData?.length || 0, userPostsData);
+        
+        if (postsError) {
+          console.error("Error fetching user posts:", postsError);
           
-          if (!allPostsError && allPosts && allPosts.length > 0) {
-            setUserPosts(allPosts);
+          // If we got data from the simple query, use that
+          if (simplePostsData && simplePostsData.length > 0) {
+            setUserPosts(simplePostsData);
           } else {
-            // Last attempt - try to fetch posts with minimal restrictions
-            const { data: lastAttemptPosts, error: lastAttemptError } = await supabase
-              .from('posts')
-              .select('*')
-              .eq('profile_id', profileId);
-              
-            console.log("Last attempt - Simple posts query:", lastAttemptPosts?.length || 0, lastAttemptPosts);
-            
-            if (!lastAttemptError && lastAttemptPosts && lastAttemptPosts.length > 0) {
-              setUserPosts(lastAttemptPosts);
+            // Last resort - create a sample post for testing in development
+            if (process.env.NODE_ENV === 'development') {
+              const samplePosts = [{
+                id: 'sample-1',
+                title: 'Sample Post',
+                content: 'This is a sample post to show the UI',
+                image_url: 'https://placehold.co/600x400/000000/FFFFFF.png?text=Sample+Post',
+                video_url: null,
+                created_at: new Date().toISOString(),
+                profile_id: profileId,
+                is_published: true
+              }];
+              console.log("Using sample post data for development:", samplePosts);
+              setUserPosts(samplePosts);
             } else {
               setUserPosts([]);
-              console.log("No posts found for profile ID:", profileId);
+            }
+          }
+        } else if (!userPostsData || userPostsData.length === 0) {
+          console.log("No posts found with detailed query");
+          
+          // If we got data from the simple query, use that
+          if (simplePostsData && simplePostsData.length > 0) {
+            setUserPosts(simplePostsData);
+          } else {
+            // Last resort - create a sample post for testing in development
+            if (process.env.NODE_ENV === 'development') {
+              const samplePosts = [{
+                id: 'sample-2',
+                title: 'Example Post',
+                content: 'This is an example post to show the UI',
+                image_url: 'https://placehold.co/600x400/121212/727272.png?text=Example+Post',
+                video_url: null,
+                created_at: new Date().toISOString(),
+                profile_id: profileId,
+                is_published: true
+              }];
+              console.log("Using sample post data for development (empty results case):", samplePosts);
+              setUserPosts(samplePosts);
+            } else {
+              setUserPosts([]);
             }
           }
         } else {
           setUserPosts(userPostsData);
         }
+      } catch (postsQueryError) {
+        console.error("Unexpected error in posts queries:", postsQueryError);
+        setUserPosts([]);
       }
       
       // Get saved videos if it's the user's own profile or if the profile is not private
@@ -619,13 +633,13 @@ const Profile = () => {
         <div className="gaming-card p-2">
           <div className="flex flex-wrap gap-2">
             <Toggle
-              pressed={activeTab === 'clips'}
-              onPressedChange={() => setActiveTab('clips')}
+              pressed={activeTab === 'posts'}
+              onPressedChange={() => setActiveTab('posts')}
               variant="outline"
               className="flex gap-2 items-center"
             >
               <Gamepad2 className="w-4 h-4" />
-              <span>Clips</span>
+              <span>Posts</span>
             </Toggle>
             <Toggle
               pressed={activeTab === 'collection'}
@@ -659,7 +673,7 @@ const Profile = () => {
       </div>
       
       {/* Tab Content */}
-      {activeTab === 'clips' ? (
+      {activeTab === 'posts' ? (
         <div className="grid grid-cols-3 gap-2">
           {userPosts.length > 0 ? (
             userPosts.map(post => (
@@ -712,12 +726,12 @@ const Profile = () => {
           ) : (
             <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
               <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Clips Yet</h3>
-              <p className="text-gaming-400">User hasn't posted any gaming clips</p>
+              <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Posts Yet</h3>
+              <p className="text-gaming-400">User hasn't posted anything</p>
               {isOwnProfile && (
                 <div className="mt-4">
                   <Button onClick={() => navigate('/post/new')} variant="outline">
-                    Upload Your First Clip
+                    Upload Your First Post
                   </Button>
                 </div>
               )}
