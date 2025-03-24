@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
-import { Gamepad2, Trophy, MessageSquare, Settings, UserX, Bookmark, FilmIcon, ImageIcon, DocumentTextIcon } from "lucide-react";
+import { Gamepad2, Trophy, MessageSquare, Settings, UserX, Bookmark, Film, Image, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -661,7 +661,7 @@ const Profile = () => {
                       <p className="text-xs text-white truncate">{post.title || post.content || 'Video clip'}</p>
                     </div>
                     <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                      <FilmIcon className="w-3 h-3 inline mr-1" />
+                      <Film className="w-3 h-3 inline mr-1" />
                     </div>
                   </div>
                 ) : post.image_url ? (
@@ -681,12 +681,12 @@ const Profile = () => {
                       <p className="text-xs text-white truncate">{post.title || post.content || 'Image post'}</p>
                     </div>
                     <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                      <ImageIcon className="w-3 h-3 inline mr-1" />
+                      <Image className="w-3 h-3 inline mr-1" />
                     </div>
                   </div>
                 ) : (
                   <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
-                    <DocumentTextIcon className="w-6 h-6 mb-2" />
+                    <FileText className="w-6 h-6 mb-2" />
                     <p className="text-xs text-center">{post.title || post.content || 'Text post'}</p>
                   </div>
                 )}
@@ -726,7 +726,7 @@ const Profile = () => {
                       <p className="text-xs text-white truncate">{post.title || post.content || 'Video clip'}</p>
                     </div>
                     <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                      <FilmIcon className="w-3 h-3 inline mr-1" />
+                      <Film className="w-3 h-3 inline mr-1" />
                     </div>
                   </div>
                 ) : post.image_url ? (
@@ -746,12 +746,12 @@ const Profile = () => {
                       <p className="text-xs text-white truncate">{post.title || post.content || 'Image post'}</p>
                     </div>
                     <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                      <ImageIcon className="w-3 h-3 inline mr-1" />
+                      <Image className="w-3 h-3 inline mr-1" />
                     </div>
                   </div>
                 ) : (
                   <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
-                    <DocumentTextIcon className="w-6 h-6 mb-2" />
+                    <FileText className="w-6 h-6 mb-2" />
                     <p className="text-xs text-center">{post.title || post.content || 'Text post'}</p>
                   </div>
                 )}
@@ -796,7 +796,7 @@ const Profile = () => {
                         <p className="text-xs text-white truncate">{post.title || post.content || 'Video clip'}</p>
                       </div>
                       <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                        <FilmIcon className="w-3 h-3 inline mr-1" />
+                        <Film className="w-3 h-3 inline mr-1" />
                       </div>
                     </div>
                   ) : post.image_url ? (
@@ -816,12 +816,12 @@ const Profile = () => {
                         <p className="text-xs text-white truncate">{post.title || post.content || 'Image post'}</p>
                       </div>
                       <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                        <ImageIcon className="w-3 h-3 inline mr-1" />
+                        <Image className="w-3 h-3 inline mr-1" />
                       </div>
                     </div>
                   ) : (
                     <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
-                      <DocumentTextIcon className="w-6 h-6 mb-2" />
+                      <FileText className="w-6 h-6 mb-2" />
                       <p className="text-xs text-center">{post.title || post.content || 'Text post'}</p>
                     </div>
                   )}
