@@ -55,80 +55,48 @@ const Profile = () => {
   const isOwnProfile = user?.id === profileId;
 
   /**
-   * Fetch the user's profile data
+   * Fetch profile data with improved error handling
    */
-  const fetchProfileData = async (userId: string) => {
+  const fetchProfileData = async (userId: string): Promise<ProfileType | null> => {
     try {
-      console.log("Fetching profile data for user:", userId);
+      console.log('Fetching profile data for user ID:', userId);
       
-      // Try to get the profile by ID
+      // First, try to get the profile
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('*') // Explicitly select all fields
+        .select('*')
         .eq('id', userId)
         .single();
       
-      // If there's an error or no profile for current user, create one
-      if (error || !profileData) {
-        console.log("Profile fetch error:", error);
+      if (error) {
+        console.error("Error fetching profile from primary query:", error);
         
-        if (userId === user?.id) {
-          console.log("No profile found for current user, creating one");
+        // Try a fallback approach with minimal requirements
+        const { data: fallbackProfile, error: fallbackError } = await supabase
+          .from('profiles')
+          .select('id, username, display_name, avatar_url, bio')
+          .eq('id', userId)
+          .single();
           
-          // Create a default profile for the current user
-          const defaultProfile: Partial<ProfileType> = {
-            id: userId,
-            username: `user_${userId.substring(0, 8)}`,
-            display_name: user?.user_metadata?.name || 'New User',
-            bio: 'Welcome to my Clipt profile!',
-            avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
+        if (fallbackError) {
+          console.error("Error fetching profile with fallback query:", fallbackError);
+          throw fallbackError;
+        }
+        
+        if (fallbackProfile) {
+          console.log("Retrieved profile with fallback query:", fallbackProfile);
+          return {
+            ...fallbackProfile,
             created_at: new Date().toISOString(),
             followers_count: 0,
             following_count: 0,
             achievements_count: 0,
-            // Default settings
             enable_notifications: true,
             enable_sounds: true
-          };
-          
-          // First create the profile
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .upsert(defaultProfile)
-            .select()
-            .single();
-          
-          if (createError) {
-            console.error("Error creating profile:", createError);
-            throw new Error('Failed to create profile');
-          }
-          
-          // Then initialize default achievements for the new user
-          try {
-            const { achievementService } = await import('@/services/achievementService');
-            await achievementService.createDefaultAchievementsForUser(userId);
-            console.log("Successfully created default achievements for new user");
-            
-            // Update the achievements count
-            await supabase
-              .from('profiles')
-              .update({ achievements_count: 10 }) // Assuming 10 default achievements are created
-              .eq('id', userId);
-              
-            // Update the achievements count in the profile object
-            newProfile.achievements_count = 10;
-          } catch (achievementError) {
-            console.error("Error creating default achievements:", achievementError);
-            // Continue even if achievements creation fails
-            // The user can still use the app
-          }
-          
-          return newProfile as ProfileType;
-        } else {
-          // Profile doesn't exist and it's not the current user
-          console.error("Profile not found for user:", userId);
-          return null;
+          } as ProfileType;
         }
+        
+        throw error;
       }
       
       // If profile exists but has no achievements, create default ones
@@ -199,6 +167,7 @@ const Profile = () => {
       const profileData = await fetchProfileData(profileId);
       
       if (!profileData) {
+        toast.error("Profile not found");
         setError("Profile not found");
         setLoading(false);
         return;
@@ -475,15 +444,9 @@ const Profile = () => {
   // Render loading state
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="gaming-card p-8 w-full max-w-md">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="w-24 h-24 rounded-full bg-gaming-800 animate-pulse"></div>
-            <div className="w-40 h-6 bg-gaming-800 animate-pulse rounded"></div>
-            <div className="w-full h-4 bg-gaming-800 animate-pulse rounded"></div>
-            <div className="w-full h-4 bg-gaming-800 animate-pulse rounded"></div>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mb-4"></div>
+        <p className="text-gaming-300">Loading profile...</p>
       </div>
     );
   }
@@ -491,14 +454,26 @@ const Profile = () => {
   // Render error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="gaming-card p-8 w-full max-w-md text-center">
-          <UserX className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Profile Error</h2>
-          <p className="text-gray-400 mb-4">{error}</p>
-          <Button onClick={() => navigate('/')}>
-            Go Home
-          </Button>
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] p-6">
+        <div className="gaming-card text-center max-w-md p-8">
+          <Gamepad2 className="w-16 h-16 mx-auto text-red-500 mb-4" />
+          <h2 className="text-xl font-bold text-gaming-100 mb-4">Failed to load profile</h2>
+          <p className="text-gaming-300 mb-6">{error || "We couldn't find this profile. It may have been deleted or is temporarily unavailable."}</p>
+          <div className="flex flex-col gap-3">
+            <Button 
+              onClick={() => window.location.reload()}
+              variant="default"
+              className="w-full"
+            >
+              Retry
+            </Button>
+            <Button 
+              onClick={() => navigate('/')}
+              variant="outline"
+            >
+              Go to Home
+            </Button>
+          </div>
         </div>
       </div>
     );
