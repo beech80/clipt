@@ -8,7 +8,7 @@ const GameBoyNavigation: React.FC = () => {
   
   const navItems = [
     { name: 'Home', path: '/', icon: <Home size={20} /> },
-    { name: 'Discover', path: '/discover', icon: <Search size={20} /> },
+    { name: 'Discover', path: '/discovery', icon: <Search size={20} /> },
     { name: 'Top Clips', path: '/topclips', icon: <Trophy size={20} /> },
     { name: 'Notifications', path: '/notifications', icon: <Bell size={20} /> },
     { name: 'Profile', path: '/profile', icon: <User size={20} /> }
