@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { Heart, MessageSquare, Award, User, Bell, Check, CheckCheck } from 'lucide-react';
+import { Heart, MessageSquare, Award, User, Bell, Check, CheckCheck, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import InviteFriendsDialog from '@/components/invite/InviteFriendsDialog';
 
 interface Notification {
   id: string;
@@ -53,6 +54,7 @@ const NotificationsPage = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', user?.id, activeTab],
@@ -172,18 +174,29 @@ const NotificationsPage = () => {
           <Bell className="mr-2 h-5 w-5" />
           Notifications
         </h1>
-        {notifications.some(n => !n.read) && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => markAllAsRead.mutate()}
-            disabled={markAllAsRead.isPending}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setInviteDialogOpen(true)}
             className="flex items-center"
           >
-            <CheckCheck className="mr-1 h-4 w-4" />
-            Mark all as read
+            <Users className="mr-1 h-4 w-4" />
+            Invite Friends
           </Button>
-        )}
+          {notifications.some(n => !n.read) && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => markAllAsRead.mutate()}
+              disabled={markAllAsRead.isPending}
+              className="flex items-center"
+            >
+              <CheckCheck className="mr-1 h-4 w-4" />
+              Mark all as read
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'unread')} className="w-full">
@@ -334,6 +347,12 @@ const NotificationsPage = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Invite Friends Dialog */}
+      <InviteFriendsDialog 
+        open={inviteDialogOpen} 
+        onOpenChange={setInviteDialogOpen} 
+      />
     </div>
   );
 };

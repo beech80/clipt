@@ -56,6 +56,7 @@ const GroupChat = React.lazy(() => import('./pages/GroupChat'));
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
 const SquadsClipts = React.lazy(() => import('./pages/SquadsClipts'));
+const InviteFriends = React.lazy(() => import('./pages/InviteFriends'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -99,6 +100,7 @@ function AppContent() {
       <Route path="/retro-search" element={<RetroSearchPage />} />
       <Route path="/video-debug" element={<VideoDebug />} />
       <Route path="/notifications" element={<Notifications />} />
+      <Route path="/invite" element={<InviteFriends />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
