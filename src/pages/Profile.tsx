@@ -672,146 +672,73 @@ const Profile = () => {
         </div>
       </div>
       
-      {/* Tab Content */}
-      {activeTab === 'posts' ? (
-        <div className="grid grid-cols-3 gap-2">
-          {userPosts.length > 0 ? (
-            userPosts.map(post => (
-              <div 
-                key={post.id} 
-                className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity cursor-pointer"
-                onClick={() => navigate(`/post/${post.id}`)}
-              >
-                {post.video_url ? (
-                  <div className="relative w-full h-full">
-                    <video 
-                      src={post.video_url} 
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
-                      <p className="text-xs text-white truncate">{post.title || post.content || 'Video clip'}</p>
-                    </div>
-                    <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                      <Film className="w-3 h-3 inline mr-1" />
-                    </div>
+      {/* Tab Content Container - Add bottom padding to accommodate GameBoy controller */}
+      <div className="pb-24">
+        {activeTab === 'posts' ? (
+          <div className="w-full">
+            {/* Instagram-style filter tabs */}
+            <div className="flex border-b border-gaming-800 mb-1">
+              <div className="flex-1 text-center py-2 font-medium text-sm text-gaming-100 border-b-2 border-gaming-100">Posts</div>
+              <div className="flex-1 text-center py-2 font-medium text-sm text-gaming-400">Tagged</div>
+            </div>
+            {userPosts.length > 0 ? (
+              <div className="grid grid-cols-3 gap-0.5 md:gap-1">
+                {userPosts.map(post => (
+                  <div 
+                    key={post.id} 
+                    className="aspect-square overflow-hidden relative cursor-pointer bg-gaming-900"
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  >
+                    {post.video_url ? (
+                      <div className="w-full h-full">
+                        <video 
+                          src={post.video_url} 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2 right-2 text-white opacity-75">
+                          <Film className="w-4 h-4" />
+                        </div>
+                      </div>
+                    ) : post.image_url ? (
+                      <div className="w-full h-full">
+                        <img 
+                          src={post.image_url} 
+                          alt={post.content || 'Post image'} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'https://placehold.co/300x300/121212/404040?text=No+Image';
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
+                        <FileText className="w-6 h-6 mb-1" />
+                        <p className="text-xs text-center line-clamp-3">{post.title || post.content || 'Text post'}</p>
+                      </div>
+                    )}
                   </div>
-                ) : post.image_url ? (
-                  <div className="relative w-full h-full">
-                    <img 
-                      src={post.image_url} 
-                      alt={post.content || 'Post image'} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        console.log(`Image failed to load: ${target.src}`);
-                        // Set a fallback image
-                        target.src = 'https://placehold.co/300x300/121212/404040?text=No+Image';
-                      }}
-                    />
-                    <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
-                      <p className="text-xs text-white truncate">{post.title || post.content || 'Image post'}</p>
-                    </div>
-                    <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                      <Image className="w-3 h-3 inline mr-1" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
-                    <FileText className="w-6 h-6 mb-2" />
-                    <p className="text-xs text-center">{post.title || post.content || 'Text post'}</p>
+                ))}
+              </div>
+            ) : (
+              <div className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60">
+                <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Posts Yet</h3>
+                <p className="text-gaming-400">User hasn't posted anything</p>
+                {isOwnProfile && (
+                  <div className="mt-4">
+                    <Button onClick={() => navigate('/post/new')} variant="outline">
+                      Create Your First Post
+                    </Button>
                   </div>
                 )}
               </div>
-            ))
-          ) : (
-            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
-              <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Posts Yet</h3>
-              <p className="text-gaming-400">User hasn't posted anything</p>
-              {isOwnProfile && (
-                <div className="mt-4">
-                  <Button onClick={() => navigate('/post/new')} variant="outline">
-                    Upload Your First Post
-                  </Button>
-                </div>
-              )}
-            </Card>
-          )}
-        </div>
-      ) : activeTab === 'collection' ? (
-        <div className="grid grid-cols-3 gap-2">
-          {userCollection.length > 0 ? (
-            userCollection.map(post => (
-              <div 
-                key={post.id} 
-                className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity cursor-pointer"
-                onClick={() => navigate(`/post/${post.id}`)}
-              >
-                {post.video_url ? (
-                  <div className="relative w-full h-full">
-                    <video 
-                      src={post.video_url} 
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
-                      <p className="text-xs text-white truncate">{post.title || post.content || 'Video clip'}</p>
-                    </div>
-                    <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                      <Film className="w-3 h-3 inline mr-1" />
-                    </div>
-                  </div>
-                ) : post.image_url ? (
-                  <div className="relative w-full h-full">
-                    <img 
-                      src={post.image_url} 
-                      alt={post.content || 'Post image'} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        console.log(`Image failed to load: ${target.src}`);
-                        // Set a fallback image
-                        target.src = 'https://placehold.co/300x300/121212/404040?text=No+Image';
-                      }}
-                    />
-                    <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
-                      <p className="text-xs text-white truncate">{post.title || post.content || 'Image post'}</p>
-                    </div>
-                    <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
-                      <Image className="w-3 h-3 inline mr-1" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
-                    <FileText className="w-6 h-6 mb-2" />
-                    <p className="text-xs text-center">{post.title || post.content || 'Text post'}</p>
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
-              <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gaming-200 mb-2">Collection Empty</h3>
-              <p className="text-gaming-400">No clips saved to collections yet</p>
-              {isOwnProfile && (
-                <div className="mt-4">
-                  <Button onClick={() => navigate('/')} variant="outline">
-                    Find Clips to Save
-                  </Button>
-                </div>
-              )}
-            </Card>
-          )}
-        </div>
-      ) : activeTab === 'saved_videos' ? (
-        <div className="grid grid-cols-3 gap-2">
-          {savedVideos.length > 0 ? (
-            savedVideos.map(item => {
-              // Extract the post from the joined data
-              const post = item;
-              if (!post) return null;
-              
-              return (
+            )}
+          </div>
+        ) : activeTab === 'collection' ? (
+          <div className="grid grid-cols-3 gap-2">
+            {userCollection.length > 0 ? (
+              userCollection.map(post => (
                 <div 
                   key={post.id} 
                   className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity cursor-pointer"
@@ -857,28 +784,99 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
-              );
-            })
-          ) : (
-            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
-              <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
-              <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Saved Videos</h3>
-              <p className="text-gaming-400">User hasn't saved any videos yet</p>
-              {isOwnProfile && (
-                <div className="mt-4">
-                  <Button onClick={() => navigate('/')} variant="outline">
-                    Find Videos to Save
-                  </Button>
-                </div>
-              )}
-            </Card>
-          )}
-        </div>
-      ) : (
-        <div className="col-span-3">
-          <AchievementList userId={profileId || ''} forceShowDemo={true} />
-        </div>
-      )}
+              ))
+            ) : (
+              <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
+                <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gaming-200 mb-2">Collection Empty</h3>
+                <p className="text-gaming-400">No clips saved to collections yet</p>
+                {isOwnProfile && (
+                  <div className="mt-4">
+                    <Button onClick={() => navigate('/')} variant="outline">
+                      Find Clips to Save
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            )}
+          </div>
+        ) : activeTab === 'saved_videos' ? (
+          <div className="grid grid-cols-3 gap-2">
+            {savedVideos.length > 0 ? (
+              savedVideos.map(item => {
+                // Extract the post from the joined data
+                const post = item;
+                if (!post) return null;
+                
+                return (
+                  <div 
+                    key={post.id} 
+                    className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity cursor-pointer"
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  >
+                    {post.video_url ? (
+                      <div className="relative w-full h-full">
+                        <video 
+                          src={post.video_url} 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
+                          <p className="text-xs text-white truncate">{post.title || post.content || 'Video clip'}</p>
+                        </div>
+                        <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
+                          <Film className="w-3 h-3 inline mr-1" />
+                        </div>
+                      </div>
+                    ) : post.image_url ? (
+                      <div className="relative w-full h-full">
+                        <img 
+                          src={post.image_url} 
+                          alt={post.content || 'Post image'} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            console.log(`Image failed to load: ${target.src}`);
+                            // Set a fallback image
+                            target.src = 'https://placehold.co/300x300/121212/404040?text=No+Image';
+                          }}
+                        />
+                        <div className="absolute bottom-0 left-0 p-2 bg-gradient-to-t from-black/80 to-transparent w-full">
+                          <p className="text-xs text-white truncate">{post.title || post.content || 'Image post'}</p>
+                        </div>
+                        <div className="absolute top-2 right-2 bg-black/60 p-1 rounded text-xs text-white">
+                          <Image className="w-3 h-3 inline mr-1" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center text-gaming-400 p-2">
+                        <FileText className="w-6 h-6 mb-2" />
+                        <p className="text-xs text-center">{post.title || post.content || 'Text post'}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
+                <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Saved Videos</h3>
+                <p className="text-gaming-400">User hasn't saved any videos yet</p>
+                {isOwnProfile && (
+                  <div className="mt-4">
+                    <Button onClick={() => navigate('/')} variant="outline">
+                      Find Videos to Save
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            )}
+          </div>
+        ) : (
+          <div className="col-span-3">
+            <AchievementList userId={profileId || ''} forceShowDemo={true} />
+          </div>
+        )}
+      </div>
     </ProfileContent>
   );
 };
