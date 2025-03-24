@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload, Camera, Search, Hash, AtSign, X, Film, Home } from 'lucide-react';
+import { Loader2, Upload, Camera, Search, Hash, AtSign, X, Film, Home, Gamepad2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Progress } from '@/components/ui/progress';
 
@@ -83,6 +83,78 @@ export const PostForm = () => {
   const handleGameSelect = (game: { id: string; name: string }) => {
     setSelectedGame(game);
     setGameSearch('');
+  };
+
+  const renderGameSearchSection = () => {
+    return (
+      <div className="mb-4 bg-gaming-800 border border-gray-700 rounded-lg p-3">
+        <h3 className="text-lg font-semibold mb-2 text-white flex items-center">
+          <Gamepad2 className="mr-2 h-5 w-5 text-blue-400" />
+          Select Game (Required)
+        </h3>
+        
+        {selectedGame ? (
+          <div className="flex items-center justify-between bg-gaming-700 p-2 rounded mb-2">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gaming-600 rounded flex items-center justify-center">
+                <Gamepad2 className="h-4 w-4 text-blue-400" />
+              </div>
+              <span className="ml-2 text-white">{selectedGame.name}</span>
+            </div>
+            <button 
+              onClick={() => setSelectedGame(null)} 
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="relative mb-2">
+            <div className="flex items-center">
+              <input
+                type="text"
+                placeholder="Search for a game..."
+                value={gameSearch}
+                onChange={(e) => setGameSearch(e.target.value)}
+                className="w-full px-4 py-2 bg-gaming-700 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <Search className="absolute right-3 h-5 w-5 text-gray-400" />
+            </div>
+            
+            {gameSearch.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-gaming-700 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {gamesLoading ? (
+                  <div className="p-2 text-center text-gray-400">
+                    <Loader2 className="h-5 w-5 mx-auto animate-spin" />
+                    <p>Searching...</p>
+                  </div>
+                ) : games && games.length > 0 ? (
+                  games.map((game) => (
+                    <div
+                      key={game.id}
+                      onClick={() => handleGameSelect(game)}
+                      className="p-2 hover:bg-gaming-600 cursor-pointer flex items-center"
+                    >
+                      <Gamepad2 className="h-4 w-4 mr-2 text-blue-400" />
+                      <span className="text-white">{game.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-2 text-center text-gray-400">
+                    No games found. Try another search term.
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <p className="text-xs text-gray-400">
+              Your post must include a game. This helps categorize your content and make it more discoverable.
+            </p>
+          </div>
+        )}
+        
+      </div>
+    );
   };
 
   const startCamera = async () => {
@@ -301,8 +373,8 @@ export const PostForm = () => {
       // Complete progress indicator
       setUploadProgress(100);
 
-      // Invalidate any existing posts queries to ensure fresh data
-      await supabase.rpc('invalidate_cache', { cache_key: 'posts' });
+      // Refresh data without using RPC
+      await supabase.from('posts').select('count').limit(1); 
 
       toast.success(
         destination === 'clipts' ? 'Clip created successfully!' : 'Post created successfully!'
@@ -376,268 +448,226 @@ export const PostForm = () => {
   return (
     <div className="relative min-h-screen bg-gaming-900">
       <div className="space-y-6 max-w-2xl mx-auto p-6 pb-48">
+        {renderGameSearchSection()}
         <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <Input
-              type="text"
-              placeholder="Search for a game..."
-              value={gameSearch}
-              onChange={(e) => setGameSearch(e.target.value)}
-              className="pl-10"
-            />
-            
-            {gameSearch && !gamesLoading && (
-              <div className="absolute z-10 w-full mt-1 bg-gaming-800 rounded-md shadow-lg border border-gaming-700">
-                {!games || games.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-gray-400">
-                    No games found
-                  </div>
-                ) : (
-                  <div className="max-h-60 overflow-auto">
-                    {games.map((game) => (
-                      <button
-                        key={game.id}
-                        onClick={() => handleGameSelect(game)}
-                        className="w-full px-4 py-2 text-left hover:bg-gaming-700 text-white text-sm"
-                      >
-                        {game.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {selectedGame && (
-              <div className="mt-2 p-2 bg-gaming-800 rounded-md flex items-center justify-between">
-                <span className="text-white">{selectedGame.name}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedGame(null)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  ×
-                </Button>
-              </div>
-            )}
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="What's on your mind?"
+            className="min-h-[100px]"
+          />
+
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowHashtagInput(true)}
+              className="flex items-center gap-2"
+            >
+              <Hash className="w-4 h-4" />
+              Add Hashtag
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowMentionInput(true)}
+              className="flex items-center gap-2"
+            >
+              <AtSign className="w-4 h-4" />
+              Mention User
+            </Button>
           </div>
 
-          <div className="space-y-2">
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="What's on your mind?"
-              className="min-h-[100px]"
-            />
-
+          {showHashtagInput && (
             <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowHashtagInput(true)}
-                className="flex items-center gap-2"
-              >
-                <Hash className="w-4 h-4" />
-                Add Hashtag
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowMentionInput(true)}
-                className="flex items-center gap-2"
-              >
-                <AtSign className="w-4 h-4" />
-                Mention User
-              </Button>
+              <Input
+                type="text"
+                value={currentHashtag}
+                onChange={(e) => setCurrentHashtag(e.target.value)}
+                placeholder="Enter hashtag"
+                className="flex-1"
+              />
+              <Button onClick={addHashtag}>Add</Button>
+              <Button variant="ghost" onClick={() => setShowHashtagInput(false)}>Cancel</Button>
             </div>
+          )}
 
-            {showHashtagInput && (
-              <div className="flex gap-2">
+          {showMentionInput && (
+            <div className="relative mt-2">
+              <div className="flex items-center">
+                <AtSign className="w-5 h-5 text-gray-400 absolute left-3" />
                 <Input
-                  type="text"
-                  value={currentHashtag}
-                  onChange={(e) => setCurrentHashtag(e.target.value)}
-                  placeholder="Enter hashtag"
-                  className="flex-1"
+                  value={currentMention}
+                  onChange={(e) => {
+                    setCurrentMention(e.target.value);
+                    searchUsers(e.target.value);
+                  }}
+                  placeholder="Mention a user"
+                  className="pl-10 pr-16"
+                  autoFocus
                 />
-                <Button onClick={addHashtag}>Add</Button>
-                <Button variant="ghost" onClick={() => setShowHashtagInput(false)}>Cancel</Button>
-              </div>
-            )}
-
-            {showMentionInput && (
-              <div className="relative mt-2">
-                <div className="flex items-center">
-                  <AtSign className="w-5 h-5 text-gray-400 absolute left-3" />
-                  <Input
-                    value={currentMention}
-                    onChange={(e) => {
-                      setCurrentMention(e.target.value);
-                      searchUsers(e.target.value);
-                    }}
-                    placeholder="Mention a user"
-                    className="pl-10 pr-16"
-                    autoFocus
-                  />
-                  <Button 
-                    onClick={addMention} 
-                    size="sm" 
-                    className="absolute right-1"
-                  >
-                    Add
-                  </Button>
-                </div>
-                
-                {/* User search results */}
-                {userResults.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg max-h-60 overflow-auto">
-                    {userResults.map(user => (
-                      <div 
-                        key={user.id}
-                        onClick={() => handleUserSelect(user.username)}
-                        className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 overflow-hidden">
-                          {user.avatar_url ? (
-                            <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-500">
-                              {user.username.substring(0, 2).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium">{user.display_name || user.username}</div>
-                          <div className="text-xs text-gray-500">@{user.username}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {searchingUsers && (
-                  <div className="flex justify-center items-center p-4">
-                    <Loader2 className="animate-spin h-5 w-5 text-gray-400" />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {hashtags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {hashtags.map(tag => (
-                  <div key={tag} className="bg-gaming-800 px-2 py-1 rounded-full flex items-center gap-2">
-                    <span>#{tag}</span>
-                    <button onClick={() => removeHashtag(tag)} className="text-gray-400 hover:text-white">×</button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {mentions.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {mentions.map(mention => (
-                  <div key={mention} className="bg-gaming-800 px-2 py-1 rounded-full flex items-center gap-2">
-                    <span>@{mention}</span>
-                    <button onClick={() => removeMention(mention)} className="text-gray-400 hover:text-white">×</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="grid gap-4">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={startCamera}
-                  className="flex items-center justify-center gap-2 h-12"
+                <Button 
+                  onClick={addMention} 
+                  size="sm" 
+                  className="absolute right-1"
                 >
-                  <Camera className="w-5 h-5" />
-                  Open Camera
+                  Add
                 </Button>
               </div>
+              
+              {/* User search results */}
+              {userResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg max-h-60 overflow-auto">
+                  {userResults.map(user => (
+                    <div 
+                      key={user.id}
+                      onClick={() => handleUserSelect(user.username)}
+                      className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 overflow-hidden">
+                        {user.avatar_url ? (
+                          <img src={user.avatar_url} alt={user.username} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">
+                            {user.username.substring(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-medium">{user.display_name || user.username}</div>
+                        <div className="text-xs text-gray-500">@{user.username}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {searchingUsers && (
+                <div className="flex justify-center items-center p-4">
+                  <Loader2 className="animate-spin h-5 w-5 text-gray-400" />
+                </div>
+              )}
+            </div>
+          )}
 
-              <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-8 h-8 mb-4 text-gray-400" />
-                    <p className="mb-2 text-sm text-gray-400">
-                      <span className="font-semibold">Upload from device</span>
-                    </p>
-                    <p className="text-xs text-gray-400">Supports video and images (max 100MB)</p>
-                    <p className="text-xs text-purple-400 mt-1">Now you can post both videos and images to Clipts!</p>
-                    <p className="text-xs text-green-400 mt-1">Select multiple images to create a photo collage!</p>
-                  </div>
-                  <Input
-                    type="file"
-                    className="hidden"
-                    accept="video/*,image/*"
-                    onChange={handleFileChange}
-                    multiple
-                  />
-                </label>
-              </div>
+          {hashtags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {hashtags.map(tag => (
+                <div key={tag} className="bg-gaming-800 px-2 py-1 rounded-full flex items-center gap-2">
+                  <span>#{tag}</span>
+                  <button onClick={() => removeHashtag(tag)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {mentions.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {mentions.map(mention => (
+                <div key={mention} className="bg-gaming-800 px-2 py-1 rounded-full flex items-center gap-2">
+                  <span>@{mention}</span>
+                  <button onClick={() => removeMention(mention)} className="text-gray-400 hover:text-white">×</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={startCamera}
+                className="flex items-center justify-center gap-2 h-12"
+              >
+                <Camera className="w-5 h-5" />
+                Open Camera
+              </Button>
             </div>
 
-            {videoRef.current && (
-              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-contain"
-                  autoPlay
-                  playsInline
-                  muted
+            <div className="flex items-center justify-center w-full">
+              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-8 h-8 mb-4 text-gray-400" />
+                  <p className="mb-2 text-sm text-gray-400">
+                    <span className="font-semibold">Upload from device</span>
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Supports video and images (max 100MB)
+                  </p>
+                  <p className="text-xs text-purple-400 mt-1">
+                    Now you can post both videos and images to Clipts!
+                  </p>
+                  <p className="text-xs text-green-400 mt-1">
+                    Select multiple images to create a photo collage!
+                  </p>
+                </div>
+                <Input
+                  type="file"
+                  className="hidden"
+                  accept="video/*,image/*"
+                  onChange={handleFileChange}
+                  multiple
                 />
-              </div>
-            )}
-
-            {filePreview.length > 0 && (
-              <div className={`relative ${filePreview.length > 1 ? 'grid grid-cols-2 gap-2' : ''}`}>
-                {filePreview.map((preview, index) => (
-                  <div key={index} className="aspect-video rounded-lg overflow-hidden bg-black">
-                    {files[index]?.type.startsWith('video/') ? (
-                      <video
-                        src={preview}
-                        className="w-full h-full object-contain"
-                        controls
-                      />
-                    ) : (
-                      <img
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-contain"
-                      />
-                    )}
-                    <button 
-                      className="absolute top-2 right-2 bg-gray-800 rounded-full p-1"
-                      onClick={() => {
-                        setFiles(files.filter((_, i) => i !== index));
-                        setFilePreview(filePreview.filter((_, i) => i !== index));
-                      }}
-                    >
-                      <X className="h-4 w-4 text-white" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="space-y-2">
-                <Progress value={uploadProgress} className="w-full" />
-                <p className="text-sm text-center text-gray-400">
-                  Uploading... {Math.round(uploadProgress)}%
-                </p>
-              </div>
-            )}
+              </label>
+            </div>
           </div>
+
+          {videoRef.current && (
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+              <video
+                ref={videoRef}
+                className="w-full h-full object-contain"
+                autoPlay
+                playsInline
+                muted
+              />
+            </div>
+          )}
+
+          {filePreview.length > 0 && (
+            <div className={`relative ${filePreview.length > 1 ? 'grid grid-cols-2 gap-2' : ''}`}>
+              {filePreview.map((preview, index) => (
+                <div key={index} className="aspect-video rounded-lg overflow-hidden bg-black">
+                  {files[index]?.type.startsWith('video/') ? (
+                    <video
+                      src={preview}
+                      className="w-full h-full object-contain"
+                      controls
+                    />
+                  ) : (
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+                  )}
+                  <button 
+                    className="absolute top-2 right-2 bg-gray-800 rounded-full p-1"
+                    onClick={() => {
+                      setFiles(files.filter((_, i) => i !== index));
+                      setFilePreview(filePreview.filter((_, i) => i !== index));
+                    }}
+                  >
+                    <X className="h-4 w-4 text-white" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {uploadProgress > 0 && uploadProgress < 100 && (
+            <div className="space-y-2">
+              <Progress value={uploadProgress} className="w-full" />
+              <p className="text-sm text-center text-gray-400">
+                Uploading... {Math.round(uploadProgress)}%
+              </p>
+            </div>
+          )}
         </div>
       </div>
       <div className="sticky bottom-0 bg-gray-950 py-4 mt-auto border-t border-gray-800 backdrop-blur-sm">

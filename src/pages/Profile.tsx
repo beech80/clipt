@@ -594,7 +594,7 @@ const Profile = () => {
       {/* Tabs */}
       <div className="flex justify-center mb-6">
         <div className="gaming-card p-2">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Toggle
               pressed={activeTab === 'clips'}
               onPressedChange={() => setActiveTab('clips')}
@@ -611,16 +611,7 @@ const Profile = () => {
               className="flex gap-2 items-center"
             >
               <Bookmark className="w-4 h-4" />
-              <span>Collection</span>
-            </Toggle>
-            <Toggle
-              pressed={activeTab === 'achievements'}
-              onPressedChange={() => setActiveTab('achievements')}
-              variant="outline"
-              className="flex gap-2 items-center"
-            >
-              <Trophy className="w-4 h-4" />
-              <span>Achievements</span>
+              <span>Collections</span>
             </Toggle>
             <Toggle
               pressed={activeTab === 'saved_videos'}
@@ -630,6 +621,15 @@ const Profile = () => {
             >
               <Bookmark className="w-4 h-4" />
               <span>Saved Videos</span>
+            </Toggle>
+            <Toggle
+              pressed={activeTab === 'achievements'}
+              onPressedChange={() => setActiveTab('achievements')}
+              variant="outline"
+              className="flex gap-2 items-center"
+            >
+              <Trophy className="w-4 h-4" />
+              <span>Trophies</span>
             </Toggle>
           </div>
         </div>
@@ -649,102 +649,59 @@ const Profile = () => {
               <p className="text-gaming-400">User hasn't posted any gaming clips</p>
               {isOwnProfile && (
                 <div className="mt-4">
-                  <Button 
-                    onClick={() => navigate('/create')}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Create Your First Clip
+                  <Button onClick={() => navigate('/upload')} variant="outline">
+                    Upload Your First Clip
                   </Button>
                 </div>
               )}
             </Card>
           )}
         </div>
-      ) : activeTab === 'achievements' ? (
-        <div className="gaming-card p-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-white mb-2">
-              <Trophy className="text-yellow-500" />
-              Achievement Showcase
-            </h2>
-            <p className="text-gray-400">Track your gaming accomplishments and milestones</p>
-          </div>
-          
-          {achievementsLoading ? (
-            <div className="p-8 flex flex-col items-center">
-              <div className="w-16 h-16 border-4 border-t-yellow-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-gray-400">Loading achievements...</p>
-            </div>
+      ) : activeTab === 'collection' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {userCollection.length > 0 ? (
+            userCollection.map(post => (
+              <PostItem key={post.id} post={post} />
+            ))
           ) : (
-            // ALWAYS force demo achievements to show for better user experience
-            <AchievementList userId={profileId} forceShowDemo={true} />
+            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
+              <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gaming-200 mb-2">Collection Empty</h3>
+              <p className="text-gaming-400">No clips saved to collections yet</p>
+              {isOwnProfile && (
+                <div className="mt-4">
+                  <Button onClick={() => navigate('/')} variant="outline">
+                    Find Clips to Save
+                  </Button>
+                </div>
+              )}
+            </Card>
           )}
         </div>
       ) : activeTab === 'saved_videos' ? (
-        <div className="gaming-card p-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-white mb-2">
-              <Bookmark className="text-blue-500" />
-              Saved Videos
-            </h2>
-            <p className="text-gray-400">Your saved gaming videos</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {savedVideos.length > 0 ? (
-              savedVideos.map(post => (
-                <PostItem key={post.id} post={post} />
-              ))
-            ) : (
-              <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
-                <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
-                <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Saved Videos Yet</h3>
-                <p className="text-gaming-400">Use the A button on a post to add it to your saved videos</p>
-                {isOwnProfile && (
-                  <div className="mt-4">
-                    <Button 
-                      onClick={() => navigate('/browse')}
-                      className="bg-blue-600 hover:bg-blue-700 mt-4"
-                    >
-                      Browse Videos to Add
-                    </Button>
-                  </div>
-                )}
-              </Card>
-            )}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {savedVideos.length > 0 ? (
+            savedVideos.map(post => (
+              <PostItem key={post.id} post={post} />
+            ))
+          ) : (
+            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
+              <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Saved Videos</h3>
+              <p className="text-gaming-400">User hasn't saved any videos yet</p>
+              {isOwnProfile && (
+                <div className="mt-4">
+                  <Button onClick={() => navigate('/')} variant="outline">
+                    Find Videos to Save
+                  </Button>
+                </div>
+              )}
+            </Card>
+          )}
         </div>
       ) : (
         <div className="gaming-card p-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-white mb-2">
-              <Bookmark className="text-blue-500" />
-              Collection
-            </h2>
-            <p className="text-gray-400">Your saved gaming clips</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {userCollection.length > 0 ? (
-              userCollection.map(post => (
-                <PostItem key={post.id} post={post} />
-              ))
-            ) : (
-              <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
-                <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
-                <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Collection Items Yet</h3>
-                <p className="text-gaming-400">Use the A button on a post to add it to your collection</p>
-                {isOwnProfile && (
-                  <div className="mt-4">
-                    <Button 
-                      onClick={() => navigate('/browse')}
-                      className="bg-blue-600 hover:bg-blue-700 mt-4"
-                    >
-                      Browse Clips to Add
-                    </Button>
-                  </div>
-                )}
-              </Card>
-            )}
-          </div>
+          <AchievementList userId={profileId || ''} forceShowDemo={true} />
         </div>
       )}
     </ProfileContent>

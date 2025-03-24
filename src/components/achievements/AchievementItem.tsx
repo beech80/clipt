@@ -1,134 +1,141 @@
 import React from 'react';
-import { Trophy, Star, Users, Monitor, Calendar, ArrowUp, MessageSquare, Heart, Rocket, Shield, Award, Share, Zap, Crown, Medal, Gift, Sparkle, Gem } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Trophy, Lock, Star, Users, Monitor, Calendar, ArrowUp, MessageSquare, Heart, Rocket, Shield, Award, Share, Zap, Crown, Medal, Gift, Sparkle, Gem } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import type { Achievement, AchievementProgress, GameAchievement } from '@/types/profile';
-import TrophyProgressBar from './TrophyProgressBar';
 
-type AchievementItemProps = {
+interface AchievementItemProps {
   achievement?: Achievement;
   progress?: AchievementProgress;
   gameAchievement?: GameAchievement;
-};
+  showDetails?: boolean;
+}
 
-// Function to determine rarity label and color
-const getRarityInfo = (percentage: number) => {
-  if (percentage < 10) {
-    return { label: 'Legendary', color: '#FF7700' };
-  } else if (percentage < 20) {
-    return { label: 'Epic', color: '#9900FF' };
-  } else if (percentage < 30) {
-    return { label: 'Rare', color: '#0078FF' };
-  } else if (percentage < 50) {
-    return { label: 'Uncommon', color: '#00B050' };
-  } else {
-    return { label: 'Common', color: '#CCCCCC' };
-  }
-};
-
-const AchievementItem: React.FC<AchievementItemProps> = ({
-  achievement,
-  progress,
-  gameAchievement,
+const AchievementItem: React.FC<AchievementItemProps> = ({ 
+  achievement, 
+  progress, 
+  gameAchievement, 
+  showDetails = false 
 }) => {
-  // If this is a game achievement, use its properties
   if (gameAchievement) {
-    const rarityInfo = getRarityInfo(20); // Demo value, would be from actual player stats
+    const { 
+      name, 
+      description, 
+      points, 
+      targetValue, 
+      category 
+    } = gameAchievement;
+    
+    const progressPercentage = Math.min(Math.max((0 / targetValue) * 100, 0), 100);
+    const progressText = `0% (0/${targetValue})`;
     
     return (
-      <div className="flex w-full overflow-hidden mb-3 rounded hover:border hover:border-gray-700 transition-colors">
-        <div className="h-24 w-24 flex-shrink-0 relative">
-          <div className="absolute inset-0 bg-[#012e14]">
-            <div className="w-full h-full flex items-center justify-center">
-              {getAchievementIcon(gameAchievement.name, gameAchievement.category)}
+      <Card className={`gaming-card p-4 flex gap-4 border-gray-700/30`}>
+        {/* Achievement Icon */}
+        <div className="relative">
+          <div className={`w-16 h-16 rounded-md flex items-center justify-center bg-gray-800/50`}>
+            {getAchievementIcon(name, category)}
+            <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
+              <Lock className="w-6 h-6 text-gray-400" />
             </div>
           </div>
-          <div className="absolute top-1 left-1 text-[#34dfeb] font-bold text-lg">
-            +{gameAchievement.points}
+        </div>
+        
+        {/* Achievement Details */}
+        <div className="flex-1">
+          <div className="flex justify-between items-start mb-1">
+            <h3 className="font-bold text-gray-300">{name}</h3>
           </div>
-          <div className="absolute bottom-1 left-1 text-[10px] px-1 rounded" style={{ backgroundColor: rarityInfo.color }}>
-            {rarityInfo.label}
+          
+          <p className="text-sm text-gray-400 mb-2">{description}</p>
+          
+          {/* Progress Bar */}
+          <div className="space-y-1">
+            <Progress value={progressPercentage} className="h-2" />
+            <div className="flex justify-between text-xs text-gray-400">
+              <span>{progressText}</span>
+              <span>{Math.round(progressPercentage)}%</span>
+            </div>
           </div>
         </div>
-        <div className="flex-1 p-3 bg-[#222222]">
-          <h3 className="text-white font-semibold text-lg">{gameAchievement.name}</h3>
-          <p className="text-gray-400 text-sm mb-2">
-            {gameAchievement.description} - 0/{gameAchievement.targetValue}
-          </p>
-          <div className="mb-1">
-            <TrophyProgressBar 
-              currentValue={0} 
-              targetValue={gameAchievement.targetValue}
-              isCompleted={false}
-            />
-          </div>
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-gray-500 text-xs">Unlocked by 0% of players</span>
-          </div>
-        </div>
-      </div>
+      </Card>
     );
   }
 
-  // For regular user achievements
   if (!achievement || !progress) return null;
   
-  // Calculate the progress percentage correctly
-  const currentValue = progress.currentValue || 0;
-  const targetValue = achievement.target_value || 1;
-  const percentComplete = Math.min(100, Math.round((currentValue / targetValue) * 100));
-  const isCompleted = currentValue >= targetValue;
+  const { 
+    name, 
+    description, 
+    points, 
+    target_value, 
+    category 
+  } = achievement;
   
-  // Get rarity info for user achievements
-  const rarityInfo = getRarityInfo(30); // Demo value, would use real data
-
+  const currentValue = progress.currentValue || 0;
+  const progressPercentage = Math.min(Math.max((currentValue / target_value) * 100, 0), 100);
+  const progressText = currentValue >= target_value 
+    ? 'Completed' 
+    : `${Math.round(progressPercentage)}% (${currentValue}/${target_value})`;
+  
   return (
-    <div className="flex w-full overflow-hidden mb-3 rounded hover:border hover:border-gray-700 transition-colors">
-      <div className="h-24 w-24 flex-shrink-0 relative">
-        <div className={`absolute inset-0 ${isCompleted ? 'bg-[#1e6b13]' : 'bg-[#012e14]'}`}>
-          <div className="w-full h-full flex items-center justify-center">
-            {getAchievementIcon(achievement.name, achievement.category)}
+    <Card className={`gaming-card p-4 flex gap-4 ${currentValue >= target_value ? 'border-yellow-500/30' : 'border-gray-700/30'}`}>
+      {/* Achievement Icon */}
+      <div className="relative">
+        <div className={`w-16 h-16 rounded-md flex items-center justify-center ${
+          currentValue >= target_value ? 'bg-yellow-500/20' : 'bg-gray-800/50'
+        }`}>
+          {getAchievementIcon(name, category)}
+          {currentValue < target_value && (
+            <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
+              <Lock className="w-6 h-6 text-gray-400" />
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Achievement Details */}
+      <div className="flex-1">
+        <div className="flex justify-between items-start mb-1">
+          <h3 className={`font-bold ${currentValue >= target_value ? 'text-yellow-400' : 'text-gray-300'}`}>
+            {name}
+          </h3>
+          {currentValue >= target_value && (
+            <span className="text-xs text-yellow-500 font-semibold px-2 py-0.5 bg-yellow-500/10 rounded">
+              Earned
+            </span>
+          )}
+        </div>
+        
+        <p className="text-sm text-gray-400 mb-2">{description}</p>
+        
+        {/* Progress Bar */}
+        <div className="space-y-1">
+          <Progress value={progressPercentage} className="h-2" />
+          <div className="flex justify-between text-xs text-gray-400">
+            <span>{progressText}</span>
+            {currentValue < target_value && (
+              <span>{Math.round(progressPercentage)}%</span>
+            )}
           </div>
         </div>
-        <div className="absolute top-1 left-1 text-[#34dfeb] font-bold text-lg">
-          +{achievement.points}
-        </div>
-        {isCompleted && (
-          <div className="absolute bottom-1 right-1">
-            <Trophy className="h-5 w-5 text-yellow-400" />
+        
+        {/* How to earn (shown only when details are expanded) */}
+        {showDetails && (
+          <div className="mt-3 pt-3 border-t border-gray-700">
+            <h4 className="text-sm font-semibold text-gray-300 mb-1">How to earn:</h4>
+            <p className="text-xs text-gray-400">This achievement can be earned by completing the following task: {name}</p>
           </div>
         )}
-        <div className="absolute bottom-1 left-1 text-[10px] px-1 rounded" style={{ backgroundColor: rarityInfo.color }}>
-          {rarityInfo.label}
-        </div>
       </div>
-      <div className="flex-1 p-3 bg-[#222222]">
-        <h3 className="text-white font-semibold text-lg">{achievement.name}</h3>
-        <p className="text-gray-400 text-sm mb-2">
-          {achievement.description} - {currentValue}/{targetValue}
-        </p>
-        <div className="mb-1">
-          <TrophyProgressBar 
-            currentValue={currentValue} 
-            targetValue={targetValue} 
-            isCompleted={isCompleted}
-          />
-        </div>
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-gray-500 text-xs">
-            {isCompleted 
-              ? `Unlocked on ${new Date(progress.updated_at || Date.now()).toLocaleDateString()}` 
-              : `${percentComplete}% Progress`
-            }
-          </span>
-        </div>
-      </div>
-    </div>
+    </Card>
   );
 };
 
 // Helper function to get the appropriate icon based on achievement name or category
 const getAchievementIcon = (name: string, category?: string) => {
-  const iconClassName = "h-12 w-12 text-[#01e6c9]";
+  const iconClassName = "w-8 h-8 text-gray-500";
   
   // First check by category if available
   if (category) {
