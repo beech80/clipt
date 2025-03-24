@@ -637,13 +637,32 @@ const Profile = () => {
       
       {/* Tab Content */}
       {activeTab === 'clips' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-2">
           {userPosts.length > 0 ? (
             userPosts.map(post => (
-              <PostItem key={post.id} post={post} />
+              <div key={post.id} className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity">
+                {post.video_url ? (
+                  <video 
+                    src={post.video_url} 
+                    className="w-full h-full object-cover"
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  />
+                ) : post.image_url ? (
+                  <img 
+                    src={post.image_url} 
+                    alt={post.content || 'Post image'} 
+                    className="w-full h-full object-cover"
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gaming-800 flex items-center justify-center text-gaming-400">
+                    No media
+                  </div>
+                )}
+              </div>
             ))
           ) : (
-            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
+            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
               <Gamepad2 className="w-12 h-12 text-gaming-400 mb-4" />
               <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Clips Yet</h3>
               <p className="text-gaming-400">User hasn't posted any gaming clips</p>
@@ -658,13 +677,32 @@ const Profile = () => {
           )}
         </div>
       ) : activeTab === 'collection' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-2">
           {userCollection.length > 0 ? (
             userCollection.map(post => (
-              <PostItem key={post.id} post={post} />
+              <div key={post.id} className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity">
+                {post.video_url ? (
+                  <video 
+                    src={post.video_url} 
+                    className="w-full h-full object-cover"
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  />
+                ) : post.image_url ? (
+                  <img 
+                    src={post.image_url} 
+                    alt={post.content || 'Post image'} 
+                    className="w-full h-full object-cover"
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gaming-800 flex items-center justify-center text-gaming-400">
+                    No media
+                  </div>
+                )}
+              </div>
             ))
           ) : (
-            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
+            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
               <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
               <h3 className="text-xl font-semibold text-gaming-200 mb-2">Collection Empty</h3>
               <p className="text-gaming-400">No clips saved to collections yet</p>
@@ -679,13 +717,32 @@ const Profile = () => {
           )}
         </div>
       ) : activeTab === 'saved_videos' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-2">
           {savedVideos.length > 0 ? (
             savedVideos.map(post => (
-              <PostItem key={post.id} post={post} />
+              <div key={post.id} className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity">
+                {post.video_url ? (
+                  <video 
+                    src={post.video_url} 
+                    className="w-full h-full object-cover"
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  />
+                ) : post.image_url ? (
+                  <img 
+                    src={post.image_url} 
+                    alt={post.content || 'Post image'} 
+                    className="w-full h-full object-cover"
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gaming-800 flex items-center justify-center text-gaming-400">
+                    No media
+                  </div>
+                )}
+              </div>
             ))
           ) : (
-            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-1 md:col-span-2">
+            <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
               <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
               <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Saved Videos</h3>
               <p className="text-gaming-400">User hasn't saved any videos yet</p>
@@ -700,7 +757,7 @@ const Profile = () => {
           )}
         </div>
       ) : (
-        <div className="gaming-card p-6">
+        <div className="col-span-3">
           <AchievementList userId={profileId || ''} forceShowDemo={true} />
         </div>
       )}
