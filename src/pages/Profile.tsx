@@ -37,22 +37,18 @@ const Profile = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collection' | 'saved_videos'>('clips');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<ProfileType | null>(null);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userCollection, setUserCollection] = useState<any[]>([]);
   const [savedVideos, setSavedVideos] = useState<any[]>([]);
-  const [achievementsLoading, setAchievementsLoading] = useState(true);
-  
-  // Stats for displaying counts
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'clips' | 'achievements' | 'collection' | 'saved_videos'>('clips');
   const [stats, setStats] = useState<ProfileStats>({
     followers: 0,
     following: 0,
     achievements: 0
   });
-
-  const [profile, setProfile] = useState<ProfileType | null>(null);
   
   // Safe profile ID handling
   const profileId = id || user?.id;
@@ -242,23 +238,22 @@ const Profile = () => {
       
       if (postsError) {
         console.error("Error fetching user posts:", postsError);
+        setUserPosts([]);
       } else {
         // Log for debugging purposes
-        console.log("User posts fetched:", userPostsData?.length || 0);
+        console.log("User posts fetched:", userPostsData?.length || 0, userPostsData);
         
-        // If there are no posts, it could be due to them being unpublished
         if (!userPostsData || userPostsData.length === 0) {
-          // Try fetching without the is_published filter
-          const { data: allUserPosts, error: allPostsError } = await supabase
+          // Try fetching without any filters to see if posts exist at all
+          const { data: allPosts, error: allPostsError } = await supabase
             .from('posts')
             .select('*')
-            .eq('profile_id', profileId)
-            .order('created_at', { ascending: false });
+            .eq('profile_id', profileId);
             
-          if (allPostsError) {
-            console.error("Error fetching all posts:", allPostsError);
-          } else if (allUserPosts && allUserPosts.length > 0) {
-            setUserPosts(allUserPosts);
+          console.log("Fallback - All posts for user:", allPosts?.length || 0, allPosts);
+          
+          if (!allPostsError && allPosts && allPosts.length > 0) {
+            setUserPosts(allPosts);
           } else {
             setUserPosts([]);
           }
@@ -434,7 +429,6 @@ const Profile = () => {
       setError(err instanceof Error ? err.message : "Failed to load profile data");
     } finally {
       setLoading(false);
-      setAchievementsLoading(false);
     }
   }, [profileId, fetchProfileData, user?.id]);
 
@@ -452,19 +446,6 @@ const Profile = () => {
     
     return () => clearTimeout(timer);
   }, [profileId, user]);
-
-  // Set the achievements to load for a brief period to show loading animation
-  useEffect(() => {
-    if (!loading) {
-      // Reset achievements loading state when profile is loaded
-      setAchievementsLoading(true);
-      const timer = setTimeout(() => {
-        setAchievementsLoading(false);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
 
   // Render loading state
   if (loading) {
@@ -668,7 +649,7 @@ const Profile = () => {
               <p className="text-gaming-400">User hasn't posted any gaming clips</p>
               {isOwnProfile && (
                 <div className="mt-4">
-                  <Button onClick={() => navigate('/upload')} variant="outline">
+                  <Button onClick={() => navigate('/post/new')} variant="outline">
                     Upload Your First Clip
                   </Button>
                 </div>
