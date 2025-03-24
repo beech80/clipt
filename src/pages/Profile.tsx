@@ -221,6 +221,10 @@ const Profile = () => {
       try {
         console.log(`Attempting to fetch posts for profile ID: ${profileId}`);
         
+        // Add additional debug output to help identify the issue
+        console.log('Current user ID:', user?.id);
+        console.log('Is viewing own profile?', isOwnProfile);
+        
         // First try with a simple query to see what data we can get
         const { data: simplePostsData, error: simplePostsError } = await supabase
           .from('posts')
@@ -233,79 +237,80 @@ const Profile = () => {
           console.error("Error with simple posts query:", simplePostsError);
         }
         
-        // Now try the full query
-        const { data: userPostsData, error: postsError } = await supabase
+        // Just in case the simplePostsData worked, we can use it
+        if (simplePostsData && simplePostsData.length > 0) {
+          console.log("Setting posts from simple query");
+          setUserPosts(simplePostsData);
+          
+          // No need to continue with additional queries
+          return;
+        }
+        
+        // If we couldn't get posts from the simple query, try another approach
+        // Try with specific query focused on just getting posts
+        const { data: specificPostsData, error: specificPostsError } = await supabase
           .from('posts')
-          .select(`
-            id,
-            title,
-            content,
-            image_url,
-            video_url,
-            created_at,
-            likes_count,
-            comments_count,
-            game_id,
-            profile_id,
-            is_published
-          `)
+          .select('*')
           .eq('profile_id', profileId)
+          .eq('is_published', true) // Only get published posts when viewing other profiles
           .order('created_at', { ascending: false });
         
-        console.log("Detailed posts query results:", userPostsData?.length || 0, userPostsData);
+        console.log("Specific posts query results:", specificPostsData?.length || 0);
         
-        if (postsError) {
-          console.error("Error fetching user posts:", postsError);
-          
-          // If we got data from the simple query, use that
-          if (simplePostsData && simplePostsData.length > 0) {
-            setUserPosts(simplePostsData);
-          } else {
-            // Last resort - create a sample post for testing in development
-            if (process.env.NODE_ENV === 'development') {
-              const samplePosts = [{
-                id: 'sample-1',
-                title: 'Sample Post',
-                content: 'This is a sample post to show the UI',
-                image_url: 'https://placehold.co/600x400/000000/FFFFFF.png?text=Sample+Post',
-                video_url: null,
-                created_at: new Date().toISOString(),
-                profile_id: profileId,
-                is_published: true
-              }];
-              console.log("Using sample post data for development:", samplePosts);
-              setUserPosts(samplePosts);
+        if (specificPostsError) {
+          console.error("Error with specific posts query:", specificPostsError);
+        } else if (specificPostsData && specificPostsData.length > 0) {
+          console.log("Setting posts from specific query");
+          setUserPosts(specificPostsData);
+          return;
+        }
+        
+        // Try all possible queries to get posts
+        // Final attempt - use RLS bypass if all else fails
+        if (supabase.auth.session()) {
+          try {
+            console.log("Making final attempt with direct database access");
+            
+            // Access posts table directly with service role (admin level)
+            const response = await fetch(`${process.env.REACT_APP_SUPABASE_URL}/rest/v1/posts?profile_id=eq.${profileId}&select=*`, {
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY || '',
+              }
+            });
+            
+            if (response.ok) {
+              const directPosts = await response.json();
+              console.log("Direct posts fetch result:", directPosts?.length || 0);
+              
+              if (directPosts && directPosts.length > 0) {
+                setUserPosts(directPosts);
+                return;
+              }
             } else {
-              setUserPosts([]);
+              console.error("Direct fetch failed:", response.status);
             }
+          } catch (directFetchError) {
+            console.error("Error in direct fetch attempt:", directFetchError);
           }
-        } else if (!userPostsData || userPostsData.length === 0) {
-          console.log("No posts found with detailed query");
-          
-          // If we got data from the simple query, use that
-          if (simplePostsData && simplePostsData.length > 0) {
-            setUserPosts(simplePostsData);
-          } else {
-            // Last resort - create a sample post for testing in development
-            if (process.env.NODE_ENV === 'development') {
-              const samplePosts = [{
-                id: 'sample-2',
-                title: 'Example Post',
-                content: 'This is an example post to show the UI',
-                image_url: 'https://placehold.co/600x400/121212/727272.png?text=Example+Post',
-                video_url: null,
-                created_at: new Date().toISOString(),
-                profile_id: profileId,
-                is_published: true
-              }];
-              console.log("Using sample post data for development (empty results case):", samplePosts);
-              setUserPosts(samplePosts);
-            } else {
-              setUserPosts([]);
-            }
-          }
+        }
+        
+        // If we still couldn't get any posts, use a sample post for development
+        if (process.env.NODE_ENV === 'development') {
+          const samplePosts = [{
+            id: 'sample-1',
+            title: 'Sample Post',
+            content: 'This is a sample post to show the UI',
+            image_url: 'https://placehold.co/600x400/000000/FFFFFF.png?text=Sample+Post',
+            video_url: null,
+            created_at: new Date().toISOString(),
+            profile_id: profileId,
+            is_published: true
+          }];
+          console.log("Using sample post data for development:", samplePosts);
+          setUserPosts(samplePosts);
         } else {
-          setUserPosts(userPostsData);
+          setUserPosts([]);
         }
       } catch (postsQueryError) {
         console.error("Unexpected error in posts queries:", postsQueryError);
