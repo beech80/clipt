@@ -99,6 +99,48 @@ const Profile = () => {
         throw error;
       }
       
+      // If there's an error or no profile for current user, create one
+      if (!profileData && userId === user?.id) {
+        console.log("No profile found for current user, creating one");
+        
+        // Create a default profile for the current user
+        const defaultProfile: Partial<ProfileType> = {
+          id: userId,
+          username: `user_${userId.substring(0, 8)}`,
+          display_name: user?.user_metadata?.name || 'New User',
+          bio: 'Welcome to my Clipt profile!',
+          avatar_url: user?.user_metadata?.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId,
+          created_at: new Date().toISOString(),
+          followers_count: 0,
+          following_count: 0,
+          achievements_count: 0,
+          // Default settings
+          enable_notifications: true,
+          enable_sounds: true
+        };
+        
+        // First create the profile
+        try {
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .upsert(defaultProfile)
+            .select()
+            .single();
+          
+          if (createError) {
+            console.error("Error creating profile:", createError);
+            throw new Error('Failed to create profile');
+          }
+          
+          console.log("Created new profile successfully:", newProfile);
+          return newProfile as ProfileType;
+        } catch (createProfileError) {
+          console.error("Error creating profile:", createProfileError);
+          // Return a fallback profile for UI display
+          return defaultProfile as ProfileType;
+        }
+      }
+      
       // If profile exists but has no achievements, create default ones
       if (profileData && userId === user?.id && (!profileData.achievements_count || profileData.achievements_count === 0)) {
         try {
