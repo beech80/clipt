@@ -47,7 +47,7 @@ const Menu = () => {
     {
       title: 'SOCIAL',
       items: [
-        { title: 'Invite Friends', icon: <Users className="h-6 w-6 mr-4 text-green-400" />, path: '/invite', description: 'Share with friends' }
+        { title: 'Invite Friends', icon: <Users className="h-6 w-6 mr-4 text-green-400" />, path: '/notifications', description: 'Share with friends' }
       ]
     }
   ];
