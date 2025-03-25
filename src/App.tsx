@@ -26,6 +26,7 @@ const Clipts = React.lazy(() => import('./pages/Clipts'));
 const TopClipts = React.lazy(() => import('./pages/TopClipts'));
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
 const Discovery = React.lazy(() => import('./pages/Discovery'));
+const Explore = React.lazy(() => import('./pages/Explore'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Menu = React.lazy(() => import('./pages/Menu'));
 const Profile = React.lazy(() => import('./pages/Profile'));
@@ -79,6 +80,7 @@ function AppContent() {
       <Route path="/squads-clipts" element={<SquadsClipts />} />
       <Route path="/profile/:id?" element={<UserProfile />} />
       <Route path="/discover" element={<Discovery />} />
+      <Route path="/explore" element={<Explore />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/profile/edit" element={
