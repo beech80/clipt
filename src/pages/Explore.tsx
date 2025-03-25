@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Gamepad2, Trophy, Users as UsersIcon, Star } from 'lucide-react';
+import { Gamepad2, Trophy, Users as UsersIcon, Star, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import GameCard from '@/components/GameCard';
 import StreamerCard from '@/components/StreamerCard';
@@ -29,6 +29,9 @@ const Explore = () => {
   const [topGames, setTopGames] = useState<Game[]>([]);
   const [topStreamers, setTopStreamers] = useState<Streamer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<{games: Game[], streamers: Streamer[]}>({games: [], streamers: []});
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -58,7 +61,7 @@ const Explore = () => {
               id: game.id || '',
               name: game.name || '',
               cover_url: game.cover_url || '',
-              post_count: Number(game.post_count) || 0
+              post_count: 0 // Set to 0 as requested
             }));
             
             if (isMounted) {
@@ -94,8 +97,8 @@ const Explore = () => {
               avatar_url: streamer.avatar_url || '',
               streaming_url: streamer.streaming_url || '',
               current_game: streamer.current_game || '',
-              is_live: Boolean(streamer.is_live),
-              follower_count: Number(streamer.follower_count) || 0
+              is_live: false, // Set to false to remove LIVE indicator
+              follower_count: 0 // Set to 0 as requested
             }));
             
             if (isMounted) {
@@ -133,19 +136,19 @@ const Explore = () => {
         id: '1',
         name: 'CyberPunk 2077',
         cover_url: 'https://i.imgur.com/9nGEh4e.jpeg',
-        post_count: 340
+        post_count: 0 // Set to 0 as requested
       },
       {
         id: '2',
         name: 'Elden Ring',
         cover_url: 'https://i.imgur.com/GNEDnLC.jpeg',
-        post_count: 285
+        post_count: 0 // Set to 0 as requested
       },
       {
         id: '3',
         name: 'Call of Duty: Warzone',
         cover_url: 'https://i.imgur.com/D5KKcOj.jpeg',
-        post_count: 210
+        post_count: 0 // Set to 0 as requested
       }
     ];
   };
@@ -159,8 +162,8 @@ const Explore = () => {
         avatar_url: 'https://i.imgur.com/UYVnrVE.jpeg',
         streaming_url: 'https://twitch.tv/ninja',
         current_game: 'Fortnite',
-        is_live: true,
-        follower_count: 18500000
+        is_live: false, // Set to false to remove LIVE indicator
+        follower_count: 0 // Set to 0 as requested
       },
       {
         id: '2',
@@ -169,8 +172,8 @@ const Explore = () => {
         avatar_url: 'https://i.imgur.com/xILQwCi.jpeg',
         streaming_url: 'https://twitch.tv/shroud',
         current_game: 'Valorant',
-        is_live: false,
-        follower_count: 10200000
+        is_live: false, // Set to false to remove LIVE indicator
+        follower_count: 0 // Set to 0 as requested
       },
       {
         id: '3',
@@ -179,11 +182,80 @@ const Explore = () => {
         avatar_url: 'https://i.imgur.com/WVJnSA3.jpeg',
         streaming_url: 'https://twitch.tv/pokimane',
         current_game: 'Just Chatting',
-        is_live: true,
-        follower_count: 9300000
+        is_live: false, // Set to false to remove LIVE indicator
+        follower_count: 0 // Set to 0 as requested
       }
     ];
   };
+
+  // New function to handle search
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) return;
+    
+    setIsSearching(true);
+    
+    try {
+      // Search for games
+      const { data: gamesData, error: gamesError } = await supabase
+        .from('games')
+        .select('id, name, cover_url, post_count')
+        .ilike('name', `%${searchTerm}%`)
+        .limit(5);
+        
+      if (gamesError) throw gamesError;
+      
+      // Search for users/streamers
+      const { data: streamersData, error: streamersError } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, streaming_url, current_game, is_live, follower_count')
+        .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
+        .limit(5);
+        
+      if (streamersError) throw streamersError;
+      
+      const processedGames = gamesData ? gamesData.map(game => ({
+        id: game.id || '',
+        name: game.name || '',
+        cover_url: game.cover_url || '',
+        post_count: 0 // Set to 0 as requested
+      })) : [];
+      
+      const processedStreamers = streamersData ? streamersData.map(streamer => ({
+        id: streamer.id || '',
+        username: streamer.username || '',
+        display_name: streamer.display_name || '',
+        avatar_url: streamer.avatar_url || '',
+        streaming_url: streamer.streaming_url || '',
+        current_game: streamer.current_game || '',
+        is_live: false, // Set to false to remove LIVE indicator
+        follower_count: 0 // Set to 0 as requested
+      })) : [];
+      
+      setSearchResults({
+        games: processedGames,
+        streamers: processedStreamers
+      });
+      
+    } catch (error) {
+      console.error('Error searching:', error);
+      toast.error('Search failed');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Effect to trigger search when user types
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm.trim()) {
+        handleSearch();
+      } else {
+        setSearchResults({games: [], streamers: []});
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   return (
     <div className="min-h-screen bg-[#0f112a] text-white pb-24">
@@ -195,6 +267,92 @@ const Explore = () => {
       </div>
 
       <div className="container mx-auto px-4 pt-24 pb-4 max-w-4xl">
+        {/* Search Bar */}
+        <div className="mb-6 relative">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search games or users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-[#1a1c42] border-2 border-[#4a4dff] rounded-lg p-3 text-white pl-10 shadow-neon focus:outline-none focus:ring-2 focus:ring-[#5ce1ff] focus:border-transparent"
+            />
+            <Search className="absolute left-3 top-3.5 text-[#5ce1ff]" size={18} />
+          </div>
+          
+          {/* Search Results */}
+          {searchTerm.trim() && (
+            <div className="absolute w-full bg-[#1a1c42] border-2 border-[#4a4dff] rounded-lg mt-2 shadow-xl z-50 max-h-96 overflow-y-auto">
+              {isSearching ? (
+                <div className="p-4 text-center">
+                  <div className="w-8 h-8 border-t-4 border-[#5ce1ff] border-solid rounded-full animate-spin mx-auto"></div>
+                  <p className="mt-2 text-[#5ce1ff]">Searching...</p>
+                </div>
+              ) : (
+                <>
+                  {searchResults.games.length === 0 && searchResults.streamers.length === 0 ? (
+                    <div className="p-4 text-center text-gray-400">No results found</div>
+                  ) : (
+                    <>
+                      {searchResults.games.length > 0 && (
+                        <div className="p-2">
+                          <h3 className="px-2 py-1 text-[#5ce1ff] font-bold">Games</h3>
+                          <div className="divide-y divide-[#4a4dff]/30">
+                            {searchResults.games.map(game => (
+                              <div 
+                                key={game.id}
+                                onClick={() => navigate(`/game/${game.id}`)}
+                                className="flex items-center p-2 hover:bg-[#262966] cursor-pointer"
+                              >
+                                <div className="w-10 h-10 rounded overflow-hidden mr-3">
+                                  {game.cover_url ? (
+                                    <img src={game.cover_url} alt={game.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full bg-indigo-900 flex items-center justify-center">
+                                      <Gamepad2 className="w-5 h-5 text-indigo-300" />
+                                    </div>
+                                  )}
+                                </div>
+                                <span>{game.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {searchResults.streamers.length > 0 && (
+                        <div className="p-2">
+                          <h3 className="px-2 py-1 text-[#ff66c4] font-bold">Users</h3>
+                          <div className="divide-y divide-[#ff66c4]/30">
+                            {searchResults.streamers.map(streamer => (
+                              <div 
+                                key={streamer.id}
+                                onClick={() => navigate(`/profile/${streamer.id}`)}
+                                className="flex items-center p-2 hover:bg-[#262966] cursor-pointer"
+                              >
+                                <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+                                  {streamer.avatar_url ? (
+                                    <img src={streamer.avatar_url} alt={streamer.username} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full bg-purple-900 flex items-center justify-center">
+                                      <UsersIcon className="w-5 h-5 text-purple-300" />
+                                    </div>
+                                  )}
+                                </div>
+                                <span>{streamer.display_name || streamer.username}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        
         {loading ? (
           <div className="flex flex-col items-center justify-center py-10">
             <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
@@ -245,7 +403,7 @@ const Explore = () => {
                       
                       <div className="flex-1">
                         <h3 className="font-bold text-lg text-white pixel-font">Coming Soon...</h3>
-                        <p className="text-[#5ce1ff] text-sm">{Number(game.post_count).toLocaleString()} posts</p>
+                        <p className="text-[#5ce1ff] text-sm">0 posts</p>
                       </div>
                     </div>
                   ))}
@@ -304,11 +462,9 @@ const Explore = () => {
                       <div className="flex-1">
                         <div className="flex items-center">
                           <h3 className="font-bold text-lg text-white pixel-font">Coming Soon...</h3>
-                          {streamer.is_live && (
-                            <span className="ml-2 px-2 py-0.5 text-xs bg-red-600 text-white rounded-full pixel-font animate-pulse">LIVE</span>
-                          )}
+                          {/* LIVE indicator removed as requested */}
                         </div>
-                        <p className="text-[#ff66c4] text-sm">{Number(streamer.follower_count).toLocaleString()} followers</p>
+                        <p className="text-[#ff66c4] text-sm">0 followers</p>
                       </div>
                     </div>
                   ))}
