@@ -36,7 +36,7 @@ const Menu = () => {
     {
       title: 'EXPLORE',
       items: [
-        { title: 'Discovery', icon: <Compass className="h-6 w-6 mr-4 text-blue-400" />, path: '/discovery', description: 'Find new games' },
+        { title: 'Discovery', icon: <Compass className="h-6 w-6 mr-4 text-blue-400" />, path: '/discover', description: 'Find new games' },
         { title: 'Top Clipts', icon: <Award className="h-6 w-6 mr-4 text-blue-400" />, path: '/top-clipts', description: 'Hall of fame' },
         { title: 'Squads Clipts', icon: <Users className="h-6 w-6 mr-4 text-purple-400" />, path: '/squads-clipts', description: 'Your squads clipts', className: 'squads-menu-item' },
         { title: 'Clipts', icon: <Film className="h-6 w-6 mr-4 text-blue-400" />, path: '/clipts', description: 'View all clipts' },

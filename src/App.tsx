@@ -78,7 +78,7 @@ function AppContent() {
       <Route path="/top-clipts" element={<TopClipts />} />
       <Route path="/squads-clipts" element={<SquadsClipts />} />
       <Route path="/profile/:id?" element={<UserProfile />} />
-      <Route path="/discovery" element={<Discovery />} />
+      <Route path="/discover" element={<Discovery />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/profile/edit" element={
