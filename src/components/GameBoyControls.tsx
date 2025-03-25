@@ -38,7 +38,8 @@ import {
   FiAward, 
   FiUsers, 
   FiMonitor,
-  FiChevronRight
+  FiChevronRight,
+  FiCompass
 } from 'react-icons/fi';
 
 interface GameBoyControlsProps {
@@ -1191,6 +1192,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       description: 'View all clipts (videos)',
       icon: <FiMonitor />, 
       action: () => navigate('/clipts') 
+    },
+    { 
+      id: 'discover', 
+      name: 'Discovery', 
+      description: 'Find new games',
+      icon: <FiCompass />, 
+      action: () => navigate('/discover') 
     }
   ];
 
