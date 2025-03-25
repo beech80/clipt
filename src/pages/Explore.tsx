@@ -47,18 +47,23 @@ const Explore = () => {
             .order('post_count', { ascending: false })
             .limit(3);
             
-          if (error) throw error;
+          if (error) {
+            console.error('Error fetching top games:', error);
+            throw error;
+          }
           
-          // Safely transform the data to Game[] type
-          const gamesData: Game[] = (data || []).map(game => ({
-            id: game.id || '',
-            name: game.name || '',
-            cover_url: game.cover_url || '',
-            post_count: Number(game.post_count) || 0
-          }));
-          
-          if (isMounted) {
-            setTopGames(gamesData);
+          if (data) {
+            // Safely transform the data to Game[] type
+            const gamesData: Game[] = data.map(game => ({
+              id: game.id || '',
+              name: game.name || '',
+              cover_url: game.cover_url || '',
+              post_count: Number(game.post_count) || 0
+            }));
+            
+            if (isMounted) {
+              setTopGames(gamesData);
+            }
           }
           
         } catch (error) {
@@ -75,22 +80,27 @@ const Explore = () => {
             .order('follower_count', { ascending: false })
             .limit(3);
             
-          if (error) throw error;
+          if (error) {
+            console.error('Error fetching top streamers:', error);
+            throw error;
+          }
           
-          // Safely transform the data to Streamer[] type
-          const streamersData: Streamer[] = (data || []).map(streamer => ({
-            id: streamer.id || '',
-            username: streamer.username || '',
-            display_name: streamer.display_name || '',
-            avatar_url: streamer.avatar_url || '',
-            streaming_url: streamer.streaming_url || '',
-            current_game: streamer.current_game || '',
-            is_live: Boolean(streamer.is_live),
-            follower_count: Number(streamer.follower_count) || 0
-          }));
-          
-          if (isMounted) {
-            setTopStreamers(streamersData);
+          if (data) {
+            // Safely transform the data to Streamer[] type
+            const streamersData: Streamer[] = data.map(streamer => ({
+              id: streamer.id || '',
+              username: streamer.username || '',
+              display_name: streamer.display_name || '',
+              avatar_url: streamer.avatar_url || '',
+              streaming_url: streamer.streaming_url || '',
+              current_game: streamer.current_game || '',
+              is_live: Boolean(streamer.is_live),
+              follower_count: Number(streamer.follower_count) || 0
+            }));
+            
+            if (isMounted) {
+              setTopStreamers(streamersData);
+            }
           }
           
         } catch (error) {
@@ -234,7 +244,7 @@ const Explore = () => {
                       </div>
                       
                       <div className="flex-1">
-                        <h3 className="font-bold text-lg text-white pixel-font truncate">{game.name}</h3>
+                        <h3 className="font-bold text-lg text-white pixel-font">Coming Soon...</h3>
                         <p className="text-[#5ce1ff] text-sm">{Number(game.post_count).toLocaleString()} posts</p>
                       </div>
                     </div>
@@ -293,7 +303,7 @@ const Explore = () => {
                       
                       <div className="flex-1">
                         <div className="flex items-center">
-                          <h3 className="font-bold text-lg text-white pixel-font">{streamer.display_name || streamer.username}</h3>
+                          <h3 className="font-bold text-lg text-white pixel-font">Coming Soon...</h3>
                           {streamer.is_live && (
                             <span className="ml-2 px-2 py-0.5 text-xs bg-red-600 text-white rounded-full pixel-font animate-pulse">LIVE</span>
                           )}
