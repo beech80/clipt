@@ -710,7 +710,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               return;
             }
             
-            toast.error("No post selected. Try scrolling to a post first.");
+            console.log('No post selected for comment');
             return;
           }
           
@@ -747,13 +747,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               handleDirectFollow(targetPostId);
             }, 500);
           } else {
-            toast.error('No post selected. Try scrolling to a post first.');
+            console.log('No post selected for follow');
           }
           break;
         case 'trophy':
           // Instead of direct implementation, dispatch a custom event
           if (!currentPostId) {
-            toast.error("No post selected. Try scrolling to a post first.");
+            console.log('No post selected for trophy');
             return;
           }
           
@@ -1364,7 +1364,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       setCurrentPostId(targetPostId);
       handleComment();
     } else {
-      toast.info('Navigate to a post to comment');
+      console.log('No post selected for comment');
     }
   };
 
@@ -1380,7 +1380,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       setCurrentPostId(targetPostId);
       handleSaveVideo();
     } else {
-      toast.info('Navigate to a post to save video');
+      console.log('No post selected for save video');
     }
   };
 
@@ -1396,7 +1396,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       setCurrentPostId(targetPostId);
       handleLike();
     } else {
-      toast.info('Navigate to a post to like');
+      console.log('No post selected for like');
     }
   };
 
@@ -1412,7 +1412,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       setCurrentPostId(targetPostId);
       handleTrophy();
     } else {
-      toast.error('No post selected. Try scrolling to a post first.');
+      console.log('No post selected for trophy');
     }
   };
 
@@ -1596,7 +1596,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         return;
       }
       
-      toast.error("No post selected. Try scrolling to a post first.");
+      console.log('No post selected for comment');
       return;
     }
     
@@ -1639,7 +1639,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         handleDirectFollow(targetPostId);
       }, 500);
     } else {
-      toast.error('No post selected. Try scrolling to a post first.');
+      console.log('No post selected for follow');
     }
   };
   const handleTrophy = async () => {
