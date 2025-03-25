@@ -16,13 +16,16 @@ interface Game {
   is_trending: boolean;
 }
 
+// Make filter type more specific
+type FilterType = 'all' | 'trending' | 'following';
+
 const TopGames = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<Game[]>([]);
   const [filteredGames, setFilteredGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'trending' | 'following'>('all');
+  const [filter, setFilter] = useState<FilterType>('all');
   const [followingIds, setFollowingIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -106,6 +109,13 @@ const TopGames = () => {
     setFilteredGames(result);
   }, [games, searchTerm, filter, followingIds]);
 
+  // Handle filter change safely
+  const handleFilterChange = (value: string) => {
+    if (value === 'all' || value === 'trending' || value === 'following') {
+      setFilter(value);
+    }
+  };
+
   const handleFollow = async (gameId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     
@@ -145,6 +155,11 @@ const TopGames = () => {
       console.error('Error following/unfollowing game:', error);
       toast.error('Failed to update follow status');
     }
+  };
+
+  // Navigate to game details
+  const navigateToGame = (gameId: string) => {
+    navigate(`/game/${gameId}`);
   };
 
   const clearSearch = () => {
@@ -188,7 +203,7 @@ const TopGames = () => {
               )}
             </div>
             
-            <Tabs value={filter} onValueChange={(value) => setFilter(value as 'all' | 'trending' | 'following')}>
+            <Tabs value={filter} onValueChange={handleFilterChange}>
               <TabsList className="w-full grid grid-cols-3 bg-gray-800/50">
                 <TabsTrigger value="all" className="data-[state=active]:bg-purple-600">
                   All
@@ -226,7 +241,7 @@ const TopGames = () => {
                 <div 
                   key={game.id}
                   className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
-                  onClick={() => navigate(`/game/${game.id}`)}
+                  onClick={() => navigateToGame(game.id)}
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-700">

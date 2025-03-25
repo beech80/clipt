@@ -33,6 +33,13 @@ const AllStreamers = () => {
   const [filter, setFilter] = useState<FilterType>('all');
   const [followingIds, setFollowingIds] = useState<string[]>([]);
 
+  // Handle filter change safely
+  const handleFilterChange = (value: string) => {
+    if (value === 'all' || value === 'live' || value === 'following') {
+      setFilter(value);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     
@@ -75,7 +82,7 @@ const AllStreamers = () => {
         // Only update state if component is still mounted
         if (isMounted) {
           // Transform raw data to proper types
-          const transformedStreamers: Streamer[] = streamerData.map((item: any) => ({
+          const transformedStreamers: Streamer[] = streamerData ? streamerData.map((item: any) => ({
             id: item.id || '',
             username: item.username || '',
             display_name: item.display_name || null,
@@ -84,7 +91,7 @@ const AllStreamers = () => {
             follower_count: Number(item.follower_count || 0),
             streaming_url: item.streaming_url || null,
             current_game: item.current_game || null
-          }));
+          })) : [];
           
           setStreamers(transformedStreamers);
           setFilteredStreamers(transformedStreamers);
@@ -172,6 +179,11 @@ const AllStreamers = () => {
     }
   };
 
+  // Navigate to streamer profile
+  const navigateToProfile = (streamerId: string) => {
+    navigate(`/profile/${streamerId}`);
+  };
+
   const clearSearch = () => {
     setSearchTerm('');
   };
@@ -213,7 +225,7 @@ const AllStreamers = () => {
               )}
             </div>
             
-            <Tabs value={filter} onValueChange={(value) => setFilter(value as FilterType)}>
+            <Tabs value={filter} onValueChange={handleFilterChange}>
               <TabsList className="w-full grid grid-cols-3 bg-gray-800/50">
                 <TabsTrigger value="all" className="data-[state=active]:bg-purple-600">
                   All
@@ -251,7 +263,7 @@ const AllStreamers = () => {
                 <div 
                   key={streamer.id}
                   className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors"
-                  onClick={() => navigate(`/profile/${streamer.id}`)}
+                  onClick={() => navigateToProfile(streamer.id)}
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 relative rounded-full overflow-hidden border border-gray-700">
