@@ -363,34 +363,8 @@ const Discovery = () => {
       return;
     }
     
-    setIsSearching(true);
-    setActiveTab('games');
-    
-    // If search wasn't triggered automatically, manually trigger it
-    if (searchTerm.trim().length > 0) {
-      // Add a small delay to ensure the search query is processed
-      setTimeout(() => {
-        refetchGames();
-        refetchStreamers();
-      }, 100);
-    
-      // If we have fewer than 3 results, try IGDB
-      if (games?.length < 3) {
-        try {
-          console.log('Few results in database, trying IGDB search...');
-          const { igdbService } = await import('@/services/igdbService');
-          const igdbResults = await igdbService.searchGames(searchTerm);
-          
-          if (igdbResults && igdbResults.length > 0) {
-            // Process and add to database for future searches
-            // This would typically be done server-side, but simulating here
-            console.log('Found additional games in IGDB:', igdbResults.length);
-          }
-        } catch (error) {
-          console.error('Error searching IGDB:', error);
-        }
-      }
-    }
+    // Redirect to the Explore page when search is submitted
+    navigate('/explore');
   };
 
   const processSearchResults = () => {
@@ -428,11 +402,17 @@ const Discovery = () => {
                   placeholder="Search games or streamers..."
                   value={searchTerm}
                   onChange={handleInputChange}
-                  onFocus={handleSearchFocus}
+                  onFocus={() => {
+                    // When search input gets focus, redirect to explore page
+                    navigate('/explore');
+                  }}
                   className="pl-10 py-5 bg-black/30 border-indigo-500/50 text-white placeholder:text-gray-400 w-full rounded-full"
                 />
               </form>
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400" />
+              <Search 
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-indigo-400 cursor-pointer" 
+                onClick={() => navigate('/explore')}
+              />
               {isSearching && (
                 <Button
                   variant="ghost"
