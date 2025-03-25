@@ -39,46 +39,69 @@ const Explore = () => {
       try {
         setLoading(true);
         
-        // Fetch top games with specific column selection - use explicit types
-        const { data, error: gamesError } = await supabase
-          .from('games')
-          .select('id, name, cover_url, post_count')
-          .order('post_count', { ascending: false })
-          .limit(3);
+        // Fetch top games with specific column selection
+        try {
+          const { data, error } = await supabase
+            .from('games')
+            .select('id, name, cover_url, post_count')
+            .order('post_count', { ascending: false })
+            .limit(3);
+            
+          if (error) throw error;
           
-        if (gamesError) {
-          console.error('Error fetching top games:', gamesError);
+          // Safely transform the data to Game[] type
+          const gamesData: Game[] = (data || []).map(game => ({
+            id: game.id || '',
+            name: game.name || '',
+            cover_url: game.cover_url || '',
+            post_count: Number(game.post_count) || 0
+          }));
+          
+          if (isMounted) {
+            setTopGames(gamesData);
+          }
+          
+        } catch (error) {
+          console.error('Error fetching top games:', error);
           toast.error('Failed to load top games');
-          return;
         }
         
-        const gamesData = data as Game[] || [];
-        
-        // Fetch top streamers with specific column selection - use explicit types
-        const { data: streamersRawData, error: streamersError } = await supabase
-          .from('profiles')
-          .select('id, username, display_name, avatar_url, streaming_url, current_game, is_live, follower_count')
-          .eq('is_streamer', true)
-          .order('follower_count', { ascending: false })
-          .limit(3);
+        // Fetch top streamers with specific column selection
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, username, display_name, avatar_url, streaming_url, current_game, is_live, follower_count')
+            .eq('is_streamer', true)
+            .order('follower_count', { ascending: false })
+            .limit(3);
+            
+          if (error) throw error;
           
-        if (streamersError) {
-          console.error('Error fetching top streamers:', streamersError);
+          // Safely transform the data to Streamer[] type
+          const streamersData: Streamer[] = (data || []).map(streamer => ({
+            id: streamer.id || '',
+            username: streamer.username || '',
+            display_name: streamer.display_name || '',
+            avatar_url: streamer.avatar_url || '',
+            streaming_url: streamer.streaming_url || '',
+            current_game: streamer.current_game || '',
+            is_live: Boolean(streamer.is_live),
+            follower_count: Number(streamer.follower_count) || 0
+          }));
+          
+          if (isMounted) {
+            setTopStreamers(streamersData);
+          }
+          
+        } catch (error) {
+          console.error('Error fetching top streamers:', error);
           toast.error('Failed to load top streamers');
-          return;
         }
         
-        const streamersData = streamersRawData as Streamer[] || [];
-        
-        // Only update state if component is still mounted
-        if (isMounted) {
-          setTopGames(gamesData);
-          setTopStreamers(streamersData);
-          setLoading(false);
-        }
       } catch (error) {
         console.error('Error in fetchData:', error);
         toast.error('Failed to load explore page data');
+      } finally {
         if (isMounted) {
           setLoading(false);
         }
@@ -176,22 +199,52 @@ const Explore = () => {
                 <h2 className="text-2xl font-bold text-[#5ce1ff] pixel-font retro-text-shadow">TOP GAMES</h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {(topGames.length > 0 ? topGames : getFallbackGames()).map((game) => (
-                  <GameCard 
-                    key={game.id}
-                    id={game.id}
-                    name={game.name}
-                    coverUrl={game.cover_url}
-                    postCount={Number(game.post_count)}
-                    onClick={() => navigate(`/game/${game.id}`)}
-                  />
-                ))}
+              {/* Old-fashioned leaderboard style for games */}
+              <div className="bg-[#1a1c42] border-4 border-[#4a4dff] rounded-lg p-2 shadow-[0_6px_0_0_#000] mb-4">
+                <div className="bg-[#0f112a] p-4 rounded">
+                  {(topGames.length > 0 ? topGames : getFallbackGames()).map((game, index) => (
+                    <div 
+                      key={game.id}
+                      onClick={() => navigate(`/game/${game.id}`)}
+                      className={`flex items-center p-3 cursor-pointer ${index < 2 ? 'border-b-2 border-[#4a4dff]/40' : ''} hover:bg-[#262966] transition duration-200`}
+                    >
+                      <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#3e4099] to-[#2d2e68] rounded-lg mr-4 shadow-inner border-2 border-[#5ce1ff]/50">
+                        <span className="font-bold text-2xl text-[#ffde3b] pixel-font retro-text-shadow">
+                          {index === 0 ? '1' : index === 1 ? '2' : '3'}
+                        </span>
+                      </div>
+                      
+                      <div className="w-14 h-14 relative mr-4 overflow-hidden rounded border-2 border-[#5ce1ff]/50">
+                        {game.cover_url ? (
+                          <img 
+                            src={game.cover_url} 
+                            alt={game.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-indigo-900 flex items-center justify-center">
+                            <Gamepad2 className="w-8 h-8 text-indigo-300" />
+                          </div>
+                        )}
+                        {index === 0 && (
+                          <div className="absolute top-0 right-0">
+                            <Trophy className="w-5 h-5 text-[#ffd700] fill-[#ffd700]" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <h3 className="font-bold text-lg text-white pixel-font truncate">{game.name}</h3>
+                        <p className="text-[#5ce1ff] text-sm">{Number(game.post_count).toLocaleString()} posts</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
               
               <button 
                 onClick={() => navigate('/games')}
-                className="mt-4 w-full py-2 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white rounded-xl text-center font-semibold pixel-font shadow-neon transition duration-200 transform hover:translate-y-[-2px]"
+                className="mt-2 w-full py-2 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white rounded-xl text-center font-semibold pixel-font shadow-neon transition duration-200 transform hover:translate-y-[-2px]"
               >
                 VIEW ALL GAMES
               </button>
@@ -200,29 +253,61 @@ const Explore = () => {
             {/* Top Streamers Section */}
             <div className="mb-10">
               <div className="flex items-center mb-6">
-                <UsersIcon className="w-8 h-8 mr-3 text-[#ff5cce]" />
-                <h2 className="text-2xl font-bold text-[#ff5cce] pixel-font retro-text-shadow">TOP STREAMERS</h2>
+                <UsersIcon className="w-8 h-8 mr-3 text-[#ff66c4]" />
+                <h2 className="text-2xl font-bold text-[#ff66c4] pixel-font retro-text-shadow">TOP STREAMERS</h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {(topStreamers.length > 0 ? topStreamers : getFallbackStreamers()).map((streamer) => (
-                  <StreamerCard 
-                    key={streamer.id}
-                    id={streamer.id}
-                    username={streamer.username}
-                    displayName={streamer.display_name}
-                    avatarUrl={streamer.avatar_url}
-                    streamingUrl={streamer.streaming_url}
-                    game={streamer.current_game}
-                    isLive={streamer.is_live}
-                    onClick={() => navigate(`/profile/${streamer.id}`)}
-                  />
-                ))}
+              {/* Old-fashioned leaderboard style for streamers */}
+              <div className="bg-[#1a1c42] border-4 border-[#ff66c4] rounded-lg p-2 shadow-[0_6px_0_0_#000] mb-4">
+                <div className="bg-[#0f112a] p-4 rounded">
+                  {(topStreamers.length > 0 ? topStreamers : getFallbackStreamers()).map((streamer, index) => (
+                    <div 
+                      key={streamer.id}
+                      onClick={() => navigate(`/profile/${streamer.id}`)}
+                      className={`flex items-center p-3 cursor-pointer ${index < 2 ? 'border-b-2 border-[#ff66c4]/40' : ''} hover:bg-[#262966] transition duration-200`}
+                    >
+                      <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-[#9c2dad] to-[#701b7e] rounded-lg mr-4 shadow-inner border-2 border-[#ff66c4]/50">
+                        <span className="font-bold text-2xl text-[#ffde3b] pixel-font retro-text-shadow">
+                          {index === 0 ? '1' : index === 1 ? '2' : '3'}
+                        </span>
+                      </div>
+                      
+                      <div className="w-14 h-14 relative mr-4 overflow-hidden rounded-full border-2 border-[#ff66c4]/50">
+                        {streamer.avatar_url ? (
+                          <img 
+                            src={streamer.avatar_url} 
+                            alt={streamer.username} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-purple-900 flex items-center justify-center">
+                            <UsersIcon className="w-8 h-8 text-purple-300" />
+                          </div>
+                        )}
+                        {index === 0 && (
+                          <div className="absolute top-0 right-0">
+                            <Trophy className="w-5 h-5 text-[#ffd700] fill-[#ffd700]" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <h3 className="font-bold text-lg text-white pixel-font">{streamer.display_name || streamer.username}</h3>
+                          {streamer.is_live && (
+                            <span className="ml-2 px-2 py-0.5 text-xs bg-red-600 text-white rounded-full pixel-font animate-pulse">LIVE</span>
+                          )}
+                        </div>
+                        <p className="text-[#ff66c4] text-sm">{Number(streamer.follower_count).toLocaleString()} followers</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
               
               <button 
                 onClick={() => navigate('/streamers')}
-                className="mt-4 w-full py-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl text-center font-semibold pixel-font shadow-neon transition duration-200 transform hover:translate-y-[-2px]"
+                className="mt-2 w-full py-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl text-center font-semibold pixel-font shadow-neon transition duration-200 transform hover:translate-y-[-2px]"
               >
                 VIEW ALL STREAMERS
               </button>
