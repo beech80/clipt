@@ -7,8 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Upload, Camera, Search, Hash, AtSign, X, Film, Home, Gamepad2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { Progress } from '@/components/ui/progress';
+import { allGames } from '@/data/gamesList';
 
 type PostDestination = 'clipts' | 'home';
 
@@ -19,6 +19,7 @@ export const PostForm = () => {
   const [loading, setLoading] = useState(false);
   const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
   const [gameSearch, setGameSearch] = useState('');
+  const [gameSearchResults, setGameSearchResults] = useState<typeof allGames>([]);
   const [streamRef, setStreamRef] = useState<MediaStream | null>(null);
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [mentions, setMentions] = useState<string[]>([]);
@@ -35,54 +36,40 @@ export const PostForm = () => {
   const { user } = useAuth();
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const { data: games, isLoading: gamesLoading } = useQuery({
-    queryKey: ['games', gameSearch],
-    queryFn: async () => {
-      if (!gameSearch) return [];
-
-      const { data, error } = await supabase.functions.invoke('igdb', {
-        body: {
-          endpoint: 'games',
-          query: `search "${gameSearch}"; fields name; limit 10;`
-        }
-      });
-
-      if (error) throw error;
-      return data.map((game: any) => ({
-        id: game.id.toString(),
-        name: game.name
-      }));
+  const handleGameSearch = (searchTerm: string) => {
+    setGameSearch(searchTerm);
+    
+    if (!searchTerm.trim()) {
+      setGameSearchResults([]);
+      return;
     }
-  });
-
-  const addHashtag = () => {
-    if (currentHashtag.trim() && !hashtags.includes(currentHashtag.trim())) {
-      setHashtags([...hashtags, currentHashtag.trim()]);
-      setCurrentHashtag('');
-    }
-    setShowHashtagInput(false);
-  };
-
-  const addMention = () => {
-    if (currentMention.trim() && !mentions.includes(currentMention.trim())) {
-      setMentions([...mentions, currentMention.trim()]);
-      setCurrentMention('');
-    }
-    setShowMentionInput(false);
-    setUserResults([]);
-  };
-
-  const removeHashtag = (tag: string) => {
-    setHashtags(hashtags.filter(t => t !== tag));
-  };
-
-  const removeMention = (mention: string) => {
-    setMentions(mentions.filter(m => m !== mention));
+    
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    const exactMatches = allGames.filter(game => 
+      game.name.toLowerCase() === searchTermLower
+    );
+    
+    const startsWithMatches = allGames.filter(game => 
+      game.name.toLowerCase().startsWith(searchTermLower) && 
+      !exactMatches.some(match => match.id === game.id)
+    );
+    
+    const containsMatches = allGames.filter(game => 
+      game.name.toLowerCase().includes(searchTermLower) && 
+      !exactMatches.some(match => match.id === game.id) && 
+      !startsWithMatches.some(match => match.id === game.id)
+    );
+    
+    const combinedResults = [...exactMatches, ...startsWithMatches, ...containsMatches].slice(0, 10);
+    
+    setGameSearchResults(combinedResults);
   };
 
   const handleGameSelect = (game: { id: string; name: string }) => {
     setSelectedGame(game);
     setGameSearch('');
+    setGameSearchResults([]);
   };
 
   const renderGameSearchSection = () => {
@@ -90,7 +77,7 @@ export const PostForm = () => {
       <div className="mb-4 bg-gaming-800 border border-gray-700 rounded-lg p-3">
         <h3 className="text-lg font-semibold mb-2 text-white flex items-center">
           <Gamepad2 className="mr-2 h-5 w-5 text-blue-400" />
-          Select Game (Required)
+          Select Game <span className="text-red-400 ml-1">*</span>
         </h3>
         
         {selectedGame ? (
@@ -115,46 +102,60 @@ export const PostForm = () => {
                 type="text"
                 placeholder="Search for a game..."
                 value={gameSearch}
-                onChange={(e) => setGameSearch(e.target.value)}
+                onChange={(e) => handleGameSearch(e.target.value)}
                 className="w-full px-4 py-2 bg-gaming-700 text-white border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <Search className="absolute right-3 h-5 w-5 text-gray-400" />
             </div>
             
-            {gameSearch.length > 0 && (
+            {gameSearch.length > 0 && gameSearchResults.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-gaming-700 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                {gamesLoading ? (
-                  <div className="p-2 text-center text-gray-400">
-                    <Loader2 className="h-5 w-5 mx-auto animate-spin" />
-                    <p>Searching...</p>
-                  </div>
-                ) : games && games.length > 0 ? (
-                  games.map((game) => (
+                <div className="divide-y divide-gray-700">
+                  {gameSearchResults.map((game) => (
                     <div
                       key={game.id}
                       onClick={() => handleGameSelect(game)}
-                      className="p-2 hover:bg-gaming-600 cursor-pointer flex items-center"
+                      className="p-2 hover:bg-gaming-600 cursor-pointer"
                     >
-                      <Gamepad2 className="h-4 w-4 mr-2 text-blue-400" />
                       <span className="text-white">{game.name}</span>
                     </div>
-                  ))
-                ) : (
-                  <div className="p-2 text-center text-gray-400">
-                    No games found. Try another search term.
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
             )}
             
-            <p className="text-xs text-gray-400">
-              Your post must include a game. This helps categorize your content and make it more discoverable.
+            <p className="text-xs text-red-400 mt-1">
+              You must select a game for your post. This helps categorize your content.
             </p>
           </div>
         )}
-        
       </div>
     );
+  };
+
+  const addHashtag = () => {
+    if (currentHashtag.trim() && !hashtags.includes(currentHashtag.trim())) {
+      setHashtags([...hashtags, currentHashtag.trim()]);
+      setCurrentHashtag('');
+    }
+    setShowHashtagInput(false);
+  };
+
+  const addMention = () => {
+    if (currentMention.trim() && !mentions.includes(currentMention.trim())) {
+      setMentions([...mentions, currentMention.trim()]);
+      setCurrentMention('');
+    }
+    setShowMentionInput(false);
+    setUserResults([]);
+  };
+
+  const removeHashtag = (tag: string) => {
+    setHashtags(hashtags.filter(t => t !== tag));
+  };
+
+  const removeMention = (mention: string) => {
+    setMentions(mentions.filter(m => m !== mention));
   };
 
   const startCamera = async () => {
@@ -210,7 +211,6 @@ export const PostForm = () => {
     const newFiles: File[] = [];
     const newPreviews: string[] = [];
     
-    // Process each file
     Array.from(selectedFiles).forEach(selectedFile => {
       const isVideo = selectedFile.type.startsWith('video/');
       const isImage = selectedFile.type.startsWith('image/');
@@ -225,13 +225,11 @@ export const PostForm = () => {
         return;
       }
       
-      // For videos, only allow one file
       if (isVideo && (newFiles.some(f => f.type.startsWith('video/')) || newFiles.length > 0)) {
         toast.error('Only one video can be uploaded at a time');
         return;
       }
       
-      // For images, allow multiple (up to 5)
       if (isImage && newFiles.length >= 5) {
         toast.error('Maximum of 5 images allowed');
         return;
@@ -245,170 +243,91 @@ export const PostForm = () => {
     setFilePreview([...newPreviews]);
   };
 
-  const handleCreatePost = async (destination: PostDestination) => {
+  const handleSubmit = async (destination: PostDestination = 'clipts') => {
     if (!user) {
-      toast.error('Please sign in to create a post');
+      toast.error('You must be logged in to post');
       return;
     }
     
-    if (!content.trim() && files.length === 0) {
-      toast.error('Please add some content or media to your post');
-      return;
-    }
-
     if (!selectedGame) {
-      toast.error('Please select a game for your post');
+      toast.error('You must select a game for your post');
+      return;
+    }
+
+    if (!content.trim() && files.length === 0) {
+      toast.error('Post must contain text or media');
       return;
     }
     
-    setLoading(true);
-    const uploadToast = toast.loading(
-      destination === 'clipts' ? 'Creating your clip...' : 'Creating your post...'
-    );
-
     try {
-      // First, handle the game reference
-      const { data: gameData, error: gameError } = await supabase
-        .from('games')
-        .upsert({
-          id: selectedGame.id,
-          name: selectedGame.name,
-          cover_url: selectedGame.id.toString()
+      setLoading(true);
+      
+      let fileUrls: string[] = [];
+      
+      if (files.length > 0) {
+        fileUrls = await Promise.all(
+          files.map(async (file, index) => {
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${user.id}/${Date.now()}-${index}.${fileExt}`;
+            
+            const { error: uploadError, data } = await supabase.storage
+              .from('posts')
+              .upload(filePath, file, {
+                upsert: true,
+                onUploadProgress: (progress) => {
+                  setUploadProgress(Math.round((progress.loaded / progress.total) * 100));
+                }
+              });
+              
+            if (uploadError) {
+              throw uploadError;
+            }
+            
+            const { data: { publicUrl } } = supabase.storage
+              .from('posts')
+              .getPublicUrl(filePath);
+              
+            return publicUrl;
+          })
+        );
+      }
+      
+      const { error: postError, data: postData } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          content,
+          media_urls: fileUrls,
+          hashtags,
+          mentions,
+          game_id: selectedGame.id,  
+          game_name: selectedGame.name, 
+          post_type: destination === 'home' ? 'home' : 'clip',
         })
         .select()
         .single();
-
-      if (gameError) {
-        console.error('Game error:', gameError);
-        throw new Error(`Failed to process game: ${gameError.message}`);
-      }
-
-      console.log('Game data saved successfully:', gameData);
-
-      // Upload files and get URLs
-      const mediaUrls: { videoUrl: string | null, imageUrls: string[] } = {
-        videoUrl: null,
-        imageUrls: []
-      };
-
-      // Only try to upload files if there are any
-      if (files.length > 0) {
-        // Show progress indicator
-        setUploadProgress(10);
         
-        for (let i = 0; i < files.length; i++) {
-          const file = files[i];
-          const timestamp = Date.now() + i; // Ensure unique timestamps
-          const fileExt = file.name.split('.').pop();
-          const filePath = `${user.id}/${timestamp}.${fileExt}`;
-
-          console.log(`Starting file upload ${i+1}/${files.length}...`, {
-            filePath,
-            fileType: file.type,
-            fileSize: file.size
-          });
-
-          // Update progress
-          setUploadProgress(10 + Math.round((i / files.length) * 70));
-
-          const { error: uploadError, data: uploadData } = await supabase.storage
-            .from('media')
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: true, // Changed to true to overwrite existing files
-            });
-
-          if (uploadError) {
-            console.error('Upload error:', uploadError);
-            throw new Error(`Failed to upload file: ${uploadError.message}`);
-          }
-
-          console.log(`File ${i+1} uploaded successfully`, uploadData);
-
-          const { data: { publicUrl } } = supabase.storage
-            .from('media')
-            .getPublicUrl(filePath);
-
-          if (file.type.startsWith('video/')) {
-            mediaUrls.videoUrl = publicUrl;
-          } else {
-            mediaUrls.imageUrls.push(publicUrl);
-          }
-        }
-        
-        setUploadProgress(80);
-      }
-
-      // Final progress update before database operation
-      setUploadProgress(90);
-
-      // Construct post data with proper handling for multiple images
-      const postData = {
-        content: content.trim(),
-        user_id: user.id,
-        game_id: gameData.id,
-        post_type: destination,
-        is_published: true,
-        video_url: mediaUrls.videoUrl,
-        // Store image URLs in a single field with comma separation
-        image_url: mediaUrls.imageUrls.length > 0 ? 
-          mediaUrls.imageUrls.join(',') : null
-      };
-
-      console.log('Creating post with data:', postData);
-
-      const { data: post, error: postError } = await supabase
-        .from('posts')
-        .insert([postData])
-        .select()
-        .single();
-
-      if (postError) {
-        console.error('Post error:', postError);
-        throw new Error(`Failed to create post: ${postError.message}`);
-      }
-
-      console.log('Post created successfully:', post);
-
-      // Complete progress indicator
-      setUploadProgress(100);
-
-      // Refresh data without using RPC
-      await supabase.from('posts').select('count').limit(1); 
-
-      toast.success(
-        destination === 'clipts' ? 'Clip created successfully!' : 'Post created successfully!'
-      );
+      if (postError) throw postError;
       
-      // Reset form
-      stopCamera();
       setContent('');
       setFiles([]);
       setFilePreview([]);
       setSelectedGame(null);
       setHashtags([]);
       setMentions([]);
-      setUploadProgress(0);
       
-      // Navigate based on destination
-      if (destination === 'clipts') {
-        // Add timestamp to force refresh of the page
-        navigate(`/clipts?refresh=${Date.now()}`);
-      } else {
-        // Navigate to home feed with refresh parameter
-        navigate(`/?refresh=${Date.now()}`);
+      toast.success('Post created successfully!');
+      
+      if (postData) {
+        navigate(`/post/${postData.id}`);
       }
       
     } catch (error: any) {
-      console.error('Post creation error:', error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to create post. Please try again.',
-        { id: uploadToast }
-      );
-      setUploadProgress(0);
+      console.error('Error creating post:', error);
+      toast.error(`Error: ${error.message || 'Failed to create post'}`);
     } finally {
       setLoading(false);
-      toast.dismiss(uploadToast);
+      setUploadProgress(0);
     }
   };
 
@@ -517,7 +436,6 @@ export const PostForm = () => {
                 </Button>
               </div>
               
-              {/* User search results */}
               {userResults.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg max-h-60 overflow-auto">
                   {userResults.map(user => (
@@ -675,7 +593,7 @@ export const PostForm = () => {
           <Button
             type="button"
             variant="default"
-            onClick={() => handleCreatePost('clipts')}
+            onClick={() => handleSubmit('clipts')}
             disabled={loading}
             className="flex-1 relative overflow-hidden group border-2 border-indigo-500 bg-gradient-to-r from-violet-600/80 to-indigo-700/80 text-white font-gaming py-3 px-6 rounded-md shadow-[0_0_15px_rgba(99,102,241,0.5)] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(124,58,237,0.6)] before:absolute before:inset-0 before:bg-gradient-to-r before:from-indigo-500/20 before:to-purple-600/20 before:opacity-0 before:transition-opacity hover:before:opacity-100"
           >
@@ -699,7 +617,7 @@ export const PostForm = () => {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => handleCreatePost('home')}
+            onClick={() => handleSubmit('home')}
             disabled={loading}
             className="flex-1 relative overflow-hidden group border-2 border-cyan-500 bg-gradient-to-r from-blue-600/80 to-cyan-700/80 text-white font-gaming py-3 px-6 rounded-md shadow-[0_0_15px_rgba(6,182,212,0.5)] transform transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(14,165,233,0.6)] before:absolute before:inset-0 before:bg-gradient-to-r before:from-cyan-500/20 before:to-blue-600/20 before:opacity-0 before:transition-opacity hover:before:opacity-100"
           >
