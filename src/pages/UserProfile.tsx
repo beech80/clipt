@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
-import { User, Settings, Grid, ListVideo, Trophy, Loader2 } from 'lucide-react';
+import { User, Settings, Grid, ListVideo, Trophy, Loader2, Video } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { followService } from '@/services/followService';
 import { toast } from 'sonner';
+import { StreamPlayer } from '@/components/streaming/StreamPlayer';
+import { Badge } from '@/components/ui/badge';
 
 interface ProfileData {
   id: string;
@@ -20,6 +22,9 @@ interface ProfileData {
   following_count?: number;
   achievements_count?: number;
   is_following?: boolean;
+  is_streaming?: boolean;
+  stream_id?: string;
+  stream_title?: string;
 }
 
 const UserProfile = () => {
@@ -59,6 +64,17 @@ const UserProfile = () => {
       // Fetch following count
       const followingCount = await followService.getFollowingCount(id || user?.id);
       
+      // Check if the user is currently streaming
+      const { data: streamData, error: streamError } = await supabase
+        .from('active_streams')
+        .select('id, title, viewer_count, started_at')
+        .eq('user_id', id || user?.id)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      const isStreaming = !!streamData && !streamError;
+      
       // Fetch posts
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
@@ -90,7 +106,10 @@ const UserProfile = () => {
         followers_count: followersCount,
         following_count: followingCount,
         achievements_count: 0, // Placeholder for now
-        is_following: isFollowing
+        is_following: isFollowing,
+        is_streaming: isStreaming,
+        stream_id: streamData?.id,
+        stream_title: streamData?.title
       });
       
       setPosts(postsData || []);
@@ -244,6 +263,43 @@ const UserProfile = () => {
       </div>
 
       <div className="container mx-auto px-4 pt-24 pb-20 max-w-2xl">
+        {/* Live Stream Display (shown only if user is streaming) */}
+        {profileData?.is_streaming && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Badge className="bg-red-500 hover:bg-red-600 flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-white animate-pulse"></span>
+                  LIVE
+                </Badge>
+                <h2 className="text-white font-semibold text-lg">{profileData.stream_title || `${profileData.username}'s stream`}</h2>
+              </div>
+              <Button 
+                variant="default" 
+                className="bg-red-600 hover:bg-red-700"
+                onClick={() => navigate(`/stream/${profileData.stream_id || profileData.id}`)}
+              >
+                Watch Full Screen
+              </Button>
+            </div>
+            <div 
+              className="relative cursor-pointer" 
+              onClick={() => navigate(`/stream/${profileData.stream_id || profileData.id}`)}
+            >
+              <StreamPlayer 
+                streamId={profileData.stream_id || profileData.id}
+                title={profileData.stream_title || `${profileData.username}'s stream`}
+                isLive={true}
+              />
+              <div className="absolute inset-0 bg-transparent hover:bg-black/20 transition-colors flex items-center justify-center">
+                <div className="bg-black/70 p-2 rounded-full opacity-0 hover:opacity-100 transition-opacity">
+                  <Video className="h-8 w-8 text-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Profile Header */}
         <div className="bg-black/30 backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 shadow-xl mb-6">
           {/* Banner */}
@@ -267,6 +323,16 @@ const UserProfile = () => {
                 </AvatarFallback>
               </Avatar>
             </div>
+            
+            {/* Live Indicator (shown when user is streaming) */}
+            {profileData?.is_streaming && (
+              <div className="absolute bottom-4 left-[104px]">
+                <Badge className="bg-red-500 hover:bg-red-600 flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-white animate-pulse"></span>
+                  LIVE
+                </Badge>
+              </div>
+            )}
             
             {/* Edit button (only show if it's the user's own profile) */}
             {user && user.id === profileData?.id && (
@@ -300,14 +366,12 @@ const UserProfile = () => {
               {/* Follow button (only show if it's not the user's own profile) */}
               {user && user.id !== profileData?.id && (
                 <Button 
-                  onClick={handleFollowToggle}
+                  onClick={handleFollowToggle} 
                   variant={profileData?.is_following ? "outline" : "default"}
-                  size="sm"
-                  className={`px-4 py-1 rounded-sm ${
-                    profileData?.is_following 
-                      ? "bg-transparent border border-purple-500 text-purple-500 hover:bg-purple-500/10" 
-                      : "bg-purple-600 text-white hover:bg-purple-700"
-                  }`}
+                  className={profileData?.is_following ? 
+                    "bg-transparent border border-purple-500 text-purple-400 hover:bg-purple-500/10" : 
+                    "bg-purple-600 hover:bg-purple-700"
+                  }
                   disabled={followLoading}
                 >
                   {followLoading ? (
@@ -318,19 +382,19 @@ const UserProfile = () => {
               )}
             </div>
             
-            {/* Stats */}
+            {/* User stats */}
             <div className="flex gap-6 mt-4">
-              <div>
+              <div className="text-center">
                 <p className="text-white font-bold">{profileData?.followers_count || 0}</p>
                 <p className="text-gray-400 text-sm">Followers</p>
               </div>
-              <div>
+              <div className="text-center">
                 <p className="text-white font-bold">{profileData?.following_count || 0}</p>
                 <p className="text-gray-400 text-sm">Following</p>
               </div>
-              <div>
-                <p className="text-white font-bold">{profileData?.achievements_count || 0}</p>
-                <p className="text-gray-400 text-sm">Trophies</p>
+              <div className="text-center">
+                <p className="text-white font-bold">{achievements.length || 0}</p>
+                <p className="text-gray-400 text-sm">Achievements</p>
               </div>
             </div>
           </div>
