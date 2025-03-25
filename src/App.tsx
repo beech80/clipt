@@ -12,6 +12,7 @@ import { CommentsProvider } from '@/contexts/CommentContext';
 import { usePerformanceMonitoring } from '@/lib/performance';
 import { useQueryClient } from '@tanstack/react-query';
 import { initUserInteractionTracking } from '@/utils/userInteraction';
+import { ensureTablesExist } from '@/lib/supabase';
 import '@/index.css';
 import '@/styles/animations.css';
 import '@/styles/retro-game.css';
@@ -58,6 +59,8 @@ const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
+const StreamSetup = React.lazy(() => import('./pages/StreamSetup'));
+const StreamView = React.lazy(() => import('./pages/StreamView'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -83,6 +86,7 @@ function AppContent() {
       <Route path="/discover" element={<Discovery />} />
       <Route path="/explore" element={<Explore />} />
       <Route path="/streamers" element={<AllStreamers />} />
+      <Route path="/stream/:id" element={<StreamView />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/profile/edit" element={
@@ -146,6 +150,14 @@ function App() {
       queryClient.clear();
     }
   }, [location.pathname, queryClient]);
+
+  // Initialize database tables on app startup
+  useEffect(() => {
+    // Ensure all required database tables exist
+    ensureTablesExist().catch(error => {
+      console.error("Error ensuring tables exist:", error);
+    });
+  }, []);
 
   // Routes that should not display the GameBoy controls
   const noControlsRoutes = ['/auth'];

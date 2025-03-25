@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import setupStreamingTables from './streamingSetup';
 
 // Create stored procedure for initializing messaging tables
 export const setupMessagingTables = async () => {
@@ -216,6 +217,34 @@ const createFallbackMessagesTable = async () => {
   } catch (error) {
     console.error("Final fallback attempt failed:", error);
     return { success: false, error };
+  }
+};
+
+export const ensureTablesExist = async () => {
+  try {
+    const tables = ['profiles', 'posts', 'comments', 'likes', 'follows', 'direct_messages'];
+    
+    // Check for posts table as an indicator
+    const { data, error } = await supabase
+      .from('posts')
+      .select('id')
+      .limit(1);
+      
+    if (error) {
+      console.log('Tables missing, attempting to create tables...');
+      await createTables();
+    } else {
+      console.log('Tables exist, skipping creation');
+    }
+    
+    // Always check messaging table
+    await createMessagesTable();
+    
+    // Also ensure streaming tables exist
+    await setupStreamingTables();
+    
+  } catch (error) {
+    console.error('Error checking/creating tables:', error);
   }
 };
 
