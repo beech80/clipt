@@ -430,8 +430,22 @@ const Explore = () => {
         });
       }
       
+      // Remove duplicate game names by creating a map of unique names
+      const uniqueGames: {[name: string]: Game} = {};
+      gamesData.forEach(game => {
+        // If this name doesn't exist yet or this game has a higher priority (lower index)
+        if (!uniqueGames[game.name.toLowerCase()]) {
+          uniqueGames[game.name.toLowerCase()] = game;
+        }
+      });
+      
+      // Convert back to array and sort alphabetically
+      const uniqueGamesArray = Object.values(uniqueGames).sort((a, b) => 
+        a.name.localeCompare(b.name)
+      );
+      
       setSearchResults({
-        games: gamesData,
+        games: uniqueGamesArray,
         streamers: usersData
       });
       
@@ -503,16 +517,7 @@ const Explore = () => {
                                 onClick={() => navigate(`/game/${game.id}`)}
                                 className="flex items-center p-2 hover:bg-[#262966] cursor-pointer"
                               >
-                                <div className="w-10 h-10 rounded overflow-hidden mr-3">
-                                  {game.cover_url ? (
-                                    <img src={game.cover_url} alt={game.name} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full bg-indigo-900 flex items-center justify-center">
-                                      <Gamepad2 className="w-5 h-5 text-indigo-300" />
-                                    </div>
-                                  )}
-                                </div>
-                                <span>{game.name}</span>
+                                <span className="px-2 py-1">{game.name}</span>
                               </div>
                             ))}
                           </div>
