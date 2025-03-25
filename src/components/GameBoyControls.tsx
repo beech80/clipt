@@ -1200,13 +1200,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       description: 'Find new games',
       icon: <FiCompass />, 
       action: () => navigate('/discover') 
-    },
-    { 
-      id: 'explore', 
-      name: 'Explore', 
-      description: 'Top games & streamers',
-      icon: <FiStar />, 
-      action: () => navigate('/explore') 
     }
   ];
 
