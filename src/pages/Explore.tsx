@@ -195,23 +195,47 @@ const Explore = () => {
     setIsSearching(true);
     
     try {
-      // Search for games
+      // Search for games - simplified query
       const { data: gamesData, error: gamesError } = await supabase
         .from('games')
         .select('id, name, cover_url, post_count')
         .ilike('name', `%${searchTerm}%`)
         .limit(5);
         
-      if (gamesError) throw gamesError;
+      if (gamesError) {
+        console.error('Error searching games:', gamesError);
+        throw gamesError;
+      }
       
-      // Search for users/streamers
-      const { data: streamersData, error: streamersError } = await supabase
+      // Search for users/streamers - search username and display_name separately
+      // First, search by username
+      const { data: usernameResults, error: usernameError } = await supabase
         .from('profiles')
         .select('id, username, display_name, avatar_url, streaming_url, current_game, is_live, follower_count')
-        .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
+        .ilike('username', `%${searchTerm}%`)
         .limit(5);
         
-      if (streamersError) throw streamersError;
+      if (usernameError) {
+        console.error('Error searching by username:', usernameError);
+        throw usernameError;
+      }
+      
+      // Then, search by display_name
+      const { data: displayNameResults, error: displayNameError } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, streaming_url, current_game, is_live, follower_count')
+        .ilike('display_name', `%${searchTerm}%`)
+        .limit(5);
+        
+      if (displayNameError) {
+        console.error('Error searching by display_name:', displayNameError);
+        throw displayNameError;
+      }
+      
+      // Combine and deduplicate results
+      const allStreamers = [...(usernameResults || []), ...(displayNameResults || [])];
+      const uniqueStreamers = Array.from(new Map(allStreamers.map(item => [item.id, item])).values());
+      const streamersData = uniqueStreamers.slice(0, 5); // Take only the first 5 after deduplication
       
       const processedGames = gamesData ? gamesData.map(game => ({
         id: game.id || '',
@@ -238,7 +262,14 @@ const Explore = () => {
       
     } catch (error) {
       console.error('Error searching:', error);
-      toast.error('Search failed');
+      // Try to provide more helpful error message and use try-catch for toast
+      try {
+        toast.error('Search failed. Please try again.');
+      } catch (toastError) {
+        console.error('Toast error:', toastError);
+        // Fallback if toast fails
+        alert('Search failed. Please try again.');
+      }
     } finally {
       setIsSearching(false);
     }
