@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gamepad2, Trophy, Users as UsersIcon, Star, Search } from 'lucide-react';
+import { supabase } from '@/lib/supabase'; 
 import GameCard from '@/components/GameCard';
 import StreamerCard from '@/components/StreamerCard';
 
@@ -31,12 +32,87 @@ const Explore = () => {
   const [searchResults, setSearchResults] = useState<{games: Game[], streamers: Streamer[]}>({games: [], streamers: []});
   const [isSearching, setIsSearching] = useState(false);
 
+  // This function will be used in the future when tracking is implemented
+  const trackUserActivity = async (type: 'search' | 'view', itemId: string, itemType: 'game' | 'user') => {
+    try {
+      console.log(`[FUTURE TRACKING] User ${type}ed ${itemType} ${itemId}`);
+      
+      // In the future, this will insert a record into analytics table
+      /*
+      const { error } = await supabase
+        .from('analytics')
+        .insert({
+          user_id: currentUserId,
+          activity_type: type,
+          item_id: itemId,
+          item_type: itemType,
+          timestamp: new Date()
+        });
+        
+      if (error) {
+        console.error('Error tracking user activity:', error);
+      }
+      */
+    } catch (error) {
+      console.error('Error in tracking:', error);
+    }
+  };
+  
+  // This function will be used in the future to fetch live data for the top games section
+  const fetchTopGames = async () => {
+    try {
+      /*
+      const { data, error } = await supabase
+        .from('games')
+        .select('id, name, cover_url')
+        .order('view_count', { ascending: false })
+        .limit(3);
+        
+      if (error) throw error;
+      
+      return data.map(game => ({
+        ...game,
+        post_count: 0
+      }));
+      */
+      return getFallbackGames();
+    } catch (error) {
+      console.error('Error fetching top games:', error);
+      return getFallbackGames();
+    }
+  };
+  
+  // This function will be used in the future to fetch live data for the top users section
+  const fetchTopUsers = async () => {
+    try {
+      /*
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url, current_game')
+        .order('follower_count', { ascending: false })
+        .limit(3);
+        
+      if (error) throw error;
+      
+      return data.map(user => ({
+        ...user,
+        streaming_url: '',
+        is_live: false,
+        follower_count: 0
+      }));
+      */
+      return getFallbackStreamers();
+    } catch (error) {
+      console.error('Error fetching top users:', error);
+      return getFallbackStreamers();
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     
     const fetchData = async () => {
       try {
-        // Use the fallback data instead of trying to fetch from database
         setTopGames(getFallbackGames());
         setTopStreamers(getFallbackStreamers());
         setLoading(false);
@@ -123,7 +199,51 @@ const Explore = () => {
     setIsSearching(true);
     
     try {
-      // Extended game list with more popular titles
+      let gamesData = [];
+      let usersData = [];
+      
+      try {
+        const { data: dbGamesData, error: gamesError } = await supabase
+          .from('games')
+          .select('id, name, cover_url')
+          .ilike('name', `%${searchTerm}%`)
+          .limit(10);
+          
+        if (!gamesError && dbGamesData && dbGamesData.length > 0) {
+          gamesData = dbGamesData.map(game => ({
+            id: game.id,
+            name: game.name,
+            cover_url: game.cover_url,
+            post_count: 0
+          }));
+          
+          trackUserActivity('search', 'multiple', 'game');
+        }
+        
+        const { data: dbUsersData, error: usersError } = await supabase
+          .from('profiles')
+          .select('id, username, display_name, avatar_url, current_game')
+          .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
+          .limit(10);
+          
+        if (!usersError && dbUsersData && dbUsersData.length > 0) {
+          usersData = dbUsersData.map(user => ({
+            id: user.id,
+            username: user.username,
+            display_name: user.display_name,
+            avatar_url: user.avatar_url,
+            streaming_url: '',
+            current_game: user.current_game || '',
+            is_live: false,
+            follower_count: 0
+          }));
+          
+          trackUserActivity('search', 'multiple', 'user');
+        }
+      } catch (dbError) {
+        console.log('Database search not available, using fallback data');
+      }
+      
       const mockGames = [
         {
           id: 'game1',
@@ -214,10 +334,99 @@ const Explore = () => {
           name: 'NBA 2K23',
           cover_url: 'https://i.imgur.com/5Qq5gPH.jpeg',
           post_count: 0
+        },
+        {
+          id: 'game16',
+          name: 'Dota 2',
+          cover_url: 'https://i.imgur.com/Lk8M9wV.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game17',
+          name: 'Rainbow Six Siege',
+          cover_url: 'https://i.imgur.com/IMh6ZlO.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game18',
+          name: 'Among Us',
+          cover_url: 'https://i.imgur.com/OG6Km2n.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game19',
+          name: 'Fall Guys',
+          cover_url: 'https://i.imgur.com/uj33a50.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game20',
+          name: 'Genshin Impact',
+          cover_url: 'https://i.imgur.com/Bm2SJi0.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game21',
+          name: 'World of Warcraft',
+          cover_url: 'https://i.imgur.com/8PzaRyb.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game22',
+          name: 'Destiny 2',
+          cover_url: 'https://i.imgur.com/RhqfGQd.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game23',
+          name: 'Halo Infinite',
+          cover_url: 'https://i.imgur.com/yJhKcDU.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game24',
+          name: 'Sea of Thieves',
+          cover_url: 'https://i.imgur.com/yIU8RKP.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game25',
+          name: 'Roblox',
+          cover_url: 'https://i.imgur.com/r0K0yQb.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game26',
+          name: 'PUBG',
+          cover_url: 'https://i.imgur.com/R5kNBlD.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game27',
+          name: 'Red Dead Redemption 2',
+          cover_url: 'https://i.imgur.com/WJ2n8yX.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game28',
+          name: 'Horizon Forbidden West',
+          cover_url: 'https://i.imgur.com/IGMq9lf.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game29',
+          name: 'God of War Ragnarök',
+          cover_url: 'https://i.imgur.com/0zPLl5u.jpeg',
+          post_count: 0
+        },
+        {
+          id: 'game30',
+          name: 'Final Fantasy XIV',
+          cover_url: 'https://i.imgur.com/jtLcDEw.jpeg',
+          post_count: 0
         }
       ];
 
-      // App users (representing users in the actual app)
       const appUsers = [
         {
           id: 'user1',
@@ -318,29 +527,94 @@ const Explore = () => {
           current_game: 'Just Chatting',
           is_live: false,
           follower_count: 0
+        },
+        {
+          id: 'user11',
+          username: 'sykkuno',
+          display_name: 'Sykkuno',
+          avatar_url: 'https://i.imgur.com/EhDckhY.jpeg',
+          streaming_url: 'https://youtube.com/sykkuno',
+          current_game: 'Among Us',
+          is_live: false,
+          follower_count: 0
+        },
+        {
+          id: 'user12',
+          username: 'ludwig',
+          display_name: 'Ludwig',
+          avatar_url: 'https://i.imgur.com/mndCTlF.jpeg',
+          streaming_url: 'https://youtube.com/ludwig',
+          current_game: 'Chess',
+          is_live: false,
+          follower_count: 0
+        },
+        {
+          id: 'user13',
+          username: 'hasanabi',
+          display_name: 'HasanAbi',
+          avatar_url: 'https://i.imgur.com/XqGI2D2.jpeg',
+          streaming_url: 'https://twitch.tv/hasanabi',
+          current_game: 'Just Chatting',
+          is_live: false,
+          follower_count: 0
+        },
+        {
+          id: 'user14',
+          username: 'amouranth',
+          display_name: 'Amouranth',
+          avatar_url: 'https://i.imgur.com/Yy2ruyX.jpeg',
+          streaming_url: 'https://twitch.tv/amouranth',
+          current_game: 'Just Chatting',
+          is_live: false,
+          follower_count: 0
+        },
+        {
+          id: 'user15',
+          username: 'mizkif',
+          display_name: 'Mizkif',
+          avatar_url: 'https://i.imgur.com/jRzVmwk.jpeg',
+          streaming_url: 'https://twitch.tv/mizkif',
+          current_game: 'Just Chatting',
+          is_live: false,
+          follower_count: 0
         }
       ];
 
-      // Filter the mock data based on search term
-      const filteredGames = mockGames.filter(game => 
-        game.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      if (gamesData.length === 0) {
+        const searchTermLower = searchTerm.toLowerCase();
+        
+        gamesData = mockGames.filter(game => {
+          const nameLower = game.name.toLowerCase();
+          return nameLower === searchTermLower || 
+                 nameLower.startsWith(searchTermLower) || 
+                 nameLower.includes(searchTermLower);
+        });
+      }
       
-      const filteredUsers = appUsers.filter(user => 
-        user.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        user.display_name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      if (usersData.length === 0) {
+        const searchTermLower = searchTerm.toLowerCase();
+        
+        usersData = appUsers.filter(user => {
+          const usernameLower = user.username.toLowerCase();
+          const displayNameLower = user.display_name.toLowerCase();
+          
+          return usernameLower === searchTermLower || 
+                 displayNameLower === searchTermLower ||
+                 usernameLower.startsWith(searchTermLower) || 
+                 displayNameLower.startsWith(searchTermLower) ||
+                 usernameLower.includes(searchTermLower) || 
+                 displayNameLower.includes(searchTermLower);
+        });
+      }
       
-      // Set the search results with the filtered mock data
       setSearchResults({
-        games: filteredGames,
-        streamers: filteredUsers
+        games: gamesData,
+        streamers: usersData
       });
       
     } catch (error) {
       console.error('Error searching:', error);
       
-      // Always show something even if search fails - don't display errors to the user
       setSearchResults({
         games: [],
         streamers: []
@@ -350,7 +624,6 @@ const Explore = () => {
     }
   };
 
-  // Effect to trigger search when user types
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchTerm.trim()) {
@@ -365,7 +638,6 @@ const Explore = () => {
 
   return (
     <div className="min-h-screen bg-[#0f112a] text-white pb-24">
-      {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-[#141644] border-b-4 border-[#4a4dff] shadow-[0_4px_0_0_#000]">
         <div className="flex items-center justify-center max-w-7xl mx-auto relative">
           <h1 className="text-3xl font-bold text-white pixel-font retro-text-shadow">EXPLORE</h1>
@@ -373,7 +645,6 @@ const Explore = () => {
       </div>
 
       <div className="container mx-auto px-4 pt-24 pb-4 max-w-4xl">
-        {/* Search Bar */}
         <div className="mb-6 relative">
           <div className="relative">
             <input
@@ -386,7 +657,6 @@ const Explore = () => {
             <Search className="absolute left-3 top-3.5 text-[#5ce1ff]" size={18} />
           </div>
           
-          {/* Search Results */}
           {searchTerm.trim() && (
             <div className="absolute w-full bg-[#1a1c42] border-2 border-[#4a4dff] rounded-lg mt-2 shadow-xl z-50 max-h-96 overflow-y-auto">
               {isSearching ? (
@@ -466,14 +736,12 @@ const Explore = () => {
           </div>
         ) : (
           <>
-            {/* Top Games Section */}
             <div className="mb-10">
               <div className="flex items-center mb-6">
                 <Gamepad2 className="w-8 h-8 mr-3 text-[#5ce1ff]" />
                 <h2 className="text-2xl font-bold text-[#5ce1ff] pixel-font retro-text-shadow">TOP GAMES</h2>
               </div>
               
-              {/* Old-fashioned leaderboard style for games */}
               <div className="bg-[#1a1c42] border-4 border-[#4a4dff] rounded-lg p-2 shadow-[0_6px_0_0_#000] mb-4">
                 <div className="bg-[#0f112a] p-4 rounded text-center">
                   <p className="text-xl text-[#5ce1ff] pixel-font mb-6">Coming Soon!</p>
@@ -482,14 +750,12 @@ const Explore = () => {
               </div>
             </div>
             
-            {/* Top Streamers Section */}
             <div>
               <div className="flex items-center mb-6">
                 <UsersIcon className="w-8 h-8 mr-3 text-[#ff66c4]" />
                 <h2 className="text-2xl font-bold text-[#ff66c4] pixel-font retro-text-shadow">TOP USERS</h2>
               </div>
               
-              {/* Streamer Cards */}
               <div className="bg-[#1a1c42] border-4 border-[#ff66c4] rounded-lg p-2 shadow-[0_6px_0_0_#000]">
                 <div className="bg-[#0f112a] p-4 rounded text-center">
                   <p className="text-xl text-[#ff66c4] pixel-font mb-6">Coming Soon!</p>
