@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { BackButton } from '@/components/ui/back-button';
-import { Camera, Upload, X, Video, Image as ImageIcon } from 'lucide-react';
+import { Camera, Upload, X, Video, Image as ImageIcon, Search, Gamepad2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { allGames } from '@/data/gamesList';
 
 const NewPost = () => {
   const navigate = useNavigate();
@@ -15,6 +16,12 @@ const NewPost = () => {
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Add game selection state
+  const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
+  const [gameSearch, setGameSearch] = useState('');
+  const [gameSearchResults, setGameSearchResults] = useState<typeof allGames>([]);
+  const [showGameSearch, setShowGameSearch] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -47,7 +54,7 @@ const NewPost = () => {
     setMediaFiles(prev => [...prev, ...files]);
     setMediaPreviewUrls(prev => [...prev, ...newPreviewUrls]);
   };
-  
+
   const removeFile = (index: number) => {
     URL.revokeObjectURL(mediaPreviewUrls[index]);
     
@@ -63,7 +70,46 @@ const NewPost = () => {
       return newUrls;
     });
   };
-  
+
+  const handleGameSearch = (searchTerm: string) => {
+    setGameSearch(searchTerm);
+    
+    if (!searchTerm.trim()) {
+      setGameSearchResults([]);
+      return;
+    }
+    
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    // Filter games based on search term with prioritization
+    const exactMatches = allGames.filter(game => 
+      game.name.toLowerCase() === searchTermLower
+    );
+    
+    const startsWithMatches = allGames.filter(game => 
+      game.name.toLowerCase().startsWith(searchTermLower) && 
+      !exactMatches.some(match => match.id === game.id)
+    );
+    
+    const containsMatches = allGames.filter(game => 
+      game.name.toLowerCase().includes(searchTermLower) && 
+      !exactMatches.some(match => match.id === game.id) && 
+      !startsWithMatches.some(match => match.id === game.id)
+    );
+    
+    // Limit results and sort alphabetically within priority groups
+    const combinedResults = [...exactMatches, ...startsWithMatches, ...containsMatches].slice(0, 10);
+    
+    setGameSearchResults(combinedResults);
+  };
+
+  const handleGameSelect = (game: { id: string; name: string }) => {
+    setSelectedGame(game);
+    setGameSearch('');
+    setGameSearchResults([]);
+    setShowGameSearch(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -75,6 +121,12 @@ const NewPost = () => {
     
     if (mediaFiles.length === 0) {
       toast.error('Please upload at least one media file');
+      return;
+    }
+    
+    // Check if game is selected
+    if (!selectedGame) {
+      toast.error('Please select a game for your post');
       return;
     }
     
@@ -137,7 +189,10 @@ const NewPost = () => {
         // Store all image URLs in image_url field using comma separation for multiple images
         image_url: uploadedUrls.length > 0 ? 
           (postDestination === 'clipts' ? null : uploadedUrls.join(',')) : null,
-        video_url: postDestination === 'clipts' ? uploadedUrls[0] : null
+        video_url: postDestination === 'clipts' ? uploadedUrls[0] : null,
+        // Add game information
+        game_id: selectedGame.id,
+        game_name: selectedGame.name
       };
       
       // Create post in database
@@ -209,6 +264,85 @@ const NewPost = () => {
             {postDestination === 'clipts' && (
               <p className="text-amber-400 text-xs mt-2">Note: Only video content is allowed in Clipts</p>
             )}
+          </div>
+          
+          {/* Game Selection Field */}
+          <div className="mb-4">
+            <label className="block text-white font-medium mb-2">
+              Select Game <span className="text-red-400">*</span>
+            </label>
+            
+            {selectedGame ? (
+              <div className="flex items-center justify-between bg-gray-800/50 p-2 rounded">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 bg-gray-800 rounded flex items-center justify-center">
+                    <Gamepad2 className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="ml-2 text-white">{selectedGame.name}</span>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setSelectedGame(null)} 
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <div 
+                  className="flex items-center justify-between bg-gray-800/50 p-2 rounded cursor-pointer"
+                  onClick={() => setShowGameSearch(!showGameSearch)}
+                >
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-800 rounded flex items-center justify-center">
+                      <Gamepad2 className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="ml-2 text-gray-400">Select a game...</span>
+                  </div>
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                
+                {showGameSearch && (
+                  <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-white/10 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div className="p-2">
+                      <input
+                        type="text"
+                        placeholder="Search for a game..."
+                        value={gameSearch}
+                        onChange={(e) => handleGameSearch(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-800 text-white border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-white"
+                        autoFocus
+                      />
+                    </div>
+                    
+                    {gameSearchResults.length > 0 ? (
+                      <div className="divide-y divide-gray-800">
+                        {gameSearchResults.map((game) => (
+                          <div
+                            key={game.id}
+                            onClick={() => handleGameSelect(game)}
+                            className="p-2 hover:bg-gray-900 cursor-pointer"
+                          >
+                            <span className="text-white">{game.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      gameSearch.trim() && (
+                        <div className="p-2 text-center text-gray-400">
+                          No games found matching "{gameSearch}"
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <p className="text-xs text-red-400 mt-1">
+              * You must select a game for your post
+            </p>
           </div>
           
           <form className="space-y-4" onSubmit={handleSubmit}>
