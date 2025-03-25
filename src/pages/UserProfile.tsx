@@ -75,25 +75,26 @@ const UserProfile = () => {
       
       const isStreaming = !!streamData && !streamError;
       
-      // Fetch posts
+      // Fetch posts - use detailed selection and include all post types
+      console.log("Fetching posts for user:", id || user?.id);
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select('*')
         .eq('user_id', id || user?.id)
-        .eq('post_type', 'post')
         .order('created_at', { ascending: false });
       
-      if (postsError) throw postsError;
+      if (postsError) {
+        console.error("Error fetching posts:", postsError);
+        toast.error('Failed to load posts');
+      } else {
+        console.log("Fetched posts:", postsData?.length || 0, "posts");
+      }
       
-      // Fetch clips
-      const { data: clipsData, error: clipsError } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('user_id', id || user?.id)
-        .eq('post_type', 'clipt')
-        .order('created_at', { ascending: false });
+      // Filter posts by type after fetching all posts
+      const regularPosts = postsData?.filter(post => post.post_type === 'post' || !post.post_type) || [];
+      const cliptPosts = postsData?.filter(post => post.post_type === 'clipt') || [];
       
-      if (clipsError) throw clipsError;
+      console.log("Regular posts:", regularPosts.length, "Clipt posts:", cliptPosts.length);
       
       // Set data
       setProfileData({
@@ -112,8 +113,8 @@ const UserProfile = () => {
         stream_title: streamData?.title
       });
       
-      setPosts(postsData || []);
-      setClips(clipsData || []);
+      setPosts(regularPosts);
+      setClips(cliptPosts);
       
     } catch (error) {
       console.error('Error fetching profile data:', error);
@@ -162,73 +163,139 @@ const UserProfile = () => {
   const renderContent = () => {
     switch(activeTab) {
       case 'posts':
+        console.log("Rendering posts:", posts);
         return posts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
-            {posts.map((post) => (
-              <div 
-                key={post.id} 
-                className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-purple-500/50 transition-colors"
-                onClick={() => navigate(`/post/${post.id}`)}
-              >
-                <div className="aspect-video bg-gray-800 flex items-center justify-center">
-                  {post.media_urls && post.media_urls[0] ? (
-                    <img 
-                      src={post.media_urls[0]} 
-                      alt={post.caption || 'Post thumbnail'} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <p className="text-gray-400 text-sm">No Thumbnail</p>
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="text-white text-sm font-medium truncate">{post.caption || 'Untitled'}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-gray-400 text-xs">{post.likes_count || 0} likes</p>
-                    <p className="text-gray-400 text-xs">{post.comments_count || 0} comments</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {posts.map((post) => {
+              // Parse media URLs if they're stored as JSON string
+              let mediaUrls = post.media_urls || [];
+              if (typeof mediaUrls === 'string') {
+                try {
+                  mediaUrls = JSON.parse(mediaUrls);
+                } catch (e) {
+                  console.error("Error parsing media URLs:", e);
+                  mediaUrls = [];
+                }
+              }
+              
+              return (
+                <div 
+                  key={post.id} 
+                  className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-purple-500/50 transition-colors"
+                  onClick={() => navigate(`/post/${post.id}`)}
+                >
+                  <div className="aspect-video bg-gray-800 flex items-center justify-center">
+                    {mediaUrls.length > 0 ? (
+                      <img 
+                        src={mediaUrls[0]} 
+                        alt={post.caption || 'Post thumbnail'} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : post.thumbnail_url ? (
+                      <img 
+                        src={post.thumbnail_url} 
+                        alt={post.caption || 'Post thumbnail'} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full w-full bg-gray-900">
+                        <p className="text-gray-400 text-sm">No Thumbnail</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-white text-sm font-medium truncate">{post.caption || 'Untitled'}</p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-gray-400 text-xs">{post.likes_count || 0} likes</p>
+                      <p className="text-gray-400 text-xs">{post.comments_count || 0} comments</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-40 text-gray-400">
-            No posts available
+          <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+            <p>No posts available</p>
+            {user && user.id === profileData?.id && (
+              <Button 
+                className="mt-4 bg-purple-600 hover:bg-purple-700"
+                onClick={() => navigate('/post/new')}
+              >
+                Create your first post
+              </Button>
+            )}
           </div>
         );
       case 'clips':
         return clips.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
-            {clips.map((clip) => (
-              <div 
-                key={clip.id} 
-                className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-purple-500/50 transition-colors"
-                onClick={() => navigate(`/post/${clip.id}`)}
-              >
-                <div className="aspect-video bg-gray-800 flex items-center justify-center">
-                  {clip.media_urls && clip.media_urls[0] ? (
-                    <video 
-                      src={clip.media_urls[0]} 
-                      className="w-full h-full object-cover"
-                      poster={clip.thumbnail_url}
-                    />
-                  ) : (
-                    <p className="text-gray-400 text-sm">No Video</p>
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="text-white text-sm font-medium truncate">{clip.caption || 'Untitled'}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-gray-400 text-xs">{clip.likes_count || 0} likes</p>
-                    <p className="text-gray-400 text-xs">{clip.comments_count || 0} comments</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {clips.map((clip) => {
+              // Parse media URLs if they're stored as JSON string
+              let mediaUrls = clip.media_urls || [];
+              if (typeof mediaUrls === 'string') {
+                try {
+                  mediaUrls = JSON.parse(mediaUrls);
+                } catch (e) {
+                  console.error("Error parsing media URLs:", e);
+                  mediaUrls = [];
+                }
+              }
+              
+              return (
+                <div 
+                  key={clip.id} 
+                  className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-purple-500/50 transition-colors"
+                  onClick={() => navigate(`/post/${clip.id}`)}
+                >
+                  <div className="aspect-video bg-gray-800 flex items-center justify-center relative">
+                    {mediaUrls.length > 0 ? (
+                      <>
+                        <video 
+                          src={mediaUrls[0]} 
+                          className="w-full h-full object-cover"
+                          poster={clip.thumbnail_url}
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="h-14 w-14 bg-purple-600/70 rounded-full flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                          </div>
+                        </div>
+                      </>
+                    ) : clip.thumbnail_url ? (
+                      <img 
+                        src={clip.thumbnail_url} 
+                        alt={clip.caption || 'Clip thumbnail'} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full w-full bg-gray-900">
+                        <p className="text-gray-400 text-sm">No Video</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-white text-sm font-medium truncate">{clip.caption || 'Untitled'}</p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-gray-400 text-xs">{clip.likes_count || 0} likes</p>
+                      <p className="text-gray-400 text-xs">{clip.comments_count || 0} comments</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-40 text-gray-400">
-            No clips available
+          <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+            <p>No clips available</p>
+            {user && user.id === profileData?.id && (
+              <Button 
+                className="mt-4 bg-purple-600 hover:bg-purple-700"
+                onClick={() => navigate('/post/new?type=clipt')}
+              >
+                Create your first clip
+              </Button>
+            )}
           </div>
         );
       case 'achievements':
