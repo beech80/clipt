@@ -24,9 +24,11 @@ const GameDetailsPage = React.lazy(() => import('./pages/GameDetails'));
 const TopGames = React.lazy(() => import('./pages/TopGames'));
 const Clipts = React.lazy(() => import('./pages/Clipts'));
 const TopClipts = React.lazy(() => import('./pages/TopClipts'));
+const SquadsClipts = React.lazy(() => import('./pages/SquadsClipts'));
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
 const Discovery = React.lazy(() => import('./pages/Discovery'));
 const Explore = React.lazy(() => import('./pages/Explore'));
+const AllStreamers = React.lazy(() => import('./pages/AllStreamers'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Menu = React.lazy(() => import('./pages/Menu'));
 const Profile = React.lazy(() => import('./pages/Profile'));
@@ -56,7 +58,6 @@ const AllCommentsPage = React.lazy(() => import('./pages/AllCommentsPage'));
 const GroupChat = React.lazy(() => import('./pages/GroupChat'));
 const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
-const SquadsClipts = React.lazy(() => import('./pages/SquadsClipts'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -81,6 +82,7 @@ function AppContent() {
       <Route path="/profile/:id?" element={<UserProfile />} />
       <Route path="/discover" element={<Discovery />} />
       <Route path="/explore" element={<Explore />} />
+      <Route path="/streamers" element={<AllStreamers />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/profile/edit" element={
