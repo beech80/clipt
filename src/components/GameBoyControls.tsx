@@ -1667,10 +1667,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   // Update the keyboard event handler to map a key for saving videos
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Using 'S' key to save videos
-      if (event.key === 's' || event.key === 'S') {
-        handleSaveVideo();
-      } else if (event.key === 'ArrowUp') {
+      if (event.key === 'ArrowUp') {
         handleDPadDirection({ x: 0, y: -50 });
       } else if (event.key === 'ArrowDown') {
         handleDPadDirection({ x: 0, y: 50 });
@@ -1680,14 +1677,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         handleDPadDirection({ x: 50, y: 0 });
       } else if (event.key === 'Enter') {
         handleMainButtonClick();
-      } else if (event.key === 'a' || event.key === 'A') {
-        handleButtonAPress();
-      } else if (event.key === 'b' || event.key === 'B') {
-        handleButtonBPress();
-      } else if (event.key === 'x' || event.key === 'X') {
-        handleButtonXPress();
-      } else if (event.key === 'y' || event.key === 'Y' || event.key === 't' || event.key === 'T') {
-        handleButtonYPress();
       }
     };
 
