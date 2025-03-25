@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { PostInteractions } from "./interactions/PostInteractions";
 import { Post } from "@/types/post";
-import { Heart, MessageSquare, Trophy, ChevronDown, ChevronUp, MoreVertical } from "lucide-react";
+import { Heart, MessageSquare, Trophy, ChevronDown, ChevronUp, MoreVertical, Gamepad2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import CommentModal from "../comments/CommentModal";
@@ -221,12 +221,13 @@ const PostItem = ({ post }: PostItemProps) => {
               {username}
             </span>
             {post.games && (
-              <span 
-                className="block text-sm text-gaming-300 hover:text-gaming-100 cursor-pointer" 
+              <div 
+                className="flex items-center text-sm text-gaming-300 hover:text-gaming-100 cursor-pointer" 
                 onClick={(e) => handleGameClick(e, String(post.games.id))}
               >
-                Playing {post.games.name}
-              </span>
+                <Gamepad2 className="h-3 w-3 mr-1" />
+                {post.games.name}
+              </div>
             )}
           </div>
         </div>
@@ -336,7 +337,7 @@ const PostItem = ({ post }: PostItemProps) => {
                       {user && user.id === comment.user_id && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="xs" className="h-5 w-5 p-0">
+                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0">
                               <MoreVertical className="h-3 w-3 text-gaming-400" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -383,7 +384,7 @@ const PostItem = ({ post }: PostItemProps) => {
                         />
                         <div className="flex gap-2 mt-1 justify-end">
                           <Button 
-                            size="xs"
+                            size="sm"
                             variant="ghost" 
                             onClick={() => {
                               setEditingComment(null);
@@ -394,7 +395,7 @@ const PostItem = ({ post }: PostItemProps) => {
                             Cancel
                           </Button>
                           <Button 
-                            size="xs"
+                            size="sm"
                             onClick={async () => {
                               try {
                                 await editComment(comment.id, user.id, editContent.trim());

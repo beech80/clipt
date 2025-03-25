@@ -15,6 +15,10 @@ export interface Post {
     name: string | null;
   } | null;
   game_id?: string | number;
+  game_name?: string;
+  media_urls?: string[];
+  hashtags?: string[];
+  mentions?: string[];
   likes_count?: number;
   clip_votes?: Array<{ count: number }>;
   comments_count?: number;
@@ -23,6 +27,7 @@ export interface Post {
   required_tier_id?: string | null;
   scheduled_publish_time?: string | null;
   type?: 'video' | 'image' | 'text';
+  post_type?: 'clip' | 'home';
 }
 
 export interface PostHeaderProps {
