@@ -215,7 +215,7 @@ const Messages = () => {
     setSearchResults(data || []);
   };
 
-  // Modified send message function with fallback to demo mode if database fails
+  // Modified send message function with improved error handling and retry logic
   const sendMessage = async () => {
     if (!message.trim() || !selectedChat || !user) return;
     
@@ -231,6 +231,9 @@ const Messages = () => {
       
       console.log("Attempting to send message:", newMessage);
       
+      // First make sure messages table exists
+      await ensureMessagesTableExists();
+      
       // Try to store message in database
       const { data: savedMessage, error } = await supabase
         .from('direct_messages')
@@ -241,24 +244,53 @@ const Messages = () => {
       if (error) {
         console.error("Error saving message to database:", error);
         
-        // Fallback to demo mode if database fails
-        console.log("Falling back to demo mode for messaging");
-        
-        // Create a local message object with an ID
-        const localMessage = {
-          id: Date.now().toString(),
-          ...newMessage,
-          sender_name: user.user_metadata?.username || 'You'
-        };
-        
-        // Add to local messages array
-        setSelectedChat({
-          ...selectedChat,
-          messages: [...(selectedChat.messages || []), localMessage]
-        });
-        
-        // Show user that we're in demo mode
-        toast.success("Message sent (Demo mode)");
+        // Try a second time with a simpler approach (no return value)
+        const { error: retryError } = await supabase
+          .from('direct_messages')
+          .insert(newMessage);
+          
+        if (retryError) {
+          console.error("Retry also failed:", retryError);
+          
+          // Fallback to demo mode if database fails
+          console.log("Falling back to demo mode for messaging");
+          
+          // Create a local message object with an ID
+          const localMessage = {
+            id: Date.now().toString(),
+            ...newMessage,
+            sender_name: user.user_metadata?.username || 'You'
+          };
+          
+          // Add to local messages array
+          setSelectedChat({
+            ...selectedChat,
+            messages: [...(selectedChat.messages || []), localMessage]
+          });
+          
+          // Update the active chats list to show this conversation has a new message
+          updateActiveChatsWithNewMessage(selectedChat.recipient_id, message.trim());
+          
+          // Show user that we're in demo mode
+          toast.success("Message sent (Demo mode)");
+        } else {
+          // The second attempt worked but we don't have the returned data
+          // Create a message object with local data
+          const localMessage = {
+            id: `local_${Date.now()}`,
+            ...newMessage,
+            sender_name: user.user_metadata?.username || 'You'
+          };
+          
+          // Add to local messages array
+          setSelectedChat({
+            ...selectedChat,
+            messages: [...(selectedChat.messages || []), localMessage]
+          });
+          
+          // Update the active chats list
+          updateActiveChatsWithNewMessage(selectedChat.recipient_id, message.trim());
+        }
       } else {
         // Database save successful
         console.log("Message saved to database:", savedMessage);
@@ -271,18 +303,68 @@ const Messages = () => {
             sender_name: user.user_metadata?.username || 'You'
           }]
         });
+        
+        // Update the active chats list
+        updateActiveChatsWithNewMessage(selectedChat.recipient_id, message.trim());
       }
       
       // Clear input in either case
       setMessage("");
+      
+      // Scroll to the bottom to show the new message
+      setTimeout(scrollToBottom, 100);
       
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
     }
   };
+  
+  // Helper function to update the active chats list with a new message
+  const updateActiveChatsWithNewMessage = (recipientId: string, messageText: string) => {
+    // Check if this chat is already in the active chats list
+    const existingChatIndex = activeChats.findIndex(chat => 
+      chat.recipient_id === recipientId
+    );
+    
+    if (existingChatIndex !== -1) {
+      // Update the existing chat
+      const updatedChats = [...activeChats];
+      updatedChats[existingChatIndex] = {
+        ...updatedChats[existingChatIndex],
+        last_message: messageText,
+        last_message_time: new Date().toISOString()
+      };
+      setActiveChats(updatedChats);
+    } else {
+      // This is a new chat, we need to add it to the list
+      // We need the recipient's profile info
+      const fetchRecipientProfile = async () => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, display_name, avatar_url')
+          .eq('id', recipientId)
+          .single();
+          
+        if (profile) {
+          const newChat = {
+            id: `chat_${Math.min(user!.id, recipientId)}_${Math.max(user!.id, recipientId)}`,
+            type: 'direct',
+            recipient_id: recipientId,
+            recipient_name: profile.username || profile.display_name || 'User',
+            recipient_avatar: profile.avatar_url,
+            last_message: messageText,
+            last_message_time: new Date().toISOString()
+          };
+          
+          setActiveChats([newChat, ...activeChats]);
+        }
+      };
+      
+      fetchRecipientProfile();
+    }
+  };
 
-  // Function to fetch messages for a conversation
   const fetchMessages = async (chatId: string, recipientId: string) => {
     if (!user) return;
     
@@ -404,50 +486,79 @@ const Messages = () => {
   useEffect(() => {
     if (!user || !selectedChat) return;
     
-    // Subscribe to new messages
+    // Subscribe to new messages for the current chat
     const subscription = supabase
-      .channel('direct_messages')
+      .channel('direct_messages_channel')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
         table: 'direct_messages',
         filter: `recipient_id=eq.${user.id}`
-      }, (payload) => {
+      }, async (payload) => {
         console.log('New message received:', payload);
         
-        // If this message is for the current chat, add it to the messages
+        const newMessage = payload.new as any;
+        
+        // Check if this message belongs to the currently selected chat
         if (selectedChat && 
-            (payload.new.sender_id === selectedChat.recipient_id || 
-             payload.new.recipient_id === selectedChat.recipient_id)) {
+            (newMessage.sender_id === selectedChat.recipient_id || 
+             newMessage.recipient_id === selectedChat.recipient_id)) {
           
-          // Get sender profile
-          supabase
+          // Fetch sender info
+          const { data: senderProfile } = await supabase
             .from('profiles')
             .select('username, display_name')
-            .eq('id', payload.new.sender_id)
-            .single()
-            .then(({ data: profile }) => {
-              const senderName = profile ? 
-                                (profile.username || profile.display_name) : 
-                                (payload.new.sender_id === user.id ? 'You' : 'User');
-              
-              // Add message to chat
-              setSelectedChat(current => {
-                if (!current) return null;
-                return {
-                  ...current,
-                  messages: [...(current.messages || []), {
-                    ...payload.new,
-                    sender_name: senderName
-                  }]
-                };
-              });
-            });
+            .eq('id', newMessage.sender_id)
+            .single();
+            
+          // Add message to chat
+          setSelectedChat(prevChat => ({
+            ...prevChat,
+            messages: [...(prevChat.messages || []), {
+              ...newMessage,
+              sender_name: senderProfile ? 
+                (senderProfile.username || senderProfile.display_name) : 
+                'User'
+            }]
+          }));
+          
+          // Update active chats list
+          updateActiveChatsWithNewMessage(
+            newMessage.sender_id,
+            newMessage.message
+          );
+          
+          // Scroll to show new message
+          setTimeout(scrollToBottom, 100);
+        } else {
+          // Message is for a different chat, just update active chats
+          const chatId = `chat_${Math.min(user.id, newMessage.sender_id)}_${Math.max(user.id, newMessage.sender_id)}`;
+          
+          // Check if we already have this chat in our list
+          const existingChatIndex = activeChats.findIndex(chat => 
+            chat.id === chatId || chat.recipient_id === newMessage.sender_id
+          );
+          
+          if (existingChatIndex !== -1) {
+            // Just update the last message
+            const updatedChats = [...activeChats];
+            updatedChats[existingChatIndex] = {
+              ...updatedChats[existingChatIndex],
+              last_message: newMessage.message,
+              last_message_time: newMessage.created_at
+            };
+            setActiveChats(updatedChats);
+          } else {
+            // This is a new chat, need to fetch the sender profile
+            fetchActiveChats();
+          }
+          
+          // Show a notification
+          toast.info("New message received");
         }
       })
       .subscribe();
       
-    // Cleanup subscription on component unmount or when selected chat changes
     return () => {
       subscription.unsubscribe();
     };
