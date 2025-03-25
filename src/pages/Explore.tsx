@@ -4,6 +4,7 @@ import { Gamepad2, Trophy, Users as UsersIcon, Star, Search } from 'lucide-react
 import { supabase } from '@/lib/supabase'; 
 import GameCard from '@/components/GameCard';
 import StreamerCard from '@/components/StreamerCard';
+import { allGames } from '@/data/gamesList';
 
 interface Game {
   id: string;
@@ -222,7 +223,7 @@ const Explore = () => {
         
         const { data: dbUsersData, error: usersError } = await supabase
           .from('profiles')
-          .select('id, username, display_name, avatar_url, current_game')
+          .select('id, username, display_name, avatar_url')
           .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
           .limit(10);
           
@@ -233,7 +234,7 @@ const Explore = () => {
             display_name: user.display_name,
             avatar_url: user.avatar_url,
             streaming_url: '',
-            current_game: user.current_game || '',
+            current_game: '',
             is_live: false,
             follower_count: 0
           }));
@@ -244,189 +245,6 @@ const Explore = () => {
         console.log('Database search not available, using fallback data');
       }
       
-      const mockGames = [
-        {
-          id: 'game1',
-          name: 'CyberPunk 2077',
-          cover_url: 'https://i.imgur.com/9nGEh4e.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game2', 
-          name: 'Elden Ring',
-          cover_url: 'https://i.imgur.com/GNEDnLC.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game3',
-          name: 'Call of Duty: Warzone',
-          cover_url: 'https://i.imgur.com/D5KKcOj.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game4',
-          name: 'Fortnite',
-          cover_url: 'https://i.imgur.com/8FTAGAi.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game5',
-          name: 'Minecraft',
-          cover_url: 'https://i.imgur.com/zDekIFE.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game6',
-          name: 'Apex Legends',
-          cover_url: 'https://i.imgur.com/gzARcBl.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game7',
-          name: 'League of Legends',
-          cover_url: 'https://i.imgur.com/CzOwTIn.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game8',
-          name: 'Valorant',
-          cover_url: 'https://i.imgur.com/kz9I8ks.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game9',
-          name: 'Grand Theft Auto V',
-          cover_url: 'https://i.imgur.com/Yh5yUEK.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game10',
-          name: 'The Witcher 3',
-          cover_url: 'https://i.imgur.com/T9XKEhm.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game11',
-          name: 'Counter-Strike 2',
-          cover_url: 'https://i.imgur.com/1hAuXiI.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game12',
-          name: 'Overwatch 2',
-          cover_url: 'https://i.imgur.com/8fnhPF9.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game13',
-          name: 'Rocket League',
-          cover_url: 'https://i.imgur.com/5RRqZRb.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game14',
-          name: 'FIFA 23',
-          cover_url: 'https://i.imgur.com/VnrRdoO.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game15',
-          name: 'NBA 2K23',
-          cover_url: 'https://i.imgur.com/5Qq5gPH.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game16',
-          name: 'Dota 2',
-          cover_url: 'https://i.imgur.com/Lk8M9wV.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game17',
-          name: 'Rainbow Six Siege',
-          cover_url: 'https://i.imgur.com/IMh6ZlO.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game18',
-          name: 'Among Us',
-          cover_url: 'https://i.imgur.com/OG6Km2n.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game19',
-          name: 'Fall Guys',
-          cover_url: 'https://i.imgur.com/uj33a50.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game20',
-          name: 'Genshin Impact',
-          cover_url: 'https://i.imgur.com/Bm2SJi0.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game21',
-          name: 'World of Warcraft',
-          cover_url: 'https://i.imgur.com/8PzaRyb.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game22',
-          name: 'Destiny 2',
-          cover_url: 'https://i.imgur.com/RhqfGQd.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game23',
-          name: 'Halo Infinite',
-          cover_url: 'https://i.imgur.com/yJhKcDU.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game24',
-          name: 'Sea of Thieves',
-          cover_url: 'https://i.imgur.com/yIU8RKP.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game25',
-          name: 'Roblox',
-          cover_url: 'https://i.imgur.com/r0K0yQb.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game26',
-          name: 'PUBG',
-          cover_url: 'https://i.imgur.com/R5kNBlD.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game27',
-          name: 'Red Dead Redemption 2',
-          cover_url: 'https://i.imgur.com/WJ2n8yX.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game28',
-          name: 'Horizon Forbidden West',
-          cover_url: 'https://i.imgur.com/IGMq9lf.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game29',
-          name: 'God of War Ragnarök',
-          cover_url: 'https://i.imgur.com/0zPLl5u.jpeg',
-          post_count: 0
-        },
-        {
-          id: 'game30',
-          name: 'Final Fantasy XIV',
-          cover_url: 'https://i.imgur.com/jtLcDEw.jpeg',
-          post_count: 0
-        }
-      ];
-
       const appUsers = [
         {
           id: 'user1',
@@ -581,9 +399,14 @@ const Explore = () => {
       ];
 
       if (gamesData.length === 0) {
+        const formattedGames = allGames.map(game => ({
+          ...game,
+          post_count: 0
+        }));
+        
         const searchTermLower = searchTerm.toLowerCase();
         
-        gamesData = mockGames.filter(game => {
+        gamesData = formattedGames.filter(game => {
           const nameLower = game.name.toLowerCase();
           return nameLower === searchTermLower || 
                  nameLower.startsWith(searchTermLower) || 
