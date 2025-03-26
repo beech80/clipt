@@ -46,7 +46,14 @@ const UserProfile = () => {
       const userId = id || user?.id;
       console.log("Fetching profile data for user ID:", userId);
       
-      // Fetch user profile data
+      if (!userId) {
+        console.error("No user ID provided for profile");
+        toast.error('Failed to load profile: No user ID provided');
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch user profile data with detailed error handling
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -55,7 +62,45 @@ const UserProfile = () => {
       
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        throw profileError;
+        
+        // Try a fallback approach if user doesn't exist in profiles
+        console.log("Attempting fallback to auth.users...");
+        
+        const { data: authUserData, error: authError } = await supabase.auth.admin.getUserById(userId);
+        
+        if (authError || !authUserData || !authUserData.user) {
+          console.error("Fallback failed:", authError);
+          toast.error('User profile not found');
+          setLoading(false);
+          return;
+        }
+        
+        // Create a basic profile for this user if they exist in auth but not in profiles
+        const newProfileData = {
+          id: userId,
+          username: authUserData.user.email?.split('@')[0] || `user_${userId.slice(0, 8)}`,
+          display_name: authUserData.user.user_metadata?.full_name || authUserData.user.email?.split('@')[0] || 'New User',
+          avatar_url: authUserData.user.user_metadata?.avatar_url || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        // Try to insert this profile
+        const { data: insertedProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert(newProfileData)
+          .select()
+          .single();
+          
+        if (insertError) {
+          console.error("Failed to create profile:", insertError);
+          toast.error('Failed to load profile data');
+          setLoading(false);
+          return;
+        }
+        
+        console.log("Created new profile:", insertedProfile);
+        profileData = insertedProfile;
       }
       
       console.log("Profile data fetched:", profileData);
@@ -63,17 +108,32 @@ const UserProfile = () => {
       // Check if the current user is following this profile
       let isFollowing = false;
       if (user && user.id !== userId) {
-        isFollowing = await followService.isFollowing(user.id, userId);
+        try {
+          isFollowing = await followService.isFollowing(user.id, userId);
+        } catch (error) {
+          console.error("Error checking following status:", error);
+        }
       }
       
-      // Fetch followers count
-      const followersCount = await followService.getFollowersCount(userId);
+      // Fetch followers count with error handling
+      let followersCount = 0;
+      try {
+        followersCount = await followService.getFollowersCount(userId);
+      } catch (error) {
+        console.error("Error fetching followers count:", error);
+      }
       
-      // Fetch following count
-      const followingCount = await followService.getFollowingCount(userId);
+      // Fetch following count with error handling
+      let followingCount = 0;
+      try {
+        followingCount = await followService.getFollowingCount(userId);
+      } catch (error) {
+        console.error("Error fetching following count:", error);
+      }
       
       // Check if the user is currently streaming
-      const { data: streamData, error: streamError } = await supabase
+      let streamData = null;
+      const { data: streamResult, error: streamError } = await supabase
         .from('active_streams')
         .select('id, title, viewer_count, started_at')
         .eq('user_id', userId)
@@ -81,13 +141,29 @@ const UserProfile = () => {
         .limit(1)
         .single();
       
-      const isStreaming = !!streamData && !streamError;
+      if (!streamError && streamResult) {
+        streamData = streamResult;
+      }
+      
+      const isStreaming = !!streamData;
+      
+      // ENSURE PROFILE DATA COMPLETENESS
+      // Some basic checks to make sure profile data is complete
+      if (!profileData.avatar_url) {
+        // Set a default avatar if none exists
+        profileData.avatar_url = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.display_name || profileData.username)}&background=random`;
+      }
+      
+      if (!profileData.banner_url) {
+        // Set a default banner if none exists
+        profileData.banner_url = 'https://placehold.co/1200x300/3f51b5/ffffff?text=Clipt+User';
+      }
       
       // *******************************************
       // CREATE DEMO POSTS FOR EACH USER IF NEEDED
       // *******************************************
       
-      // IMPORTANT: Check if posts exist for this user
+      // Check if posts exist for this user
       const { data: existingPosts, error: postsError } = await supabase
         .from('posts')
         .select('count')
@@ -192,10 +268,10 @@ const UserProfile = () => {
       setProfileData({
         id: profileData.id,
         username: profileData.username,
-        display_name: profileData.display_name,
+        display_name: profileData.display_name || profileData.username,
         avatar_url: profileData.avatar_url,
         banner_url: profileData.banner_url,
-        bio: profileData.bio,
+        bio: profileData.bio || '',
         followers_count: followersCount,
         following_count: followingCount,
         achievements_count: 0, // Placeholder for now
