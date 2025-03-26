@@ -394,7 +394,15 @@ const UserProfile = () => {
       return (
         <div className="flex flex-col items-center justify-center py-12 text-gray-400">
           <FileText className="h-12 w-12 mb-4 text-gray-300" />
-          <p>No posts available</p>
+          <p>No posts available. This could be because the user hasn't created any posts yet.</p>
+          
+          {/* Debug section to help identify issues */}
+          <div className="mt-4 p-2 bg-gray-800 rounded text-xs text-left w-full max-w-md">
+            <p>Debug info:</p>
+            <p>User ID: {userId || 'Not available'}</p>
+            <p>Total posts found: {posts.length + clips.length}</p>
+            <p>Current tab: {activeTab}</p>
+          </div>
         </div>
       );
     }
@@ -406,7 +414,7 @@ const UserProfile = () => {
         {postsToRender.map(post => {
           if (!post || !post.id) return null;
           
-          // Get the first media URL if available
+          // Get the first media URL if available with robust fallbacks
           let mediaUrl = null;
           try {
             if (post.media_urls) {
@@ -424,20 +432,24 @@ const UserProfile = () => {
               }
             }
 
-            // Fallback to thumbnail if available
-            if (!mediaUrl && post.thumbnail_url) {
-              mediaUrl = post.thumbnail_url;
+            // Fallback to other fields if not found
+            if (!mediaUrl) {
+              if (post.thumbnail_url) mediaUrl = post.thumbnail_url;
+              else if (post.image_url) mediaUrl = post.image_url;
+              else if (post.video_url) mediaUrl = post.video_url;
             }
           } catch (error) {
-            console.error("Error processing media URL:", error);
+            console.error("Error processing media URL for post:", post.id, error);
             mediaUrl = null;
           }
+
+          const postContent = post.content || 'No content';
 
           return (
             <div 
               key={post.id}
               onClick={() => handlePostClick(post.id)}
-              className="aspect-square overflow-hidden cursor-pointer relative border border-[#003366] p-1"
+              className="aspect-square overflow-hidden cursor-pointer relative border border-[#003366] p-1 hover:border-[#4488cc]"
             >
               {mediaUrl ? (
                 <div className="w-full h-full relative">
@@ -446,18 +458,19 @@ const UserProfile = () => {
                     alt={post.content?.substring(0, 20) || "Post"} 
                     className="w-full h-full object-cover"
                     onError={(e) => {
+                      console.log(`Image load error for post ${post.id}:`, e);
                       const target = e.target as HTMLImageElement;
                       target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23001133'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%234488cc' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
                     }}
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-1 text-white text-xs truncate">
-                    {post.content?.substring(0, 24) || "..."}
+                    {postContent.substring(0, 24) || "Post"}
                   </div>
                 </div>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-[#0a1a40] p-2">
                   <div className="text-white text-xs text-center overflow-hidden line-clamp-4">
-                    {post.content || "No content"}
+                    {postContent}
                   </div>
                 </div>
               )}
