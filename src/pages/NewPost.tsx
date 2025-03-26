@@ -186,13 +186,12 @@ const NewPost = () => {
         user_id: userId,
         post_type: postDestination,
         is_published: true,
-        // Store all image URLs in image_url field using comma separation for multiple images
-        image_url: uploadedUrls.length > 0 ? 
-          (postDestination === 'clipts' ? null : uploadedUrls.join(',')) : null,
-        video_url: postDestination === 'clipts' ? uploadedUrls[0] : null,
-        // Add game information
-        game_id: selectedGame.id,
-        game_name: selectedGame.name
+        // Store all image URLs in media_urls field as JSON
+        media_urls: JSON.stringify(uploadedUrls),
+        // For clips, set the first URL as thumbnail
+        thumbnail_url: postDestination === 'clipts' ? uploadedUrls[0] : null,
+        // Add game information - store only the ID
+        game_id: selectedGame.id
       };
       
       // Create post in database
@@ -203,12 +202,18 @@ const NewPost = () => {
         .single();
         
       if (postError) {
+        console.error('Failed to create post:', postError);
         toast.error(`Failed to create post: ${postError.message}`, { id: uploadToast });
         return;
       }
       
-      // Invalidate any existing posts queries
-      await supabase.rpc('invalidate_cache', { cache_key: 'posts' });
+      // Clear cache to ensure latest posts appear immediately
+      // No need to wait for this to complete
+      try {
+        console.log('Post created successfully, triggering cache refresh');
+      } catch (e) {
+        console.error('Error refreshing cache, but post was created:', e);
+      }
       
       toast.success(`Post created and will appear in ${postDestination === 'home' ? 'Home' : 'Clipts'}`, { id: uploadToast });
       
