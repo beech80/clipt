@@ -205,9 +205,10 @@ const UserProfile = () => {
 
         try {
           // Direct approach to fetch all posts without filters that might block results
+          // Based on previous experience, removing filters that could prevent posts from appearing
           const { data: allPostsData, error: allPostsError } = await supabase
             .from('posts')
-            .select('*, profiles(username, avatar_url)')
+            .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
 
@@ -221,12 +222,33 @@ const UserProfile = () => {
             // Process and separate posts
             if (Array.isArray(allPostsData) && allPostsData.length > 0) {
               try {
-                const regularPosts = allPostsData
-                  .filter(post => post && post.post_type !== 'clipt')
+                // Add debug output to see raw post data
+                console.log("Raw posts from database:", JSON.stringify(allPostsData, null, 2));
+                
+                // Get profile data for posts
+                const { data: profilesData } = await supabase
+                  .from('profiles')
+                  .select('id, username, avatar_url')
+                  .in('id', allPostsData.map(post => post.user_id));
+                
+                // Create a map of profiles for easier access
+                const profilesMap = profilesData ? profilesData.reduce((acc: Record<string, any>, profile: any) => {
+                  acc[profile.id] = profile;
+                  return acc;
+                }, {}) : {};
+                
+                // Enhance post data with profile info if missing
+                const enhancedPosts = allPostsData.map((post: any) => ({
+                  ...post,
+                  profiles: post.profiles || profilesMap[post.user_id] || null
+                }));
+                
+                const regularPosts = enhancedPosts
+                  .filter((post: any) => post && post.post_type !== 'clipt')
                   .map(processPost);
                 
-                const clipPosts = allPostsData
-                  .filter(post => post && post.post_type === 'clipt')
+                const clipPosts = enhancedPosts
+                  .filter((post: any) => post && post.post_type === 'clipt')
                   .map(processPost);
 
                 console.log("Processed posts:", regularPosts);
