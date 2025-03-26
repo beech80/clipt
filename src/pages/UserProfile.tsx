@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
-import { User, Settings, Grid, ListVideo, Trophy, Loader2, Video } from 'lucide-react';
+import { User, Settings, Grid, ListVideo, Trophy, Loader2, Video, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -75,28 +75,37 @@ const UserProfile = () => {
       
       const isStreaming = !!streamData && !streamError;
       
-      // Fetch posts - use detailed selection and include all post types
-      console.log("Fetching posts for user:", id || user?.id);
-      const { data: postsData, error: postsError } = await supabase
+      const targetUserId = id || user?.id;
+      console.log("Fetching posts for user ID:", targetUserId);
+      
+      // Direct query to get all posts from this user - no filtering by post_type
+      const { data: allPostsData, error: postsError } = await supabase
         .from('posts')
         .select('*')
-        .eq('user_id', id || user?.id)
+        .eq('user_id', targetUserId)
         .order('created_at', { ascending: false });
       
       if (postsError) {
         console.error("Error fetching posts:", postsError);
         toast.error('Failed to load posts');
       } else {
-        console.log("Fetched posts:", postsData?.length || 0, "posts");
+        console.log("Fetched total posts:", allPostsData?.length || 0);
+        
+        // Even if post_type doesn't exist, include the post in regularPosts
+        const regularPosts = allPostsData?.filter(post => {
+          return post.post_type === 'post' || !post.post_type || post.post_type === '';
+        }) || [];
+        
+        const cliptPosts = allPostsData?.filter(post => post.post_type === 'clipt') || [];
+        
+        console.log("Regular posts:", regularPosts.length, "Clipt posts:", cliptPosts.length);
+        
+        // Update state with the posts
+        setPosts(regularPosts);
+        setClips(cliptPosts);
       }
       
-      // Filter posts by type after fetching all posts
-      const regularPosts = postsData?.filter(post => post.post_type === 'post' || !post.post_type) || [];
-      const cliptPosts = postsData?.filter(post => post.post_type === 'clipt') || [];
-      
-      console.log("Regular posts:", regularPosts.length, "Clipt posts:", cliptPosts.length);
-      
-      // Set data
+      // Set profile data
       setProfileData({
         id: profileData.id,
         username: profileData.username,
@@ -112,9 +121,6 @@ const UserProfile = () => {
         stream_id: streamData?.id,
         stream_title: streamData?.title
       });
-      
-      setPosts(regularPosts);
-      setClips(cliptPosts);
       
     } catch (error) {
       console.error('Error fetching profile data:', error);
@@ -163,56 +169,94 @@ const UserProfile = () => {
   const renderContent = () => {
     switch(activeTab) {
       case 'posts':
-        console.log("Rendering posts:", posts);
+        console.log("Rendering posts tab, posts available:", posts.length);
+        
+        if (loading) {
+          return (
+            <div className="flex flex-col items-center justify-center h-40">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-500 mb-2" />
+              <p className="text-gray-400">Loading posts...</p>
+            </div>
+          );
+        }
+        
         return posts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {posts.map((post) => {
-              // Parse media URLs if they're stored as JSON string
-              let mediaUrls = post.media_urls || [];
-              if (typeof mediaUrls === 'string') {
-                try {
-                  mediaUrls = JSON.parse(mediaUrls);
-                } catch (e) {
-                  console.error("Error parsing media URLs:", e);
-                  mediaUrls = [];
+          <div className="space-y-4">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-white font-medium">All Posts</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-400 hover:text-white"
+                onClick={fetchProfileData}
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Refresh
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {posts.map((post) => {
+                // Parse media URLs if they're stored as JSON string
+                let mediaUrls = post.media_urls || [];
+                if (typeof mediaUrls === 'string') {
+                  try {
+                    mediaUrls = JSON.parse(mediaUrls);
+                  } catch (e) {
+                    console.error("Error parsing media URLs:", e);
+                    mediaUrls = [];
+                  }
                 }
-              }
-              
-              return (
-                <div 
-                  key={post.id} 
-                  className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-purple-500/50 transition-colors"
-                  onClick={() => navigate(`/post/${post.id}`)}
-                >
-                  <div className="aspect-video bg-gray-800 flex items-center justify-center">
-                    {mediaUrls.length > 0 ? (
-                      <img 
-                        src={mediaUrls[0]} 
-                        alt={post.caption || 'Post thumbnail'} 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : post.thumbnail_url ? (
-                      <img 
-                        src={post.thumbnail_url} 
-                        alt={post.caption || 'Post thumbnail'} 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full w-full bg-gray-900">
-                        <p className="text-gray-400 text-sm">No Thumbnail</p>
+                
+                // Debug info for this post
+                console.log(`Post ${post.id}:`, {
+                  caption: post.caption,
+                  mediaUrls: mediaUrls,
+                  thumbnail: post.thumbnail_url
+                });
+                
+                return (
+                  <div 
+                    key={post.id} 
+                    className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-purple-500/50 transition-colors"
+                    onClick={() => navigate(`/post/${post.id}`)}
+                  >
+                    <div className="aspect-video bg-gray-800 flex items-center justify-center">
+                      {mediaUrls && mediaUrls.length > 0 ? (
+                        <img 
+                          src={mediaUrls[0]} 
+                          alt={post.caption || 'Post thumbnail'} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Post';
+                          }}
+                        />
+                      ) : post.thumbnail_url ? (
+                        <img 
+                          src={post.thumbnail_url} 
+                          alt={post.caption || 'Post thumbnail'} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Post';
+                          }}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full w-full bg-gray-900">
+                          <p className="text-gray-400 text-sm">{post.caption || 'No Thumbnail'}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <p className="text-white text-sm font-medium truncate">{post.caption || 'Untitled'}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-gray-400 text-xs">{post.likes_count || 0} likes</p>
+                        <p className="text-gray-400 text-xs">{post.comments_count || 0} comments</p>
                       </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-white text-sm font-medium truncate">{post.caption || 'Untitled'}</p>
-                    <div className="flex items-center justify-between mt-1">
-                      <p className="text-gray-400 text-xs">{post.likes_count || 0} likes</p>
-                      <p className="text-gray-400 text-xs">{post.comments_count || 0} comments</p>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-gray-400">
@@ -227,6 +271,7 @@ const UserProfile = () => {
             )}
           </div>
         );
+      
       case 'clips':
         return clips.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
