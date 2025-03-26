@@ -43,66 +43,155 @@ const UserProfile = () => {
     try {
       setLoading(true);
       
+      const userId = id || user?.id;
+      console.log("Fetching profile data for user ID:", userId);
+      
       // Fetch user profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', id || user?.id)
+        .eq('id', userId)
         .single();
       
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
+      }
+      
+      console.log("Profile data fetched:", profileData);
       
       // Check if the current user is following this profile
       let isFollowing = false;
-      if (user && user.id !== (id || user.id)) {
-        isFollowing = await followService.isFollowing(user.id, id || user.id);
+      if (user && user.id !== userId) {
+        isFollowing = await followService.isFollowing(user.id, userId);
       }
       
       // Fetch followers count
-      const followersCount = await followService.getFollowersCount(id || user?.id);
+      const followersCount = await followService.getFollowersCount(userId);
       
       // Fetch following count
-      const followingCount = await followService.getFollowingCount(id || user?.id);
+      const followingCount = await followService.getFollowingCount(userId);
       
       // Check if the user is currently streaming
       const { data: streamData, error: streamError } = await supabase
         .from('active_streams')
         .select('id, title, viewer_count, started_at')
-        .eq('user_id', id || user?.id)
+        .eq('user_id', userId)
         .order('started_at', { ascending: false })
         .limit(1)
         .single();
       
       const isStreaming = !!streamData && !streamError;
       
-      const targetUserId = id || user?.id;
-      console.log("Fetching posts for user ID:", targetUserId);
+      // Let's do a complete debug of the posts fetching
+      console.log("About to fetch posts for user ID:", userId);
       
-      // Direct query to get all posts from this user - no filtering by post_type
-      const { data: allPostsData, error: postsError } = await supabase
+      // APPROACH 1: Try getting all posts from this specific user
+      const { data: userPostsData, error: userPostsError } = await supabase
         .from('posts')
         .select('*')
-        .eq('user_id', targetUserId)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
       
-      if (postsError) {
-        console.error("Error fetching posts:", postsError);
-        toast.error('Failed to load posts');
+      console.log("APPROACH 1 results:", userPostsData?.length || 0, "posts found");
+      
+      if (userPostsError) {
+        console.error("Error with APPROACH 1:", userPostsError);
+      }
+      
+      // APPROACH 2: Try using the username instead of user_id
+      const { data: usernamePostsData, error: usernamePostsError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('username', profileData.username)
+        .order('created_at', { ascending: false });
+      
+      console.log("APPROACH 2 results:", usernamePostsData?.length || 0, "posts found by username");
+      
+      if (usernamePostsError) {
+        console.error("Error with APPROACH 2:", usernamePostsError);
+      }
+      
+      // APPROACH 3: Try searching author field if it exists
+      const { data: authorPostsData, error: authorPostsError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('author', profileData.username)
+        .order('created_at', { ascending: false });
+      
+      console.log("APPROACH 3 results:", authorPostsData?.length || 0, "posts found by author field");
+      
+      if (authorPostsError) {
+        console.error("Error with APPROACH 3:", authorPostsError);
+      }
+      
+      // APPROACH 4: Try getting all posts and filter manually
+      const { data: allPosts, error: allPostsError } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (allPostsError) {
+        console.error("Error with APPROACH 4:", allPostsError);
       } else {
-        console.log("Fetched total posts:", allPostsData?.length || 0);
+        console.log("Total posts in database:", allPosts?.length || 0);
         
-        // Even if post_type doesn't exist, include the post in regularPosts
-        const regularPosts = allPostsData?.filter(post => {
+        // Filter posts manually to find any with matching user info
+        const filteredPosts = allPosts?.filter(post => {
+          return (
+            post.user_id === userId || 
+            post.username === profileData.username || 
+            post.user_username === profileData.username ||
+            post.author === profileData.username
+          );
+        });
+        
+        console.log("APPROACH 4 results:", filteredPosts?.length || 0, "posts found by manual filtering");
+      }
+      
+      // Combine results from all approaches, removing duplicates
+      let combinedPosts = [
+        ...(userPostsData || []),
+        ...(usernamePostsData || []),
+        ...(authorPostsData || [])
+      ];
+      
+      // If we still don't have posts, try using the manually filtered posts
+      if (combinedPosts.length === 0 && allPosts) {
+        combinedPosts = allPosts.filter(post => {
+          return (
+            post.user_id === userId || 
+            post.username === profileData.username || 
+            post.user_username === profileData.username ||
+            post.author === profileData.username
+          );
+        });
+      }
+      
+      // Remove duplicates by post ID
+      const uniquePosts = Array.from(
+        new Map(combinedPosts.map(post => [post.id, post])).values()
+      );
+      
+      console.log("Final unique posts count:", uniquePosts.length);
+      
+      if (uniquePosts.length > 0) {
+        // Split posts into regular posts and clips
+        const regularPosts = uniquePosts.filter(post => {
           return post.post_type === 'post' || !post.post_type || post.post_type === '';
-        }) || [];
+        });
         
-        const cliptPosts = allPostsData?.filter(post => post.post_type === 'clipt') || [];
+        const cliptPosts = uniquePosts.filter(post => post.post_type === 'clipt');
         
         console.log("Regular posts:", regularPosts.length, "Clipt posts:", cliptPosts.length);
         
         // Update state with the posts
         setPosts(regularPosts);
         setClips(cliptPosts);
+      } else {
+        console.warn("No posts found for user after trying all approaches");
+        setPosts([]);
+        setClips([]);
       }
       
       // Set profile data
