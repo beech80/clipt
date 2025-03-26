@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
-import { User, Settings, Grid, ListVideo, Trophy, Loader2, Video, RefreshCw } from 'lucide-react';
+import { Loader2, Settings, User, Grid, ListVideo, Trophy, Video, Heart, MessageSquare, FileText, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,7 +10,6 @@ import { followService } from '@/services/followService';
 import { toast } from 'sonner';
 import { StreamPlayer } from '@/components/streaming/StreamPlayer';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Heart, MessageSquare } from 'lucide-react';
 
 interface ProfileData {
   id: string;
@@ -121,7 +120,7 @@ const UserProfile = () => {
           id: insertedProfile.id,
           username: insertedProfile.username,
           display_name: insertedProfile.display_name || insertedProfile.username,
-          avatar_url: insertedProfile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(insertedProfile.display_name || insertedProfile.username)}&background=random`,
+          avatar_url: insertedProfile.avatar_url,
           banner_url: 'https://placehold.co/1200x300/3f51b5/3f51b5',
           bio: insertedProfile.bio || '',
           followers_count: 0,
@@ -228,66 +227,20 @@ const UserProfile = () => {
       
       console.log("Posts found by user_id:", userIdPosts?.length || 0);
       
-      // Then check for posts by username
-      const { data: usernamePosts, error: usernamePostsError } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('username', enhancedProfileData.username)
-        .order('created_at', { ascending: false });
-        
-      if (usernamePostsError) {
-        console.error("Error fetching posts by username:", usernamePostsError);
-      }
-      
-      console.log("Posts found by username:", usernamePosts?.length || 0);
-      
-      // Combine the results, removing duplicates by ID
-      let allUserPosts: any[] = [];
-      
-      if (userIdPosts) {
-        allUserPosts = [...userIdPosts];
-      }
-      
-      if (usernamePosts) {
-        // Add posts that don't already exist in the array
-        usernamePosts.forEach(post => {
-          if (!allUserPosts.some(p => p.id === post.id)) {
-            allUserPosts.push(post);
-          }
-        });
-      }
+      // Combine all posts (currently just from user_id query)
+      let allUserPosts = userIdPosts || [];
       
       // Last resort: Try a more relaxed query to find any posts that might be associated with this user
       if (allUserPosts.length === 0) {
         const { data: relaxedPosts, error: relaxedError } = await supabase
           .from('posts')
           .select('*')
-          .or(`user_id.eq.${userId},username.ilike.${enhancedProfileData.username}`)
+          .eq('user_id', userId)
           .order('created_at', { ascending: false });
           
         if (!relaxedError && relaxedPosts && relaxedPosts.length > 0) {
           console.log("Found posts through relaxed query:", relaxedPosts.length);
           allUserPosts = relaxedPosts;
-        }
-      }
-      
-      // Additional step: Try to fix up posts that might have the wrong username
-      const postsNeedingFix = allUserPosts.filter(post => !post.username && post.user_id === userId);
-      if (postsNeedingFix.length > 0) {
-        console.log(`Found ${postsNeedingFix.length} posts with missing username, attempting to fix...`);
-        
-        // Update these posts with the correct username
-        for (const post of postsNeedingFix) {
-          const { error: updateError } = await supabase
-            .from('posts')
-            .update({ username: enhancedProfileData.username })
-            .eq('id', post.id);
-            
-          if (updateError) {
-            console.error("Error updating post username:", updateError);
-          } else {
-            post.username = enhancedProfileData.username;
-          }
         }
       }
       
@@ -311,24 +264,20 @@ const UserProfile = () => {
             post_type: "clipt",
             media_urls: JSON.stringify(["https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight"]),
             thumbnail_url: "https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight",
-            username: enhancedProfileData.username,
             created_at: new Date().toISOString(),
             likes_count: Math.floor(Math.random() * 50),
             comments_count: Math.floor(Math.random() * 10),
-            hashtags: ["gaming", "highlight", "clipt"],
-            game_id: 1
+            game_id: "1" 
           },
           {
             user_id: userId,
             content: "Just finished an amazing gaming session! #gaming #streamer",
             post_type: "post",
             media_urls: JSON.stringify(["https://placehold.co/600x400/4a148c/ffffff?text=Gaming+Session"]),
-            username: enhancedProfileData.username,
             created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
             likes_count: Math.floor(Math.random() * 50),
             comments_count: Math.floor(Math.random() * 10),
-            hashtags: ["gaming", "streamer"],
-            game_id: 2
+            game_id: "2" 
           },
           {
             user_id: userId,
@@ -338,36 +287,40 @@ const UserProfile = () => {
               "https://placehold.co/600x400/00695c/ffffff?text=Gaming+Setup+1",
               "https://placehold.co/600x400/004d40/ffffff?text=Gaming+Setup+2"
             ]),
-            username: enhancedProfileData.username,
             created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
             likes_count: Math.floor(Math.random() * 50),
             comments_count: Math.floor(Math.random() * 10),
-            hashtags: ["setup", "gaming"],
-            game_id: 3
+            game_id: "3" 
           }
         ];
         
-        // Insert the demo posts
-        const { data: createdPosts, error: createError } = await supabase
-          .from('posts')
-          .insert(demoPostsData)
-          .select();
-          
-        if (createError) {
-          console.error("Error creating demo posts:", createError);
-          // If we can't create posts, just use the demo data directly in memory
-          allUserPosts = demoPostsData as any[];
-          console.log("Using demo posts in memory instead of database");
-        } else {
-          console.log("Created demo posts successfully:", createdPosts);
-          
-          // Update allUserPosts with the newly created demo posts
-          if (createdPosts) {
-            allUserPosts = createdPosts;
-          } else {
-            // If no posts were returned, use the demo data directly
+        try {
+          // Insert the demo posts
+          const { data: createdPosts, error: createError } = await supabase
+            .from('posts')
+            .insert(demoPostsData)
+            .select();
+            
+          if (createError) {
+            console.error("Error creating demo posts:", createError);
+            // If we can't create posts, just use the demo data directly in memory
             allUserPosts = demoPostsData as any[];
+            console.log("Using demo posts in memory instead of database");
+          } else {
+            console.log("Created demo posts successfully:", createdPosts);
+            
+            // Update allUserPosts with the newly created demo posts
+            if (createdPosts) {
+              allUserPosts = createdPosts;
+            } else {
+              // If no posts were returned, use the demo data directly
+              allUserPosts = demoPostsData as any[];
+            }
           }
+        } catch (err) {
+          console.error("Exception when creating posts:", err);
+          // Use the demo posts directly if we get an exception
+          allUserPosts = demoPostsData as any[];
         }
       }
       
@@ -392,7 +345,6 @@ const UserProfile = () => {
             content: "Fallback post created in memory",
             post_type: "post",
             media_urls: JSON.stringify(["https://placehold.co/600x400/b71c1c/ffffff?text=Fallback+Post"]),
-            username: enhancedProfileData.username,
             created_at: new Date().toISOString(),
             likes_count: 5,
             comments_count: 2
@@ -407,7 +359,6 @@ const UserProfile = () => {
             post_type: "clipt",
             media_urls: JSON.stringify(["https://placehold.co/600x400/311b92/ffffff?text=Fallback+Clip"]),
             thumbnail_url: "https://placehold.co/600x400/311b92/ffffff?text=Fallback+Clip",
-            username: enhancedProfileData.username,
             created_at: new Date().toISOString(),
             likes_count: 10,
             comments_count: 3
