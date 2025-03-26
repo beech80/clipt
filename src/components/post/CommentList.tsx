@@ -15,13 +15,15 @@ interface CommentListProps {
   onCommentAdded?: () => void;
   autoFocus?: boolean;
   className?: string;
+  onBack?: () => void;
 }
 
 export const CommentList = ({ 
   postId, 
   onCommentAdded,
   autoFocus = false,
-  className = ''
+  className = '',
+  onBack
 }: CommentListProps) => {
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const commentsContainerRef = useRef<HTMLDivElement>(null);

@@ -155,7 +155,7 @@ const Post = () => {
           </div>
           
           <div className="gaming-card" data-post-id={id}>
-            <PostItem post={post} onCommentClick={() => setShowComments(!showComments)} data-post-id={id} />
+            <PostItem post={post} data-post-id={id} />
           </div>
           
           {/* Comments section */}

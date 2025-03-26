@@ -49,19 +49,22 @@ interface Post {
   user_id: string;
   content: string;
   post_type: string;
-  media_urls: string | string[];
+  media_urls: string[] | string;
   thumbnail_url?: string;
+  image_url?: string | null;
+  video_url?: string | null;
   created_at: string;
   likes_count: number;
   comments_count: number;
-  game_id?: string;
+  game_id: string;
   is_published: boolean;
-  profiles?: {
+  profiles: {
     username: string;
     avatar_url: string;
-  };
-  liked_by_current_user?: boolean;
-  comments?: any[];
+    display_name?: string;
+  } | null;
+  liked_by_current_user: boolean;
+  comments: any[];
 }
 
 const UserProfile = () => {
@@ -399,7 +402,7 @@ const UserProfile = () => {
           {/* Debug section to help identify issues */}
           <div className="mt-4 p-2 bg-gray-800 rounded text-xs text-left w-full max-w-md">
             <p>Debug info:</p>
-            <p>User ID: {userId || 'Not available'}</p>
+            <p>User ID: {profileData?.id || 'Not available'}</p>
             <p>Total posts found: {posts.length + clips.length}</p>
             <p>Current tab: {activeTab}</p>
           </div>
@@ -435,8 +438,8 @@ const UserProfile = () => {
             // Fallback to other fields if not found
             if (!mediaUrl) {
               if (post.thumbnail_url) mediaUrl = post.thumbnail_url;
-              else if (post.image_url) mediaUrl = post.image_url;
-              else if (post.video_url) mediaUrl = post.video_url;
+              else if (post.image_url !== null && post.image_url !== undefined) mediaUrl = post.image_url;
+              else if (post.video_url !== null && post.video_url !== undefined) mediaUrl = post.video_url;
             }
           } catch (error) {
             console.error("Error processing media URL for post:", post.id, error);
