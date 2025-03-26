@@ -84,7 +84,7 @@ const UserProfile = () => {
       username: rawProfileData?.username || 'user',
       display_name: rawProfileData?.display_name || rawProfileData?.username || 'User',
       avatar_url: rawProfileData?.avatar_url || '',
-      banner_url: rawProfileData?.banner_url || 'https://placehold.co/1200x300/0d1b3c/1a237e?text=',
+      banner_url: rawProfileData?.banner_url || '',
       bio: rawProfileData?.bio || '',
       followers_count: rawProfileData?.followers_count || 0,
       following_count: rawProfileData?.following_count || 0,
@@ -550,8 +550,17 @@ const UserProfile = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] text-white">
       <div className="w-full relative">
-        {/* Banner */}
-        <div className="w-full h-[300px] bg-cover bg-center" style={{ backgroundImage: `url('${profileData?.banner_url}')` }} />
+        {/* Banner - replacing placeholder with a gradient background */}
+        <div 
+          className="w-full h-[200px] bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-800"
+          style={{ 
+            backgroundImage: profileData?.banner_url ? 
+              `url('${profileData.banner_url}')` : 
+              'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }} 
+        />
 
         {/* Profile info */}
         <div className="container mx-auto px-4 relative -mt-16">
