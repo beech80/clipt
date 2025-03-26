@@ -2,160 +2,144 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
-import { Loader2, Settings, User, Grid, ListVideo, Trophy, Video, Heart, MessageSquare, FileText, RefreshCw } from 'lucide-react';
+import { Loader2, Settings, User, Grid, ListVideo, Trophy, Video, Heart, MessageSquare, FileText, RefreshCw, Share2, MessageCircle, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import { formatDistanceToNow } from 'date-fns';
+import achievementService from '@/services/achievementService';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { followService } from '@/services/followService';
-import { toast } from 'sonner';
 import { StreamPlayer } from '@/components/streaming/StreamPlayer';
 import { Badge } from '@/components/ui/badge';
 
 interface ProfileData {
   id: string;
   username: string;
-  display_name?: string;
-  avatar_url?: string;
-  banner_url?: string;
-  bio?: string;
-  followers_count?: number;
-  following_count?: number;
-  achievements_count?: number;
-  is_following?: boolean;
-  is_streaming?: boolean;
-  stream_id?: string;
-  stream_title?: string;
+  display_name: string;
+  avatar_url: string;
+  banner_url: string;
+  bio: string;
+  followers_count: number;
+  following_count: number;
+  achievements_count: number;
+  is_following: boolean;
+  is_streaming: boolean;
+  stream_id: string | null;
+  stream_title: string | null;
+}
+
+interface Achievement {
+  id: string;
+  achievement: {
+    id: string;
+    name: string;
+    description: string;
+    image?: string;
+    target_value?: number;
+    reward_type?: 'points' | 'badge' | 'title';
+    points?: number;
+  };
+  completed: boolean;
+  currentValue: number;
+  user_id: string;
+}
+
+interface Post {
+  id: string;
+  user_id: string;
+  content: string;
+  post_type: string;
+  media_urls: string | string[];
+  thumbnail_url?: string;
+  created_at: string;
+  likes_count: number;
+  comments_count: number;
+  game_id?: string;
+  is_published: boolean;
+  profiles?: {
+    username: string;
+    avatar_url: string;
+  };
+  liked_by_current_user?: boolean;
+  comments?: any[];
 }
 
 const UserProfile = () => {
   const { username: usernameParam, id: userIdParam } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('posts');
+
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [clips, setClips] = useState<Post[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [activeTab, setActiveTab] = useState('posts');
   const [loading, setLoading] = useState(true);
-  const [followLoading, setFollowLoading] = useState(false);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [clips, setClips] = useState<any[]>([]);
-  const [achievements, setAchievements] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null);
+
+  // Process the profile data from Supabase
+  const processProfileData = (rawProfileData: any, userId: string, isFollowing: boolean = false, streamData: any = null): ProfileData => {
+    // Check if streaming data exists
+    const isStreaming = rawProfileData?.is_streaming === true || streamData !== null;
+    
+    return {
+      id: userId,
+      username: rawProfileData?.username || 'user',
+      display_name: rawProfileData?.display_name || rawProfileData?.username || 'User',
+      avatar_url: rawProfileData?.avatar_url || '',
+      banner_url: rawProfileData?.banner_url || 'https://placehold.co/1200x300/0d1b3c/1a237e?text=',
+      bio: rawProfileData?.bio || '',
+      followers_count: rawProfileData?.followers_count || 0,
+      following_count: rawProfileData?.following_count || 0,
+      achievements_count: rawProfileData?.achievements_count || 0,
+      is_following: isFollowing,
+      is_streaming: isStreaming,
+      stream_id: streamData?.id || null,
+      stream_title: streamData?.title || null,
+    };
+  };
 
   const fetchProfileData = async (profileUserId: string) => {
     try {
       setLoading(true);
-      
+
       let userId = profileUserId || user?.id;
-      console.log("Initial user ID:", userId);
-      
-      // If we're on the /profile route with no ID, get the current user
+
       if (!userId && !userIdParam && user) {
         userId = user.id;
-        console.log("Using current user ID:", userId);
       } else if (!userId) {
         throw new Error('No user ID provided');
       }
-      
-      console.log("Fetching profile data for user ID:", userId);
-      
-      // Fetch user profile data with detailed error handling
-      const { data, error: profileError } = await supabase
+
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
-      
+
       if (profileError) {
         console.error("Error fetching profile:", profileError);
-        
-        // Try a fallback approach if user doesn't exist in profiles
-        console.log("Attempting fallback to auth.users...");
-        
-        const { data: authUserData, error: authError } = await supabase.auth.admin.getUserById(userId);
-        
-        if (authError || !authUserData || !authUserData.user) {
-          console.error("Fallback failed:", authError);
-          toast.error('User profile not found');
-          setLoading(false);
-          return;
-        }
-        
-        // Create a basic profile for this user if they exist in auth but not in profiles
-        const newProfileData = {
-          id: userId,
-          username: authUserData.user.email?.split('@')[0] || `user_${userId.slice(0, 8)}`,
-          display_name: authUserData.user.user_metadata?.full_name || authUserData.user.email?.split('@')[0] || 'New User',
-          avatar_url: authUserData.user.user_metadata?.avatar_url || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        // Try to insert this profile
-        const { data: insertedProfile, error: insertError } = await supabase
-          .from('profiles')
-          .insert(newProfileData)
-          .select()
-          .single();
-          
-        if (insertError) {
-          console.error("Failed to create profile:", insertError);
-          toast.error('Failed to load profile data');
-          setLoading(false);
-          return;
-        }
-        
-        console.log("Created new profile:", insertedProfile);
-        setProfileData({
-          id: insertedProfile.id,
-          username: insertedProfile.username,
-          display_name: insertedProfile.display_name || insertedProfile.username,
-          avatar_url: insertedProfile.avatar_url,
-          banner_url: 'https://placehold.co/1200x300/3f51b5/3f51b5',
-          bio: insertedProfile.bio || '',
-          followers_count: 0,
-          following_count: 0,
-          achievements_count: 0,
-          is_following: false,
-          is_streaming: false,
-          stream_id: null,
-          stream_title: null
-        });
-        setLoading(false);
-        return;
+        throw profileError;
       }
-      
-      const profileData = data;
-      console.log("Profile data fetched:", profileData);
-      
-      // Check if the current user is following this profile
+
       let isFollowing = false;
       if (user && user.id !== userId) {
-        try {
-          isFollowing = await followService.isFollowing(user.id, userId);
-        } catch (error) {
-          console.error("Error checking following status:", error);
+        const { data: followData, error: followError } = await supabase
+          .from('follows')
+          .select('*')
+          .eq('follower_id', user.id)
+          .eq('following_id', userId)
+          .maybeSingle();
+
+        if (!followError) {
+          isFollowing = !!followData;
         }
       }
-      
-      // Fetch followers count with error handling
-      let followersCount = 0;
-      try {
-        followersCount = await followService.getFollowersCount(userId);
-      } catch (error) {
-        console.error("Error fetching followers count:", error);
-      }
-      
-      // Fetch following count with error handling
-      let followingCount = 0;
-      try {
-        followingCount = await followService.getFollowingCount(userId);
-      } catch (error) {
-        console.error("Error fetching following count:", error);
-      }
-      
-      // Check if the user is currently streaming
+
+      // Get streaming info if available
       let streamData = null;
-      try {
+      if (profileData?.is_streaming) {
         const { data: streamResult, error: streamError } = await supabase
           .from('streams')
           .select('id, title, viewer_count, started_at')
@@ -163,189 +147,178 @@ const UserProfile = () => {
           .order('started_at', { ascending: false })
           .limit(1)
           .single();
-        
+
         if (!streamError && streamResult) {
           streamData = streamResult;
         }
-      } catch (error) {
-        console.error("Error fetching stream data:", error);
       }
-      
-      const isStreaming = !!streamData;
-      
-      // ENSURE PROFILE DATA COMPLETENESS
-      // Some basic checks to make sure profile data is complete
-      if (!profileData.avatar_url) {
-        // Set a default avatar if none exists
-        profileData.avatar_url = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.display_name || profileData.username)}&background=random`;
-      }
-      
-      // Create a local copy with banner_url field
-      const enhancedProfileData = {
-        ...profileData,
-        banner_url: (profileData as any).banner_url || 'https://placehold.co/1200x300/3f51b5/3f51b5',
-        bio: profileData.bio || ''
-      };
-      
-      if (!enhancedProfileData.banner_url) {
-        // Set a default banner if none exists - with no text
-        enhancedProfileData.banner_url = 'https://placehold.co/1200x300/3f51b5/3f51b5';
-      }
-      
-      if (!enhancedProfileData.bio) {
-        // Set a default bio if none exists
-        enhancedProfileData.bio = '';
-      }
-      
-      // Filter and prepare posts for display
+
+      // Create the processed profile data
+      const enhancedProfileData = processProfileData(profileData, userId, isFollowing, streamData);
+
+      // Load posts and achievements
       const loadData = async () => {
         setLoading(true);
-        
+
         try {
           // Get all posts, regardless of type
           const { data: allPostsData, error: allPostsError } = await supabase
             .from('posts')
-            .select('*')
+            .select('*, profiles(username, avatar_url), likes_count, comments_count')
             .eq('user_id', userId)
             .eq('is_published', true)
             .order('created_at', { ascending: false });
-          
+
           if (allPostsError) {
             console.error('Error fetching all posts:', allPostsError);
-            throw allPostsError;
+            // If there's an error, set empty arrays and try to create demo content
+            setPosts([]);
+            setClips([]);
+            // Try to create demo content
+            await createDemoContent(userId);
+          } else {
+            // Separate posts and clips, ensuring they match the Post interface
+            const processPost = (post: any): Post => {
+              let mediaUrls = post.media_urls;
+              
+              // Handle legacy format where media might be in image_url or video_url
+              if (!mediaUrls && (post.image_url || post.video_url)) {
+                mediaUrls = post.video_url || post.image_url;
+              }
+              
+              return {
+                id: post.id || `temp-${Date.now()}-${Math.random()}`,
+                user_id: post.user_id,
+                content: post.content || '',
+                post_type: post.post_type || 'post',
+                media_urls: mediaUrls || [],
+                thumbnail_url: post.thumbnail_url || '',
+                created_at: post.created_at || new Date().toISOString(),
+                likes_count: post.likes_count || 0,
+                comments_count: post.comments_count || 0,
+                game_id: post.game_id || '',
+                is_published: post.is_published !== false,
+                profiles: post.profiles,
+                liked_by_current_user: false,
+                comments: post.comments || []
+              };
+            };
+
+            if (allPostsData && allPostsData.length > 0) {
+              try {
+                // Check if data is an array before filtering
+                if (Array.isArray(allPostsData)) {
+                  const regularPosts = allPostsData
+                    .filter(post => post && post.post_type !== 'clipt')
+                    .map(processPost);
+                  
+                  const clipPosts = allPostsData
+                    .filter(post => post && post.post_type === 'clipt')
+                    .map(processPost);
+
+                  setPosts(regularPosts);
+                  setClips(clipPosts);
+                } else {
+                  // If data is not an array, set empty arrays
+                  setPosts([]);
+                  setClips([]);
+                  // Try to create demo content
+                  await createDemoContent(userId);
+                }
+              } catch (error) {
+                console.error("Error processing posts:", error);
+                setPosts([]);
+                setClips([]);
+                // Try to create demo content
+                await createDemoContent(userId);
+              }
+            } else {
+              // Only create demo content if the user has no posts at all
+              setPosts([]);
+              setClips([]);
+              await createDemoContent(userId);
+            }
           }
-          
-          console.log(`Found ${allPostsData?.length || 0} posts for user ${userId}`);
-          
-          // Separate posts and clips
-          const regularPosts = allPostsData?.filter(post => post.post_type !== 'clipt') || [];
-          const clipPosts = allPostsData?.filter(post => post.post_type === 'clipt') || [];
-          
-          console.log(`Regular posts: ${regularPosts.length}, Clips: ${clipPosts.length}`);
-          
-          setPosts(regularPosts);
-          setClips(clipPosts);
-          
-          // Only create demo content if the user has no posts at all
-          if (allPostsData?.length === 0) {
-            console.log("Creating demo content - user has no posts");
-            await createDemoContent();
+
+          // Load user achievements
+          try {
+            const userAchievements = await achievementService.getUserAchievements(userId);
+            
+            // Make sure achievements match our interface
+            const processedAchievements = Array.isArray(userAchievements) 
+              ? userAchievements.map((achievement: any): Achievement => ({
+                  id: achievement.id || `temp-${Date.now()}-${Math.random()}`,
+                  achievement: {
+                    id: achievement.achievement?.id || '',
+                    name: achievement.achievement?.name || 'Achievement',
+                    description: achievement.achievement?.description || '',
+                    image: achievement.achievement?.image,
+                    target_value: achievement.achievement?.target_value,
+                    reward_type: achievement.achievement?.reward_type as any,
+                    points: achievement.achievement?.points
+                  },
+                  completed: achievement.completed || false,
+                  currentValue: achievement.currentValue || 0,
+                  user_id: userId
+                }))
+              : [];
+            
+            setAchievements(processedAchievements);
+          } catch (error) {
+            console.error("Error loading achievements:", error);
+            // If real achievements fail to load, use mock achievements
+            try {
+              const mockAchievements = achievementService.getMockAchievements();
+              
+              // Convert mock achievements to match our interface
+              const processedMockAchievements = Array.isArray(mockAchievements) 
+                ? mockAchievements.map((achievement: any): Achievement => ({
+                    id: achievement.id || `temp-${Date.now()}-${Math.random()}`,
+                    achievement: {
+                      id: achievement.achievement?.id || '',
+                      name: achievement.achievement?.name || 'Achievement',
+                      description: achievement.achievement?.description || '',
+                      image: achievement.achievement?.image,
+                      target_value: achievement.achievement?.target_value,
+                      reward_type: achievement.achievement?.reward_type as any,
+                      points: achievement.achievement?.points
+                    },
+                    completed: achievement.completed || false,
+                    currentValue: achievement.currentValue || 0,
+                    user_id: userId
+                  }))
+                : [];
+              
+              setAchievements(processedMockAchievements);
+            } catch (err) {
+              console.error("Error loading mock achievements:", err);
+              setAchievements([]);
+            }
           }
         } catch (error) {
           console.error('Error in loadData:', error);
           toast.error('Failed to load profile data');
+          setPosts([]);
+          setClips([]);
+          setAchievements([]);
         } finally {
           setLoading(false);
         }
       };
-      
-      // Create demo content if none exists
-      const createDemoContent = async () => {
-        try {
-          console.log("Creating demo posts for user", userId);
-          
-          // Create demo posts (regular and clips)
-          const demoPosts = [
-            {
-              user_id: userId,
-              content: "Check out my latest gaming highlight!",
-              post_type: "clipt",
-              media_urls: JSON.stringify(["https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight"]),
-              thumbnail_url: "https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight",
-              created_at: new Date().toISOString(),
-              likes_count: Math.floor(Math.random() * 50),
-              comments_count: Math.floor(Math.random() * 10),
-              game_id: "1",
-              is_published: true
-            },
-            {
-              user_id: userId,
-              content: "Just finished an amazing gaming session! #gaming #streamer",
-              post_type: "post",
-              media_urls: JSON.stringify(["https://placehold.co/600x400/4a148c/ffffff?text=Gaming+Session"]),
-              created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-              likes_count: Math.floor(Math.random() * 50),
-              comments_count: Math.floor(Math.random() * 10),
-              game_id: "2",
-              is_published: true
-            },
-            {
-              user_id: userId,
-              content: "My latest gaming setup upgrade! What do you think?",
-              post_type: "post",
-              media_urls: JSON.stringify([
-                "https://placehold.co/600x400/00695c/ffffff?text=Gaming+Setup+1",
-                "https://placehold.co/600x400/004d40/ffffff?text=Gaming+Setup+2"
-              ]),
-              created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-              likes_count: Math.floor(Math.random() * 50),
-              comments_count: Math.floor(Math.random() * 10),
-              game_id: "3",
-              is_published: true
-            }
-          ];
-          
-          // Insert the demo posts
-          const { data: createdPosts, error: createError } = await supabase
-            .from('posts')
-            .insert(demoPosts)
-            .select();
-            
-          if (createError) {
-            console.error("Error creating demo posts:", createError);
-            // If we can't create posts, use the demo data directly
-            const regularDemoPosts = demoPosts.filter(post => post.post_type !== 'clipt');
-            const clipDemoPosts = demoPosts.filter(post => post.post_type === 'clipt');
-            
-            setPosts(regularDemoPosts);
-            setClips(clipDemoPosts);
-          } else {
-            console.log("Created demo posts successfully:", createdPosts);
-            
-            // Update state with the newly created demo posts
-            if (createdPosts) {
-              const regularCreatedPosts = createdPosts.filter(post => post.post_type !== 'clipt');
-              const clipCreatedPosts = createdPosts.filter(post => post.post_type === 'clipt');
-              
-              setPosts(regularCreatedPosts);
-              setClips(clipCreatedPosts);
-            }
-          }
-        } catch (error) {
-          console.error("Exception creating demo content:", error);
-        }
-      };
-      
       await loadData();
-      
+
       // Set profile data
-      setProfileData({
-        id: enhancedProfileData.id,
-        username: enhancedProfileData.username,
-        display_name: enhancedProfileData.display_name || enhancedProfileData.username,
-        avatar_url: enhancedProfileData.avatar_url,
-        banner_url: enhancedProfileData.banner_url,
-        bio: enhancedProfileData.bio || '',
-        followers_count: followersCount,
-        following_count: followingCount,
-        achievements_count: 0, // Placeholder for now
-        is_following: isFollowing,
-        is_streaming: isStreaming,
-        stream_id: streamData?.id,
-        stream_title: streamData?.title
-      });
-      
+      setProfileData(enhancedProfileData);
+
     } catch (error) {
       console.error('Error fetching profile data:', error);
       toast.error('Failed to load profile data');
-    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      // Handle case when username is provided but not userId
       if (usernameParam && !userIdParam) {
         setLoading(true);
         try {
@@ -354,47 +327,36 @@ const UserProfile = () => {
             .select('*')
             .eq('username', usernameParam)
             .single();
-          
+
           if (userError) {
             throw userError;
           }
-          
+
           if (userData) {
-            // If we find the user by username, fetch their data
             await fetchProfileData(userData.id);
           } else {
             throw new Error('User not found');
           }
         } catch (error) {
           console.error("Error fetching user by username:", error);
-          setError('User not found');
           setLoading(false);
         }
-      } 
-      // Handle case when userId is provided directly
-      else if (userIdParam) {
+      } else if (userIdParam) {
         await fetchProfileData(userIdParam);
-      } 
-      // Default to current user if neither is provided
-      else if (user) {
+      } else if (user) {
         await fetchProfileData(user.id);
-      }
-      // If no user is logged in and no username/userId provided, show error
-      else {
-        setError('No user specified');
+      } else {
         setLoading(false);
       }
     };
-    
+
     fetchUserProfile();
-  }, [usernameParam, userIdParam, user, refreshTrigger]);
+  }, [usernameParam, userIdParam, user]);
 
   const handleFollowToggle = async () => {
     if (!user || !profileData) return;
-    
+
     try {
-      setFollowLoading(true);
-      
       if (profileData.is_following) {
         await followService.unfollow(user.id, profileData.id);
         setProfileData(prev => prev ? {
@@ -412,261 +374,342 @@ const UserProfile = () => {
         } : null);
         toast.success(`Following @${profileData.username}`);
       }
-      
     } catch (error) {
       console.error('Error toggling follow:', error);
       toast.error('Failed to update follow status');
-    } finally {
-      setFollowLoading(false);
     }
   };
 
-  const renderContent = () => {
-    switch(activeTab) {
+  const renderPost = (post: Post) => {
+    const mediaUrls = typeof post.media_urls === 'string'
+      ? JSON.parse(post.media_urls)
+      : post.media_urls;
+
+    return (
+      <div key={post.id} className="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-gray-800">
+        {/* Post header */}
+        <div className="p-4 flex items-center space-x-3">
+          <Avatar className="h-10 w-10 border border-indigo-500">
+            <AvatarImage
+              src={post.profiles?.avatar_url || profileData?.avatar_url}
+              alt={post.profiles?.username || profileData?.username}
+            />
+            <AvatarFallback>{(post.profiles?.username || profileData?.username || "").substring(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-semibold text-white">{post.profiles?.username || profileData?.username}</div>
+            <div className="text-xs text-gray-400">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</div>
+          </div>
+        </div>
+
+        {/* Post content */}
+        <div className="px-4 pb-3">
+          <p className="text-white mb-2">{post.content}</p>
+
+          {/* Media content */}
+          {mediaUrls && mediaUrls.length > 0 && (
+            <div className={`grid ${mediaUrls.length > 1 ? 'grid-cols-2 gap-2' : 'grid-cols-1'} mb-4`}>
+              {mediaUrls.map((url: string, idx: number) => (
+                <div key={idx} className="relative pt-[56.25%] bg-gray-900 rounded-lg overflow-hidden">
+                  <img
+                    src={url}
+                    alt={`Media ${idx + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://placehold.co/600x400/1a237e/ffffff?text=Media+Not+Available";
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Social stats */}
+          <div className="flex items-center justify-between mt-2 text-sm text-gray-400">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center">
+                <Heart className="h-4 w-4 mr-1" />
+                <span>{post.likes_count} likes</span>
+              </div>
+              <div className="flex items-center">
+                <MessageSquare className="h-4 w-4 mr-1" />
+                <span>{post.comments_count} comments</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="border-t border-gray-800 flex">
+          <button className="flex-1 py-2 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 transition">
+            <Heart className={`h-5 w-5 mr-2 ${post.liked_by_current_user ? 'text-red-500 fill-red-500' : ''}`} />
+            Like
+          </button>
+          <button className="flex-1 py-2 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 transition">
+            <MessageCircle className="h-5 w-5 mr-2" />
+            Comment
+          </button>
+          <button className="flex-1 py-2 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 transition">
+            <Share2 className="h-5 w-5 mr-2" />
+            Share
+          </button>
+        </div>
+
+        {/* Display only the first comment if there are any */}
+        {post.comments && post.comments.length > 0 && (
+          <div className="border-t border-gray-800 p-4">
+            <div className="flex space-x-3">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={post.comments[0].profiles?.avatar_url} alt={post.comments[0].profiles?.username} />
+                <AvatarFallback>{post.comments[0].profiles?.username?.substring(0, 2).toUpperCase() || "US"}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="bg-gray-800 rounded-lg p-3">
+                  <div className="font-semibold text-sm text-white">{post.comments[0].profiles?.username || "User"}</div>
+                  <p className="text-sm text-gray-300">{post.comments[0].content}</p>
+                </div>
+                <div className="flex items-center mt-1 text-xs text-gray-400">
+                  <span>{formatDistanceToNow(new Date(post.comments[0].created_at), { addSuffix: true })}</span>
+                  <span className="mx-2">·</span>
+                  <button className="hover:text-white">Like</button>
+                  <span className="mx-2">·</span>
+                  <button className="hover:text-white">Reply</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Comment input for replying */}
+            <div className="mt-3 flex items-center">
+              <Avatar className="h-8 w-8 mr-3">
+                <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name} />
+                <AvatarFallback>{user?.email?.substring(0, 2).toUpperCase() || "U"}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  placeholder="Write a comment..."
+                  className="w-full bg-gray-800 rounded-full py-2 px-4 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+                <button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-indigo-500 hover:text-indigo-400">
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderPostsTab = () => {
+    if (posts.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+          <FileText className="h-12 w-12 mb-4 text-gray-300" />
+          <p>No posts available</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-4">
+        {posts.map(post => renderPost(post))}
+      </div>
+    );
+  };
+
+  const renderClipsTab = () => {
+    if (clips.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+          <Video className="h-12 w-12 mb-4 text-gray-300" />
+          <p>No clips available</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-4">
+        {clips.map(post => renderPost(post))}
+      </div>
+    );
+  };
+
+  // Create demo content if none exists
+  const createDemoContent = async (profileId: string) => {
+    try {
+      if (!profileId) {
+        console.error("Cannot create demo content: profileId is missing");
+        return;
+      }
+
+      console.log("Creating demo posts for user", profileId);
+
+      // Create demo posts (regular and clips)
+      const demoPosts = [
+        {
+          id: `demo-clipt-${Date.now()}`,
+          user_id: profileId,
+          content: "Check out my latest gaming highlight!",
+          post_type: "clipt",
+          media_urls: JSON.stringify(["https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight"]),
+          thumbnail_url: "https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight",
+          created_at: new Date().toISOString(),
+          likes_count: Math.floor(Math.random() * 50),
+          comments_count: Math.floor(Math.random() * 10),
+          game_id: "1",
+          is_published: true
+        },
+        {
+          id: `demo-post1-${Date.now()}`,
+          user_id: profileId,
+          content: "Just finished an amazing gaming session! #gaming #streamer",
+          post_type: "post",
+          media_urls: JSON.stringify(["https://placehold.co/600x400/4a148c/ffffff?text=Gaming+Session"]),
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+          likes_count: Math.floor(Math.random() * 50),
+          comments_count: Math.floor(Math.random() * 10),
+          game_id: "2",
+          is_published: true
+        },
+        {
+          id: `demo-post2-${Date.now()}`,
+          user_id: profileId,
+          content: "My latest gaming setup upgrade! What do you think?",
+          post_type: "post",
+          media_urls: JSON.stringify([
+            "https://placehold.co/600x400/00695c/ffffff?text=Gaming+Setup+1",
+            "https://placehold.co/600x400/004d40/ffffff?text=Gaming+Setup+2"
+          ]),
+          created_at: new Date(Date.now() - 172800000).toISOString(),
+          likes_count: Math.floor(Math.random() * 50),
+          comments_count: Math.floor(Math.random() * 10),
+          game_id: "3",
+          is_published: true
+        }
+      ];
+
+      const { data: createdPosts, error: createError } = await supabase
+        .from('posts')
+        .insert(demoPosts)
+        .select();
+
+      if (createError) {
+        console.error("Error creating demo posts:", createError);
+        const regularDemoPosts = demoPosts.filter(post => post.post_type !== 'clipt');
+        const clipDemoPosts = demoPosts.filter(post => post.post_type === 'clipt');
+
+        setPosts(regularDemoPosts);
+        setClips(clipDemoPosts);
+      } else {
+        console.log("Created demo posts successfully:", createdPosts);
+
+        if (createdPosts) {
+          const regularCreatedPosts = createdPosts.filter(post => post.post_type !== 'clipt');
+          const clipCreatedPosts = createdPosts.filter(post => post.post_type === 'clipt');
+
+          setPosts(regularCreatedPosts);
+          setClips(clipCreatedPosts);
+        }
+      }
+    } catch (error) {
+      console.error("Exception creating demo content:", error);
+    }
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
       case 'posts':
-        return (
-          <div>
-            {posts && posts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {posts.map((post) => {
-                  // Process media URLs to ensure we always have a valid array
-                  let mediaUrls = [];
-                  
-                  try {
-                    // Handle string format (JSON)
-                    if (post.media_urls && typeof post.media_urls === 'string') {
-                      try {
-                        const parsed = JSON.parse(post.media_urls);
-                        mediaUrls = Array.isArray(parsed) ? parsed : [parsed];
-                      } catch (e) {
-                        // If JSON parsing fails, handle as comma-separated or single URL
-                        if (post.media_urls.includes(',')) {
-                          mediaUrls = post.media_urls.split(',');
-                        } else {
-                          mediaUrls = [post.media_urls];
-                        }
-                      }
-                    } 
-                    // Handle already parsed array
-                    else if (post.media_urls && Array.isArray(post.media_urls)) {
-                      mediaUrls = post.media_urls;
-                    }
-                    // Handle legacy formats
-                    else if (post.video_url) {
-                      mediaUrls = [post.video_url];
-                    }
-                    else if (post.image_url) {
-                      mediaUrls = [post.image_url];
-                    }
-                    
-                    // Ensure we have at least one media URL
-                    if (mediaUrls.length === 0) {
-                      mediaUrls = ["https://placehold.co/600x400/673ab7/ffffff?text=No+Media"];
-                    }
-                  } catch (error) {
-                    console.error("Error processing media URLs:", error);
-                    mediaUrls = ["https://placehold.co/600x400/673ab7/ffffff?text=Error"];
-                  }
-
-                  return (
-                    <div 
-                      key={post.id} 
-                      className="aspect-square relative group rounded-lg overflow-hidden cursor-pointer"
-                      onClick={() => navigate(`/post/${post.id}`)}
-                    >
-                      {/* Media (first image/video) */}
-                      <img 
-                        src={mediaUrls[0]} 
-                        alt={post.content} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://placehold.co/600x400/673ab7/ffffff?text=Post";
-                        }}
-                      />
-                      
-                      {/* Multiple media indicator */}
-                      {mediaUrls.length > 1 && (
-                        <div className="absolute top-2 right-2 bg-black/50 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-                          +{mediaUrls.length}
-                        </div>
-                      )}
-                      
-                      {/* Hover overlay with post details */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 text-white">
-                          <div className="text-sm truncate">{post.content}</div>
-                          <div className="flex items-center mt-1 text-xs">
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              width="12" 
-                              height="12" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round"
-                              className="mr-1"
-                            >
-                              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                            </svg>
-                            <span className="mr-3">{post.likes_count || 0}</span>
-                            
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              width="12" 
-                              height="12" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round"
-                              className="mr-1"
-                            >
-                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                            </svg>
-                            <span>{post.comments_count || 0}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                <FileText className="h-12 w-12 mb-4 text-gray-300" />
-                <p>No posts yet</p>
-              </div>
-            )}
-          </div>
-        );
+        return renderPostsTab();
       case 'clips':
-        return (
-          <div>
-            {clips && clips.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {clips.map((clip) => {
-                  // Process media URLs to ensure we always have a valid array
-                  let mediaUrls = [];
-                  
-                  try {
-                    // Handle string format (JSON)
-                    if (clip.media_urls && typeof clip.media_urls === 'string') {
-                      try {
-                        const parsed = JSON.parse(clip.media_urls);
-                        mediaUrls = Array.isArray(parsed) ? parsed : [parsed];
-                      } catch (e) {
-                        // If JSON parsing fails, handle as comma-separated or single URL
-                        if (clip.media_urls.includes(',')) {
-                          mediaUrls = clip.media_urls.split(',');
-                        } else {
-                          mediaUrls = [clip.media_urls];
-                        }
-                      }
-                    } 
-                    // Handle already parsed array
-                    else if (clip.media_urls && Array.isArray(clip.media_urls)) {
-                      mediaUrls = clip.media_urls;
-                    }
-                    // Handle legacy formats
-                    else if (clip.video_url) {
-                      mediaUrls = [clip.video_url];
-                    }
-                    else if (clip.image_url) {
-                      mediaUrls = [clip.image_url];
-                    }
-                    
-                    // Ensure we have at least one media URL
-                    if (mediaUrls.length === 0) {
-                      mediaUrls = ["https://placehold.co/600x400/311b92/ffffff?text=No+Media"];
-                    }
-                  } catch (error) {
-                    console.error("Error processing media URLs:", error);
-                    mediaUrls = ["https://placehold.co/600x400/311b92/ffffff?text=Error"];
-                  }
-
-                  return (
-                    <div 
-                      key={clip.id} 
-                      className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 shadow-xl cursor-pointer hover:border-purple-500/50 transition-colors"
-                      onClick={() => navigate(`/post/${clip.id}`)}
-                    >
-                      <div className="aspect-video bg-gray-800 flex items-center justify-center relative">
-                        {/* Thumbnail */}
-                        <img 
-                          src={clip.thumbnail_url || mediaUrls[0]} 
-                          alt={clip.content} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = "https://placehold.co/600x400/311b92/ffffff?text=Clip";
-                          }}
-                        />
-                        
-                        {/* Play button overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
-                          <div className="bg-white/10 rounded-full p-3 backdrop-blur-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                              <polygon points="5 3 19 12 5 21 5 3" />
-                            </svg>
-                          </div>
-                        </div>
-                        
-                        {/* Multiple clips indicator */}
-                        {mediaUrls.length > 1 && (
-                          <div className="absolute top-2 right-2 bg-black/50 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-                            +{mediaUrls.length}
-                          </div>
-                        )}
-                        
-                        {/* Video indicator */}
-                        <div className="absolute bottom-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                          CLIP
-                        </div>
-                      </div>
-                      
-                      <div className="p-3">
-                        <h3 className="text-white text-sm font-medium line-clamp-2">{clip.content}</h3>
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-1">
-                            <img 
-                              src={profileData?.avatar_url || "https://placehold.co/100/1a237e/ffffff?text=User"} 
-                              alt={profileData?.username || ''} 
-                              className="w-5 h-5 rounded-full"
-                            />
-                            <span className="text-xs text-gray-400">{profileData?.username || ''}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1 text-gray-400">
-                              <Heart className="w-3 h-3" />
-                              <span className="text-xs">{clip.likes_count || 0}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-gray-400">
-                              <MessageSquare className="w-3 h-3" />
-                              <span className="text-xs">{clip.comments_count || 0}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                <Video className="h-12 w-12 mb-4 text-gray-300" />
-                <p>No clips yet</p>
-              </div>
-            )}
-          </div>
-        );
+        return renderClipsTab();
       case 'achievements':
         return (
-          <div className="flex items-center justify-center h-40 text-gray-400">
-            No achievements available
+          <div className="p-4">
+            {achievements && achievements.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {achievements.map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className={`p-4 rounded-lg border ${
+                      achievement.completed
+                        ? 'bg-indigo-900/50 border-indigo-500'
+                        : 'bg-gray-800/50 border-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="h-16 w-16 rounded-md overflow-hidden flex-shrink-0 bg-indigo-900 flex items-center justify-center">
+                        {achievement.achievement?.image ? (
+                          <img
+                            src={achievement.achievement.image}
+                            alt={achievement.achievement.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "https://placehold.co/200/311b92/ffffff?text=Achievement";
+                            }}
+                          />
+                        ) : (
+                          <Trophy className="h-8 w-8 text-indigo-300" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-white font-bold">
+                          {achievement.achievement?.name}
+                          {achievement.completed && (
+                            <span className="ml-2 text-xs bg-green-500 text-white px-2 py-0.5 rounded">
+                              COMPLETED
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-gray-300 text-sm mt-1">{achievement.achievement?.description}</p>
+
+                        {/* Progress bar */}
+                        {!achievement.completed && achievement.achievement?.target_value && (
+                          <div className="mt-2">
+                            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-indigo-500"
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    (achievement.currentValue / achievement.achievement.target_value) * 100
+                                  )}%`
+                                }}
+                              />
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              {achievement.currentValue} / {achievement.achievement.target_value}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Reward */}
+                        {achievement.achievement?.reward_type && (
+                          <div className="text-xs text-indigo-300 mt-2">
+                            {achievement.achievement.reward_type === 'points' && (
+                              <span>Reward: {achievement.achievement.points} points</span>
+                            )}
+                            {achievement.achievement.reward_type === 'badge' && (
+                              <span>Reward: Special Badge</span>
+                            )}
+                            {achievement.achievement.reward_type === 'title' && (
+                              <span>Reward: Unique Title</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                <Trophy className="h-12 w-12 mb-4 text-gray-300" />
+                <p>No achievements available</p>
+              </div>
+            )}
           </div>
         );
       default:
@@ -674,62 +717,10 @@ const UserProfile = () => {
     }
   };
 
-  const getMediaUrls = (post: any): string[] => {
-    try {
-      // Try to parse as JSON first
-      if (post.media_urls && typeof post.media_urls === 'string') {
-        try {
-          return JSON.parse(post.media_urls);
-        } catch (e) {
-          console.error("Error parsing media_urls JSON:", e);
-          // If JSON parsing fails, check if it's a comma-separated string
-          if (post.media_urls.includes(',')) {
-            return post.media_urls.split(',');
-          }
-          // If it's just a single URL
-          return [post.media_urls];
-        }
-      } 
-      // Handle case where media_urls might already be an array
-      else if (post.media_urls && Array.isArray(post.media_urls)) {
-        return post.media_urls;
-      }
-      // Check for legacy format with video_url
-      else if (post.video_url) {
-        return [post.video_url];
-      }
-      // Check for legacy format with image_url
-      else if (post.image_url) {
-        return [post.image_url];
-      }
-      // Default fallback
-      return ["https://placehold.co/600x400/673ab7/ffffff?text=No+Media"];
-    } catch (error) {
-      console.error("Error in getMediaUrls:", error);
-      return ["https://placehold.co/600x400/673ab7/ffffff?text=Error+Loading+Media"];
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-white animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] flex items-center justify-center">
-        <div className="text-white text-center">
-          <p className="text-2xl">{error}</p>
-          <button 
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition"
-            onClick={() => setRefreshTrigger(refreshTrigger + 1)}
-          >
-            Try Again
-          </button>
-        </div>
       </div>
     );
   }
@@ -747,9 +738,9 @@ const UserProfile = () => {
               {/* Avatar */}
               <div className="relative">
                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-indigo-500">
-                  <img 
-                    src={profileData?.avatar_url || "https://placehold.co/200/1a237e/ffffff?text=User"} 
-                    alt={profileData?.username} 
+                  <img
+                    src={profileData?.avatar_url || "https://placehold.co/200/1a237e/ffffff?text=User"}
+                    alt={profileData?.username}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -757,7 +748,7 @@ const UserProfile = () => {
                     }}
                   />
                 </div>
-                
+
                 {/* Streaming indicator */}
                 {profileData?.is_streaming && (
                   <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-1 flex items-center gap-1">
@@ -766,12 +757,12 @@ const UserProfile = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* User info */}
               <div className="flex-1 text-center md:text-left">
                 <h1 className="text-2xl md:text-3xl font-bold">{profileData?.display_name || profileData?.username}</h1>
                 <p className="text-indigo-300 mb-2">@{profileData?.username}</p>
-                
+
                 {/* Stream title if streaming */}
                 {profileData?.is_streaming && profileData?.stream_title && (
                   <div className="mb-3 bg-red-500/20 rounded-md p-2 border border-red-500/30">
@@ -779,38 +770,41 @@ const UserProfile = () => {
                     <p className="text-sm">{profileData?.stream_id} viewers</p>
                   </div>
                 )}
-                
+
                 <p className="text-sm md:text-base whitespace-pre-wrap">{profileData?.bio || ""}</p>
-                
+
                 <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
                   {/* Follow button or Edit profile button */}
                   {user && user.id === profileData?.id ? (
-                    <button 
+                    <button
                       onClick={() => navigate("/settings")}
                       className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition"
                     >
                       Edit Profile
                     </button>
                   ) : (
-                    <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition">
-                      Follow
+                    <button
+                      onClick={handleFollowToggle}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition"
+                    >
+                      {profileData?.is_following ? 'Unfollow' : 'Follow'}
                     </button>
                   )}
-                  
+
                   {/* Message button (if not current user) */}
                   {user && user.id !== profileData?.id && (
                     <button className="px-4 py-2 bg-transparent border border-indigo-500 hover:bg-indigo-500/20 rounded-md text-white font-medium transition">
                       Message
                     </button>
                   )}
-                  
+
                   {/* Share profile button */}
                   <button className="px-4 py-2 bg-transparent border border-indigo-500 hover:bg-indigo-500/20 rounded-md text-white font-medium transition">
                     Share Profile
                   </button>
                 </div>
               </div>
-              
+
               {/* Stats */}
               <div className="flex gap-6 text-center mt-4 md:mt-0">
                 <div>
@@ -871,7 +865,7 @@ const UserProfile = () => {
       </div>
 
       {/* Content Area */}
-      {renderContent()}
+      {renderTabContent()}
     </div>
   );
 };
