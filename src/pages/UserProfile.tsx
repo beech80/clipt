@@ -382,122 +382,64 @@ const UserProfile = () => {
 
   const renderPost = (post: Post) => {
     const mediaUrls = typeof post.media_urls === 'string'
-      ? JSON.parse(post.media_urls)
+      ? [post.media_urls]
       : post.media_urls;
 
     return (
-      <div key={post.id} className="bg-[#1A1A1A] rounded-lg overflow-hidden mb-4 border border-gray-800">
-        {/* Post header */}
-        <div className="p-4 flex items-center space-x-3">
-          <Avatar className="h-10 w-10 border border-indigo-500">
-            <AvatarImage
-              src={post.profiles?.avatar_url || profileData?.avatar_url}
-              alt={post.profiles?.username || profileData?.username}
-            />
+      <div key={post.id} className="bg-[#121212] rounded-lg overflow-hidden mb-4">
+        <div className="p-3 flex items-center space-x-2">
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={post.profiles?.avatar_url || profileData?.avatar_url} alt={post.profiles?.username || profileData?.username} />
             <AvatarFallback>{(post.profiles?.username || profileData?.username || "").substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div>
-            <div className="font-semibold text-white">{post.profiles?.username || profileData?.username}</div>
+            <div className="font-medium text-white">{post.profiles?.username || profileData?.username}</div>
             <div className="text-xs text-gray-400">{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</div>
           </div>
         </div>
-
-        {/* Post content */}
-        <div className="px-4 pb-3">
-          <p className="text-white mb-2">{post.content}</p>
-
-          {/* Media content */}
-          {mediaUrls && mediaUrls.length > 0 && (
-            <div className={`grid ${mediaUrls.length > 1 ? 'grid-cols-2 gap-2' : 'grid-cols-1'} mb-4`}>
-              {mediaUrls.map((url: string, idx: number) => (
-                <div key={idx} className="relative pt-[56.25%] bg-gray-900 rounded-lg overflow-hidden">
-                  <img
-                    src={url}
-                    alt={`Media ${idx + 1}`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "https://placehold.co/600x400/1a237e/ffffff?text=Media+Not+Available";
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Social stats */}
-          <div className="flex items-center justify-between mt-2 text-sm text-gray-400">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <Heart className="h-4 w-4 mr-1" />
-                <span>{post.likes_count} likes</span>
+        
+        {post.content && <p className="px-3 mb-2 text-gray-200">{post.content}</p>}
+        
+        {mediaUrls && mediaUrls.length > 0 && (
+          <div className="mb-2">
+            {mediaUrls.map((url: string, idx: number) => (
+              <div key={idx} className="w-full">
+                <img
+                  src={url}
+                  alt={`Post media ${idx + 1}`}
+                  className="w-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://placehold.co/600x400/0d1b3c/1a237e?text=Media+Not+Available";
+                  }}
+                />
               </div>
-              <div className="flex items-center">
-                <MessageSquare className="h-4 w-4 mr-1" />
-                <span>{post.comments_count} comments</span>
-              </div>
-            </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="px-3 pb-1 mb-1">
+          <div className="flex items-center text-sm text-gray-400">
+            <span>{post.likes_count} likes</span>
+            <span className="mx-2">•</span>
+            <span>{post.comments_count} comments</span>
           </div>
         </div>
-
-        {/* Action buttons */}
+        
         <div className="border-t border-gray-800 flex">
           <button className="flex-1 py-2 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 transition">
-            <Heart className={`h-5 w-5 mr-2 ${post.liked_by_current_user ? 'text-red-500 fill-red-500' : ''}`} />
+            <Heart className={`h-4 w-4 mr-1 ${post.liked_by_current_user ? 'text-red-500 fill-red-500' : ''}`} />
             Like
           </button>
           <button className="flex-1 py-2 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 transition">
-            <MessageCircle className="h-5 w-5 mr-2" />
+            <MessageSquare className="h-4 w-4 mr-1" />
             Comment
           </button>
           <button className="flex-1 py-2 flex items-center justify-center text-gray-400 hover:text-white hover:bg-gray-800 transition">
-            <Share2 className="h-5 w-5 mr-2" />
+            <Share2 className="h-4 w-4 mr-1" />
             Share
           </button>
         </div>
-
-        {/* Display only the first comment if there are any */}
-        {post.comments && post.comments.length > 0 && (
-          <div className="border-t border-gray-800 p-4">
-            <div className="flex space-x-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={post.comments[0].profiles?.avatar_url} alt={post.comments[0].profiles?.username} />
-                <AvatarFallback>{post.comments[0].profiles?.username?.substring(0, 2).toUpperCase() || "US"}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="bg-gray-800 rounded-lg p-3">
-                  <div className="font-semibold text-sm text-white">{post.comments[0].profiles?.username || "User"}</div>
-                  <p className="text-sm text-gray-300">{post.comments[0].content}</p>
-                </div>
-                <div className="flex items-center mt-1 text-xs text-gray-400">
-                  <span>{formatDistanceToNow(new Date(post.comments[0].created_at), { addSuffix: true })}</span>
-                  <span className="mx-2">·</span>
-                  <button className="hover:text-white">Like</button>
-                  <span className="mx-2">·</span>
-                  <button className="hover:text-white">Reply</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Comment input for replying */}
-            <div className="mt-3 flex items-center">
-              <Avatar className="h-8 w-8 mr-3">
-                <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.user_metadata?.name} />
-                <AvatarFallback>{user?.email?.substring(0, 2).toUpperCase() || "U"}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  placeholder="Write a comment..."
-                  className="w-full bg-gray-800 rounded-full py-2 px-4 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-                <button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-indigo-500 hover:text-indigo-400">
-                  <Send className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
