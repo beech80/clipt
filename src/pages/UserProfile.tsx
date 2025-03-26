@@ -209,90 +209,88 @@ const UserProfile = () => {
       }
       
       // *******************************************
-      // CREATE DEMO POSTS FOR EACH USER IF NEEDED
-      // *******************************************
-      
-      // Check if posts exist for this user
-      const { data: existingPosts, error: postsError } = await supabase
-        .from('posts')
-        .select('count')
-        .eq('user_id', userId);
-        
-      console.log("Existing posts for this user:", existingPosts);
-      
-      // If no posts, create some demo posts for this user so we can see them
-      if ((!existingPosts || existingPosts.length === 0 || existingPosts[0].count === 0) && !postsError) {
-        console.log("No posts found for this user, creating demo posts");
-        
-        // Create a few demo posts for this user
-        const demoPostsData = [
-          {
-            user_id: userId,
-            content: "Check out my latest clip!",
-            post_type: "clipt",
-            media_urls: JSON.stringify(["https://placehold.co/600x400/1a237e/ffffff?text=Demo+Clip"]),
-            thumbnail_url: "https://placehold.co/600x400/1a237e/ffffff?text=Demo+Clip",
-            username: enhancedProfileData.username,
-            created_at: new Date().toISOString(),
-            likes_count: Math.floor(Math.random() * 50),
-            comments_count: Math.floor(Math.random() * 10)
-          },
-          {
-            user_id: userId,
-            content: "Just sharing some thoughts!",
-            post_type: "post",
-            media_urls: JSON.stringify(["https://placehold.co/600x400/4a148c/ffffff?text=Demo+Post"]),
-            username: enhancedProfileData.username,
-            created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-            likes_count: Math.floor(Math.random() * 50),
-            comments_count: Math.floor(Math.random() * 10)
-          },
-          {
-            user_id: userId,
-            content: "My gaming setup!",
-            post_type: "post",
-            media_urls: JSON.stringify([
-              "https://placehold.co/600x400/00695c/ffffff?text=Setup+1",
-              "https://placehold.co/600x400/004d40/ffffff?text=Setup+2"
-            ]),
-            username: enhancedProfileData.username,
-            created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-            likes_count: Math.floor(Math.random() * 50),
-            comments_count: Math.floor(Math.random() * 10)
-          }
-        ];
-        
-        // Insert the demo posts
-        const { data: createdPosts, error: createError } = await supabase
-          .from('posts')
-          .insert(demoPostsData)
-          .select();
-          
-        if (createError) {
-          console.error("Error creating demo posts:", createError);
-        } else {
-          console.log("Created demo posts:", createdPosts);
-        }
-      }
-      
-      // *******************************************
       // FETCH POSTS WITH COMPREHENSIVE APPROACH
       // *******************************************
       
-      console.log("About to fetch posts for user ID:", userId);
+      console.log("About to fetch posts for user ID:", userId, "and username:", enhancedProfileData.username);
       
-      // Single approach that combines all the data we need
-      const { data: allUserPosts, error: allUserPostsError } = await supabase
+      // First check for posts by user_id
+      const { data: userIdPosts, error: userIdPostsError } = await supabase
         .from('posts')
         .select('*')
-        .or(`user_id.eq.${userId},username.eq.${enhancedProfileData.username}`)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
         
-      if (allUserPostsError) {
-        console.error("Error fetching posts with combined approach:", allUserPostsError);
+      if (userIdPostsError) {
+        console.error("Error fetching posts by user_id:", userIdPostsError);
       }
       
-      console.log("All user posts fetched:", allUserPosts?.length || 0);
+      console.log("Posts found by user_id:", userIdPosts?.length || 0);
+      
+      // Then check for posts by username
+      const { data: usernamePosts, error: usernamePostsError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('username', enhancedProfileData.username)
+        .order('created_at', { ascending: false });
+        
+      if (usernamePostsError) {
+        console.error("Error fetching posts by username:", usernamePostsError);
+      }
+      
+      console.log("Posts found by username:", usernamePosts?.length || 0);
+      
+      // Combine the results, removing duplicates by ID
+      let allUserPosts: any[] = [];
+      
+      if (userIdPosts) {
+        allUserPosts = [...userIdPosts];
+      }
+      
+      if (usernamePosts) {
+        // Add posts that don't already exist in the array
+        usernamePosts.forEach(post => {
+          if (!allUserPosts.some(p => p.id === post.id)) {
+            allUserPosts.push(post);
+          }
+        });
+      }
+      
+      // Last resort: Try a more relaxed query to find any posts that might be associated with this user
+      if (allUserPosts.length === 0) {
+        const { data: relaxedPosts, error: relaxedError } = await supabase
+          .from('posts')
+          .select('*')
+          .or(`user_id.eq.${userId},username.ilike.${enhancedProfileData.username}`)
+          .order('created_at', { ascending: false });
+          
+        if (!relaxedError && relaxedPosts && relaxedPosts.length > 0) {
+          console.log("Found posts through relaxed query:", relaxedPosts.length);
+          allUserPosts = relaxedPosts;
+        }
+      }
+      
+      // Additional step: Try to fix up posts that might have the wrong username
+      const postsNeedingFix = allUserPosts.filter(post => !post.username && post.user_id === userId);
+      if (postsNeedingFix.length > 0) {
+        console.log(`Found ${postsNeedingFix.length} posts with missing username, attempting to fix...`);
+        
+        // Update these posts with the correct username
+        for (const post of postsNeedingFix) {
+          const { error: updateError } = await supabase
+            .from('posts')
+            .update({ username: enhancedProfileData.username })
+            .eq('id', post.id);
+            
+          if (updateError) {
+            console.error("Error updating post username:", updateError);
+          } else {
+            post.username = enhancedProfileData.username;
+          }
+        }
+      }
+      
+      console.log("Total user posts after combining sources:", allUserPosts.length);
       
       if (allUserPosts && allUserPosts.length > 0) {
         // Split posts into regular posts and clips
@@ -469,40 +467,42 @@ const UserProfile = () => {
                       )}
                       
                       {/* Hover overlay with post details */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 text-white">
-                        <div className="text-sm truncate">{post.content}</div>
-                        <div className="flex items-center mt-1 text-xs">
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            width="12" 
-                            height="12" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round"
-                            className="mr-1"
-                          >
-                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                          </svg>
-                          <span className="mr-3">{post.likes_count || 0}</span>
-                          
-                          <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            width="12" 
-                            height="12" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round"
-                            className="mr-1"
-                          >
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                          </svg>
-                          <span>{post.comments_count || 0}</span>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 text-white">
+                          <div className="text-sm truncate">{post.content}</div>
+                          <div className="flex items-center mt-1 text-xs">
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              width="12" 
+                              height="12" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                              className="mr-1"
+                            >
+                              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                            </svg>
+                            <span className="mr-3">{post.likes_count || 0}</span>
+                            
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              width="12" 
+                              height="12" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                              className="mr-1"
+                            >
+                              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>
+                            <span>{post.comments_count || 0}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
