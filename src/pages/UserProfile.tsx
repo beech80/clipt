@@ -43,18 +43,34 @@ const UserProfile = () => {
     try {
       setLoading(true);
       
-      const userId = id || user?.id;
-      console.log("Fetching profile data for user ID:", userId);
+      let userId = id || user?.id;
+      console.log("Initial user ID:", userId);
+      
+      // If we're on the /profile route with no ID, get the current user
+      if (!userId && !id && user) {
+        userId = user.id;
+        console.log("Using current user ID:", userId);
+      } else if (!userId) {
+        // Try to get current user as fallback if still no ID
+        const { data } = await supabase.auth.getUser();
+        if (data?.user) {
+          userId = data.user.id;
+          console.log("Retrieved user ID from auth:", userId);
+        }
+      }
       
       if (!userId) {
         console.error("No user ID provided for profile");
-        toast.error('Failed to load profile: No user ID provided');
+        toast.error('Please log in to view profiles');
         setLoading(false);
+        navigate('/login');
         return;
       }
       
+      console.log("Fetching profile data for user ID:", userId);
+      
       // Fetch user profile data with detailed error handling
-      const { data: profileData, error: profileError } = await supabase
+      const { data, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -100,9 +116,26 @@ const UserProfile = () => {
         }
         
         console.log("Created new profile:", insertedProfile);
-        profileData = insertedProfile;
+        setProfileData({
+          id: insertedProfile.id,
+          username: insertedProfile.username,
+          display_name: insertedProfile.display_name || insertedProfile.username,
+          avatar_url: insertedProfile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(insertedProfile.display_name || insertedProfile.username)}&background=random`,
+          banner_url: 'https://placehold.co/1200x300/3f51b5/3f51b5',
+          bio: insertedProfile.bio || '',
+          followers_count: 0,
+          following_count: 0,
+          achievements_count: 0,
+          is_following: false,
+          is_streaming: false,
+          stream_id: null,
+          stream_title: null
+        });
+        setLoading(false);
+        return;
       }
       
+      const profileData = data;
       console.log("Profile data fetched:", profileData);
       
       // Check if the current user is following this profile
@@ -133,16 +166,20 @@ const UserProfile = () => {
       
       // Check if the user is currently streaming
       let streamData = null;
-      const { data: streamResult, error: streamError } = await supabase
-        .from('active_streams')
-        .select('id, title, viewer_count, started_at')
-        .eq('user_id', userId)
-        .order('started_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (!streamError && streamResult) {
-        streamData = streamResult;
+      try {
+        const { data: streamResult, error: streamError } = await supabase
+          .from('streams')
+          .select('id, title, viewer_count, started_at')
+          .eq('user_id', userId)
+          .order('started_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (!streamError && streamResult) {
+          streamData = streamResult;
+        }
+      } catch (error) {
+        console.error("Error fetching stream data:", error);
       }
       
       const isStreaming = !!streamData;
@@ -154,9 +191,21 @@ const UserProfile = () => {
         profileData.avatar_url = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.display_name || profileData.username)}&background=random`;
       }
       
-      if (!profileData.banner_url) {
-        // Set a default banner if none exists
-        profileData.banner_url = 'https://placehold.co/1200x300/3f51b5/ffffff?text=Clipt+User';
+      // Create a local copy with banner_url field
+      const enhancedProfileData = {
+        ...profileData,
+        banner_url: (profileData as any).banner_url || 'https://placehold.co/1200x300/3f51b5/3f51b5',
+        bio: profileData.bio || ''
+      };
+      
+      if (!enhancedProfileData.banner_url) {
+        // Set a default banner if none exists - with no text
+        enhancedProfileData.banner_url = 'https://placehold.co/1200x300/3f51b5/3f51b5';
+      }
+      
+      if (!enhancedProfileData.bio) {
+        // Set a default bio if none exists
+        enhancedProfileData.bio = '';
       }
       
       // *******************************************
@@ -183,7 +232,7 @@ const UserProfile = () => {
             post_type: "clipt",
             media_urls: JSON.stringify(["https://placehold.co/600x400/1a237e/ffffff?text=Demo+Clip"]),
             thumbnail_url: "https://placehold.co/600x400/1a237e/ffffff?text=Demo+Clip",
-            username: profileData.username,
+            username: enhancedProfileData.username,
             created_at: new Date().toISOString(),
             likes_count: Math.floor(Math.random() * 50),
             comments_count: Math.floor(Math.random() * 10)
@@ -193,7 +242,7 @@ const UserProfile = () => {
             content: "Just sharing some thoughts!",
             post_type: "post",
             media_urls: JSON.stringify(["https://placehold.co/600x400/4a148c/ffffff?text=Demo+Post"]),
-            username: profileData.username,
+            username: enhancedProfileData.username,
             created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
             likes_count: Math.floor(Math.random() * 50),
             comments_count: Math.floor(Math.random() * 10)
@@ -206,7 +255,7 @@ const UserProfile = () => {
               "https://placehold.co/600x400/00695c/ffffff?text=Setup+1",
               "https://placehold.co/600x400/004d40/ffffff?text=Setup+2"
             ]),
-            username: profileData.username,
+            username: enhancedProfileData.username,
             created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
             likes_count: Math.floor(Math.random() * 50),
             comments_count: Math.floor(Math.random() * 10)
@@ -236,7 +285,7 @@ const UserProfile = () => {
       const { data: allUserPosts, error: allUserPostsError } = await supabase
         .from('posts')
         .select('*')
-        .or(`user_id.eq.${userId},username.eq.${profileData.username}`)
+        .or(`user_id.eq.${userId},username.eq.${enhancedProfileData.username}`)
         .order('created_at', { ascending: false });
         
       if (allUserPostsError) {
@@ -266,12 +315,12 @@ const UserProfile = () => {
       
       // Set profile data
       setProfileData({
-        id: profileData.id,
-        username: profileData.username,
-        display_name: profileData.display_name || profileData.username,
-        avatar_url: profileData.avatar_url,
-        banner_url: profileData.banner_url,
-        bio: profileData.bio || '',
+        id: enhancedProfileData.id,
+        username: enhancedProfileData.username,
+        display_name: enhancedProfileData.display_name || enhancedProfileData.username,
+        avatar_url: enhancedProfileData.avatar_url,
+        banner_url: enhancedProfileData.banner_url,
+        bio: enhancedProfileData.bio || '',
         followers_count: followersCount,
         following_count: followingCount,
         achievements_count: 0, // Placeholder for now
@@ -339,141 +388,132 @@ const UserProfile = () => {
           );
         }
 
-        // Combine all posts for the Posts tab (both regular posts and clipts)
-        const allUserContent = [...posts, ...clips].sort((a, b) => {
-          // Sort by created_at date, newest first
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        });
-        
-        return allUserContent.length > 0 ? (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-white font-medium">All Posts</h3>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-gray-400 hover:text-white"
-                onClick={fetchProfileData}
-              >
-                <RefreshCw className="h-4 w-4 mr-1" />
-                Refresh
-              </Button>
-            </div>
-            
-            {/* Instagram-style grid layout */}
-            <div className="grid grid-cols-3 gap-1 sm:gap-2">
-              {allUserContent.map((post) => {
-                // Parse media URLs if they're stored as JSON string
-                let mediaUrls = post.media_urls || [];
-                if (typeof mediaUrls === 'string') {
+        const postsTabContent = (
+          <div className="mt-2">
+            {loading ? (
+              <div className="flex justify-center p-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No posts yet</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-1 p-1">
+                {posts.map((post) => {
+                  // Parse the media_urls as JSON
+                  let mediaUrls: string[] = [];
                   try {
-                    mediaUrls = JSON.parse(mediaUrls);
+                    mediaUrls = JSON.parse(post.media_urls || '[]');
                   } catch (e) {
-                    console.error("Error parsing media URLs:", e);
-                    mediaUrls = [];
+                    // If parsing fails, check if it's a comma-separated string
+                    if (typeof post.media_urls === 'string') {
+                      mediaUrls = post.media_urls.split(',');
+                    }
                   }
-                }
-                
-                const isVideo = post.post_type === 'clipt';
-                
-                return (
-                  <div 
-                    key={post.id} 
-                    className="aspect-square relative cursor-pointer bg-black/30 overflow-hidden"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  >
-                    {isVideo ? (
-                      <>
-                        {/* Video thumbnail */}
-                        <div className="w-full h-full">
-                          {mediaUrls.length > 0 ? (
-                            <>
-                              <img 
-                                src={post.thumbnail_url || mediaUrls[0]} 
-                                alt={post.caption || 'Clip thumbnail'} 
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Clip';
-                                }}
-                              />
-                              <div className="absolute top-2 right-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="flex items-center justify-center h-full w-full bg-gray-900">
-                              <p className="text-gray-400 text-sm">Video</p>
-                            </div>
-                          )}
+                  
+                  const hasMultipleImages = mediaUrls.length > 1;
+                  
+                  return (
+                    <div 
+                      key={post.id} 
+                      className="relative aspect-square overflow-hidden bg-muted cursor-pointer group"
+                      onClick={() => navigate(`/post/${post.id}`)}
+                    >
+                      <img 
+                        src={mediaUrls[0] || 'https://placehold.co/400x400/3f51b5/ffffff?text=No+Image'} 
+                        alt={`Post by ${post.username}`}
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      
+                      {/* Multiple images indicator */}
+                      {hasMultipleImages && (
+                        <div className="absolute top-2 right-2 bg-black/70 rounded-full p-1">
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="16" 
+                            height="16" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            className="text-white"
+                          >
+                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                            <path d="M10 16v-4a2 2 0 0 1 2-2h4" />
+                            <path d="m16 10 4 4-4 4" />
+                          </svg>
                         </div>
-                      </>
-                    ) : (
-                      <>
-                        {/* Image thumbnail */}
-                        <div className="w-full h-full">
-                          {mediaUrls.length > 0 ? (
-                            <img 
-                              src={mediaUrls[0]} 
-                              alt={post.caption || 'Post thumbnail'} 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Post';
-                              }}
-                            />
-                          ) : post.thumbnail_url ? (
-                            <img 
-                              src={post.thumbnail_url} 
-                              alt={post.caption || 'Post thumbnail'} 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Post';
-                              }}
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full w-full bg-gray-900">
-                              <p className="text-gray-400 text-sm">{post.caption || 'Post'}</p>
-                            </div>
-                          )}
-                          {mediaUrls.length > 1 && (
-                            <div className="absolute top-2 right-2">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="10" height="10" rx="2" ry="2"></rect></svg>
-                            </div>
-                          )}
+                      )}
+                      
+                      {/* Video indicator for video posts */}
+                      {post.post_type === 'clipt' && (
+                        <div className="absolute top-2 right-2 bg-black/70 rounded-full p-1">
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="16" 
+                            height="16" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            className="text-white"
+                          >
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
                         </div>
-                      </>
-                    )}
-                    
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
-                      <div className="flex items-center gap-4 text-white">
-                        <div className="flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                          <span>{post.likes_count || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                      )}
+                      
+                      {/* Hover overlay with post details */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 text-white">
+                        <div className="text-sm truncate">{post.content}</div>
+                        <div className="flex items-center mt-1 text-xs">
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="12" 
+                            height="12" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            className="mr-1"
+                          >
+                            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                          </svg>
+                          <span className="mr-3">{post.likes_count || 0}</span>
+                          
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="12" 
+                            height="12" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            className="mr-1"
+                          >
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                          </svg>
                           <span>{post.comments_count || 0}</span>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-40 text-gray-400">
-            <p>No posts available</p>
-            {user && user.id === profileData?.id && (
-              <Button 
-                className="mt-4 bg-purple-600 hover:bg-purple-700"
-                onClick={() => navigate('/post/new')}
-              >
-                Create your first post
-              </Button>
+                  );
+                })}
+              </div>
             )}
           </div>
         );
+
+        return postsTabContent;
       
       case 'clips':
         return clips.length > 0 ? (
