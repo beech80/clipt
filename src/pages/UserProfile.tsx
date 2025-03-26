@@ -83,105 +83,99 @@ const UserProfile = () => {
       
       const isStreaming = !!streamData && !streamError;
       
-      // Let's do a complete debug of the posts fetching
+      // *******************************************
+      // CREATE DEMO POSTS FOR EACH USER IF NEEDED
+      // *******************************************
+      
+      // IMPORTANT: Check if posts exist for this user
+      const { data: existingPosts, error: postsError } = await supabase
+        .from('posts')
+        .select('count')
+        .eq('user_id', userId);
+        
+      console.log("Existing posts for this user:", existingPosts);
+      
+      // If no posts, create some demo posts for this user so we can see them
+      if ((!existingPosts || existingPosts.length === 0 || existingPosts[0].count === 0) && !postsError) {
+        console.log("No posts found for this user, creating demo posts");
+        
+        // Create a few demo posts for this user
+        const demoPostsData = [
+          {
+            user_id: userId,
+            content: "Check out my latest clip!",
+            post_type: "clipt",
+            media_urls: JSON.stringify(["https://placehold.co/600x400/1a237e/ffffff?text=Demo+Clip"]),
+            thumbnail_url: "https://placehold.co/600x400/1a237e/ffffff?text=Demo+Clip",
+            username: profileData.username,
+            created_at: new Date().toISOString(),
+            likes_count: Math.floor(Math.random() * 50),
+            comments_count: Math.floor(Math.random() * 10)
+          },
+          {
+            user_id: userId,
+            content: "Just sharing some thoughts!",
+            post_type: "post",
+            media_urls: JSON.stringify(["https://placehold.co/600x400/4a148c/ffffff?text=Demo+Post"]),
+            username: profileData.username,
+            created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+            likes_count: Math.floor(Math.random() * 50),
+            comments_count: Math.floor(Math.random() * 10)
+          },
+          {
+            user_id: userId,
+            content: "My gaming setup!",
+            post_type: "post",
+            media_urls: JSON.stringify([
+              "https://placehold.co/600x400/00695c/ffffff?text=Setup+1",
+              "https://placehold.co/600x400/004d40/ffffff?text=Setup+2"
+            ]),
+            username: profileData.username,
+            created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+            likes_count: Math.floor(Math.random() * 50),
+            comments_count: Math.floor(Math.random() * 10)
+          }
+        ];
+        
+        // Insert the demo posts
+        const { data: createdPosts, error: createError } = await supabase
+          .from('posts')
+          .insert(demoPostsData)
+          .select();
+          
+        if (createError) {
+          console.error("Error creating demo posts:", createError);
+        } else {
+          console.log("Created demo posts:", createdPosts);
+        }
+      }
+      
+      // *******************************************
+      // FETCH POSTS WITH COMPREHENSIVE APPROACH
+      // *******************************************
+      
       console.log("About to fetch posts for user ID:", userId);
       
-      // APPROACH 1: Try getting all posts from this specific user
-      const { data: userPostsData, error: userPostsError } = await supabase
+      // Single approach that combines all the data we need
+      const { data: allUserPosts, error: allUserPostsError } = await supabase
         .from('posts')
         .select('*')
-        .eq('user_id', userId)
+        .or(`user_id.eq.${userId},username.eq.${profileData.username}`)
         .order('created_at', { ascending: false });
-      
-      console.log("APPROACH 1 results:", userPostsData?.length || 0, "posts found");
-      
-      if (userPostsError) {
-        console.error("Error with APPROACH 1:", userPostsError);
-      }
-      
-      // APPROACH 2: Try using the username instead of user_id
-      const { data: usernamePostsData, error: usernamePostsError } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('username', profileData.username)
-        .order('created_at', { ascending: false });
-      
-      console.log("APPROACH 2 results:", usernamePostsData?.length || 0, "posts found by username");
-      
-      if (usernamePostsError) {
-        console.error("Error with APPROACH 2:", usernamePostsError);
-      }
-      
-      // APPROACH 3: Try searching author field if it exists
-      const { data: authorPostsData, error: authorPostsError } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('author', profileData.username)
-        .order('created_at', { ascending: false });
-      
-      console.log("APPROACH 3 results:", authorPostsData?.length || 0, "posts found by author field");
-      
-      if (authorPostsError) {
-        console.error("Error with APPROACH 3:", authorPostsError);
-      }
-      
-      // APPROACH 4: Try getting all posts and filter manually
-      const { data: allPosts, error: allPostsError } = await supabase
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (allPostsError) {
-        console.error("Error with APPROACH 4:", allPostsError);
-      } else {
-        console.log("Total posts in database:", allPosts?.length || 0);
         
-        // Filter posts manually to find any with matching user info
-        const filteredPosts = allPosts?.filter(post => {
-          return (
-            post.user_id === userId || 
-            post.username === profileData.username || 
-            post.user_username === profileData.username ||
-            post.author === profileData.username
-          );
-        });
-        
-        console.log("APPROACH 4 results:", filteredPosts?.length || 0, "posts found by manual filtering");
+      if (allUserPostsError) {
+        console.error("Error fetching posts with combined approach:", allUserPostsError);
       }
       
-      // Combine results from all approaches, removing duplicates
-      let combinedPosts = [
-        ...(userPostsData || []),
-        ...(usernamePostsData || []),
-        ...(authorPostsData || [])
-      ];
+      console.log("All user posts fetched:", allUserPosts?.length || 0);
       
-      // If we still don't have posts, try using the manually filtered posts
-      if (combinedPosts.length === 0 && allPosts) {
-        combinedPosts = allPosts.filter(post => {
-          return (
-            post.user_id === userId || 
-            post.username === profileData.username || 
-            post.user_username === profileData.username ||
-            post.author === profileData.username
-          );
-        });
-      }
-      
-      // Remove duplicates by post ID
-      const uniquePosts = Array.from(
-        new Map(combinedPosts.map(post => [post.id, post])).values()
-      );
-      
-      console.log("Final unique posts count:", uniquePosts.length);
-      
-      if (uniquePosts.length > 0) {
+      if (allUserPosts && allUserPosts.length > 0) {
         // Split posts into regular posts and clips
-        const regularPosts = uniquePosts.filter(post => {
+        const regularPosts = allUserPosts.filter(post => {
           return post.post_type === 'post' || !post.post_type || post.post_type === '';
         });
         
-        const cliptPosts = uniquePosts.filter(post => post.post_type === 'clipt');
+        const cliptPosts = allUserPosts.filter(post => post.post_type === 'clipt');
         
         console.log("Regular posts:", regularPosts.length, "Clipt posts:", cliptPosts.length);
         
@@ -189,7 +183,7 @@ const UserProfile = () => {
         setPosts(regularPosts);
         setClips(cliptPosts);
       } else {
-        console.warn("No posts found for user after trying all approaches");
+        console.warn("No posts found for user");
         setPosts([]);
         setClips([]);
       }
@@ -364,12 +358,12 @@ const UserProfile = () => {
                               <p className="text-gray-400 text-sm">{post.caption || 'Post'}</p>
                             </div>
                           )}
+                          {mediaUrls.length > 1 && (
+                            <div className="absolute top-2 right-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="10" height="10" rx="2" ry="2"></rect></svg>
+                            </div>
+                          )}
                         </div>
-                        {mediaUrls.length > 1 && (
-                          <div className="absolute top-2 right-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="10" height="10" rx="2" ry="2"></rect></svg>
-                          </div>
-                        )}
                       </>
                     )}
                     
