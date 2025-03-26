@@ -28,7 +28,7 @@ interface ProfileData {
 }
 
 const UserProfile = () => {
-  const { id } = useParams();
+  const { username: usernameParam, id: userIdParam } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('posts');
@@ -38,33 +38,22 @@ const UserProfile = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [clips, setClips] = useState<any[]>([]);
   const [achievements, setAchievements] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const fetchProfileData = async () => {
+  const fetchProfileData = async (profileUserId: string) => {
     try {
       setLoading(true);
       
-      let userId = id || user?.id;
+      let userId = profileUserId || user?.id;
       console.log("Initial user ID:", userId);
       
       // If we're on the /profile route with no ID, get the current user
-      if (!userId && !id && user) {
+      if (!userId && !userIdParam && user) {
         userId = user.id;
         console.log("Using current user ID:", userId);
       } else if (!userId) {
-        // Try to get current user as fallback if still no ID
-        const { data } = await supabase.auth.getUser();
-        if (data?.user) {
-          userId = data.user.id;
-          console.log("Retrieved user ID from auth:", userId);
-        }
-      }
-      
-      if (!userId) {
-        console.error("No user ID provided for profile");
-        toast.error('Please log in to view profiles');
-        setLoading(false);
-        navigate('/login');
-        return;
+        throw new Error('No user ID provided');
       }
       
       console.log("Fetching profile data for user ID:", userId);
@@ -208,167 +197,126 @@ const UserProfile = () => {
         enhancedProfileData.bio = '';
       }
       
-      // *******************************************
-      // FETCH POSTS WITH COMPREHENSIVE APPROACH
-      // *******************************************
-      
-      console.log("About to fetch posts for user ID:", userId, "and username:", enhancedProfileData.username);
-      
-      // First check for posts by user_id
-      const { data: userIdPosts, error: userIdPostsError } = await supabase
-        .from('posts')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-        
-      if (userIdPostsError) {
-        console.error("Error fetching posts by user_id:", userIdPostsError);
-      }
-      
-      console.log("Posts found by user_id:", userIdPosts?.length || 0);
-      
-      // Combine all posts (currently just from user_id query)
-      let allUserPosts = userIdPosts || [];
-      
-      // Last resort: Try a more relaxed query to find any posts that might be associated with this user
-      if (allUserPosts.length === 0) {
-        const { data: relaxedPosts, error: relaxedError } = await supabase
-          .from('posts')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-          
-        if (!relaxedError && relaxedPosts && relaxedPosts.length > 0) {
-          console.log("Found posts through relaxed query:", relaxedPosts.length);
-          allUserPosts = relaxedPosts;
-        }
-      }
-      
-      console.log("Total user posts after combining sources:", allUserPosts.length);
-      
-      // *******************************************
-      // CREATE DEMO POSTS IF NONE FOUND - GUARANTEED!
-      // *******************************************
-      // Force create demo posts to ensure we always have content to show
-      // Remove this forced creation once real posts are consistently available
-      const forceDemoPosts = true; // Set to true to always create demo posts
-      
-      if (allUserPosts.length === 0 || forceDemoPosts) {
-        console.log("Creating demo posts for user", userId);
-        
-        // Create a few demo posts for this user with proper structure
-        const demoPostsData = [
-          {
-            user_id: userId,
-            content: "Check out my latest gaming highlight!",
-            post_type: "clipt",
-            media_urls: JSON.stringify(["https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight"]),
-            thumbnail_url: "https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight",
-            created_at: new Date().toISOString(),
-            likes_count: Math.floor(Math.random() * 50),
-            comments_count: Math.floor(Math.random() * 10),
-            game_id: "1" 
-          },
-          {
-            user_id: userId,
-            content: "Just finished an amazing gaming session! #gaming #streamer",
-            post_type: "post",
-            media_urls: JSON.stringify(["https://placehold.co/600x400/4a148c/ffffff?text=Gaming+Session"]),
-            created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-            likes_count: Math.floor(Math.random() * 50),
-            comments_count: Math.floor(Math.random() * 10),
-            game_id: "2" 
-          },
-          {
-            user_id: userId,
-            content: "My latest gaming setup upgrade! What do you think?",
-            post_type: "post",
-            media_urls: JSON.stringify([
-              "https://placehold.co/600x400/00695c/ffffff?text=Gaming+Setup+1",
-              "https://placehold.co/600x400/004d40/ffffff?text=Gaming+Setup+2"
-            ]),
-            created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-            likes_count: Math.floor(Math.random() * 50),
-            comments_count: Math.floor(Math.random() * 10),
-            game_id: "3" 
-          }
-        ];
+      // Filter and prepare posts for display
+      const loadData = async () => {
+        setLoading(true);
         
         try {
+          // Get all posts, regardless of type
+          const { data: allPostsData, error: allPostsError } = await supabase
+            .from('posts')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('is_published', true)
+            .order('created_at', { ascending: false });
+          
+          if (allPostsError) {
+            console.error('Error fetching all posts:', allPostsError);
+            throw allPostsError;
+          }
+          
+          console.log(`Found ${allPostsData?.length || 0} posts for user ${userId}`);
+          
+          // Separate posts and clips
+          const regularPosts = allPostsData?.filter(post => post.post_type !== 'clipt') || [];
+          const clipPosts = allPostsData?.filter(post => post.post_type === 'clipt') || [];
+          
+          console.log(`Regular posts: ${regularPosts.length}, Clips: ${clipPosts.length}`);
+          
+          setPosts(regularPosts);
+          setClips(clipPosts);
+          
+          // Only create demo content if the user has no posts at all
+          if (allPostsData?.length === 0) {
+            console.log("Creating demo content - user has no posts");
+            await createDemoContent();
+          }
+        } catch (error) {
+          console.error('Error in loadData:', error);
+          toast.error('Failed to load profile data');
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      // Create demo content if none exists
+      const createDemoContent = async () => {
+        try {
+          console.log("Creating demo posts for user", userId);
+          
+          // Create demo posts (regular and clips)
+          const demoPosts = [
+            {
+              user_id: userId,
+              content: "Check out my latest gaming highlight!",
+              post_type: "clipt",
+              media_urls: JSON.stringify(["https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight"]),
+              thumbnail_url: "https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight",
+              created_at: new Date().toISOString(),
+              likes_count: Math.floor(Math.random() * 50),
+              comments_count: Math.floor(Math.random() * 10),
+              game_id: "1",
+              is_published: true
+            },
+            {
+              user_id: userId,
+              content: "Just finished an amazing gaming session! #gaming #streamer",
+              post_type: "post",
+              media_urls: JSON.stringify(["https://placehold.co/600x400/4a148c/ffffff?text=Gaming+Session"]),
+              created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+              likes_count: Math.floor(Math.random() * 50),
+              comments_count: Math.floor(Math.random() * 10),
+              game_id: "2",
+              is_published: true
+            },
+            {
+              user_id: userId,
+              content: "My latest gaming setup upgrade! What do you think?",
+              post_type: "post",
+              media_urls: JSON.stringify([
+                "https://placehold.co/600x400/00695c/ffffff?text=Gaming+Setup+1",
+                "https://placehold.co/600x400/004d40/ffffff?text=Gaming+Setup+2"
+              ]),
+              created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+              likes_count: Math.floor(Math.random() * 50),
+              comments_count: Math.floor(Math.random() * 10),
+              game_id: "3",
+              is_published: true
+            }
+          ];
+          
           // Insert the demo posts
           const { data: createdPosts, error: createError } = await supabase
             .from('posts')
-            .insert(demoPostsData)
+            .insert(demoPosts)
             .select();
             
           if (createError) {
             console.error("Error creating demo posts:", createError);
-            // If we can't create posts, just use the demo data directly in memory
-            allUserPosts = demoPostsData as any[];
-            console.log("Using demo posts in memory instead of database");
+            // If we can't create posts, use the demo data directly
+            const regularDemoPosts = demoPosts.filter(post => post.post_type !== 'clipt');
+            const clipDemoPosts = demoPosts.filter(post => post.post_type === 'clipt');
+            
+            setPosts(regularDemoPosts);
+            setClips(clipDemoPosts);
           } else {
             console.log("Created demo posts successfully:", createdPosts);
             
-            // Update allUserPosts with the newly created demo posts
+            // Update state with the newly created demo posts
             if (createdPosts) {
-              allUserPosts = createdPosts;
-            } else {
-              // If no posts were returned, use the demo data directly
-              allUserPosts = demoPostsData as any[];
+              const regularCreatedPosts = createdPosts.filter(post => post.post_type !== 'clipt');
+              const clipCreatedPosts = createdPosts.filter(post => post.post_type === 'clipt');
+              
+              setPosts(regularCreatedPosts);
+              setClips(clipCreatedPosts);
             }
           }
-        } catch (err) {
-          console.error("Exception when creating posts:", err);
-          // Use the demo posts directly if we get an exception
-          allUserPosts = demoPostsData as any[];
+        } catch (error) {
+          console.error("Exception creating demo content:", error);
         }
-      }
+      };
       
-      if (allUserPosts && allUserPosts.length > 0) {
-        // Split posts into regular posts and clips
-        const foundRegularPosts = allUserPosts.filter(post => post.post_type === 'post');
-        const foundClipPosts = allUserPosts.filter(post => post.post_type === 'clipt');
-        
-        console.log(`Found ${foundRegularPosts.length} regular posts and ${foundClipPosts.length} clips`);
-        
-        // Update state with the posts
-        setPosts(foundRegularPosts);
-        setClips(foundClipPosts);
-      } else {
-        console.error("No posts found or created for this user. This should never happen.");
-        
-        // Absolute last resort - create some in-memory posts if nothing else works
-        const fallbackRegularPosts = [
-          {
-            id: 'memory-1',
-            user_id: userId,
-            content: "Fallback post created in memory",
-            post_type: "post",
-            media_urls: JSON.stringify(["https://placehold.co/600x400/b71c1c/ffffff?text=Fallback+Post"]),
-            created_at: new Date().toISOString(),
-            likes_count: 5,
-            comments_count: 2
-          }
-        ];
-        
-        const fallbackClipPosts = [
-          {
-            id: 'memory-2',
-            user_id: userId,
-            content: "Fallback clip created in memory",
-            post_type: "clipt",
-            media_urls: JSON.stringify(["https://placehold.co/600x400/311b92/ffffff?text=Fallback+Clip"]),
-            thumbnail_url: "https://placehold.co/600x400/311b92/ffffff?text=Fallback+Clip",
-            created_at: new Date().toISOString(),
-            likes_count: 10,
-            comments_count: 3
-          }
-        ];
-        
-        // Update state with fallback posts
-        setPosts(fallbackRegularPosts);
-        setClips(fallbackClipPosts);
-      }
+      await loadData();
       
       // Set profile data
       setProfileData({
@@ -396,8 +344,50 @@ const UserProfile = () => {
   };
 
   useEffect(() => {
-    fetchProfileData();
-  }, [id, user]);
+    const fetchUserProfile = async () => {
+      // Handle case when username is provided but not userId
+      if (usernameParam && !userIdParam) {
+        setLoading(true);
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('username', usernameParam)
+            .single();
+          
+          if (userError) {
+            throw userError;
+          }
+          
+          if (userData) {
+            // If we find the user by username, fetch their data
+            await fetchProfileData(userData.id);
+          } else {
+            throw new Error('User not found');
+          }
+        } catch (error) {
+          console.error("Error fetching user by username:", error);
+          setError('User not found');
+          setLoading(false);
+        }
+      } 
+      // Handle case when userId is provided directly
+      else if (userIdParam) {
+        await fetchProfileData(userIdParam);
+      } 
+      // Default to current user if neither is provided
+      else if (user) {
+        await fetchProfileData(user.id);
+      }
+      // If no user is logged in and no username/userId provided, show error
+      else {
+        setError('No user specified');
+        setLoading(false);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [usernameParam, userIdParam, user, refreshTrigger]);
 
   const handleFollowToggle = async () => {
     if (!user || !profileData) return;
@@ -439,35 +429,51 @@ const UserProfile = () => {
             {posts && posts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {posts.map((post) => {
-                  let mediaUrls = post.media_urls || [];
+                  // Process media URLs to ensure we always have a valid array
+                  let mediaUrls = [];
+                  
                   try {
-                    if (typeof mediaUrls === 'string') {
-                      mediaUrls = JSON.parse(mediaUrls);
-                    }
-                  } catch (e) {
-                    console.error("Error parsing post media URLs:", e);
-                    if (typeof mediaUrls === 'string') {
-                      if (mediaUrls.includes(',')) {
-                        mediaUrls = mediaUrls.split(',');
-                      } else {
-                        mediaUrls = [mediaUrls];
+                    // Handle string format (JSON)
+                    if (post.media_urls && typeof post.media_urls === 'string') {
+                      try {
+                        const parsed = JSON.parse(post.media_urls);
+                        mediaUrls = Array.isArray(parsed) ? parsed : [parsed];
+                      } catch (e) {
+                        // If JSON parsing fails, handle as comma-separated or single URL
+                        if (post.media_urls.includes(',')) {
+                          mediaUrls = post.media_urls.split(',');
+                        } else {
+                          mediaUrls = [post.media_urls];
+                        }
                       }
+                    } 
+                    // Handle already parsed array
+                    else if (post.media_urls && Array.isArray(post.media_urls)) {
+                      mediaUrls = post.media_urls;
                     }
-                  }
-
-                  // Ensure mediaUrls is always an array
-                  if (!Array.isArray(mediaUrls)) {
-                    if (post.image_url) {
-                      mediaUrls = [post.image_url];
-                    } else if (post.video_url) {
+                    // Handle legacy formats
+                    else if (post.video_url) {
                       mediaUrls = [post.video_url];
-                    } else {
-                      mediaUrls = ["https://placehold.co/600x400/673ab7/ffffff?text=Post"];
                     }
+                    else if (post.image_url) {
+                      mediaUrls = [post.image_url];
+                    }
+                    
+                    // Ensure we have at least one media URL
+                    if (mediaUrls.length === 0) {
+                      mediaUrls = ["https://placehold.co/600x400/673ab7/ffffff?text=No+Media"];
+                    }
+                  } catch (error) {
+                    console.error("Error processing media URLs:", error);
+                    mediaUrls = ["https://placehold.co/600x400/673ab7/ffffff?text=Error"];
                   }
 
                   return (
-                    <div key={post.id} className="aspect-square relative group rounded-lg overflow-hidden">
+                    <div 
+                      key={post.id} 
+                      className="aspect-square relative group rounded-lg overflow-hidden cursor-pointer"
+                      onClick={() => navigate(`/post/${post.id}`)}
+                    >
                       {/* Media (first image/video) */}
                       <img 
                         src={mediaUrls[0]} 
@@ -480,7 +486,7 @@ const UserProfile = () => {
                       />
                       
                       {/* Multiple media indicator */}
-                      {Array.isArray(mediaUrls) && mediaUrls.length > 1 && (
+                      {mediaUrls.length > 1 && (
                         <div className="absolute top-2 right-2 bg-black/50 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
                           +{mediaUrls.length}
                         </div>
@@ -543,37 +549,43 @@ const UserProfile = () => {
             {clips && clips.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {clips.map((clip) => {
-                  // Process media URLs
-                  let mediaUrls = clip.media_urls || [];
+                  // Process media URLs to ensure we always have a valid array
+                  let mediaUrls = [];
                   
-                  // Ensure we have an array of media URLs
-                  if (typeof mediaUrls === 'string') {
-                    try {
-                      mediaUrls = JSON.parse(mediaUrls);
-                    } catch (e) {
-                      console.error("Error parsing clip media URLs:", e);
-                      // If JSON parsing fails, check if it's a comma-separated string
-                      if (mediaUrls.includes(',')) {
-                        mediaUrls = mediaUrls.split(',');
-                      } else {
-                        // If it's just a single URL
-                        mediaUrls = [mediaUrls];
+                  try {
+                    // Handle string format (JSON)
+                    if (clip.media_urls && typeof clip.media_urls === 'string') {
+                      try {
+                        const parsed = JSON.parse(clip.media_urls);
+                        mediaUrls = Array.isArray(parsed) ? parsed : [parsed];
+                      } catch (e) {
+                        // If JSON parsing fails, handle as comma-separated or single URL
+                        if (clip.media_urls.includes(',')) {
+                          mediaUrls = clip.media_urls.split(',');
+                        } else {
+                          mediaUrls = [clip.media_urls];
+                        }
                       }
+                    } 
+                    // Handle already parsed array
+                    else if (clip.media_urls && Array.isArray(clip.media_urls)) {
+                      mediaUrls = clip.media_urls;
                     }
-                  } 
-                  // Handle case where media_urls might already be an array
-                  else if (!Array.isArray(mediaUrls)) {
-                    // Check for legacy format with video_url
-                    if (clip.video_url) {
+                    // Handle legacy formats
+                    else if (clip.video_url) {
                       mediaUrls = [clip.video_url];
                     }
-                    // Check for legacy format with image_url
                     else if (clip.image_url) {
                       mediaUrls = [clip.image_url];
-                    } else {
-                      // Default fallback
-                      mediaUrls = ["https://placehold.co/600x400/673ab7/ffffff?text=No+Media"];
                     }
+                    
+                    // Ensure we have at least one media URL
+                    if (mediaUrls.length === 0) {
+                      mediaUrls = ["https://placehold.co/600x400/311b92/ffffff?text=No+Media"];
+                    }
+                  } catch (error) {
+                    console.error("Error processing media URLs:", error);
+                    mediaUrls = ["https://placehold.co/600x400/311b92/ffffff?text=Error"];
                   }
 
                   return (
@@ -590,7 +602,7 @@ const UserProfile = () => {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = "https://placehold.co/600x400/673ab7/ffffff?text=Clip";
+                            target.src = "https://placehold.co/600x400/311b92/ffffff?text=Clip";
                           }}
                         />
                         
@@ -604,7 +616,7 @@ const UserProfile = () => {
                         </div>
                         
                         {/* Multiple clips indicator */}
-                        {Array.isArray(mediaUrls) && mediaUrls.length > 1 && (
+                        {mediaUrls.length > 1 && (
                           <div className="absolute top-2 right-2 bg-black/50 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
                             +{mediaUrls.length}
                           </div>
@@ -622,10 +634,10 @@ const UserProfile = () => {
                           <div className="flex items-center gap-1">
                             <img 
                               src={profileData?.avatar_url || "https://placehold.co/100/1a237e/ffffff?text=User"} 
-                              alt={clip.username || profileData?.username} 
+                              alt={profileData?.username || ''} 
                               className="w-5 h-5 rounded-full"
                             />
-                            <span className="text-xs text-gray-400">{clip.username || profileData?.username}</span>
+                            <span className="text-xs text-gray-400">{profileData?.username || ''}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-1 text-gray-400">
@@ -702,6 +714,22 @@ const UserProfile = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-white animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-2xl">{error}</p>
+          <button 
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition"
+            onClick={() => setRefreshTrigger(refreshTrigger + 1)}
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
