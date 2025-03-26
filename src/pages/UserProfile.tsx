@@ -24,7 +24,6 @@ interface ProfileData {
   following_count: number;
   achievements_count: number;
   is_following: boolean;
-  is_streaming: boolean;
   stream_id: string | null;
   stream_title: string | null;
 }
@@ -80,9 +79,6 @@ const UserProfile = () => {
 
   // Process the profile data from Supabase
   const processProfileData = (rawProfileData: any, userId: string, isFollowing: boolean = false, streamData: any = null): ProfileData => {
-    // Check if streaming data exists
-    const isStreaming = rawProfileData?.is_streaming === true || streamData !== null;
-    
     return {
       id: userId,
       username: rawProfileData?.username || 'user',
@@ -94,9 +90,51 @@ const UserProfile = () => {
       following_count: rawProfileData?.following_count || 0,
       achievements_count: rawProfileData?.achievements_count || 0,
       is_following: isFollowing,
-      is_streaming: isStreaming,
       stream_id: streamData?.id || null,
       stream_title: streamData?.title || null,
+    };
+  };
+
+  // Process post data to ensure consistent format
+  const processPost = (post: any): Post => {
+    let mediaUrls;
+    
+    // Handle different formats of media_urls
+    if (post.media_urls) {
+      if (typeof post.media_urls === 'string') {
+        try {
+          // Try to parse JSON string
+          const parsed = JSON.parse(post.media_urls);
+          mediaUrls = Array.isArray(parsed) ? parsed : [post.media_urls];
+        } catch (e) {
+          // If parsing fails, use the string directly
+          mediaUrls = [post.media_urls];
+        }
+      } else if (Array.isArray(post.media_urls)) {
+        mediaUrls = post.media_urls;
+      }
+    }
+    
+    // Fallback to other fields if media_urls not available
+    if (!mediaUrls && (post.image_url || post.video_url || post.thumbnail_url)) {
+      mediaUrls = [post.video_url || post.image_url || post.thumbnail_url];
+    }
+    
+    return {
+      id: post.id || `temp-${Date.now()}-${Math.random()}`,
+      user_id: post.user_id,
+      content: post.content || '',
+      post_type: post.post_type || 'post',
+      media_urls: mediaUrls || [],
+      thumbnail_url: post.thumbnail_url || (mediaUrls && mediaUrls.length > 0 ? mediaUrls[0] : ''),
+      created_at: post.created_at || new Date().toISOString(),
+      likes_count: typeof post.likes_count === 'number' ? post.likes_count : 0,
+      comments_count: typeof post.comments_count === 'number' ? post.comments_count : 0,
+      game_id: post.game_id || '',
+      is_published: post.is_published !== false,
+      profiles: post.profiles,
+      liked_by_current_user: false,
+      comments: post.comments || []
     };
   };
 
@@ -139,18 +177,16 @@ const UserProfile = () => {
 
       // Get streaming info if available
       let streamData = null;
-      if (profileData?.is_streaming) {
-        const { data: streamResult, error: streamError } = await supabase
-          .from('streams')
-          .select('id, title, viewer_count, started_at')
-          .eq('user_id', userId)
-          .order('started_at', { ascending: false })
-          .limit(1)
-          .single();
+      const { data: streamResult, error: streamError } = await supabase
+        .from('streams')
+        .select('id, title, viewer_count, started_at')
+        .eq('user_id', userId)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single();
 
-        if (!streamError && streamResult) {
-          streamData = streamResult;
-        }
+      if (!streamError && streamResult) {
+        streamData = streamResult;
       }
 
       // Create the processed profile data
@@ -159,15 +195,17 @@ const UserProfile = () => {
       // Load posts and achievements
       const loadData = async () => {
         setLoading(true);
+        console.log("Loading data for user ID:", userId);
 
         try {
-          // Direct approach to fetch posts bypassing React Query
+          // Direct approach to fetch all posts without filters that might block results
           const { data: allPostsData, error: allPostsError } = await supabase
             .from('posts')
-            .select('*, profiles(username, avatar_url), likes_count, comments_count')
+            .select('*, profiles(username, avatar_url)')
             .eq('user_id', userId)
-            .eq('is_published', true)
             .order('created_at', { ascending: false });
+
+          console.log("Fetched posts data:", allPostsData, "Error:", allPostsError);
 
           if (allPostsError) {
             console.error('Error fetching all posts:', allPostsError);
@@ -185,6 +223,9 @@ const UserProfile = () => {
                   .filter(post => post && post.post_type === 'clipt')
                   .map(processPost);
 
+                console.log("Processed posts:", regularPosts);
+                console.log("Processed clips:", clipPosts);
+
                 setPosts(regularPosts);
                 setClips(clipPosts);
                 
@@ -196,6 +237,7 @@ const UserProfile = () => {
                 setClips([]);
               }
             } else {
+              console.log("No posts found for user");
               setPosts([]);
               setClips([]);
             }
@@ -318,6 +360,7 @@ const UserProfile = () => {
     navigate(`/post/${postId}`);
   };
 
+  // Render posts grid in Madden NFL 95 style
   const renderPostsGrid = (postsToRender: Post[]) => {
     if (!postsToRender || postsToRender.length === 0) {
       return (
@@ -328,15 +371,27 @@ const UserProfile = () => {
       );
     }
 
+    console.log("Rendering posts grid with posts:", postsToRender);
+
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-[#001133]">
         {postsToRender.map(post => {
           // Get the first media URL if available
-          const mediaUrl = typeof post.media_urls === 'string'
-            ? post.media_urls
-            : Array.isArray(post.media_urls) && post.media_urls.length > 0
-              ? post.media_urls[0]
-              : null;
+          let mediaUrl = null;
+          if (post.media_urls) {
+            if (typeof post.media_urls === 'string') {
+              try {
+                // Try to parse JSON string
+                const parsed = JSON.parse(post.media_urls);
+                mediaUrl = Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : post.media_urls;
+              } catch (e) {
+                // If parsing fails, use the string directly
+                mediaUrl = post.media_urls;
+              }
+            } else if (Array.isArray(post.media_urls) && post.media_urls.length > 0) {
+              mediaUrl = post.media_urls[0];
+            }
+          }
 
           return (
             <div 
@@ -348,15 +403,15 @@ const UserProfile = () => {
                 <div className="w-full h-full relative">
                   <img 
                     src={mediaUrl} 
-                    alt={post.content?.substring(0, 20) || "Post media"} 
+                    alt={post.content?.substring(0, 20) || "Post"} 
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = "https://placehold.co/300x300/001133/4488cc?text=Media";
+                      target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23001133'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%234488cc' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
                     }}
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-1 text-white text-xs truncate">
-                    {post.content?.substring(0, 24)}...
+                    {post.content?.substring(0, 24) || "..."}
                   </div>
                 </div>
               ) : (
@@ -368,7 +423,7 @@ const UserProfile = () => {
               )}
               <div className="absolute top-1 right-1 flex items-center space-x-1 bg-black bg-opacity-60 px-1 rounded-sm">
                 <Heart className="h-3 w-3 text-white" />
-                <span className="text-white text-[10px]">{post.likes_count}</span>
+                <span className="text-white text-[10px]">{post.likes_count || 0}</span>
               </div>
             </div>
           );
@@ -517,7 +572,7 @@ const UserProfile = () => {
                 </div>
 
                 {/* Streaming indicator */}
-                {profileData?.is_streaming && (
+                {profileData?.stream_id && (
                   <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-semibold rounded-full px-2 py-1 flex items-center gap-1">
                     <span className="animate-pulse rounded-full h-2 w-2 bg-white"></span>
                     LIVE
@@ -531,7 +586,7 @@ const UserProfile = () => {
                 <p className="text-indigo-300 mb-2">@{profileData?.username}</p>
 
                 {/* Stream title if streaming */}
-                {profileData?.is_streaming && profileData?.stream_title && (
+                {profileData?.stream_title && (
                   <div className="mb-3 bg-red-500/20 rounded-md p-2 border border-red-500/30">
                     <p className="font-semibold">Currently streaming: {profileData.stream_title}</p>
                     <p className="text-sm">{profileData?.stream_id} viewers</p>
