@@ -179,8 +179,14 @@ const UserProfile = () => {
             </div>
           );
         }
+
+        // Combine all posts for the Posts tab (both regular posts and clipts)
+        const allUserContent = [...posts, ...clips].sort((a, b) => {
+          // Sort by created_at date, newest first
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
         
-        return posts.length > 0 ? (
+        return allUserContent.length > 0 ? (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-white font-medium">All Posts</h3>
@@ -195,8 +201,9 @@ const UserProfile = () => {
               </Button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {posts.map((post) => {
+            {/* Instagram-style grid layout */}
+            <div className="grid grid-cols-3 gap-1 sm:gap-2">
+              {allUserContent.map((post) => {
                 // Parse media URLs if they're stored as JSON string
                 let mediaUrls = post.media_urls || [];
                 if (typeof mediaUrls === 'string') {
@@ -208,49 +215,86 @@ const UserProfile = () => {
                   }
                 }
                 
-                // Debug info for this post
-                console.log(`Post ${post.id}:`, {
-                  caption: post.caption,
-                  mediaUrls: mediaUrls,
-                  thumbnail: post.thumbnail_url
-                });
+                const isVideo = post.post_type === 'clipt';
                 
                 return (
                   <div 
                     key={post.id} 
-                    className="bg-black/30 backdrop-blur-sm rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-purple-500/50 transition-colors"
+                    className="aspect-square relative cursor-pointer bg-black/30 overflow-hidden"
                     onClick={() => navigate(`/post/${post.id}`)}
                   >
-                    <div className="aspect-video bg-gray-800 flex items-center justify-center">
-                      {mediaUrls && mediaUrls.length > 0 ? (
-                        <img 
-                          src={mediaUrls[0]} 
-                          alt={post.caption || 'Post thumbnail'} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Post';
-                          }}
-                        />
-                      ) : post.thumbnail_url ? (
-                        <img 
-                          src={post.thumbnail_url} 
-                          alt={post.caption || 'Post thumbnail'} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Post';
-                          }}
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full w-full bg-gray-900">
-                          <p className="text-gray-400 text-sm">{post.caption || 'No Thumbnail'}</p>
+                    {isVideo ? (
+                      <>
+                        {/* Video thumbnail */}
+                        <div className="w-full h-full">
+                          {mediaUrls.length > 0 ? (
+                            <>
+                              <img 
+                                src={post.thumbnail_url || mediaUrls[0]} 
+                                alt={post.caption || 'Clip thumbnail'} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Clip';
+                                }}
+                              />
+                              <div className="absolute top-2 right-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex items-center justify-center h-full w-full bg-gray-900">
+                              <p className="text-gray-400 text-sm">Video</p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <p className="text-white text-sm font-medium truncate">{post.caption || 'Untitled'}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-gray-400 text-xs">{post.likes_count || 0} likes</p>
-                        <p className="text-gray-400 text-xs">{post.comments_count || 0} comments</p>
+                      </>
+                    ) : (
+                      <>
+                        {/* Image thumbnail */}
+                        <div className="w-full h-full">
+                          {mediaUrls.length > 0 ? (
+                            <img 
+                              src={mediaUrls[0]} 
+                              alt={post.caption || 'Post thumbnail'} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Post';
+                              }}
+                            />
+                          ) : post.thumbnail_url ? (
+                            <img 
+                              src={post.thumbnail_url} 
+                              alt={post.caption || 'Post thumbnail'} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = 'https://placehold.co/600x400/1a237e/ffffff?text=Post';
+                              }}
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full w-full bg-gray-900">
+                              <p className="text-gray-400 text-sm">{post.caption || 'Post'}</p>
+                            </div>
+                          )}
+                        </div>
+                        {mediaUrls.length > 1 && (
+                          <div className="absolute top-2 right-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="10" height="10" rx="2" ry="2"></rect></svg>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                      <div className="flex items-center gap-4 text-white">
+                        <div className="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                          <span>{post.likes_count || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                          <span>{post.comments_count || 0}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
