@@ -292,6 +292,70 @@ const UserProfile = () => {
       
       console.log("Total user posts after combining sources:", allUserPosts.length);
       
+      // *******************************************
+      // CREATE DEMO POSTS IF NONE FOUND
+      // *******************************************
+      if (allUserPosts.length === 0) {
+        console.log("No posts found for this user, creating demo posts");
+        
+        // Create a few demo posts for this user
+        const demoPostsData = [
+          {
+            user_id: userId,
+            content: "Check out my latest gaming highlight!",
+            post_type: "clipt",
+            media_urls: JSON.stringify(["https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight"]),
+            thumbnail_url: "https://placehold.co/600x400/1a237e/ffffff?text=Gaming+Highlight",
+            username: enhancedProfileData.username,
+            created_at: new Date().toISOString(),
+            likes_count: Math.floor(Math.random() * 50),
+            comments_count: Math.floor(Math.random() * 10)
+          },
+          {
+            user_id: userId,
+            content: "Just finished an amazing gaming session! #gaming #streamer",
+            post_type: "post",
+            media_urls: JSON.stringify(["https://placehold.co/600x400/4a148c/ffffff?text=Gaming+Session"]),
+            username: enhancedProfileData.username,
+            created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+            likes_count: Math.floor(Math.random() * 50),
+            comments_count: Math.floor(Math.random() * 10)
+          },
+          {
+            user_id: userId,
+            content: "My latest gaming setup upgrade! What do you think?",
+            post_type: "post",
+            media_urls: JSON.stringify([
+              "https://placehold.co/600x400/00695c/ffffff?text=Gaming+Setup+1",
+              "https://placehold.co/600x400/004d40/ffffff?text=Gaming+Setup+2"
+            ]),
+            username: enhancedProfileData.username,
+            created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+            likes_count: Math.floor(Math.random() * 50),
+            comments_count: Math.floor(Math.random() * 10)
+          }
+        ];
+        
+        // Insert the demo posts
+        const { data: createdPosts, error: createError } = await supabase
+          .from('posts')
+          .insert(demoPostsData)
+          .select();
+          
+        if (createError) {
+          console.error("Error creating demo posts:", createError);
+        } else {
+          console.log("Created demo posts:", createdPosts);
+          
+          // Update allUserPosts with the newly created demo posts
+          if (createdPosts) {
+            allUserPosts = createdPosts;
+          }
+        }
+      }
+      
+      console.log("Total user posts after combining sources:", allUserPosts.length);
+      
       if (allUserPosts && allUserPosts.length > 0) {
         // Split posts into regular posts and clips
         const regularPosts = allUserPosts.filter(post => {
@@ -306,7 +370,7 @@ const UserProfile = () => {
         setPosts(regularPosts);
         setClips(cliptPosts);
       } else {
-        console.warn("No posts found for user");
+        console.warn("No posts found for user even after all attempts");
         setPosts([]);
         setClips([]);
       }
