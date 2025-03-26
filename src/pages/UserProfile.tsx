@@ -99,7 +99,7 @@ const UserProfile = () => {
   const processPost = (post: any): Post => {
     let mediaUrls;
     
-    // Handle different formats of media_urls
+    // Handle different formats of media_urls - more robust parsing
     if (post.media_urls) {
       if (typeof post.media_urls === 'string') {
         try {
@@ -112,17 +112,23 @@ const UserProfile = () => {
         }
       } else if (Array.isArray(post.media_urls)) {
         mediaUrls = post.media_urls;
+      } else {
+        // If it's neither string nor array, use empty array
+        mediaUrls = [];
       }
+    } else {
+      mediaUrls = [];
     }
     
     // Fallback to other fields if media_urls not available
-    if (!mediaUrls && (post.image_url || post.video_url || post.thumbnail_url)) {
-      mediaUrls = [post.video_url || post.image_url || post.thumbnail_url];
+    if ((!mediaUrls || mediaUrls.length === 0) && 
+        (post.image_url || post.video_url || post.thumbnail_url)) {
+      mediaUrls = [post.video_url || post.image_url || post.thumbnail_url].filter(Boolean);
     }
     
     return {
       id: post.id || `temp-${Date.now()}-${Math.random()}`,
-      user_id: post.user_id,
+      user_id: post.user_id || '',
       content: post.content || '',
       post_type: post.post_type || 'post',
       media_urls: mediaUrls || [],
@@ -132,7 +138,7 @@ const UserProfile = () => {
       comments_count: typeof post.comments_count === 'number' ? post.comments_count : 0,
       game_id: post.game_id || '',
       is_published: post.is_published !== false,
-      profiles: post.profiles,
+      profiles: post.profiles || null,
       liked_by_current_user: false,
       comments: post.comments || []
     };
@@ -360,7 +366,7 @@ const UserProfile = () => {
     navigate(`/post/${postId}`);
   };
 
-  // Render posts grid in Madden NFL 95 style
+  // Render posts grid in Madden NFL 95 style with better error handling
   const renderPostsGrid = (postsToRender: Post[]) => {
     if (!postsToRender || postsToRender.length === 0) {
       return (
@@ -376,21 +382,33 @@ const UserProfile = () => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-[#001133]">
         {postsToRender.map(post => {
+          if (!post || !post.id) return null;
+          
           // Get the first media URL if available
           let mediaUrl = null;
-          if (post.media_urls) {
-            if (typeof post.media_urls === 'string') {
-              try {
-                // Try to parse JSON string
-                const parsed = JSON.parse(post.media_urls);
-                mediaUrl = Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : post.media_urls;
-              } catch (e) {
-                // If parsing fails, use the string directly
-                mediaUrl = post.media_urls;
+          try {
+            if (post.media_urls) {
+              if (typeof post.media_urls === 'string') {
+                try {
+                  // Try to parse JSON string
+                  const parsed = JSON.parse(post.media_urls);
+                  mediaUrl = Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : post.media_urls;
+                } catch (e) {
+                  // If parsing fails, use the string directly
+                  mediaUrl = post.media_urls;
+                }
+              } else if (Array.isArray(post.media_urls) && post.media_urls.length > 0) {
+                mediaUrl = post.media_urls[0];
               }
-            } else if (Array.isArray(post.media_urls) && post.media_urls.length > 0) {
-              mediaUrl = post.media_urls[0];
             }
+
+            // Fallback to thumbnail if available
+            if (!mediaUrl && post.thumbnail_url) {
+              mediaUrl = post.thumbnail_url;
+            }
+          } catch (error) {
+            console.error("Error processing media URL:", error);
+            mediaUrl = null;
           }
 
           return (
