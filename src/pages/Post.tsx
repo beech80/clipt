@@ -245,7 +245,18 @@ const Post = () => {
           </div>
           
           <div className="gaming-card border border-[#2e4482]/30 rounded-lg overflow-hidden bg-[#1a1f30]" data-post-id={id}>
-            <PostItem post={post} data-post-id={id} />
+            <PostItem 
+              post={post} 
+              data-post-id={id} 
+              onCommentClick={() => {
+                setShowComments(true);
+                setTimeout(() => {
+                  if (commentsRef.current) {
+                    commentsRef.current.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100);
+              }}
+            />
           </div>
           
           {/* Comments section */}
