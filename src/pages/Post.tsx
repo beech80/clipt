@@ -7,7 +7,7 @@ import PostItem from "@/components/PostItem";
 import { Calendar, User } from "lucide-react";
 import { Post as PostType } from "@/types/post";
 import { toast } from "sonner";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CommentList } from "@/components/post/CommentList";
 import { BackButton } from "@/components/ui/back-button";
 
@@ -16,6 +16,8 @@ const Post = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const commentsRef = useRef<HTMLDivElement>(null);
+  const [userPosts, setUserPosts] = useState<PostType[]>([]);
+  const [isLoadingUserPosts, setIsLoadingUserPosts] = useState(false);
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['post', id],
@@ -128,6 +130,56 @@ const Post = () => {
     }
   }, [location.hash]);
 
+  // Fetch more posts from the same user once we have the current post
+  useEffect(() => {
+    if (post && post.user_id) {
+      setIsLoadingUserPosts(true);
+      
+      // Direct approach without React Query to avoid filter issues
+      const fetchUserPosts = async () => {
+        try {
+          // Using a direct Supabase query without unnecessary filters that may block results
+          const { data: userPostsData, error } = await supabase
+            .from('posts')
+            .select(`
+              *,
+              profiles:user_id (
+                username,
+                avatar_url,
+                display_name
+              ),
+              likes_count:likes(count),
+              comments_count:comments(count)
+            `)
+            .eq('user_id', post.user_id)
+            .order('created_at', { ascending: false })
+            .limit(50);
+            
+          if (error) {
+            console.error('Error fetching user posts:', error);
+            return;
+          }
+          
+          console.log('User posts loaded:', userPostsData?.length);
+          // Process the data to ensure counts are numbers
+          const processedPosts = userPostsData?.map(p => ({
+            ...p,
+            likes_count: p.likes_count?.[0]?.count || 0,
+            comments_count: p.comments_count?.[0]?.count || 0
+          })) as unknown as PostType[];
+          
+          setUserPosts(processedPosts);
+        } catch (err) {
+          console.error('Error in fetchUserPosts:', err);
+        } finally {
+          setIsLoadingUserPosts(false);
+        }
+      };
+      
+      fetchUserPosts();
+    }
+  }, [post, id]);
+
   return (
     <>
       <SEO 
@@ -137,36 +189,108 @@ const Post = () => {
         type="article"
         structuredData={structuredData}
       />
-      <div className="min-h-screen bg-gradient-to-b from-[#0d1b3c] to-[#121212]">
+      <div className="min-h-screen bg-[#131626]">
         <div className="container mx-auto max-w-2xl px-4 py-6">
-          <div className="mb-6 flex items-center justify-between">
-            <BackButton />
-            <div className="flex items-center space-x-4 text-sm text-white/70">
-              <div className="flex items-center space-x-1">
-                <Calendar className="h-4 w-4" />
-                <span>{formattedDate}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <User className="h-4 w-4" />
-                <span>{post.profiles?.username || "Anonymous"}</span>
-              </div>
-            </div>
-          </div>
+          <BackButton />
           
-          <div className="gaming-card border border-[#2e4482]/30 rounded-lg overflow-hidden bg-[#1a1f30]" data-post-id={id}>
-            <PostItem 
-              post={post} 
-              data-post-id={id} 
-            />
-            
-            {/* Comments section */}
-            <div ref={commentsRef} id="comments" className="mt-6 px-4 pb-4" data-post-id={id}>
-              <CommentList 
-                postId={id || ''} 
-                key={`comments-${id}`}
-                hideForm={false}
-              />
+          {/* User's posts feed */}
+          <div className="space-y-6 mt-4">
+            {/* First show the current post */}
+            <div className="gaming-card border border-[#2e4482]/30 rounded-lg overflow-hidden bg-[#1a1f30] shadow-md" data-post-id={id}>
+              <div className="p-4">
+                {/* User info header */}
+                <div className="flex items-center mb-4">
+                  <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-indigo-500 mr-3">
+                    <img 
+                      src={post.profiles?.avatar_url || '/placeholder-avatar.png'}
+                      alt={post.profiles?.username || 'User'}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/placeholder-avatar.png';
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div className="font-bold text-white">{post.profiles?.username || 'User'}</div>
+                  </div>
+                </div>
+                
+                {/* Post content */}
+                <PostItem 
+                  post={post} 
+                  data-post-id={id} 
+                />
+              </div>
+              
+              {/* Comments section */}
+              <div ref={commentsRef} id="comments" className="px-4 pb-4" data-post-id={id}>
+                <CommentList 
+                  postId={id || ''} 
+                  key={`comments-${id}`}
+                  hideForm={false}
+                />
+              </div>
             </div>
+            
+            {/* Then show other posts from the same user */}
+            {userPosts
+              .filter(p => p.id !== id) // Filter out the current post
+              .map(userPost => (
+                <div 
+                  key={userPost.id} 
+                  className="gaming-card border border-[#2e4482]/30 rounded-lg overflow-hidden bg-[#1a1f30] shadow-md cursor-pointer"
+                  onClick={() => navigate(`/post/${userPost.id}`)}
+                >
+                  <div className="p-4">
+                    {/* User info header */}
+                    <div className="flex items-center mb-4">
+                      <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-indigo-500 mr-3">
+                        <img 
+                          src={userPost.profiles?.avatar_url || '/placeholder-avatar.png'}
+                          alt={userPost.profiles?.username || 'User'}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/placeholder-avatar.png';
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white">{userPost.profiles?.username || 'User'}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Post content */}
+                    <PostItem 
+                      post={userPost} 
+                      data-post-id={userPost.id} 
+                    />
+                  </div>
+                </div>
+              ))}
+              
+            {isLoadingUserPosts && (
+              <div className="space-y-4 mt-6">
+                {[1, 2, 3].map(i => (
+                  <div key={`skeleton-${i}`} className="gaming-card border border-[#2e4482]/30 rounded-lg overflow-hidden bg-[#1a1f30] shadow-md p-4">
+                    <div className="flex items-center mb-4">
+                      <Skeleton className="h-10 w-10 rounded-full mr-3" />
+                      <Skeleton className="h-5 w-32" />
+                    </div>
+                    <Skeleton className="h-[300px] w-full mb-4" />
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {!isLoadingUserPosts && userPosts.filter(p => p.id !== id).length === 0 && (
+              <div className="text-center py-8 text-gray-400">
+                No other posts from this user
+              </div>
+            )}
           </div>
         </div>
       </div>
