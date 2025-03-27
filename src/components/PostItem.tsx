@@ -27,6 +27,7 @@ interface PostItemProps {
   highlight?: boolean;
   'data-post-id'?: string;
   isCliptsPage?: boolean;
+  isProfilePage?: boolean;
 }
 
 const PostItem: React.FC<PostItemProps> = ({ 
@@ -34,7 +35,8 @@ const PostItem: React.FC<PostItemProps> = ({
   onCommentClick, 
   highlight = false, 
   'data-post-id': postIdAttr,
-  isCliptsPage = false
+  isCliptsPage = false,
+  isProfilePage = false
 }) => {
   // Use location to detect if we're on the Clipts page
   const location = useLocation();
@@ -1026,34 +1028,36 @@ const PostItem: React.FC<PostItemProps> = ({
               </span>
             </button>
           </DialogTrigger>
-          <DialogContent className="bg-[#1D1E2A] border-[#2C2D41] text-white p-4 max-w-md mx-auto">
-            <h3 className="text-lg font-bold mb-3">Add Comment</h3>
-            <p className="text-sm text-gray-400 mb-4">Commenting on post from {post.profiles?.username || 'user'}</p>
-            
-            <Textarea
-              placeholder="Write your comment..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              className="bg-[#252636] border-[#333442] text-white min-h-[100px] mb-4"
-            />
-            
-            <div className="flex justify-end gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsDialogOpen(false)}
-                className="border-[#3F4252] text-gray-300 hover:bg-[#2C2D41]"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={submitComment}
-                disabled={isSubmitting || !commentText.trim()}
-                className="bg-[#6366F1] hover:bg-[#4F46E5] text-white"
-              >
-                {isSubmitting ? 'Posting...' : 'Post Comment'}
-              </Button>
-            </div>
-          </DialogContent>
+          {!isProfilePage && (
+            <DialogContent className="bg-[#1D1E2A] border-[#2C2D41] text-white p-4 max-w-md mx-auto">
+              <h3 className="text-lg font-bold mb-3">Add Comment</h3>
+              <p className="text-sm text-gray-400 mb-4">Commenting on post from {post.profiles?.username || 'user'}</p>
+              
+              <Textarea
+                placeholder="Write your comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="bg-[#252636] border-[#333442] text-white min-h-[100px] mb-4"
+              />
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsDialogOpen(false)}
+                  className="border-[#3F4252] text-gray-300 hover:bg-[#2C2D41]"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={submitComment}
+                  disabled={isSubmitting || !commentText.trim()}
+                  className="bg-[#6366F1] hover:bg-[#4F46E5] text-white"
+                >
+                  {isSubmitting ? 'Posting...' : 'Post Comment'}
+                </Button>
+              </div>
+            </DialogContent>
+          )}
         </Dialog>
         <button 
           className="trophy-button flex items-center text-sm font-medium text-gray-400 hover:text-yellow-500 transition-all duration-200 group"
