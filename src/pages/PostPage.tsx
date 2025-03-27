@@ -1,21 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
-import { MessageSquare, ThumbsUp, Trophy, Share2, ExternalLink, ChevronDown } from 'lucide-react';
+import { MessageSquare, ThumbsUp, Trophy, Share2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { CommentList } from '@/components/post/CommentList';
-import { CommentForm } from '@/components/post/comment/CommentForm';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
 
 const PostPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [showAllComments, setShowAllComments] = useState(false);
 
   // Fetch post details
   const { data: post, isLoading } = useQuery({
@@ -32,6 +27,7 @@ const PostPage = () => {
           user_id,
           likes_count,
           comments_count,
+          trophy_count,
           profiles:user_id (
             username,
             avatar_url
@@ -49,10 +45,6 @@ const PostPage = () => {
     },
     enabled: !!id,
   });
-
-  const handleCommentAdded = () => {
-    toast.success('Comment added!');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c]">
@@ -104,70 +96,20 @@ const PostPage = () => {
             <div className="flex items-center space-x-6">
               <button className="flex items-center text-gray-300 hover:text-purple-400">
                 <ThumbsUp className="mr-1 h-5 w-5" />
-                <span className="text-sm">{post?.likes_count || 24}</span>
+                <span className="text-sm font-semibold">{post?.likes_count || 0}</span>
               </button>
               <button className="flex items-center text-gray-300 hover:text-purple-400">
                 <MessageSquare className="mr-1 h-5 w-5" />
-                <span className="text-sm">{post?.comments_count || 8}</span>
-              </button>
-              <button 
-                className="flex items-center text-gray-300 hover:text-purple-400"
-                onClick={() => navigate(`/post/${id}/comments`)}
-              >
-                <span className="text-xs ml-1 underline text-purple-400">See all comments</span>
+                <span className="text-sm font-semibold">{post?.comments_count || 0}</span>
               </button>
               <button className="flex items-center text-gray-300 hover:text-purple-400">
                 <Trophy className="mr-1 h-5 w-5" />
+                <span className="text-sm font-semibold">{post?.trophy_count || 0}</span>
               </button>
             </div>
             <button className="text-gray-300 hover:text-purple-400">
               <Share2 className="h-5 w-5" />
             </button>
-          </div>
-        </div>
-        
-        {/* Comments section */}
-        <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/10 shadow-xl">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-white flex items-center">
-              <MessageSquare className="mr-2 h-5 w-5 text-purple-400" />
-              Comments
-              {post?.comments_count > 0 && (
-                <span className="ml-2 text-sm text-gray-400">({post.comments_count})</span>
-              )}
-            </h3>
-            
-            {/* Link to dedicated comments page */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/post/${id}/comments`)}
-              className="text-xs flex items-center gap-1 text-purple-400 hover:text-purple-300 hover:bg-purple-950/30"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              View All Comments
-            </Button>
-          </div>
-          
-          {/* Display recent comments */}
-          <div className="mb-4 border border-white/5 rounded-lg overflow-hidden">
-            {id && (
-              <div className="max-h-[400px] overflow-auto custom-scrollbar bg-black/20">
-                <CommentList 
-                  postId={id}
-                  onCommentAdded={handleCommentAdded}
-                />
-              </div>
-            )}
-          </div>
-          
-          {/* Comment input */}
-          <div className="mt-4">
-            <CommentForm
-              postId={id || ''}
-              onCommentAdded={handleCommentAdded}
-              autoFocus={false}
-            />
           </div>
         </div>
       </div>
