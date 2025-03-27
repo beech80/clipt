@@ -42,7 +42,22 @@ export const StreamPlayer = ({
   if (!effectivePlaybackUrl) {
     return (
       <Card className="aspect-video w-full bg-gray-900 flex items-center justify-center">
-        <p className="text-gray-400">Stream is offline</p>
+        <div className="flex flex-col items-center">
+          <div className="mt-4 flex space-x-4">
+            <div className="text-center">
+              <p className="text-xs text-gray-500">Stream URL</p>
+              <div className="mt-1 bg-black/30 px-3 py-1 rounded font-mono text-xs">
+                {generatePlaybackUrl('')}
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-500">Stream Key</p>
+              <div className="mt-1 bg-black/30 px-3 py-1 rounded font-mono text-xs">
+                ••••••••••••
+              </div>
+            </div>
+          </div>
+        </div>
       </Card>
     );
   }

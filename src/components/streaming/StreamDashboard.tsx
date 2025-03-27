@@ -263,7 +263,6 @@ export function StreamDashboard() {
                   <Card className="h-auto overflow-hidden rounded-lg shadow-md bg-muted/30 p-6">
                     <div className="w-full flex flex-col items-center justify-center gap-6">
                       <div className="text-center">
-                        <h3 className="text-lg font-medium mb-2">Stream is Offline</h3>
                         <p className="text-sm text-muted-foreground">Set up your streaming software with the details below</p>
                       </div>
                       
