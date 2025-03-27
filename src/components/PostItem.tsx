@@ -224,9 +224,21 @@ const PostItem: React.FC<PostItemProps> = ({
     }
   };
 
-  const handleComment = () => {
+  const handleComment = useCallback((e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    // If we're in the post detail view, don't show the dialog
+    if (window.location.pathname.includes('/post/')) {
+      if (onCommentClick) {
+        onCommentClick();
+      }
+      return;
+    }
+    
     setIsDialogOpen(true);
-  };
+  }, [onCommentClick]);
 
   const submitComment = async () => {
     if (!user) {
