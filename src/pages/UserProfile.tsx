@@ -10,7 +10,7 @@ import achievementTrackerService from '@/services/achievementTrackerService';
 import AchievementDisplay, { ACHIEVEMENT_CATEGORIES } from '@/components/achievements/AchievementDisplay';
 import { toast } from 'react-hot-toast';
 import { followService } from '@/services/followService';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
 interface ProfileData {
   id: string;
@@ -273,47 +273,50 @@ const UserProfile = () => {
       try {
         if (!currentUserProfileId) return;
 
-        console.log(`Fetching posts for user profile: ${currentUserProfileId}`);
+        console.log(`PROFILE DEBUG: Fetching posts for user profile: ${currentUserProfileId}`);
 
-        // Fetch posts with a more direct approach to ensure they're visible
+        // DEBUG: First check if any posts exist for this user without filters
+        const { data: checkAnyPosts, error: checkError } = await supabase
+          .from('posts')
+          .select('id, content, post_type')
+          .eq('user_id', currentUserProfileId)
+          .limit(20);
+          
+        console.log(`PROFILE DEBUG: Raw check - Found ${checkAnyPosts?.length || 0} total posts for user ${currentUserProfileId}`, checkAnyPosts);
+        
+        if (checkError) {
+          console.error('PROFILE DEBUG: Error in initial posts check:', checkError);
+        }
+
+        // Fetch posts WITHOUT the is_published filter which may be blocking posts
         const { data: postsData, error: postsError } = await supabase
           .from('posts')
           .select('*, profiles:profiles(username, avatar_url, display_name)')
           .eq('user_id', currentUserProfileId)
           .eq('post_type', 'post')
-          .eq('is_published', true) // Explicitly set this filter
           .order('created_at', { ascending: false });
 
-        if (postsError) throw postsError;
-        console.log(`Found ${postsData?.length || 0} posts for this user`);
-        if (postsData?.length === 0) {
-          console.log('No posts found with standard filters. Trying again without is_published filter');
-          
-          // Try again without the is_published filter as a fallback
-          const { data: allPostsData, error: allPostsError } = await supabase
-            .from('posts')
-            .select('*, profiles:profiles(username, avatar_url, display_name)')
-            .eq('user_id', currentUserProfileId)
-            .eq('post_type', 'post')
-            .order('created_at', { ascending: false });
-            
-          if (!allPostsError && allPostsData?.length > 0) {
-            console.log(`Found ${allPostsData.length} posts without is_published filter`);
-            postsData.push(...allPostsData);
-          }
+        if (postsError) {
+          console.error('PROFILE DEBUG: Error fetching posts:', postsError);
+          throw postsError;
         }
+        
+        console.log(`PROFILE DEBUG: Found ${postsData?.length || 0} posts for this user`);
 
-        // Fetch clips
+        // Fetch clips WITHOUT the is_published filter
         const { data: clipsData, error: clipsError } = await supabase
           .from('posts')
           .select('*, profiles:profiles(username, avatar_url, display_name)')
           .eq('user_id', currentUserProfileId)
           .eq('post_type', 'clip')
-          .eq('is_published', true) // Explicitly set this filter
           .order('created_at', { ascending: false });
 
-        if (clipsError) throw clipsError;
-        console.log(`Found ${clipsData?.length || 0} clips for this user`);
+        if (clipsError) {
+          console.error('PROFILE DEBUG: Error fetching clips:', clipsError);
+          throw clipsError;
+        }
+        
+        console.log(`PROFILE DEBUG: Found ${clipsData?.length || 0} clips for this user`);
 
         // Fetch saved posts if viewing own profile
         let savedPostsData: any[] = [];
@@ -330,11 +333,13 @@ const UserProfile = () => {
               .from('posts')
               .select('*, profiles:profiles(username, avatar_url, display_name)')
               .in('id', postIds)
-              .eq('is_published', true) // Explicitly set this filter
               .order('created_at', { ascending: false });
               
             if (!fetchSavedError) {
               savedPostsData = savedPosts || [];
+              console.log(`PROFILE DEBUG: Found ${savedPostsData?.length || 0} saved posts`);
+            } else {
+              console.error('PROFILE DEBUG: Error fetching saved posts:', fetchSavedError);
             }
           }
         }
@@ -377,12 +382,17 @@ const UserProfile = () => {
           }));
         }
 
-        console.log('Setting processed posts to state:', processedPosts.length);
+        console.log('PROFILE DEBUG: Final post counts before setting state:', {
+          posts: processedPosts.length,
+          clips: processedClips.length,
+          saved: processedSavedPosts.length
+        });
+        
         setPosts(processedPosts);
         setClips(processedClips);
         setSavedPosts(processedSavedPosts);
       } catch (error) {
-        console.error('Error fetching user content:', error);
+        console.error('PROFILE DEBUG: Error in fetchUserContent:', error);
       }
     };
 
@@ -478,119 +488,107 @@ const UserProfile = () => {
           
           {activeTab === 'saved' && (
             <div className="text-center max-w-md">
-              <p className="text-xl font-semibold mb-2">No saved content</p>
-              <p className="text-gray-400">When you save posts and clips from others, they'll appear here.</p>
-            </div>
-          )}
-          
-          {activeTab === 'achievements' && (
-            <div className="text-center max-w-md">
-              <p className="text-xl font-semibold mb-2">No achievements yet</p>
-              <p className="text-gray-400">This user hasn't earned any achievements.</p>
+              <p className="text-xl font-semibold mb-2">No saved posts</p>
+              <p className="text-gray-400">When you save posts, they'll appear here.</p>
             </div>
           )}
         </div>
       );
     }
 
-    console.log("Rendering posts grid with posts:", postsToRender);
-
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-3 bg-[#001133] rounded-md border-2 border-[#4488cc] my-4">
-        {postsToRender.map(post => {
-          if (!post || !post.id) return null;
-          
-          // Get the first media URL if available with robust fallbacks
-          let mediaUrl = null;
-          try {
-            if (post.media_urls) {
-              if (typeof post.media_urls === 'string') {
-                try {
-                  // Try to parse JSON string
-                  const parsed = JSON.parse(post.media_urls);
-                  mediaUrl = Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : post.media_urls;
-                } catch (e) {
-                  // If parsing fails, use the string directly
-                  mediaUrl = post.media_urls;
-                }
-              } else if (Array.isArray(post.media_urls) && post.media_urls.length > 0) {
-                mediaUrl = post.media_urls[0];
-              }
-            }
-
-            // Fallback to other fields if not found
-            if (!mediaUrl) {
-              if (post.thumbnail_url) mediaUrl = post.thumbnail_url;
-              else if (post.image_url !== null && post.image_url !== undefined) mediaUrl = post.image_url;
-              else if (post.video_url !== null && post.video_url !== undefined) mediaUrl = post.video_url;
-            }
-          } catch (error) {
-            console.error("Error processing media URL for post:", post.id, error);
-            mediaUrl = null;
-          }
-
-          const postContent = post.content || 'No content';
-
-          return (
-            <div 
+      <div className="py-4">
+        {/* Classic Madden 95-style header */}
+        <div className="bg-[#001133] border-2 border-[#4488cc] text-white font-bold uppercase text-center py-2 mb-4 rounded">
+          {activeTab === 'posts' ? 'User Posts' : activeTab === 'clips' ? 'Video Clips' : 'Saved Content'}
+        </div>
+        
+        {/* Grid layout with Madden 95 styling */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {postsToRender.map(post => (
+            <div
               key={post.id}
+              className="bg-[#001133] border-4 border-[#4488cc] rounded-md overflow-hidden cursor-pointer transform transition hover:scale-[1.02] hover:shadow-lg"
               onClick={() => handlePostClick(post.id)}
-              className="bg-[#002255] rounded-md overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 border-2 border-[#4488cc]"
             >
-              <div className="aspect-video overflow-hidden relative">
-                {mediaUrl ? (
-                  <img 
-                    src={mediaUrl} 
-                    alt={post.content?.substring(0, 20) || "Post"} 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.log(`Image load error for post ${post.id}:`, e);
-                      const target = e.target as HTMLImageElement;
-                      target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23001133'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%234488cc' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-[#001122] p-4">
-                    <FileText className="h-12 w-12 text-[#4488cc] mb-2" />
-                    <div className="text-white text-center">Text Post</div>
+              <div className="relative">
+                {/* Post media */}
+                <div className="bg-black aspect-video overflow-hidden relative">
+                  {post.image_url ? (
+                    <img 
+                      src={post.image_url} 
+                      alt="Post content" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : post.video_url ? (
+                    <div className="relative">
+                      <video
+                        src={post.video_url}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-black bg-opacity-50 flex items-center justify-center">
+                          <Video className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#001133] to-[#001b3d]">
+                      <FileText className="h-10 w-10 text-[#4488cc]" />
+                    </div>
+                  )}
+                  
+                  {/* Post type indicator */}
+                  <div className="absolute top-2 right-2 bg-[#000A20] bg-opacity-90 px-2 py-1 rounded text-xs text-white border border-[#4488cc]">
+                    {post.post_type === 'clip' ? 'CLIP' : 'POST'}
                   </div>
-                )}
-                
-                {/* Post type indicator */}
-                <div className="absolute top-2 right-2 bg-[#000A20] bg-opacity-90 px-2 py-1 rounded text-xs text-white border border-[#4488cc]">
-                  {post.post_type === 'clip' ? 'CLIP' : 'POST'}
-                </div>
-              </div>
-
-              <div className="p-3 bg-gradient-to-b from-[#002255] to-[#001133]">
-                <div className="text-white font-semibold mb-2 line-clamp-2 text-sm">
-                  {postContent}
                 </div>
                 
-                <div className="flex justify-between items-center mt-2 border-t border-[#4488cc] pt-2">
-                  <div className="flex space-x-3">
-                    <div className="flex items-center space-x-1 text-gray-400">
-                      <Heart className={`h-4 w-4 ${post.liked_by_current_user ? 'text-[#FF6699]' : 'text-gray-400'}`} />
-                      <span className="text-xs">{post.likes_count || 0}</span>
-                    </div>
-                    <div className="flex items-center space-x-1 text-gray-400">
-                      <MessageSquare className="h-4 w-4" />
-                      <span className="text-xs">{post.comments_count || 0}</span>
-                    </div>
-                    <div className="flex items-center space-x-1 text-gray-400">
-                      <Trophy className="h-4 w-4 text-[#FFCC00]" />
-                      <span className="text-xs">{post.trophy_count || 0}</span>
-                    </div>
+                {/* Post info */}
+                <div className="p-3">
+                  {/* User info */}
+                  <div className="flex items-center space-x-2 mb-2">
+                    <img
+                      src={post.avatar_url || '/default-avatar.png'}
+                      alt={post.username || "User"}
+                      className="w-6 h-6 rounded-full border border-[#4488cc]"
+                    />
+                    <span className="text-white text-sm font-medium truncate">
+                      {post.display_name || post.username || "User"}
+                    </span>
                   </div>
                   
-                  <div className="text-xs text-gray-400">
-                    {post.created_at ? format(new Date(post.created_at), 'MMM d') : ''}
+                  {/* Post content - Limit to two lines */}
+                  <p className="text-gray-300 text-sm mb-3 line-clamp-2">
+                    {post.content || ""}
+                  </p>
+                  
+                  {/* Engagement stats - Madden 95 style */}
+                  <div className="flex items-center justify-between mt-2 border-t border-[#4488cc] pt-2">
+                    {/* Likes */}
+                    <div className="flex items-center text-xs text-gray-300 gap-1">
+                      <Heart className={`h-4 w-4 ${post.liked_by_current_user ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
+                      <span>{post.likes_count || 0}</span>
+                    </div>
+                    
+                    {/* Comments */}
+                    <div className="flex items-center text-xs text-gray-300 gap-1">
+                      <MessageSquare className="h-4 w-4 text-gray-400" />
+                      <span>{post.comments_count || 0}</span>
+                    </div>
+                    
+                    {/* Time */}
+                    <div className="text-xs text-gray-400">
+                      {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
     );
   };
