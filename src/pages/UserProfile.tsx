@@ -4,14 +4,10 @@ import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
 import { Loader2, Settings, User, Grid, ListVideo, Trophy, Video, Heart, MessageSquare, FileText, RefreshCw, Share2, MessageCircle, Send, Bookmark } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '@/providers/AuthProvider';
 import achievementService from '@/services/achievementService';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { followService } from '@/services/followService';
-import { StreamPlayer } from '@/components/streaming/StreamPlayer';
-import { Badge } from '@/components/ui/badge';
+import achievementTrackerService from '@/services/achievementTrackerService';
+import AchievementDisplay, { ACHIEVEMENT_CATEGORIES } from '@/components/achievements/AchievementDisplay';
 
 interface ProfileData {
   id: string;
@@ -77,7 +73,8 @@ const UserProfile = () => {
   const [clips, setClips] = useState<Post[]>([]);
   const [savedPosts, setSavedPosts] = useState<Post[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [activeTab, setActiveTab] = useState('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'clips' | 'saved' | 'achievements'>('posts');
+  const [selectedAchievementCategory, setSelectedAchievementCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null);
 
@@ -148,225 +145,20 @@ const UserProfile = () => {
     };
   };
 
-  const fetchProfileData = async (profileUserId: string) => {
-    try {
-      setLoading(true);
-
-      let userId = profileUserId || user?.id;
-
-      if (!userId && !userIdParam && user) {
-        userId = user.id;
-      } else if (!userId) {
-        throw new Error('No user ID provided');
-      }
-
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw profileError;
-      }
-
-      let isFollowing = false;
-      if (user && user.id !== userId) {
-        const { data: followData, error: followError } = await supabase
-          .from('follows')
-          .select('*')
-          .eq('follower_id', user.id)
-          .eq('following_id', userId)
-          .maybeSingle();
-
-        if (!followError) {
-          isFollowing = !!followData;
-        }
-      }
-
-      // Get streaming info if available
-      let streamData = null;
-      const { data: streamResult, error: streamError } = await supabase
-        .from('streams')
-        .select('id, title, viewer_count, started_at')
-        .eq('user_id', userId)
-        .order('started_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (!streamError && streamResult) {
-        streamData = streamResult;
-      }
-
-      // Create the processed profile data
-      const enhancedProfileData = processProfileData(profileData, userId, isFollowing, streamData);
-
-      // Load posts and achievements
-      const loadData = async () => {
-        setLoading(true);
-        console.log("Loading data for user ID:", userId);
-
-        try {
-          // Direct approach to fetch all posts without filters that might block results
-          // Based on previous experience, removing filters that could prevent posts from appearing
-          const { data: allPostsData, error: allPostsError } = await supabase
-            .from('posts')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
-
-          console.log("Fetched posts data:", allPostsData, "Error:", allPostsError);
-
-          if (allPostsError) {
-            console.error('Error fetching all posts:', allPostsError);
-            setPosts([]);
-            setClips([]);
-          } else {
-            // Process and separate posts
-            if (Array.isArray(allPostsData) && allPostsData.length > 0) {
-              try {
-                // Add debug output to see raw post data
-                console.log("Raw posts from database:", JSON.stringify(allPostsData, null, 2));
-                
-                // Get profile data for posts
-                const { data: profilesData } = await supabase
-                  .from('profiles')
-                  .select('id, username, avatar_url')
-                  .in('id', allPostsData.map(post => post.user_id));
-                
-                // Create a map of profiles for easier access
-                const profilesMap = profilesData ? profilesData.reduce((acc: Record<string, any>, profile: any) => {
-                  acc[profile.id] = profile;
-                  return acc;
-                }, {}) : {};
-                
-                // Enhance post data with profile info if missing
-                const enhancedPosts = allPostsData.map((post: any) => ({
-                  ...post,
-                  profiles: post.profiles || profilesMap[post.user_id] || null
-                }));
-                
-                const regularPosts = enhancedPosts
-                  .filter((post: any) => post && post.post_type !== 'clipt')
-                  .map(processPost);
-                
-                const clipPosts = enhancedPosts
-                  .filter((post: any) => post && post.post_type === 'clipt')
-                  .map(processPost);
-
-                console.log("Processed posts:", regularPosts);
-                console.log("Processed clips:", clipPosts);
-
-                setPosts(regularPosts);
-                setClips(clipPosts);
-                
-                // Log post count for debugging
-                console.log(`Loaded ${regularPosts.length} regular posts and ${clipPosts.length} clips`);
-              } catch (error) {
-                console.error("Error processing posts:", error);
-                setPosts([]);
-                setClips([]);
-              }
-            } else {
-              console.log("No posts found for user");
-              setPosts([]);
-              setClips([]);
-            }
-          }
-
-          // Fetch saved posts if viewing own profile
-          if (user && (user.id === userId)) {
-            try {
-              // Get saved posts IDs from the bookmarks table
-              const { data: bookmarksData, error: bookmarksError } = await supabase
-                .from('bookmarks')
-                .select('post_id')
-                .eq('user_id', user.id);
-                
-              if (!bookmarksError && bookmarksData && bookmarksData.length > 0) {
-                const savedPostIds = bookmarksData.map(bookmark => bookmark.post_id);
-                
-                // Fetch the actual posts
-                const { data: savedPostsData, error: savedPostsError } = await supabase
-                  .from('posts')
-                  .select('*, profiles(username, avatar_url, display_name)')
-                  .in('id', savedPostIds)
-                  .order('created_at', { ascending: false });
-                  
-                if (!savedPostsError && savedPostsData) {
-                  const processedSavedPosts = savedPostsData.map(processPost);
-                  setSavedPosts(processedSavedPosts);
-                  console.log(`Loaded ${processedSavedPosts.length} saved posts`);
-                } else {
-                  console.error('Error fetching saved posts:', savedPostsError);
-                  setSavedPosts([]);
-                }
-              } else {
-                console.log('No bookmarks found or error:', bookmarksError);
-                setSavedPosts([]);
-              }
-            } catch (error) {
-              console.error('Error processing saved posts:', error);
-              setSavedPosts([]);
-            }
-          }
-
-          // Load user achievements
-          try {
-            const userAchievements = await achievementService.getUserAchievements(userId);
-            
-            // Make sure achievements match our interface
-            const processedAchievements = Array.isArray(userAchievements) 
-              ? userAchievements.map((achievement: any): Achievement => ({
-                  id: achievement.id || `temp-${Date.now()}-${Math.random()}`,
-                  achievement: {
-                    id: achievement.achievement?.id || '',
-                    name: achievement.achievement?.name || 'Achievement',
-                    description: achievement.achievement?.description || '',
-                    image: achievement.achievement?.image,
-                    target_value: achievement.achievement?.target_value,
-                    reward_type: achievement.achievement?.reward_type as any,
-                    points: achievement.achievement?.points
-                  },
-                  completed: achievement.completed || false,
-                  currentValue: achievement.currentValue || 0,
-                  user_id: userId
-                }))
-              : [];
-            
-            setAchievements(processedAchievements);
-          } catch (error) {
-            console.error("Error loading achievements:", error);
-            setAchievements([]);
-          }
-        } catch (error) {
-          console.error('Error in loadData:', error);
-          toast.error('Failed to load profile data');
-          setPosts([]);
-          setClips([]);
-          setAchievements([]);
-        } finally {
-          setLoading(false);
-        }
-      };
-      await loadData();
-
-      // Set profile data
-      setProfileData(enhancedProfileData);
-
-    } catch (error) {
-      console.error('Error fetching profile data:', error);
-      toast.error('Failed to load profile data');
-      setLoading(false);
-    }
-  };
-
+  // Fetch user profile data and achievements
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (usernameParam && !userIdParam) {
+    const fetchUserProfileData = async () => {
+      try {
         setLoading(true);
-        try {
+        
+        if (!userIdParam && !usernameParam) {
+          setLoading(false);
+          return;
+        }
+
+        let userId = userIdParam || user?.id;
+
+        if (!userId && usernameParam) {
           const { data: userData, error: userError } = await supabase
             .from('profiles')
             .select('*')
@@ -378,25 +170,232 @@ const UserProfile = () => {
           }
 
           if (userData) {
-            await fetchProfileData(userData.id);
+            userId = userData.id;
           } else {
             throw new Error('User not found');
           }
-        } catch (error) {
-          console.error("Error fetching user by username:", error);
-          setLoading(false);
         }
-      } else if (userIdParam) {
-        await fetchProfileData(userIdParam);
-      } else if (user) {
-        await fetchProfileData(user.id);
-      } else {
+
+        // Fetch profile data
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          setLoading(false);
+          return;
+        }
+
+        // Check if this profile is being followed by the current user
+        let isFollowingProfile = false;
+        if (user) {
+          const { data: followingData } = await supabase
+            .from('follows')
+            .select('*')
+            .eq('follower_id', user.id)
+            .eq('following_id', userId)
+            .maybeSingle();
+          
+          isFollowingProfile = !!followingData;
+        }
+
+        // Get follower and following counts
+        const { count: followersCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', userId);
+        
+        const { count: followingCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('follower_id', userId);
+
+        // Get stream information if any
+        const { data: streamData } = await supabase
+          .from('streams')
+          .select('id, title')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        // Fetch achievements - now using achievementTrackerService for better organization
+        let userAchievements = [];
+        try {
+          if (user && user.id === userId) {
+            // If viewing own profile, get detailed achievement progress
+            const categorizedAchievements = await achievementTrackerService.getAchievementsByCategories(userId);
+            userAchievements = Object.values(categorizedAchievements).flat();
+          } else {
+            // If viewing someone else's profile, get basic achievements
+            const { data } = await supabase
+              .from('user_achievements')
+              .select('*, achievement:achievements(*)')
+              .eq('user_id', userId)
+              .eq('completed', true);
+            userAchievements = data || [];
+          }
+        } catch (e) {
+          console.error('Error fetching achievements:', e);
+          // Fallback to mock data for demo purposes
+          userAchievements = achievementService.getMockAchievements();
+        }
+
+        // Set state variables
+        setProfileData({
+          ...profileData,
+          followers_count: followersCount || 0,
+          following_count: followingCount || 0,
+          achievements_count: userAchievements.filter(a => a.completed).length,
+          is_following: isFollowingProfile,
+          stream_id: streamData?.id || null,
+          stream_title: streamData?.title || null
+        });
+        
+        setAchievements(userAchievements);
+        setCurrentUserProfileId(userId);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
         setLoading(false);
       }
     };
 
-    fetchUserProfile();
-  }, [usernameParam, userIdParam, user]);
+    fetchUserProfileData();
+  }, [userIdParam, usernameParam, user]);
+
+  useEffect(() => {
+    const fetchUserContent = async () => {
+      try {
+        if (!currentUserProfileId) return;
+
+        // Fetch posts
+        const { data: postsData, error: postsError } = await supabase
+          .from('posts')
+          .select('*, profiles:profiles(username, avatar_url, display_name)')
+          .eq('user_id', currentUserProfileId)
+          .eq('post_type', 'post')
+          .order('created_at', { ascending: false });
+
+        if (postsError) throw postsError;
+
+        // Fetch clips
+        const { data: clipsData, error: clipsError } = await supabase
+          .from('posts')
+          .select('*, profiles:profiles(username, avatar_url, display_name)')
+          .eq('user_id', currentUserProfileId)
+          .eq('post_type', 'clip')
+          .order('created_at', { ascending: false });
+
+        if (clipsError) throw clipsError;
+
+        // Fetch saved posts if viewing own profile
+        let savedPostsData: any[] = [];
+        if (user && user.id === currentUserProfileId) {
+          const { data: savedPostIds, error: savedError } = await supabase
+            .from('bookmarks')
+            .select('post_id')
+            .eq('user_id', user.id);
+
+          if (!savedError && savedPostIds && savedPostIds.length > 0) {
+            const postIds = savedPostIds.map(item => item.post_id);
+            
+            const { data: savedPosts, error: fetchSavedError } = await supabase
+              .from('posts')
+              .select('*, profiles:profiles(username, avatar_url, display_name)')
+              .in('id', postIds)
+              .order('created_at', { ascending: false });
+              
+            if (!fetchSavedError) {
+              savedPostsData = savedPosts || [];
+            }
+          }
+        }
+
+        // Process likes for posts if user is logged in
+        let processedPosts = postsData || [];
+        let processedClips = clipsData || [];
+        let processedSavedPosts = savedPostsData || [];
+
+        if (user) {
+          const { data: likedPosts } = await supabase
+            .from('post_likes')
+            .select('post_id')
+            .eq('user_id', user.id);
+
+          const likedPostIds = new Set((likedPosts || []).map(like => like.post_id));
+
+          processedPosts = processedPosts.map(post => ({
+            ...post,
+            liked_by_current_user: likedPostIds.has(post.id),
+            username: post.profiles?.username,
+            avatar_url: post.profiles?.avatar_url,
+            display_name: post.profiles?.display_name
+          }));
+
+          processedClips = processedClips.map(clip => ({
+            ...clip,
+            liked_by_current_user: likedPostIds.has(clip.id),
+            username: clip.profiles?.username,
+            avatar_url: clip.profiles?.avatar_url,
+            display_name: clip.profiles?.display_name
+          }));
+
+          processedSavedPosts = processedSavedPosts.map(post => ({
+            ...post,
+            liked_by_current_user: likedPostIds.has(post.id),
+            username: post.profiles?.username,
+            avatar_url: post.profiles?.avatar_url,
+            display_name: post.profiles?.display_name
+          }));
+        }
+
+        setPosts(processedPosts);
+        setClips(processedClips);
+        setSavedPosts(processedSavedPosts);
+      } catch (error) {
+        console.error('Error fetching user content:', error);
+      }
+    };
+
+    fetchUserContent();
+
+    // Also update trophy-related achievements if viewing own profile
+    const updateTrophyAchievements = async () => {
+      if (user && currentUserProfileId && user.id === currentUserProfileId) {
+        try {
+          // Get the post with the highest trophy count
+          const { data: highestTrophyPost } = await supabase
+            .from('posts')
+            .select('id, trophy_count')
+            .eq('user_id', currentUserProfileId)
+            .order('trophy_count', { ascending: false })
+            .limit(1);
+          
+          if (highestTrophyPost && highestTrophyPost.length > 0) {
+            const { id: postId, trophy_count } = highestTrophyPost[0];
+            // Update trophy achievements
+            await achievementTrackerService.updateTrophyAchievements(currentUserProfileId, postId, trophy_count);
+          }
+          
+          // Update follower-related achievements
+          const { count: followerCount } = await supabase
+            .from('follows')
+            .select('*', { count: 'exact', head: true })
+            .eq('following_id', currentUserProfileId);
+            
+          if (followerCount !== null) {
+            await achievementTrackerService.updateFollowerAchievements(currentUserProfileId, followerCount);
+          }
+        } catch (error) {
+          console.error('Error updating achievements:', error);
+        }
+      }
+    };
+    
+    updateTrophyAchievements();
+  }, [currentUserProfileId, user]);
 
   const handleFollowToggle = async () => {
     if (!user || !profileData) return;
@@ -578,89 +577,48 @@ const UserProfile = () => {
       case 'achievements':
         return (
           <div className="p-4">
-            {achievements && achievements.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className={`p-4 rounded-lg border ${
-                      achievement.completed
-                        ? 'bg-indigo-900/50 border-indigo-500'
-                        : 'bg-gray-800/50 border-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="h-16 w-16 rounded-md overflow-hidden flex-shrink-0 bg-indigo-900 flex items-center justify-center">
-                        {achievement.achievement?.image ? (
-                          <img
-                            src={achievement.achievement.image}
-                            alt={achievement.achievement.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "https://placehold.co/200/311b92/ffffff?text=Achievement";
-                            }}
-                          />
-                        ) : (
-                          <Trophy className="h-8 w-8 text-indigo-300" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-white font-bold">
-                          {achievement.achievement?.name}
-                          {achievement.completed && (
-                            <span className="ml-2 text-xs bg-green-500 text-white px-2 py-0.5 rounded">
-                              COMPLETED
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-gray-300 text-sm mt-1">{achievement.achievement?.description}</p>
-
-                        {/* Progress bar */}
-                        {!achievement.completed && achievement.achievement?.target_value && (
-                          <div className="mt-2">
-                            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-indigo-500"
-                                style={{
-                                  width: `${Math.min(
-                                    100,
-                                    (achievement.currentValue / achievement.achievement.target_value) * 100
-                                  )}%`
-                                }}
-                              />
-                            </div>
-                            <div className="text-xs text-gray-400 mt-1">
-                              {achievement.currentValue} / {achievement.achievement.target_value}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Reward */}
-                        {achievement.achievement?.reward_type && (
-                          <div className="text-xs text-indigo-300 mt-2">
-                            {achievement.achievement.reward_type === 'points' && (
-                              <span>Reward: {achievement.achievement.points} points</span>
-                            )}
-                            {achievement.achievement.reward_type === 'badge' && (
-                              <span>Reward: Special Badge</span>
-                            )}
-                            {achievement.achievement.reward_type === 'title' && (
-                              <span>Reward: Unique Title</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            {/* Achievement category filters */}
+            <div className="mb-6 overflow-x-auto">
+              <div className="flex space-x-2 pb-2">
+                <Button 
+                  variant={selectedAchievementCategory === null ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedAchievementCategory(null)}
+                  className="whitespace-nowrap"
+                >
+                  All Achievements
+                </Button>
+                
+                {Object.entries(ACHIEVEMENT_CATEGORIES).map(([key, category]) => {
+                  // Check if there are achievements in this category
+                  const hasAchievements = achievements?.some(
+                    a => a.achievement?.category === key
+                  );
+                  
+                  if (!hasAchievements) return null;
+                  
+                  const CategoryIcon = category.icon;
+                  
+                  return (
+                    <Button
+                      key={key}
+                      variant={selectedAchievementCategory === key ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedAchievementCategory(key)}
+                      className="whitespace-nowrap"
+                    >
+                      <CategoryIcon className="h-4 w-4 mr-2" />
+                      {category.title}
+                    </Button>
+                  );
+                })}
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                <Trophy className="h-12 w-12 mb-4 text-gray-300" />
-                <p>No achievements available</p>
-              </div>
-            )}
+            </div>
+            
+            <AchievementDisplay 
+              achievements={achievements || []} 
+              filter={selectedAchievementCategory}
+            />
           </div>
         );
       default:
