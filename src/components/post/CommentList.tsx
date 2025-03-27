@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CommentForm } from './comment/CommentForm';
 import { CommentItem, Comment } from './comment/CommentItem';
 import { Button } from '@/components/ui/button';
 import { Loader2, MessageCircle, AlertCircle, Sparkles } from 'lucide-react';
@@ -170,16 +169,6 @@ export const CommentList = ({
             Refresh
           </Button>
         )}
-      </div>
-      
-      {/* Comment input form */}
-      <div className="px-4 py-3">
-        <CommentForm 
-          postId={normalizedPostId}
-          onReplyComplete={handleCommentAdded}
-          autoFocus={autoFocus}
-          placeholder="Add a comment..."
-        />
       </div>
 
       <Separator className="my-1" />
