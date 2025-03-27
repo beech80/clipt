@@ -273,15 +273,35 @@ const UserProfile = () => {
       try {
         if (!currentUserProfileId) return;
 
-        // Fetch posts
+        console.log(`Fetching posts for user profile: ${currentUserProfileId}`);
+
+        // Fetch posts with a more direct approach to ensure they're visible
         const { data: postsData, error: postsError } = await supabase
           .from('posts')
           .select('*, profiles:profiles(username, avatar_url, display_name)')
           .eq('user_id', currentUserProfileId)
           .eq('post_type', 'post')
+          .eq('is_published', true) // Explicitly set this filter
           .order('created_at', { ascending: false });
 
         if (postsError) throw postsError;
+        console.log(`Found ${postsData?.length || 0} posts for this user`);
+        if (postsData?.length === 0) {
+          console.log('No posts found with standard filters. Trying again without is_published filter');
+          
+          // Try again without the is_published filter as a fallback
+          const { data: allPostsData, error: allPostsError } = await supabase
+            .from('posts')
+            .select('*, profiles:profiles(username, avatar_url, display_name)')
+            .eq('user_id', currentUserProfileId)
+            .eq('post_type', 'post')
+            .order('created_at', { ascending: false });
+            
+          if (!allPostsError && allPostsData?.length > 0) {
+            console.log(`Found ${allPostsData.length} posts without is_published filter`);
+            postsData.push(...allPostsData);
+          }
+        }
 
         // Fetch clips
         const { data: clipsData, error: clipsError } = await supabase
@@ -289,9 +309,11 @@ const UserProfile = () => {
           .select('*, profiles:profiles(username, avatar_url, display_name)')
           .eq('user_id', currentUserProfileId)
           .eq('post_type', 'clip')
+          .eq('is_published', true) // Explicitly set this filter
           .order('created_at', { ascending: false });
 
         if (clipsError) throw clipsError;
+        console.log(`Found ${clipsData?.length || 0} clips for this user`);
 
         // Fetch saved posts if viewing own profile
         let savedPostsData: any[] = [];
@@ -308,6 +330,7 @@ const UserProfile = () => {
               .from('posts')
               .select('*, profiles:profiles(username, avatar_url, display_name)')
               .in('id', postIds)
+              .eq('is_published', true) // Explicitly set this filter
               .order('created_at', { ascending: false });
               
             if (!fetchSavedError) {
@@ -354,6 +377,7 @@ const UserProfile = () => {
           }));
         }
 
+        console.log('Setting processed posts to state:', processedPosts.length);
         setPosts(processedPosts);
         setClips(processedClips);
         setSavedPosts(processedSavedPosts);
