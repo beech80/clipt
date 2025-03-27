@@ -257,22 +257,22 @@ const Post = () => {
                 }, 100);
               }}
             />
-          </div>
-          
-          {/* Comments section */}
-          <div ref={commentsRef} id="comments" className="mt-6" data-post-id={id}>
-            {showComments ? (
-              <CommentList 
-                postId={id || ''} 
-                onBack={() => setShowComments(false)}
-                key={`comments-${id}`}
-              />
-            ) : (
-              <div className="bg-[#1A1F2C] rounded-lg p-4 text-center cursor-pointer border border-[#2e4482]/30" onClick={() => setShowComments(true)}>
-                <MessageSquare className="h-6 w-6 mx-auto mb-2 text-blue-400" />
-                <p>Click to view comments</p>
-              </div>
-            )}
+            
+            {/* Comments section */}
+            <div ref={commentsRef} id="comments" className="mt-6 px-4 pb-4" data-post-id={id}>
+              {showComments ? (
+                <CommentList 
+                  postId={id || ''} 
+                  onBack={() => setShowComments(false)}
+                  key={`comments-${id}`}
+                />
+              ) : (
+                <div className="bg-[#1A1F2C] rounded-lg p-4 text-center cursor-pointer border border-[#2e4482]/30" onClick={() => setShowComments(true)}>
+                  <MessageSquare className="h-6 w-6 mx-auto mb-2 text-blue-400" />
+                  <p>Click to view comments</p>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* More from this user section - in Madden NFL 95 style */}
