@@ -259,72 +259,14 @@ export function StreamDashboard() {
                   </Card>
                 )}
                 
-                {!isLive && (
-                  <Card className="h-auto overflow-hidden rounded-lg shadow-md bg-muted/30 p-6">
-                    <div className="w-full flex flex-col items-center justify-center gap-6">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground">Set up your streaming software with the details below</p>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium">Stream URL</h4>
-                          <div className="flex items-center gap-2">
-                            <Input 
-                              value={rtmpUrl}
-                              readOnly
-                              className="font-mono text-xs bg-muted"
-                            />
-                            <Button 
-                              size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(rtmpUrl);
-                                toast.success("RTMP URL copied to clipboard");
-                              }}
-                            >
-                              Copy
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium">Stream Key</h4>
-                          <div className="flex items-center gap-2">
-                            <Input 
-                              value={streamKey}
-                              type={showStreamKey ? "text" : "password"}
-                              readOnly
-                              className="font-mono text-xs bg-muted"
-                            />
-                            <Button 
-                              size="sm"
-                              variant={showStreamKey ? "outline" : "default"}
-                              onClick={() => setShowStreamKey(!showStreamKey)}
-                            >
-                              {showStreamKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
-                            <Button 
-                              size="sm"
-                              onClick={() => {
-                                navigator.clipboard.writeText(streamKey);
-                                toast.success("Stream key copied to clipboard");
-                              }}
-                            >
-                              Copy
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                )}
-              </div>
-              
-              <div className="w-full lg:w-[500px] h-[650px]">
-                <StreamerDashboardChat 
-                  streamId={stream?.id || "temp-stream-id"} 
-                  isLive={isLive} 
-                />
+                {/* Removed the stream setup card that was showing the purple text */}
+                
+                <div className="w-full lg:w-[500px] h-[650px]">
+                  <StreamerDashboardChat 
+                    streamId={stream?.id || "temp-stream-id"} 
+                    isLive={isLive} 
+                  />
+                </div>
               </div>
             </div>
           </div>
