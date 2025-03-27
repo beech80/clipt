@@ -99,6 +99,10 @@ export default function Streaming() {
           </p>
         </div>
         
+        <div className="streaming-status-badge mt-2">
+          <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">Ready to Stream</span>
+        </div>
+        
         <div className="streaming-dropdown-wrapper mt-4">
           <Select 
             value={activeTab} 
@@ -199,58 +203,54 @@ export default function Streaming() {
                 {/* Stream URL Section */}
                 <div className="space-y-2">
                   <h3 className="text-md font-medium">Stream URL (Server)</h3>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex">
-                      <Input
-                        value={RTMP_URL}
-                        readOnly
-                        className="font-mono bg-black/20 border-gray-700 rounded-r-none"
-                      />
-                      <Button
-                        onClick={() => copyToClipboard(RTMP_URL, "Stream URL")}
-                        className="whitespace-nowrap rounded-l-none"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-xs text-gray-400">
-                      Enter this as the "Server" in your streaming software.
-                    </p>
+                  <div className="flex">
+                    <Input
+                      value={RTMP_URL}
+                      readOnly
+                      className="font-mono bg-black/20 border-gray-700 rounded-r-none"
+                    />
+                    <Button
+                      onClick={() => copyToClipboard(RTMP_URL, "Stream URL")}
+                      className="whitespace-nowrap rounded-l-none"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
                   </div>
+                  <p className="text-xs text-gray-400">
+                    Enter this as the "Server" in your streaming software.
+                  </p>
                 </div>
                 
                 {/* Stream Key Section */}
                 <div className="space-y-2">
                   <h3 className="text-md font-medium">Stream Key</h3>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex">
-                      <div className="relative flex-grow">
-                        <Input
-                          type={showKey ? "text" : "password"}
-                          value={STREAM_KEY}
-                          readOnly
-                          className="font-mono pr-10 bg-black/20 border-gray-700 rounded-r-none"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowKey(!showKey)}
-                          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                        >
-                          {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                      </div>
+                  <div className="flex">
+                    <div className="relative flex-grow">
+                      <Input
+                        type={showKey ? "text" : "password"}
+                        value={STREAM_KEY}
+                        readOnly
+                        className="font-mono pr-10 bg-black/20 border-gray-700 rounded-r-none"
+                      />
                       <Button
-                        onClick={() => copyToClipboard(STREAM_KEY, "Stream Key")}
-                        className="whitespace-nowrap rounded-l-none"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowKey(!showKey)}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
                       >
-                        <Copy className="h-4 w-4" />
+                        {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
-                    <p className="text-xs text-gray-400">
-                      Enter this as the "Stream Key" in your streaming software. Keep this private.
-                    </p>
+                    <Button
+                      onClick={() => copyToClipboard(STREAM_KEY, "Stream Key")}
+                      className="whitespace-nowrap rounded-l-none"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
                   </div>
+                  <p className="text-xs text-gray-400">
+                    Enter this as the "Stream Key" in your streaming software. Keep this private.
+                  </p>
                 </div>
               </div>
               

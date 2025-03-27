@@ -31,34 +31,56 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
     const progressText = `0% (0/${targetValue})`;
     
     return (
-      <Card className={`gaming-card p-4 flex gap-4 border-gray-700/30`}>
-        {/* Achievement Icon */}
-        <div className="relative">
-          <div className={`w-16 h-16 rounded-md flex items-center justify-center bg-gray-800/50`}>
-            {getAchievementIcon(name, category)}
-            <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
-              <Lock className="w-6 h-6 text-gray-400" />
+      <Card className={`gaming-card p-4 flex flex-col gap-4 border-gray-700/30`}>
+        <div className="flex gap-4">
+          {/* Achievement Icon */}
+          <div className="relative">
+            <div className={`w-16 h-16 rounded-md flex items-center justify-center bg-gray-800/50`}>
+              {getAchievementIcon(name, category)}
+              <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
+                <Lock className="w-6 h-6 text-gray-400" />
+              </div>
+            </div>
+          </div>
+          
+          {/* Achievement Details */}
+          <div className="flex-1">
+            <div className="flex justify-between items-start mb-1">
+              <h3 className="font-bold text-gray-300">{name}</h3>
+              <div className="bg-gray-800 px-2 py-1 rounded text-xs text-gray-300">{points} XP</div>
+            </div>
+            
+            <p className="text-sm text-gray-400 mb-2">{description}</p>
+            
+            {/* Progress Bar */}
+            <div className="space-y-1">
+              <Progress value={progressPercentage} className="h-2" />
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>{progressText}</span>
+                <span>{Math.round(progressPercentage)}%</span>
+              </div>
             </div>
           </div>
         </div>
         
-        {/* Achievement Details */}
-        <div className="flex-1">
-          <div className="flex justify-between items-start mb-1">
-            <h3 className="font-bold text-gray-300">{name}</h3>
-          </div>
-          
-          <p className="text-sm text-gray-400 mb-2">{description}</p>
-          
-          {/* Progress Bar */}
-          <div className="space-y-1">
-            <Progress value={progressPercentage} className="h-2" />
-            <div className="flex justify-between text-xs text-gray-400">
-              <span>{progressText}</span>
-              <span>{Math.round(progressPercentage)}%</span>
+        {showDetails && (
+          <div className="mt-2 pt-3 border-t border-gray-700/30">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-800/30 p-2 rounded">
+                <div className="text-xs text-gray-400 mb-1">Required Skill</div>
+                <div className="text-sm text-gray-200">{getSkillForAchievement(name)}</div>
+              </div>
+              <div className="bg-gray-800/30 p-2 rounded">
+                <div className="text-xs text-gray-400 mb-1">Difficulty</div>
+                <div className="text-sm text-gray-200">{getDifficultyForAchievement(name)}</div>
+              </div>
+            </div>
+            <div className="mt-3 bg-gray-800/30 p-2 rounded">
+              <div className="text-xs text-gray-400 mb-1">How to unlock</div>
+              <div className="text-sm text-gray-200">{description}</div>
             </div>
           </div>
-        </div>
+        )}
       </Card>
     );
   }
@@ -80,55 +102,64 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
     : `${Math.round(progressPercentage)}% (${currentValue}/${target_value})`;
   
   return (
-    <Card className={`gaming-card p-4 flex gap-4 ${currentValue >= target_value ? 'border-yellow-500/30' : 'border-gray-700/30'}`}>
-      {/* Achievement Icon */}
-      <div className="relative">
-        <div className={`w-16 h-16 rounded-md flex items-center justify-center ${
-          currentValue >= target_value ? 'bg-yellow-500/20' : 'bg-gray-800/50'
-        }`}>
-          {getAchievementIcon(name, category)}
-          {currentValue < target_value && (
-            <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
-              <Lock className="w-6 h-6 text-gray-400" />
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Achievement Details */}
-      <div className="flex-1">
-        <div className="flex justify-between items-start mb-1">
-          <h3 className={`font-bold ${currentValue >= target_value ? 'text-yellow-400' : 'text-gray-300'}`}>
-            {name}
-          </h3>
-          {currentValue >= target_value && (
-            <span className="text-xs text-yellow-500 font-semibold px-2 py-0.5 bg-yellow-500/10 rounded">
-              Earned
-            </span>
-          )}
-        </div>
-        
-        <p className="text-sm text-gray-400 mb-2">{description}</p>
-        
-        {/* Progress Bar */}
-        <div className="space-y-1">
-          <Progress value={progressPercentage} className="h-2" />
-          <div className="flex justify-between text-xs text-gray-400">
-            <span>{progressText}</span>
+    <Card className={`gaming-card p-4 flex flex-col gap-4 ${currentValue >= target_value ? 'border-yellow-500/30' : 'border-gray-700/30'}`}>
+      <div className="flex gap-4">
+        {/* Achievement Icon */}
+        <div className="relative">
+          <div className={`w-16 h-16 rounded-md flex items-center justify-center ${
+            currentValue >= target_value ? 'bg-yellow-500/20' : 'bg-gray-800/50'
+          }`}>
+            {getAchievementIcon(name, category)}
             {currentValue < target_value && (
-              <span>{Math.round(progressPercentage)}%</span>
+              <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
+                <Lock className="w-6 h-6 text-gray-400" />
+              </div>
             )}
           </div>
         </div>
         
-        {/* How to earn (shown only when details are expanded) */}
-        {showDetails && (
-          <div className="mt-3 pt-3 border-t border-gray-700">
-            <h4 className="text-sm font-semibold text-gray-300 mb-1">How to earn:</h4>
-            <p className="text-xs text-gray-400">This achievement can be earned by completing the following task: {name}</p>
+        {/* Achievement Details */}
+        <div className="flex-1">
+          <div className="flex justify-between items-start mb-1">
+            <h3 className={`font-bold ${currentValue >= target_value ? 'text-yellow-400' : 'text-gray-300'}`}>
+              {name}
+            </h3>
+            <div className={`px-2 py-1 rounded text-xs ${currentValue >= target_value ? 'bg-yellow-500/20 text-yellow-300' : 'bg-gray-800 text-gray-300'}`}>
+              {points} XP
+            </div>
           </div>
-        )}
+          
+          <p className="text-sm text-gray-400 mb-2">{description}</p>
+          
+          {/* Progress Bar */}
+          <div className="space-y-1">
+            <Progress value={progressPercentage} className={`h-2 ${currentValue >= target_value ? 'bg-yellow-500/20' : ''}`} />
+            <div className="flex justify-between text-xs text-gray-400">
+              <span>{progressText}</span>
+              <span>{Math.round(progressPercentage)}%</span>
+            </div>
+          </div>
+        </div>
       </div>
+      
+      {showDetails && (
+        <div className="mt-2 pt-3 border-t border-gray-700/30">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gray-800/30 p-2 rounded">
+              <div className="text-xs text-gray-400 mb-1">Required Skill</div>
+              <div className="text-sm text-gray-200">{getSkillForAchievement(name)}</div>
+            </div>
+            <div className="bg-gray-800/30 p-2 rounded">
+              <div className="text-xs text-gray-400 mb-1">Difficulty</div>
+              <div className="text-sm text-gray-200">{getDifficultyForAchievement(name)}</div>
+            </div>
+          </div>
+          <div className="mt-3 bg-gray-800/30 p-2 rounded">
+            <div className="text-xs text-gray-400 mb-1">How to unlock</div>
+            <div className="text-sm text-gray-200">{description}</div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 };
@@ -185,6 +216,99 @@ const getAchievementIcon = (name: string, category?: string) => {
   } else {
     return <Award className={iconClassName} />;
   }
+};
+
+// Helper function to get the skill associated with each achievement
+const getSkillForAchievement = (name: string): string => {
+  const skillMap: {[key: string]: string} = {
+    // Content creation skills
+    'First Taste of Gold': 'Content Creation',
+    'Crowd Favorite': 'Content Creation',
+    'Viral Sensation': 'Content Creation',
+    'Content King': 'Content Creation',
+    'Clipt Icon': 'Content Creation',
+    
+    // Streaming skills
+    'First Supporter': 'Streaming',
+    'Small but Mighty': 'Streaming',
+    'Streaming Star': 'Streaming',
+    'Big League Streamer': 'Streaming',
+    'Streaming Legend': 'Streaming',
+    
+    // Community skills
+    'First Follower': 'Community Building',
+    'Rising Star': 'Community Building',
+    'Trending Now': 'Community Building',
+    'Influencer Status': 'Community Building',
+    'Clipt Famous': 'Community Building',
+    'Elite Creator': 'Community Building',
+    
+    // Engagement skills
+    'Hype Squad': 'Engagement',
+    'Super Supporter': 'Engagement',
+    'Engagement Master': 'Engagement',
+    'Conversation Starter': 'Engagement',
+    'Community Builder': 'Engagement',
+    
+    // Leaderboard skills
+    'Breaking In': 'Consistency',
+    'Back-to-Back': 'Consistency',
+    'Hot Streak': 'Consistency',
+    'Unstoppable': 'Consistency',
+    'Clipt Hall of Fame': 'Consistency',
+    
+    // Default
+    'default': 'General Skills'
+  };
+  
+  return skillMap[name] || skillMap['default'];
+};
+
+// Helper function to get the difficulty level for each achievement
+const getDifficultyForAchievement = (name: string): string => {
+  const difficultyMap: {[key: string]: string} = {
+    // Easy achievements
+    'First Taste of Gold': 'Easy',
+    'First Follower': 'Easy',
+    'First Supporter': 'Easy',
+    'Breaking In': 'Easy',
+    'Hype Squad': 'Easy',
+    'Complete 4 Daily Quests': 'Easy',
+    'Earn Your Way': 'Easy',
+    
+    // Medium achievements
+    'Crowd Favorite': 'Medium',
+    'Rising Star': 'Medium',
+    'Small but Mighty': 'Medium',
+    'Back-to-Back': 'Medium',
+    'Super Supporter': 'Medium',
+    'Trending Now': 'Medium',
+    
+    // Hard achievements
+    'Viral Sensation': 'Hard',
+    'Influencer Status': 'Hard',
+    'Streaming Star': 'Hard',
+    'Hot Streak': 'Hard',
+    'Engagement Master': 'Hard',
+    
+    // Very Hard achievements
+    'Content King': 'Very Hard',
+    'Clipt Famous': 'Very Hard',
+    'Big League Streamer': 'Very Hard',
+    'Unstoppable': 'Very Hard',
+    'Community Builder': 'Very Hard',
+    
+    // Legendary achievements
+    'Clipt Icon': 'Legendary',
+    'Elite Creator': 'Legendary',
+    'Streaming Legend': 'Legendary',
+    'Clipt Hall of Fame': 'Legendary',
+    
+    // Default
+    'default': 'Medium'
+  };
+  
+  return difficultyMap[name] || difficultyMap['default'];
 };
 
 export default AchievementItem;
