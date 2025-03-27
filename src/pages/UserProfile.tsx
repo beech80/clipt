@@ -431,11 +431,11 @@ const UserProfile = () => {
     navigate(`/post/${postId}`);
   };
 
-  // Render posts grid in the original style
+  // Render posts grid in Madden 95 retro gaming style
   const renderPostsGrid = (postsToRender: Post[]) => {
     if (!postsToRender || postsToRender.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-300">
+        <div className="flex flex-col items-center justify-center py-16 text-gray-300 bg-[#001133] rounded-md border-2 border-[#4488cc] my-4">
           <FileText className="h-16 w-16 mb-6 text-gray-300 opacity-50" />
           
           {activeTab === 'posts' && (
@@ -472,7 +472,7 @@ const UserProfile = () => {
     console.log("Rendering posts grid with posts:", postsToRender);
 
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-1 bg-[#001133]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-3 bg-[#001133] rounded-md border-2 border-[#4488cc] my-4">
         {postsToRender.map(post => {
           if (!post || !post.id) return null;
           
@@ -511,10 +511,10 @@ const UserProfile = () => {
             <div 
               key={post.id}
               onClick={() => handlePostClick(post.id)}
-              className="aspect-square overflow-hidden cursor-pointer relative border border-[#003366] p-1 hover:border-[#4488cc]"
+              className="bg-[#002255] rounded-md overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 border-2 border-[#4488cc]"
             >
-              {mediaUrl ? (
-                <div className="w-full h-full relative">
+              <div className="aspect-video overflow-hidden relative">
+                {mediaUrl ? (
                   <img 
                     src={mediaUrl} 
                     alt={post.content?.substring(0, 20) || "Post"} 
@@ -525,20 +525,44 @@ const UserProfile = () => {
                       target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23001133'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%234488cc' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
                     }}
                   />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-1 text-white text-xs truncate">
-                    {postContent.substring(0, 24) || "Post"}
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-[#001122] p-4">
+                    <FileText className="h-12 w-12 text-[#4488cc] mb-2" />
+                    <div className="text-white text-center">Text Post</div>
+                  </div>
+                )}
+                
+                {/* Post type indicator */}
+                <div className="absolute top-2 right-2 bg-[#000A20] bg-opacity-90 px-2 py-1 rounded text-xs text-white border border-[#4488cc]">
+                  {post.post_type === 'clip' ? 'CLIP' : 'POST'}
+                </div>
+              </div>
+
+              <div className="p-3 bg-gradient-to-b from-[#002255] to-[#001133]">
+                <div className="text-white font-semibold mb-2 line-clamp-2 text-sm">
+                  {postContent}
+                </div>
+                
+                <div className="flex justify-between items-center mt-2 border-t border-[#4488cc] pt-2">
+                  <div className="flex space-x-3">
+                    <div className="flex items-center space-x-1 text-gray-400">
+                      <Heart className={`h-4 w-4 ${post.liked_by_current_user ? 'text-[#FF6699]' : 'text-gray-400'}`} />
+                      <span className="text-xs">{post.likes_count || 0}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-gray-400">
+                      <MessageSquare className="h-4 w-4" />
+                      <span className="text-xs">{post.comments_count || 0}</span>
+                    </div>
+                    <div className="flex items-center space-x-1 text-gray-400">
+                      <Trophy className="h-4 w-4 text-[#FFCC00]" />
+                      <span className="text-xs">{post.trophy_count || 0}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-gray-400">
+                    {post.created_at ? format(new Date(post.created_at), 'MMM d') : ''}
                   </div>
                 </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-[#0a1a40] p-2">
-                  <div className="text-white text-xs text-center overflow-hidden line-clamp-4">
-                    {postContent}
-                  </div>
-                </div>
-              )}
-              <div className="absolute top-1 right-1 flex items-center space-x-1 bg-black bg-opacity-60 px-1 rounded-sm">
-                <Heart className="h-3 w-3 text-white" />
-                <span className="text-white text-[10px]">{post.likes_count || 0}</span>
               </div>
             </div>
           );
