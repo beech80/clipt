@@ -189,179 +189,119 @@ const Post = () => {
         type="article"
         structuredData={structuredData}
       />
-      <div className="min-h-screen bg-black text-white">
-        {/* Header */}
-        <div className="fixed top-0 left-0 right-0 bg-black border-b border-gray-800 z-10">
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center">
-              <BackButton />
-              <div className="ml-4 font-semibold text-lg">{post.profiles?.username || "User"}</div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Main content with padding for header */}
-        <div className="pt-14 pb-20">
-          {/* Current post */}
-          <div className="border-b border-gray-800">
-            {/* User info header */}
-            <div className="px-4 py-3 flex items-center">
-              <div className="w-8 h-8 rounded-full overflow-hidden mr-3">
-                <img 
-                  src={post.profiles?.avatar_url || '/placeholder-avatar.png'} 
-                  alt={post.profiles?.username || "User"}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder-avatar.png';
-                  }}
-                />
-              </div>
-              <div className="font-medium text-sm">{post.profiles?.username || "User"}</div>
-              <div className="ml-auto">
-                <button className="p-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            {/* Post media/content */}
-            <div className="aspect-square bg-gray-900 flex items-center justify-center overflow-hidden">
-              {post.video_url ? (
-                <video 
-                  src={post.video_url} 
-                  className="w-full h-full object-contain"
-                  controls
-                  poster={post.image_url || undefined}
-                />
-              ) : post.image_url ? (
-                <img 
-                  src={post.image_url} 
-                  alt={post.content || "Post"} 
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23252525'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-900 p-4">
-                  <p className="text-center text-gray-300">{post.content || "No content"}</p>
-                </div>
-              )}
-            </div>
-            
-            {/* Post actions */}
-            <div className="px-4 py-2 flex items-center">
-              <button className="p-1 mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </button>
-              <button className="p-1 mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </button>
-              <button className="p-1 mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
-              <button className="p-1 ml-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-              </button>
-            </div>
-            
-            {/* Likes count */}
-            <div className="px-4 py-1">
-              <p className="font-semibold text-sm">{post.likes_count || 0} likes</p>
-            </div>
-            
-            {/* Caption */}
-            <div className="px-4 py-1">
-              <p className="text-sm">
-                <span className="font-semibold mr-2">{post.profiles?.username || "User"}</span>
-                {post.content || "No caption"}
-              </p>
-            </div>
-            
-            {/* Comments */}
-            <div className="px-4 py-2">
-              <CommentList 
-                postId={id || ''} 
-                key={`comments-${id}`}
-                hideForm={false}
-              />
-            </div>
-          </div>
+      <div className="min-h-screen bg-[#131626]">
+        <div className="container mx-auto max-w-2xl px-4 py-6">
+          <BackButton />
           
-          {/* More posts section title */}
-          <div className="px-4 py-4 border-b border-gray-800">
-            <p className="text-sm text-gray-400 uppercase font-medium">More from {post.profiles?.username || "this user"}</p>
-          </div>
-          
-          {/* More posts grid */}
-          <div className="grid grid-cols-3 gap-[1px]">
-            {isLoadingUserPosts ? (
-              // Loading skeletons
-              Array.from({ length: 9 }).map((_, i) => (
-                <div key={`skeleton-${i}`} className="aspect-square bg-gray-900">
-                  <Skeleton className="w-full h-full" />
-                </div>
-              ))
-            ) : (
-              userPosts
-                .filter(p => p.id !== id) // Filter out the current post
-                .map(userPost => (
-                  <div 
-                    key={userPost.id} 
-                    className="aspect-square bg-gray-900 relative cursor-pointer"
-                    onClick={() => navigate(`/post/${userPost.id}`)}
-                  >
-                    {userPost.video_url ? (
-                      <div className="w-full h-full relative">
-                        <img 
-                          src={userPost.image_url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23252525'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3EVideo%3C/text%3E%3C/svg%3E"} 
-                          alt="Video thumbnail"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 right-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="white">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                      </div>
-                    ) : userPost.image_url ? (
+          {/* User's posts feed */}
+          <div className="space-y-6 mt-4">
+            {/* Show all user posts in a vertical feed */}
+            {[post, ...userPosts.filter(p => p.id !== id)].map(userPost => (
+              <div 
+                key={userPost.id} 
+                className="gaming-card border border-[#2e4482]/30 rounded-lg overflow-hidden bg-[#1a1f30] shadow-md" 
+                data-post-id={userPost.id}
+              >
+                <div className="p-4">
+                  {/* User info header */}
+                  <div className="flex items-center mb-4">
+                    <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-indigo-500 mr-3">
                       <img 
-                        src={userPost.image_url} 
-                        alt={userPost.content || "Post"} 
-                        className="w-full h-full object-cover"
+                        src={userPost.profiles?.avatar_url || '/placeholder-avatar.png'}
+                        alt={userPost.profiles?.username || 'User'}
+                        className="h-full w-full object-cover"
                         onError={(e) => {
-                          const target =e.target as HTMLImageElement;
-                          target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23252525'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder-avatar.png';
                         }}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-900 p-2">
-                        <p className="text-xs text-center text-gray-300 line-clamp-3">{userPost.content || "No content"}</p>
-                      </div>
-                    )}
+                    </div>
+                    <div>
+                      <div className="font-bold text-white">{userPost.profiles?.username || 'User'}</div>
+                    </div>
                   </div>
-                ))
+                  
+                  {/* Post content */}
+                  <PostItem 
+                    post={userPost} 
+                    data-post-id={userPost.id} 
+                  />
+                </div>
+                
+                {/* Interactive elements */}
+                <div className="px-4 pb-2 flex items-center space-x-4">
+                  <button className="flex items-center space-x-1 text-red-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                    <span className="text-white">{userPost.likes_count || 0}</span>
+                  </button>
+                  
+                  <button className="flex items-center space-x-1 text-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span className="text-white">{userPost.comments_count || 0}</span>
+                  </button>
+                  
+                  <button className="flex items-center space-x-1 text-yellow-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2L8.52 8.15l-7.15.62 5.42 4.8L4.99 21 12 17.27 19.01 21l-1.8-7.43 5.42-4.8-7.15-.62L12 2z" />
+                    </svg>
+                    <span className="text-white">1</span>
+                  </button>
+                  
+                  <button className="flex items-center space-x-1 text-purple-500 ml-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    <span className="text-white">Share</span>
+                  </button>
+                </div>
+                
+                {/* Caption */}
+                <div className="px-4 pb-4">
+                  <div className="flex items-start">
+                    <span className="font-bold text-white mr-2">{userPost.profiles?.username || 'User'}</span>
+                    <span className="text-gray-300">{userPost.content || "Post test"}</span>
+                  </div>
+                </div>
+                
+                {/* Comments section - only show for the current post */}
+                {userPost.id === id && (
+                  <div className="px-4 pb-4" ref={userPost.id === id ? commentsRef : undefined} id={userPost.id === id ? "comments" : undefined}>
+                    <CommentList 
+                      postId={id || ''} 
+                      key={`comments-${id}`}
+                      hideForm={false}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {isLoadingUserPosts && (
+              <div className="space-y-4 mt-6">
+                {[1, 2, 3].map(i => (
+                  <div key={`skeleton-${i}`} className="gaming-card border border-[#2e4482]/30 rounded-lg overflow-hidden bg-[#1a1f30] shadow-md p-4">
+                    <div className="flex items-center mb-4">
+                      <Skeleton className="h-10 w-10 rounded-full mr-3" />
+                      <Skeleton className="h-5 w-32" />
+                    </div>
+                    <Skeleton className="h-[300px] w-full mb-4" />
+                    <Skeleton className="h-6 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {!isLoadingUserPosts && userPosts.filter(p => p.id !== id).length === 0 && (
+              <div className="text-center py-8 text-gray-400">
+                No other posts from this user
+              </div>
             )}
           </div>
-          
-          {!isLoadingUserPosts && userPosts.filter(p => p.id !== id).length === 0 && (
-            <div className="text-center py-8 text-gray-400">
-              No other posts from this user
-            </div>
-          )}
         </div>
       </div>
     </>
