@@ -1,16 +1,18 @@
-import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import PostItem from "@/components/PostItem";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { Post as PostType } from "@/types/post";
 import { SEO } from "@/components/SEO";
-import { BackButton } from "@/components/ui/back-button";
+import PostItem from "@/components/PostItem";
 import { Calendar, MessageSquare, Share2, User, Grid, ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
+import { Post as PostType } from "@/types/post";
+import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import { CommentList } from "@/components/post/CommentList";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { createComment } from "@/services/commentService";
+import { BackButton } from "@/components/ui/back-button";
 
 const Post = () => {
   const { id } = useParams();
@@ -19,6 +21,10 @@ const Post = () => {
   const [userPosts, setUserPosts] = useState<PostType[]>([]);
   const [isLoadingUserPosts, setIsLoadingUserPosts] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showComments, setShowComments] = useState(false);
+  const commentsRef = useRef<HTMLDivElement>(null);
+  const [commentText, setCommentText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['post', id],
@@ -79,7 +85,7 @@ const Post = () => {
           }
           
           console.log('User posts loaded:', userPostsData?.length);
-          setUserPosts(userPostsData || []);
+          setUserPosts(userPostsData as unknown as PostType[]);
         } catch (err) {
           console.error('Error in fetchUserPosts:', err);
         } finally {
@@ -174,9 +180,6 @@ const Post = () => {
     day: 'numeric'
   });
 
-  const [showComments, setShowComments] = useState(false);
-  const commentsRef = useRef<HTMLDivElement>(null);
-
   // Check if URL has #comments hash on load
   useEffect(() => {
     if (location.hash === '#comments') {
@@ -216,7 +219,38 @@ const Post = () => {
     }
     
     // Fallback to other potential fields
-    return post.image_url || post.video_url || post.thumbnail_url || null;
+    return post.image_url || post.video_url || (post as any).thumbnail_url || null;
+  };
+
+  const submitComment = async () => {
+    if (!commentText.trim()) return;
+    setIsSubmittingComment(true);
+    try {
+      const { user } = useAuth();
+      if (!user) {
+        toast.error("You must be logged in to comment");
+        return;
+      }
+      
+      await createComment({
+        post_id: id || '',
+        user_id: user.id,
+        content: commentText,
+      });
+      
+      toast.success("Comment added successfully");
+      setCommentText('');
+      
+      // Refresh comments data
+      const queryClient = useQueryClient();
+      queryClient.invalidateQueries({ queryKey: ['comments', id] });
+      queryClient.invalidateQueries({ queryKey: ['comments-count', id] });
+    } catch (err) {
+      console.error('Error submitting comment:', err);
+      toast.error("Failed to add comment");
+    } finally {
+      setIsSubmittingComment(false);
+    }
   };
 
   return (
@@ -261,11 +295,40 @@ const Post = () => {
             {/* Comments section */}
             <div ref={commentsRef} id="comments" className="mt-6 px-4 pb-4" data-post-id={id}>
               {showComments ? (
-                <CommentList 
-                  postId={id || ''} 
-                  onBack={() => setShowComments(false)}
-                  key={`comments-${id}`}
-                />
+                <>
+                  {/* Add Comment form */}
+                  <div className="mb-4 border-b border-[#2e4482]/30 pb-4">
+                    <h3 className="font-semibold text-white mb-2">Add Comment</h3>
+                    <div className="flex gap-2">
+                      <textarea 
+                        className="flex-1 p-2 bg-[#1A1F2C] border border-[#2e4482]/50 rounded-lg text-white resize-none focus:outline-none focus:border-blue-500" 
+                        placeholder="Write a comment..."
+                        rows={2}
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                      />
+                      <button 
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!commentText.trim() || isSubmittingComment}
+                        onClick={submitComment}
+                      >
+                        {isSubmittingComment ? (
+                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        ) : (
+                          <span>Post</span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <CommentList 
+                    postId={id || ''} 
+                    onBack={() => setShowComments(false)}
+                    key={`comments-${id}`}
+                  />
+                </>
               ) : (
                 <div className="bg-[#1A1F2C] rounded-lg p-4 text-center cursor-pointer border border-[#2e4482]/30" onClick={() => setShowComments(true)}>
                   <MessageSquare className="h-6 w-6 mx-auto mb-2 text-blue-400" />
@@ -273,111 +336,111 @@ const Post = () => {
                 </div>
               )}
             </div>
-          </div>
-          
-          {/* More from this user section - in Madden NFL 95 style */}
-          {userPosts.length > 0 && (
-            <div className="mt-12 mb-6">
-              <div className="bg-[#1a237e] border border-[#2e4482] rounded-lg overflow-hidden">
-                {/* User banner */}
-                <div className="p-4 pb-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="h-10 w-10 border-2 border-indigo-500">
-                        <AvatarImage src={post.profiles?.avatar_url || ''} alt={post.profiles?.username || 'User'} />
-                        <AvatarFallback className="bg-[#0d1b3c] text-white">
-                          {post.profiles?.username?.substring(0, 2).toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="text-lg font-bold text-white">More from {post.profiles?.display_name || post.profiles?.username || 'this user'}</h3>
-                        <div 
-                          className="text-indigo-300 hover:text-white text-sm cursor-pointer flex items-center" 
-                          onClick={() => navigate(`/profile/${post.user_id}`)}
-                        >
-                          View all posts <ArrowUpRight className="h-3 w-3 ml-1" />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Scroll controls */}
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={scrollLeft}
-                        className="p-2 rounded bg-[#0d1b3c] text-white hover:bg-indigo-800 transition"
-                        aria-label="Scroll left"
-                      >
-                        <ChevronLeft className="h-5 w-5" />
-                      </button>
-                      <button 
-                        onClick={scrollRight}
-                        className="p-2 rounded bg-[#0d1b3c] text-white hover:bg-indigo-800 transition"
-                        aria-label="Scroll right"
-                      >
-                        <ChevronRight className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Scrollable posts */}
-                <div 
-                  ref={scrollContainerRef}
-                  className="flex overflow-x-auto py-4 px-4 gap-2 hide-scrollbar scroll-smooth"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                  {isLoadingUserPosts ? (
-                    // Loading skeletons
-                    Array.from({ length: 6 }).map((_, i) => (
-                      <div key={`skeleton-${i}`} className="relative flex-shrink-0 w-40 h-40 bg-[#0d1b3c]/50 rounded">
-                        <Skeleton className="w-full h-full" />
-                      </div>
-                    ))
-                  ) : userPosts.length > 0 ? (
-                    // User posts
-                    userPosts.map(userPost => {
-                      const mediaUrl = getMediaUrl(userPost);
-                      return (
-                        <div
-                          key={userPost.id}
-                          onClick={() => handleUserPostClick(userPost.id)}
-                          className="relative flex-shrink-0 w-40 h-40 overflow-hidden rounded cursor-pointer border border-[#2e4482]/30 hover:border-indigo-400 transition group"
-                        >
-                          {mediaUrl ? (
-                            <img
-                              src={mediaUrl}
-                              alt={userPost.content?.substring(0, 20) || "Post"}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a237e'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%236366f1' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center bg-[#0d1b3c] p-2">
-                              <div className="text-white text-xs text-center overflow-hidden line-clamp-3">
-                                {userPost.content || "No content"}
-                              </div>
-                            </div>
-                          )}
-                          {/* Post info overlay */}
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                            <div className="text-xs text-white line-clamp-1">
-                              {userPost.content?.substring(0, 30) || "Post"}
-                            </div>
+            
+            {/* More from this user section - in Madden NFL 95 style */}
+            {userPosts.length > 0 && (
+              <div className="mt-12 mb-6">
+                <div className="bg-[#1a237e] border border-[#2e4482] rounded-lg overflow-hidden">
+                  {/* User banner */}
+                  <div className="p-4 pb-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-10 w-10 border-2 border-indigo-500">
+                          <AvatarImage src={post.profiles?.avatar_url || ''} alt={post.profiles?.username || 'User'} />
+                          <AvatarFallback className="bg-[#0d1b3c] text-white">
+                            {post.profiles?.username?.substring(0, 2).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">More from {post.profiles?.display_name || post.profiles?.username || 'this user'}</h3>
+                          <div 
+                            className="text-indigo-300 hover:text-white text-sm cursor-pointer flex items-center" 
+                            onClick={() => navigate(`/profile/${post.user_id}`)}
+                          >
+                            View all posts <ArrowUpRight className="h-3 w-3 ml-1" />
                           </div>
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div className="w-full h-40 flex items-center justify-center text-indigo-300">
-                      No other posts from this user
+                      </div>
+                      
+                      {/* Scroll controls */}
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={scrollLeft}
+                          className="p-2 rounded bg-[#0d1b3c] text-white hover:bg-indigo-800 transition"
+                          aria-label="Scroll left"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <button 
+                          onClick={scrollRight}
+                          className="p-2 rounded bg-[#0d1b3c] text-white hover:bg-indigo-800 transition"
+                          aria-label="Scroll right"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                      </div>
                     </div>
-                  )}
+                  </div>
+                  
+                  {/* Scrollable posts */}
+                  <div 
+                    ref={scrollContainerRef}
+                    className="flex overflow-x-auto py-4 px-4 gap-2 hide-scrollbar scroll-smooth"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    {isLoadingUserPosts ? (
+                      // Loading skeletons
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <div key={`skeleton-${i}`} className="relative flex-shrink-0 w-40 h-40 bg-[#0d1b3c]/50 rounded">
+                          <Skeleton className="w-full h-full" />
+                        </div>
+                      ))
+                    ) : userPosts.length > 0 ? (
+                      // User posts
+                      userPosts.map(userPost => {
+                        const mediaUrl = getMediaUrl(userPost);
+                        return (
+                          <div
+                            key={userPost.id}
+                            onClick={() => handleUserPostClick(userPost.id)}
+                            className="relative flex-shrink-0 w-40 h-40 overflow-hidden rounded cursor-pointer border border-[#2e4482]/30 hover:border-indigo-400 transition group"
+                          >
+                            {mediaUrl ? (
+                              <img
+                                src={mediaUrl}
+                                alt={userPost.content?.substring(0, 20) || "Post"}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a237e'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%236366f1' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-[#0d1b3c] p-2">
+                                <div className="text-white text-xs text-center overflow-hidden line-clamp-3">
+                                  {userPost.content || "No content"}
+                                </div>
+                              </div>
+                            )}
+                            {/* Post info overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                              <div className="text-xs text-white line-clamp-1">
+                                {userPost.content?.substring(0, 30) || "Post"}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="w-full h-40 flex items-center justify-center text-indigo-300">
+                        No other posts from this user
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </>
