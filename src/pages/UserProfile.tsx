@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
-import { Loader2, Settings, User, Grid, ListVideo, Trophy, Video, Heart, MessageSquare, FileText, RefreshCw, Share2, MessageCircle, Send } from 'lucide-react';
+import { Loader2, Settings, User, Grid, ListVideo, Trophy, Video, Heart, MessageSquare, FileText, RefreshCw, Share2, MessageCircle, Send, Bookmark } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -75,6 +75,7 @@ const UserProfile = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [clips, setClips] = useState<Post[]>([]);
+  const [savedPosts, setSavedPosts] = useState<Post[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [activeTab, setActiveTab] = useState('posts');
   const [loading, setLoading] = useState(true);
@@ -274,6 +275,43 @@ const UserProfile = () => {
             }
           }
 
+          // Fetch saved posts if viewing own profile
+          if (user && (user.id === userId)) {
+            try {
+              // Get saved posts IDs from the bookmarks table
+              const { data: bookmarksData, error: bookmarksError } = await supabase
+                .from('bookmarks')
+                .select('post_id')
+                .eq('user_id', user.id);
+                
+              if (!bookmarksError && bookmarksData && bookmarksData.length > 0) {
+                const savedPostIds = bookmarksData.map(bookmark => bookmark.post_id);
+                
+                // Fetch the actual posts
+                const { data: savedPostsData, error: savedPostsError } = await supabase
+                  .from('posts')
+                  .select('*, profiles(username, avatar_url, display_name)')
+                  .in('id', savedPostIds)
+                  .order('created_at', { ascending: false });
+                  
+                if (!savedPostsError && savedPostsData) {
+                  const processedSavedPosts = savedPostsData.map(processPost);
+                  setSavedPosts(processedSavedPosts);
+                  console.log(`Loaded ${processedSavedPosts.length} saved posts`);
+                } else {
+                  console.error('Error fetching saved posts:', savedPostsError);
+                  setSavedPosts([]);
+                }
+              } else {
+                console.log('No bookmarks found or error:', bookmarksError);
+                setSavedPosts([]);
+              }
+            } catch (error) {
+              console.error('Error processing saved posts:', error);
+              setSavedPosts([]);
+            }
+          }
+
           // Load user achievements
           try {
             const userAchievements = await achievementService.getUserAchievements(userId);
@@ -395,17 +433,36 @@ const UserProfile = () => {
   const renderPostsGrid = (postsToRender: Post[]) => {
     if (!postsToRender || postsToRender.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-          <FileText className="h-12 w-12 mb-4 text-gray-300" />
-          <p>No posts available. This could be because the user hasn't created any posts yet.</p>
+        <div className="flex flex-col items-center justify-center py-16 text-gray-300">
+          <FileText className="h-16 w-16 mb-6 text-gray-300 opacity-50" />
           
-          {/* Debug section to help identify issues */}
-          <div className="mt-4 p-2 bg-gray-800 rounded text-xs text-left w-full max-w-md">
-            <p>Debug info:</p>
-            <p>User ID: {profileData?.id || 'Not available'}</p>
-            <p>Total posts found: {posts.length + clips.length}</p>
-            <p>Current tab: {activeTab}</p>
-          </div>
+          {activeTab === 'posts' && (
+            <div className="text-center max-w-md">
+              <p className="text-xl font-semibold mb-2">This user hasn't posted anything yet</p>
+              <p className="text-gray-400">When they share posts, you'll see them here.</p>
+            </div>
+          )}
+          
+          {activeTab === 'clips' && (
+            <div className="text-center max-w-md">
+              <p className="text-xl font-semibold mb-2">No clips available</p>
+              <p className="text-gray-400">This user hasn't created any video clips yet.</p>
+            </div>
+          )}
+          
+          {activeTab === 'saved' && (
+            <div className="text-center max-w-md">
+              <p className="text-xl font-semibold mb-2">No saved content</p>
+              <p className="text-gray-400">When you save posts and clips from others, they'll appear here.</p>
+            </div>
+          )}
+          
+          {activeTab === 'achievements' && (
+            <div className="text-center max-w-md">
+              <p className="text-xl font-semibold mb-2">No achievements yet</p>
+              <p className="text-gray-400">This user hasn't earned any achievements.</p>
+            </div>
+          )}
         </div>
       );
     }
@@ -496,12 +553,28 @@ const UserProfile = () => {
     return renderPostsGrid(clips);
   };
 
+  const renderSavedTab = () => {
+    // Only show saved posts if viewing own profile
+    if (user && profileData && user.id !== profileData.id) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+          <FileText className="h-12 w-12 mb-4 text-gray-300" />
+          <p>Saved posts are only visible on your own profile</p>
+        </div>
+      );
+    }
+    
+    return renderPostsGrid(savedPosts);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'posts':
         return renderPostsTab();
       case 'clips':
         return renderClipsTab();
+      case 'saved':
+        return renderSavedTab();
       case 'achievements':
         return (
           <div className="p-4">
@@ -715,7 +788,7 @@ const UserProfile = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex mb-6 border-b border-white/10">
+      <div className="flex mb-6 border-b border-white/10 overflow-x-auto">
         <button
           className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${
             activeTab === 'posts'
@@ -737,6 +810,17 @@ const UserProfile = () => {
         >
           <ListVideo className="h-4 w-4" />
           Clipts
+        </button>
+        <button
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${
+            activeTab === 'saved'
+              ? 'text-purple-400 border-b-2 border-purple-400'
+              : 'text-gray-400 hover:text-gray-200'
+          }`}
+          onClick={() => setActiveTab('saved')}
+        >
+          <Bookmark className="h-4 w-4" />
+          Saved
         </button>
         <button
           className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${
