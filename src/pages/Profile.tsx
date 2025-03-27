@@ -1006,8 +1006,8 @@ const Profile = () => {
               className={`flex flex-col items-center ${activeTab === 'bookmarks' ? 'text-purple-400 border-b-2 border-purple-400 -mb-3 pb-1' : 'text-gray-400'}`}
               onClick={() => setActiveTab('bookmarks')}
             >
-              <Bookmark className="w-5 h-5 mb-1" />
-              <span className="text-xs">Saved</span>
+              <Bookmark className="w-6 h-6 mb-1" strokeWidth={2.5} />
+              <span className="text-xs font-medium">Saved</span>
             </button>
           </div>
         </div>
@@ -1074,7 +1074,7 @@ const Profile = () => {
                         <img 
                           src={post.image_url} 
                           alt={post.content || 'Post content'} 
-                          className="max-h-full max-w-full"
+                          className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.src = 'https://placehold.co/400x400/121212/303030?text=Image';

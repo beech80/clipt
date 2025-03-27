@@ -183,8 +183,27 @@ export default function Streaming() {
                 <StreamDashboard />
               </div>
               
-              <div className="mt-6">
-                <StreamChat />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+                <div className="lg:col-span-2">
+                  <StreamChat streamId={""} isLive={false} />
+                </div>
+                <div className="lg:col-span-1 bg-black/20 rounded-md p-4">
+                  <h3 className="text-lg font-medium mb-4">Stream Info</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-400">Status</p>
+                      <p className="text-md font-medium">Offline</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Viewers</p>
+                      <p className="text-md font-medium">0</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Duration</p>
+                      <p className="text-md font-medium">00:00:00</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
