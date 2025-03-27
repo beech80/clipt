@@ -43,7 +43,7 @@ const Profile = () => {
   const [savedVideos, setSavedVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'posts' | 'clips' | 'trophies'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'clips' | 'trophies' | 'bookmarks'>('posts');
   const [stats, setStats] = useState<ProfileStats>({
     followers: 0,
     following: 0,
@@ -1002,6 +1002,13 @@ const Profile = () => {
               <Trophy className="w-5 h-5 mb-1" />
               <span className="text-xs">Trophies</span>
             </button>
+            <button 
+              className={`flex flex-col items-center ${activeTab === 'bookmarks' ? 'text-purple-400 border-b-2 border-purple-400 -mb-3 pb-1' : 'text-gray-400'}`}
+              onClick={() => setActiveTab('bookmarks')}
+            >
+              <Bookmark className="w-5 h-5 mb-1" />
+              <span className="text-xs">Saved</span>
+            </button>
           </div>
         </div>
         {activeTab === 'posts' ? (
@@ -1070,12 +1077,13 @@ const Profile = () => {
                           className="max-h-full max-w-full"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23252525'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+                            target.src = 'https://placehold.co/400x400/121212/303030?text=Image';
                           }}
                         />
                       ) : (
-                        <div className="p-4 text-center text-gray-400">
-                          This is a detailed view of post ID: {post.id}
+                        <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center p-3">
+                          <FileText className="w-6 h-6 mb-2 text-gaming-400" />
+                          <p className="text-xs text-center text-gaming-300 line-clamp-3">{post.title || post.content || 'Text post'}</p>
                         </div>
                       )}
                     </div>
@@ -1176,6 +1184,51 @@ const Profile = () => {
                     </Button>
                   </div>
                 )}
+              </Card>
+            )}
+          </div>
+        ) : activeTab === 'bookmarks' ? (
+          <div className="grid grid-cols-3 gap-2">
+            {savedVideos.length > 0 ? (
+              savedVideos.map(post => (
+                <div 
+                  key={post.id} 
+                  className="aspect-square overflow-hidden rounded-md relative hover:opacity-90 transition-opacity cursor-pointer"
+                  onClick={() => navigate(`/post/${post.id}`)}
+                >
+                  {post.video_url ? (
+                    <div className="relative w-full h-full bg-gaming-900">
+                      {/* Video thumbnail with play icon */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Film className="w-8 h-8 text-white opacity-75" />
+                      </div>
+                      <div className="absolute top-2 right-2 bg-black/60 p-1 rounded-full">
+                        <Film className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                  ) : post.image_url ? (
+                    <img 
+                      src={post.image_url} 
+                      alt={post.content || 'Post image'} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://placehold.co/400x400/121212/303030?text=Image';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center p-3">
+                      <FileText className="w-6 h-6 mb-2 text-gaming-400" />
+                      <p className="text-xs text-center text-gaming-300 line-clamp-3">{post.title || post.content || 'Text post'}</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <Card className="gaming-card p-8 flex flex-col items-center justify-center text-center h-60 col-span-3">
+                <Bookmark className="w-12 h-12 text-gaming-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gaming-200 mb-2">No Saved Posts</h3>
+                <p className="text-gaming-400">You haven't saved any posts yet</p>
               </Card>
             )}
           </div>
