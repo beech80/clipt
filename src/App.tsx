@@ -16,6 +16,7 @@ import { ensureTablesExist } from '@/lib/supabase';
 import '@/index.css';
 import '@/styles/animations.css';
 import '@/styles/retro-game.css';
+import TabsNavigation from '@/components/TabsNavigation';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const Auth = React.lazy(() => import('./pages/Auth'));
@@ -61,6 +62,7 @@ const CommentsFullPage = React.lazy(() => import('./pages/CommentsFullPage'));
 const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
 const StreamSetup = React.lazy(() => import('./pages/StreamSetup'));
 const StreamView = React.lazy(() => import('./pages/StreamView'));
+const Saved = React.lazy(() => import('./pages/Saved'));
 
 function AppContent() {
   usePerformanceMonitoring('App');
@@ -90,22 +92,24 @@ function AppContent() {
       <Route path="/menu" element={<Menu />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/profile/edit" element={
-        <ErrorBoundary fallback={<div className="p-4 text-center">Error loading profile editor. Try refreshing the page.</div>}>
+        <ErrorBoundary fallback={<div className="p-4 text-red-500">Error loading profile editor</div>}>
           <EditProfile />
         </ErrorBoundary>
       } />
-      <Route path="/streaming" element={
-        <ErrorBoundary fallback={<div className="p-4 text-center">Error loading streaming page. Try refreshing the page.</div>}>
-          <Streaming />
-        </ErrorBoundary>
-      } />
+      <Route path="/notifications" element={<Notifications />} />
       <Route path="/messages" element={<Messages />} />
-      <Route path="/messages/:userId" element={<Messages />} />
+      <Route path="/messages/:threadId" element={<Messages />} />
+      <Route path="/messages/new/:recipientId" element={<Messages />} />
       <Route path="/settings" element={<Settings />} />
+      <Route path="/streaming/:id?" element={<Streaming />} />
+      <Route path="/stream-setup" element={<StreamSetup />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/game-streamers/:gameId" element={<GameStreamers />} />
       <Route path="/retro-search" element={<RetroSearchPage />} />
       <Route path="/video-debug" element={<VideoDebug />} />
+      <Route path="/posts" element={<Home />} />
+      <Route path="/trophies" element={<TopClipts />} />
+      <Route path="/saved" element={<Saved />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -165,6 +169,12 @@ function App() {
     location.pathname.startsWith(route)
   );
 
+  // Routes that should display the tabs navigation
+  const tabNavigationRoutes = ['/posts', '/clipts', '/trophies', '/saved'];
+  const shouldShowTabNavigation = tabNavigationRoutes.some(route => 
+    location.pathname === route
+  );
+
   return (
     <ErrorBoundary>
       <React.Suspense fallback={
@@ -181,8 +191,10 @@ function App() {
               <CommentsProvider>
                 <Toaster richColors position="top-center" />
                 <ScrollToTop />
+                {shouldShowTabNavigation && <TabsNavigation />}
                 <div className="app-content-wrapper" style={{ 
                   paddingBottom: shouldShowControls ? '180px' : '0',
+                  paddingTop: shouldShowTabNavigation ? '60px' : '0',
                   minHeight: '100vh',
                   maxHeight: '100vh',
                   overflow: 'auto',
