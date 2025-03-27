@@ -1099,7 +1099,7 @@ const PostItem: React.FC<PostItemProps> = ({
       )}
 
       {/* Inline Comments Section - Showing limited comments by default */}
-      {!showComments && (
+      {!showComments && !window.location.pathname.includes('/post/') && (
         <InlineComments 
           postId={postId}
           maxComments={3}
@@ -1108,7 +1108,7 @@ const PostItem: React.FC<PostItemProps> = ({
       )}
 
       {/* Full Comments Section - shown when expanded */}
-      {showComments && (
+      {showComments && !window.location.pathname.includes('/post/') && (
         <div className="border-t border-gaming-400/20">
           {postId ? (
             <CommentList 
