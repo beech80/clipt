@@ -9,7 +9,7 @@ import achievementService from '@/services/achievementService';
 import achievementTrackerService from '@/services/achievementTrackerService';
 import AchievementDisplay, { ACHIEVEMENT_CATEGORIES } from '@/components/achievements/AchievementDisplay';
 import { toast } from 'react-hot-toast';
-import followService from '@/services/followService';
+import { followService } from '@/services/followService';
 import { format } from 'date-fns';
 
 interface ProfileData {
