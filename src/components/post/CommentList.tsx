@@ -28,7 +28,6 @@ export const CommentList = ({
 }: CommentListProps) => {
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const commentsContainerRef = useRef<HTMLDivElement>(null);
-  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
   const { user } = useAuth();
 
   // Normalized post ID (always string)
@@ -74,12 +73,6 @@ export const CommentList = ({
       }
     }, 100);
   }, []);
-
-  const handleEmojiSelect = (emoji: string) => {
-    setSelectedEmoji(emoji);
-    // Here you would typically send the emoji reaction to the backend
-    toast.success(`Reacted with ${emoji}`);
-  };
 
   // Organize comments into threaded view
   const organizedComments = useMemo(() => {
@@ -201,30 +194,6 @@ export const CommentList = ({
           </div>
         )}
       </div>
-
-      {/* Quick reaction buttons */}
-      {organizedComments && organizedComments.length > 0 && (
-        <>
-          <Separator />
-          <div className="px-4 py-3 flex items-center justify-center">
-            <div className="inline-flex bg-gray-100 dark:bg-gray-800 rounded-full p-1">
-              {['❤️', '👍', '🔥', '👏', '😂'].map(emoji => (
-                <button 
-                  key={emoji}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                    selectedEmoji === emoji 
-                      ? 'bg-white dark:bg-gray-700 shadow-sm transform scale-110' 
-                      : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
-                  onClick={() => handleEmojiSelect(emoji)}
-                >
-                  <span className="text-lg">{emoji}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 };
