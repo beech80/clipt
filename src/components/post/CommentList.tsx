@@ -15,6 +15,7 @@ interface CommentListProps {
   autoFocus?: boolean;
   className?: string;
   onBack?: () => void;
+  hideForm?: boolean;
 }
 
 export const CommentList = ({ 
@@ -22,7 +23,8 @@ export const CommentList = ({
   onCommentAdded,
   autoFocus = false,
   className = '',
-  onBack
+  onBack,
+  hideForm = false
 }: CommentListProps) => {
   const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
   const commentsContainerRef = useRef<HTMLDivElement>(null);
@@ -149,29 +151,31 @@ export const CommentList = ({
       className={`w-full ${className}`}
       ref={commentsContainerRef}
     >
-      {/* Comments Header */}
-      <div className="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">Comments</h3>
+      {/* Comments Header - Only show if not hidden */}
+      {!hideForm && (
+        <div className="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Comments</h3>
+            {commentCount > 0 && (
+              <Badge variant="secondary" className="rounded-full">
+                {commentCount}
+              </Badge>
+            )}
+          </div>
           {commentCount > 0 && (
-            <Badge variant="secondary" className="rounded-full">
-              {commentCount}
-            </Badge>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs"
+              onClick={() => refetch()}
+            >
+              Refresh
+            </Button>
           )}
         </div>
-        {commentCount > 0 && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-xs"
-            onClick={() => refetch()}
-          >
-            Refresh
-          </Button>
-        )}
-      </div>
+      )}
 
-      <Separator className="my-1" />
+      {!hideForm && <Separator className="my-1" />}
 
       {/* Comments list */}
       <div className="px-4 pt-2 pb-4 space-y-4">
