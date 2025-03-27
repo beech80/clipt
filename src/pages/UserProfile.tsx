@@ -271,128 +271,166 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchUserContent = async () => {
       try {
-        if (!currentUserProfileId) return;
+        if (!currentUserProfileId) {
+          console.error("CRITICAL: No currentUserProfileId available");
+          return;
+        }
 
-        console.log(`PROFILE DEBUG: Fetching posts for user profile: ${currentUserProfileId}`);
-
-        // DEBUG: First check if any posts exist for this user without filters
-        const { data: checkAnyPosts, error: checkError } = await supabase
+        console.log(`PROFILE DEBUG: Fetching ALL content for user ID: ${currentUserProfileId}`);
+        
+        // ======== EMERGENCY DIRECT USER POST CHECK ========
+        // Direct database check - no filters that could block content
+        const { data: rawUserPosts, error: rawPostsError } = await supabase
           .from('posts')
-          .select('id, content, post_type')
+          .select('*')
           .eq('user_id', currentUserProfileId)
-          .limit(20);
+          .limit(100);
+
+        console.log(`DIRECT DB CHECK: Found ${rawUserPosts?.length || 0} total items for user ${currentUserProfileId}`, 
+          rawUserPosts?.map(p => ({ id: p.id, type: p.post_type, content: p.content?.substring(0, 20) })));
+        
+        if (rawPostsError) {
+          console.error('CRITICAL ERROR in direct DB query:', rawPostsError);
+        }
+        
+        if (!rawUserPosts || rawUserPosts.length === 0) {
+          console.log(`WARNING: No posts found for user ${currentUserProfileId} in direct DB check`);
+        }
+
+        // ======== FETCH POSTS WITH USER PROFILE DATA ========
+        console.log(`Fetching posts for user ${currentUserProfileId} - including profile data`);
+        const { data: postsWithProfiles, error: profilesError } = await supabase
+          .from('posts')
+          .select(`
+            *,
+            profiles:profiles(*)
+          `)
+          .eq('user_id', currentUserProfileId)
+          .order('created_at', { ascending: false });
+        
+        if (profilesError) {
+          console.error('Error fetching posts with profiles:', profilesError);
+        } else {
+          console.log(`Found ${postsWithProfiles?.length || 0} posts with profile data:`, 
+            postsWithProfiles?.map(p => ({ 
+              id: p.id, 
+              type: p.post_type, 
+              username: p.profiles?.username,
+              hasProfileData: !!p.profiles 
+            })));
+        }
+
+        // ======== SEPARATE POSTS AND CLIPS ========
+        let postItems = [];
+        let clipItems = [];
+        
+        if (postsWithProfiles && postsWithProfiles.length > 0) {
+          postItems = postsWithProfiles.filter(item => item.post_type === 'post');
+          clipItems = postsWithProfiles.filter(item => item.post_type === 'clip');
           
-        console.log(`PROFILE DEBUG: Raw check - Found ${checkAnyPosts?.length || 0} total posts for user ${currentUserProfileId}`, checkAnyPosts);
-        
-        if (checkError) {
-          console.error('PROFILE DEBUG: Error in initial posts check:', checkError);
+          console.log(`Filtered ${postItems.length} posts and ${clipItems.length} clips`);
         }
 
-        // Fetch posts WITHOUT the is_published filter which may be blocking posts
-        const { data: postsData, error: postsError } = await supabase
-          .from('posts')
-          .select('*, profiles:profiles(username, avatar_url, display_name)')
-          .eq('user_id', currentUserProfileId)
-          .eq('post_type', 'post')
-          .order('created_at', { ascending: false });
-
-        if (postsError) {
-          console.error('PROFILE DEBUG: Error fetching posts:', postsError);
-          throw postsError;
-        }
-        
-        console.log(`PROFILE DEBUG: Found ${postsData?.length || 0} posts for this user`);
-
-        // Fetch clips WITHOUT the is_published filter
-        const { data: clipsData, error: clipsError } = await supabase
-          .from('posts')
-          .select('*, profiles:profiles(username, avatar_url, display_name)')
-          .eq('user_id', currentUserProfileId)
-          .eq('post_type', 'clip')
-          .order('created_at', { ascending: false });
-
-        if (clipsError) {
-          console.error('PROFILE DEBUG: Error fetching clips:', clipsError);
-          throw clipsError;
-        }
-        
-        console.log(`PROFILE DEBUG: Found ${clipsData?.length || 0} clips for this user`);
-
-        // Fetch saved posts if viewing own profile
-        let savedPostsData: any[] = [];
+        // ======== FETCH SAVED POSTS ========
+        let savedPostsData = [];
         if (user && user.id === currentUserProfileId) {
-          const { data: savedPostIds, error: savedError } = await supabase
+          // Get bookmark IDs first
+          const { data: bookmarks, error: bookmarksError } = await supabase
             .from('bookmarks')
             .select('post_id')
             .eq('user_id', user.id);
 
-          if (!savedError && savedPostIds && savedPostIds.length > 0) {
-            const postIds = savedPostIds.map(item => item.post_id);
+          if (bookmarksError) {
+            console.error('Error fetching bookmarks:', bookmarksError);
+          } else if (bookmarks && bookmarks.length > 0) {
+            const bookmarkIds = bookmarks.map(b => b.post_id);
+            console.log(`Found ${bookmarkIds.length} bookmark IDs for current user`);
             
-            const { data: savedPosts, error: fetchSavedError } = await supabase
+            // Fetch actual posts by those IDs
+            const { data: savedPosts, error: savedPostsError } = await supabase
               .from('posts')
-              .select('*, profiles:profiles(username, avatar_url, display_name)')
-              .in('id', postIds)
+              .select(`
+                *,
+                profiles:profiles(*)
+              `)
+              .in('id', bookmarkIds)
               .order('created_at', { ascending: false });
               
-            if (!fetchSavedError) {
-              savedPostsData = savedPosts || [];
-              console.log(`PROFILE DEBUG: Found ${savedPostsData?.length || 0} saved posts`);
+            if (savedPostsError) {
+              console.error('Error fetching saved posts:', savedPostsError);
             } else {
-              console.error('PROFILE DEBUG: Error fetching saved posts:', fetchSavedError);
+              savedPostsData = savedPosts || [];
+              console.log(`Retrieved ${savedPostsData.length} saved posts`);
             }
           }
         }
 
-        // Process likes for posts if user is logged in
-        let processedPosts = postsData || [];
-        let processedClips = clipsData || [];
-        let processedSavedPosts = savedPostsData || [];
-
+        // ======== ADD USER LIKES INFO ========
         if (user) {
-          const { data: likedPosts } = await supabase
+          const { data: userLikes, error: likesError } = await supabase
             .from('post_likes')
             .select('post_id')
             .eq('user_id', user.id);
-
-          const likedPostIds = new Set((likedPosts || []).map(like => like.post_id));
-
-          processedPosts = processedPosts.map(post => ({
-            ...post,
-            liked_by_current_user: likedPostIds.has(post.id),
-            username: post.profiles?.username,
-            avatar_url: post.profiles?.avatar_url,
-            display_name: post.profiles?.display_name
-          }));
-
-          processedClips = processedClips.map(clip => ({
-            ...clip,
-            liked_by_current_user: likedPostIds.has(clip.id),
-            username: clip.profiles?.username,
-            avatar_url: clip.profiles?.avatar_url,
-            display_name: clip.profiles?.display_name
-          }));
-
-          processedSavedPosts = processedSavedPosts.map(post => ({
-            ...post,
-            liked_by_current_user: likedPostIds.has(post.id),
-            username: post.profiles?.username,
-            avatar_url: post.profiles?.avatar_url,
-            display_name: post.profiles?.display_name
-          }));
+            
+          if (likesError) {
+            console.error('Error fetching user likes:', likesError);
+          } else {
+            const likedPostIds = new Set((userLikes || []).map(like => like.post_id));
+            console.log(`User has liked ${likedPostIds.size} posts`);
+            
+            // Process user like info into posts
+            postItems = postItems.map(post => ({
+              ...post,
+              liked_by_current_user: likedPostIds.has(post.id),
+              // Extract profile info to top level for easier access
+              username: post.profiles?.username || 'Unknown',
+              avatar_url: post.profiles?.avatar_url || null,
+              display_name: post.profiles?.display_name || post.profiles?.username || 'User'
+            }));
+            
+            clipItems = clipItems.map(clip => ({
+              ...clip,
+              liked_by_current_user: likedPostIds.has(clip.id),
+              username: clip.profiles?.username || 'Unknown',
+              avatar_url: clip.profiles?.avatar_url || null,
+              display_name: clip.profiles?.display_name || clip.profiles?.username || 'User'
+            }));
+            
+            savedPostsData = savedPostsData.map(post => ({
+              ...post,
+              liked_by_current_user: likedPostIds.has(post.id),
+              username: post.profiles?.username || 'Unknown',
+              avatar_url: post.profiles?.avatar_url || null,
+              display_name: post.profiles?.display_name || post.profiles?.username || 'User'
+            }));
+          }
         }
 
-        console.log('PROFILE DEBUG: Final post counts before setting state:', {
-          posts: processedPosts.length,
-          clips: processedClips.length,
-          saved: processedSavedPosts.length
-        });
+        // Final debug check before setting state
+        console.log('FINAL DATA SUMMARY:');
+        console.log(`- Posts: ${postItems.length}`);
+        console.log(`- Clips: ${clipItems.length}`);
+        console.log(`- Saved: ${savedPostsData.length}`);
         
-        setPosts(processedPosts);
-        setClips(processedClips);
-        setSavedPosts(processedSavedPosts);
+        // If we have raw posts but processed posts are empty, use raw posts as fallback
+        if (rawUserPosts?.length > 0 && postItems.length === 0 && clipItems.length === 0) {
+          console.log('EMERGENCY FALLBACK: Using raw posts data');
+          
+          // Simple separation of posts and clips from raw data
+          const rawPostItems = rawUserPosts.filter(p => p.post_type === 'post');
+          const rawClipItems = rawUserPosts.filter(p => p.post_type === 'clip');
+          
+          // Set these directly if we have no other option
+          setPosts(rawPostItems);
+          setClips(rawClipItems);
+        } else {
+          // Set the processed data with profile information
+          setPosts(postItems);
+          setClips(clipItems);
+          setSavedPosts(savedPostsData);
+        }
       } catch (error) {
-        console.error('PROFILE DEBUG: Error in fetchUserContent:', error);
+        console.error('CRITICAL ERROR in fetchUserContent:', error);
       }
     };
 
@@ -467,6 +505,9 @@ const UserProfile = () => {
 
   // Render posts grid in Madden 95 retro gaming style
   const renderPostsGrid = (postsToRender: Post[]) => {
+    console.log(`Rendering grid with ${postsToRender?.length || 0} posts:`, 
+      postsToRender?.map(p => ({ id: p.id, type: p.post_type, content: p.content?.substring(0, 20) || 'No content' })));
+    
     if (!postsToRender || postsToRender.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center py-16 text-gray-300 bg-[#001133] rounded-md border-2 border-[#4488cc] my-4">
@@ -503,6 +544,11 @@ const UserProfile = () => {
           {activeTab === 'posts' ? 'User Posts' : activeTab === 'clips' ? 'Video Clips' : 'Saved Content'}
         </div>
         
+        {/* Debug counts */}
+        <div className="text-xs text-gray-500 mb-2 font-mono">
+          Debug: Found {postsToRender.length} items
+        </div>
+        
         {/* Grid layout with Madden 95 styling */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {postsToRender.map(post => (
@@ -512,33 +558,9 @@ const UserProfile = () => {
               onClick={() => handlePostClick(post.id)}
             >
               <div className="relative">
-                {/* Post media */}
+                {/* Post media - with enhanced fallback handling */}
                 <div className="bg-black aspect-video overflow-hidden relative">
-                  {post.image_url ? (
-                    <img 
-                      src={post.image_url} 
-                      alt="Post content" 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : post.video_url ? (
-                    <div className="relative">
-                      <video
-                        src={post.video_url}
-                        className="w-full h-full object-cover"
-                        muted
-                        playsInline
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-black bg-opacity-50 flex items-center justify-center">
-                          <Video className="h-6 w-6 text-white" />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#001133] to-[#001b3d]">
-                      <FileText className="h-10 w-10 text-[#4488cc]" />
-                    </div>
-                  )}
+                  {getPostMediaContent(post)}
                   
                   {/* Post type indicator */}
                   <div className="absolute top-2 right-2 bg-[#000A20] bg-opacity-90 px-2 py-1 rounded text-xs text-white border border-[#4488cc]">
@@ -554,9 +576,13 @@ const UserProfile = () => {
                       src={post.avatar_url || '/default-avatar.png'}
                       alt={post.username || "User"}
                       className="w-6 h-6 rounded-full border border-[#4488cc]"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/default-avatar.png';
+                      }}
                     />
                     <span className="text-white text-sm font-medium truncate">
-                      {post.display_name || post.username || "User"}
+                      {post.display_name || post.username || post.profiles?.username || "User"}
                     </span>
                   </div>
                   
@@ -579,9 +605,10 @@ const UserProfile = () => {
                       <span>{post.comments_count || 0}</span>
                     </div>
                     
-                    {/* Time */}
-                    <div className="text-xs text-gray-400">
-                      {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                    {/* Trophy count */}
+                    <div className="flex items-center text-xs text-gray-300 gap-1">
+                      <Trophy className="h-4 w-4 text-yellow-500" />
+                      <span>{post.trophy_count || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -589,6 +616,100 @@ const UserProfile = () => {
             </div>
           ))}
         </div>
+      </div>
+    );
+  };
+
+  // Helper to extract the right media content from a post
+  const getPostMediaContent = (post: Post) => {
+    // First try video_url
+    if (post.video_url) {
+      return (
+        <div className="relative">
+          <video
+            src={post.video_url}
+            className="w-full h-full object-cover"
+            muted
+            playsInline
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-black bg-opacity-50 flex items-center justify-center">
+              <Video className="h-6 w-6 text-white" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Then try image_url
+    if (post.image_url) {
+      return (
+        <img 
+          src={post.image_url} 
+          alt="Post content" 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23001133'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%234488cc' text-anchor='middle' dominant-baseline='middle'%3EImage Error%3C/text%3E%3C/svg%3E";
+          }}
+        />
+      );
+    }
+    
+    // Try thumbnail_url
+    if (post.thumbnail_url) {
+      return (
+        <img 
+          src={post.thumbnail_url} 
+          alt="Post thumbnail" 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23001133'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%234488cc' text-anchor='middle' dominant-baseline='middle'%3EImage Error%3C/text%3E%3C/svg%3E";
+          }}
+        />
+      );
+    }
+    
+    // Try media_urls
+    if (post.media_urls) {
+      let mediaUrl = null;
+      try {
+        if (typeof post.media_urls === 'string') {
+          try {
+            // Try to parse JSON string
+            const parsed = JSON.parse(post.media_urls);
+            mediaUrl = Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : post.media_urls;
+          } catch (e) {
+            // If parsing fails, use the string directly
+            mediaUrl = post.media_urls;
+          }
+        } else if (Array.isArray(post.media_urls) && post.media_urls.length > 0) {
+          mediaUrl = post.media_urls[0];
+        }
+        
+        if (mediaUrl) {
+          return (
+            <img 
+              src={mediaUrl} 
+              alt="Post media" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23001133'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%234488cc' text-anchor='middle' dominant-baseline='middle'%3EImage Error%3C/text%3E%3C/svg%3E";
+              }}
+            />
+          );
+        }
+      } catch (error) {
+        console.error("Error processing media URL for post:", post.id, error);
+      }
+    }
+    
+    // Fallback for text posts
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#001133] to-[#001b3d]">
+        <FileText className="h-10 w-10 text-[#4488cc]" />
       </div>
     );
   };
