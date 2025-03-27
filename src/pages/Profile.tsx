@@ -1006,45 +1006,113 @@ const Profile = () => {
         </div>
         {activeTab === 'posts' ? (
           <div className="w-full">
-            {/* Post grid layout */}
-            <div className="grid grid-cols-3 gap-1">
+            {/* Post vertical feed layout */}
+            <div className="space-y-6">
               {userPosts.length > 0 ? (
                 userPosts.map(post => (
                   <div 
                     key={post.id} 
-                    className="aspect-square overflow-hidden relative hover:opacity-90 transition-opacity cursor-pointer"
+                    className="bg-[#1a2366] rounded-lg overflow-hidden shadow-md"
                     onClick={() => navigate(`/post/${post.id}`)}
                   >
-                    {post.video_url ? (
-                      <div className="relative w-full h-full bg-gaming-900">
-                        {/* Video thumbnail with play icon */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Film className="w-8 h-8 text-white opacity-75" />
-                        </div>
-                        <div className="absolute top-2 right-2 bg-black/60 p-1 rounded-full">
-                          <Film className="w-3 h-3 text-white" />
+                    {/* User info header */}
+                    <div className="p-4 flex items-center">
+                      <div className="w-10 h-10 bg-gray-700 rounded-full overflow-hidden mr-3">
+                        {profile.avatar_url ? (
+                          <img 
+                            src={profile.avatar_url} 
+                            alt={profile.username || "User"}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder-avatar.png';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[#2a2a2a] text-white">
+                            {profile.username?.[0]?.toUpperCase() || "U"}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white">{profile.username || "Username"}</div>
+                        <div className="text-gray-400 text-sm">
+                          {post.created_at ? new Date(post.created_at).toLocaleString() : ""}
                         </div>
                       </div>
-                    ) : post.image_url ? (
-                      <img 
-                        src={post.image_url} 
-                        alt={post.content || 'Post image'} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = 'https://placehold.co/400x400/121212/303030?text=Image';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gaming-800 flex flex-col items-center justify-center p-3">
-                        <FileText className="w-6 h-6 mb-2 text-gaming-400" />
-                        <p className="text-xs text-center text-gaming-300 line-clamp-3">{post.title || post.content || 'Text post'}</p>
+                    </div>
+                    
+                    {/* Post content/caption */}
+                    {post.content && (
+                      <div className="px-4 pb-2 text-white">
+                        {post.content}
                       </div>
                     )}
+                    
+                    {/* Post media */}
+                    <div className="bg-[#080e31] aspect-video flex items-center justify-center">
+                      {post.video_url ? (
+                        <div className="relative w-full h-full bg-[#080e31] flex items-center justify-center">
+                          <video 
+                            src={post.video_url} 
+                            className="max-h-full max-w-full"
+                            controls
+                            poster={post.image_url || undefined}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <Film className="w-12 h-12 text-white opacity-75" />
+                          </div>
+                        </div>
+                      ) : post.image_url ? (
+                        <img 
+                          src={post.image_url} 
+                          alt={post.content || 'Post content'} 
+                          className="max-h-full max-w-full"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23252525'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+                          }}
+                        />
+                      ) : (
+                        <div className="p-4 text-center text-gray-400">
+                          This is a detailed view of post ID: {post.id}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Interaction bar */}
+                    <div className="p-4 flex items-center">
+                      <button className="flex items-center mr-4">
+                        <svg className="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                        </svg>
+                        <span className="ml-2 text-white text-sm">{post.likes_count || 0}</span>
+                      </button>
+                      
+                      <button className="flex items-center mr-4">
+                        <svg className="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span className="ml-2 text-white text-sm">{post.comments_count || 0}</span>
+                      </button>
+                      
+                      <button className="flex items-center mr-4">
+                        <svg className="w-6 h-6 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                        </svg>
+                        <span className="ml-2 text-white text-sm">1</span>
+                      </button>
+                      
+                      <button className="flex items-center ml-auto">
+                        <svg className="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))
               ) : (
-                <div className="col-span-3 flex flex-col items-center justify-center py-16 text-center">
+                <div className="flex flex-col items-center justify-center py-16 text-center">
                   <p className="text-gray-400">No posts available</p>
                   {isOwnProfile && (
                     <Button 
