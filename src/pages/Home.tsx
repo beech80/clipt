@@ -1,79 +1,79 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import PostItem from "@/components/PostItem";
-import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Camera } from "lucide-react";
-import { Post } from '@/types/post';
 
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch posts with post_type 'home'
-  const { data: posts, isLoading, error } = useQuery({
-    queryKey: ['posts', 'home'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          created_at,
-          user_id,
-          image_url,
-          video_url,
-          game_id,
-          post_type,
-          profiles(id, username, display_name, avatar_url)
-        `)
-        .eq('post_type', 'home')
-        .eq('is_published', true)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      
-      if (error) {
-        console.error('Error fetching home posts:', error);
-        throw error;
-      }
-      
-      return data as Post[];
-    },
-  });
-
   return (
-    <div className="relative min-h-screen bg-gaming-900">
-      {/* Modern Header with Gradient and Blur */}
-      <div className="w-full py-6 px-4 bg-gradient-to-b from-gaming-800/80 to-transparent backdrop-blur-sm">
-        <h1 className="text-center text-3xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+    <div className="min-h-screen bg-gradient-to-b from-[#1A1C50] to-[#0F1033] text-white overflow-hidden">
+      {/* Header */}
+      <div className="pt-8 pb-4">
+        <h1 className="text-center text-3xl font-bold text-purple-300">
           Squads Clipts
         </h1>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Main feed */}
-        <div className="space-y-6 max-w-2xl mx-auto">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-20">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-6 flex flex-col items-center justify-center">
+        <div className="max-w-md w-full text-center py-12 px-4">
+          <p className="text-xl font-semibold text-purple-300 mb-6">Welcome to Clipts</p>
+          <p className="text-gray-400 mb-8">Share your gaming moments with your squad!</p>
+          
+          <button 
+            onClick={() => navigate('/squads')}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-3 rounded-lg font-medium text-white shadow-lg hover:from-purple-700 hover:to-blue-700 transition-all"
+          >
+            View Squad Content
+          </button>
+        </div>
+      </div>
+
+      {/* Game Controls */}
+      <div className="fixed bottom-0 left-0 right-0 p-4">
+        <div className="flex items-center justify-between">
+          {/* D-Pad */}
+          <div className="relative w-24 h-24">
+            <div className="absolute inset-0 rounded-full bg-green-900/50 border border-green-500"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
             </div>
-          ) : error ? (
-            <div className="text-center py-20 text-red-400">
-              <p>Failed to load posts. Please try again later.</p>
+          </div>
+          
+          {/* Center Button */}
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+              <span className="text-xs font-bold text-white">CLIPT</span>
             </div>
-          ) : posts && posts.length > 0 ? (
-            posts.map((post) => (
-              <PostItem key={post.id} post={post} />
-            ))
-          ) : (
-            <div className="text-center py-20 text-gray-400">
-              <p className="text-xl font-semibold mb-2">No posts available. Create your first post!</p>
-              <p className="text-sm text-gray-500">Share both videos and images in your squad feed.</p>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="relative w-24 h-24">
+            <div className="absolute top-1/4 right-1/4 w-10 h-10 rounded-full bg-blue-900 border border-blue-400 flex items-center justify-center">
+              <span className="text-xs">D</span>
             </div>
-          )}
+            <div className="absolute bottom-1/4 right-1/4 w-10 h-10 rounded-full bg-red-900 border border-red-400 flex items-center justify-center">
+              <span className="text-xs">B</span>
+            </div>
+            <div className="absolute bottom-1/4 left-1/4 w-10 h-10 rounded-full bg-yellow-900 border border-yellow-400 flex items-center justify-center">
+              <span className="text-xs">Y</span>
+            </div>
+            <div className="absolute top-1/4 left-1/4 w-10 h-10 rounded-full bg-purple-900 border border-purple-400 flex items-center justify-center">
+              <span className="text-xs">X</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Menu Buttons */}
+        <div className="flex justify-center mt-2 space-x-8">
+          <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
+            <span className="text-sm">≡</span>
+          </button>
+          <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
+            <span className="text-sm">◎</span>
+          </button>
         </div>
       </div>
     </div>
