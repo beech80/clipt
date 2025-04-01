@@ -27,6 +27,13 @@ const Home = () => {
   const [animateBackground, setAnimateBackground] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3); // Mock notification count
   
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+  
   // Update time every minute
   useEffect(() => {
     const interval = setInterval(() => {
@@ -79,6 +86,11 @@ const Home = () => {
   const handleNotificationsClick = () => {
     navigate('/notifications');
   };
+
+  // If not logged in, don't render the home page (will redirect to login)
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className={`min-h-screen relative overflow-hidden transition-all duration-1000 ${

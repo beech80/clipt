@@ -12,6 +12,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [justSignedUp, setJustSignedUp] = useState(false);
   const [currentSelection, setCurrentSelection] = useState<'email' | 'password' | 'signin' | 'demo' | 'signup'>('email');
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -24,6 +25,16 @@ const Login = () => {
     }, 60000);
     
     return () => clearInterval(interval);
+  }, []);
+
+  // Check if user just signed up
+  useEffect(() => {
+    const signedUpFlag = localStorage.getItem('justSignedUp');
+    if (signedUpFlag === 'true') {
+      setJustSignedUp(true);
+      // Remove the flag after showing the message
+      localStorage.removeItem('justSignedUp');
+    }
   }, []);
 
   // Handle keyboard navigation
@@ -144,6 +155,23 @@ const Login = () => {
               {/* Nintendo DS-style floating bubbles */}
               <div className="absolute -right-4 top-1/4 w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 opacity-50"></div>
               <div className="absolute left-1/4 -top-4 w-4 h-4 rounded-full bg-gradient-to-r from-green-500 to-blue-500 opacity-30"></div>
+              
+              {justSignedUp && (
+                <Alert className="bg-blue-950/30 border-blue-800 text-blue-400 mb-4">
+                  <AlertDescription>
+                    We've sent a verification email to your address. Please verify your email before logging in.
+                    <div className="mt-2">
+                      <Button 
+                        variant="link" 
+                        className="text-blue-400 p-0 h-auto"
+                        onClick={() => setJustSignedUp(false)}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
               
               {error && (
                 <Alert variant="destructive" className="mb-6 bg-red-900/40 border border-red-700/50 text-red-200">
