@@ -220,7 +220,7 @@ const SquadsClipts = () => {
   const currentPost = squadPosts[currentPostIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1A1C50] to-[#0F1033] text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-[#1A1C50] to-[#0F1033] text-white">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#1A1C50] to-[#3A0C70] backdrop-blur-md border-b border-indigo-800 shadow-lg">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -232,8 +232,8 @@ const SquadsClipts = () => {
         </div>
       </div>
 
-      {/* Main Content - Full page layout */}
-      <div className="pt-16 h-[calc(100vh-80px)]">
+      {/* Main Content - Full screen layout */}
+      <div className="pt-16 h-[calc(100vh-5rem)]">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
@@ -242,12 +242,12 @@ const SquadsClipts = () => {
           <div className="h-full">
             {/* Horizontal Scrollable Container - Full Height */}
             <div className="overflow-x-auto h-full hide-scrollbar">
-              <div className="flex flex-row h-full">
+              <div className="flex flex-row h-full snap-x snap-mandatory">
                 {squadPosts.map((post, index) => (
-                  <div key={post.id} className="flex-shrink-0 min-w-[100vw] h-full px-2">
-                    <div className="h-full flex flex-col border border-blue-900/50 rounded-lg overflow-hidden">
+                  <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center">
+                    <div className="h-full flex flex-col max-w-3xl mx-auto">
                       {/* User info */}
-                      <div className="p-3 flex items-center space-x-2 bg-blue-900/20">
+                      <div className="p-3 flex items-center space-x-2 bg-blue-900/20 rounded-t-lg">
                         <Avatar 
                           className="w-10 h-10 rounded-full overflow-hidden cursor-pointer"
                           onClick={() => post?.user_id && navigate(`/profile/${post.user_id}`)}
@@ -269,7 +269,7 @@ const SquadsClipts = () => {
                       </div>
                       
                       {/* Video content - Make it take most of the space */}
-                      <div className="bg-[#0F1573] flex-grow flex items-center justify-center">
+                      <div className="bg-[#0F1573] flex-grow flex items-center justify-center rounded-b-lg">
                         {getMediaUrl(post) && 
                          (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
                           <video 
@@ -285,8 +285,8 @@ const SquadsClipts = () => {
                         )}
                       </div>
                       
-                      {/* Action buttons */}
-                      <div className="p-4 flex items-center justify-between bg-black/30">
+                      {/* Action buttons - Only in the post container, not at the bottom */}
+                      <div className="p-4 flex items-center justify-between bg-black/30 rounded-b-lg">
                         <button 
                           className={`flex items-center ${post?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
                           onClick={() => post?.id && likeMutation.mutate(post.id)}

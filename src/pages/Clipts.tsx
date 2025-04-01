@@ -294,7 +294,7 @@ const Clipts = () => {
   }, [rawPosts]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-black text-white pb-20">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-black text-white">
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -317,8 +317,8 @@ const Clipts = () => {
         </div>
       </div>
 
-      {/* Main content - Full page layout */}
-      <div className="pt-16 h-[calc(100vh-80px)]">
+      {/* Main content - Full screen layout */}
+      <div className="pt-16 h-[calc(100vh-5rem)]">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <Button variant="outline" size="icon" className="animate-spin">
@@ -329,15 +329,17 @@ const Clipts = () => {
           <div className="h-full">
             {/* Horizontal Scrollable Container - Full Height */}
             <div className="overflow-x-auto h-full hide-scrollbar">
-              <div className="flex flex-row h-full">
+              <div className="flex flex-row h-full snap-x snap-mandatory">
                 {rawPosts.map((post) => (
-                  <div key={post.id} className="flex-shrink-0 min-w-[100vw] h-full px-2">
+                  <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center">
                     <div className="h-full flex flex-col">
-                      <PostItem 
-                        post={post}
-                        isCliptsPage={true}
-                        className="flex-grow"
-                      />
+                      <div className="flex-grow flex items-center justify-center">
+                        <PostItem 
+                          post={post}
+                          isCliptsPage={true}
+                          className="w-full max-w-3xl mx-auto post-item-container"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
