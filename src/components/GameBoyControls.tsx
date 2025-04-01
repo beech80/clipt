@@ -1122,7 +1122,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleMainButtonClick = () => {
     console.log('Main CLIPT button pressed');
     // Navigate to home feed or toggle main menu
-    navigate('/');
+    navigate("/");
   };
 
   // Handle selecting a menu option
@@ -1686,18 +1686,19 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [dPadDirection.x, dPadDirection.y, currentPostId, user]);
 
-  // Classic GameBoy controller UI with retained functionality
+  // Modern UI controller based on the image
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="game-boy-controls">
-        {/* Left Side - D-Pad (Classic GameBoy style) */}
+        {/* Left Side - Joystick */}
         <div className="d-pad-section">
           <div 
-            className="d-pad"
-            ref={dPadRef}
-            onClick={handleDPadMouseDown}
+            className="d-pad" 
+            onClick={toggleMenu}
             aria-label="Open menu"
           >
+            <div className="d-pad-ring"></div>
+            <div className="joystick-indicator"></div>
             <div className="direction-indicators">
               <div className="direction-indicator direction-up"></div>
               <div className="direction-indicator direction-right"></div>
@@ -1707,7 +1708,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
           </div>
         </div>
 
-        {/* Center - CLIPT button and SELECT/START buttons (Classic GameBoy style) */}
+        {/* Center - CLIPT button and menu buttons */}
         <div className="center-section">
           <button 
             className="main-button" 
@@ -1717,34 +1718,44 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             CLIPT
           </button>
           
-          <div className="select-start-buttons">
-            <button className="select-button" aria-label="Select"></button>
-            <button className="start-button" aria-label="Start"></button>
+          <div className="menu-buttons">
+            <button className="menu-button" aria-label="Menu">
+              <Menu size={18} />
+            </button>
+            <button className="menu-button" aria-label="Camera">
+              <Camera size={18} />
+            </button>
           </div>
         </div>
 
-        {/* Right Side - A/B Buttons (GameBoy style) */}
+        {/* Right Side - Action Buttons in Diamond Formation */}
         <div className="action-buttons">
-          <div className="button-wrapper">
-            <button 
-              className={`action-button x-button ${hasLiked ? 'active' : ''}`} 
-              onClick={handleButtonXPress}
-              data-action="like"
-              aria-label="Like post (B button)"
-            >
-              <Heart size={16} />
-            </button>
-          </div>
-          <div className="button-wrapper">
-            <button 
-              className={`action-button a-button ${commentModalOpen ? 'active' : ''}`} 
-              onClick={handleButtonAPress}
-              data-action="comment"
-              aria-label="Comment on post (A button)"
-            >
-              <MessageCircle size={16} />
-            </button>
-          </div>
+          <button 
+            className={`action-button heart-button ${hasLiked ? 'active' : ''}`} 
+            onClick={handleButtonXPress}
+            aria-label="Like post"
+          >
+            <Heart size={16} />
+          </button>
+          <button 
+            className={`action-button message-button ${commentModalOpen ? 'active' : ''}`} 
+            onClick={handleButtonAPress}
+            aria-label="Comment on post"
+          >
+            <MessageCircle size={16} />
+          </button>
+          <button 
+            className="action-button trophy-button"
+            aria-label="Trophy/Rank"
+          >
+            <Trophy size={16} />
+          </button>
+          <button 
+            className="action-button folder-button"
+            aria-label="Save"
+          >
+            <FolderPlus size={16} />
+          </button>
         </div>
 
         {/* Menu Modal */}
@@ -1763,14 +1774,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
                     onClick={() => {
                       setSelectedMenuOption(option.id);
                       option.action();
-                      setIsMenuOpen(false);
                     }}
-                    aria-label={option.name}
                   >
-                    <div className="menu-option-icon">{option.icon}</div>
+                    <div className="menu-option-icon">
+                      {option.icon}
+                    </div>
                     <div className="menu-option-content">
                       <div className="menu-option-title">{option.name}</div>
-                      <div className="menu-option-description">{option.description}</div>
                     </div>
                   </div>
                 ))}
