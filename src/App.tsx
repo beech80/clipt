@@ -3,7 +3,6 @@ import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
-import GameBoyControls from '@/components/GameBoyControls';
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
@@ -202,30 +201,11 @@ function App() {
     });
   }, []);
 
-  // Routes that should not display the GameBoy controls
-  const noControlsRoutes = ['/auth'];
-  const shouldShowControls = !noControlsRoutes.some(route => 
-    location.pathname.startsWith(route)
-  );
-
   // Routes that should display the tabs navigation
   const tabNavigationRoutes = ['/posts', '/trophies', '/saved'];
   const shouldShowTabNavigation = tabNavigationRoutes.some(route => 
     location.pathname === route
   );
-
-  // Add class to body for the fixed GameBoy controls
-  useEffect(() => {
-    if (shouldShowControls) {
-      document.body.classList.add('has-gameboy-controls');
-    } else {
-      document.body.classList.remove('has-gameboy-controls');
-    }
-    
-    return () => {
-      document.body.classList.remove('has-gameboy-controls');
-    };
-  }, [shouldShowControls]);
 
   return (
     <ErrorBoundary>
@@ -245,7 +225,6 @@ function App() {
                 <ScrollToTop />
                 {shouldShowTabNavigation && <TabsNavigation />}
                 <div className="app-content-wrapper" style={{ 
-                  paddingBottom: shouldShowControls ? '180px' : '0',
                   paddingTop: shouldShowTabNavigation ? '60px' : '0',
                   minHeight: '100vh',
                   maxHeight: '100vh',
@@ -255,11 +234,6 @@ function App() {
                   <AppContent />
                 </div>
                 <PWAInstallPrompt />
-                {shouldShowControls && (
-                  <div className="fixed-gameboy-controls">
-                    <GameBoyControls currentPostId={currentPostId} />
-                  </div>
-                )}
               </CommentsProvider>
             </ReportDialogProvider>
           </MessagesProvider>
@@ -270,17 +244,19 @@ function App() {
 }
 
 <style jsx global>{`
-  .fixed-gameboy-controls {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000; /* High z-index to ensure it's always on top */
-  }
+  /* GameBoy controls styling has been removed */
   
-  .has-gameboy-controls {
-    padding-bottom: 180px;
+  html, body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+      Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+    overflow: hidden;
+    height: 100%;
+    color-scheme: dark;
   }
-`}</style>
+  /* ... */
+}
 
 export default App;
