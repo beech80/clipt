@@ -103,17 +103,9 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
       }
     });
     
-    // Try to play every few seconds if not already playing
-    const intervalId = setInterval(() => {
-      if (videoRef.current && videoRef.current.paused && autoPlay) {
-        videoRef.current.play().catch(() => {});
-      }
-    }, 2000);
-    
     return () => {
       document.removeEventListener('user-interacted', handleUserInteraction);
       document.removeEventListener('visibilitychange', handleUserInteraction);
-      clearInterval(intervalId);
     };
   }, [autoPlay]);
 
