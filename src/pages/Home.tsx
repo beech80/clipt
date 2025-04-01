@@ -48,9 +48,9 @@ const Home = () => {
   // Menu options - updated to match the specific list requested
   const menuOptions = [
     { name: "Profile", icon: <User className="h-6 w-6" />, action: () => navigate('/profile') },
-    { name: "Discovery", icon: <Compass className="h-6 w-6" />, action: () => navigate('/discovery') },
+    { name: "Discovery", icon: <Compass className="h-6 w-6" />, action: () => navigate('/discover') },
     { name: "Squads", icon: <Users className="h-6 w-6" />, action: () => navigate('/squads-clipts') },
-    { name: "Clipts", icon: <Bookmark className="h-6 w-6" />, action: () => navigate('/clipts-videos') },
+    { name: "Clipts", icon: <Bookmark className="h-6 w-6" />, action: () => navigate('/clipts') },
     { name: "Messages", icon: <MessageSquare className="h-6 w-6" />, action: () => navigate('/messages') },
     { name: "Settings", icon: <Settings className="h-6 w-6" />, action: () => navigate('/settings') }
   ];
