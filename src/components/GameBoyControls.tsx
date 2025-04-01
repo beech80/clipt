@@ -1693,10 +1693,10 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [dPadDirection.x, dPadDirection.y, currentPostId, user]);
 
-  // Modern UI controller based on the image (simple version)
+  // Modern UI controller matching the second image design
   return (
     <div className="game-boy-controls">
-      {/* Left Side - Joystick */}
+      {/* Left Side - Simple Joystick with green dot */}
       <div className="d-pad-section">
         <div 
           className="d-pad" 
@@ -1707,7 +1707,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         </div>
       </div>
 
-      {/* Center - CLIPT button and menu buttons */}
+      {/* Center - Dark CLIPT button with menu buttons below */}
       <div className="center-section">
         <button 
           className="main-button" 
@@ -1719,16 +1719,17 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         
         <div className="menu-buttons">
           <button className="menu-button" aria-label="Menu">
-            <Menu size={18} />
+            <Menu size={16} />
           </button>
           <button className="menu-button" aria-label="Camera">
-            <Camera size={18} />
+            <Camera size={16} />
           </button>
         </div>
       </div>
 
-      {/* Right Side - Action Buttons in Diamond Formation */}
+      {/* Right Side - Action Buttons in Diamond Formation with colored borders */}
       <div className="action-buttons">
+        {/* Heart/Like (blue) at top */}
         <button 
           className={`action-button heart-button ${hasLiked ? 'active' : ''}`}
           onClick={handleButtonXPress}
@@ -1736,6 +1737,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         >
           <Heart size={16} />
         </button>
+        
+        {/* Message/Comment (pink) at right */}
         <button 
           className={`action-button message-button ${commentModalOpen ? 'active' : ''}`}
           onClick={handleButtonAPress}
@@ -1743,6 +1746,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         >
           <MessageCircle size={16} />
         </button>
+        
+        {/* Trophy/Rank (yellow) at bottom */}
         <button 
           className="action-button trophy-button"
           onClick={handleTrophy}
@@ -1750,10 +1755,12 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         >
           <Trophy size={16} />
         </button>
+        
+        {/* Save/Bookmark (green) at left */}
         <button 
           className="action-button folder-button"
           onClick={handleSaveVideo}
-          aria-label="Save"
+          aria-label="Save video"
         >
           <FolderPlus size={16} />
         </button>
