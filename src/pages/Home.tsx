@@ -45,15 +45,13 @@ const Home = () => {
     return () => clearTimeout(timeout);
   }, []);
   
-  // Menu options - updated to include all requested options
+  // Menu options - updated to match the specific list requested
   const menuOptions = [
-    { name: "My Profile", icon: <User className="h-6 w-6" />, action: () => navigate('/profile') },
-    { name: "Explore", icon: <Compass className="h-6 w-6" />, action: () => navigate('/discovery') },
+    { name: "Profile", icon: <User className="h-6 w-6" />, action: () => navigate('/profile') },
+    { name: "Discovery", icon: <Compass className="h-6 w-6" />, action: () => navigate('/discovery') },
+    { name: "Notifications", icon: <Bell className="h-6 w-6" />, action: () => navigate('/notifications') },
     { name: "Squads", icon: <Users className="h-6 w-6" />, action: () => navigate('/squads') },
     { name: "Clipts", icon: <Bookmark className="h-6 w-6" />, action: () => navigate('/clipts') },
-    { name: "Clips", icon: <Film className="h-6 w-6" />, action: () => navigate('/clips') },
-    { name: "Streaming", icon: <Radio className="h-6 w-6" />, action: () => navigate('/streaming') },
-    { name: "Notifications", icon: <Bell className="h-6 w-6" />, action: () => navigate('/notifications') },
     { name: "Messages", icon: <MessageSquare className="h-6 w-6" />, action: () => navigate('/messages') },
     { name: "Settings", icon: <Settings className="h-6 w-6" />, action: () => navigate('/settings') }
   ];
@@ -359,23 +357,7 @@ const Home = () => {
                     <p className="text-blue-400/80 mt-1">Level 5 Gamer</p>
                   </div>
                   
-                  <div className="flex flex-col space-y-3">
-                    <button 
-                      onClick={() => navigate('/clipts')}
-                      className="w-full bg-gradient-to-r from-blue-600/80 to-purple-600/80 hover:from-blue-500/80 hover:to-purple-500/80 text-white py-3 px-8 rounded-lg font-medium transition-all shadow-lg hover:shadow-purple-500/20 border border-blue-500/30 flex items-center justify-center"
-                    >
-                      <CloudLightning className="mr-2 h-5 w-5" />
-                      Latest Content
-                    </button>
-                    
-                    <button 
-                      onClick={() => navigate('/squads')}
-                      className="w-full bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-500/80 hover:to-pink-500/80 text-white py-3 px-8 rounded-lg font-medium transition-all shadow-lg hover:shadow-pink-500/20 border border-purple-500/30 flex items-center justify-center"
-                    >
-                      <Users className="mr-2 h-5 w-5" />
-                      My Squads
-                    </button>
-                    
+                  <div className="flex flex-col">
                     <button 
                       onClick={() => navigate('/streaming')}
                       className="w-full bg-gradient-to-r from-green-600/80 to-blue-600/80 hover:from-green-500/80 hover:to-blue-500/80 text-white py-3 px-8 rounded-lg font-medium transition-all shadow-lg hover:shadow-blue-500/20 border border-green-500/30 flex items-center justify-center"
