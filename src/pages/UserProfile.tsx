@@ -864,7 +864,7 @@ const UserProfile = () => {
                 <p className="text-sm md:text-base whitespace-pre-wrap">{profileData?.bio || ""}</p>
 
                 <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
-                  {/* Follow button or Edit profile button */}
+                  {/* Edit profile button when viewing own profile */}
                   {user && user.id === profileData?.id ? (
                     <button
                       onClick={() => navigate("/settings")}
@@ -873,22 +873,26 @@ const UserProfile = () => {
                       Edit Profile
                     </button>
                   ) : (
-                    <button
-                      onClick={handleFollowToggle}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition"
-                    >
-                      {profileData?.is_following ? 'Unfollow' : 'Follow'}
-                    </button>
+                    <>
+                      {/* Follow button when viewing someone else's profile */}
+                      <button
+                        onClick={handleFollowToggle}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition"
+                      >
+                        {profileData?.is_following ? 'Unfollow' : 'Follow'}
+                      </button>
+                      
+                      {/* Message button when viewing someone else's profile */}
+                      <button 
+                        className="px-4 py-2 bg-transparent border border-indigo-500 hover:bg-indigo-500/20 rounded-md text-white font-medium transition"
+                        onClick={() => navigate(`/messages/new/${profileData?.id}`)}
+                      >
+                        Message
+                      </button>
+                    </>
                   )}
 
-                  {/* Message button (if not current user) */}
-                  {user && user.id !== profileData?.id && (
-                    <button className="px-4 py-2 bg-transparent border border-indigo-500 hover:bg-indigo-500/20 rounded-md text-white font-medium transition">
-                      Message
-                    </button>
-                  )}
-
-                  {/* Share profile button */}
+                  {/* Share profile button - always shown */}
                   <button className="px-4 py-2 bg-transparent border border-indigo-500 hover:bg-indigo-500/20 rounded-md text-white font-medium transition">
                     Share Profile
                   </button>

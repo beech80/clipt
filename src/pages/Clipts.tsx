@@ -317,7 +317,7 @@ const Clipts = () => {
         </div>
       </div>
 
-      {/* Main content with padding for fixed header */}
+      {/* Main content with padding for fixed header - Changed to horizontal layout */}
       <div className="pt-16">
         {isLoading ? (
           <div className="flex justify-center items-center h-[60vh]">
@@ -326,14 +326,31 @@ const Clipts = () => {
             </Button>
           </div>
         ) : rawPosts.length > 0 ? (
-          <div className="container mx-auto px-4 py-8 max-w-2xl">
-            {rawPosts.map((post) => (
-              <PostItem 
-                key={post.id} 
-                post={post}
-                isCliptsPage={true}
-              />
-            ))}
+          <div className="container mx-auto px-4 py-8">
+            {/* Horizontal Scrollable Container */}
+            <div className="overflow-x-auto pb-4 hide-scrollbar">
+              <div className="flex flex-row space-x-4 min-w-min">
+                {rawPosts.map((post) => (
+                  <div key={post.id} className="flex-shrink-0 w-80">
+                    <PostItem 
+                      post={post}
+                      isCliptsPage={true}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Add custom CSS for hiding scrollbar but keeping functionality */}
+            <style jsx>{`
+              .hide-scrollbar {
+                -ms-overflow-style: none;  /* IE and Edge */
+                scrollbar-width: none;  /* Firefox */
+              }
+              .hide-scrollbar::-webkit-scrollbar {
+                display: none;  /* Chrome, Safari and Opera */
+              }
+            `}</style>
           </div>
         ) : (
           <div className="flex justify-center items-center h-[60vh]">

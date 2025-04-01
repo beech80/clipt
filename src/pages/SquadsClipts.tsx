@@ -228,81 +228,86 @@ const SquadsClipts = () => {
         </h1>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-2 max-w-md">
+      {/* Main Content - Changed to horizontal layout */}
+      <div className="container mx-auto px-4">
         {isLoading ? (
           <div className="flex justify-center items-center h-[60vh]">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
           </div>
         ) : squadPosts.length > 0 ? (
-          <div className="border border-blue-900/50 rounded-lg overflow-hidden">
-            {/* User info */}
-            <div className="p-2 flex items-center space-x-2 bg-blue-900/20">
-              <Avatar 
-                className="w-8 h-8 rounded-full overflow-hidden"
-                onClick={() => currentPost?.user_id && navigate(`/profile/${currentPost.user_id}`)}
-              >
-                {currentPost?.profiles?.avatar_url ? (
-                  <AvatarImage 
-                    src={currentPost.profiles.avatar_url}
-                    alt={currentPost.profiles.username || 'User'}
-                  />
-                ) : (
-                  <AvatarFallback className="text-white font-bold bg-purple-700">
-                    {currentPost?.profiles?.username?.substring(0, 1)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              <span className="font-medium">
-                {currentPost?.profiles?.username || 'Username'}
-              </span>
-            </div>
-            
-            {/* Video content */}
-            <div className="bg-[#0F1573] aspect-video flex items-center justify-center">
-              {getMediaUrl(currentPost) && 
-               (getMediaUrl(currentPost)?.includes('.mp4') || getMediaUrl(currentPost)?.includes('.webm')) ? (
-                <video 
-                  src={getMediaUrl(currentPost) || ''}
-                  controls
-                  className="w-full h-full object-contain"
-                  poster={currentPost.thumbnail_url || ''}
-                />
-              ) : (
-                <div className="text-center text-blue-300">
-                  For video clips only!
+          <div className="overflow-x-auto hide-scrollbar">
+            <div className="flex flex-row space-x-4 pb-4 min-w-min">
+              {squadPosts.map((post, index) => (
+                <div key={post.id} className="flex-shrink-0 w-72 border border-blue-900/50 rounded-lg overflow-hidden">
+                  {/* User info */}
+                  <div className="p-2 flex items-center space-x-2 bg-blue-900/20">
+                    <Avatar 
+                      className="w-8 h-8 rounded-full overflow-hidden"
+                      onClick={() => post?.user_id && navigate(`/profile/${post.user_id}`)}
+                    >
+                      {post?.profiles?.avatar_url ? (
+                        <AvatarImage 
+                          src={post.profiles.avatar_url}
+                          alt={post.profiles.username || 'User'}
+                        />
+                      ) : (
+                        <AvatarFallback className="text-white font-bold bg-purple-700">
+                          {post?.profiles?.username?.substring(0, 1)?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <span className="font-medium truncate">
+                      {post?.profiles?.username || 'Username'}
+                    </span>
+                  </div>
+                  
+                  {/* Video content */}
+                  <div className="bg-[#0F1573] aspect-video flex items-center justify-center">
+                    {getMediaUrl(post) && 
+                     (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
+                      <video 
+                        src={getMediaUrl(post) || ''}
+                        controls
+                        className="w-full h-full object-contain"
+                        poster={post.thumbnail_url || ''}
+                      />
+                    ) : (
+                      <div className="text-center text-blue-300">
+                        For video clips only!
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Action buttons */}
+                  <div className="p-2 flex items-center justify-between bg-black/50">
+                    <button 
+                      className={`flex items-center ${post?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
+                      onClick={() => post?.id && likeMutation.mutate(post.id)}
+                    >
+                      <Heart className="mr-1 h-5 w-5 fill-current" />
+                      <span>{post?.likes_count || 0}</span>
+                    </button>
+                    
+                    <button className="flex items-center text-blue-400">
+                      <MessageSquare className="mr-1 h-5 w-5" />
+                      <span>{post?.comments_count || 0}</span>
+                    </button>
+                    
+                    <button className="flex items-center text-yellow-400">
+                      <Trophy className="mr-1 h-5 w-5" />
+                      <span>{post?.trophy_count || 0}</span>
+                    </button>
+                    
+                    <button className="flex items-center text-purple-400">
+                      <Share2 className="h-5 w-5" />
+                    </button>
+                    
+                    <button className="text-gray-300">
+                      <Bookmark className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-            
-            {/* Action buttons */}
-            <div className="p-2 flex items-center justify-between bg-black/50">
-              <button 
-                className={`flex items-center ${currentPost?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
-                onClick={() => currentPost?.id && likeMutation.mutate(currentPost.id)}
-              >
-                <Heart className="mr-1 h-5 w-5 fill-current" />
-                <span>{currentPost?.likes_count || 0}</span>
-              </button>
-              
-              <button className="flex items-center text-blue-400">
-                <MessageSquare className="mr-1 h-5 w-5" />
-                <span>{currentPost?.comments_count || 0}</span>
-              </button>
-              
-              <button className="flex items-center text-yellow-400">
-                <Trophy className="mr-1 h-5 w-5" />
-                <span>{currentPost?.trophy_count || 0}</span>
-              </button>
-              
-              <button className="flex items-center text-purple-400">
-                <Share2 className="mr-1 h-5 w-5" />
-                <span>Share</span>
-              </button>
-              
-              <button className="text-gray-300">
-                <Bookmark className="h-5 w-5" />
-              </button>
+              ))}
             </div>
           </div>
         ) : (
@@ -313,53 +318,21 @@ const SquadsClipts = () => {
         )}
       </div>
 
-      {/* Game Controls */}
-      <div className="fixed bottom-0 left-0 right-0 p-4">
-        <div className="flex items-center justify-between">
-          {/* D-Pad */}
-          <div className="relative w-24 h-24">
-            <div className="absolute inset-0 rounded-full bg-green-900/50 border border-green-500"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            </div>
-          </div>
-          
-          {/* Center Button */}
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
-              <span className="text-xs font-bold text-white">CLIPT</span>
-            </div>
-          </div>
-          
-          {/* Action Buttons */}
-          <div className="relative w-24 h-24">
-            <div className="absolute top-1/4 right-1/4 w-10 h-10 rounded-full bg-blue-900 border border-blue-400 flex items-center justify-center">
-              <span className="text-xs">D</span>
-            </div>
-            <div className="absolute bottom-1/4 right-1/4 w-10 h-10 rounded-full bg-red-900 border border-red-400 flex items-center justify-center">
-              <span className="text-xs">B</span>
-            </div>
-            <div className="absolute bottom-1/4 left-1/4 w-10 h-10 rounded-full bg-yellow-900 border border-yellow-400 flex items-center justify-center">
-              <span className="text-xs">Y</span>
-            </div>
-            <div className="absolute top-1/4 left-1/4 w-10 h-10 rounded-full bg-purple-900 border border-purple-400 flex items-center justify-center">
-              <span className="text-xs">X</span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Menu Buttons */}
-        <div className="flex justify-center mt-2 space-x-8">
-          <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-            <span className="text-sm">≡</span>
-          </button>
-          <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-            <span className="text-sm">◎</span>
-          </button>
-        </div>
-      </div>
+      {/* Add custom CSS for hiding scrollbar but keeping functionality */}
+      <style jsx>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;  /* Chrome, Safari and Opera */
+        }
+      `}</style>
+
+      {/* Removed game controls display since we're using the global GameBoyControls component */}
     </div>
   );
+
 };
 
 export default SquadsClipts;
