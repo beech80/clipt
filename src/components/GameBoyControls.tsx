@@ -334,13 +334,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
 
     // Determine if we should do post-by-post navigation or smooth scrolling
     // For larger movements (higher amount), do post-by-post
-    if (Math.abs(amount) > 25) {
+    if (Math.abs(amount) > 20) { 
       const direction = amount > 0 ? 1 : -1;
       handlePostByPostScrolling(direction);
     } else {
       // For smaller movements, do smooth scrolling
       // Increase scrolling speed to make it more responsive
-      const scrollAmount = amount * 8; // Increased from 5 to 8 for faster scrolling
+      const scrollAmount = amount * 12; 
       
       // Apply scroll directly for immediate response
       window.scrollBy({
@@ -509,8 +509,8 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     }
     
     // Handle scrolling with more sensitivity for mobile
-    if (Math.abs(constrainedY) > 5) { // Lower threshold for better response
-      const scrollAmount = constrainedY * 1.0; // Higher multiplier for better mobile response
+    if (Math.abs(constrainedY) > 2) { 
+      const scrollAmount = constrainedY * 2.5; 
       handleScrollFromJoystick(scrollAmount);
     }
     
