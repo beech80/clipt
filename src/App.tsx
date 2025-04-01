@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { ReportDialogProvider } from '@/components/report/ReportDialogProvider';
 import GameBoyControls from '@/components/GameBoyControls';
 import PWAInstallPrompt from '@/components/ui/PWAInstallPrompt';
 import ScrollToTop from '@/components/common/ScrollToTop';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { MessagesProvider } from '@/contexts/MessagesContext';
 import { CommentsProvider } from '@/contexts/CommentContext';
 import { usePerformanceMonitoring } from '@/lib/performance';
@@ -64,15 +64,54 @@ const StreamSetup = React.lazy(() => import('./pages/StreamSetup'));
 const StreamView = React.lazy(() => import('./pages/StreamView'));
 const Saved = React.lazy(() => import('./pages/Saved'));
 
+// Protected route component to prevent redirecting authenticated users to login/signup
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  
+  // If we're still loading, show nothing yet
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-blue-950">
+        <div className="text-center p-4">
+          <div className="animate-pulse text-blue-300 mb-2">Loading...</div>
+          <div className="text-sm text-blue-400">Please wait while we get things ready</div>
+        </div>
+      </div>
+    );
+  }
+  
+  // If user is already authenticated and tries to access login/signup pages,
+  // redirect them to the main page
+  if (user && (location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/auth')) {
+    return <Navigate to="/" replace />;
+  }
+  
+  // Otherwise, render the children
+  return <>{children}</>;
+};
+
 function AppContent() {
   usePerformanceMonitoring('App');
   
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
+      <Route path="/auth" element={
+        <ProtectedRoute>
+          <Auth />
+        </ProtectedRoute>
+      } />
+      <Route path="/login" element={
+        <ProtectedRoute>
+          <Login />
+        </ProtectedRoute>
+      } />
+      <Route path="/signup" element={
+        <ProtectedRoute>
+          <Signup />
+        </ProtectedRoute>
+      } />
       <Route path="/post/new" element={<NewPost />} />
       <Route path="/post/:id" element={<PostPage />} />
       <Route path="/post/:postId/comments" element={<CommentsPage />} />
