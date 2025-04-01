@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Users, ChevronLeft, RefreshCw, Heart, MessageSquare, Trophy, Share2, Bookmark } from 'lucide-react';
+import { Heart, MessageSquare, Trophy, Share2, Bookmark } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -36,6 +36,7 @@ const SquadsClipts = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentPostIndex, setCurrentPostIndex] = useState(0);
 
   // Fetch squad clips
   const { data: squadPosts = [], isLoading, refetch } = useQuery({
@@ -166,8 +167,6 @@ const SquadsClipts = () => {
     onSuccess: (result) => {
       // Update query cache
       queryClient.invalidateQueries({ queryKey: ['squad-posts'] });
-      
-      toast.success(result?.action === 'liked' ? 'Post liked!' : 'Post unliked');
     },
     onError: (error) => {
       console.error("Error liking post:", error);
@@ -206,171 +205,157 @@ const SquadsClipts = () => {
     }
   };
 
-  // Function to refresh posts
-  const refreshPosts = async () => {
-    setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
-    toast.success("Squad content refreshed!");
+  // Function to navigate to previous/next post
+  const navigatePost = (direction: 'prev' | 'next') => {
+    if (squadPosts.length === 0) return;
     
-    // Force user interaction for autoplay
-    document.documentElement.setAttribute('data-user-interacted', 'true');
+    if (direction === 'next') {
+      setCurrentPostIndex((prev) => (prev + 1) % squadPosts.length);
+    } else {
+      setCurrentPostIndex((prev) => (prev - 1 + squadPosts.length) % squadPosts.length);
+    }
   };
 
+  // Current post to display
+  const currentPost = squadPosts[currentPostIndex];
+
   return (
-    <div className="min-h-screen bg-[#0f112a] text-white">
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-[#141644] border-b-4 border-[#4a4dff] shadow-[0_4px_0_0_#000]">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="text-white hover:bg-[#252968]"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-2xl font-bold text-white flex items-center pixel-font retro-text-shadow">
-            <Users className="h-5 w-5 mr-2 text-purple-400" />
-            CLIPTS
-          </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={refreshPosts}
-            className={`text-white transition-all duration-300 ${isRefreshing ? 'animate-spin' : ''}`}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className="h-5 w-5" />
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-[#1A1C50] to-[#0F1033] text-white overflow-hidden">
+      {/* Header */}
+      <div className="pt-8 pb-4">
+        <h1 className="text-center text-3xl font-bold text-purple-300">
+          Squads Clipts
+        </h1>
       </div>
 
-      <div className="container mx-auto px-4 pt-20 pb-32 max-w-2xl">
-        <div className="retro-border p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4 text-purple-400 pixel-font retro-text-shadow">YOUR SQUAD'S CONTENT</h2>
-          
-          {isLoading || isRefreshing ? (
-            <div className="flex justify-center items-center py-20">
-              <Button variant="outline" size="icon" className="animate-spin">
-                <RefreshCw className="h-5 w-5" />
-              </Button>
+      {/* Main Content */}
+      <div className="container mx-auto px-2 max-w-md">
+        {isLoading ? (
+          <div className="flex justify-center items-center h-[60vh]">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+          </div>
+        ) : squadPosts.length > 0 ? (
+          <div className="border border-blue-900/50 rounded-lg overflow-hidden">
+            {/* User info */}
+            <div className="p-2 flex items-center space-x-2 bg-blue-900/20">
+              <Avatar 
+                className="w-8 h-8 rounded-full overflow-hidden"
+                onClick={() => currentPost?.user_id && navigate(`/profile/${currentPost.user_id}`)}
+              >
+                {currentPost?.profiles?.avatar_url ? (
+                  <AvatarImage 
+                    src={currentPost.profiles.avatar_url}
+                    alt={currentPost.profiles.username || 'User'}
+                  />
+                ) : (
+                  <AvatarFallback className="text-white font-bold bg-purple-700">
+                    {currentPost?.profiles?.username?.substring(0, 1)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <span className="font-medium">
+                {currentPost?.profiles?.username || 'Username'}
+              </span>
             </div>
-          ) : squadPosts.length > 0 ? (
-            <div className="space-y-6">
-              {squadPosts.map((post) => (
-                <div key={post.id} className="bg-[#191F35] backdrop-blur-sm rounded-xl overflow-hidden border border-white/10 shadow-xl">
-                  {/* Post Author */}
-                  <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Avatar 
-                        className="w-10 h-10 rounded-full bg-purple-500 overflow-hidden cursor-pointer"
-                        onClick={() => navigate(`/profile/${post.user_id}`)}
-                      >
-                        {post.profiles?.avatar_url ? (
-                          <AvatarImage 
-                            src={post.profiles.avatar_url}
-                            alt={post.profiles.username || 'User'}
-                          />
-                        ) : (
-                          <AvatarFallback className="text-white font-bold">
-                            {post.profiles?.username?.substring(0, 1)?.toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      <div>
-                        <p 
-                          className="font-medium text-white cursor-pointer hover:text-purple-300"
-                          onClick={() => navigate(`/profile/${post.user_id}`)}
-                        >
-                          {post.profiles?.username || 'Username'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Post Content */}
-                  <div 
-                    className="p-4 cursor-pointer"
-                    onClick={() => navigate(`/post/${post.id}`)}
-                  >
-                    {post.content && (
-                      <p className="text-gray-300 mb-4">{post.content}</p>
-                    )}
-                    
-                    {/* Media content */}
-                    {getMediaUrl(post) && (
-                      <div className="rounded-lg overflow-hidden bg-[#17205B] aspect-video flex items-center justify-center">
-                        {(getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
-                          <video 
-                            src={getMediaUrl(post) || ''}
-                            controls
-                            className="w-full h-full object-contain max-h-[80vh]"
-                            poster={post.thumbnail_url || ''}
-                          />
-                        ) : (
-                          <img 
-                            src={getMediaUrl(post) || ''} 
-                            alt={post.content?.substring(0, 20) || "Post content"} 
-                            className="w-full h-full object-contain max-h-[80vh]"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23001133'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='12' fill='%234488cc' text-anchor='middle' dominant-baseline='middle'%3EFor video clips only!%3C/text%3E%3C/svg%3E";
-                            }}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Post Actions */}
-                  <div className="px-4 py-3 flex items-center justify-between">
-                    <div className="flex items-center space-x-6">
-                      <button 
-                        className={`flex items-center ${post.liked_by_current_user ? 'text-red-400' : 'text-gray-300'} hover:text-red-400`}
-                        onClick={() => likeMutation.mutate(post.id)}
-                      >
-                        <Heart className={`mr-1 h-5 w-5 ${likeMutation.isPending && likeMutation.variables === post.id ? 'animate-pulse' : ''}`} />
-                        <span className="text-sm font-semibold">{post.likes_count || 0}</span>
-                      </button>
-                      <button 
-                        className="flex items-center text-gray-300 hover:text-blue-400"
-                        onClick={() => navigate(`/post/${post.id}`)}
-                      >
-                        <MessageSquare className="mr-1 h-5 w-5" />
-                        <span className="text-sm font-semibold">{post.comments_count || 0}</span>
-                      </button>
-                      <button className="flex items-center text-gray-300 hover:text-yellow-400">
-                        <Trophy className="mr-1 h-5 w-5" />
-                        <span className="text-sm font-semibold">{post.trophy_count || 0}</span>
-                      </button>
-                    </div>
-                    <div className="flex space-x-4">
-                      <button className="text-gray-300 hover:text-purple-400">
-                        <Share2 className="h-5 w-5" />
-                      </button>
-                      <button className="text-gray-300 hover:text-blue-400">
-                        <Bookmark className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Post Info */}
-                  <div className="px-4 pb-3">
-                    <p className="text-xs text-gray-500">
-                      {post.created_at 
-                        ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true })
-                        : '2 hours ago'}
-                    </p>
-                  </div>
+            
+            {/* Video content */}
+            <div className="bg-[#0F1573] aspect-video flex items-center justify-center">
+              {getMediaUrl(currentPost) && 
+               (getMediaUrl(currentPost)?.includes('.mp4') || getMediaUrl(currentPost)?.includes('.webm')) ? (
+                <video 
+                  src={getMediaUrl(currentPost) || ''}
+                  controls
+                  className="w-full h-full object-contain"
+                  poster={currentPost.thumbnail_url || ''}
+                />
+              ) : (
+                <div className="text-center text-blue-300">
+                  For video clips only!
                 </div>
-              ))}
+              )}
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-300 mb-4">No squad content found.</p>
-              <p className="text-gray-400 text-sm">Add friends to your squad to see their clipts here!</p>
+            
+            {/* Action buttons */}
+            <div className="p-2 flex items-center justify-between bg-black/50">
+              <button 
+                className={`flex items-center ${currentPost?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
+                onClick={() => currentPost?.id && likeMutation.mutate(currentPost.id)}
+              >
+                <Heart className="mr-1 h-5 w-5 fill-current" />
+                <span>{currentPost?.likes_count || 0}</span>
+              </button>
+              
+              <button className="flex items-center text-blue-400">
+                <MessageSquare className="mr-1 h-5 w-5" />
+                <span>{currentPost?.comments_count || 0}</span>
+              </button>
+              
+              <button className="flex items-center text-yellow-400">
+                <Trophy className="mr-1 h-5 w-5" />
+                <span>{currentPost?.trophy_count || 0}</span>
+              </button>
+              
+              <button className="flex items-center text-purple-400">
+                <Share2 className="mr-1 h-5 w-5" />
+                <span>Share</span>
+              </button>
+              
+              <button className="text-gray-300">
+                <Bookmark className="h-5 w-5" />
+              </button>
             </div>
-          )}
+          </div>
+        ) : (
+          <div className="text-center py-12 px-4">
+            <p className="text-xl font-semibold text-purple-300 mb-2">No squad clipts available</p>
+            <p className="text-gray-400">Add friends to your squad or create new clipts!</p>
+          </div>
+        )}
+      </div>
+
+      {/* Game Controls */}
+      <div className="fixed bottom-0 left-0 right-0 p-4">
+        <div className="flex items-center justify-between">
+          {/* D-Pad */}
+          <div className="relative w-24 h-24">
+            <div className="absolute inset-0 rounded-full bg-green-900/50 border border-green-500"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+          </div>
+          
+          {/* Center Button */}
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+              <span className="text-xs font-bold text-white">CLIPT</span>
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="relative w-24 h-24">
+            <div className="absolute top-1/4 right-1/4 w-10 h-10 rounded-full bg-blue-900 border border-blue-400 flex items-center justify-center">
+              <span className="text-xs">D</span>
+            </div>
+            <div className="absolute bottom-1/4 right-1/4 w-10 h-10 rounded-full bg-red-900 border border-red-400 flex items-center justify-center">
+              <span className="text-xs">B</span>
+            </div>
+            <div className="absolute bottom-1/4 left-1/4 w-10 h-10 rounded-full bg-yellow-900 border border-yellow-400 flex items-center justify-center">
+              <span className="text-xs">Y</span>
+            </div>
+            <div className="absolute top-1/4 left-1/4 w-10 h-10 rounded-full bg-purple-900 border border-purple-400 flex items-center justify-center">
+              <span className="text-xs">X</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Menu Buttons */}
+        <div className="flex justify-center mt-2 space-x-8">
+          <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
+            <span className="text-sm">≡</span>
+          </button>
+          <button className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
+            <span className="text-sm">◎</span>
+          </button>
         </div>
       </div>
     </div>
