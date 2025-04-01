@@ -11,7 +11,12 @@ import {
   Compass,
   Sparkles,
   CloudLightning,
-  Flame
+  Flame,
+  Users,
+  Bookmark,
+  Radio,
+  Bell,
+  Zap
 } from "lucide-react";
 
 const Home = () => {
@@ -20,6 +25,7 @@ const Home = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedMenu, setSelectedMenu] = useState(0);
   const [animateBackground, setAnimateBackground] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(3); // Mock notification count
   
   // Update time every minute
   useEffect(() => {
@@ -39,11 +45,15 @@ const Home = () => {
     return () => clearTimeout(timeout);
   }, []);
   
-  // Menu options - updated to match actual existing pages
+  // Menu options - updated to include all requested options
   const menuOptions = [
     { name: "My Profile", icon: <User className="h-6 w-6" />, action: () => navigate('/profile') },
     { name: "Explore", icon: <Compass className="h-6 w-6" />, action: () => navigate('/discovery') },
+    { name: "Squads", icon: <Users className="h-6 w-6" />, action: () => navigate('/squads') },
+    { name: "Clipts", icon: <Bookmark className="h-6 w-6" />, action: () => navigate('/clipts') },
     { name: "Clips", icon: <Film className="h-6 w-6" />, action: () => navigate('/clips') },
+    { name: "Streaming", icon: <Radio className="h-6 w-6" />, action: () => navigate('/streaming') },
+    { name: "Notifications", icon: <Bell className="h-6 w-6" />, action: () => navigate('/notifications') },
     { name: "Messages", icon: <MessageSquare className="h-6 w-6" />, action: () => navigate('/messages') },
     { name: "Settings", icon: <Settings className="h-6 w-6" />, action: () => navigate('/settings') }
   ];
@@ -85,29 +95,102 @@ const Home = () => {
         }`}></div>
       </div>
 
-      {/* Futuristic grid lines */}
+      {/* Enhanced animated grid lines */}
       <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
-        <div className="absolute w-full h-px bg-blue-400/50 top-1/4"></div>
-        <div className="absolute w-full h-px bg-blue-400/30 top-1/2"></div>
-        <div className="absolute w-full h-px bg-blue-400/50 top-3/4"></div>
-        <div className="absolute w-px h-full bg-blue-400/50 left-1/4"></div>
-        <div className="absolute w-px h-full bg-blue-400/30 left-1/2"></div>
-        <div className="absolute w-px h-full bg-blue-400/50 left-3/4"></div>
+        {/* Horizontal lines */}
+        {[...Array(8)].map((_, i) => (
+          <div 
+            key={`h-${i}`} 
+            className="absolute w-full h-px bg-blue-400/50" 
+            style={{ 
+              top: `${(i + 1) * 12}%`,
+              transform: `translateY(${Math.sin(i * 0.5) * 5}px)`,
+              opacity: i % 2 === 0 ? 0.5 : 0.3,
+              filter: `blur(${i % 3 === 0 ? 1 : 0}px)`
+            }}
+          ></div>
+        ))}
+        
+        {/* Vertical lines */}
+        {[...Array(8)].map((_, i) => (
+          <div 
+            key={`v-${i}`} 
+            className="absolute h-full w-px bg-blue-400/50" 
+            style={{
+              left: `${(i + 1) * 12}%`,
+              transform: `translateX(${Math.sin(i * 0.5) * 5}px)`,
+              opacity: i % 2 === 0 ? 0.5 : 0.3,
+              filter: `blur(${i % 3 === 0 ? 1 : 0}px)`
+            }}
+          ></div>
+        ))}
+        
+        {/* Animated scanning line */}
+        <div 
+          className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none" 
+          style={{
+            background: 'linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.1) 50%, transparent)',
+            backgroundSize: '100% 10px',
+            animation: 'scan 8s linear infinite'
+          }}
+        ></div>
       </div>
       
       <div className="relative z-10 text-white">
-        {/* Top status bar - Enhanced PlayStation style */}
-        <div className="flex justify-between items-center p-4 bg-black/40 backdrop-blur-md border-b border-blue-900/40">
-          <div className="flex items-center space-x-3">
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/40"></div>
-            <span className="text-sm font-medium tracking-wide">{user ? user.email : 'Guest'}</span>
-          </div>
-          <div className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/40"></div>
-            <div className="w-3 h-3 rounded-full bg-white shadow-lg shadow-white/40"></div>
+        {/* Enhanced top status bar with visual improvements */}
+        <div className="relative">
+          {/* Animated glow line under header */}
+          <div className="absolute bottom-0 left-0 w-full h-px bg-blue-500/50 z-0 animate-pulse-slow"></div>
+          
+          {/* Main header with enhanced styling */}
+          <div className="flex justify-between items-center p-4 bg-black/40 backdrop-blur-md border-b border-blue-900/40 relative z-10">
+            {/* Left side with user info */}
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/40"></div>
+                <div className="absolute -inset-1 rounded-full bg-green-500/20 animate-ping opacity-75"></div>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium tracking-wide">{user ? user.email : 'Guest'}</span>
+                <span className="text-xs text-blue-400/80">Online</span>
+              </div>
+            </div>
+            
+            {/* Center with logo/branding */}
+            <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center">
+              <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-green-400">
+                CLIPT
+              </span>
+              <Zap className="h-5 w-5 text-yellow-400 ml-1 animate-pulse-slow" />
+            </div>
+            
+            {/* Right side with time and indicators */}
+            <div className="flex items-center space-x-4">
+              {/* Notification indicator */}
+              <div className="relative group">
+                <Bell className="h-5 w-5 text-blue-300 group-hover:text-blue-100 transition-colors" />
+                {notificationCount > 0 && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-[10px] font-bold">{notificationCount}</span>
+                  </div>
+                )}
+                <div className="absolute -inset-2 rounded-full bg-blue-500/0 group-hover:bg-blue-500/10 transition-all"></div>
+              </div>
+              
+              {/* Time with enhanced styling */}
+              <div className="relative px-3 py-1 rounded-md bg-blue-900/20 border border-blue-500/20">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-md"></div>
+                <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 relative z-10">
+                  {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              
+              {/* Status indicators */}
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/40"></div>
+                <div className="w-3 h-3 rounded-full bg-white shadow-lg shadow-white/40"></div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -159,8 +242,8 @@ const Home = () => {
                 </h2>
               </div>
               
-              {/* Enhanced menu items */}
-              <div className="space-y-3">
+              {/* Enhanced menu items with scrollable container for more items */}
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-blue-700 scrollbar-track-blue-900/20">
                 {menuOptions.map((option, index) => (
                   <div 
                     key={index}
@@ -194,6 +277,13 @@ const Home = () => {
                     }`}>
                       {option.name}
                     </span>
+                    
+                    {/* New item indicator for Notifications */}
+                    {option.name === "Notifications" && notificationCount > 0 && (
+                      <div className="ml-auto bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                        {notificationCount}
+                      </div>
+                    )}
                     
                     {/* Animated hover effect */}
                     <div className={`absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity ${
@@ -279,11 +369,19 @@ const Home = () => {
                     </button>
                     
                     <button 
-                      onClick={() => navigate('/discovery')}
+                      onClick={() => navigate('/squads')}
+                      className="w-full bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-500/80 hover:to-pink-500/80 text-white py-3 px-8 rounded-lg font-medium transition-all shadow-lg hover:shadow-pink-500/20 border border-purple-500/30 flex items-center justify-center"
+                    >
+                      <Users className="mr-2 h-5 w-5" />
+                      My Squads
+                    </button>
+                    
+                    <button 
+                      onClick={() => navigate('/streaming')}
                       className="w-full bg-gradient-to-r from-green-600/80 to-blue-600/80 hover:from-green-500/80 hover:to-blue-500/80 text-white py-3 px-8 rounded-lg font-medium transition-all shadow-lg hover:shadow-blue-500/20 border border-green-500/30 flex items-center justify-center"
                     >
-                      <Compass className="mr-2 h-5 w-5" />
-                      Explore Discovery
+                      <Radio className="mr-2 h-5 w-5" />
+                      Start Streaming
                     </button>
                   </div>
                 </div>
@@ -358,6 +456,11 @@ const globalStyles = `
     100% { opacity: 0.4; }
   }
   
+  @keyframes scan {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 100%; }
+  }
+  
   .animate-float {
     animation: float 15s ease-in-out infinite;
   }
@@ -368,6 +471,21 @@ const globalStyles = `
   
   .animate-pulse-slow {
     animation: pulse-slow 4s ease-in-out infinite;
+  }
+  
+  /* Custom scrollbar styling */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .scrollbar-thumb-blue-700::-webkit-scrollbar-thumb {
+    background-color: rgba(29, 78, 216, 0.5);
+    border-radius: 9999px;
+  }
+  
+  .scrollbar-track-blue-900\/20::-webkit-scrollbar-track {
+    background-color: rgba(30, 58, 138, 0.2);
+    border-radius: 9999px;
   }
 `;
 
