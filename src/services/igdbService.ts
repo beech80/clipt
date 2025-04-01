@@ -18,6 +18,7 @@ export interface IGDBGame {
 interface SearchOptions {
   sort?: string;
   limit?: number;
+  includeFullData?: boolean; 
 }
 
 class IGDBService {
@@ -31,27 +32,32 @@ class IGDBService {
       // For empty queries, return popular games
       if (!cleanQuery) {
         console.log('Empty query, returning popular games');
-        return this.getPopularGames();
+        return this.getPopularGames(options.limit || 100); 
       }
       
       // Build search query with improved pattern matching
       // Use multiple query conditions to ensure we get more comprehensive results
       // First try exact match, then alternative search patterns
-      const searchTerm = cleanQuery.length > 3 
-        ? `where (name ~ "${cleanQuery}"* | name ~ "*${cleanQuery}*" | alternative_names.name ~ "*${cleanQuery}*") & cover != null;`
+      const searchTerm = cleanQuery.length > 2 
+        ? `where (name ~ "${cleanQuery}"* | name ~ "*${cleanQuery}*" | alternative_names.name ~ "*${cleanQuery}*" | keywords.name ~ "*${cleanQuery}*") & cover != null;`
         : `where name ~ "*${cleanQuery}*" & cover != null;`;
       
       // Set up sorting with proper defaults - prioritize relevance when searching
       const sortOption = cleanQuery
-        ? 'sort popularity desc;' // Sort by popularity for search results
+        ? 'sort popularity desc;' 
         : (options.sort ? `sort ${options.sort};` : 'sort popularity desc;');
       
       // Set reasonable limit but increase for searches to ensure we find matches
-      const limitOption = `limit ${options.limit || (cleanQuery ? 50 : 20)};`;
+      const limitOption = `limit ${options.limit || (cleanQuery ? 150 : 100)};`; 
+      
+      // Expand fields to get more comprehensive game data
+      const fields = options.includeFullData 
+        ? 'fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity,alternative_names.name,storyline,total_rating,total_rating_count,aggregated_rating,aggregated_rating_count,game_modes.name,keywords.name,themes.name,similar_games.name,similar_games.cover.url,player_perspectives.name,involved_companies.company.name,videos.video_id,websites.url,websites.category;'
+        : 'fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity,alternative_names.name;';
       
       // Create a well-formed IGDB query with proper formatting
       const igdbQuery = `
-        fields name,rating,cover.url,genres.name,platforms.name,first_release_date,summary,popularity,alternative_names.name;
+        ${fields}
         ${searchTerm}
         ${sortOption}
         ${limitOption}
@@ -90,16 +96,16 @@ class IGDBService {
       } catch (apiError) {
         console.error('Failed to get games from IGDB API, using fallback:', apiError);
         // Fallback to mock data for immediate testing
-        return this.getMockGamesBySearch(cleanQuery, options.limit || 10);
+        return this.getMockGamesBySearch(cleanQuery, options.limit || 20); 
       }
     } catch (error) {
       console.error('Error in searchGames method:', error);
       // Return mock games as fallback
-      return this.getMockGamesBySearch(query, options.limit || 10);
+      return this.getMockGamesBySearch(query, options.limit || 20); 
     }
   }
 
-  async getPopularGames(limit: number = 10): Promise<IGDBGame[]> {
+  async getPopularGames(limit = 100): Promise<IGDBGame[]> { 
     try {
       console.log('Getting popular games from IGDB');
       
