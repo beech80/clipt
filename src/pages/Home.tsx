@@ -166,7 +166,7 @@ const Home = () => {
               <Zap className="h-5 w-5 text-yellow-400 ml-1 animate-pulse-slow" />
             </div>
             
-            {/* Right side with time and indicators */}
+            {/* Right side with notification indicator */}
             <div className="flex items-center space-x-4">
               {/* Notification indicator - now clickable to navigate to notifications page */}
               <div className="relative group cursor-pointer" onClick={handleNotificationsClick}>
@@ -177,20 +177,6 @@ const Home = () => {
                   </div>
                 )}
                 <div className="absolute -inset-2 rounded-full bg-blue-500/0 group-hover:bg-blue-500/10 transition-all"></div>
-              </div>
-              
-              {/* Time with enhanced styling */}
-              <div className="relative px-3 py-1 rounded-md bg-blue-900/20 border border-blue-500/20">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-md"></div>
-                <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 relative z-10">
-                  {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-              
-              {/* Status indicators */}
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-500/40"></div>
-                <div className="w-3 h-3 rounded-full bg-white shadow-lg shadow-white/40"></div>
               </div>
             </div>
           </div>
