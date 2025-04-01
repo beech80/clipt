@@ -317,25 +317,28 @@ const Clipts = () => {
         </div>
       </div>
 
-      {/* Main content with padding for fixed header - Changed to horizontal layout */}
-      <div className="pt-16">
+      {/* Main content - Full page layout */}
+      <div className="pt-16 h-[calc(100vh-80px)]">
         {isLoading ? (
-          <div className="flex justify-center items-center h-[60vh]">
+          <div className="flex justify-center items-center h-full">
             <Button variant="outline" size="icon" className="animate-spin">
               <RefreshCw className="h-5 w-5" />
             </Button>
           </div>
         ) : rawPosts.length > 0 ? (
-          <div className="container mx-auto px-4 py-8">
-            {/* Horizontal Scrollable Container */}
-            <div className="overflow-x-auto pb-4 hide-scrollbar">
-              <div className="flex flex-row space-x-4 min-w-min">
+          <div className="h-full">
+            {/* Horizontal Scrollable Container - Full Height */}
+            <div className="overflow-x-auto h-full hide-scrollbar">
+              <div className="flex flex-row h-full">
                 {rawPosts.map((post) => (
-                  <div key={post.id} className="flex-shrink-0 w-80">
-                    <PostItem 
-                      post={post}
-                      isCliptsPage={true}
-                    />
+                  <div key={post.id} className="flex-shrink-0 min-w-[100vw] h-full px-2">
+                    <div className="h-full flex flex-col">
+                      <PostItem 
+                        post={post}
+                        isCliptsPage={true}
+                        className="flex-grow"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -353,7 +356,7 @@ const Clipts = () => {
             `}</style>
           </div>
         ) : (
-          <div className="flex justify-center items-center h-[60vh]">
+          <div className="flex justify-center items-center h-full">
             <p className="text-gray-400">No clips found</p>
           </div>
         )}
