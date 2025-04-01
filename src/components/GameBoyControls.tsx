@@ -1692,11 +1692,11 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       <div className="fixed bottom-0 left-0 right-0 z-50">
         <div className="game-boy-controls">
           {/* D-Pad */}
-          <div className="d-pad-container">
+          <div className="d-pad-section">
             <div 
-              className="d-pad" 
-              ref={dPadRef} 
-              onTouchStart={handleDPadTouchStart} 
+              ref={dPadRef}
+              className="d-pad"
+              onTouchStart={handleDPadTouchStart}
               onTouchMove={handleDPadTouchMove}
               onTouchEnd={handleDPadTouchEnd}
               onMouseDown={handleDPadMouseDown}
@@ -1720,14 +1720,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
             <button className="main-button" onClick={handleMainButtonClick} aria-label="Navigate to home feed">
               <span>CLIPT</span>
             </button>
-            <div className="select-start-buttons">
-              <button className="select-button" onClick={handleSelectPress} aria-label="Toggle menu">
-                <Menu size={16} />
-              </button>
-              <button className="start-button" onClick={handleStartPress} aria-label="Create new post">
-                <Camera size={16} />
-              </button>
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -1739,14 +1731,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
               aria-label="Comment on post"
             >
               <MessageCircle size={20} />
-            </button>
-            <button 
-              className={`action-button b-button`}
-              onClick={handleSaveVideo}
-              data-action="save-video"
-              aria-label="Save clip"
-            >
-              <Save size={20} />
             </button>
             <button 
               className={`action-button x-button ${hasLiked ? 'active' : ''}`} 

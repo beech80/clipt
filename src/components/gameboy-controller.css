@@ -13,287 +13,63 @@
   border-top: none; /* Remove border */
 }
 
-.game-boy-controls .joystick-container {
+/* D-Pad Section */
+.game-boy-controls .d-pad-section {
   position: relative;
+  width: 90px;
+  height: 90px;
+}
+
+.game-boy-controls .d-pad {
+  position: absolute;
   width: 80px;
   height: 80px;
-}
-
-.joystick-base {
-  position: absolute;
-  inset: 0;
   border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.2);
   border: 2px solid rgba(12, 230, 77, 0.8);
   box-shadow: 0 0 10px rgba(12, 230, 77, 0.6);
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.joystick {
-  position: absolute;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  top: 50%;
-  left: 50%;
-  background: radial-gradient(circle at center, rgba(10, 10, 10, 0.9) 0%, rgba(30, 30, 30, 0.9) 80%);
-  border: 1px solid rgba(12, 230, 77, 0.8);
-  box-shadow: 0 0 8px rgba(12, 230, 77, 0.6);
   cursor: pointer;
 }
 
-.joystick-dot {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  top: 50%;
-  left: 50%;
-  background-color: rgba(12, 230, 77, 0.8);
-  box-shadow: 0 0 5px rgba(12, 230, 77, 0.6);
-}
-
-.game-boy-controls .center-button {
-  width: 80px;
-  height: 80px;
-  position: relative;
-}
-
-.center-button-bg {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-}
-
-.center-button-bg::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, #ff00cc, #3333ff);
-  border-radius: 50%;
-  opacity: 0.8;
-  z-index: -1;
-}
-
-.center-button-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-weight: bold;
-  font-size: 16px;
-  letter-spacing: 1px;
-  text-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
-}
-
-.game-boy-controls .action-buttons {
-  position: relative;
-  width: 80px;
-  height: 80px;
-}
-
-.action-button {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  background: rgba(0, 0, 0, 0.2);
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
-}
-
-.action-button.top {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 2px solid rgba(0, 162, 255, 0.8);
-  box-shadow: 0 0 8px rgba(0, 162, 255, 0.6);
-}
-
-.action-button.right {
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  border: 2px solid rgba(255, 0, 0, 0.8);
-  box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
-}
-
-.action-button.bottom {
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 2px solid rgba(255, 196, 0, 0.8);
-  box-shadow: 0 0 8px rgba(255, 196, 0, 0.6);
-}
-
-.action-button.left {
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  border: 2px solid rgba(128, 0, 255, 0.8);
-  box-shadow: 0 0 8px rgba(128, 0, 255, 0.6);
-}
-
-.game-boy-controls .menu-buttons {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-  gap: 20px;
-}
-
-.menu-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
-}
-
-@media (max-width: 768px) {
-  .game-boy-controls {
-    padding: 10px;
-  }
-  
-  .game-boy-controls .joystick-container,
-  .game-boy-controls .center-button, 
-  .game-boy-controls .action-buttons {
-    transform: scale(0.9);
-  }
-  
-  .game-boy-controls .menu-buttons {
-    margin-top: 5px;
-  }
-}
-
-@media (max-width: 480px) {
-  .game-boy-controls .joystick-container,
-  .game-boy-controls .center-button, 
-  .game-boy-controls .action-buttons {
-    transform: scale(0.8);
-  }
-}
-
-/* Joystick Styling - Xbox-like analog stick */
-.d-pad-container {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  margin-left: 20px;
-}
-
-.d-pad {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  background: #1a1a1a;
-  border-radius: 50%;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
-  overflow: visible;
-  cursor: grab;
-  touch-action: none;
-  transform: translate3d(0, 0, 0);
-}
-
-/* Xbox-like joystick texture */
-.d-pad::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    radial-gradient(circle at center, rgba(60, 60, 60, 0.8) 0%, rgba(30, 30, 30, 0.8) 60%, rgba(10, 10, 10, 0.8) 100%),
-    repeating-conic-gradient(rgba(0, 0, 0, 0.2) 0deg, rgba(20, 20, 20, 0.2) 5deg, rgba(0, 0, 0, 0.2) 10deg);
-  background-color: #222;
-  border-radius: 50%;
-  z-index: 1;
-}
-
-/* Green ring around joystick */
 .d-pad-ring {
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  width: calc(100% + 6px);
-  height: calc(100% + 6px);
-  border-radius: 50%;
-  border: 2px solid rgba(76, 217, 100, 0.7);
-  box-shadow: 0 0 15px rgba(76, 217, 100, 0.4);
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Xbox-like joystick dome */
-.d-pad::after {
-  content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 60%;
   height: 60%;
-  background: radial-gradient(circle at center, #333 0%, #222 70%, #1a1a1a 100%);
   border-radius: 50%;
-  box-shadow: 
-    inset 0 2px 8px rgba(0, 0, 0, 0.9),
-    0 0 10px rgba(255, 255, 255, 0.05);
-  z-index: 2;
+  border: 1px solid rgba(12, 230, 77, 0.6);
 }
 
-/* Joystick indicator dot */
 .joystick-indicator {
   position: absolute;
+  width: 14px;
+  height: 14px;
+  background-color: rgba(12, 230, 77, 0.8);
+  border-radius: 50%;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 10px;
-  height: 10px;
-  background-color: rgba(76, 217, 100, 0.8);
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(76, 217, 100, 0.6);
-  z-index: 3;
-  pointer-events: none;
+  box-shadow: 0 0 5px rgba(12, 230, 77, 0.6);
 }
 
-/* Joystick pressed state */
-.d-pad.pressed {
-  cursor: grabbing;
-}
-
-/* Direction indicators */
+/* Direction Indicators */
 .direction-indicators {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   width: 100%;
   height: 100%;
-  z-index: 2;
   pointer-events: none;
 }
 
 .direction-indicator {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  opacity: 0;
+  width: 0;
+  height: 0;
+  opacity: 0.5;
   transition: opacity 0.2s ease;
 }
 
@@ -301,231 +77,151 @@
   top: 5px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(76, 217, 100, 0.8);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 10px solid rgba(12, 230, 77, 0.9);
 }
 
 .direction-right {
   top: 50%;
   right: 5px;
   transform: translateY(-50%);
-  background-color: rgba(76, 217, 100, 0.8);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 10px solid rgba(12, 230, 77, 0.9);
 }
 
 .direction-down {
   bottom: 5px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(76, 217, 100, 0.8);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 10px solid rgba(12, 230, 77, 0.9);
 }
 
 .direction-left {
   top: 50%;
   left: 5px;
   transform: translateY(-50%);
-  background-color: rgba(76, 217, 100, 0.8);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid rgba(12, 230, 77, 0.9);
 }
 
 .direction-active {
   opacity: 1;
-  box-shadow: 0 0 8px rgba(76, 217, 100, 0.6);
-}
-
-.direction-limit {
-  background-color: rgba(255, 100, 100, 0.8);
-  box-shadow: 0 0 12px rgba(255, 100, 100, 0.7);
-  transform: scale(1.2);
-  transition: all 0.2s ease;
 }
 
 /* Center Section */
-.center-section {
+.game-boy-controls .center-section {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 15px;
 }
 
 .main-button {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background-color: #0D0D18;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.main-button span {
+  background: linear-gradient(135deg, rgba(43, 0, 113, 0.7), rgba(113, 0, 113, 0.7));
+  border: 2px solid;
+  border-image: linear-gradient(45deg, #ff00cc, #3333ff) 1;
   color: white;
   font-weight: bold;
   font-size: 16px;
-  z-index: 3;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-}
-
-/* Cool gradient animation for main button */
-.main-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: conic-gradient(#ff3366, #ff6633, #ffcc33, #33cc33, #3366ff, #cc33ff, #ff3366);
-  opacity: 0.8;
-  border-radius: 50%;
-  animation: rotate 3s linear infinite;
-}
-
-.main-button::after {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  background-color: #0D0D18;
-  border-radius: 50%;
-  z-index: 2;
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.select-start-buttons {
+  letter-spacing: 1px;
+  box-shadow: 0 0 10px rgba(255, 0, 204, 0.4), 0 0 20px rgba(51, 51, 255, 0.2);
   display: flex;
-  gap: 20px;
-}
-
-.select-button,
-.start-button {
-  width: 35px;
-  height: 35px;
-  background-color: #1D1D26;
-  border-radius: 50%;
-  border: none;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
 }
 
-.select-button:active,
-.start-button:active {
+.main-button:active {
   transform: scale(0.95);
-  background-color: #2b2b36;
+  box-shadow: 0 0 15px rgba(255, 0, 204, 0.6), 0 0 30px rgba(51, 51, 255, 0.3);
 }
 
-/* Action Buttons - Darker style matching image */
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin-right: 20px;
+/* Action Buttons */
+.game-boy-controls .action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  width: 90px;
+  height: 90px;
 }
 
 .action-button {
-  position: absolute;
-  width: 42px;
+  width: 38px;
   height: 38px;
-  border-radius: 20px; /* Make them slightly oval like in the image */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
   border: none;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #1a1a24;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
-  z-index: 1;
+  transition: all 0.2s ease;
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
-.save-video-button {
-  position: absolute;
-  width: 42px;
-  height: 38px;
-  border-radius: 20px;
-  border: 2px solid rgba(139, 92, 246, 0.7); /* Purple border */
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(145deg, #1a1a24, #232330);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
-  z-index: 1;
-  /* Position it below the diamond formation */
-  bottom: -40px;
-  left: 50%;
-  transform: translateX(-50%);
+.action-button:active {
+  transform: scale(0.9);
 }
 
-.save-video-button svg {
-  color: white;
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
-}
-
-.save-video-button:active {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-  transform: translateX(-50%) scale(0.95);
-}
-
-.action-button svg {
-  color: white;
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
-}
-
-/* Reset animations but preserve position transformations */
-.button-press-animation, 
-.x-button.button-press-animation, 
-.a-button.button-press-animation, 
-.b-button.button-press-animation, 
-.y-button.button-press-animation, 
-.action-button:active, 
-.a-button:active, 
-.b-button:active, 
-.x-button:active, 
-.y-button:active {
-  animation: none !important;
-}
-
-/* Individual button positioning */
+/* Specific action button styles */
 .a-button {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 2px solid rgba(34, 197, 94, 0.7);
-  background: linear-gradient(145deg, #1a1a24, #232330);
-}
-
-.b-button {
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 2px solid rgba(239, 68, 68, 0.7);
-  background: linear-gradient(145deg, #1a1a24, #232330);
+  grid-column: 2;
+  grid-row: 2;
+  border: 2px solid rgba(0, 153, 255, 0.8);
+  box-shadow: 0 0 8px rgba(0, 153, 255, 0.6);
 }
 
 .x-button {
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 2px solid rgba(59, 130, 246, 0.7);
-  background: linear-gradient(145deg, #1a1a24, #232330);
+  grid-column: 1;
+  grid-row: 1;
+  border: 2px solid rgba(255, 0, 0, 0.8);
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
 }
 
 .y-button {
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 2px solid rgba(234, 179, 8, 0.7);
-  background: linear-gradient(145deg, #1a1a24, #232330);
+  grid-column: 2;
+  grid-row: 1;
+  border: 2px solid rgba(255, 204, 0, 0.8);
+  box-shadow: 0 0 8px rgba(255, 204, 0, 0.6);
+}
+
+/* Active states */
+.action-button.active {
+  background-color: rgba(0, 0, 0, 0.5);
+  transform: scale(0.95);
+  box-shadow: 0 0 12px currentColor;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .game-boy-controls {
+    padding: 10px;
+  }
+  
+  .game-boy-controls .d-pad-section,
+  .game-boy-controls .center-section, 
+  .game-boy-controls .action-buttons {
+    transform: scale(0.9);
+  }
+}
+
+@media (max-width: 480px) {
+  .game-boy-controls .d-pad-section,
+  .game-boy-controls .center-section, 
+  .game-boy-controls .action-buttons {
+    transform: scale(0.8);
+  }
 }
 
 /* Menu Modal */
@@ -727,4 +423,230 @@
   0% { box-shadow: 0 0 0 0 rgba(76, 217, 100, 0.7); }
   50% { box-shadow: 0 0 0 10px rgba(76, 217, 100, 0.2); }
   100% { box-shadow: 0 0 0 0 rgba(76, 217, 100, 0); }
+}
+
+/* Reset animations but preserve position transformations */
+.button-press-animation, 
+.x-button.button-press-animation, 
+.a-button.button-press-animation, 
+.b-button.button-press-animation, 
+.y-button.button-press-animation, 
+.action-button:active, 
+.a-button:active, 
+.b-button:active, 
+.x-button:active, 
+.y-button:active {
+  animation: none !important;
+}
+
+/* Individual button positioning */
+.a-button {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid rgba(34, 197, 94, 0.7);
+  background: linear-gradient(145deg, #1a1a24, #232330);
+}
+
+.b-button {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 2px solid rgba(239, 68, 68, 0.7);
+  background: linear-gradient(145deg, #1a1a24, #232330);
+}
+
+.x-button {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 2px solid rgba(59, 130, 246, 0.7);
+  background: linear-gradient(145deg, #1a1a24, #232330);
+}
+
+.y-button {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid rgba(234, 179, 8, 0.7);
+  background: linear-gradient(145deg, #1a1a24, #232330);
+}
+
+/* Menu Modal */
+.menu-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.menu-container {
+  width: 90%;
+  max-width: 400px;
+  background-color: #0D0D18;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.menu-title {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.close-menu {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-option {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background-color: #1D1D26;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-option:hover,
+.menu-option.selected {
+  background-color: #4a68f9;
+}
+
+.menu-option-icon {
+  width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.menu-option-content {
+  margin-left: 15px;
+}
+
+.menu-option-title {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.menu-option-description {
+  color: #a0aec0;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* Action Buttons - Darker style matching image */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-right: 20px;
+}
+
+.action-button {
+  position: absolute;
+  width: 42px;
+  height: 38px;
+  border-radius: 20px; /* Make them slightly oval like in the image */
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1a1a24;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
+  z-index: 1;
+}
+
+.save-video-button {
+  position: absolute;
+  width: 42px;
+  height: 38px;
+  border-radius: 20px;
+  border: 2px solid rgba(139, 92, 246, 0.7); /* Purple border */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #1a1a24, #232330);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
+  z-index: 1;
+  /* Position it below the diamond formation */
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.save-video-button svg {
+  color: white;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+}
+
+.save-video-button:active {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  transform: translateX(-50%) scale(0.95);
+}
+
+.action-button svg {
+  color: white;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+}
+
+/* Select and Start buttons */
+.select-start-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.select-button,
+.start-button {
+  width: 35px;
+  height: 35px;
+  background-color: #1D1D26;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.select-button:active,
+.start-button:active {
+  transform: scale(0.95);
+  background-color: #2b2b36;
 }
