@@ -4,113 +4,50 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: transparent; /* Completely transparent background */
-  backdrop-filter: none; /* Remove blur effect */
+  background-color: rgba(13, 14, 22, 0.9); /* Dark background matching image */
   padding: 15px 20px;
-  box-shadow: none; /* Remove shadow */
+  box-shadow: none;
   position: relative;
   overflow: hidden;
-  border-top: none; /* Remove border */
+  border-top: none;
+  height: 110px;
 }
 
 /* D-Pad Section - Joystick */
 .game-boy-controls .d-pad-section {
   position: relative;
-  width: 90px;
-  height: 90px;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .game-boy-controls .d-pad {
-  position: absolute;
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: rgba(0, 0, 0, 0.2);
   border: 2px solid rgba(12, 230, 77, 0.8);
-  box-shadow: 0 0 10px rgba(12, 230, 77, 0.6);
+  box-shadow: 0 0 8px rgba(12, 230, 77, 0.6);
   cursor: pointer;
-}
-
-.d-pad-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 60%;
-  height: 60%;
-  border-radius: 50%;
-  border: 1px solid rgba(12, 230, 77, 0.6);
+  position: relative;
 }
 
 .joystick-indicator {
-  position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
   background-color: rgba(12, 230, 77, 0.8);
   border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   box-shadow: 0 0 5px rgba(12, 230, 77, 0.6);
 }
 
-/* Direction Indicators */
+/* Direction indicators - simplified, hidden by default */
 .direction-indicators {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.direction-indicator {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0.5;
-  transition: opacity 0.2s ease;
-}
-
-.direction-up {
-  top: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 10px solid rgba(12, 230, 77, 0.9);
-}
-
-.direction-right {
-  top: 50%;
-  right: 5px;
-  transform: translateY(-50%);
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
-  border-left: 10px solid rgba(12, 230, 77, 0.9);
-}
-
-.direction-down {
-  bottom: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 10px solid rgba(12, 230, 77, 0.9);
-}
-
-.direction-left {
-  top: 50%;
-  left: 5px;
-  transform: translateY(-50%);
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
-  border-right: 10px solid rgba(12, 230, 77, 0.9);
-}
-
-.direction-active {
-  opacity: 1;
+  display: none;
 }
 
 /* Center Section */
@@ -119,32 +56,42 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 
 .main-button {
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(43, 0, 113, 0.7), rgba(113, 0, 113, 0.7));
-  border: 2px solid;
-  border-image: linear-gradient(45deg, #ff00cc, #3333ff) 1;
+  background: rgba(30, 30, 40, 0.8);
+  border: 2px solid transparent;
   color: white;
   font-weight: bold;
   font-size: 16px;
   letter-spacing: 1px;
-  box-shadow: 0 0 10px rgba(255, 0, 204, 0.4), 0 0 20px rgba(51, 51, 255, 0.2);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+  position: relative;
+}
+
+/* Rainbow gradient for CLIPT button */
+.main-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #ff0066, #ff9900, #33cc33, #3399ff, #9933ff, #ff0066);
+  z-index: -1;
 }
 
 .main-button:active {
   transform: scale(0.95);
-  box-shadow: 0 0 15px rgba(255, 0, 204, 0.6), 0 0 30px rgba(51, 51, 255, 0.3);
 }
 
 /* Center menu buttons */
@@ -157,8 +104,8 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background-color: rgba(60, 60, 70, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: rgba(40, 40, 50, 0.7);
+  border: 1px solid rgba(100, 100, 120, 0.4);
   color: white;
   display: flex;
   justify-content: center;
@@ -169,14 +116,17 @@
 /* Action Buttons - Diamond Formation */
 .game-boy-controls .action-buttons {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .action-button {
   position: absolute;
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -185,159 +135,161 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(30, 30, 40, 0.7);
 }
 
-/* Individual button positioning */
+/* Individual button positioning and colors */
 .heart-button {
-  bottom: 50%;
-  left: 50%;
-  transform: translate(-50%, 50%);
-  border: 2px solid rgba(0, 102, 255, 0.8);
-  box-shadow: 0 0 8px rgba(0, 102, 255, 0.6);
-}
-
-.message-button {
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  border: 2px solid rgba(255, 0, 0, 0.8);
-  box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
-}
-
-.trophy-button {
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  border: 2px solid rgba(255, 196, 0, 0.8);
-  box-shadow: 0 0 8px rgba(255, 196, 0, 0.6);
-}
-
-.folder-button {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
+  border: 2px solid rgba(0, 51, 255, 0.8);
+  box-shadow: 0 0 8px rgba(0, 51, 255, 0.5);
+}
+
+.message-button {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   border: 2px solid rgba(0, 204, 102, 0.8);
-  box-shadow: 0 0 8px rgba(0, 204, 102, 0.6);
+  box-shadow: 0 0 8px rgba(0, 204, 102, 0.5);
 }
 
-/* Active states */
+.trophy-button {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid rgba(255, 204, 0, 0.8);
+  box-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
+}
+
+.folder-button {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 2px solid rgba(255, 51, 153, 0.8);
+  box-shadow: 0 0 8px rgba(255, 51, 153, 0.5);
+}
+
+.action-button:hover {
+  transform: scale(1.05) translateX(-50%);
+}
+
+.action-button.heart-button:hover {
+  transform: scale(1.05) translateX(-50%);
+}
+
+.action-button.trophy-button:hover {
+  transform: scale(1.05) translateX(-50%);
+}
+
+.action-button.message-button:hover {
+  transform: scale(1.05) translateY(-50%);
+}
+
+.action-button.folder-button:hover {
+  transform: scale(1.05) translateY(-50%);
+}
+
 .action-button.active {
-  background-color: rgba(0, 0, 0, 0.5);
-  transform: scale(0.95);
-  box-shadow: 0 0 12px currentColor;
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .game-boy-controls {
-    padding: 10px;
-  }
-  
-  .game-boy-controls .d-pad-section,
-  .game-boy-controls .center-section, 
-  .game-boy-controls .action-buttons {
-    transform: scale(0.9);
-  }
-}
-
-@media (max-width: 480px) {
-  .game-boy-controls .d-pad-section,
-  .game-boy-controls .center-section, 
-  .game-boy-controls .action-buttons {
-    transform: scale(0.8);
-  }
-}
-
-/* Menu Modal */
+/* Menu Modal (when opened) */
 .menu-modal {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
-  z-index: 100;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  padding: 20px;
+  align-items: center;
 }
 
 .menu-container {
-  width: 90%;
-  max-width: 400px;
-  background-color: #0D0D18;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-  max-height: 80vh;
-  overflow-y: auto;
+  background-color: rgba(30, 30, 40, 0.95);
+  border-radius: 15px;
+  width: 300px;
+  max-width: 90%;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 }
 
 .menu-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .menu-title {
-  color: white;
-  font-size: 24px;
   font-weight: bold;
+  color: white;
 }
 
 .close-menu {
   background: none;
   border: none;
-  color: white;
-  font-size: 24px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 20px;
   cursor: pointer;
 }
 
 .menu-options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .menu-option {
   display: flex;
   align-items: center;
-  padding: 15px;
-  background-color: #1D1D26;
-  border-radius: 12px;
+  padding: 12px 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s;
 }
 
-.menu-option:hover,
-.menu-option.selected {
-  background-color: #4a68f9;
+.menu-option:hover, .menu-option.selected {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .menu-option-icon {
-  width: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.menu-option-content {
-  margin-left: 15px;
+  margin-right: 15px;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .menu-option-title {
   color: white;
-  font-size: 16px;
-  font-weight: bold;
 }
 
-.menu-option-description {
-  color: #a0aec0;
-  font-size: 12px;
-  margin-top: 5px;
+@media (max-width: 768px) {
+  .game-boy-controls {
+    padding: 10px;
+  }
+  
+  .game-boy-controls .d-pad-section,
+  .game-boy-controls .d-pad {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .main-button {
+    width: 50px;
+    height: 50px;
+    font-size: 14px;
+  }
+  
+  .menu-button {
+    width: 25px;
+    height: 25px;
+  }
+  
+  .action-button {
+    width: 32px;
+    height: 32px;
+  }
 }
