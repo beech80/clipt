@@ -170,7 +170,7 @@ function App() {
   );
 
   // Routes that should display the tabs navigation
-  const tabNavigationRoutes = ['/posts', '/clipts', '/trophies', '/saved'];
+  const tabNavigationRoutes = ['/posts', '/trophies', '/saved'];
   const shouldShowTabNavigation = tabNavigationRoutes.some(route => 
     location.pathname === route
   );
