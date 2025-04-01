@@ -214,6 +214,19 @@ function App() {
     location.pathname === route
   );
 
+  // Add class to body for the fixed GameBoy controls
+  useEffect(() => {
+    if (shouldShowControls) {
+      document.body.classList.add('has-gameboy-controls');
+    } else {
+      document.body.classList.remove('has-gameboy-controls');
+    }
+    
+    return () => {
+      document.body.classList.remove('has-gameboy-controls');
+    };
+  }, [shouldShowControls]);
+
   return (
     <ErrorBoundary>
       <React.Suspense fallback={
@@ -242,7 +255,11 @@ function App() {
                   <AppContent />
                 </div>
                 <PWAInstallPrompt />
-                {shouldShowControls && <GameBoyControls currentPostId={currentPostId} />}
+                {shouldShowControls && (
+                  <div className="fixed-gameboy-controls">
+                    <GameBoyControls currentPostId={currentPostId} />
+                  </div>
+                )}
               </CommentsProvider>
             </ReportDialogProvider>
           </MessagesProvider>
@@ -251,5 +268,19 @@ function App() {
     </ErrorBoundary>
   );
 }
+
+<style jsx global>{`
+  .fixed-gameboy-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000; /* High z-index to ensure it's always on top */
+  }
+  
+  .has-gameboy-controls {
+    padding-bottom: 180px;
+  }
+`}</style>
 
 export default App;
