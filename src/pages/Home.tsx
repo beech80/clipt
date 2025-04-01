@@ -49,9 +49,8 @@ const Home = () => {
   const menuOptions = [
     { name: "Profile", icon: <User className="h-6 w-6" />, action: () => navigate('/profile') },
     { name: "Discovery", icon: <Compass className="h-6 w-6" />, action: () => navigate('/discovery') },
-    { name: "Notifications", icon: <Bell className="h-6 w-6" />, action: () => navigate('/notifications') },
-    { name: "Squads", icon: <Users className="h-6 w-6" />, action: () => navigate('/squads') },
-    { name: "Clipts", icon: <Bookmark className="h-6 w-6" />, action: () => navigate('/clipts') },
+    { name: "Squads", icon: <Users className="h-6 w-6" />, action: () => navigate('/squads-clipts') },
+    { name: "Clipts", icon: <Bookmark className="h-6 w-6" />, action: () => navigate('/clipts-videos') },
     { name: "Messages", icon: <MessageSquare className="h-6 w-6" />, action: () => navigate('/messages') },
     { name: "Settings", icon: <Settings className="h-6 w-6" />, action: () => navigate('/settings') }
   ];
@@ -75,6 +74,11 @@ const Home = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedMenu, menuOptions]);
+
+  // Navigate to notifications page when clicking on the bell icon
+  const handleNotificationsClick = () => {
+    navigate('/notifications');
+  };
 
   return (
     <div className={`min-h-screen relative overflow-hidden transition-all duration-1000 ${
@@ -164,8 +168,8 @@ const Home = () => {
             
             {/* Right side with time and indicators */}
             <div className="flex items-center space-x-4">
-              {/* Notification indicator */}
-              <div className="relative group">
+              {/* Notification indicator - now clickable to navigate to notifications page */}
+              <div className="relative group cursor-pointer" onClick={handleNotificationsClick}>
                 <Bell className="h-5 w-5 text-blue-300 group-hover:text-blue-100 transition-colors" />
                 {notificationCount > 0 && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
@@ -275,13 +279,6 @@ const Home = () => {
                     }`}>
                       {option.name}
                     </span>
-                    
-                    {/* New item indicator for Notifications */}
-                    {option.name === "Notifications" && notificationCount > 0 && (
-                      <div className="ml-auto bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                        {notificationCount}
-                      </div>
-                    )}
                     
                     {/* Animated hover effect */}
                     <div className={`absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity ${
