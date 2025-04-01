@@ -20,7 +20,7 @@ const SquadsClipts = () => {
           </Button>
           <h1 className="text-2xl font-bold text-white flex items-center pixel-font retro-text-shadow">
             <Users className="h-5 w-5 mr-2 text-purple-400" />
-            SQUADS CLIPTS
+            CLIPTS
           </h1>
           <div className="w-8"></div> {/* Spacer for alignment */}
         </div>
