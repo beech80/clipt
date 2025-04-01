@@ -1693,118 +1693,112 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [dPadDirection.x, dPadDirection.y, currentPostId, user]);
 
-  // Modern UI controller based on the image
+  // Modern UI controller based on the image (simple version)
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="game-boy-controls">
-        {/* Left Side - Joystick */}
-        <div className="d-pad-section">
-          <div 
-            className="d-pad" 
-            onClick={toggleMenu}
-            aria-label="Open menu"
-          >
-            <div className="d-pad-ring"></div>
-            <div className="joystick-indicator"></div>
-            <div className="direction-indicators">
-              <div className="direction-indicator direction-up"></div>
-              <div className="direction-indicator direction-right"></div>
-              <div className="direction-indicator direction-down"></div>
-              <div className="direction-indicator direction-left"></div>
-            </div>
-          </div>
+    <div className="game-boy-controls">
+      {/* Left Side - Joystick */}
+      <div className="d-pad-section">
+        <div 
+          className="d-pad" 
+          onClick={toggleMenu}
+          aria-label="Open menu"
+        >
+          <div className="joystick-indicator"></div>
         </div>
-
-        {/* Center - CLIPT button and menu buttons */}
-        <div className="center-section">
-          <button 
-            className="main-button" 
-            onClick={handleMainButtonClick}
-            aria-label="Navigate to home feed"
-          >
-            CLIPT
-          </button>
-          
-          <div className="menu-buttons">
-            <button className="menu-button" aria-label="Menu">
-              <Menu size={18} />
-            </button>
-            <button className="menu-button" aria-label="Camera">
-              <Camera size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Right Side - Action Buttons in Diamond Formation */}
-        <div className="action-buttons">
-          <button 
-            className={`action-button heart-button ${hasLiked ? 'active' : ''}`} 
-            onClick={handleButtonXPress}
-            aria-label="Like post"
-          >
-            <Heart size={16} />
-          </button>
-          <button 
-            className={`action-button message-button ${commentModalOpen ? 'active' : ''}`} 
-            onClick={handleButtonAPress}
-            aria-label="Comment on post"
-          >
-            <MessageCircle size={16} />
-          </button>
-          <button 
-            className="action-button trophy-button"
-            aria-label="Trophy/Rank"
-          >
-            <Trophy size={16} />
-          </button>
-          <button 
-            className="action-button folder-button"
-            aria-label="Save"
-          >
-            <FolderPlus size={16} />
-          </button>
-        </div>
-
-        {/* Menu Modal */}
-        {isMenuOpen && (
-          <div className="menu-modal" onClick={() => setIsMenuOpen(false)}>
-            <div className="menu-container" onClick={(e) => e.stopPropagation()}>
-              <div className="menu-header">
-                <span className="menu-title">Navigation</span>
-                <button className="close-menu" onClick={() => setIsMenuOpen(false)}>×</button>
-              </div>
-              <div className="menu-options">
-                {menuOptions.map((option) => (
-                  <div
-                    key={option.id}
-                    className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
-                    onClick={() => {
-                      setSelectedMenuOption(option.id);
-                      option.action();
-                    }}
-                  >
-                    <div className="menu-option-icon">
-                      {option.icon}
-                    </div>
-                    <div className="menu-option-content">
-                      <div className="menu-option-title">{option.name}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Comment Modal */}
-        {commentModalOpen && currentPostId && (
-          <CommentModal 
-            postId={currentPostId} 
-            onClose={() => setCommentModalOpen(false)}
-            isOpen={commentModalOpen}
-          />
-        )}
       </div>
+
+      {/* Center - CLIPT button and menu buttons */}
+      <div className="center-section">
+        <button 
+          className="main-button" 
+          onClick={handleMainButtonClick}
+          aria-label="Navigate to home feed"
+        >
+          CLIPT
+        </button>
+        
+        <div className="menu-buttons">
+          <button className="menu-button" aria-label="Menu">
+            <Menu size={18} />
+          </button>
+          <button className="menu-button" aria-label="Camera">
+            <Camera size={18} />
+          </button>
+        </div>
+      </div>
+
+      {/* Right Side - Action Buttons in Diamond Formation */}
+      <div className="action-buttons">
+        <button 
+          className={`action-button heart-button ${hasLiked ? 'active' : ''}`}
+          onClick={handleButtonXPress}
+          aria-label="Like post"
+        >
+          <Heart size={16} />
+        </button>
+        <button 
+          className={`action-button message-button ${commentModalOpen ? 'active' : ''}`}
+          onClick={handleButtonAPress}
+          aria-label="Comment on post"
+        >
+          <MessageCircle size={16} />
+        </button>
+        <button 
+          className="action-button trophy-button"
+          onClick={handleTrophy}
+          aria-label="Trophy/Rank"
+        >
+          <Trophy size={16} />
+        </button>
+        <button 
+          className="action-button folder-button"
+          onClick={handleSaveVideo}
+          aria-label="Save"
+        >
+          <FolderPlus size={16} />
+        </button>
+      </div>
+
+      {/* Menu Modal */}
+      {isMenuOpen && (
+        <div className="menu-modal" onClick={() => setIsMenuOpen(false)}>
+          <div className="menu-container" onClick={(e) => e.stopPropagation()}>
+            <div className="menu-header">
+              <span className="menu-title">Navigation</span>
+              <button className="close-menu" onClick={() => setIsMenuOpen(false)}>×</button>
+            </div>
+            <div className="menu-options">
+              {navigationOptions.map((option) => (
+                <div
+                  key={option.id}
+                  className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
+                  onClick={() => {
+                    setSelectedMenuOption(option.id);
+                    navigate(option.path);
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  <div className="menu-option-icon">
+                    {option.icon}
+                  </div>
+                  <div className="menu-option-content">
+                    <div className="menu-option-title">{option.name}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Comment Modal */}
+      {commentModalOpen && currentPostId && (
+        <CommentModal 
+          postId={currentPostId} 
+          onClose={() => setCommentModalOpen(false)}
+          isOpen={commentModalOpen}
+        />
+      )}
     </div>
   );
 };
