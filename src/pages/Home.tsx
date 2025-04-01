@@ -11,7 +11,9 @@ import {
   Image, 
   Film, 
   Users, 
-  MessageSquare
+  MessageSquare,
+  Compass,
+  Bookmark
 } from "lucide-react";
 
 const Home = () => {
@@ -29,13 +31,14 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
   
-  // Menu options
+  // Menu options - updated to match actual existing pages
   const menuOptions = [
-    { name: "Play Game", icon: <Gamepad2 className="h-6 w-6" />, action: () => navigate('/squads') },
+    { name: "Play Game", icon: <Gamepad2 className="h-6 w-6" />, action: () => navigate('/game') },
     { name: "My Profile", icon: <User className="h-6 w-6" />, action: () => navigate('/profile') },
-    { name: "Squads", icon: <Users className="h-6 w-6" />, action: () => navigate('/squads') },
+    { name: "Explore", icon: <Compass className="h-6 w-6" />, action: () => navigate('/explore') },
+    { name: "Clipts", icon: <Bookmark className="h-6 w-6" />, action: () => navigate('/clipts') },
     { name: "Achievements", icon: <Trophy className="h-6 w-6" />, action: () => navigate('/achievements') },
-    { name: "Media", icon: <Film className="h-6 w-6" />, action: () => navigate('/media') },
+    { name: "Clips", icon: <Film className="h-6 w-6" />, action: () => navigate('/clips') },
     { name: "Messages", icon: <MessageSquare className="h-6 w-6" />, action: () => navigate('/messages') },
     { name: "Settings", icon: <Settings className="h-6 w-6" />, action: () => navigate('/settings') }
   ];
@@ -149,10 +152,10 @@ const Home = () => {
                 <h2 className="text-2xl font-bold text-blue-300">{user.email?.split('@')[0]}</h2>
                 <p className="text-blue-400/80">Level 5 Gamer</p>
                 <button 
-                  onClick={() => navigate('/squads')}
+                  onClick={() => navigate('/clipts')}
                   className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-8 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700"
                 >
-                  View Squad Content
+                  View Content
                 </button>
               </div>
             )}
