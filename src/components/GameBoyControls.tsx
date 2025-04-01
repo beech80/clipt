@@ -33,7 +33,8 @@ import {
   Camera,
   FolderPlus,
   Bookmark,
-  Save
+  Save,
+  User
 } from 'lucide-react';
 import {
   FiSettings, 
