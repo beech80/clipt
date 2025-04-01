@@ -256,7 +256,6 @@ function App() {
     height: 100%;
     color-scheme: dark;
   }
-  /* ... */
-}
+`}</style>
 
 export default App;
