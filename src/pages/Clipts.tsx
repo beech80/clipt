@@ -37,6 +37,7 @@ const Clipts = () => {
   const [rawPosts, setRawPosts] = useState<ExtendedPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPostIndex, setCurrentPostIndex] = useState(0);
 
   // Direct fetch function - simplified based on what worked previously
   const fetchPostsDirectly = useCallback(async () => {
@@ -328,26 +329,74 @@ const Clipts = () => {
         ) : rawPosts.length > 0 ? (
           <div className="h-full">
             {/* Horizontal Scrollable Container - Full Height */}
-            <div className="overflow-x-auto h-full hide-scrollbar">
+            <div className="relative overflow-x-auto h-full hide-scrollbar">
               <div className="flex flex-row h-full snap-x snap-mandatory">
-                {rawPosts.map((post) => (
+                {rawPosts.map((post, index) => (
                   <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center">
                     <div className="h-full flex flex-col">
                       <div className="flex-grow flex items-center justify-center">
                         <PostItem 
                           post={post}
                           isCliptsPage={true}
-                          className="w-full max-w-3xl mx-auto post-item-container"
                         />
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
+              
+              {/* Navigation indicators */}
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                {rawPosts.map((_, index) => (
+                  <div 
+                    key={index} 
+                    className={`w-2 h-2 rounded-full ${index === currentPostIndex ? 'bg-white' : 'bg-gray-500'}`}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            {/* Navigation controls */}
+            <div className="absolute left-4 right-4 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none">
+              <button 
+                onClick={() => {
+                  setCurrentPostIndex(prev => 
+                    prev > 0 ? prev - 1 : rawPosts.length - 1
+                  );
+                  document.querySelector('.snap-mandatory')?.scrollTo({
+                    left: (currentPostIndex - 1) * window.innerWidth,
+                    behavior: 'smooth'
+                  });
+                }}
+                className="bg-black/30 rounded-full p-2 pointer-events-auto"
+                aria-label="Previous post"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              <button 
+                onClick={() => {
+                  setCurrentPostIndex(prev => 
+                    prev < rawPosts.length - 1 ? prev + 1 : 0
+                  );
+                  document.querySelector('.snap-mandatory')?.scrollTo({
+                    left: (currentPostIndex + 1) * window.innerWidth,
+                    behavior: 'smooth'
+                  });
+                }}
+                className="bg-black/30 rounded-full p-2 pointer-events-auto"
+                aria-label="Next post"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
             
             {/* Add custom CSS for hiding scrollbar but keeping functionality */}
-            <style jsx>{`
+            <style dangerouslySetInnerHTML={{ __html: `
               .hide-scrollbar {
                 -ms-overflow-style: none;  /* IE and Edge */
                 scrollbar-width: none;  /* Firefox */
@@ -355,7 +404,7 @@ const Clipts = () => {
               .hide-scrollbar::-webkit-scrollbar {
                 display: none;  /* Chrome, Safari and Opera */
               }
-            `}</style>
+            `}} />
           </div>
         ) : (
           <div className="flex justify-center items-center h-full">

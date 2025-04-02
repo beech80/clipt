@@ -241,10 +241,10 @@ const SquadsClipts = () => {
         ) : squadPosts.length > 0 ? (
           <div className="h-full">
             {/* Horizontal Scrollable Container - Full Height */}
-            <div className="overflow-x-auto h-full hide-scrollbar">
+            <div className="relative overflow-x-auto h-full hide-scrollbar">
               <div className="flex flex-row h-full snap-x snap-mandatory">
                 {squadPosts.map((post, index) => (
-                  <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center">
+                  <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center" onClick={() => setCurrentPostIndex(index)}>
                     <div className="h-full flex flex-col max-w-3xl mx-auto">
                       {/* User info */}
                       <div className="p-3 flex items-center space-x-2 bg-blue-900/20 rounded-t-lg">
@@ -317,6 +317,40 @@ const SquadsClipts = () => {
                   </div>
                 ))}
               </div>
+              
+              {/* Navigation indicators */}
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                {squadPosts.map((_, index) => (
+                  <div 
+                    key={index} 
+                    className={`w-2 h-2 rounded-full ${index === currentPostIndex ? 'bg-white' : 'bg-gray-500'}`}
+                    onClick={() => setCurrentPostIndex(index)}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            {/* Navigation controls */}
+            <div className="absolute left-4 right-4 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none">
+              <button 
+                onClick={() => navigatePost('prev')}
+                className="bg-black/30 rounded-full p-2 pointer-events-auto"
+                aria-label="Previous post"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              <button 
+                onClick={() => navigatePost('next')}
+                className="bg-black/30 rounded-full p-2 pointer-events-auto"
+                aria-label="Next post"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
         ) : (
@@ -330,7 +364,7 @@ const SquadsClipts = () => {
       </div>
 
       {/* Add custom CSS for hiding scrollbar but keeping functionality */}
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .hide-scrollbar {
           -ms-overflow-style: none;  /* IE and Edge */
           scrollbar-width: none;  /* Firefox */
@@ -338,7 +372,7 @@ const SquadsClipts = () => {
         .hide-scrollbar::-webkit-scrollbar {
           display: none;  /* Chrome, Safari and Opera */
         }
-      `}</style>
+      `}} />
     </div>
   );
 
