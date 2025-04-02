@@ -960,16 +960,18 @@ const PostItem: React.FC<PostItemProps> = ({
 
   return (
     <article 
-      className={`relative w-full gaming-card transition-opacity duration-300 ${
+      className={`relative gaming-card transition-opacity duration-300 ${
         isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
-      } ${highlight ? 'ring-2 ring-blue-500' : ''}`}
+      } ${highlight ? 'ring-2 ring-blue-500' : ''} ${
+        onCliptsPage ? 'w-80 flex-shrink-0 h-full max-h-[600px] overflow-hidden flex flex-col' : 'w-full'
+      }`}
       data-post-id={postId}
     >
       {/* User Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gaming-400/20">
-        <div className="flex items-center space-x-3">
+      <div className={`flex items-center justify-between ${onCliptsPage ? 'p-2' : 'p-4'} border-b border-gaming-400/20`}>
+        <div className="flex items-center space-x-2">
           <Avatar 
-            className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200"
+            className={`${onCliptsPage ? 'h-8 w-8' : 'h-10 w-10'} cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200`}
             onClick={() => handleProfileClick(post.user_id)}
           >
             <AvatarImage src={avatarUrl || ''} alt={username} />
@@ -978,17 +980,17 @@ const PostItem: React.FC<PostItemProps> = ({
           <div className="flex flex-col">
             <span 
               onClick={() => handleProfileClick(post.user_id)}
-              className="text-base font-semibold text-gaming-100 hover:text-gaming-200 cursor-pointer"
+              className={`${onCliptsPage ? 'text-sm' : 'text-base'} font-semibold text-gaming-100 hover:text-gaming-200 cursor-pointer truncate max-w-[180px]`}
             >
               {username}
             </span>
             {gameName && gameId && (
-              <div className="mb-1">
+              <div className={onCliptsPage ? 'mb-0' : 'mb-1'}>
                 <span 
-                  className="text-gaming-300 hover:text-gaming-100 cursor-pointer text-sm"
+                  className="text-gaming-300 hover:text-gaming-100 cursor-pointer text-xs truncate max-w-[180px] block"
                   onClick={(e) => handleGameClick(e, gameId, gameName)} 
                 >
-                  Playing {gameName}
+                  {onCliptsPage ? gameName : `Playing ${gameName}`}
                 </span>
               </div>
             )}
@@ -1013,119 +1015,36 @@ const PostItem: React.FC<PostItemProps> = ({
       </div>
 
       {/* Post Content */}
-      <div className="w-full">
+      <div className={`${onCliptsPage ? 'flex-1 min-h-0 overflow-hidden' : 'w-full'}`}>
         <PostContent
           imageUrl={post.image_url}
           videoUrl={post.video_url}
           postId={postId}
+          compact={onCliptsPage}
         />
       </div>
 
-      {/* Interaction Counts */}
-      <div className="flex justify-around py-3 border-t border-gaming-400/20">
-        <button 
-          className="like-button flex items-center text-sm font-medium transition-all duration-200 group"
-          onClick={handleLikeToggle}
-          disabled={likeLoading}
-        >
-          <Heart 
-            className={`h-6 w-6 ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
-            fill={liked ? "currentColor" : "none"}
-          />
-          <span className={`text-base font-medium ${liked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-500'}`}>
-            {likesCount}
-          </span>
-        </button>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <button 
-              className="comment-button flex items-center text-sm font-medium text-gray-400 hover:text-blue-500 transition-all duration-200 group"
-              onClick={handleComment}
-            >
-              <MessageSquare 
-                className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" 
-              />
-              <span className="text-base font-medium text-gray-400 group-hover:text-blue-300">
-                {commentsCount}
-              </span>
-            </button>
-          </DialogTrigger>
-          {!isProfilePage && (
-            <DialogContent className="bg-[#1D1E2A] border-[#2C2D41] text-white p-4 max-w-md mx-auto">
-              <h3 className="text-lg font-bold mb-3">Add Comment</h3>
-              <p className="text-sm text-gray-400 mb-4">Commenting on post from {post.profiles?.username || 'user'}</p>
-              
-              <Textarea
-                placeholder="Write your comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="bg-[#252636] border-[#333442] text-white min-h-[100px] mb-4"
-              />
-              
-              <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  className="border-[#3F4252] text-gray-300 hover:bg-[#2C2D41]"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={submitComment}
-                  disabled={isSubmitting || !commentText.trim()}
-                  className="bg-[#6366F1] hover:bg-[#4F46E5] text-white"
-                >
-                  {isSubmitting ? 'Posting...' : 'Post Comment'}
-                </Button>
-              </div>
-            </DialogContent>
-          )}
-        </Dialog>
-        <button 
-          className="trophy-button flex items-center text-sm font-medium text-gray-400 hover:text-yellow-500 transition-all duration-200 group"
-          onClick={handleTrophyVote}
-          disabled={trophyLoading}
-          aria-label={hasTrophy ? "Remove rank" : "Rank up clip"}
-        >
-          <Trophy 
-            className={`h-6 w-6 ${hasTrophy ? 'text-yellow-500 fill-yellow-500' : 'text-yellow-500'} transition-all ${trophyLoading ? 'opacity-50' : ''}`}
-          />
-          <span className={`text-base font-medium ml-1 ${hasTrophy ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-500'}`}>
-            {post.rank || trophyCount || 0}
-          </span>
-        </button>
-        
-        {/* Always show the share button */}
-        <ShareButton postId={post.id} className="share-button" />
-        
-        <button 
-          className="save-button flex items-center text-sm font-medium text-gray-400 hover:text-blue-500 transition-all duration-200 group"
-          onClick={handleSaveVideo}
-          disabled={saveLoading}
-          aria-label={isSaved ? "Remove from saved videos" : "Save video"}
-        >
-          <Bookmark 
-            className={`h-6 w-6 ${isSaved ? 'text-blue-500 fill-blue-500' : 'text-gray-400 group-hover:text-blue-500'} transition-transform duration-200 group-hover:scale-110 group-active:scale-90`}
-            fill={isSaved ? "currentColor" : "none"}
-          />
-        </button>
+      {/* Share Button */}
+      <div className={`flex justify-center ${onCliptsPage ? 'py-2' : 'py-3'} border-t border-gaming-400/20 flex-shrink-0`}>
+        {/* Only show the share button */}
+        <ShareButton postId={post.id} className={`share-button ${onCliptsPage ? 'scale-90' : ''}`} />
       </div>
 
       {/* Caption */}
       {post.content && (
-        <div className="px-4 py-3 border-t border-gaming-400/20">
-          <p className="text-base text-gaming-100">
+        <div className={`${onCliptsPage ? 'px-2 py-2' : 'px-4 py-3'} border-t border-gaming-400/20 ${onCliptsPage ? 'flex-shrink-0' : ''}`}>
+          <p className={`${onCliptsPage ? 'text-sm' : 'text-base'} text-gaming-100`}>
             <span className="font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
               {username}
             </span>
             {' '}
-            <span className="text-gaming-200">{post.content}</span>
+            <span className="text-gaming-200 line-clamp-2 overflow-hidden">{post.content}</span>
           </p>
         </div>
       )}
 
       {/* Inline Comments Section - Showing limited comments by default */}
-      {!showComments && !window.location.pathname.includes('/post/') && (
+      {!showComments && !window.location.pathname.includes('/post/') && !onCliptsPage && (
         <InlineComments 
           postId={postId}
           maxComments={3}
@@ -1134,7 +1053,7 @@ const PostItem: React.FC<PostItemProps> = ({
       )}
 
       {/* Full Comments Section - shown when expanded */}
-      {showComments && !window.location.pathname.includes('/post/') && (
+      {showComments && !window.location.pathname.includes('/post/') && !onCliptsPage && (
         <div className="border-t border-gaming-400/20">
           {postId ? (
             <CommentList 
