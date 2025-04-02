@@ -976,8 +976,8 @@ const Profile = () => {
         </div>
       </div>
       
-      {/* Tab Content Container - Add bottom padding to accommodate GameBoy controller */}
-      <div className="pb-24">
+      {/* Tab Content Container */}
+      <div className="pb-6">
         {/* Tabs Header - Navy blue background with icons like in screenshot */}
         <div className="flex justify-center mb-4 bg-[#0b1457] py-3 border-b border-gaming-700">
           <div className="flex w-full max-w-md justify-around">

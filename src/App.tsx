@@ -246,7 +246,7 @@ function App() {
 }
 
 <style jsx global>{`
-  /* GameBoy controls styling has been removed */
+  /* Global styles */
   
   html, body {
     margin: 0;

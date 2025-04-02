@@ -144,37 +144,3 @@
     max-height: 70vh;
   }
 }
-
-/* Import joystick animations */
-@import './components/joystick-animations.css';
-
-/* Highlight for currently visible posts when using joystick */
-.joystick-visible-post {
-  position: relative;
-  z-index: 2;
-}
-
-.joystick-visible-post::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  box-shadow: 0 0 0 2px rgba(80, 180, 250, 0.7);
-  border-radius: 8px;
-  pointer-events: none;
-  animation: pulse-highlight 2s infinite;
-}
-
-@keyframes pulse-highlight {
-  0% {
-    box-shadow: 0 0 0 2px rgba(80, 180, 250, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 3px rgba(80, 180, 250, 0.8);
-  }
-  100% {
-    box-shadow: 0 0 0 2px rgba(80, 180, 250, 0.4);
-  }
-}
