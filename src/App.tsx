@@ -119,9 +119,10 @@ function AppContent() {
       <Route path="/group-chat" element={<GroupChat />} />
       <Route path="/game/:id" element={<GameDetailsPage />} />
       <Route path="/games" element={<TopGames />} />
-      <Route path="/clipts" element={<Clipts />} />
+      {/* Removed Clipts and Squads pages as requested */}
+      {/* <Route path="/clipts" element={<Clipts />} /> */}
       <Route path="/top-clipts" element={<TopClipts />} />
-      <Route path="/squads-clipts" element={<SquadsClipts />} />
+      {/* <Route path="/squads-clipts" element={<SquadsClipts />} /> */}
       <Route path="/profile/:id?" element={<UserProfile />} />
       <Route path="/discover" element={<Discovery />} />
       <Route path="/explore" element={<Explore />} />
@@ -145,7 +146,8 @@ function AppContent() {
       <Route path="/game-streamers/:gameId" element={<GameStreamers />} />
       <Route path="/retro-search" element={<RetroSearchPage />} />
       <Route path="/video-debug" element={<VideoDebug />} />
-      <Route path="/posts" element={<Home />} />
+      {/* Removed Posts page as requested */}
+      {/* <Route path="/posts" element={<Home />} /> */}
       <Route path="/trophies" element={<TopClipts />} />
       <Route path="/saved" element={<Saved />} />
       <Route path="/notifications" element={<Notifications />} />
@@ -202,7 +204,7 @@ function App() {
   }, []);
 
   // Routes that should display the tabs navigation
-  const tabNavigationRoutes = ['/posts', '/trophies', '/saved'];
+  const tabNavigationRoutes = ['/trophies', '/saved'];
   const shouldShowTabNavigation = tabNavigationRoutes.some(route => 
     location.pathname === route
   );
