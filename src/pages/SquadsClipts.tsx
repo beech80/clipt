@@ -245,9 +245,9 @@ const SquadsClipts = () => {
               <div className="flex flex-row h-full snap-x snap-mandatory">
                 {squadPosts.map((post, index) => (
                   <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center" onClick={() => setCurrentPostIndex(index)}>
-                    <div className="h-full flex flex-col max-w-3xl mx-auto">
+                    <div className="h-full flex flex-col max-w-3xl mx-auto md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
                       {/* User info */}
-                      <div className="p-3 flex items-center space-x-2 bg-blue-900/20 rounded-t-lg">
+                      <div className="p-3 flex items-center gap-2 bg-blue-900/20 rounded-t-lg">
                         <Avatar 
                           className="w-10 h-10 rounded-full overflow-hidden cursor-pointer"
                           onClick={() => post?.user_id && navigate(`/profile/${post.user_id}`)}
@@ -270,7 +270,7 @@ const SquadsClipts = () => {
                       
                       {/* Video content - Make it take most of the space with square ratio */}
                       <div className="bg-[#0F1573] flex-grow flex items-center justify-center rounded-b-lg">
-                        <div className="w-full" style={{ aspectRatio: '1/1' }}>
+                        <div className="w-full md:max-w-[80%] lg:max-w-[70%] xl:max-w-[60%] mx-auto" style={{ aspectRatio: '1/1' }}>
                         {getMediaUrl(post) && 
                          (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
                           <video 
@@ -288,7 +288,7 @@ const SquadsClipts = () => {
                       </div>
                       
                       {/* Action buttons - Only in the post container, not at the bottom */}
-                      <div className="p-4 flex items-center justify-between bg-black/30 rounded-b-lg">
+                      <div className="p-4 flex items-center justify-between md:justify-center md:gap-12 bg-black/30 rounded-b-lg">
                         <button 
                           className={`flex items-center ${post?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
                           onClick={() => post?.id && likeMutation.mutate(post.id)}
@@ -297,7 +297,7 @@ const SquadsClipts = () => {
                           <span className="text-base">{post?.likes_count || 0}</span>
                         </button>
                         
-                        <button className="flex items-center text-blue-400">
+                        <button className="flex items-center text-blue-400" onClick={() => navigate(`/post/${post.id}`)}>
                           <MessageSquare className="mr-1 h-6 w-6" />
                           <span className="text-base">{post?.comments_count || 0}</span>
                         </button>
