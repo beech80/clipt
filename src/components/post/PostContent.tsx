@@ -222,10 +222,10 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false }: PostConten
       {/* Media Content */}
       {videoUrl ? (
         <div className="relative w-full h-full bg-black" style={{ 
-          aspectRatio: '16/9', 
-          maxHeight: compact ? '202px' : '90vh', /* Exactly 16:9 ratio for 360px width */
+          aspectRatio: '1/1', 
+          maxHeight: compact ? '360px' : '90vh', /* Square aspect ratio */
           display: 'block', 
-          minHeight: compact ? '202px' : '300px', /* Ensure exact 16:9 ratio for 360px width */
+          minHeight: compact ? '360px' : '360px', /* Ensure square aspect ratio */
           overflow: 'hidden',
           width: '100%'
         }}>
@@ -323,9 +323,9 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false }: PostConten
             className={`w-full object-cover bg-black`}
             style={compact ? { 
               width: '100%', 
-              height: '202px', /* Exactly 16:9 for 360px width */
+              height: '360px', /* Square aspect ratio */
               objectFit: 'cover'
-            } : { aspectRatio: '16/9' }}
+            } : { aspectRatio: '1/1' }}
             onLoad={handleMediaLoad}
             onError={handleImageError}
             onClick={() => setShowFullscreenGallery(true)}

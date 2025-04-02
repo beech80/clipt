@@ -268,9 +268,9 @@ const SquadsClipts = () => {
                         </span>
                       </div>
                       
-                      {/* Video content - Make it take most of the space with 16:9 aspect ratio */}
+                      {/* Video content - Make it take most of the space with square ratio */}
                       <div className="bg-[#0F1573] flex-grow flex items-center justify-center rounded-b-lg">
-                        <div className="w-full" style={{ aspectRatio: '16/9' }}>
+                        <div className="w-full" style={{ aspectRatio: '1/1' }}>
                         {getMediaUrl(post) && 
                          (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
                           <video 
