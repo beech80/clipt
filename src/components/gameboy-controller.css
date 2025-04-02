@@ -12,7 +12,7 @@
   z-index: 100;
 }
 
-/* D-Pad Section - Joystick with concentric rings */
+/* D-Pad Section - Joystick with green ring */
 .game-boy-controls .d-pad-section {
   position: relative;
   width: 75px;
@@ -24,9 +24,10 @@
 
 .game-boy-controls .d-pad.classic {
   position: relative;
-  width: 60px;
-  height: 60px;
-  background-color: #5659af; /* Purple-blue background */
+  width: 70px;
+  height: 70px;
+  background-color: #111; /* Dark background */
+  border: 2px solid #1db954; /* Green outline matching image */
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -39,7 +40,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
+  color: #1db954; /* Green text color matching outline */
   font-weight: bold;
   font-size: 18px;
 }
@@ -63,7 +64,7 @@
 .d-pad-center {
   width: 20px;
   height: 20px;
-  background-color: #3e7bfe; /* Blue center */
+  background-color: #1db954; /* Green center */
   border-radius: 50%;
 }
 
@@ -81,7 +82,7 @@
   height: 60px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #f5515f, #a1051d); /* Red-pink gradient */
+  background: #111; /* Dark background */
   color: white;
   font-weight: bold;
   display: flex;
@@ -90,43 +91,64 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+/* Rainbow border for CLIPT button */
+.main-button.classic::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff00ff);
+  border-radius: 50%;
+  z-index: -1;
 }
 
 /* Menu buttons below CLIPT */
 .menu-buttons {
   display: flex;
   gap: 15px;
+  margin-top: 10px;
 }
 
 .menu-button {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background-color: rgba(40, 40, 50, 0.8);
-  color: white;
+  background-color: #111;
+  color: #aaa;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  border: none;
+  border: 1px solid #333;
 }
 
 /* Action Buttons - Diamond Formation */
 .game-boy-controls .action-buttons.classic {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  position: relative;
+  width: 120px;
+  height: 120px;
 }
 
+/* B Button (Green) */
 .b-button {
-  width: 60px;
-  height: 60px;
+  position: absolute;
+  right: 30px;
+  bottom: 0;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, #28c76f, #1e9c56); /* Green gradient */
-  color: white;
+  background: #111; /* Dark background */
+  border: 2px solid #1db954; /* Green border */
+  color: #1db954; /* Green text */
   font-weight: bold;
-  font-size: 20px;
+  font-size: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -135,9 +157,58 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.b-button:active {
-  transform: scale(0.95);
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+/* Heart/Like Button (Blue) */
+.heart-button {
+  position: absolute;
+  top: 10px;
+  left: 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #111; /* Dark background */
+  border: 2px solid #4285f4; /* Blue border */
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Save/Folder Button (Red) */
+.save-button {
+  position: absolute;
+  right: 10px;
+  top: 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #111; /* Dark background */
+  border: 2px solid #ea4335; /* Red border */
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Trophy Button (Gold) */
+.trophy-button {
+  position: absolute;
+  bottom: 30px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #111; /* Dark background */
+  border: 2px solid #fbbc05; /* Gold border */
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 
 /* Menu Modal (when opened) */
