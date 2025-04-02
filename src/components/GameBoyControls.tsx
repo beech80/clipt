@@ -1693,76 +1693,66 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [dPadDirection.x, dPadDirection.y, currentPostId, user]);
 
-  // Modern UI controller matching the image exactly
+  // Classic UI controller matching the old design
   return (
     <div className="game-boy-controls">
-      {/* Left Side - Green Joystick with ring */}
+      {/* Left Side - Purple/Blue D-pad */}
       <div className="d-pad-section">
         <div 
-          className="d-pad" 
+          className="d-pad classic" 
           onClick={toggleMenu}
           aria-label="Open menu"
         >
-          <div className="joystick-indicator"></div>
+          <div className="d-pad-button up" onClick={(e) => {e.stopPropagation(); handleDPadPress(0, -1);}}>
+            <span>↑</span>
+          </div>
+          <div className="d-pad-button right" onClick={(e) => {e.stopPropagation(); handleDPadPress(1, 0);}}>
+            <span>→</span>
+          </div>
+          <div className="d-pad-button down" onClick={(e) => {e.stopPropagation(); handleDPadPress(0, 1);}}>
+            <span>↓</span>
+          </div>
+          <div className="d-pad-button left" onClick={(e) => {e.stopPropagation(); handleDPadPress(-1, 0);}}>
+            <span>←</span>
+          </div>
+          <div 
+            className="d-pad-center"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Toggle between like and comment actions when pressing center
+              if (currentPostId) {
+                handleButtonXPress(); // Like action
+              }
+            }}
+          ></div>
         </div>
       </div>
 
-      {/* Center - CLIPT button with rainbow gradient border and menu buttons below */}
+      {/* Center - CLIPT button with red-pink gradient */}
       <div className="center-section">
         <button 
-          className="main-button" 
+          className="main-button classic" 
           onClick={handleMainButtonClick}
           aria-label="Navigate to home feed"
+          onDoubleClick={() => {
+            if (currentPostId) {
+              handleButtonAPress(); // Comment action on double-click
+            }
+          }}
         >
           CLIPT
         </button>
-        
-        <div className="menu-buttons">
-          <button className="menu-button" aria-label="Menu">
-            <Menu size={16} />
-          </button>
-          <button className="menu-button" aria-label="Camera">
-            <Camera size={16} />
-          </button>
-        </div>
       </div>
 
-      {/* Right Side - Action Buttons in Diamond Formation with colored borders matching image */}
-      <div className="action-buttons">
-        {/* Heart/Like (blue) at top */}
+      {/* Right Side - Green B Button */}
+      <div className="action-buttons classic">
         <button 
-          className={`action-button heart-button ${hasLiked ? 'active' : ''}`}
-          onClick={handleButtonXPress}
-          aria-label="Like post"
-        >
-          <Heart size={16} />
-        </button>
-        
-        {/* Save/Folder (teal) at right */}
-        <button 
-          className="action-button folder-button"
+          className="b-button"
           onClick={handleSaveVideo}
-          aria-label="Save video"
+          onDoubleClick={handleTrophy} // Trophy/rank action on double-click
+          aria-label="Save video / Trophy"
         >
-          <FolderPlus size={16} />
-        </button>
-        
-        {/* Trophy/Rank (yellow/gold) at bottom */}
-        <button 
-          className="action-button trophy-button"
-          onClick={handleTrophy}
-          aria-label="Trophy/Rank"
-        >
-          <Trophy size={16} />
-        </button>
-        
-        {/* Message/Comment (pink) at left */}
-        <button 
-          className={`action-button message-button ${commentModalOpen ? 'active' : ''}`}
-          onClick={handleButtonAPress}
-          aria-label="Comment on post"
-        >
-          <MessageCircle size={16} />
+          B
         </button>
       </div>
 
