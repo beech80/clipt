@@ -11,9 +11,10 @@ interface PostContentProps {
   imageUrl?: string | null;
   videoUrl?: string | null;
   postId: string;
+  compact?: boolean;
 }
 
-const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
+const PostContent = ({ imageUrl, videoUrl, postId, compact = false }: PostContentProps) => {
   const [isMediaLoaded, setIsMediaLoaded] = useState(false);
   const [isMediaError, setIsMediaError] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -222,9 +223,10 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
       {videoUrl ? (
         <div className="relative w-full h-full bg-black" style={{ 
           aspectRatio: '16/9', 
-          maxHeight: '90vh', 
+          maxHeight: compact ? '250px' : '90vh', 
           display: 'block', 
-          minHeight: '300px' /* Ensure a minimum height for the video container */
+          minHeight: compact ? '180px' : '300px', /* Adjusted for compact mode */
+          overflow: 'hidden'
         }}>
           {isMediaError ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
@@ -317,7 +319,8 @@ const PostContent = ({ imageUrl, videoUrl, postId }: PostContentProps) => {
           <img
             src={imageUrls[0]}
             alt="Post content"
-            className="w-full aspect-video object-cover bg-black"
+            className={`w-full ${compact ? 'h-48 object-cover' : 'aspect-video object-cover'} bg-black`}
+            style={compact ? { maxHeight: '200px' } : {}}
             onLoad={handleMediaLoad}
             onError={handleImageError}
             onClick={() => setShowFullscreenGallery(true)}
