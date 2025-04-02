@@ -15,9 +15,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 550px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
 }
 
 /* D-Pad / Joystick */
@@ -168,8 +168,8 @@
 /* Action Buttons */
 .action-buttons {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
 }
 
 .action-button {
@@ -192,7 +192,7 @@
 }
 
 .action-button.like {
-  top: -5px;
+  top: -10px;
   left: 50%;
   transform: translateX(-50%);
   color: #ff3366;
@@ -214,7 +214,7 @@
 
 .action-button.comment {
   top: 50%;
-  right: -5px;
+  right: -10px;
   transform: translateY(-50%);
   color: #0095ff;
 }
@@ -234,7 +234,7 @@
 }
 
 .action-button.trophy {
-  bottom: -5px;
+  bottom: -10px;
   left: 50%;
   transform: translateX(-50%);
   color: #ffcf00;
@@ -256,7 +256,7 @@
 
 .action-button.save {
   top: 50%;
-  left: -5px;
+  left: -10px;
   transform: translateY(-50%);
   color: #cc33cc;
 }
