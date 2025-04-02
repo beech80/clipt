@@ -5,43 +5,55 @@
   left: 0;
   width: 100%;
   z-index: 1000;
-  padding: 0.5rem;
-  background-color: rgba(8, 8, 16, 0.95);
+  padding: 0.5rem 0 0.75rem;
+  background-color: rgba(5, 5, 14, 0.95);
   backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(80, 80, 255, 0.3);
+  border-top: 1px solid rgba(40, 40, 80, 0.4);
 }
 
 .gameboy-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 768px;
+  max-width: 500px;
   margin: 0 auto;
-  padding: 0.5rem 1rem;
+  padding: 0 1rem;
 }
 
 /* D-Pad / Joystick */
 .d-pad {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
-  border: 2px solid rgba(0, 180, 0, 0.5);
-  background-color: rgba(10, 10, 10, 0.8);
-  box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+  background: linear-gradient(to bottom, #111111, #050505);
+  box-shadow: 
+    0 0 0 1px rgba(0, 100, 0, 0.3),
+    0 0 15px rgba(0, 255, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .d-pad::after {
   content: '';
   position: absolute;
-  width: 16px;
-  height: 16px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background-color: rgba(0, 255, 0, 0.8);
-  box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+  background-color: rgba(0, 255, 0, 0.9);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+}
+
+.d-pad::before {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 90, 0, 0.3);
+  background-color: rgba(15, 15, 15, 0.9);
 }
 
 .d-pad-button {
@@ -62,26 +74,26 @@
 }
 
 .d-pad-button.up {
-  top: 5px;
+  top: 0px;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .d-pad-button.right {
   top: 50%;
-  right: 5px;
+  right: 0px;
   transform: translateY(-50%);
 }
 
 .d-pad-button.down {
-  bottom: 5px;
+  bottom: 0px;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .d-pad-button.left {
   top: 50%;
-  left: 5px;
+  left: 0px;
   transform: translateY(-50%);
 }
 
@@ -89,63 +101,69 @@
   display: none;
 }
 
+/* Center Section */
+.center-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
 /* CLIPT Button */
 .clipt-button {
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: rgba(20, 20, 30, 0.8);
-  border: 2px solid transparent;
-  border-image: linear-gradient(to right, #ff3e3e, #4a4dff);
-  border-image-slice: 1;
+  background: rgba(15, 15, 20, 0.97);
+  border: none;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-weight: bold;
   color: white;
-  transition: all 0.2s ease;
   font-size: 12px;
-  box-shadow: 0 0 20px rgba(119, 0, 255, 0.3);
-  position: relative;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 15px rgba(50, 50, 80, 0.15);
   overflow: hidden;
-  animation: pulse 2s infinite ease-in-out;
+  z-index: 1;
 }
 
-.clipt-button:before {
+.clipt-button::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, #ff0080, #7928ca, #4a4dff, #7928ca, #ff0080);
-  background-size: 200% 100%;
-  animation: gradient-shift 10s linear infinite;
-  opacity: 0.3;
+  margin: -1px;
   border-radius: 50%;
+  background: conic-gradient(
+    #ff0000,
+    #ff8800,
+    #ffff00,
+    #00ff00,
+    #00ffff,
+    #0088ff,
+    #8800ff,
+    #ff00ff,
+    #ff0000
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1.5px;
+  z-index: -1;
+  animation: rotate 8s linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .clipt-button:active {
-  transform: scale(0.9);
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 10px rgba(119, 0, 255, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(119, 0, 255, 0.5);
-  }
-  100% {
-    box-shadow: 0 0 10px rgba(119, 0, 255, 0.3);
-  }
-}
-
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
+  transform: scale(0.95);
 }
 
 /* Action Buttons */
@@ -165,11 +183,9 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.1s ease;
-  background-color: rgba(10, 10, 10, 0.8);
-}
-
-.action-button:active {
-  transform: scale(0.9);
+  background: rgba(15, 15, 20, 0.97);
+  border: none;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .action-button svg {
@@ -181,60 +197,110 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  border: 2px solid #ff0080;
-  color: #ff0080;
-  box-shadow: 0 0 10px rgba(255, 0, 128, 0.4);
+  box-shadow: 0 0 10px rgba(255, 0, 128, 0.2);
+  color: #ff3366;
+}
+
+.action-button.like::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: -1px;
+  border-radius: 50%;
+  background: rgba(255, 51, 102, 0.7);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1.5px;
+  z-index: -1;
 }
 
 .action-button.comment {
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  border: 2px solid #00bfff;
-  color: #00bfff;
-  box-shadow: 0 0 10px rgba(0, 191, 255, 0.4);
+  box-shadow: 0 0 10px rgba(0, 149, 255, 0.2);
+  color: #0095ff;
+}
+
+.action-button.comment::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: -1px;
+  border-radius: 50%;
+  background: rgba(0, 149, 255, 0.7);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1.5px;
+  z-index: -1;
 }
 
 .action-button.trophy {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  border: 2px solid #ffcf00;
+  box-shadow: 0 0 10px rgba(255, 207, 0, 0.2);
   color: #ffcf00;
-  box-shadow: 0 0 10px rgba(255, 207, 0, 0.4);
+}
+
+.action-button.trophy::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: -1px;
+  border-radius: 50%;
+  background: rgba(255, 207, 0, 0.7);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1.5px;
+  z-index: -1;
 }
 
 .action-button.save {
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  border: 2px solid #4a4dff;
-  color: #4a4dff;
-  box-shadow: 0 0 10px rgba(74, 77, 255, 0.4);
+  box-shadow: 0 0 10px rgba(204, 51, 204, 0.2);
+  color: #cc33cc;
+}
+
+.action-button.save::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: -1px;
+  border-radius: 50%;
+  background: rgba(204, 51, 204, 0.7);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1.5px;
+  z-index: -1;
 }
 
 /* Menu buttons */
 .menu-buttons {
   display: flex;
-  gap: 10px;
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  justify-content: center;
+  gap: 15px;
+  margin-top: 0;
 }
 
 .menu-button {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background-color: rgba(30, 30, 30, 0.8);
-  border: 1px solid rgba(100, 100, 100, 0.5);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: rgba(30, 30, 40, 0.7);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.1s ease;
-  color: #8a8a8a;
+  color: #9a9aaa;
 }
 
 .menu-button:active {
@@ -242,26 +308,14 @@
 }
 
 .menu-button svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 /* Media queries for responsive design */
 @media (max-width: 768px) {
   .gameboy-controls {
-    padding: 0.25rem;
-  }
-  
-  .d-pad {
-    transform: scale(0.9);
-  }
-  
-  .action-buttons {
-    transform: scale(0.9);
-  }
-  
-  .clipt-button {
-    transform: scale(0.9);
+    padding: 0 0.75rem;
   }
 }
 
@@ -271,14 +325,14 @@
   }
   
   .d-pad {
-    transform: scale(0.8);
+    transform: scale(0.95);
   }
   
   .action-buttons {
-    transform: scale(0.8);
+    transform: scale(0.95);
   }
   
   .clipt-button {
-    transform: scale(0.8);
+    transform: scale(0.95);
   }
 }
