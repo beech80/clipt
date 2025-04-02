@@ -963,7 +963,7 @@ const PostItem: React.FC<PostItemProps> = ({
       className={`relative gaming-card transition-opacity duration-300 ${
         isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
       } ${highlight ? 'ring-2 ring-blue-500' : ''} ${
-        onCliptsPage ? 'w-80 flex-shrink-0 h-full max-h-[600px] overflow-hidden flex flex-col' : 'w-full'
+        onCliptsPage ? 'w-[360px] flex-shrink-0 h-full max-h-[600px] overflow-hidden flex flex-col' : 'w-full'
       }`}
       data-post-id={postId}
     >
