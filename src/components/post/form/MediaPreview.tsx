@@ -11,7 +11,7 @@ const MediaPreview = ({ file, type, onRemove }: MediaPreviewProps) => {
   return (
     <div className="relative w-full">
       {type === "image" ? (
-        <div className="w-full" style={{ aspectRatio: '16/9' }}>
+        <div className="w-full" style={{ aspectRatio: '1/1' }}>
           <img 
             src={URL.createObjectURL(file)} 
             alt="Preview" 
@@ -23,7 +23,7 @@ const MediaPreview = ({ file, type, onRemove }: MediaPreviewProps) => {
           />
         </div>
       ) : (
-        <div className="w-full" style={{ aspectRatio: '16/9' }}>
+        <div className="w-full" style={{ aspectRatio: '1/1' }}>
           <video 
             src={URL.createObjectURL(file)} 
             controls

@@ -207,7 +207,7 @@ const PostForm = ({ onPostCreated, onClose }: PostFormProps) => {
   };
 
   return (
-    <div className="bg-card rounded-lg p-4 shadow-sm animate-fade-in overflow-hidden" style={{ aspectRatio: '16/9', maxWidth: '100%', minHeight: '202px' }}>
+    <div className="bg-card rounded-lg p-4 shadow-sm animate-fade-in overflow-hidden" style={{ aspectRatio: '1/1', maxWidth: '100%', minHeight: '360px' }}>
       <form onSubmit={handleSubmit} className="h-full flex flex-col space-y-3">
         {error && (
           <Alert variant="destructive">
