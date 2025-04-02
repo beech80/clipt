@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import usePostDetector from './gameboy/PostDetector';
 import { triggerPostInteraction } from './gameboy/PostInteractions';
 import { dispatchVideoControl } from './gameboy/VideoControls';
 
 const GameBoyControls: React.FC = () => {
+  // Create a ref for the joystick element
+  const joystickRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const [enabled, setEnabled] = useState(true);
@@ -74,22 +76,22 @@ const GameBoyControls: React.FC = () => {
   return (
     <div className="gameboy-controls-container">
       <div className="gameboy-controls">
-        {/* D-Pad / Joystick for navigation */}
-        <div className="d-pad">
-          <div className="d-pad-button up" onClick={(e) => {e.stopPropagation(); handleDPadPress(0, -1);}}>
-            <span>↑</span>
-          </div>
-          <div className="d-pad-button right" onClick={(e) => {e.stopPropagation(); handleDPadPress(1, 0);}}>
-            <span>→</span>
-          </div>
-          <div className="d-pad-button down" onClick={(e) => {e.stopPropagation(); handleDPadPress(0, 1);}}>
-            <span>↓</span>
-          </div>
-          <div className="d-pad-button left" onClick={(e) => {e.stopPropagation(); handleDPadPress(-1, 0);}}>
-            <span>←</span>
+        {/* D-Pad / Joystick - Left edge */}
+        <div className="left-control-area">
+          <div className="d-pad">
+            <div className="d-pad-center" ref={joystickRef}>
+              <button
+                className="d-pad-button"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent joystick movement
+                  handleDPadPress(0, 0);
+                }}
+                aria-label="D-pad center button"
+              ></button>
+            </div>
           </div>
         </div>
-        
+
         {/* Center Section */}
         <div className="center-section">
           {/* CLIPT Button */}
@@ -118,36 +120,38 @@ const GameBoyControls: React.FC = () => {
             </button>
           </div>
         </div>
-        
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          <button className="action-button like" onClick={() => handleActionPress('like')} aria-label="Like post">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-            </svg>
-          </button>
-          <button className="action-button comment" onClick={() => handleActionPress('comment')} aria-label="Comment on post">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-          </button>
-          <button className="action-button trophy" onClick={() => handleActionPress('trophy')} aria-label="Rank post">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-              <path d="M4 22h16"></path>
-              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-              <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-            </svg>
-          </button>
-          <button className="action-button save" onClick={() => handleActionPress('save')} aria-label="Save post">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="8" y1="12" x2="16" y2="12"></line>
-              <line x1="12" y1="8" x2="12" y2="16"></line>
-            </svg>
-          </button>
+
+        {/* Action Buttons - Right edge */}
+        <div className="right-control-area">
+          <div className="action-buttons">
+            <button className="action-button like" onClick={() => handleActionPress('like')} aria-label="Like post">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
+            <button className="action-button comment" onClick={() => handleActionPress('comment')} aria-label="Comment on post">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </button>
+            <button className="action-button trophy" onClick={() => handleActionPress('trophy')} aria-label="Rank post">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                <path d="M4 22h16"></path>
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+              </svg>
+            </button>
+            <button className="action-button save" onClick={() => handleActionPress('save')} aria-label="Save post">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
