@@ -72,9 +72,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string | null>(null);
   const [navigationOptions] = useState([
-    { id: 'clips', name: 'Clipts', icon: <Grid size={18} />, path: '/' },
     { id: 'top-clipts', name: 'Top Clipts', icon: <Trophy size={18} />, path: '/top-clipts' },
-    { id: 'squads-clipts', name: 'Squads Clipts', icon: <Users size={18} />, path: '/squads-clipts' },
     { id: 'profile', name: 'Profile', icon: <User size={18} />, path: '/profile' },
     { id: 'messages', name: 'Messages', icon: <MessageCircle size={18} />, path: '/messages' },
   ]);
@@ -1186,13 +1184,6 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       description: 'Hall of fame',
       icon: <FiAward />, 
       action: () => navigate('/top-clipts') 
-    },
-    { 
-      id: 'squads-clipts', 
-      name: 'Squads Clipts', 
-      description: 'Your squads clipts',
-      icon: <FiUsers />, 
-      action: () => navigate('/squads-clipts') 
     },
     { 
       id: 'clipts', 
