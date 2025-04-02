@@ -138,7 +138,7 @@ const PostItem: React.FC<PostItemProps> = ({
     }
   };
 
-  const handleLike = async (e?: React.MouseEvent) => {
+  const handleLikeToggle = async (e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
     }
@@ -892,9 +892,56 @@ const PostItem: React.FC<PostItemProps> = ({
   useEffect(() => {
     if (!postId) return;
     
-    // Event handlers for trophy and save functionality have been removed
-    // as part of removing the GameBoy controller UI
-  }, [postId]);
+    // Handle trophy button event from GameBoyControls
+    const handleTrophyButtonEvent = (e: Event) => {
+      const detail = (e as any).detail;
+      if (detail && detail.postId === postId) {
+        console.log('Trophy button event received for post:', postId);
+        handleTrophyVote(new MouseEvent('click') as any);
+      }
+    };
+    
+    // Handle save button event from GameBoyControls
+    const handleSaveButtonEvent = (e: Event) => {
+      const detail = (e as any).detail;
+      if (detail && detail.postId === postId) {
+        console.log('Save button event received for post:', postId);
+        handleSaveVideo(new MouseEvent('click') as any);
+      }
+    };
+    
+    // Handle like button event from GameBoyControls
+    const handleLikeButtonEvent = (e: Event) => {
+      const detail = (e as any).detail;
+      if (detail && detail.postId === postId) {
+        console.log('Like button event received for post:', postId);
+        handleLikeToggle(new MouseEvent('click') as any);
+      }
+    };
+    
+    // Handle comment button event from GameBoyControls
+    const handleCommentButtonEvent = (e: Event) => {
+      const detail = (e as any).detail;
+      if (detail && detail.postId === postId) {
+        console.log('Comment button event received for post:', postId);
+        if (onCommentClick) onCommentClick();
+      }
+    };
+    
+    // Add event listeners
+    document.addEventListener('trophy-button-click', handleTrophyButtonEvent);
+    document.addEventListener('save-button-click', handleSaveButtonEvent);
+    document.addEventListener('like-button-click', handleLikeButtonEvent);
+    document.addEventListener('comment-button-click', handleCommentButtonEvent);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('trophy-button-click', handleTrophyButtonEvent);
+      document.removeEventListener('save-button-click', handleSaveButtonEvent);
+      document.removeEventListener('like-button-click', handleLikeButtonEvent);
+      document.removeEventListener('comment-button-click', handleCommentButtonEvent);
+    };
+  }, [postId, handleTrophyVote, handleSaveVideo, handleLikeToggle, onCommentClick]);
 
   const username = post.profiles?.username || 'Anonymous';
   const avatarUrl = post.profiles?.avatar_url;
@@ -978,7 +1025,7 @@ const PostItem: React.FC<PostItemProps> = ({
       <div className="flex justify-around py-3 border-t border-gaming-400/20">
         <button 
           className="like-button flex items-center text-sm font-medium transition-all duration-200 group"
-          onClick={handleLike}
+          onClick={handleLikeToggle}
           disabled={likeLoading}
         >
           <Heart 
