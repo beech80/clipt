@@ -23,13 +23,13 @@
 /* D-Pad / Joystick */
 .d-pad {
   position: relative;
-  width: 75px;
-  height: 75px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  background: linear-gradient(to bottom, #111111, #050505);
+  background: rgba(10, 10, 10, 0.9);
   box-shadow: 
-    0 0 0 1px rgba(0, 100, 0, 0.3),
-    0 0 15px rgba(0, 255, 0, 0.3);
+    0 0 0 2px rgba(0, 200, 0, 0.5),
+    0 0 20px rgba(0, 255, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,21 +39,21 @@
 .d-pad::after {
   content: '';
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background-color: rgba(0, 255, 0, 0.9);
-  box-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+  box-shadow: 0 0 10px 2px rgba(0, 255, 0, 0.8);
 }
 
 .d-pad::before {
   content: '';
   position: absolute;
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  border: 2px solid rgba(0, 90, 0, 0.3);
-  background-color: rgba(15, 15, 15, 0.9);
+  background-color: rgba(20, 20, 20, 0.8);
+  border: 1px solid rgba(0, 170, 0, 0.4);
 }
 
 .d-pad-button {
@@ -106,16 +106,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
   position: relative;
 }
 
 /* CLIPT Button */
 .clipt-button {
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: rgba(15, 15, 20, 0.97);
+  background: rgba(18, 18, 30, 0.97);
   border: none;
   position: relative;
   display: flex;
@@ -124,9 +124,8 @@
   cursor: pointer;
   font-weight: bold;
   color: white;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.5px;
-  box-shadow: 0 0 15px rgba(50, 50, 80, 0.15);
   overflow: hidden;
   z-index: 1;
 }
@@ -138,15 +137,15 @@
   margin: -1px;
   border-radius: 50%;
   background: conic-gradient(
-    #ff0000,
-    #ff8800,
+    #ff3300,
+    #ff9900,
     #ffff00,
-    #00ff00,
+    #33ff00,
     #00ffff,
-    #0088ff,
-    #8800ff,
-    #ff00ff,
-    #ff0000
+    #0066ff,
+    #cc00ff,
+    #ff0066,
+    #ff3300
   );
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
@@ -169,23 +168,22 @@
 /* Action Buttons */
 .action-buttons {
   position: relative;
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
 }
 
 .action-button {
   position: absolute;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.1s ease;
-  background: rgba(15, 15, 20, 0.97);
+  background: rgba(18, 18, 30, 0.97);
   border: none;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .action-button svg {
@@ -197,7 +195,6 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  box-shadow: 0 0 10px rgba(255, 0, 128, 0.2);
   color: #ff3366;
 }
 
@@ -207,7 +204,7 @@
   inset: 0;
   margin: -1px;
   border-radius: 50%;
-  background: rgba(255, 51, 102, 0.7);
+  background: rgba(255, 51, 102, 0.9);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
@@ -219,7 +216,6 @@
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  box-shadow: 0 0 10px rgba(0, 149, 255, 0.2);
   color: #0095ff;
 }
 
@@ -229,7 +225,7 @@
   inset: 0;
   margin: -1px;
   border-radius: 50%;
-  background: rgba(0, 149, 255, 0.7);
+  background: rgba(0, 149, 255, 0.9);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
@@ -241,7 +237,6 @@
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  box-shadow: 0 0 10px rgba(255, 207, 0, 0.2);
   color: #ffcf00;
 }
 
@@ -251,7 +246,7 @@
   inset: 0;
   margin: -1px;
   border-radius: 50%;
-  background: rgba(255, 207, 0, 0.7);
+  background: rgba(255, 207, 0, 0.9);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
@@ -263,7 +258,6 @@
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  box-shadow: 0 0 10px rgba(204, 51, 204, 0.2);
   color: #cc33cc;
 }
 
@@ -273,7 +267,7 @@
   inset: 0;
   margin: -1px;
   border-radius: 50%;
-  background: rgba(204, 51, 204, 0.7);
+  background: rgba(204, 51, 204, 0.9);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
   -webkit-mask-composite: xor;
@@ -285,15 +279,15 @@
 .menu-buttons {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  margin-top: 0;
+  gap: 20px;
+  margin-top: 5px;
 }
 
 .menu-button {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   border-radius: 4px;
-  background-color: rgba(30, 30, 40, 0.7);
+  background-color: rgba(28, 28, 40, 0.8);
   border: none;
   display: flex;
   align-items: center;
@@ -308,8 +302,8 @@
 }
 
 .menu-button svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 /* Media queries for responsive design */
