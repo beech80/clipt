@@ -1,0 +1,98 @@
+/* Joystick Animation Styles */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes buttonPulse {
+  0% {
+    box-shadow: 0 0 5px rgba(var(--color), 0.4);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(var(--color), 0.7);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(var(--color), 0.4);
+  }
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.joystick-container {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.joystick-active {
+  transition: transform 0.2s ease-out;
+}
+
+.joystick-button {
+  transition: all 0.1s ease;
+}
+
+.joystick-button:active {
+  transform: scale(0.9);
+}
+
+.button-pulse-effect {
+  animation: buttonPulse 2s infinite ease-in-out;
+}
+
+.gradient-background {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradientFlow 15s ease infinite;
+}
+
+/* Joystick movement animations */
+.joystick-up {
+  transform: translateY(-10px);
+}
+
+.joystick-down {
+  transform: translateY(10px);
+}
+
+.joystick-left {
+  transform: translateX(-10px);
+}
+
+.joystick-right {
+  transform: translateX(10px);
+}
+
+/* Press effect for d-pad buttons */
+.button-pressed {
+  transform: scale(0.9);
+  filter: brightness(1.2);
+}
+
+/* Glow effects */
+.glow-effect {
+  box-shadow: 0 0 15px rgba(var(--glow-color, 255, 255, 255), 0.7);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-effect:hover {
+  box-shadow: 0 0 25px rgba(var(--glow-color, 255, 255, 255), 0.9);
+}

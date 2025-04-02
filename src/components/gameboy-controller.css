@@ -1,0 +1,284 @@
+/* Modern Controller Styles */
+.gameboy-controls-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  padding: 0.5rem;
+  background-color: rgba(8, 8, 16, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(80, 80, 255, 0.3);
+}
+
+.gameboy-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+}
+
+/* D-Pad / Joystick */
+.d-pad {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 180, 0, 0.5);
+  background-color: rgba(10, 10, 10, 0.8);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.d-pad::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: rgba(0, 255, 0, 0.8);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+}
+
+.d-pad-button {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 255, 0, 0.8);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  user-select: none;
+  font-weight: bold;
+  font-size: 14px;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.d-pad-button.up {
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.d-pad-button.right {
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+}
+
+.d-pad-button.down {
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.d-pad-button.left {
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+}
+
+.d-pad-center {
+  display: none;
+}
+
+/* CLIPT Button */
+.clipt-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(20, 20, 30, 0.8);
+  border: 2px solid transparent;
+  border-image: linear-gradient(to right, #ff3e3e, #4a4dff);
+  border-image-slice: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  box-shadow: 0 0 20px rgba(119, 0, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.clipt-button:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #ff0080, #7928ca, #4a4dff, #7928ca, #ff0080);
+  background-size: 200% 100%;
+  animation: gradient-shift 10s linear infinite;
+  opacity: 0.3;
+  border-radius: 50%;
+}
+
+.clipt-button:active {
+  transform: scale(0.9);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 10px rgba(119, 0, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(119, 0, 255, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(119, 0, 255, 0.3);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+/* Action Buttons */
+.action-buttons {
+  position: relative;
+  width: 90px;
+  height: 90px;
+}
+
+.action-button {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  background-color: rgba(10, 10, 10, 0.8);
+}
+
+.action-button:active {
+  transform: scale(0.9);
+}
+
+.action-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.action-button.like {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid #ff0080;
+  color: #ff0080;
+  box-shadow: 0 0 10px rgba(255, 0, 128, 0.4);
+}
+
+.action-button.comment {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  border: 2px solid #00bfff;
+  color: #00bfff;
+  box-shadow: 0 0 10px rgba(0, 191, 255, 0.4);
+}
+
+.action-button.trophy {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 2px solid #ffcf00;
+  color: #ffcf00;
+  box-shadow: 0 0 10px rgba(255, 207, 0, 0.4);
+}
+
+.action-button.save {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  border: 2px solid #4a4dff;
+  color: #4a4dff;
+  box-shadow: 0 0 10px rgba(74, 77, 255, 0.4);
+}
+
+/* Menu buttons */
+.menu-buttons {
+  display: flex;
+  gap: 10px;
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.menu-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background-color: rgba(30, 30, 30, 0.8);
+  border: 1px solid rgba(100, 100, 100, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  color: #8a8a8a;
+}
+
+.menu-button:active {
+  transform: scale(0.9);
+}
+
+.menu-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .gameboy-controls {
+    padding: 0.25rem;
+  }
+  
+  .d-pad {
+    transform: scale(0.9);
+  }
+  
+  .action-buttons {
+    transform: scale(0.9);
+  }
+  
+  .clipt-button {
+    transform: scale(0.9);
+  }
+}
+
+@media (max-width: 576px) {
+  .gameboy-controls {
+    justify-content: space-around;
+  }
+  
+  .d-pad {
+    transform: scale(0.8);
+  }
+  
+  .action-buttons {
+    transform: scale(0.8);
+  }
+  
+  .clipt-button {
+    transform: scale(0.8);
+  }
+}
