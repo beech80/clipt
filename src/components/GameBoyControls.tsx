@@ -72,7 +72,9 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string | null>(null);
   const [navigationOptions] = useState([
+    { id: 'clips', name: 'Clipts', icon: <Grid size={18} />, path: '/' },
     { id: 'top-clipts', name: 'Top Clipts', icon: <Trophy size={18} />, path: '/top-clipts' },
+    { id: 'squads-clipts', name: 'Squads Clipts', icon: <Users size={18} />, path: '/squads-clipts' },
     { id: 'profile', name: 'Profile', icon: <User size={18} />, path: '/profile' },
     { id: 'messages', name: 'Messages', icon: <MessageCircle size={18} />, path: '/messages' },
   ]);
@@ -1186,6 +1188,13 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
       action: () => navigate('/top-clipts') 
     },
     { 
+      id: 'squads-clipts', 
+      name: 'Squads Clipts', 
+      description: 'Your squads clipts',
+      icon: <FiUsers />, 
+      action: () => navigate('/squads-clipts') 
+    },
+    { 
       id: 'clipts', 
       name: 'Clipts', 
       description: 'View all clipts (videos)',
@@ -1684,66 +1693,76 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [dPadDirection.x, dPadDirection.y, currentPostId, user]);
 
-  // Classic UI controller matching the old design
+  // Modern UI controller matching the image exactly
   return (
     <div className="game-boy-controls">
-      {/* Left Side - Purple/Blue D-pad */}
+      {/* Left Side - Green Joystick with ring */}
       <div className="d-pad-section">
         <div 
-          className="d-pad classic" 
+          className="d-pad" 
           onClick={toggleMenu}
           aria-label="Open menu"
         >
-          <div className="d-pad-button up" onClick={(e) => {e.stopPropagation(); handleDPadPress(0, -1);}}>
-            <span>↑</span>
-          </div>
-          <div className="d-pad-button right" onClick={(e) => {e.stopPropagation(); handleDPadPress(1, 0);}}>
-            <span>→</span>
-          </div>
-          <div className="d-pad-button down" onClick={(e) => {e.stopPropagation(); handleDPadPress(0, 1);}}>
-            <span>↓</span>
-          </div>
-          <div className="d-pad-button left" onClick={(e) => {e.stopPropagation(); handleDPadPress(-1, 0);}}>
-            <span>←</span>
-          </div>
-          <div 
-            className="d-pad-center"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Toggle between like and comment actions when pressing center
-              if (currentPostId) {
-                handleButtonXPress(); // Like action
-              }
-            }}
-          ></div>
+          <div className="joystick-indicator"></div>
         </div>
       </div>
 
-      {/* Center - CLIPT button with red-pink gradient */}
+      {/* Center - CLIPT button with rainbow gradient border and menu buttons below */}
       <div className="center-section">
         <button 
-          className="main-button classic" 
+          className="main-button" 
           onClick={handleMainButtonClick}
           aria-label="Navigate to home feed"
-          onDoubleClick={() => {
-            if (currentPostId) {
-              handleButtonAPress(); // Comment action on double-click
-            }
-          }}
         >
           CLIPT
         </button>
+        
+        <div className="menu-buttons">
+          <button className="menu-button" aria-label="Menu">
+            <Menu size={16} />
+          </button>
+          <button className="menu-button" aria-label="Camera">
+            <Camera size={16} />
+          </button>
+        </div>
       </div>
 
-      {/* Right Side - Green B Button */}
-      <div className="action-buttons classic">
+      {/* Right Side - Action Buttons in Diamond Formation with colored borders matching image */}
+      <div className="action-buttons">
+        {/* Heart/Like (blue) at top */}
         <button 
-          className="b-button"
-          onClick={handleSaveVideo}
-          onDoubleClick={handleTrophy} // Trophy/rank action on double-click
-          aria-label="Save video / Trophy"
+          className={`action-button heart-button ${hasLiked ? 'active' : ''}`}
+          onClick={handleButtonXPress}
+          aria-label="Like post"
         >
-          B
+          <Heart size={16} />
+        </button>
+        
+        {/* Save/Folder (teal) at right */}
+        <button 
+          className="action-button folder-button"
+          onClick={handleSaveVideo}
+          aria-label="Save video"
+        >
+          <FolderPlus size={16} />
+        </button>
+        
+        {/* Trophy/Rank (yellow/gold) at bottom */}
+        <button 
+          className="action-button trophy-button"
+          onClick={handleTrophy}
+          aria-label="Trophy/Rank"
+        >
+          <Trophy size={16} />
+        </button>
+        
+        {/* Message/Comment (pink) at left */}
+        <button 
+          className={`action-button message-button ${commentModalOpen ? 'active' : ''}`}
+          onClick={handleButtonAPress}
+          aria-label="Comment on post"
+        >
+          <MessageCircle size={16} />
         </button>
       </div>
 
