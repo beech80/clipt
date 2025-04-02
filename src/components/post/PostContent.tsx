@@ -218,15 +218,16 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false }: PostConten
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       {/* Media Content */}
       {videoUrl ? (
         <div className="relative w-full h-full bg-black" style={{ 
           aspectRatio: '16/9', 
-          maxHeight: compact ? '250px' : '90vh', 
+          maxHeight: compact ? '202px' : '90vh', /* Exactly 16:9 ratio for 360px width */
           display: 'block', 
-          minHeight: compact ? '180px' : '300px', /* Adjusted for compact mode */
-          overflow: 'hidden'
+          minHeight: compact ? '202px' : '300px', /* Ensure exact 16:9 ratio for 360px width */
+          overflow: 'hidden',
+          width: '100%'
         }}>
           {isMediaError ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
@@ -319,8 +320,12 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false }: PostConten
           <img
             src={imageUrls[0]}
             alt="Post content"
-            className={`w-full ${compact ? 'h-48 object-cover' : 'aspect-video object-cover'} bg-black`}
-            style={compact ? { maxHeight: '200px' } : {}}
+            className={`w-full object-cover bg-black`}
+            style={compact ? { 
+              width: '100%', 
+              height: '202px', /* Exactly 16:9 for 360px width */
+              objectFit: 'cover'
+            } : { aspectRatio: '16/9' }}
             onLoad={handleMediaLoad}
             onError={handleImageError}
             onClick={() => setShowFullscreenGallery(true)}
