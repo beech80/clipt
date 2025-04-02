@@ -268,14 +268,15 @@ const SquadsClipts = () => {
                         </span>
                       </div>
                       
-                      {/* Video content - Make it take most of the space */}
+                      {/* Video content - Make it take most of the space with 16:9 aspect ratio */}
                       <div className="bg-[#0F1573] flex-grow flex items-center justify-center rounded-b-lg">
+                        <div className="w-full" style={{ aspectRatio: '16/9' }}>
                         {getMediaUrl(post) && 
                          (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
                           <video 
                             src={getMediaUrl(post) || ''}
                             controls
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-cover"
                             poster={post.thumbnail_url || ''}
                           />
                         ) : (
@@ -283,6 +284,7 @@ const SquadsClipts = () => {
                             For video clips only!
                           </div>
                         )}
+                        </div>
                       </div>
                       
                       {/* Action buttons - Only in the post container, not at the bottom */}
