@@ -9,34 +9,27 @@ import './gameboy-controller.css';
 import './joystick-animations.css';
 import CommentModal from './comments/CommentModal';
 import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Circle,
-  Clock,
   Heart,
-  Home,
   MessageCircle,
-  MoreHorizontal,
-  Search,
-  Send,
-  Settings,
-  Share,
-  X,
-  Menu,
-  Grid,
-  Trophy,
-  Users,
   Camera,
-  FolderPlus,
+  Award,
+  Bell,
+  Settings,
+  Menu,
+  User,
+  UserCheck,
+  UserPlus,
+  Video,
+  Trophy,
+  Monitor,
+  Users,
+  Grid,
+  Compass,
+  Share,
   Bookmark,
-  Save,
-  User
+  Save
 } from 'lucide-react';
-import {
+import { 
   FiSettings, 
   FiUser, 
   FiBell, 
@@ -1129,7 +1122,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
   const handleMainButtonClick = () => {
     console.log('Main CLIPT button pressed');
     // Navigate to home feed or toggle main menu
-    navigate("/");
+    navigate('/');
   };
 
   // Handle selecting a menu option
@@ -1693,119 +1686,108 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
     };
   }, [dPadDirection.x, dPadDirection.y, currentPostId, user]);
 
-  // Modern UI controller matching the image exactly
+  // Classic GameBoy controller UI with retained functionality
   return (
-    <div className="game-boy-controls">
-      {/* Left Side - Green Joystick with ring */}
-      <div className="d-pad-section">
-        <div 
-          className="d-pad" 
-          onClick={toggleMenu}
-          aria-label="Open menu"
-        >
-          <div className="joystick-indicator"></div>
-        </div>
-      </div>
-
-      {/* Center - CLIPT button with rainbow gradient border and menu buttons below */}
-      <div className="center-section">
-        <button 
-          className="main-button" 
-          onClick={handleMainButtonClick}
-          aria-label="Navigate to home feed"
-        >
-          CLIPT
-        </button>
-        
-        <div className="menu-buttons">
-          <button className="menu-button" aria-label="Menu">
-            <Menu size={16} />
-          </button>
-          <button className="menu-button" aria-label="Camera">
-            <Camera size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Right Side - Action Buttons in Diamond Formation with colored borders matching image */}
-      <div className="action-buttons">
-        {/* Heart/Like (blue) at top */}
-        <button 
-          className={`action-button heart-button ${hasLiked ? 'active' : ''}`}
-          onClick={handleButtonXPress}
-          aria-label="Like post"
-        >
-          <Heart size={16} />
-        </button>
-        
-        {/* Save/Folder (teal) at right */}
-        <button 
-          className="action-button folder-button"
-          onClick={handleSaveVideo}
-          aria-label="Save video"
-        >
-          <FolderPlus size={16} />
-        </button>
-        
-        {/* Trophy/Rank (yellow/gold) at bottom */}
-        <button 
-          className="action-button trophy-button"
-          onClick={handleTrophy}
-          aria-label="Trophy/Rank"
-        >
-          <Trophy size={16} />
-        </button>
-        
-        {/* Message/Comment (pink) at left */}
-        <button 
-          className={`action-button message-button ${commentModalOpen ? 'active' : ''}`}
-          onClick={handleButtonAPress}
-          aria-label="Comment on post"
-        >
-          <MessageCircle size={16} />
-        </button>
-      </div>
-
-      {/* Menu Modal */}
-      {isMenuOpen && (
-        <div className="menu-modal" onClick={() => setIsMenuOpen(false)}>
-          <div className="menu-container" onClick={(e) => e.stopPropagation()}>
-            <div className="menu-header">
-              <span className="menu-title">Navigation</span>
-              <button className="close-menu" onClick={() => setIsMenuOpen(false)}>×</button>
-            </div>
-            <div className="menu-options">
-              {navigationOptions.map((option) => (
-                <div
-                  key={option.id}
-                  className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
-                  onClick={() => {
-                    setSelectedMenuOption(option.id);
-                    navigate(option.path);
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  <div className="menu-option-icon">
-                    {option.icon}
-                  </div>
-                  <div className="menu-option-content">
-                    <div className="menu-option-title">{option.name}</div>
-                  </div>
-                </div>
-              ))}
+    <div className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="game-boy-controls">
+        {/* Left Side - D-Pad (Classic GameBoy style) */}
+        <div className="d-pad-section">
+          <div 
+            className="d-pad"
+            ref={dPadRef}
+            onClick={handleDPadMouseDown}
+            aria-label="Open menu"
+          >
+            <div className="direction-indicators">
+              <div className="direction-indicator direction-up"></div>
+              <div className="direction-indicator direction-right"></div>
+              <div className="direction-indicator direction-down"></div>
+              <div className="direction-indicator direction-left"></div>
             </div>
           </div>
         </div>
-      )}
-      
-      {/* Comment Modal */}
-      {commentModalOpen && currentPostId && (
-        <CommentModal 
-          postId={currentPostId} 
-          onClose={() => setCommentModalOpen(false)}
-          isOpen={commentModalOpen}
-        />
-      )}
+
+        {/* Center - CLIPT button and SELECT/START buttons (Classic GameBoy style) */}
+        <div className="center-section">
+          <button 
+            className="main-button" 
+            onClick={handleMainButtonClick}
+            aria-label="Navigate to home feed"
+          >
+            CLIPT
+          </button>
+          
+          <div className="select-start-buttons">
+            <button className="select-button" aria-label="Select"></button>
+            <button className="start-button" aria-label="Start"></button>
+          </div>
+        </div>
+
+        {/* Right Side - A/B Buttons (GameBoy style) */}
+        <div className="action-buttons">
+          <div className="button-wrapper">
+            <button 
+              className={`action-button x-button ${hasLiked ? 'active' : ''}`} 
+              onClick={handleButtonXPress}
+              data-action="like"
+              aria-label="Like post (B button)"
+            >
+              <Heart size={16} />
+            </button>
+          </div>
+          <div className="button-wrapper">
+            <button 
+              className={`action-button a-button ${commentModalOpen ? 'active' : ''}`} 
+              onClick={handleButtonAPress}
+              data-action="comment"
+              aria-label="Comment on post (A button)"
+            >
+              <MessageCircle size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Menu Modal */}
+        {isMenuOpen && (
+          <div className="menu-modal" onClick={() => setIsMenuOpen(false)}>
+            <div className="menu-container" onClick={(e) => e.stopPropagation()}>
+              <div className="menu-header">
+                <span className="menu-title">Navigation</span>
+                <button className="close-menu" onClick={() => setIsMenuOpen(false)}>×</button>
+              </div>
+              <div className="menu-options">
+                {menuOptions.map((option) => (
+                  <div
+                    key={option.id}
+                    className={`menu-option ${selectedMenuOption === option.id ? 'selected' : ''}`}
+                    onClick={() => {
+                      setSelectedMenuOption(option.id);
+                      option.action();
+                      setIsMenuOpen(false);
+                    }}
+                    aria-label={option.name}
+                  >
+                    <div className="menu-option-icon">{option.icon}</div>
+                    <div className="menu-option-content">
+                      <div className="menu-option-title">{option.name}</div>
+                      <div className="menu-option-description">{option.description}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Comment Modal */}
+        {commentModalOpen && currentPostId && (
+          <CommentModal 
+            postId={currentPostId} 
+            onClose={() => setCommentModalOpen(false)}
+            isOpen={commentModalOpen}
+          />
+        )}
+      </div>
     </div>
   );
 };
