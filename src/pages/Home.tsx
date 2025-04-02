@@ -365,47 +365,8 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Enhanced Game Controls - Bottom console UI */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-black/60 backdrop-blur-md border-t border-blue-900/40">
-          <div className="flex items-center justify-between max-w-6xl mx-auto">
-            {/* Enhanced D-Pad - PS5/Xbox style */}
-            <div className="relative w-24 h-24">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-900/80 to-purple-900/80 border border-blue-500/50 shadow-lg"></div>
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-md"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-4 h-4 rounded-full bg-blue-500 shadow-md shadow-blue-500/50"></div>
-              </div>
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/3 text-xs bg-black/70 px-2 py-1 rounded-md border border-blue-500/30">↑</div>
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/3 text-xs bg-black/70 px-2 py-1 rounded-md border border-blue-500/30">↓</div>
-              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-1/3 text-xs bg-black/70 px-2 py-1 rounded-md border border-blue-500/30">←</div>
-              <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/3 text-xs bg-black/70 px-2 py-1 rounded-md border border-blue-500/30">→</div>
-            </div>
-            
-            {/* Enhanced Center Button - Nintendo style */}
-            <div className="relative w-16 h-16">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500/50 to-blue-500/50 animate-pulse-slow blur-md"></div>
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 to-blue-500 flex items-center justify-center shadow-lg border border-white/20">
-                <span className="text-xs font-bold text-white">CLIPT</span>
-              </div>
-            </div>
-            
-            {/* Enhanced Action Buttons - Xbox style */}
-            <div className="relative w-24 h-24">
-              <div className="absolute top-1/4 right-1/4 w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 border border-blue-400 flex items-center justify-center shadow-md">
-                <span className="text-xs font-bold">X</span>
-              </div>
-              <div className="absolute bottom-1/4 right-1/4 w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-800 border border-red-400 flex items-center justify-center shadow-md">
-                <span className="text-xs font-bold">A</span>
-              </div>
-              <div className="absolute bottom-1/4 left-1/4 w-10 h-10 rounded-full bg-gradient-to-br from-yellow-600 to-yellow-800 border border-yellow-400 flex items-center justify-center shadow-md">
-                <span className="text-xs font-bold">Y</span>
-              </div>
-              <div className="absolute top-1/4 left-1/4 w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-green-800 border border-green-400 flex items-center justify-center shadow-md">
-                <span className="text-xs font-bold">B</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Enhanced Game Controls have been removed */}
+        
       </div>
     </div>
   );
