@@ -123,10 +123,9 @@ function AppContent() {
       <Route path="/group-chat" element={<GroupChat />} />
       <Route path="/game/:id" element={<GameDetailsPage />} />
       <Route path="/games" element={<TopGames />} />
-      {/* Removed Clipts and Squads pages as requested */}
-      {/* <Route path="/clipts" element={<Clipts />} /> */}
+      <Route path="/clipts" element={<Clipts />} />
       <Route path="/top-clipts" element={<TopClipts />} />
-      {/* <Route path="/squads-clipts" element={<SquadsClipts />} /> */}
+      <Route path="/squads-clipts" element={<SquadsClipts />} />
       <Route path="/profile/:id?" element={<UserProfile />} />
       <Route path="/discover" element={<Discovery />} />
       <Route path="/explore" element={<Explore />} />
