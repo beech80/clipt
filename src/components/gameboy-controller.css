@@ -5,9 +5,8 @@
   left: 0;
   right: 0;
   z-index: 900;
-  background: rgba(18, 18, 30, 0.97);
+  background: transparent;
   padding: 0.8rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .gameboy-controls {
@@ -106,7 +105,16 @@
 }
 
 .d-pad-center {
-  display: none;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: radial-gradient(circle, rgba(0, 255, 0, 0.1) 0%, rgba(0, 255, 0, 0.05) 70%, transparent 100%);
+  border: 2px solid rgba(0, 255, 0, 0.3);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.5), inset 0 0 15px rgba(0, 255, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 /* Center Section */
@@ -136,6 +144,7 @@
   letter-spacing: 0.5px;
   overflow: hidden;
   z-index: 1;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 .clipt-button::before {
@@ -192,6 +201,7 @@
   transition: all 0.1s ease;
   background: rgba(18, 18, 30, 0.97);
   border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 .action-button svg {
@@ -303,6 +313,7 @@
   cursor: pointer;
   transition: all 0.1s ease;
   color: #9a9aaa;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
 .menu-button:active {
