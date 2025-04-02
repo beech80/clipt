@@ -1719,7 +1719,7 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         </div>
       </div>
 
-      {/* Center - CLIPT button with rainbow gradient border */}
+      {/* Center - CLIPT button with red-pink gradient */}
       <div className="center-section">
         <button 
           className="main-button classic" 
@@ -1733,52 +1733,15 @@ const GameBoyControls: React.FC<GameBoyControlsProps> = ({ currentPostId: propCu
         >
           CLIPT
         </button>
-        {/* Menu buttons below CLIPT as shown in the image */}
-        <div className="menu-buttons">
-          <button className="menu-button" aria-label="Menu">
-            <Menu size={16} />
-          </button>
-          <button className="menu-button" aria-label="Camera">
-            <Camera size={16} />
-          </button>
-        </div>
       </div>
 
-      {/* Right Side - Diamond pattern of buttons */}
+      {/* Right Side - Green B Button */}
       <div className="action-buttons classic">
-        {/* Heart/Like Button (Blue) */}
-        <button 
-          className="heart-button"
-          onClick={handleButtonXPress}
-          aria-label="Like"
-        >
-          <Heart size={20} />
-        </button>
-        
-        {/* Save/Folder Button (Red) */}
-        <button 
-          className="save-button"
-          onClick={() => navigate('/saved')}
-          aria-label="Saved clips"
-        >
-          <Bookmark size={20} />
-        </button>
-        
-        {/* Trophy Button (Gold) */}
-        <button 
-          className="trophy-button"
-          onClick={handleTrophy}
-          aria-label="Trophy/Rank"
-        >
-          <Trophy size={20} />
-        </button>
-        
-        {/* B Button (Green) */}
         <button 
           className="b-button"
           onClick={handleSaveVideo}
-          onDoubleClick={handleTrophy}
-          aria-label="Save video"
+          onDoubleClick={handleTrophy} // Trophy/rank action on double-click
+          aria-label="Save video / Trophy"
         >
           B
         </button>
