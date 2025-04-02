@@ -114,10 +114,11 @@ function AppContent() {
           <Signup />
         </ProtectedRoute>
       } />
+      <Route path="/create" element={<Navigate to="/post/new" replace />} />
       <Route path="/post/new" element={<NewPost />} />
       <Route path="/post/:id" element={<PostPage />} />
       <Route path="/post/:postId/comments" element={<CommentsPage />} />
-      <Route path="/comments" element={<AllCommentsPage />} />
+      {/* Removed All Comments page as requested */}
       <Route path="/comments-full/:postId" element={<CommentsFullPage />} />
       <Route path="/group-chat" element={<GroupChat />} />
       <Route path="/game/:id" element={<GameDetailsPage />} />
@@ -148,7 +149,7 @@ function AppContent() {
       <Route path="/admin" element={<Admin />} />
       <Route path="/game-streamers/:gameId" element={<GameStreamers />} />
       <Route path="/retro-search" element={<RetroSearchPage />} />
-      <Route path="/video-debug" element={<VideoDebug />} />
+      {/* Removed Video Debug page as requested */}
       {/* Removed Posts page as requested */}
       {/* <Route path="/posts" element={<Home />} /> */}
       <Route path="/trophies" element={<TopClipts />} />
@@ -249,19 +250,6 @@ function App() {
   );
 }
 
-<style jsx global>{`
-  /* Global styles */
-  
-  html, body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-      Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-    overflow: hidden;
-    height: 100%;
-    color-scheme: dark;
-  }
-`}</style>
+/* Global styles are imported from CSS files */
 
 export default App;
