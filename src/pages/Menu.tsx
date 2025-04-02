@@ -29,8 +29,7 @@ const Menu = () => {
         { title: 'Streaming', icon: <Video className="h-6 w-6 mr-4 text-purple-400" />, path: '/streaming', description: 'Live gameplay' },
         { title: 'Profile', icon: <User className="h-6 w-6 mr-4 text-purple-400" />, path: '/profile', description: 'Your player stats' },
         { title: 'Messages', icon: <MessageSquare className="h-6 w-6 mr-4 text-purple-400" />, path: '/messages', description: 'Chat with players' },
-        { title: 'Notifications', icon: <Bell className="h-6 w-6 mr-4 text-purple-400" />, path: '/notifications', description: 'View all notifications' },
-        { title: 'Video Debug', icon: <Film className="h-6 w-6 mr-4 text-red-400" />, path: '/video-debug', description: 'Fix video issues [DEV]', className: 'dev-tool' }
+        { title: 'Notifications', icon: <Bell className="h-6 w-6 mr-4 text-purple-400" />, path: '/notifications', description: 'View all notifications' }
       ]
     },
     {
@@ -40,7 +39,6 @@ const Menu = () => {
         { title: 'Top Clipts', icon: <Award className="h-6 w-6 mr-4 text-blue-400" />, path: '/top-clipts', description: 'Hall of fame' },
         { title: 'Squads Clipts', icon: <Users className="h-6 w-6 mr-4 text-purple-400" />, path: '/squads-clipts', description: 'Your squads clipts', className: 'squads-menu-item' },
         { title: 'Clipts', icon: <Film className="h-6 w-6 mr-4 text-blue-400" />, path: '/clipts', description: 'View all clipts' },
-        { title: 'All Comments', icon: <MessageCircle className="h-6 w-6 mr-4 text-blue-400" />, path: '/comments', description: 'Community chat' },
         { title: 'Home', icon: <Home className="h-6 w-6 mr-4 text-blue-400" />, path: '/', description: 'Main screen', className: 'home-menu-item'}
       ]
     },
