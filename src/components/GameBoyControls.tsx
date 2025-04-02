@@ -22,6 +22,12 @@ const GameBoyControls: React.FC = () => {
     setEnabled(!shouldDisable);
   }, [location]);
   
+  // Determine if we should show background based on current route
+  const shouldHideBackground = [
+    '/clipts',
+    '/squads-clipts'
+  ].some(route => location.pathname === route);
+  
   // Handle navigation using D-pad
   const handleDPadPress = (dx: number, dy: number) => {
     if (!enabled) return;
@@ -74,7 +80,7 @@ const GameBoyControls: React.FC = () => {
   if (!enabled) return null;
   
   return (
-    <div className="gameboy-controls-container">
+    <div className={`gameboy-controls-container ${!shouldHideBackground ? 'with-background' : ''}`}>
       <div className="gameboy-controls">
         {/* D-Pad / Joystick - Left edge */}
         <div className="left-control-area">
