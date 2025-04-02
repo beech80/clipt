@@ -53,13 +53,14 @@ const PostFormContent = ({ content, onChange }: PostFormContentProps) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative flex-grow">
       <Textarea
-        placeholder="Share your gaming moments... Use # for hashtags, @ to mention users"
+        placeholder="What's happening?"
         value={content}
         onChange={(e) => onChange(e.target.value)}
+        onKeyUp={(e) => setCursorPosition(e.currentTarget.selectionStart)}
         onSelect={(e) => setCursorPosition(e.currentTarget.selectionStart)}
-        className="min-h-[100px] resize-none"
+        className="min-h-[120px] h-full w-full resize-none"
       />
       {hashtagSearch && hashtagSuggestions && (
         <div className="absolute z-10 w-full max-w-md bg-background border border-border rounded-md shadow-lg mt-1">
