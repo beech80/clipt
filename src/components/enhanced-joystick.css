@@ -1,0 +1,208 @@
+/* Enhanced Joystick Animations and Effects */
+
+/* Base joystick styles with improved visual appearance */
+.joystick {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #111823, #1a2334);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 255, 0.2);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  overflow: visible;
+}
+
+/* Improved inner stick with glow effect */
+.joystick-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0a0a1a, #202040);
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+  z-index: 2;
+}
+
+/* Glowing center dot */
+.joystick-inner::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background-color: #00ff00;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px #00ff00, 0 0 15px #00ff00;
+}
+
+/* Direction indicators */
+.joystick-direction {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: rgba(0, 255, 0, 0.2);
+  border-radius: 50%;
+  transition: opacity 0.2s ease, background 0.2s ease;
+  opacity: 0.4;
+}
+
+.joystick-direction-up {
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.joystick-direction-right {
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+}
+
+.joystick-direction-down {
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.joystick-direction-left {
+  top: 50%;
+  left: 5px;
+  transform: translateY(-50%);
+}
+
+/* Active joystick state */
+.joystick.active {
+  transform: scale(1.05);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 0, 0.4);
+}
+
+/* Create a circular track effect */
+.joystick::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border-radius: 50%;
+  background: transparent;
+  border: 2px solid rgba(0, 255, 0, 0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+/* Direction activation states */
+.joystick.active-up .joystick-direction-up,
+.joystick.active-right .joystick-direction-right,
+.joystick.active-down .joystick-direction-down,
+.joystick.active-left .joystick-direction-left {
+  background: rgba(0, 255, 0, 0.6);
+  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+  opacity: 1;
+}
+
+.joystick.active::before {
+  opacity: 1;
+  animation: pulse 2s infinite;
+}
+
+/* Magnetic effect pulse animation */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.2); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 255, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
+}
+
+/* Movement animation for the joystick */
+@keyframes joystickMovement {
+  0% { transform: translate(-50%, -50%); }
+  100% { transform: translate(var(--move-x), var(--move-y)); }
+}
+
+/* Ripple effect for joystick interaction */
+.joystick-ripple {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 255, 0, 0.2) 0%, rgba(0, 255, 0, 0) 70%);
+  transform: scale(0);
+  opacity: 0;
+  z-index: 0;
+}
+
+.joystick.touched .joystick-ripple {
+  animation: ripple 0.8s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Post snapping indicator */
+.post-snap-indicator {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 3;
+}
+
+.post-snap-indicator.active {
+  opacity: 1;
+  animation: snapPulse 0.5s ease-out;
+}
+
+@keyframes snapPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.7);
+    background-color: rgba(0, 255, 255, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(0, 255, 255, 0);
+    background-color: rgba(0, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 255, 0);
+    background-color: rgba(0, 255, 255, 0);
+  }
+}
+
+/* Direction-based glow effects */
+.joystick-inner.direction-left {
+  box-shadow: -5px 0 15px rgba(0, 255, 0, 0.7);
+}
+
+.joystick-inner.direction-right {
+  box-shadow: 5px 0 15px rgba(0, 255, 0, 0.7);
+}
+
+.joystick-inner.direction-up {
+  box-shadow: 0 -5px 15px rgba(0, 255, 0, 0.7);
+}
+
+.joystick-inner.direction-down {
+  box-shadow: 0 5px 15px rgba(0, 255, 0, 0.7);
+}
+
+/* Momentum effect */
+.joystick-inner.momentum {
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
