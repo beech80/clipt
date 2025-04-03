@@ -15,9 +15,11 @@ interface ShareButtonProps {
   postId: string;
   className?: string;
   iconOnly?: boolean;
+  iconClassName?: string;
+  style?: React.CSSProperties;
 }
 
-const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '', iconOnly = false }) => {
+const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '', iconOnly = false, iconClassName = '', style }) => {
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -130,7 +132,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '', iconO
   };
 
   return (
-    <div className={className}>
+    <div className={className} style={style}>
       <DropdownMenu>
         <DropdownMenuTrigger 
           id="share-dropdown-trigger"
@@ -142,7 +144,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '', iconO
             }
           }}
         >
-          <Share2 className="h-6 w-6 text-purple-400 group-hover:text-purple-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" />
+          <Share2 className={`h-6 w-6 text-purple-400 group-hover:text-purple-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90 ${iconClassName}`} />
           {!iconOnly && (
             <span className="text-base font-medium text-gray-400 group-hover:text-purple-300 ml-1">
               Share

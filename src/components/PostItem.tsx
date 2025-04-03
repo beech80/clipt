@@ -971,14 +971,18 @@ const PostItem: React.FC<PostItemProps> = ({
       <div className={`flex items-center justify-between ${isCliptsPage ? 'p-4 pt-12 pb-8 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 via-black/50 to-transparent backdrop-blur-sm' : 'p-4 border-b border-gaming-400/20'}`}>
         {/* Enhanced Share button for Clipts Page */}
         {isCliptsPage && (
-          <div className="absolute top-4 right-4 z-20">
-            <ShareButton 
-              postId={post.id} 
-              className="share-button bg-gradient-to-r from-blue-600/80 to-purple-600/80 backdrop-blur-sm p-2.5 rounded-lg shadow-[0_0_10px_rgba(79,70,229,0.5)] border border-indigo-500/30 hover:shadow-[0_0_15px_rgba(79,70,229,0.7)] transition-all duration-300 hover:scale-105 active:scale-95" 
-              iconOnly={true} 
-            />
-          </div>
-        )}
+        <div className="absolute top-6 right-6 z-20">
+          <ShareButton 
+            postId={post.id} 
+            className="share-button p-2.5 rounded-full bg-transparent transition-all duration-300 hover:scale-110 active:scale-95" 
+            iconOnly={true} 
+            iconClassName="h-6 w-6 text-[rgba(216,180,254,0.9)]" 
+            style={{
+              filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
+            }}
+          />
+        </div>
+      )}
         <div className="flex items-center space-x-2">
           <Avatar 
             className={`${onCliptsPage ? 'h-8 w-8' : 'h-10 w-10'} cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200`}
@@ -1002,6 +1006,13 @@ const PostItem: React.FC<PostItemProps> = ({
                 >
                   {onCliptsPage ? gameName : `Playing ${gameName}`}
                 </span>
+              </div>
+            )}
+
+            {/* Caption for Clipts page - horizontally scrolling */}
+            {isCliptsPage && post.content && (
+              <div className="mt-1 max-w-[80vw] overflow-x-auto whitespace-nowrap hide-scrollbar">
+                <p className="text-sm text-gaming-300 pr-8">{post.content}</p>
               </div>
             )}
           </div>

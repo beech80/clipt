@@ -367,26 +367,7 @@ const Clipts = () => {
     <div className="fixed inset-0 bg-black text-white overflow-hidden touch-none select-none">
       {/* Fullscreen content layout */}
       <div className="h-screen w-screen overflow-hidden relative">
-        {/* Floating controls - only visible when needed */}
-        <div className="absolute top-6 left-6 z-30">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-white hover:text-purple-300 focus:outline-none transition-all duration-300 bg-transparent p-2 rounded-full"
-            aria-label="Go back"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" 
-              className="h-7 w-7" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="rgba(216, 180, 254, 0.9)"
-              style={{
-                filter: "drop-shadow(0 0 10px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
-              }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        </div>
+        {/* Back button removed for cleaner full-screen experience */}
         
         {/* Refresh button removed to create a cleaner UI */}
 
