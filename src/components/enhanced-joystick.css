@@ -240,28 +240,24 @@
   transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Xbox action button styles - diamond formation */
-.action-buttons.xbox-style {
+/* Modern circular button layout */
+.action-buttons.modern-style {
   display: grid;
-  grid-template-areas:
-    ". up ."
-    "left center right"
-    ". down .";
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
-  gap: 5px;
-  width: 120px;
-  height: 120px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+  width: 100px;
+  height: 100px;
+  margin-right: 10px;
   position: relative;
 }
 
-.action-buttons.xbox-style .action-button {
-  width: 40px;
-  height: 40px;
+.action-buttons.modern-style .action-button {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #333;
-  border: none;
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.5);
+  border: 2px solid;
+  background: rgba(20, 20, 30, 0.8);
   position: relative;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -278,61 +274,48 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.action-buttons.xbox-style .action-button.x {
-  grid-area: left;
-  background: linear-gradient(135deg, #0066cc, #0044aa);
-  justify-self: end;
-}
-
-/* Button label styling */
-.action-buttons.xbox-style .action-button span.button-label {
-  position: absolute;
-  bottom: -16px;
-  font-size: 12px;
-  font-weight: bold;
-  color: white;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
-}
-
-.action-buttons.xbox-style .action-button.y {
-  grid-area: up;
-  background: linear-gradient(135deg, #ffcc00, #ff9900);
-  justify-self: center;
-}
-
-.action-buttons.xbox-style .action-button.b {
-  grid-area: right;
-  background: linear-gradient(135deg, #cc0000, #990000);
-  justify-self: start;
-}
-
-.action-buttons.xbox-style .action-button.a {
-  grid-area: down;
-  background: linear-gradient(135deg, #00cc00, #009900);
-  justify-self: center;
-}
-
-/* Xbox controller matte texture overlay */
-.matte-texture {
-  position: absolute;
-  top: 0;
+/* Controller layout wrapper */
+.game-boy-controls-wrapper {
+  position: fixed;
+  bottom: 0;
   left: 0;
   width: 100%;
-  height: 100%;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="none" stroke="none"/><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="linear" slope="0.1"/><feFuncG type="linear" slope="0.1"/><feFuncB type="linear" slope="0.1"/></feComponentTransfer></filter><rect width="100" height="100" fill="white" filter="url(%23noise)" opacity="0.05"/></svg>');
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0.4;
-  mix-blend-mode: overlay;
+  z-index: 1000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(5px);
+}
+
+.action-buttons.modern-style .action-button.x {
+  border-color: #1e90ff;
+}
+
+/* Button label styling - hidden in modern design */
+.action-buttons.modern-style .button-label {
+  display: none;
+}
+
+.action-buttons.modern-style .action-button.y {
+  border-color: #ffcc00;
+}
+
+.action-buttons.modern-style .action-button.b {
+  border-color: #ff3e4e;
+}
+
+.action-buttons.modern-style .action-button.a {
+  border-color: #00cc66;
 }
 
 /* Active states for controller buttons */
-.action-buttons.xbox-style .action-button svg.active {
+.action-buttons.modern-style .action-button svg.active {
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
-  transform: scale(1.1);
 }
 
-.action-buttons.xbox-style .action-button:active {
+.action-buttons.modern-style .action-button:active {
   transform: scale(0.9);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
@@ -348,21 +331,23 @@
 
 /* Central CLIPT button */
 .central-button {
-  width: 70px;
-  height: 70px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
-  background: #1e1e2e;
+  background: #14141e;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
-  border: 2px solid transparent;
-  border-image: linear-gradient(to right, #ff3e84, #3498db) 1;
+  border: 2px solid;
+  border-image: linear-gradient(45deg, #ff3e84, #3498db, #ffcc00, #00cc66) 1;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
+  font-size: 13px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: 10px;
+  letter-spacing: 1px;
 }
 
 .central-button:active {
@@ -372,29 +357,26 @@
 /* Post and Select buttons */
 .menu-buttons {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 20px;
 }
 
 .menu-button {
-  width: 60px;
-  height: 30px;
-  border-radius: 15px;
-  background: #1e1e2e;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(20, 20, 30, 0.8);
   color: white;
-  border: 1px solid #444;
-  font-size: 12px;
+  border: 2px solid rgba(125, 125, 255, 0.5);
+  font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   transition: all 0.2s ease;
 }
 
 .menu-button:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transform: scale(0.95);
 }

@@ -456,8 +456,8 @@ const GameBoyControls: React.FC = () => {
 
           {/* Action Buttons - Right edge */}
           <div className="right-control-area">
-            {/* Diamond formation action buttons */}
-            <div className="action-buttons xbox-style">
+            {/* Modern circular buttons */}
+            <div className="action-buttons modern-style">
               {/* X Button - Like */}
               <button 
                 className="action-button x" 
@@ -467,7 +467,7 @@ const GameBoyControls: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isLiked ? 'active' : ''} width="20" height="20">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
-                <span className="button-label">X</span>
+
               </button>
               
               {/* Y Button - Rank */}
@@ -484,7 +484,7 @@ const GameBoyControls: React.FC = () => {
                   <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
                   <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
                 </svg>
-                <span className="button-label">Y</span>
+
               </button>
               
               {/* B Button - Save */}
@@ -496,7 +496,7 @@ const GameBoyControls: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isSaved ? 'active' : ''} width="20" height="20">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span className="button-label">B</span>
+
               </button>
               
               {/* A Button - Comment */}
@@ -508,7 +508,7 @@ const GameBoyControls: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isCommenting ? 'active' : ''} width="20" height="20">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span className="button-label">A</span>
+
               </button>
               
               {/* Xbox controller texture overlay */}
@@ -516,7 +516,7 @@ const GameBoyControls: React.FC = () => {
             </div>
         </div>
         
-        {/* Center Area - CLIPT button and menu buttons */}
+        {/* Center Area - Only CLIPT button */}
         <div className="center-control-area">
           <button 
             className="central-button"
@@ -527,11 +527,19 @@ const GameBoyControls: React.FC = () => {
           </button>
           
           <div className="menu-buttons">
-            <button className="menu-button" onClick={() => navigate('/select')} aria-label="Select">
-              SELECT
+            <button className="menu-button select-button" onClick={() => navigate('/select')} aria-label="Select">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+              </svg>
             </button>
-            <button className="menu-button" onClick={() => navigate('/create')} aria-label="Post">
-              POST
+            <button className="menu-button post-button" onClick={() => navigate('/create')} aria-label="Post">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
             </button>
           </div>
         </div>
