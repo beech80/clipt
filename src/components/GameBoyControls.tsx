@@ -100,10 +100,12 @@ const GameBoyControls: React.FC = () => {
   };
   
   // Determine if we should show background based on current route
-  const shouldHideBackground = [
+  const isCliptsPage = [
     '/clipts',
     '/squads-clipts'
   ].some(route => location.pathname === route);
+  
+  const shouldHideBackground = isCliptsPage;
   
   // Handle navigation using D-pad
   const handleDPadPress = (dx: number, dy: number) => {
@@ -167,7 +169,8 @@ const GameBoyControls: React.FC = () => {
   if (!enabled) return null;
   
   return (
-    <div className={`gameboy-controls-container ${!shouldHideBackground ? 'with-background' : ''}`}>
+    <div className="gameboy-controls-wrapper">
+    <div className={`gameboy-controls-container ${!shouldHideBackground ? 'with-background' : ''} ${isCliptsPage ? 'clipts-controller' : ''}`}>
       <div className="gameboy-controls">
         {/* D-Pad / Joystick - Left edge */}
         <div className="left-control-area">
@@ -283,6 +286,7 @@ const GameBoyControls: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

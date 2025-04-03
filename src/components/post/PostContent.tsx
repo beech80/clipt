@@ -24,6 +24,9 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
   const [showFullscreenGallery, setShowFullscreenGallery] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // Define aspect ratio class for video container
+  const aspectRatioClass = isCliptsPage ? 'aspect-[9/16]' : 'aspect-video';
 
   // Fetch multiple images if available
   useEffect(() => {
@@ -254,19 +257,21 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
                   <div className="animate-pulse text-white">Loading video...</div>
                 </div>
               )}
-              
-              {/* FallbackVideoPlayer with enhanced error recovery */}
-              <FallbackVideoPlayer
-                videoUrl={videoUrl}
-                postId={postId}
-                onLoad={handleMediaLoad}
-                onError={() => setIsMediaError(true)}
-                className={`w-full h-full ${isCliptsPage ? 'object-cover' : 'object-cover md:object-contain'}`}
-                autoPlay={true}
-                controls={!isCliptsPage} /* Hide controls on Clipts page */
-                muted={false}
-                loop={true}
-              />
+              {videoUrl && (
+                <div className={`relative w-full overflow-hidden ${hasMultipleImages ? '' : aspectRatioClass}`}>
+                  <FallbackVideoPlayer 
+                    videoUrl={videoUrl} 
+                    postId={postId}
+                    onLoad={handleMediaLoad}
+                    onError={() => handleVideoError(null)}
+                    controls={!isCliptsPage} // No controls on Clipts page
+                    autoPlay={true} // Always attempt autoplay
+                    muted={compact}
+                    loop={true}
+                    className="object-cover w-full h-full rounded-none"
+                  />
+                </div>
+              )}
             </>
           )}
         </div>
