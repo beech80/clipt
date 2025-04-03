@@ -319,7 +319,7 @@ const Clipts = () => {
       </div>
 
       {/* Main content - Full screen layout */}
-      <div className="pt-16 h-[calc(100vh-5rem)]">
+      <div className="pt-14 h-[calc(100vh-3.5rem)] overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <Button variant="outline" size="icon" className="animate-spin">
@@ -333,13 +333,11 @@ const Clipts = () => {
               <div className="flex flex-row h-full snap-x snap-mandatory">
                 {rawPosts.map((post, index) => (
                   <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center">
-                    <div className="h-full flex flex-col">
-                      <div className="flex-grow flex items-center justify-center">
-                        <PostItem 
-                          post={post}
-                          isCliptsPage={true}
-                        />
-                      </div>
+                    <div className="h-full w-full">
+                      <PostItem 
+                        post={post}
+                        isCliptsPage={true}
+                      />
                     </div>
                   </div>
                 ))}
