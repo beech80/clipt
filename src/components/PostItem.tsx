@@ -1034,23 +1034,7 @@ const PostItem: React.FC<PostItemProps> = ({
           isCliptsPage={isCliptsPage}
         />
         
-        {/* Overlay caption for Clipts Page */}
-        {isCliptsPage && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-16 z-10">
-            {/* Caption */}
-            {post.content && (
-              <div>
-                <p className="text-white text-sm">
-                  <span className="font-semibold cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
-                    {username}
-                  </span>
-                  {' '}
-                  <span className="text-gray-200 line-clamp-2 overflow-hidden">{post.content}</span>
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Removed overlay caption for a cleaner, more immersive UI */}
       </div>
 
       {/* Share Button and Caption for regular pages */}

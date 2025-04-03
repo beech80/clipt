@@ -364,47 +364,37 @@ const Clipts = () => {
   }, [currentPostIndex, rawPosts.length, isLoading]);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="fixed inset-0 bg-black text-white overflow-hidden touch-none select-none">
       {/* Fullscreen content layout */}
       <div className="h-screen w-screen overflow-hidden relative">
         {/* Floating controls - only visible when needed */}
-        <div className="absolute top-4 left-4 z-30">
-          <Button
-            variant="ghost"
-            size="icon"
+        <div className="absolute top-6 left-6 z-30">
+          <button
             onClick={() => navigate(-1)}
-            className="bg-black/50 backdrop-blur-sm p-2 rounded-full text-white transition-all duration-300 hover:bg-black/70"
+            className="text-white hover:text-purple-300 focus:outline-none transition-all duration-300 bg-transparent p-2 rounded-full"
+            aria-label="Go back"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg xmlns="http://www.w3.org/2000/svg" 
+              className="h-7 w-7" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="rgba(216, 180, 254, 0.9)"
+              style={{
+                filter: "drop-shadow(0 0 10px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
+              }}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
-          </Button>
+          </button>
         </div>
         
-        <div className="absolute top-4 right-4 z-30">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              toast.info("Refreshing videos...");
-              refreshPosts();
-              // Force user interaction for autoplay
-              document.documentElement.setAttribute('data-user-interacted', 'true');
-            }}
-            className={`bg-black/50 backdrop-blur-sm p-2 rounded-full text-white transition-all duration-300 hover:bg-black/70 ${isLoading ? 'animate-spin' : ''}`}
-            disabled={isLoading}
-          >
-            <RefreshCw className="h-5 w-5" />
-          </Button>
-        </div>
+        {/* Refresh button removed to create a cleaner UI */}
 
         {/* Fullscreen content */}
         <div className="h-screen w-screen overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
-            <Button variant="outline" size="icon" className="animate-spin">
-              <RefreshCw className="h-5 w-5" />
-            </Button>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
           </div>
         ) : rawPosts.length > 0 ? (
           <div className="h-full">
@@ -446,14 +436,20 @@ const Clipts = () => {
                     behavior: 'smooth'
                   });
                 }}
-                className="h-24 w-12 ml-2 bg-gradient-to-r from-purple-900/70 to-indigo-900/70 backdrop-blur-sm rounded-xl pointer-events-auto border border-purple-500/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] transition-all duration-300 hover:shadow-[0_0_25px_rgba(147,51,234,0.5)] hover:border-purple-500/50 active:scale-95"
+                className="h-full w-1/4 flex items-center justify-start pl-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
                 aria-label="Previous post"
               >
-                <div className="flex justify-center items-center h-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                  className="h-10 w-10 transition-all duration-300 hover:scale-110" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="rgba(216, 180, 254, 0.9)"
+                  style={{
+                    filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
+                  }}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                </svg>
               </button>
               
               <button 
@@ -466,14 +462,20 @@ const Clipts = () => {
                     behavior: 'smooth'
                   });
                 }}
-                className="h-24 w-12 mr-2 bg-gradient-to-r from-indigo-900/70 to-purple-900/70 backdrop-blur-sm rounded-xl pointer-events-auto border border-purple-500/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] transition-all duration-300 hover:shadow-[0_0_25px_rgba(147,51,234,0.5)] hover:border-purple-500/50 active:scale-95"
+                className="h-full w-1/4 flex items-center justify-end pr-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
                 aria-label="Next post"
               >
-                <div className="flex justify-center items-center h-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                  className="h-10 w-10 transition-all duration-300 hover:scale-110" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="rgba(216, 180, 254, 0.9)"
+                  style={{
+                    filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
+                  }}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
             
