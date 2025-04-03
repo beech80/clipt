@@ -12,11 +12,11 @@ import { usePerformanceMonitoring } from '@/lib/performance';
 import { useQueryClient } from '@tanstack/react-query';
 import { initUserInteractionTracking } from '@/utils/userInteraction';
 import { ensureTablesExist } from '@/lib/supabase';
-// GameBoy controls removed
+import GameBoyControls from '@/components/GameBoyControls';
 import '@/index.css';
 import '@/styles/animations.css';
 import '@/styles/retro-game.css';
-// GameBoy controller styles removed
+import '@/components/enhanced-joystick.css';
 import TabsNavigation from '@/components/TabsNavigation';
 
 const Home = React.lazy(() => import('./pages/Home'));
@@ -238,7 +238,7 @@ function App() {
                 }}>
                   <AppContent />
                 </div>
-                {/* GameBoy controls removed */}
+                <GameBoyControls />
                 <PWAInstallPrompt />
               </CommentsProvider>
             </ReportDialogProvider>
