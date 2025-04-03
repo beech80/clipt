@@ -246,8 +246,8 @@ const SquadsClipts = () => {
                 {squadPosts.map((post, index) => (
                   <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center" onClick={() => setCurrentPostIndex(index)}>
                     <div className="h-full flex items-center justify-center">
-                      {/* Square border container */}
-                      <div className="w-[min(90vw,500px)] aspect-square flex flex-col bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] rounded-lg shadow-xl border border-purple-900/50 overflow-hidden mx-auto">
+                      {/* Larger post container */}
+                      <div className="w-[min(95vw,800px)] h-[90vh] flex flex-col bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] rounded-lg shadow-xl border border-purple-900/50 overflow-hidden mx-auto">
                         {/* User info */}
                         <div className="p-3 flex items-center gap-2 bg-blue-900/40 border-b border-purple-900/50">
                           <Avatar 
@@ -275,7 +275,7 @@ const SquadsClipts = () => {
                         
                         {/* Video content with 4:5 aspect ratio */}
                         <div className="flex-grow flex items-center justify-center p-4">
-                          <div className="w-full mx-auto" style={{ aspectRatio: '4/5' }}>
+                          <div className="max-w-md mx-auto" style={{ aspectRatio: '4/5' }}>
                           {getMediaUrl(post) && 
                            (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
                             <video 
