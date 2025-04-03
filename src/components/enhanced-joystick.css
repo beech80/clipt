@@ -3,31 +3,34 @@
 /* Glowing joystick based on Image 1 */
 .joystick.xbox-style {
   position: absolute;
-  width: 40px;
-  height: 40px;
-  background: transparent;
+  width: 50px;
+  height: 50px;
+  background: rgba(10, 10, 20, 0.5);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(255, 0, 255, 0.7);
+  border: 2px solid rgba(255, 0, 255, 0.8);
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
   user-select: none;
   touch-action: none;
   left: 50px;
   bottom: 100px;
   pointer-events: auto; /* Enable interaction */
+  overflow: visible;
 }
 
 .joystick-inner {
-  width: 25px;
-  height: 25px;
-  background: transparent;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, rgba(40, 0, 60, 0.8), rgba(20, 0, 30, 0.9));
   border-radius: 50%;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 0, 255, 0.7);
+  border: 1px solid rgba(255, 0, 255, 0.9);
+  box-shadow: inset 0 0 8px rgba(255, 0, 255, 0.4);
   transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
 }
@@ -40,28 +43,29 @@
 .joystick-inner::before {
   content: '';
   position: absolute;
-  width: 30px;
-  height: 30px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #444, #222);
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, #ff00ff, #9900ff);
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.7);
+  opacity: 0.8;
 }
 
 .joystick-inner::after {
   content: '';
   position: absolute;
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background: transparent;
-  border: 1px solid rgba(0, 255, 0, 0.2);
-  box-shadow: 0 0 5px rgba(0, 255, 0, 0.1);
+  border: 1px solid rgba(255, 0, 255, 0.4);
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.3);
   animation: pulseGlow 3s infinite alternate;
 }
 
 /* Active joystick state - Xbox controller style */
 .joystick.active {
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 25px rgba(255, 0, 255, 0.7);
 }
 
 .joystick::before {
@@ -74,8 +78,8 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(0, 255, 0, 0.1) 0%,
-    rgba(0, 255, 0, 0) 70%
+    rgba(255, 0, 255, 0.2) 0%,
+    rgba(255, 0, 255, 0) 70%
   );
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -90,9 +94,11 @@
 @keyframes pulseGlow {
   0% {
     opacity: 0.2;
+    transform: scale(1);
   }
   100% {
-    opacity: 0.8;
+    opacity: 0.9;
+    transform: scale(1.05);
   }
 }
 
@@ -116,8 +122,8 @@
   height: 0;
   background: radial-gradient(
     circle,
-    rgba(0, 255, 0, 0.3) 0%,
-    rgba(0, 255, 0, 0) 70%
+    rgba(255, 0, 255, 0.4) 0%,
+    rgba(255, 0, 255, 0) 70%
   );
   border-radius: 50%;
   opacity: 0;
@@ -162,21 +168,7 @@
   }
 }
 
-.joystick-inner.direction-left {
-  transform: translate(-10px, 0);
-}
 
-.joystick-inner.direction-right {
-  transform: translate(10px, 0);
-}
-
-.joystick-inner.direction-up {
-  transform: translate(0, -10px);
-}
-
-.joystick-inner.direction-down {
-  transform: translate(0, 10px);
-}
 
 .joystick-inner.momentum {
   transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -405,6 +397,24 @@
   position: relative;
   pointer-events: auto; /* Enable interaction */
   border: none;
+  transition: all 0.3s ease;
+}
+
+/* Special styling for camera button */
+.menu-button.camera-button {
+  background: linear-gradient(135deg, rgba(40, 0, 60, 0.8), rgba(20, 0, 30, 0.9));
+  border: 1px solid rgba(255, 0, 255, 0.6);
+  box-shadow: 0 0 12px rgba(255, 0, 255, 0.3);
+}
+
+.menu-button.camera-button:hover {
+  box-shadow: 0 0 18px rgba(255, 0, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.menu-button.camera-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 25px rgba(255, 0, 255, 0.7);
 }
 
 .menu-button:active {
