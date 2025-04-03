@@ -335,8 +335,8 @@ const GameBoyControls: React.FC = () => {
 
   return (
     <div className="gameboy-controls">
-      <div className="gameboy-section">
-        {/* Xbox-style joystick */}
+      <div className="gameboy-section left">
+        {/* Simple joystick */}
         <div 
           ref={joystickRef}
           className={`joystick xbox-style ${isJoystickActive ? 'active' : ''} ${joystickDirection ? `active-${joystickDirection}` : ''} ${isTouched ? 'touched' : ''}`}
@@ -346,82 +346,65 @@ const GameBoyControls: React.FC = () => {
             ref={joystickInnerRef}
             className={`joystick-inner ${momentumActive ? 'momentum' : ''}`}
           ></div>
-          <div className="joystick-ripple"></div>
-          <div className="joystick-direction joystick-direction-up"></div>
-          <div className="joystick-direction joystick-direction-right"></div>
-          <div className="joystick-direction joystick-direction-down"></div>
-          <div className="joystick-direction joystick-direction-left"></div>
-        </div>
-
-        <div className="center-section">
-          <button className="clipt-button" onClick={() => navigate('/')} aria-label="CLIPT button">
-            CLIPT
-          </button>
-          
-          <div className="menu-buttons">
-            <button className="menu-button" onClick={() => navigate('/select')} aria-label="Select">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
-            <button className="menu-button" onClick={() => navigate('/create')} aria-label="Post">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="16"></line>
-                <line x1="8" y1="12" x2="16" y2="12"></line>
-              </svg>
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="action-buttons modern-style">
-        {/* Like button (X - Blue) */}
-        <button 
-          className={`action-button x ${likeActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('like')}
-          aria-label="Like post"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-          </svg>
+      <div className="gameboy-section center">
+        <button className="clipt-button" onClick={() => navigate('/')} aria-label="CLIPT button">
+          CLIPT
         </button>
-        
-        {/* Save button (B - Red) */}
-        <button 
-          className={`action-button b ${saveActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('save')}
-          aria-label="Save video"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-          </svg>
-        </button>
-        
-        {/* Comment button (A - Green) */}
-        <button 
-          className={`action-button a ${commentActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('comment')}
-          aria-label="Comment"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-        </button>
-        
-        {/* Rank button (Y - Yellow) */}
-        <button 
-          className={`action-button y ${rankActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('rank')}
-          aria-label="Rank post"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-          </svg>
-        </button>
+        <div className="menu-buttons">
+          <div className="menu-button"></div>
+          <div className="menu-button"></div>
+        </div>
+      </div>
+
+      <div className="gameboy-section right">
+        <div className="action-buttons modern-style">
+          {/* Like button (Blue) */}
+          <button 
+            className={`action-button x ${likeActive ? 'active' : ''}`}
+            onClick={() => handleActionButtonClick('like')}
+            aria-label="Like post"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1e90ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+          
+          {/* Save button (Red) */}
+          <button 
+            className={`action-button b ${saveActive ? 'active' : ''}`}
+            onClick={() => handleActionButtonClick('save')}
+            aria-label="Save video"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ff3e4e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </button>
+          
+          {/* Comment button (Green) */}
+          <button 
+            className={`action-button a ${commentActive ? 'active' : ''}`}
+            onClick={() => handleActionButtonClick('comment')}
+            aria-label="Comment"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#00cc66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </button>
+          
+          {/* Rank button (Yellow) */}
+          <button 
+            className={`action-button y ${rankActive ? 'active' : ''}`}
+            onClick={() => handleActionButtonClick('rank')}
+            aria-label="Rank post"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffcc00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

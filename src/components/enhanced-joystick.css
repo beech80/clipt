@@ -3,31 +3,28 @@
 /* Base joystick styles with Xbox-inspired appearance */
 .joystick.xbox-style {
   position: relative;
-  width: 80px;
-  height: 80px;
-  background: rgba(30, 30, 40, 0.8);
+  width: 25px;
+  height: 25px;
+  background: transparent;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-  border: 2px solid rgba(0, 255, 0, 0.5);
-  margin-left: 10px;
+  border: 1px solid rgba(0, 255, 0, 0.7);
   user-select: none;
   touch-action: none;
 }
 
 .joystick-inner {
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(135deg, #333, #222);
+  width: 15px;
+  height: 15px;
+  background: transparent;
   border-radius: 50%;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(0, 255, 0, 0.3);
+  border: 1px solid rgba(0, 255, 0, 0.5);
   transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
 }
@@ -225,25 +222,25 @@
 /* Modern circular button layout */
 .action-buttons.modern-style {
   position: relative;
-  width: 120px;
-  height: 120px;
-  margin-right: 10px;
+  width: 60px;
+  height: 60px;
+  background: transparent;
 }
 
 .action-buttons.modern-style .action-button {
   position: absolute;
-  width: 40px;
-  height: 40px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: rgba(30, 30, 40, 0.9);
-  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: 1px solid;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
   color: white;
-  font-size: 16px;
+  font-size: 10px;
 }
 
 .action-buttons.modern-style .action-button:active {
@@ -258,8 +255,8 @@
 }
 
 .action-buttons.modern-style .action-button svg {
-  width: 18px;
-  height: 18px;
+  width: 12px;
+  height: 12px;
 }
 
 .action-buttons.modern-style .action-button.x {
@@ -268,6 +265,7 @@
   left: 50%;
   transform: translateX(-50%);
   border-color: #1e90ff;
+  color: #1e90ff;
 }
 
 .action-buttons.modern-style .action-button.x svg {
@@ -287,6 +285,7 @@
   right: 0;
   transform: translateY(-50%);
   border-color: #ff3e4e;
+  color: #ff3e4e;
 }
 
 .action-buttons.modern-style .action-button.a {
@@ -303,16 +302,15 @@
 /* CLIPT Button */
 .clipt-button {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 45px;
+  height: 20px;
   padding: 0;
-  border-radius: 10px;
-  background: rgba(30, 30, 40, 0.9);
+  border-radius: 5px;
+  background: transparent;
   color: white;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
+  font-family: sans-serif;
+  font-size: 8px;
   letter-spacing: 0.5px;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -326,19 +324,17 @@
 .clipt-button::after {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: 10px;
-  padding: 2px;
-  background: linear-gradient(135deg, #6e8efb, #a777e3, #e94057);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 7px;
+  border: 1px solid #8e54e9;
+  z-index: -1;
 }
 
-.clipt-button:active {
-  transform: scale(0.95);
+.clipt-button:hover, .clipt-button:focus {
+  transform: scale(1.05);
 }
 
 /* Button activation effects */
@@ -363,40 +359,48 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  background: rgba(20, 20, 30, 0.8);
-  backdrop-filter: blur(10px);
+  padding: 10px 20px;
+  background: transparent;
   z-index: 1000;
-  height: 110px;
+  height: 40px;
 }
 
 .gameboy-section {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
-/* Menu buttons below CLIPT */
+.gameboy-section.left {
+  margin-left: 5px;
+}
+
+.gameboy-section.right {
+  margin-right: 5px;
+}
+
+.gameboy-section.center {
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Small dots below CLIPT */
 .menu-buttons {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 4px;
+  margin-top: 2px;
 }
 
 .menu-button {
-  width: 28px;
-  height: 28px;
+  width: 3px;
+  height: 3px;
   border-radius: 50%;
-  background: rgba(30, 30, 40, 0.9);
-  color: white;
-  border: 1px solid rgba(120, 120, 140, 0.7);
-  font-size: 10px;
+  background: rgba(255, 255, 255, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .menu-button:active {
