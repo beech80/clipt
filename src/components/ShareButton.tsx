@@ -14,9 +14,10 @@ import { supabase } from '@/lib/supabase';
 interface ShareButtonProps {
   postId: string;
   className?: string;
+  iconOnly?: boolean;
 }
 
-const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '' }) => {
+const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '', iconOnly = false }) => {
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -142,9 +143,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '' }) => 
           }}
         >
           <Share2 className="h-6 w-6 text-purple-400 group-hover:text-purple-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90" />
-          <span className="text-base font-medium text-gray-400 group-hover:text-purple-300 ml-1">
-            Share
-          </span>
+          {!iconOnly && (
+            <span className="text-base font-medium text-gray-400 group-hover:text-purple-300 ml-1">
+              Share
+            </span>
+          )}
         </DropdownMenuTrigger>
         
         <DropdownMenuContent align="center" className="w-44 bg-[#1D1E2A] border-[#2C2D41] text-white">
