@@ -59,41 +59,6 @@
   animation: pulseGlow 3s infinite alternate;
 }
 
-/* Direction indicators */
-.joystick-direction {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: rgba(0, 255, 0, 0.3);
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  opacity: 0.5;
-}
-
-.joystick-direction-up {
-  top: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.joystick-direction-right {
-  top: 50%;
-  right: 5px;
-  transform: translateY(-50%);
-}
-
-.joystick-direction-down {
-  bottom: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.joystick-direction-left {
-  top: 50%;
-  left: 5px;
-  transform: translateY(-50%);
-}
-
 /* Active joystick state - Xbox controller style */
 .joystick.active {
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
@@ -115,16 +80,6 @@
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
-}
-
-/* Direction indicators light up when active */
-.joystick.active-up .joystick-direction-up,
-.joystick.active-right .joystick-direction-right,
-.joystick.active-down .joystick-direction-down,
-.joystick.active-left .joystick-direction-left {
-  background: rgba(0, 255, 0, 0.8);
-  box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
-  opacity: 1;
 }
 
 .joystick.active::before {
