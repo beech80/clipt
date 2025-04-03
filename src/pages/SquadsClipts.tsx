@@ -8,6 +8,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ShareButton } from '@/components/ShareButton';
 
 interface PostType {
   id: string;
@@ -35,7 +36,6 @@ const SquadsClipts = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
   const [initialPostSet, setInitialPostSet] = useState(false);
   const [navigationDirection, setNavigationDirection] = useState<'next' | 'prev' | null>(null);
@@ -242,23 +242,119 @@ const SquadsClipts = () => {
   }, [squadPosts.length]);
 
   // Current post to display
+
   const currentPost = squadPosts[currentPostIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1A1C50] to-[#0F1033] text-white">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#1A1C50] to-[#3A0C70] backdrop-blur-md border-b border-indigo-800 shadow-lg">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="text-white">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+    <div className="fixed inset-0 bg-black text-white overflow-hidden touch-none select-none">
+      <div className="h-screen w-screen overflow-hidden relative">
+        {/* Back button removed for cleaner full-screen experience */}
+        <div className="fixed top-0 left-0 right-0 z-10 flex justify-center p-4">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Squads Clipts</h1>
-          <div className="w-8 h-8"></div> {/* Empty spacer for balance */}
         </div>
-      </div>
+  {isLoading ? (
+    <div className="flex justify-center items-center h-full">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+    </div>
+        ) : squadPosts.length > 0 ? (
+          <div className="h-full relative">
+            {/* Main content area that fills the screen */}
+            <div className="h-full w-full relative overflow-hidden">
+              {/* Current post display */}
+              <div className="h-full w-full">
+                {/* User info and caption at top */}
+                <div className="absolute top-14 left-0 right-0 z-10 flex flex-col items-start">
+                  <div className="w-full px-4 py-2 flex items-center space-x-2 bg-black/60 backdrop-blur-sm">
+                    <Avatar 
+                      className="w-8 h-8 rounded-full overflow-hidden cursor-pointer"
+                      onClick={() => currentPost?.user_id && navigate(`/profile/${currentPost.user_id}`)}
+                    >
+                      {currentPost?.profiles?.avatar_url ? (
+                        <AvatarImage 
+                          src={currentPost.profiles.avatar_url}
+                          alt={currentPost.profiles.username || 'User'}
+                        />
+                      ) : (
+                        <AvatarFallback className="text-white font-bold bg-purple-700">
+                          {currentPost?.profiles?.username?.substring(0, 1)?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div>
+                      <span className="font-medium text-sm text-white">
+                        {currentPost?.profiles?.username || 'Username'}
+                      </span>
+                      {/* Caption with horizontal scrolling */}
+                      {currentPost?.content && (
+                        <div className="overflow-x-auto max-w-[85vw] hide-scrollbar whitespace-nowrap">
+                          <p className="text-gray-300 text-sm">{currentPost.content}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-      {/* Main Content - Full screen layout */}
-      <div className="pt-16 h-[calc(100vh-5rem)]">
+                {/* Video content centered in screen */}
+                <div className="h-full w-full flex items-center justify-center bg-black">
+                  {getMediaUrl(currentPost) && 
+                   (getMediaUrl(currentPost)?.includes('.mp4') || getMediaUrl(currentPost)?.includes('.webm')) ? (
+                    <video 
+                      src={getMediaUrl(currentPost) || ''}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="h-full max-h-[80vh] max-w-full object-contain"
+                      poster={currentPost.thumbnail_url || ''}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full w-full text-center text-gray-400">
+                      No video available
+                    </div>
+                  )}
+                </div>
+
+                {/* Action buttons on the right side */}
+                <div className="absolute right-4 bottom-24 flex flex-col gap-6 items-center z-10">
+                  <button 
+                    className={`flex flex-col items-center ${currentPost?.liked_by_current_user ? 'text-red-500' : 'text-white'}`}
+                    onClick={() => currentPost?.id && likeMutation.mutate(currentPost.id)}
+                    aria-label="Like post"
+                  >
+                    <Heart className={`h-8 w-8 ${currentPost?.liked_by_current_user ? 'fill-red-500' : ''}`} />
+                    <span className="text-xs mt-1">{currentPost?.likes_count || 0}</span>
+                  </button>
+                  
+                  <button 
+                    className="flex flex-col items-center text-white" 
+                    onClick={() => currentPost?.id && navigate(`/post/${currentPost.id}`)}
+                    aria-label="View comments"
+                  >
+                    <MessageSquare className="h-8 w-8" />
+                    <span className="text-xs mt-1">{currentPost?.comments_count || 0}</span>
+                  </button>
+                  
+                  <button 
+                    className="flex flex-col items-center text-yellow-400"
+                    aria-label="Give trophy"
+                  >
+                    <Trophy className="h-8 w-8" />
+                    <span className="text-xs mt-1">{currentPost?.trophy_count || 0}</span>
+                  </button>
+                  
+                  <button className="text-white" aria-label="Save video">
+                    <Bookmark className="h-8 w-8" />
+                  </button>
+                  
+                  <ShareButton 
+                    url={`${window.location.origin}/post/${currentPost?.id}`} 
+                    title={`Check out this clip from ${currentPost?.profiles?.username || 'a user'}`}
+                    iconClassName="h-8 w-8 text-white hover:text-purple-400 transition-all"
+                    style={{
+                      filter: "drop-shadow(0 0 10px rgba(168, 85, 247, 0.8)) drop-shadow(0 0 3px rgba(255, 0, 255, 0.6))"
+                    }}
+                  />
+                </div>
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
@@ -347,87 +443,148 @@ const SquadsClipts = () => {
                             onClick={(e) => e.stopPropagation()}
                             aria-label="Give trophy"
                           >
-                            <Trophy className="mr-1 h-6 w-6" />
-                            <span className="text-base">{post?.trophy_count || 0}</span>
-                          </button>
-                          
-                          <button 
-                            className="text-purple-400"
-                            onClick={(e) => e.stopPropagation()}
-                            aria-label="Share post"
-                          >
-                            <Share2 className="h-6 w-6" />
-                          </button>
-                          
-                          <button 
-                            className="text-gray-300"
-                            onClick={(e) => e.stopPropagation()}
-                            aria-label="Save post"
-                          >
-                            <Bookmark className="h-6 w-6" />
-                          </button>
-                        </div>
                       </div>
+                    )}
                     </div>
                   </div>
-                ))}
+                  
+                  {/* Action buttons - Only in the post container, not at the bottom */}
+                  <div className="p-4 flex items-center justify-between border-t border-purple-900/50 bg-black/30">
+                    <button 
+                      className={`flex items-center ${post?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        post?.id && likeMutation.mutate(post.id);
+                      }}
+                      aria-label="Like post"
+                    >
+                      <Heart className="mr-1 h-6 w-6 fill-current" />
+                      <span className="text-base">{post?.likes_count || 0}</span>
+                    </button>
+                    
+                    <button 
+                      className="text-blue-400" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/post/${post.id}`);
+                      }}
+                      aria-label="View comments"
+                    >
+                      <MessageSquare className="h-6 w-6" />
+                    </button>
+                    
+                    <button 
+                      className="flex items-center text-yellow-400"
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label="Give trophy"
+                    >
+                      <Trophy className="mr-1 h-6 w-6" />
+                      <span className="text-base">{post?.trophy_count || 0}</span>
+                    </button>
+                    
+                    <button 
+                      className="text-purple-400"
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label="Share post"
+                    >
+                      <Share2 className="h-6 w-6" />
+                    </button>
+                    
+                    <button 
+                      className="text-gray-300"
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label="Save post"
+                    >
+                      <Bookmark className="h-6 w-6" />
+                    </button>
+                    
+                    <button 
+                      className="text-gray-300"
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label="Back"
+                    >
+                      <ArrowLeft className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {/* Navigation indicators */}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
-              {squadPosts.map((_, index) => (
-                <div 
-                  key={index} 
-                  className={`w-2 h-2 rounded-full ${index === currentPostIndex ? 'bg-white' : 'bg-gray-500'}`}
-                  onClick={() => setCurrentPostIndex(index)}
-                />
-              ))}
-            </div>
-            
-            {/* Navigation controls */}
-            <div className="absolute left-4 right-4 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none">
-              <button 
-                onClick={() => handleNavigation('prev')}
-                className="bg-black/30 rounded-full p-2 pointer-events-auto"
-                aria-label="Previous post"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              
-              <button 
-                onClick={() => handleNavigation('next')}
-                className="bg-black/30 rounded-full p-2 pointer-events-auto"
-                aria-label="Next post"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Navigation indicators */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+        {squadPosts.map((_, index) => (
+          <div 
+            key={index} 
+            className={`w-2 h-2 rounded-full ${index === currentPostIndex ? 'bg-white' : 'bg-gray-500'}`}
+            onClick={() => setCurrentPostIndex(index)}
+          />
+        ))}
+      </div>
+      
+                {/* Navigation controls with glowing effect */}
+                <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none">
+                  <button 
+                    onClick={() => handleNavigation('prev')}
+                    className="h-full w-1/4 flex items-center justify-start pl-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
+                    aria-label="Previous post"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                      className="h-10 w-10 transition-all duration-300 hover:scale-110" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="rgba(216, 180, 254, 0.9)"
+                      style={{
+                        filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
+                      }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  
+                  <button 
+                    onClick={() => handleNavigation('next')}
+                    className="h-full w-1/4 flex items-center justify-end pr-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
+                    aria-label="Next post"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" 
+                      className="h-10 w-10 transition-all duration-300 hover:scale-110" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="rgba(216, 180, 254, 0.9)"
+                      style={{
+                        filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
+                      }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         ) : (
           <div className="flex justify-center items-center h-full">
-            <div className="text-center">
-              <p className="text-xl font-semibold text-purple-300 mb-2">No squad clipts available</p>
+            <div className="text-center p-4 max-w-md">
+              <h3 className="text-xl font-bold text-purple-300 mb-2">No squad clipts available</h3>
               <p className="text-gray-400">Add friends to your squad or create new clipts!</p>
             </div>
           </div>
         )}
+        
+        {/* Add custom CSS for hiding scrollbar but keeping functionality */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+          }
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;  /* Chrome, Safari and Opera */
+          }
+        `}} />
       </div>
-
-      {/* Add custom CSS for hiding scrollbar but keeping functionality */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .hide-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
-        }
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;  /* Chrome, Safari and Opera */
-        }
-      `}} />
     </div>
   );
 };
