@@ -259,6 +259,53 @@ const Clipts = () => {
     };
   }, [fetchPostsDirectly, refreshKey]);
 
+  // Set up navigation via the joystick/swipe
+  useEffect(() => {
+    const handleNavigatePost = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const direction = customEvent.detail?.direction;
+      
+      if (direction === 'prev') {
+        const newIndex = currentPostIndex > 0 ? currentPostIndex - 1 : rawPosts.length - 1;
+        setCurrentPostIndex(newIndex);
+        document.querySelector('.snap-mandatory')?.scrollTo({
+          left: newIndex * window.innerWidth,
+          behavior: 'smooth'
+        });
+      } else if (direction === 'next') {
+        const newIndex = currentPostIndex < rawPosts.length - 1 ? currentPostIndex + 1 : 0;
+        setCurrentPostIndex(newIndex);
+        document.querySelector('.snap-mandatory')?.scrollTo({
+          left: newIndex * window.innerWidth,
+          behavior: 'smooth'
+        });
+      }
+      
+      // Force videos to autoplay after navigation
+      setTimeout(() => {
+        document.documentElement.setAttribute('data-user-interacted', 'true');
+        // Try to play the current video
+        const videos = document.querySelectorAll('video');
+        if (videos.length > 0) {
+          videos.forEach((video, idx) => {
+            if (idx === currentPostIndex) {
+              video.play().catch(err => console.log('Auto-play prevented after navigation:', err));
+            } else {
+              video.pause();
+            }
+          });
+        }
+      }, 300);
+    };
+    
+    // Listen for navigation events from the GameBoy controls
+    document.addEventListener('navigatePost', handleNavigatePost);
+    
+    return () => {
+      document.removeEventListener('navigatePost', handleNavigatePost);
+    };
+  }, [currentPostIndex, rawPosts.length]);
+
   // Trophy count updates - now actively refreshes trophy counts
   useEffect(() => {
     const handleTrophyCountUpdate = async () => {
@@ -294,6 +341,28 @@ const Clipts = () => {
     };
   }, [rawPosts]);
 
+  // Auto-play the current video whenever the current post index changes
+  useEffect(() => {
+    if (rawPosts.length > 0 && !isLoading) {
+      // Force user interaction flag for autoplay
+      document.documentElement.setAttribute('data-user-interacted', 'true');
+      
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        const videos = document.querySelectorAll('video');
+        if (videos.length > 0) {
+          videos.forEach((video, idx) => {
+            if (idx === currentPostIndex) {
+              video.play().catch(err => console.log('Auto-play prevented on index change:', err));
+            } else {
+              video.pause();
+            }
+          });
+        }
+      }, 100);
+    }
+  }, [currentPostIndex, rawPosts.length, isLoading]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-black text-white">
       {/* Header */}
@@ -318,8 +387,8 @@ const Clipts = () => {
         </div>
       </div>
 
-      {/* Main content - Full screen layout */}
-      <div className="pt-14 h-[calc(100vh-3.5rem)] overflow-hidden">
+      {/* Main content - Full screen layout adjusted to avoid GameBoy controls */}
+      <div className="pt-14 h-[calc(100vh-7rem)] overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <Button variant="outline" size="icon" className="animate-spin">
