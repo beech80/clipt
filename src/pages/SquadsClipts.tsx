@@ -268,9 +268,9 @@ const SquadsClipts = () => {
               <div className="flex flex-row h-full snap-x snap-mandatory">
                 {squadPosts.map((post, index) => (
                   <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center" onClick={() => setCurrentPostIndex(index)}>
-                    <div className="h-full flex items-center justify-center">
-                      {/* Larger post container with 16:9 aspect ratio */}
-                      <div className="w-full max-w-7xl flex flex-col bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] rounded-lg shadow-xl border border-purple-900/50 overflow-hidden mx-auto" style={{ aspectRatio: '16/9' }}>
+                    <div className="h-full w-full flex items-center justify-center">
+                      {/* Full-width post container */}
+                      <div className="w-screen h-full flex flex-col bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] border-y border-purple-900/50 overflow-hidden">
                         {/* User info */}
                         <div className="p-3 flex items-center gap-2 bg-blue-900/40 border-b border-purple-900/50">
                           <Avatar 
@@ -296,19 +296,19 @@ const SquadsClipts = () => {
                           </span>
                         </div>
                         
-                        {/* Video content container */}
-                        <div className="flex-grow flex items-center justify-center p-4">
-                          <div className="w-full max-w-2xl mx-auto" style={{ aspectRatio: '9/16' }}>
+                        {/* Video content container that fills more of the screen */}
+                        <div className="flex-grow flex items-center justify-center">
+                          <div className="w-full h-full flex items-center justify-center">
                           {getMediaUrl(post) && 
                            (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
                             <video 
                               src={getMediaUrl(post) || ''}
                               controls
-                              className="w-full h-full object-cover rounded"
+                              className="max-h-[80vh] max-w-full object-contain"
                               poster={post.thumbnail_url || ''}
                             />
                           ) : (
-                            <div className="flex items-center justify-center h-full text-center text-blue-300 bg-blue-900/20 rounded">
+                            <div className="flex items-center justify-center h-full w-full text-center text-blue-300 bg-blue-900/20">
                               For video clips only!
                             </div>
                           )}
