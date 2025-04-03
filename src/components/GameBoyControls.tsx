@@ -23,7 +23,6 @@ const GameBoyControls: React.FC = () => {
   // Enhanced joystick animation states
   const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
   const [isJoystickActive, setIsJoystickActive] = useState(false);
-  const [joystickDirection, setJoystickDirection] = useState<'up' | 'down' | 'left' | 'right' | null>(null);
   const [isTouched, setIsTouched] = useState(false);
   const [momentumActive, setMomentumActive] = useState(false);
 
@@ -110,7 +109,6 @@ const GameBoyControls: React.FC = () => {
       
       setMomentumActive(true);
       setJoystickPosition({ x: 0, y: 0 });
-      setJoystickDirection(null);
       
       // Reset active states
       setIsJoystickActive(false);
@@ -146,38 +144,49 @@ const GameBoyControls: React.FC = () => {
   
   // Handle joystick movement logic
   const handleJoystickMovement = (clientX: number, clientY: number) => {
+    // Get joystick element and its dimensions
     const joystick = joystickRef.current;
     const joystickInner = joystickInnerRef.current;
     
     if (!joystick || !joystickInner) return;
     
-    const joystickRect = joystick.getBoundingClientRect();
-    
-    // Calculate position relative to joystick center
-    const centerX = joystickRect.left + joystickRect.width / 2;
-    const centerY = joystickRect.top + joystickRect.height / 2;
+    // Calculate joystick center position
+    const rect = joystick.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
     
     // Calculate distance from center
     let deltaX = clientX - centerX;
     let deltaY = clientY - centerY;
     
-    // Constrain distance to joystick radius for realistic movement
-    const maxRadius = joystickRect.width / 2 - 10;
+    // Calculate distance from center
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     
+    // Calculate max radius (70% of joystick radius)
+    const maxRadius = rect.width * 0.35;
+    
+    let intensity = 0;
+    
+    // If the distance is greater than the max radius, normalize to max radius
     if (distance > maxRadius) {
-      const angle = Math.atan2(deltaY, deltaX);
-      deltaX = Math.cos(angle) * maxRadius;
-      deltaY = Math.sin(angle) * maxRadius;
+      deltaX = (deltaX / distance) * maxRadius;
+      deltaY = (deltaY / distance) * maxRadius;
+      intensity = 1; // Maximum intensity
+    } else {
+      intensity = distance / maxRadius; // Proportional intensity
     }
     
-    // Set CSS variables for animation
+    // Update joystick position state
+    setJoystickPosition({ x: deltaX, y: deltaY });
+    
+    // Set joystick inner element position using CSS variables
     joystickInner.style.setProperty('--x', `${deltaX}px`);
     joystickInner.style.setProperty('--y', `${deltaY}px`);
+    joystickInner.style.transition = 'none';
     joystickInner.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
     
-    // Update position state
-    setJoystickPosition({ x: deltaX, y: deltaY });
+    // Calculate angle to determine direction for scrolling
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
     
     // Determine joystick direction based on position
     const absX = Math.abs(deltaX);
@@ -185,31 +194,21 @@ const GameBoyControls: React.FC = () => {
     
     if (absX > absY && absX > 10) {
       if (deltaX > 0) {
-        setJoystickDirection('right');
-        joystickInner.className = 'joystick-inner direction-right';
         // Scroll logic for right direction
         scrollHorizontal(1);
       } else {
-        setJoystickDirection('left');
-        joystickInner.className = 'joystick-inner direction-left';
         // Scroll logic for left direction
         scrollHorizontal(-1);
       }
     } else if (absY > absX && absY > 10) {
       if (deltaY > 0) {
-        setJoystickDirection('down');
-        joystickInner.className = 'joystick-inner direction-down';
         // Scroll down
         scrollVertical(absY / maxRadius);
       } else {
-        setJoystickDirection('up');
-        joystickInner.className = 'joystick-inner direction-up';
         // Scroll up
         scrollVertical(-absY / maxRadius);
       }
     } else {
-      setJoystickDirection(null);
-      joystickInner.className = 'joystick-inner';
       stopScrolling();
     }
   };
@@ -336,13 +335,9 @@ const GameBoyControls: React.FC = () => {
   return (
     <div className="gameboy-controls">
       {/* Left control (Joystick) based on Image 1 */}
-      <div 
-        ref={joystickRef}
-        className={`joystick xbox-style ${isJoystickActive ? 'active' : ''} ${joystickDirection ? `active-${joystickDirection}` : ''} ${isTouched ? 'touched' : ''}`}
-        aria-label="Joystick control for navigation"
-      >
+      <div className={`joystick xbox-style ${isJoystickActive ? 'active' : ''} ${isTouched ? 'touched' : ''}`} ref={joystickRef} aria-label="Joystick control for navigation">
         <div 
-          ref={joystickInnerRef}
+          ref={joystickInnerRef} 
           className={`joystick-inner ${momentumActive ? 'momentum' : ''}`}
         ></div>
       </div>
