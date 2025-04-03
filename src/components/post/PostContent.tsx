@@ -25,8 +25,8 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
   const [retryCount, setRetryCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   
-  // Define aspect ratio class for video container
-  const aspectRatioClass = isCliptsPage ? 'aspect-[9/16]' : 'aspect-video';
+  // For Clipts page, we want videos to fill the entire screen
+  const aspectRatioClass = isCliptsPage ? 'h-screen' : 'aspect-video';
 
   // Fetch multiple images if available
   useEffect(() => {
@@ -268,7 +268,7 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
                     autoPlay={true} // Always attempt autoplay
                     muted={compact}
                     loop={true}
-                    className="object-cover w-full h-full rounded-none"
+                    className={`${isCliptsPage ? 'object-cover w-screen h-screen fixed inset-0' : 'object-cover w-full h-full rounded-none'}`}
                   />
                 </div>
               )}

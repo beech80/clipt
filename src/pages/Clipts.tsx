@@ -364,12 +364,24 @@ const Clipts = () => {
   }, [currentPostIndex, rawPosts.length, isLoading]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-950 to-black text-white">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-indigo-950 to-purple-900 backdrop-blur-md border-b border-indigo-800 shadow-lg">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <BackButton />
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Clipts</h1>
+    <div className="min-h-screen bg-black text-white">
+      {/* Fullscreen content layout */}
+      <div className="h-screen w-screen overflow-hidden relative">
+        {/* Floating controls - only visible when needed */}
+        <div className="absolute top-4 left-4 z-30">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="bg-black/50 backdrop-blur-sm p-2 rounded-full text-white transition-all duration-300 hover:bg-black/70"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </Button>
+        </div>
+        
+        <div className="absolute top-4 right-4 z-30">
           <Button
             variant="ghost"
             size="icon"
@@ -379,16 +391,15 @@ const Clipts = () => {
               // Force user interaction for autoplay
               document.documentElement.setAttribute('data-user-interacted', 'true');
             }}
-            className={`text-white transition-all duration-300 ${isLoading ? 'animate-spin' : ''}`}
+            className={`bg-black/50 backdrop-blur-sm p-2 rounded-full text-white transition-all duration-300 hover:bg-black/70 ${isLoading ? 'animate-spin' : ''}`}
             disabled={isLoading}
           >
             <RefreshCw className="h-5 w-5" />
           </Button>
         </div>
-      </div>
 
-      {/* Main content - Full screen layout with improved spacing to avoid GameBoy controls */}
-      <div className="pt-14 h-[calc(100vh-8rem)] overflow-hidden">
+        {/* Fullscreen content */}
+        <div className="h-screen w-screen overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <Button variant="outline" size="icon" className="animate-spin">
@@ -482,6 +493,7 @@ const Clipts = () => {
             <p className="text-gray-400">No clips found</p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
