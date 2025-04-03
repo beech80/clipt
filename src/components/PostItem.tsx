@@ -960,15 +960,15 @@ const PostItem: React.FC<PostItemProps> = ({
 
   return (
     <article 
-      className={`relative gaming-card transition-opacity duration-300 ${
+      className={`relative transition-opacity duration-300 ${
         isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
       } ${highlight ? 'ring-2 ring-blue-500' : ''} ${
-        isCliptsPage ? 'w-screen flex-shrink-0 h-full overflow-hidden flex flex-col border-0 rounded-none' : 'w-full'
+        isCliptsPage ? 'w-screen flex-shrink-0 h-full overflow-hidden flex flex-col border-0 rounded-none bg-transparent' : 'w-full gaming-card'
       }`}
       data-post-id={postId}
     >
       {/* User Header */}
-      <div className={`flex items-center justify-between ${onCliptsPage ? 'p-2' : 'p-4'} border-b border-gaming-400/20`}>
+      <div className={`flex items-center justify-between ${isCliptsPage ? 'p-2 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/70 to-transparent' : 'p-4 border-b border-gaming-400/20'}`}>
         <div className="flex items-center space-x-2">
           <Avatar 
             className={`${onCliptsPage ? 'h-8 w-8' : 'h-10 w-10'} cursor-pointer hover:ring-2 hover:ring-purple-500/50 transition-all duration-200`}
@@ -1014,8 +1014,8 @@ const PostItem: React.FC<PostItemProps> = ({
         )}
       </div>
 
-      {/* Post Content */}
-      <div className={`${onCliptsPage ? 'flex-1 min-h-0 overflow-hidden' : 'w-full'}`}>
+      {/* Post Content with overlaid caption for Clipts Page */}
+      <div className={`${isCliptsPage ? 'flex-1 min-h-0 overflow-hidden relative' : 'w-full'}`}>
         <PostContent
           imageUrl={post.image_url}
           videoUrl={post.video_url}
@@ -1023,25 +1023,52 @@ const PostItem: React.FC<PostItemProps> = ({
           compact={onCliptsPage}
           isCliptsPage={isCliptsPage}
         />
+        
+        {/* Overlay caption and share button for Clipts Page */}
+        {isCliptsPage && (
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-16 z-10">
+            {/* Caption */}
+            {post.content && (
+              <div className="mb-3">
+                <p className="text-white text-sm">
+                  <span className="font-semibold cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
+                    {username}
+                  </span>
+                  {' '}
+                  <span className="text-gray-200 line-clamp-2 overflow-hidden">{post.content}</span>
+                </p>
+              </div>
+            )}
+            
+            {/* Share Button */}
+            <div className="flex justify-start py-1">
+              <ShareButton postId={post.id} className="share-button scale-90" />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Share Button */}
-      <div className={`flex justify-center ${onCliptsPage ? 'py-2' : 'py-3'} border-t border-gaming-400/20 flex-shrink-0`}>
-        {/* Only show the share button */}
-        <ShareButton postId={post.id} className={`share-button ${onCliptsPage ? 'scale-90' : ''}`} />
-      </div>
+      {/* Share Button and Caption for regular pages */}
+      {!isCliptsPage && (
+        <>
+          {/* Share Button */}
+          <div className="flex justify-center py-3 border-t border-gaming-400/20 flex-shrink-0">
+            <ShareButton postId={post.id} className="share-button" />
+          </div>
 
-      {/* Caption */}
-      {post.content && (
-        <div className={`${onCliptsPage ? 'px-2 py-2' : 'px-4 py-3'} border-t border-gaming-400/20 ${onCliptsPage ? 'flex-shrink-0' : ''}`}>
-          <p className={`${onCliptsPage ? 'text-sm' : 'text-base'} text-gaming-100`}>
-            <span className="font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
-              {username}
-            </span>
-            {' '}
-            <span className="text-gaming-200 line-clamp-2 overflow-hidden">{post.content}</span>
-          </p>
-        </div>
+          {/* Caption */}
+          {post.content && (
+            <div className="px-4 py-3 border-t border-gaming-400/20">
+              <p className="text-base text-gaming-100">
+                <span className="font-semibold hover:text-gaming-200 cursor-pointer" onClick={() => handleProfileClick(post.user_id)}>
+                  {username}
+                </span>
+                {' '}
+                <span className="text-gaming-200 line-clamp-2 overflow-hidden">{post.content}</span>
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Inline Comments Section - Showing limited comments by default */}

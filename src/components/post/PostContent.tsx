@@ -222,13 +222,14 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
     <div className="relative w-full h-full">
       {/* Media Content */}
       {videoUrl ? (
-        <div className={`relative w-full bg-black ${isCliptsPage ? 'h-screen' : 'h-full'}`} style={{ 
-          aspectRatio: isCliptsPage ? 'unset' : '1/1', 
+        <div className={`relative w-full ${isCliptsPage ? 'h-full' : 'h-full'}`} style={{ 
+          aspectRatio: isCliptsPage ? '16/9' : '1/1', 
           maxHeight: isCliptsPage ? 'none' : (compact ? '360px' : '90vh'),
           display: 'block', 
           minHeight: isCliptsPage ? 'calc(100vh - 120px)' : (compact ? '360px' : '360px'),
           overflow: 'hidden',
-          width: '100%'
+          width: '100%',
+          backgroundColor: 'transparent'
         }}>
           {isMediaError ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
