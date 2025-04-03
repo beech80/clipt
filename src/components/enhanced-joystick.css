@@ -242,14 +242,10 @@
 
 /* Modern circular button layout */
 .action-buttons.modern-style {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 12px;
-  width: 100px;
-  height: 100px;
-  margin-right: 10px;
   position: relative;
+  width: 120px;
+  height: 120px;
+  margin-right: 10px;
 }
 
 .action-buttons.modern-style .action-button {
@@ -290,6 +286,10 @@
 }
 
 .action-buttons.modern-style .action-button.x {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
   border-color: #1e90ff;
 }
 
@@ -299,14 +299,24 @@
 }
 
 .action-buttons.modern-style .action-button.y {
+  position: absolute;
+  bottom: 0;
+  right: 0;
   border-color: #ffcc00;
 }
 
 .action-buttons.modern-style .action-button.b {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
   border-color: #ff3e4e;
 }
 
 .action-buttons.modern-style .action-button.a {
+  position: absolute;
+  bottom: 0;
+  left: 0;
   border-color: #00cc66;
 }
 
@@ -354,27 +364,32 @@
   transform: scale(0.95);
 }
 
-/* Post and Select buttons */
+/* Menu buttons below CLIPT */
 .menu-buttons {
   display: flex;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 20px;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 15px;
 }
 
 .menu-button {
-  width: 46px;
-  height: 46px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: rgba(20, 20, 30, 0.8);
+  background: rgba(30, 30, 40, 0.9);
   color: white;
-  border: 2px solid rgba(125, 125, 255, 0.5);
+  border: 1px solid rgba(120, 120, 140, 0.7);
   font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.menu-button-small {
+  width: 28px;
+  height: 28px;
 }
 
 .menu-button:active {
