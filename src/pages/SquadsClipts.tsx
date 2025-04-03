@@ -206,15 +206,38 @@ const SquadsClipts = () => {
   };
 
   // Function to navigate to previous/next post
-  const navigatePost = (direction: 'prev' | 'next') => {
-    if (squadPosts.length === 0) return;
+  const handleNavigation = (direction: 'next' | 'prev') => {
+    setNavigationDirection(direction);
     
     if (direction === 'next') {
-      setCurrentPostIndex((prev) => (prev + 1) % squadPosts.length);
+      setCurrentPostIndex((prev) => Math.min(prev + 1, squadPosts.length - 1));
     } else {
-      setCurrentPostIndex((prev) => (prev - 1 + squadPosts.length) % squadPosts.length);
+      setCurrentPostIndex((prev) => Math.max(prev - 1, 0));
     }
   };
+
+  useEffect(() => {
+    if (squadPosts.length > 0 && !initialPostSet) {
+      setCurrentPostIndex(0);
+      setInitialPostSet(true);
+    }
+  }, [squadPosts, initialPostSet]);
+
+  useEffect(() => {
+    // Listen for custom navigation events from GameBoyControls
+    const handlePostNavigation = (event: CustomEvent) => {
+      const { direction } = event.detail;
+      handleNavigation(direction);
+    };
+    
+    // Add event listener for custom navigatePost event
+    document.addEventListener('navigatePost', handlePostNavigation as EventListener);
+    
+    // Cleanup
+    return () => {
+      document.removeEventListener('navigatePost', handlePostNavigation as EventListener);
+    };
+  }, [squadPosts.length]);
 
   // Current post to display
   const currentPost = squadPosts[currentPostIndex];
@@ -246,8 +269,8 @@ const SquadsClipts = () => {
                 {squadPosts.map((post, index) => (
                   <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center" onClick={() => setCurrentPostIndex(index)}>
                     <div className="h-full flex items-center justify-center">
-                      {/* Larger post container */}
-                      <div className="w-[min(95vw,800px)] h-[90vh] flex flex-col bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] rounded-lg shadow-xl border border-purple-900/50 overflow-hidden mx-auto">
+                      {/* Larger post container with 16:9 aspect ratio */}
+                      <div className="w-full max-w-7xl flex flex-col bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] rounded-lg shadow-xl border border-purple-900/50 overflow-hidden mx-auto" style={{ aspectRatio: '16/9' }}>
                         {/* User info */}
                         <div className="p-3 flex items-center gap-2 bg-blue-900/40 border-b border-purple-900/50">
                           <Avatar 
@@ -273,9 +296,9 @@ const SquadsClipts = () => {
                           </span>
                         </div>
                         
-                        {/* Video content with 4:5 aspect ratio */}
+                        {/* Video content container */}
                         <div className="flex-grow flex items-center justify-center p-4">
-                          <div className="max-w-md mx-auto" style={{ aspectRatio: '4/5' }}>
+                          <div className="w-full max-w-2xl mx-auto" style={{ aspectRatio: '9/16' }}>
                           {getMediaUrl(post) && 
                            (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
                             <video 
@@ -363,7 +386,7 @@ const SquadsClipts = () => {
             {/* Navigation controls */}
             <div className="absolute left-4 right-4 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none">
               <button 
-                onClick={() => navigatePost('prev')}
+                onClick={() => handleNavigation('prev')}
                 className="bg-black/30 rounded-full p-2 pointer-events-auto"
                 aria-label="Previous post"
               >
@@ -373,7 +396,7 @@ const SquadsClipts = () => {
               </button>
               
               <button 
-                onClick={() => navigatePost('next')}
+                onClick={() => handleNavigation('next')}
                 className="bg-black/30 rounded-full p-2 pointer-events-auto"
                 aria-label="Next post"
               >
