@@ -347,17 +347,18 @@ const SquadsClipts = () => {
                   </div>
                 ))}
               </div>
-              
-              {/* Navigation indicators */}
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
-                {squadPosts.map((_, index) => (
-                  <div 
-                    key={index} 
-                    className={`w-2 h-2 rounded-full ${index === currentPostIndex ? 'bg-white' : 'bg-gray-500'}`}
-                    onClick={() => setCurrentPostIndex(index)}
-                  />
-                ))}
-              </div>
+            </div>
+            
+            {/* Navigation indicators */}
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+              {squadPosts.map((_, index) => (
+                <div 
+                  key={index} 
+                  className={`w-2 h-2 rounded-full ${index === currentPostIndex ? 'bg-white' : 'bg-gray-500'}`}
+                  onClick={() => setCurrentPostIndex(index)}
+                />
+              ))}
+            </div>
             </div>
             
             {/* Navigation controls */}
