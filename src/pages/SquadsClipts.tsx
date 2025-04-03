@@ -245,73 +245,101 @@ const SquadsClipts = () => {
               <div className="flex flex-row h-full snap-x snap-mandatory">
                 {squadPosts.map((post, index) => (
                   <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center" onClick={() => setCurrentPostIndex(index)}>
-                    <div className="h-full flex flex-col max-w-3xl mx-auto md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
-                      {/* User info */}
-                      <div className="p-3 flex items-center gap-2 bg-blue-900/20 rounded-t-lg">
-                        <Avatar 
-                          className="w-10 h-10 rounded-full overflow-hidden cursor-pointer"
-                          onClick={() => post?.user_id && navigate(`/profile/${post.user_id}`)}
-                        >
-                          {post?.profiles?.avatar_url ? (
-                            <AvatarImage 
-                              src={post.profiles.avatar_url}
-                              alt={post.profiles.username || 'User'}
+                    <div className="h-full flex items-center justify-center">
+                      {/* Square border container */}
+                      <div className="w-[min(90vw,500px)] aspect-square flex flex-col bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] rounded-lg shadow-xl border border-purple-900/50 overflow-hidden mx-auto">
+                        {/* User info */}
+                        <div className="p-3 flex items-center gap-2 bg-blue-900/40 border-b border-purple-900/50">
+                          <Avatar 
+                            className="w-10 h-10 rounded-full overflow-hidden cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              post?.user_id && navigate(`/profile/${post.user_id}`);
+                            }}
+                          >
+                            {post?.profiles?.avatar_url ? (
+                              <AvatarImage 
+                                src={post.profiles.avatar_url}
+                                alt={post.profiles.username || 'User'}
+                              />
+                            ) : (
+                              <AvatarFallback className="text-white font-bold bg-purple-700">
+                                {post?.profiles?.username?.substring(0, 1)?.toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          <span className="font-medium text-lg text-white">
+                            {post?.profiles?.username || 'Username'}
+                          </span>
+                        </div>
+                        
+                        {/* Video content with 4:5 aspect ratio */}
+                        <div className="flex-grow flex items-center justify-center p-4">
+                          <div className="w-full mx-auto" style={{ aspectRatio: '4/5' }}>
+                          {getMediaUrl(post) && 
+                           (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
+                            <video 
+                              src={getMediaUrl(post) || ''}
+                              controls
+                              className="w-full h-full object-cover rounded"
+                              poster={post.thumbnail_url || ''}
                             />
                           ) : (
-                            <AvatarFallback className="text-white font-bold bg-purple-700">
-                              {post?.profiles?.username?.substring(0, 1)?.toUpperCase() || 'U'}
-                            </AvatarFallback>
+                            <div className="flex items-center justify-center h-full text-center text-blue-300 bg-blue-900/20 rounded">
+                              For video clips only!
+                            </div>
                           )}
-                        </Avatar>
-                        <span className="font-medium text-lg">
-                          {post?.profiles?.username || 'Username'}
-                        </span>
-                      </div>
-                      
-                      {/* Video content - Make it take most of the space with square ratio */}
-                      <div className="bg-[#0F1573] flex-grow flex items-center justify-center rounded-b-lg">
-                        <div className="w-full md:max-w-[80%] lg:max-w-[70%] xl:max-w-[60%] mx-auto" style={{ aspectRatio: '1/1' }}>
-                        {getMediaUrl(post) && 
-                         (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
-                          <video 
-                            src={getMediaUrl(post) || ''}
-                            controls
-                            className="w-full h-full object-cover"
-                            poster={post.thumbnail_url || ''}
-                          />
-                        ) : (
-                          <div className="text-center text-blue-300">
-                            For video clips only!
                           </div>
-                        )}
                         </div>
-                      </div>
                       
                       {/* Action buttons - Only in the post container, not at the bottom */}
-                      <div className="p-4 flex items-center justify-between md:justify-center md:gap-12 bg-black/30 rounded-b-lg">
+                      <div className="p-4 flex items-center justify-between border-t border-purple-900/50 bg-black/30">
                         <button 
                           className={`flex items-center ${post?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
-                          onClick={() => post?.id && likeMutation.mutate(post.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            post?.id && likeMutation.mutate(post.id);
+                          }}
+                          aria-label="Like post"
                         >
                           <Heart className="mr-1 h-6 w-6 fill-current" />
                           <span className="text-base">{post?.likes_count || 0}</span>
                         </button>
                         
-                        <button className="flex items-center text-blue-400" onClick={() => navigate(`/post/${post.id}`)}>
-                          <MessageSquare className="mr-1 h-6 w-6" />
-                          <span className="text-base">{post?.comments_count || 0}</span>
+                        <button 
+                          className="flex items-center text-blue-400" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/post/${post.id}`);
+                          }}
+                          aria-label="View comments"
+                        >
+                          <MessageSquare className="h-6 w-6" />
+                          {/* Comment count removed from border, will show in popup */}
                         </button>
                         
-                        <button className="flex items-center text-yellow-400">
+                        <button 
+                          className="flex items-center text-yellow-400"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label="Give trophy"
+                        >
                           <Trophy className="mr-1 h-6 w-6" />
                           <span className="text-base">{post?.trophy_count || 0}</span>
                         </button>
                         
-                        <button className="flex items-center text-purple-400">
+                        <button 
+                          className="flex items-center text-purple-400"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label="Share post"
+                        >
                           <Share2 className="h-6 w-6" />
                         </button>
                         
-                        <button className="text-gray-300">
+                        <button 
+                          className="text-gray-300"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label="Save post"
+                        >
                           <Bookmark className="h-6 w-6" />
                         </button>
                       </div>
