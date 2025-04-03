@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import usePostDetector from './gameboy/PostDetector';
 import { triggerPostInteraction } from './gameboy/PostInteractions';
 import { dispatchVideoControl } from './gameboy/VideoControls';
-import { IconHeart, IconBookmark, IconMessageCircle, IconTrophy } from 'tabler-icons-react';
+import { FaHeart, FaBookmark, FaCommentAlt, FaTrophy } from 'react-icons/fa';
 import './enhanced-joystick.css';
 
 const GameBoyControls: React.FC = () => {
@@ -464,7 +464,7 @@ const GameBoyControls: React.FC = () => {
                 onClick={() => handleActionButtonClick('like')} 
                 aria-label="Like post (X button)"
               >
-                <IconHeart
+                <FaHeart
                   size={20}
                   className={isLiked ? 'active' : ''}
                 />
@@ -477,7 +477,7 @@ const GameBoyControls: React.FC = () => {
                 onClick={() => handleActionButtonClick('rank')} 
                 aria-label="Rank post (Y button)"
               >
-                <IconTrophy
+                <FaTrophy
                   size={20}
                   className={isRanked ? 'active' : ''}
                 />
@@ -490,7 +490,7 @@ const GameBoyControls: React.FC = () => {
                 onClick={() => handleActionButtonClick('save')} 
                 aria-label="Save video (B button)"
               >
-                <IconBookmark
+                <FaBookmark
                   size={20}
                   className={isSaved ? 'active' : ''}
                 />
@@ -503,7 +503,7 @@ const GameBoyControls: React.FC = () => {
                 onClick={() => handleActionButtonClick('comment')} 
                 aria-label="Comment on post (A button)"
               >
-                <IconMessageCircle
+                <FaCommentAlt
                   size={20}
                   className={isCommenting ? 'active' : ''}
                 />
