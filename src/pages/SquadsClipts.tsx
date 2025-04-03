@@ -37,6 +37,8 @@ const SquadsClipts = () => {
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentPostIndex, setCurrentPostIndex] = useState(0);
+  const [initialPostSet, setInitialPostSet] = useState(false);
+  const [navigationDirection, setNavigationDirection] = useState<'next' | 'prev' | null>(null);
 
   // Fetch squad clips
   const { data: squadPosts = [], isLoading, refetch } = useQuery({
