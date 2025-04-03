@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import usePostDetector from './gameboy/PostDetector';
 import { triggerPostInteraction } from './gameboy/PostInteractions';
 import { dispatchVideoControl } from './gameboy/VideoControls';
-import { FaHeart, FaBookmark, FaCommentAlt, FaTrophy } from 'react-icons/fa';
+// No external icon dependencies - using inline SVGs
 import './enhanced-joystick.css';
 
 const GameBoyControls: React.FC = () => {
@@ -464,10 +464,9 @@ const GameBoyControls: React.FC = () => {
                 onClick={() => handleActionButtonClick('like')} 
                 aria-label="Like post (X button)"
               >
-                <FaHeart
-                  size={20}
-                  className={isLiked ? 'active' : ''}
-                />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isLiked ? 'active' : ''} width="20" height="20">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
                 <span className="button-label">X</span>
               </button>
               
@@ -477,10 +476,14 @@ const GameBoyControls: React.FC = () => {
                 onClick={() => handleActionButtonClick('rank')} 
                 aria-label="Rank post (Y button)"
               >
-                <FaTrophy
-                  size={20}
-                  className={isRanked ? 'active' : ''}
-                />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isRanked ? 'active' : ''} width="20" height="20">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                  <path d="M4 22h16"></path>
+                  <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                  <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+                </svg>
                 <span className="button-label">Y</span>
               </button>
               
@@ -490,10 +493,9 @@ const GameBoyControls: React.FC = () => {
                 onClick={() => handleActionButtonClick('save')} 
                 aria-label="Save video (B button)"
               >
-                <FaBookmark
-                  size={20}
-                  className={isSaved ? 'active' : ''}
-                />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isSaved ? 'active' : ''} width="20" height="20">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
                 <span className="button-label">B</span>
               </button>
               
@@ -503,10 +505,9 @@ const GameBoyControls: React.FC = () => {
                 onClick={() => handleActionButtonClick('comment')} 
                 aria-label="Comment on post (A button)"
               >
-                <FaCommentAlt
-                  size={20}
-                  className={isCommenting ? 'active' : ''}
-                />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isCommenting ? 'active' : ''} width="20" height="20">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
                 <span className="button-label">A</span>
               </button>
               
