@@ -12,9 +12,10 @@ interface PostContentProps {
   videoUrl?: string | null;
   postId: string;
   compact?: boolean;
+  isCliptsPage?: boolean;
 }
 
-const PostContent = ({ imageUrl, videoUrl, postId, compact = false }: PostContentProps) => {
+const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage = false }: PostContentProps) => {
   const [isMediaLoaded, setIsMediaLoaded] = useState(false);
   const [isMediaError, setIsMediaError] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -221,11 +222,11 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false }: PostConten
     <div className="relative w-full h-full">
       {/* Media Content */}
       {videoUrl ? (
-        <div className="relative w-full h-full bg-black" style={{ 
-          aspectRatio: '1/1', 
-          maxHeight: compact ? '360px' : '90vh', /* Square aspect ratio */
+        <div className={`relative w-full bg-black ${isCliptsPage ? 'h-screen' : 'h-full'}`} style={{ 
+          aspectRatio: isCliptsPage ? 'unset' : '1/1', 
+          maxHeight: isCliptsPage ? 'none' : (compact ? '360px' : '90vh'),
           display: 'block', 
-          minHeight: compact ? '360px' : '360px', /* Ensure square aspect ratio */
+          minHeight: isCliptsPage ? 'calc(100vh - 120px)' : (compact ? '360px' : '360px'),
           overflow: 'hidden',
           width: '100%'
         }}>
@@ -259,7 +260,7 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false }: PostConten
                 postId={postId}
                 onLoad={handleMediaLoad}
                 onError={() => setIsMediaError(true)}
-                className="w-full h-full object-cover md:object-contain"
+                className={`w-full h-full ${isCliptsPage ? 'object-cover' : 'object-cover md:object-contain'}`}
                 autoPlay={true}
                 controls={true}
                 muted={false}

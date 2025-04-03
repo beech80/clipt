@@ -963,7 +963,7 @@ const PostItem: React.FC<PostItemProps> = ({
       className={`relative gaming-card transition-opacity duration-300 ${
         isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'
       } ${highlight ? 'ring-2 ring-blue-500' : ''} ${
-        onCliptsPage ? 'w-[360px] flex-shrink-0 h-full max-h-[600px] overflow-hidden flex flex-col' : 'w-full'
+        isCliptsPage ? 'w-screen flex-shrink-0 h-full overflow-hidden flex flex-col border-0 rounded-none' : 'w-full'
       }`}
       data-post-id={postId}
     >
@@ -1021,6 +1021,7 @@ const PostItem: React.FC<PostItemProps> = ({
           videoUrl={post.video_url}
           postId={postId}
           compact={onCliptsPage}
+          isCliptsPage={isCliptsPage}
         />
       </div>
 
