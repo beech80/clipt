@@ -3,10 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import usePostDetector from './gameboy/PostDetector';
 import { triggerPostInteraction } from './gameboy/PostInteractions';
 import { dispatchVideoControl } from './gameboy/VideoControls';
+import { IconHeart, IconBookmark, IconMessageCircle, IconTrophy } from 'tabler-icons-react';
+import './enhanced-joystick.css';
 
 const GameBoyControls: React.FC = () => {
-  // Create a ref for the joystick element
+  // Create refs for joystick elements
   const joystickRef = useRef<HTMLDivElement>(null);
+  const joystickInnerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const [enabled, setEnabled] = useState(true);
@@ -14,6 +17,12 @@ const GameBoyControls: React.FC = () => {
   
   // Toggle the active state of the CLIPT button
   const [isCliptActive, setIsCliptActive] = useState(false);
+  
+  // Action button states for Xbox-style controls
+  const [isLiked, setIsLiked] = useState(false);
+  const [isRanked, setIsRanked] = useState(false);
+  const [isCommenting, setIsCommenting] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   
   // Enhanced joystick animation states
   const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
@@ -23,10 +32,16 @@ const GameBoyControls: React.FC = () => {
   const [showSnapIndicator, setShowSnapIndicator] = useState(false);
   const [useMomentum, setUseMomentum] = useState(false);
   
-  // Track touch events for swipe detection
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  // Touch handling refs
+  const isDragging = useRef(false);
+  const startPosition = useRef({ x: 0, y: 0 });
+  const lastDirection = useRef<'up' | 'down' | 'left' | 'right' | null>(null);
+  const touchStartTime = useRef(0);
+  const lastMoveTime = useRef(0);
   
+  // Debug and position tracking
+  const touchStartCoords = useRef({ x: 0, y: 0 });
+  const touchMoveCoords = useRef({ x: 0, y: 0 });
   useEffect(() => {
     // Check if we should disable the controls on certain routes
     const disabledRoutes = ['/auth', '/onboarding', '/messages'];
@@ -34,44 +49,188 @@ const GameBoyControls: React.FC = () => {
     setEnabled(!shouldDisable);
   }, [location]);
   
-  // Add touch event listeners for swipe detection
+  // Setup joystick interaction with touch/mouse events
   useEffect(() => {
-    const isCliptsPage = ['/clipts', '/squads-clipts'].some(route => location.pathname === route);
+    const joystick = joystickRef.current;
+    const joystickInner = joystickInnerRef.current;
     
-    if (isCliptsPage) {
-      const handleTouchStart = (e: TouchEvent) => {
-        touchStartX.current = e.touches[0].clientX;
-      };
+    if (!joystick || !joystickInner) return;
+    
+    // Mouse event handlers for desktop
+    const handleMouseDown = (e: MouseEvent) => {
+      e.preventDefault();
+      isDragging.current = true;
+      startPosition.current = { x: e.clientX, y: e.clientY };
+      touchStartCoords.current = { x: e.clientX, y: e.clientY };
+      touchStartTime.current = Date.now();
+      setIsTouched(true);
+      setIsJoystickActive(true);
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    };
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging.current) return;
+      touchMoveCoords.current = { x: e.clientX, y: e.clientY };
+      lastMoveTime.current = Date.now();
+      handleJoystickMovement(e.clientX, e.clientY);
+    };
+    
+    const handleMouseUp = (e: MouseEvent) => {
+      releaseJoystick();
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    // Touch events for mobile
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      isDragging.current = true;
+      const touch = e.touches[0];
+      startPosition.current = { x: touch.clientX, y: touch.clientY };
+      touchStartCoords.current = { x: touch.clientX, y: touch.clientY };
+      touchStartTime.current = Date.now();
+      setIsTouched(true);
+      setIsJoystickActive(true);
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      touchMoveCoords.current = { x: touch.clientX, y: touch.clientY };
+      lastMoveTime.current = Date.now();
+      handleJoystickMovement(touch.clientX, touch.clientY);
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (isDragging.current) {
+        const touchDuration = Date.now() - touchStartTime.current;
+        const touch = e.changedTouches[0];
+        const diffX = touch.clientX - touchStartCoords.current.x;
+        const diffY = touch.clientY - touchStartCoords.current.y;
+        const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+        
+        // If it was a quick tap without much movement, treat as a center button press
+        if (touchDuration < 200 && distance < 20) {
+          handleDPadPress(0, 0); // Center press
+        }
+      }
       
-      const handleTouchEnd = (e: TouchEvent) => {
-        touchEndX.current = e.changedTouches[0].clientX;
-        handleSwipe();
-      };
-      
-      document.addEventListener('touchstart', handleTouchStart);
-      document.addEventListener('touchend', handleTouchEnd);
-      
-      return () => {
-        document.removeEventListener('touchstart', handleTouchStart);
-        document.removeEventListener('touchend', handleTouchEnd);
-      };
-    }
-  }, [location.pathname]);
+      releaseJoystick();
+    };
+    
+    // Add event listeners
+    joystickInner.addEventListener('mousedown', handleMouseDown);
+    joystick.addEventListener('mousedown', handleMouseDown);
+    joystickInner.addEventListener('touchstart', handleTouchStart, { passive: false });
+    joystick.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+    
+    return () => {
+      joystickInner.removeEventListener('mousedown', handleMouseDown);
+      joystick.removeEventListener('mousedown', handleMouseDown);
+      joystickInner.removeEventListener('touchstart', handleTouchStart);
+      joystick.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [joystickRef.current, joystickInnerRef.current]);
   
-  // Handle swipe gestures
-  const handleSwipe = () => {
-    const swipeThreshold = 50; // Minimum distance required for a swipe
-    const diffX = touchEndX.current - touchStartX.current;
+  // Enhanced joystick movement with realistic Xbox controller physics
+  const handleJoystickMovement = (clientX: number, clientY: number) => {
+    const joystick = joystickRef.current;
+    if (!joystick || !isDragging.current) return;
     
-    if (Math.abs(diffX) > swipeThreshold) {
-      if (diffX > 0) {
-        // Swipe right - previous post
-        animateJoystick(-1, 0);
-        setTimeout(() => navigatePost('prev'), 300);
-      } else {
-        // Swipe left - next post
-        animateJoystick(1, 0);
-        setTimeout(() => navigatePost('next'), 300);
+    // Get joystick dimensions and position
+    const rect = joystick.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Calculate distance from center
+    let dx = (clientX - centerX) / (rect.width / 2);
+    let dy = (clientY - centerY) / (rect.height / 2);
+    
+    // Add slight deadzone in center (Xbox controllers have this)
+    const deadzone = 0.1;
+    if (Math.abs(dx) < deadzone) dx = 0;
+    if (Math.abs(dy) < deadzone) dy = 0;
+    
+    // Constrain to a circle with radius 1 (Xbox thumbstick range)
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    if (distance > 1) {
+      dx = dx / distance;
+      dy = dy / distance;
+    }
+    
+    // Animate joystick with Xbox-like movement
+    animateJoystick(dx, dy);
+    
+    // Handle navigation with responsive thresholds
+    const directionThreshold = 0.5;
+    if (Math.abs(dx) > directionThreshold && Math.abs(dx) > Math.abs(dy)) {
+      const newDirection = dx > 0 ? 'right' : 'left';
+      if (newDirection !== lastDirection.current) {
+        lastDirection.current = newDirection;
+        // Navigate to next/prev post with Xbox-like tactile feel
+        if (newDirection === 'right') {
+          navigatePost('next');
+          // Add haptic-like visual feedback
+          setShowSnapIndicator(true);
+          setTimeout(() => setShowSnapIndicator(false), 300);
+        } else {
+          navigatePost('prev');
+          setShowSnapIndicator(true);
+          setTimeout(() => setShowSnapIndicator(false), 300);
+        }
+      }
+    } else if (Math.abs(dy) > directionThreshold && Math.abs(dy) > Math.abs(dx)) {
+      lastDirection.current = dy > 0 ? 'down' : 'up';
+      
+      // For vertical movements, implement scroll behavior
+      // This supports the existing post-snapping behavior from prior implementation
+    } else {
+      lastDirection.current = null;
+    }
+  };
+  
+  // Release joystick and reset position with animation
+  const releaseJoystick = () => {
+    isDragging.current = false;
+    setIsTouched(false);
+    setJoystickPosition({ x: 0, y: 0 });
+    setJoystickDirection(null);
+    setUseMomentum(true);
+    lastDirection.current = null;
+    
+    // Add momentum for smooth return to center
+    setTimeout(() => {
+      setIsJoystickActive(false);
+      setUseMomentum(false);
+    }, 300);
+  };
+  
+  // Trigger navigation based on swipe distance and direction
+  const handleSwipe = () => {
+    if (!touchStartCoords.current || !touchMoveCoords.current) return;
+    
+    const diffX = touchMoveCoords.current.x - touchStartCoords.current.x;
+    const diffY = touchMoveCoords.current.y - touchStartCoords.current.y;
+    const distance = Math.sqrt(diffX * diffX + diffY * diffY);
+    const swipeThreshold = 50; // Minimum distance for a swipe
+    
+    if (distance > swipeThreshold) {
+      // Determine primary direction of swipe
+      if (Math.abs(diffX) > Math.abs(diffY)) {
+        // Horizontal swipe
+        if (diffX > 0) {
+          navigatePost('prev'); // Right swipe - previous post
+        } else {
+          navigatePost('next'); // Left swipe - next post
+        }
       }
     }
   };
@@ -96,7 +255,7 @@ const GameBoyControls: React.FC = () => {
     
     // Calculate magnitude (for intensity of movement)
     const magnitude = Math.min(Math.sqrt(dx * dx + dy * dy), 1);
-    const scaleFactor = 15; // Max pixels to move
+    const scaleFactor = 20; // Max pixels to move
     
     // Apply the movement with realistic constraints
     setJoystickPosition({ 
@@ -105,7 +264,7 @@ const GameBoyControls: React.FC = () => {
     });
     
     // Show snap indicator when changing direction
-    if (direction) {
+    if (direction && direction !== joystickDirection) {
       setShowSnapIndicator(true);
       setTimeout(() => setShowSnapIndicator(false), 500);
     }
@@ -204,10 +363,28 @@ const GameBoyControls: React.FC = () => {
     }, 300);
   };
   
-  // Handle action button press
-  const handleActionPress = (action: 'like' | 'comment' | 'trophy' | 'save') => {
+  // Handle action button press with state toggling
+  const handleActionButtonClick = (action: 'like' | 'comment' | 'rank' | 'save') => {
     if (activePost?.id) {
-      triggerPostInteraction(action, activePost.id);
+      // Toggle the state for visual feedback
+      switch(action) {
+        case 'like':
+          setIsLiked(!isLiked);
+          triggerPostInteraction('like', activePost.id);
+          break;
+        case 'comment':
+          setIsCommenting(!isCommenting);
+          triggerPostInteraction('comment', activePost.id);
+          break;
+        case 'rank':
+          setIsRanked(!isRanked);
+          triggerPostInteraction('trophy', activePost.id);
+          break;
+        case 'save':
+          setIsSaved(!isSaved);
+          triggerPostInteraction('save', activePost.id);
+          break;
+      }
     }
   };
   
@@ -222,92 +399,40 @@ const GameBoyControls: React.FC = () => {
           <div className="left-control-area">
             <div className="d-pad-container">
               <div 
-                className={`joystick ${isJoystickActive ? 'active' : ''} 
-                          ${joystickDirection ? `active-${joystickDirection}` : ''}
-                          ${isTouched ? 'touched' : ''}`}
+                className={`joystick xbox-style ${isJoystickActive ? 'active' : ''} ${isTouched ? 'touched' : ''} ${
+                  joystickDirection ? `active-${joystickDirection}` : ''
+                }`}
                 ref={joystickRef}
-                onTouchStart={() => setIsTouched(true)}
-                onTouchEnd={() => {
-                  setIsTouched(false);
-                  setJoystickPosition({ x: 0, y: 0 });
-                  setJoystickDirection(null);
-                  setIsJoystickActive(false);
-                }}
-                onTouchMove={(e) => {
-                  if (!joystickRef.current) return;
-                  
-                  const rect = joystickRef.current.getBoundingClientRect();
-                  const centerX = rect.left + rect.width / 2;
-                  const centerY = rect.top + rect.height / 2;
-                  
-                  const touch = e.touches[0];
-                  const deltaX = (touch.clientX - centerX) / (rect.width / 2);
-                  const deltaY = (touch.clientY - centerY) / (rect.height / 2);
-                  
-                  // Normalize to stay within a circular boundary
-                  const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                  const normalizedDeltaX = length > 1 ? deltaX / length : deltaX;
-                  const normalizedDeltaY = length > 1 ? deltaY / length : deltaY;
-                  
-                  // Determine direction for visual feedback
-                  let direction: 'up' | 'down' | 'left' | 'right' | null = null;
-                  const absDx = Math.abs(normalizedDeltaX);
-                  const absDy = Math.abs(normalizedDeltaY);
-                  
-                  if (absDx > 0.5 || absDy > 0.5) {
-                    if (absDx > absDy) {
-                      direction = normalizedDeltaX > 0 ? 'right' : 'left';
-                    } else {
-                      direction = normalizedDeltaY > 0 ? 'down' : 'up';
-                    }
-                    
-                    // Actually perform the navigation if movement is significant
-                    if (length > 0.7) {
-                      if (direction === 'left') handleDPadPress(-1, 0);
-                      else if (direction === 'right') handleDPadPress(1, 0);
-                      else if (direction === 'up') handleDPadPress(0, -1);
-                      else if (direction === 'down') handleDPadPress(0, 1);
-                    }
-                  }
-                  
-                  setJoystickDirection(direction);
-                  setIsJoystickActive(length > 0.2);
-                  setJoystickPosition({ 
-                    x: normalizedDeltaX * 15, 
-                    y: normalizedDeltaY * 15 
-                  });
-                }}
               >
-                <div className="joystick-ripple"></div>
-                <div className={`post-snap-indicator ${showSnapIndicator ? 'active' : ''}`}></div>
-                <div 
-                  className={`joystick-inner ${joystickDirection ? `direction-${joystickDirection}` : ''} ${useMomentum ? 'momentum' : ''}`}
-                  style={{
-                    transform: `translate(calc(-50% + ${joystickPosition.x}px), calc(-50% + ${joystickPosition.y}px))`
-                  }}
-                ></div>
+                {/* Direction indicators for visual feedback */}
                 <div className="joystick-direction joystick-direction-up"></div>
                 <div className="joystick-direction joystick-direction-right"></div>
                 <div className="joystick-direction joystick-direction-down"></div>
                 <div className="joystick-direction joystick-direction-left"></div>
+                
+                {/* Joystick inner thumbstick with Xbox-style texture */}
+                <div 
+                  className={`joystick-inner ${useMomentum ? 'momentum' : ''} ${
+                    joystickDirection ? `direction-${joystickDirection}` : ''}`}
+                  ref={joystickInnerRef}
+                  style={{
+                    transform: `translate(calc(-50% + ${joystickPosition.x}px), calc(-50% + ${joystickPosition.y}px))`
+                  }}
+                ></div>
               </div>
               
-              {/* Keep the invisible D-pad buttons for keyboard and click support */}
-              <div className="d-pad" style={{ opacity: 0, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+              {/* Visual feedback for post snapping */}
+              <div className={`post-snap-indicator ${showSnapIndicator ? 'active' : ''}`}></div>
+              
+              {/* Ripple effect on touch */}
+              <div className="joystick-ripple"></div>
+              
+              {/* Center dpad button */}
+              <div className="d-pad-overlay">
                 <button 
-                  className="d-pad-button up"
-                  onClick={() => handleDPadPress(0, -1)}
-                  aria-label="D-pad up"
-                ></button>
-                <button 
-                  className="d-pad-button right" 
-                  onClick={() => handleDPadPress(1, 0)}
-                  aria-label="D-pad right"
-                ></button>
-                <button 
-                  className="d-pad-button down"
-                  onClick={() => handleDPadPress(0, 1)}
-                  aria-label="D-pad down"
+                  className="d-pad-center" 
+                  onClick={() => handleDPadPress(0, 0)}
+                  aria-label="D-pad center button"
                 ></button>
                 <button 
                   className="d-pad-button left"
@@ -320,69 +445,74 @@ const GameBoyControls: React.FC = () => {
                   aria-label="D-pad center button"
                 ></button>
               </div>
+              <button className="menu-button" onClick={() => navigate('/create')} aria-label="Create Post">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+              </button>
             </div>
           </div>
 
-          {/* Center Section */}
-          <div className="center-section">
-            {/* CLIPT Button */}
-            <button 
-              className={`clipt-button ${isCliptActive ? 'active' : ''}`} 
-              onClick={handleCliptPress}
-              aria-label="Create new post"
-            >
-              CLIPT
-          </button>
-          
-          {/* Menu Buttons */}
-          <div className="menu-buttons">
-            <button className="menu-button" onClick={() => navigate('/menu')} aria-label="Menu">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="6" x2="21" y2="6"></line>
-                <line x1="3" y1="18" x2="21" y2="18"></line>
-              </svg>
-            </button>
-            <button className="menu-button" onClick={() => navigate('/create')} aria-label="Create Post">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                <circle cx="12" cy="13" r="4"></circle>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Action Buttons - Right edge */}
-        <div className="right-control-area">
-          <div className="action-buttons">
-            <button className="action-button like" onClick={() => handleActionPress('like')} aria-label="Like post">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-              </svg>
-            </button>
-            <button className="action-button comment" onClick={() => handleActionPress('comment')} aria-label="Comment on post">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </button>
-            <button className="action-button trophy" onClick={() => handleActionPress('trophy')} aria-label="Rank post">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                <path d="M4 22h16"></path>
-                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-              </svg>
-            </button>
-            <button className="action-button save" onClick={() => handleActionPress('save')} aria-label="Save post">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="8" y1="12" x2="16" y2="12"></line>
-                <line x1="12" y1="8" x2="12" y2="16"></line>
-              </svg>
-            </button>
-          </div>
+          {/* Action Buttons - Right edge */}
+          <div className="right-control-area">
+            {/* Xbox-style Diamond action buttons */}
+            <div className="action-buttons xbox-style">
+              {/* X Button - Like */}
+              <button 
+                className="action-button x" 
+                onClick={() => handleActionButtonClick('like')} 
+                aria-label="Like post (X button)"
+              >
+                <IconHeart
+                  size={20}
+                  className={isLiked ? 'active' : ''}
+                />
+                <span className="button-label">X</span>
+              </button>
+              
+              {/* Y Button - Rank */}
+              <button 
+                className="action-button y" 
+                onClick={() => handleActionButtonClick('rank')} 
+                aria-label="Rank post (Y button)"
+              >
+                <IconTrophy
+                  size={20}
+                  className={isRanked ? 'active' : ''}
+                />
+                <span className="button-label">Y</span>
+              </button>
+              
+              {/* B Button - Save */}
+              <button 
+                className="action-button b" 
+                onClick={() => handleActionButtonClick('save')} 
+                aria-label="Save video (B button)"
+              >
+                <IconBookmark
+                  size={20}
+                  className={isSaved ? 'active' : ''}
+                />
+                <span className="button-label">B</span>
+              </button>
+              
+              {/* A Button - Comment */}
+              <button 
+                className="action-button a" 
+                onClick={() => handleActionButtonClick('comment')} 
+                aria-label="Comment on post (A button)"
+              >
+                <IconMessageCircle
+                  size={20}
+                  className={isCommenting ? 'active' : ''}
+                />
+                <span className="button-label">A</span>
+              </button>
+              
+              {/* Xbox controller texture overlay */}
+              <div className="matte-texture"></div>
+            </div>
         </div>
         </div>
       </div>
