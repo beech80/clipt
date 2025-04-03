@@ -311,33 +311,62 @@
 /* Menu buttons */
 .menu-buttons {
   display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-top: 5px;
+  justify-content: space-between;
+  gap: 30px;
 }
 
 .menu-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  background-color: rgba(28, 28, 40, 0.8);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(18, 18, 30, 0.97);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.1s ease;
-  color: #9a9aaa;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.menu-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: -1px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #4f46e5,
+    #7e22ce,
+    #a855f7,
+    #d946ef,
+    #ec4899,
+    #f43f5e,
+    #ec4899,
+    #d946ef,
+    #a855f7,
+    #7e22ce,
+    #4f46e5
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1.5px;
+  z-index: -1;
+  animation: rotate 8s linear infinite;
 }
 
 .menu-button:active {
-  transform: scale(0.9);
+  transform: scale(0.95);
 }
 
 .menu-button svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  color: white;
 }
 
 /* Media queries for responsive design */
