@@ -15,7 +15,7 @@
   user-select: none;
   touch-action: none;
   left: 50px;
-  bottom: 100px;
+  bottom: 30px;
   pointer-events: auto; /* Enable interaction */
   overflow: visible;
 }
@@ -181,7 +181,7 @@
   height: 170px;
   background: transparent;
   right: 50px;
-  bottom: 100px;
+  bottom: 30px; /* Lowered to be at the same level as other elements */
 }
 
 .action-buttons.modern-style .action-button {
@@ -301,7 +301,7 @@
   text-transform: uppercase;
   overflow: hidden;
   border: none;
-  bottom: 100px;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: auto; /* Enable interaction */
@@ -379,10 +379,9 @@
   justify-content: center;
   gap: 100px;
   position: absolute;
-  bottom: 20px;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 20px;
 }
 
 .menu-button {
@@ -400,19 +399,22 @@
   transition: all 0.3s ease;
 }
 
-/* Special styling for camera button */
-.menu-button.camera-button {
+/* Special styling for menu buttons */
+.menu-button.camera-button,
+.menu-button.menu-left {
   background: linear-gradient(135deg, rgba(40, 0, 60, 0.8), rgba(20, 0, 30, 0.9));
   border: 1px solid rgba(255, 0, 255, 0.6);
   box-shadow: 0 0 12px rgba(255, 0, 255, 0.3);
 }
 
-.menu-button.camera-button:hover {
+.menu-button.camera-button:hover,
+.menu-button.menu-left:hover {
   box-shadow: 0 0 18px rgba(255, 0, 255, 0.5);
   transform: scale(1.05);
 }
 
-.menu-button.camera-button:active {
+.menu-button.camera-button:active,
+.menu-button.menu-left:active {
   transform: scale(0.95);
   box-shadow: 0 0 25px rgba(255, 0, 255, 0.7);
 }
