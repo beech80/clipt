@@ -307,7 +307,7 @@ const SquadsClipts = () => {
                           </button>
                           
                           <button 
-                            className="flex items-center text-blue-400" 
+                            className="text-blue-400" 
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/post/${post.id}`);
@@ -315,7 +315,6 @@ const SquadsClipts = () => {
                             aria-label="View comments"
                           >
                             <MessageSquare className="h-6 w-6" />
-                            {/* Comment count removed from border, will show in popup */}
                           </button>
                           
                           <button 
@@ -328,7 +327,7 @@ const SquadsClipts = () => {
                           </button>
                           
                           <button 
-                            className="flex items-center text-purple-400"
+                            className="text-purple-400"
                             onClick={(e) => e.stopPropagation()}
                             aria-label="Share post"
                           >
