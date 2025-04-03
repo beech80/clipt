@@ -202,22 +202,29 @@ const SquadsClipts = () => {
       
       return null;
     } catch (error) {
-      console.error("Error processing media URL:", error);
+      console.error("Error getting media URL:", error);
       return null;
     }
   };
 
-  // Function to navigate to previous/next post
+  // Navigation between posts
   const handleNavigation = (direction: 'next' | 'prev') => {
+    if (squadPosts.length === 0) return;
+    
     setNavigationDirection(direction);
     
     if (direction === 'next') {
-      setCurrentPostIndex((prev) => Math.min(prev + 1, squadPosts.length - 1));
+      setCurrentPostIndex(prevIndex => 
+        prevIndex < squadPosts.length - 1 ? prevIndex + 1 : 0
+      );
     } else {
-      setCurrentPostIndex((prev) => Math.max(prev - 1, 0));
+      setCurrentPostIndex(prevIndex => 
+        prevIndex > 0 ? prevIndex - 1 : squadPosts.length - 1
+      );
     }
   };
 
+  // Set initial post when posts are loaded
   useEffect(() => {
     if (squadPosts.length > 0 && !initialPostSet) {
       setCurrentPostIndex(0);
@@ -225,348 +232,209 @@ const SquadsClipts = () => {
     }
   }, [squadPosts, initialPostSet]);
 
+  // Add keyboard navigation
   useEffect(() => {
-    // Listen for custom navigation events from GameBoyControls
-    const handlePostNavigation = (event: CustomEvent) => {
-      const { direction } = event.detail;
-      handleNavigation(direction);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        handleNavigation('next');
+      } else if (e.key === 'ArrowLeft') {
+        handleNavigation('prev');
+      }
     };
     
-    // Add event listener for custom navigatePost event
-    document.addEventListener('navigatePost', handlePostNavigation as EventListener);
-    
-    // Cleanup
-    return () => {
-      document.removeEventListener('navigatePost', handlePostNavigation as EventListener);
-    };
-  }, [squadPosts.length]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
-  // Current post to display
-
-  const currentPost = squadPosts[currentPostIndex];
-
+  // Optional: Add joystick control hook here if needed
+  
   return (
-    <div className="fixed inset-0 bg-black text-white overflow-hidden touch-none select-none">
-      <div className="h-screen w-screen overflow-hidden relative">
-        {/* Back button removed for cleaner full-screen experience */}
-        <div className="fixed top-0 left-0 right-0 z-10 flex justify-center p-4">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Squads Clipts</h1>
-        </div>
-  {isLoading ? (
-    <div className="flex justify-center items-center h-full">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-    </div>
-        ) : squadPosts.length > 0 ? (
-          <div className="h-full relative">
-            {/* Main content area that fills the screen */}
-            <div className="h-full w-full relative overflow-hidden">
-              {/* Current post display */}
-              <div className="h-full w-full">
-                {/* User info and caption at top */}
-                <div className="absolute top-14 left-0 right-0 z-10 flex flex-col items-start">
-                  <div className="w-full px-4 py-2 flex items-center space-x-2 bg-black/60 backdrop-blur-sm">
-                    <Avatar 
-                      className="w-8 h-8 rounded-full overflow-hidden cursor-pointer"
-                      onClick={() => currentPost?.user_id && navigate(`/profile/${currentPost.user_id}`)}
-                    >
-                      {currentPost?.profiles?.avatar_url ? (
-                        <AvatarImage 
-                          src={currentPost.profiles.avatar_url}
-                          alt={currentPost.profiles.username || 'User'}
-                        />
-                      ) : (
-                        <AvatarFallback className="text-white font-bold bg-purple-700">
-                          {currentPost?.profiles?.username?.substring(0, 1)?.toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div>
-                      <span className="font-medium text-sm text-white">
-                        {currentPost?.profiles?.username || 'Username'}
-                      </span>
-                      {/* Caption with horizontal scrolling */}
-                      {currentPost?.content && (
-                        <div className="overflow-x-auto max-w-[85vw] hide-scrollbar whitespace-nowrap">
-                          <p className="text-gray-300 text-sm">{currentPost.content}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Video content centered in screen */}
-                <div className="h-full w-full flex items-center justify-center bg-black">
-                  {getMediaUrl(currentPost) && 
-                   (getMediaUrl(currentPost)?.includes('.mp4') || getMediaUrl(currentPost)?.includes('.webm')) ? (
-                    <video 
-                      src={getMediaUrl(currentPost) || ''}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="h-full max-h-[80vh] max-w-full object-contain"
-                      poster={currentPost.thumbnail_url || ''}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full w-full text-center text-gray-400">
-                      No video available
-                    </div>
-                  )}
-                </div>
-
-                {/* Action buttons on the right side */}
-                <div className="absolute right-4 bottom-24 flex flex-col gap-6 items-center z-10">
-                  <button 
-                    className={`flex flex-col items-center ${currentPost?.liked_by_current_user ? 'text-red-500' : 'text-white'}`}
-                    onClick={() => currentPost?.id && likeMutation.mutate(currentPost.id)}
-                    aria-label="Like post"
-                  >
-                    <Heart className={`h-8 w-8 ${currentPost?.liked_by_current_user ? 'fill-red-500' : ''}`} />
-                    <span className="text-xs mt-1">{currentPost?.likes_count || 0}</span>
-                  </button>
-                  
-                  <button 
-                    className="flex flex-col items-center text-white" 
-                    onClick={() => currentPost?.id && navigate(`/post/${currentPost.id}`)}
-                    aria-label="View comments"
-                  >
-                    <MessageSquare className="h-8 w-8" />
-                    <span className="text-xs mt-1">{currentPost?.comments_count || 0}</span>
-                  </button>
-                  
-                  <button 
-                    className="flex flex-col items-center text-yellow-400"
-                    aria-label="Give trophy"
-                  >
-                    <Trophy className="h-8 w-8" />
-                    <span className="text-xs mt-1">{currentPost?.trophy_count || 0}</span>
-                  </button>
-                  
-                  <button className="text-white" aria-label="Save video">
-                    <Bookmark className="h-8 w-8" />
-                  </button>
-                  
-                  <ShareButton 
-                    url={`${window.location.origin}/post/${currentPost?.id}`} 
-                    title={`Check out this clip from ${currentPost?.profiles?.username || 'a user'}`}
-                    iconClassName="h-8 w-8 text-white hover:text-purple-400 transition-all"
-                    style={{
-                      filter: "drop-shadow(0 0 10px rgba(168, 85, 247, 0.8)) drop-shadow(0 0 3px rgba(255, 0, 255, 0.6))"
-                    }}
-                  />
-                </div>
-        {isLoading ? (
-          <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+    <div className="bg-gradient-to-b from-black to-purple-950 min-h-screen">
+      <div className="relative min-h-screen overflow-hidden">
+        {/* Fixed header with title */}
+        <div className="fixed top-0 left-0 right-0 z-10 bg-black/60 backdrop-blur-sm">
+          <div className="flex justify-center items-center h-16">
+            <h1 className="text-xl font-bold text-center text-white">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-600">
+                Squad Clipts
+              </span>
+            </h1>
           </div>
-        ) : squadPosts.length > 0 ? (
-          <div className="h-full relative">
-            {/* Horizontal Scrollable Container - Full Height */}
-            <div className="relative overflow-x-auto h-full hide-scrollbar">
-              <div className="flex flex-row h-full snap-x snap-mandatory">
-                {squadPosts.map((post, index) => (
-                  <div key={post.id} className="flex-shrink-0 w-screen h-full snap-center" onClick={() => setCurrentPostIndex(index)}>
-                    <div className="h-full w-full flex items-center justify-center">
-                      {/* Full-width post container */}
-                      <div className="w-screen h-full flex flex-col bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] border-y border-purple-900/50 overflow-hidden">
+        </div>
+        
+        {/* Main content area */}
+        {squadPosts.length > 0 ? (
+          <div className="pt-16 min-h-screen">
+            <div className="relative h-[calc(100vh-64px)]">
+              <div className="h-full">
+                {/* Only render current post for better performance */}
+                {squadPosts.length > 0 && squadPosts[currentPostIndex] && (
+                  <div className="h-full">
+                    <div className="flex flex-col h-full">
+                      {/* Post container */}
+                      <div className="flex-1 relative">
                         {/* User info */}
-                        <div className="p-3 flex items-center gap-2 bg-blue-900/40 border-b border-purple-900/50">
-                          <Avatar 
-                            className="w-10 h-10 rounded-full overflow-hidden cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              post?.user_id && navigate(`/profile/${post.user_id}`);
-                            }}
-                          >
-                            {post?.profiles?.avatar_url ? (
-                              <AvatarImage 
-                                src={post.profiles.avatar_url}
-                                alt={post.profiles.username || 'User'}
-                              />
-                            ) : (
-                              <AvatarFallback className="text-white font-bold bg-purple-700">
-                                {post?.profiles?.username?.substring(0, 1)?.toUpperCase() || 'U'}
+                        <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/80 to-transparent">
+                          <div className="flex items-center">
+                            <Avatar className="h-10 w-10 border-2 border-purple-500">
+                              <AvatarImage src={squadPosts[currentPostIndex]?.profiles?.avatar_url || ""} />
+                              <AvatarFallback className="bg-purple-950 text-purple-300">
+                                {squadPosts[currentPostIndex]?.profiles?.username?.charAt(0).toUpperCase() || "U"}
                               </AvatarFallback>
-                            )}
-                          </Avatar>
-                          <span className="font-medium text-lg text-white">
-                            {post?.profiles?.username || 'Username'}
-                          </span>
-                        </div>
-                        
-                        {/* Video content container that fills more of the screen */}
-                        <div className="flex-grow flex items-center justify-center">
-                          <div className="w-full h-full flex items-center justify-center">
-                          {getMediaUrl(post) && 
-                           (getMediaUrl(post)?.includes('.mp4') || getMediaUrl(post)?.includes('.webm')) ? (
-                            <video 
-                              src={getMediaUrl(post) || ''}
-                              controls
-                              className="max-h-[80vh] max-w-full object-contain"
-                              poster={post.thumbnail_url || ''}
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full w-full text-center text-blue-300 bg-blue-900/20">
-                              For video clips only!
+                            </Avatar>
+                            <div className="ml-2">
+                              <div className="font-medium text-white">
+                                {squadPosts[currentPostIndex]?.profiles?.display_name || 
+                                  squadPosts[currentPostIndex]?.profiles?.username || "Anonymous"}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {squadPosts[currentPostIndex]?.created_at && 
+                                  formatDistanceToNow(new Date(squadPosts[currentPostIndex].created_at), { addSuffix: true })}
+                              </div>
                             </div>
-                          )}
                           </div>
                         </div>
-                      
-                        {/* Action buttons - Only in the post container, not at the bottom */}
-                        <div className="p-4 flex items-center justify-between border-t border-purple-900/50 bg-black/30">
-                          <button 
-                            className={`flex items-center ${post?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              post?.id && likeMutation.mutate(post.id);
-                            }}
-                            aria-label="Like post"
-                          >
-                            <Heart className="mr-1 h-6 w-6 fill-current" />
-                            <span className="text-base">{post?.likes_count || 0}</span>
-                          </button>
+                        
+                        {/* Post content */}
+                        <div className="h-full flex flex-col justify-center items-center p-4 pt-16 pb-16">
+                          {/* Caption with horizontal scroll */}
+                          {squadPosts[currentPostIndex]?.content && (
+                            <div className="w-full mb-4 pb-2 overflow-x-auto hide-scrollbar">
+                              <p className="text-gray-200 text-center whitespace-pre-wrap px-4">
+                                {squadPosts[currentPostIndex].content}
+                              </p>
+                            </div>
+                          )}
                           
-                          <button 
-                            className="text-blue-400" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/post/${post.id}`);
-                            }}
-                            aria-label="View comments"
-                          >
-                            <MessageSquare className="h-6 w-6" />
-                          </button>
-                          
-                          <button 
-                            className="flex items-center text-yellow-400"
-                            onClick={(e) => e.stopPropagation()}
-                            aria-label="Give trophy"
-                          >
+                          {/* Media container */}
+                          <div className="flex-1 flex items-center justify-center w-full max-h-[60vh]">
+                            <div className="relative w-full h-full flex items-center justify-center">
+                              {(getMediaUrl(squadPosts[currentPostIndex])?.includes('.mp4') || 
+                                getMediaUrl(squadPosts[currentPostIndex])?.includes('.webm')) ? (
+                                <video 
+                                  src={getMediaUrl(squadPosts[currentPostIndex]) || ''}
+                                  controls
+                                  className="max-h-[80vh] max-w-full object-contain"
+                                  poster={squadPosts[currentPostIndex].thumbnail_url || ''}
+                                />
+                              ) : (
+                                <div className="flex items-center justify-center h-full w-full text-center text-blue-300 bg-blue-900/20">
+                                  For video clips only!
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    )}
+                      
+                      {/* Action buttons */}
+                      <div className="p-4 flex items-center justify-between border-t border-purple-900/50 bg-black/30">
+                        <button 
+                          className={`flex items-center ${squadPosts[currentPostIndex]?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            squadPosts[currentPostIndex]?.id && likeMutation.mutate(squadPosts[currentPostIndex].id);
+                          }}
+                          aria-label="Like post"
+                        >
+                          <Heart className="mr-1 h-6 w-6 fill-current" />
+                          <span className="text-base">{squadPosts[currentPostIndex]?.likes_count || 0}</span>
+                        </button>
+                        
+                        <button 
+                          className="text-blue-400" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/post/${squadPosts[currentPostIndex].id}`);
+                          }}
+                          aria-label="View comments"
+                        >
+                          <MessageSquare className="h-6 w-6" />
+                        </button>
+                        
+                        <button 
+                          className="flex items-center text-yellow-400"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label="Give trophy"
+                        >
+                          <Trophy className="mr-1 h-6 w-6" />
+                          <span className="text-base">{squadPosts[currentPostIndex]?.trophy_count || 0}</span>
+                        </button>
+                        
+                        <button 
+                          className="text-purple-400"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label="Share post"
+                        >
+                          <Share2 className="h-6 w-6" />
+                        </button>
+                        
+                        <button 
+                          className="text-gray-300"
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label="Save post"
+                        >
+                          <Bookmark className="h-6 w-6" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Action buttons - Only in the post container, not at the bottom */}
-                  <div className="p-4 flex items-center justify-between border-t border-purple-900/50 bg-black/30">
-                    <button 
-                      className={`flex items-center ${post?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        post?.id && likeMutation.mutate(post.id);
-                      }}
-                      aria-label="Like post"
-                    >
-                      <Heart className="mr-1 h-6 w-6 fill-current" />
-                      <span className="text-base">{post?.likes_count || 0}</span>
-                    </button>
-                    
-                    <button 
-                      className="text-blue-400" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/post/${post.id}`);
-                      }}
-                      aria-label="View comments"
-                    >
-                      <MessageSquare className="h-6 w-6" />
-                    </button>
-                    
-                    <button 
-                      className="flex items-center text-yellow-400"
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label="Give trophy"
-                    >
-                      <Trophy className="mr-1 h-6 w-6" />
-                      <span className="text-base">{post?.trophy_count || 0}</span>
-                    </button>
-                    
-                    <button 
-                      className="text-purple-400"
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label="Share post"
-                    >
-                      <Share2 className="h-6 w-6" />
-                    </button>
-                    
-                    <button 
-                      className="text-gray-300"
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label="Save post"
-                    >
-                      <Bookmark className="h-6 w-6" />
-                    </button>
-                    
-                    <button 
-                      className="text-gray-300"
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label="Back"
-                    >
-                      <ArrowLeft className="h-6 w-6" />
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Navigation indicators */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
-        {squadPosts.map((_, index) => (
-          <div 
-            key={index} 
-            className={`w-2 h-2 rounded-full ${index === currentPostIndex ? 'bg-white' : 'bg-gray-500'}`}
-            onClick={() => setCurrentPostIndex(index)}
-          />
-        ))}
-      </div>
-      
-                {/* Navigation controls with glowing effect */}
-                <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none">
-                  <button 
-                    onClick={() => handleNavigation('prev')}
-                    className="h-full w-1/4 flex items-center justify-start pl-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
-                    aria-label="Previous post"
+              
+              {/* Navigation indicators */}
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                {squadPosts.map((_, index) => (
+                  <div 
+                    key={index} 
+                    className={`w-2 h-2 rounded-full ${index === currentPostIndex ? 'bg-white' : 'bg-gray-500'}`}
+                    onClick={() => setCurrentPostIndex(index)}
+                  />
+                ))}
+              </div>
+              
+              {/* Navigation controls with glowing effect */}
+              <div className="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none">
+                <button 
+                  onClick={() => handleNavigation('prev')}
+                  className="h-full w-1/4 flex items-center justify-start pl-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
+                  aria-label="Previous post"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" 
+                    className="h-10 w-10 transition-all duration-300 hover:scale-110" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="rgba(216, 180, 254, 0.9)"
+                    style={{
+                      filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
+                    }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                      className="h-10 w-10 transition-all duration-300 hover:scale-110" 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      stroke="rgba(216, 180, 254, 0.9)"
-                      style={{
-                        filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
-                      }}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  
-                  <button 
-                    onClick={() => handleNavigation('next')}
-                    className="h-full w-1/4 flex items-center justify-end pr-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
-                    aria-label="Next post"
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                
+                <button 
+                  onClick={() => handleNavigation('next')}
+                  className="h-full w-1/4 flex items-center justify-end pr-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
+                  aria-label="Next post"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" 
+                    className="h-10 w-10 transition-all duration-300 hover:scale-110" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="rgba(216, 180, 254, 0.9)"
+                    style={{
+                      filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
+                    }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" 
-                      className="h-10 w-10 transition-all duration-300 hover:scale-110" 
-                      fill="none" 
-                      viewBox="0 0 24 24" 
-                      stroke="rgba(216, 180, 254, 0.9)"
-                      style={{
-                        filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
-                      }}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
         ) : (
-          <div className="flex justify-center items-center h-full">
+          <div className="flex justify-center items-center h-full pt-16">
             <div className="text-center p-4 max-w-md">
               <h3 className="text-xl font-bold text-purple-300 mb-2">No squad clipts available</h3>
               <p className="text-gray-400">Add friends to your squad or create new clipts!</p>
