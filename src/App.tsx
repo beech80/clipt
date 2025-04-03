@@ -18,6 +18,7 @@ import '@/styles/animations.css';
 import '@/styles/retro-game.css';
 import '@/components/gameboy-controller.css';
 import '@/components/joystick-animations.css';
+import '@/components/enhanced-joystick.css';
 import TabsNavigation from '@/components/TabsNavigation';
 
 const Home = React.lazy(() => import('./pages/Home'));
@@ -98,7 +99,8 @@ function AppContent() {
   
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Navigate to="/clipts" replace />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/auth" element={
         <ProtectedRoute>
           <Auth />

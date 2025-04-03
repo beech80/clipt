@@ -41,9 +41,9 @@
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
-    height: auto;
+    height: 100%;
     position: relative;
-    overflow-y: auto !important;
+    overflow-y: auto;
     overflow-x: hidden;
     margin: 0;
     padding: 0;
@@ -52,6 +52,8 @@
     background-image: 
       radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(107, 81, 201, 0.12) 0px, transparent 50%);
+    /* Ensure the background doesn't extend beyond the content */
+    background-attachment: fixed;
   }
   #root {
     height: auto;
@@ -73,16 +75,30 @@
   height: auto;
   min-height: 100vh;
   width: 100%;
-  overflow: visible !important;
+  overflow: hidden;
   position: relative;
+  max-height: 100vh;
 }
 
-/* Remove any overflow restrictions on mobile */
+/* Ensure proper containment on mobile */
 @media (max-width: 768px) {
-  html, body, #root, main, .main-content, .main-container, .page-container {
-    overflow: visible !important;
-    height: auto !important;
+  html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 100% !important;
     min-height: 100vh;
+    max-height: 100vh;
+    position: fixed;
+    width: 100%;
+  }
+  
+  #root, main, .main-content, .main-container, .page-container {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 100% !important;
+    min-height: 100vh;
+    max-height: 100vh;
+    width: 100%;
   }
 }
 

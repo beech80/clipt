@@ -15,9 +15,13 @@ const GameBoyControls: React.FC = () => {
   // Toggle the active state of the CLIPT button
   const [isCliptActive, setIsCliptActive] = useState(false);
   
-  // Joystick animation states
+  // Enhanced joystick animation states
   const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
   const [isJoystickActive, setIsJoystickActive] = useState(false);
+  const [joystickDirection, setJoystickDirection] = useState<'up' | 'down' | 'left' | 'right' | null>(null);
+  const [isTouched, setIsTouched] = useState(false);
+  const [showSnapIndicator, setShowSnapIndicator] = useState(false);
+  const [useMomentum, setUseMomentum] = useState(false);
   
   // Track touch events for swipe detection
   const touchStartX = useRef(0);
@@ -72,17 +76,55 @@ const GameBoyControls: React.FC = () => {
     }
   };
   
-  // Animate joystick movement
+  // Enhanced joystick movement animation with realistic physics
   const animateJoystick = (dx: number, dy: number) => {
-    // Set joystick to active and move it
-    setIsJoystickActive(true);
-    setJoystickPosition({ x: dx * 10, y: dy * 10 });
+    // Determine which direction has the strongest movement
+    let direction: 'up' | 'down' | 'left' | 'right' | null = null;
     
-    // Reset joystick position after animation
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    
+    if (absDx > absDy) {
+      direction = dx > 0 ? 'right' : 'left';
+    } else if (absDy > absDx) {
+      direction = dy > 0 ? 'down' : 'up';
+    }
+    
+    // Set joystick to active state
+    setIsJoystickActive(true);
+    setJoystickDirection(direction);
+    
+    // Calculate magnitude (for intensity of movement)
+    const magnitude = Math.min(Math.sqrt(dx * dx + dy * dy), 1);
+    const scaleFactor = 15; // Max pixels to move
+    
+    // Apply the movement with realistic constraints
+    setJoystickPosition({ 
+      x: dx * scaleFactor * magnitude, 
+      y: dy * scaleFactor * magnitude 
+    });
+    
+    // Show snap indicator when changing direction
+    if (direction) {
+      setShowSnapIndicator(true);
+      setTimeout(() => setShowSnapIndicator(false), 500);
+    }
+    
+    // Use physics-based momentum for return to center
+    setUseMomentum(true);
+    
+    // Reset joystick with a natural return to center
+    const returnDelay = 350; // Longer delay for more realistic movement
     setTimeout(() => {
+      setUseMomentum(true);
       setJoystickPosition({ x: 0, y: 0 });
-      setIsJoystickActive(false);
-    }, 300);
+      
+      setTimeout(() => {
+        setJoystickDirection(null);
+        setIsJoystickActive(false);
+        setUseMomentum(false);
+      }, 150);
+    }, returnDelay);
   };
   
   // Navigate between posts in clipts pages
@@ -111,38 +153,41 @@ const GameBoyControls: React.FC = () => {
   const handleDPadPress = (dx: number, dy: number) => {
     if (!enabled) return;
     
-    // Animate the joystick
     animateJoystick(dx, dy);
     
     // Check if we're on a clipts page
     const isCliptsPage = ['/clipts', '/squads-clipts'].some(route => location.pathname === route);
     
-    if (dy < 0) {
-      // Up: Scroll up
-      window.scrollBy({ top: -200, behavior: 'smooth' });
-    } else if (dy > 0) {
-      // Down: Scroll down
-      window.scrollBy({ top: 200, behavior: 'smooth' });
-    } else if (dx < 0) {
-      // Left: Previous page, post, or handle video scrubbing
-      const activeVideo = document.querySelector('video:focus') as HTMLVideoElement;
-      if (activeVideo) {
-        dispatchVideoControl('backward');
-      } else if (isCliptsPage) {
-        navigatePost('prev');
-      } else {
-        navigate(-1);
-      }
-    } else if (dx > 0) {
-      // Right: Next page, post, or handle video scrubbing
-      const activeVideo = document.querySelector('video:focus') as HTMLVideoElement;
-      if (activeVideo) {
-        dispatchVideoControl('forward');
-      } else if (isCliptsPage) {
-        navigatePost('next');
-      } else if (location.pathname === '/') {
-        navigate('/explore');
-      }
+    if (isCliptsPage) {
+      if (dx === 1) navigatePost('next');
+      else if (dx === -1) navigatePost('prev');
+      return;
+    }
+    
+    // Video control on posts
+    if (activePost && dx === 0 && dy === 0) {
+      // Center button press on a post with video - toggle between play/pause
+      dispatchVideoControl('play'); // This will toggle properly based on current state
+      return;
+    }
+    
+    // Navigation based on D-pad direction
+    switch(true) {
+      case dx === 1: // Right - Main discovery page
+        navigate('/discover');
+        break;
+      case dx === -1: // Left - Profile
+        navigate('/profile');
+        break;
+      case dy === -1: // Up - Settings
+        navigate('/settings');
+        break;
+      case dy === 1: // Down - Top games
+        navigate('/games');
+        break;
+      default:
+        // Center press - default menu
+        navigate('/menu');
     }
   };
   
@@ -150,19 +195,20 @@ const GameBoyControls: React.FC = () => {
   const handleCliptPress = () => {
     setIsCliptActive(true);
     
-    // Navigate to create post page
+    // Navigate to post creation
     navigate('/create');
     
-    // Reset button state after a delay
+    // Reset button state after animation
     setTimeout(() => {
       setIsCliptActive(false);
     }, 300);
   };
-
+  
   // Handle action button press
   const handleActionPress = (action: 'like' | 'comment' | 'trophy' | 'save') => {
-    if (!activePost?.id) return;
-    triggerPostInteraction(action, activePost.id);
+    if (activePost?.id) {
+      triggerPostInteraction(action, activePost.id);
+    }
   };
   
   // Only render if enabled
@@ -170,69 +216,122 @@ const GameBoyControls: React.FC = () => {
   
   return (
     <div className="gameboy-controls-wrapper">
-    <div className={`gameboy-controls-container ${!shouldHideBackground ? 'with-background' : ''} ${isCliptsPage ? 'clipts-controller' : ''}`}>
-      <div className="gameboy-controls">
-        {/* D-Pad / Joystick - Left edge */}
-        <div className="left-control-area">
-          <div className="d-pad">
-            {/* D-pad Up */}
-            <button 
-              className="d-pad-button up"
-              onClick={() => handleDPadPress(0, -1)}
-              aria-label="D-pad up"
-            ></button>
-            
-            {/* D-pad Right */}
-            <button 
-              className="d-pad-button right"
-              onClick={() => handleDPadPress(1, 0)}
-              aria-label="D-pad right"
-            ></button>
-            
-            {/* D-pad Down */}
-            <button 
-              className="d-pad-button down"
-              onClick={() => handleDPadPress(0, 1)}
-              aria-label="D-pad down"
-            ></button>
-            
-            {/* D-pad Left */}
-            <button 
-              className="d-pad-button left"
-              onClick={() => handleDPadPress(-1, 0)}
-              aria-label="D-pad left"
-            ></button>
-            
-            {/* D-pad Center with animated joystick */}
-            <div 
-              className={`d-pad-center ${isJoystickActive ? 'active' : ''}`} 
-              ref={joystickRef}
-              style={{
-                transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
-                transition: isJoystickActive ? 'transform 0.15s ease-out' : 'transform 0.2s ease-in-out'
-              }}
-            >
-              <button
-                className="d-pad-button center"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDPadPress(0, 0);
+      <div className={`gameboy-controls-container ${!shouldHideBackground ? 'with-background' : ''} ${isCliptsPage ? 'clipts-controller' : ''}`}>
+        <div className="gameboy-controls">
+          {/* Enhanced Joystick - Left edge */}
+          <div className="left-control-area">
+            <div className="d-pad-container">
+              <div 
+                className={`joystick ${isJoystickActive ? 'active' : ''} 
+                          ${joystickDirection ? `active-${joystickDirection}` : ''}
+                          ${isTouched ? 'touched' : ''}`}
+                ref={joystickRef}
+                onTouchStart={() => setIsTouched(true)}
+                onTouchEnd={() => {
+                  setIsTouched(false);
+                  setJoystickPosition({ x: 0, y: 0 });
+                  setJoystickDirection(null);
+                  setIsJoystickActive(false);
                 }}
-                aria-label="D-pad center button"
-              ></button>
+                onTouchMove={(e) => {
+                  if (!joystickRef.current) return;
+                  
+                  const rect = joystickRef.current.getBoundingClientRect();
+                  const centerX = rect.left + rect.width / 2;
+                  const centerY = rect.top + rect.height / 2;
+                  
+                  const touch = e.touches[0];
+                  const deltaX = (touch.clientX - centerX) / (rect.width / 2);
+                  const deltaY = (touch.clientY - centerY) / (rect.height / 2);
+                  
+                  // Normalize to stay within a circular boundary
+                  const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                  const normalizedDeltaX = length > 1 ? deltaX / length : deltaX;
+                  const normalizedDeltaY = length > 1 ? deltaY / length : deltaY;
+                  
+                  // Determine direction for visual feedback
+                  let direction: 'up' | 'down' | 'left' | 'right' | null = null;
+                  const absDx = Math.abs(normalizedDeltaX);
+                  const absDy = Math.abs(normalizedDeltaY);
+                  
+                  if (absDx > 0.5 || absDy > 0.5) {
+                    if (absDx > absDy) {
+                      direction = normalizedDeltaX > 0 ? 'right' : 'left';
+                    } else {
+                      direction = normalizedDeltaY > 0 ? 'down' : 'up';
+                    }
+                    
+                    // Actually perform the navigation if movement is significant
+                    if (length > 0.7) {
+                      if (direction === 'left') handleDPadPress(-1, 0);
+                      else if (direction === 'right') handleDPadPress(1, 0);
+                      else if (direction === 'up') handleDPadPress(0, -1);
+                      else if (direction === 'down') handleDPadPress(0, 1);
+                    }
+                  }
+                  
+                  setJoystickDirection(direction);
+                  setIsJoystickActive(length > 0.2);
+                  setJoystickPosition({ 
+                    x: normalizedDeltaX * 15, 
+                    y: normalizedDeltaY * 15 
+                  });
+                }}
+              >
+                <div className="joystick-ripple"></div>
+                <div className={`post-snap-indicator ${showSnapIndicator ? 'active' : ''}`}></div>
+                <div 
+                  className={`joystick-inner ${joystickDirection ? `direction-${joystickDirection}` : ''} ${useMomentum ? 'momentum' : ''}`}
+                  style={{
+                    transform: `translate(calc(-50% + ${joystickPosition.x}px), calc(-50% + ${joystickPosition.y}px))`
+                  }}
+                ></div>
+                <div className="joystick-direction joystick-direction-up"></div>
+                <div className="joystick-direction joystick-direction-right"></div>
+                <div className="joystick-direction joystick-direction-down"></div>
+                <div className="joystick-direction joystick-direction-left"></div>
+              </div>
+              
+              {/* Keep the invisible D-pad buttons for keyboard and click support */}
+              <div className="d-pad" style={{ opacity: 0, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, pointerEvents: 'none' }}>
+                <button 
+                  className="d-pad-button up"
+                  onClick={() => handleDPadPress(0, -1)}
+                  aria-label="D-pad up"
+                ></button>
+                <button 
+                  className="d-pad-button right" 
+                  onClick={() => handleDPadPress(1, 0)}
+                  aria-label="D-pad right"
+                ></button>
+                <button 
+                  className="d-pad-button down"
+                  onClick={() => handleDPadPress(0, 1)}
+                  aria-label="D-pad down"
+                ></button>
+                <button 
+                  className="d-pad-button left"
+                  onClick={() => handleDPadPress(-1, 0)}
+                  aria-label="D-pad left"
+                ></button>
+                <button 
+                  className="d-pad-button center"
+                  onClick={() => handleDPadPress(0, 0)}
+                  aria-label="D-pad center button"
+                ></button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Center Section */}
-        <div className="center-section">
-          {/* CLIPT Button */}
-          <button 
-            className={`clipt-button ${isCliptActive ? 'active' : ''}`} 
-            onClick={handleCliptPress}
-            aria-label="Create new post"
-          >
-            CLIPT
+          {/* Center Section */}
+          <div className="center-section">
+            {/* CLIPT Button */}
+            <button 
+              className={`clipt-button ${isCliptActive ? 'active' : ''}`} 
+              onClick={handleCliptPress}
+              aria-label="Create new post"
+            >
+              CLIPT
           </button>
           
           {/* Menu Buttons */}
@@ -285,8 +384,8 @@ const GameBoyControls: React.FC = () => {
             </button>
           </div>
         </div>
+        </div>
       </div>
-    </div>
     </div>
   );
 };
