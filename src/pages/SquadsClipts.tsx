@@ -239,7 +239,7 @@ const SquadsClipts = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
           </div>
         ) : squadPosts.length > 0 ? (
-          <div className="h-full">
+          <div className="h-full relative">
             {/* Horizontal Scrollable Container - Full Height */}
             <div className="relative overflow-x-auto h-full hide-scrollbar">
               <div className="flex flex-row h-full snap-x snap-mandatory">
@@ -292,56 +292,57 @@ const SquadsClipts = () => {
                           </div>
                         </div>
                       
-                      {/* Action buttons - Only in the post container, not at the bottom */}
-                      <div className="p-4 flex items-center justify-between border-t border-purple-900/50 bg-black/30">
-                        <button 
-                          className={`flex items-center ${post?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            post?.id && likeMutation.mutate(post.id);
-                          }}
-                          aria-label="Like post"
-                        >
-                          <Heart className="mr-1 h-6 w-6 fill-current" />
-                          <span className="text-base">{post?.likes_count || 0}</span>
-                        </button>
-                        
-                        <button 
-                          className="flex items-center text-blue-400" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/post/${post.id}`);
-                          }}
-                          aria-label="View comments"
-                        >
-                          <MessageSquare className="h-6 w-6" />
-                          {/* Comment count removed from border, will show in popup */}
-                        </button>
-                        
-                        <button 
-                          className="flex items-center text-yellow-400"
-                          onClick={(e) => e.stopPropagation()}
-                          aria-label="Give trophy"
-                        >
-                          <Trophy className="mr-1 h-6 w-6" />
-                          <span className="text-base">{post?.trophy_count || 0}</span>
-                        </button>
-                        
-                        <button 
-                          className="flex items-center text-purple-400"
-                          onClick={(e) => e.stopPropagation()}
-                          aria-label="Share post"
-                        >
-                          <Share2 className="h-6 w-6" />
-                        </button>
-                        
-                        <button 
-                          className="text-gray-300"
-                          onClick={(e) => e.stopPropagation()}
-                          aria-label="Save post"
-                        >
-                          <Bookmark className="h-6 w-6" />
-                        </button>
+                        {/* Action buttons - Only in the post container, not at the bottom */}
+                        <div className="p-4 flex items-center justify-between border-t border-purple-900/50 bg-black/30">
+                          <button 
+                            className={`flex items-center ${post?.liked_by_current_user ? 'text-red-400' : 'text-gray-300'}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              post?.id && likeMutation.mutate(post.id);
+                            }}
+                            aria-label="Like post"
+                          >
+                            <Heart className="mr-1 h-6 w-6 fill-current" />
+                            <span className="text-base">{post?.likes_count || 0}</span>
+                          </button>
+                          
+                          <button 
+                            className="flex items-center text-blue-400" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/post/${post.id}`);
+                            }}
+                            aria-label="View comments"
+                          >
+                            <MessageSquare className="h-6 w-6" />
+                            {/* Comment count removed from border, will show in popup */}
+                          </button>
+                          
+                          <button 
+                            className="flex items-center text-yellow-400"
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label="Give trophy"
+                          >
+                            <Trophy className="mr-1 h-6 w-6" />
+                            <span className="text-base">{post?.trophy_count || 0}</span>
+                          </button>
+                          
+                          <button 
+                            className="flex items-center text-purple-400"
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label="Share post"
+                          >
+                            <Share2 className="h-6 w-6" />
+                          </button>
+                          
+                          <button 
+                            className="text-gray-300"
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label="Save post"
+                          >
+                            <Bookmark className="h-6 w-6" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -358,7 +359,6 @@ const SquadsClipts = () => {
                   onClick={() => setCurrentPostIndex(index)}
                 />
               ))}
-            </div>
             </div>
             
             {/* Navigation controls */}
@@ -406,7 +406,6 @@ const SquadsClipts = () => {
       `}} />
     </div>
   );
-
 };
 
 export default SquadsClipts;
