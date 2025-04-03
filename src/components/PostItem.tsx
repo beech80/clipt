@@ -967,12 +967,16 @@ const PostItem: React.FC<PostItemProps> = ({
       }`}
       data-post-id={postId}
     >
-      {/* User Header */}
-      <div className={`flex items-center justify-between ${isCliptsPage ? 'p-2 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/70 to-transparent' : 'p-4 border-b border-gaming-400/20'}`}>
-        {/* Share button in top right for Clipts Page */}
+      {/* Enhanced User Header */}
+      <div className={`flex items-center justify-between ${isCliptsPage ? 'p-4 pt-12 pb-8 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 via-black/50 to-transparent backdrop-blur-sm' : 'p-4 border-b border-gaming-400/20'}`}>
+        {/* Enhanced Share button for Clipts Page */}
         {isCliptsPage && (
-          <div className="absolute top-2 right-2 z-20">
-            <ShareButton postId={post.id} className="share-button" iconOnly={true} />
+          <div className="absolute top-4 right-4 z-20">
+            <ShareButton 
+              postId={post.id} 
+              className="share-button bg-gradient-to-r from-blue-600/80 to-purple-600/80 backdrop-blur-sm p-2.5 rounded-lg shadow-[0_0_10px_rgba(79,70,229,0.5)] border border-indigo-500/30 hover:shadow-[0_0_15px_rgba(79,70,229,0.7)] transition-all duration-300 hover:scale-105 active:scale-95" 
+              iconOnly={true} 
+            />
           </div>
         )}
         <div className="flex items-center space-x-2">

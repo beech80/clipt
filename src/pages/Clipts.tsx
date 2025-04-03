@@ -387,8 +387,8 @@ const Clipts = () => {
         </div>
       </div>
 
-      {/* Main content - Full screen layout adjusted to avoid GameBoy controls */}
-      <div className="pt-14 h-[calc(100vh-7rem)] overflow-hidden">
+      {/* Main content - Full screen layout with improved spacing to avoid GameBoy controls */}
+      <div className="pt-14 h-[calc(100vh-8rem)] overflow-hidden">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
             <Button variant="outline" size="icon" className="animate-spin">
@@ -423,8 +423,8 @@ const Clipts = () => {
               </div>
             </div>
             
-            {/* Navigation controls */}
-            <div className="absolute left-4 right-4 top-1/2 transform -translate-y-1/2 flex justify-between pointer-events-none">
+            {/* Navigation controls - Sides of the screen */}
+            <div className="absolute left-0 right-0 top-0 bottom-0 flex justify-between items-center pointer-events-none z-10">
               <button 
                 onClick={() => {
                   setCurrentPostIndex(prev => 
@@ -435,12 +435,14 @@ const Clipts = () => {
                     behavior: 'smooth'
                   });
                 }}
-                className="bg-black/30 rounded-full p-2 pointer-events-auto"
+                className="h-24 w-12 ml-2 bg-gradient-to-r from-purple-900/70 to-indigo-900/70 backdrop-blur-sm rounded-xl pointer-events-auto border border-purple-500/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] transition-all duration-300 hover:shadow-[0_0_25px_rgba(147,51,234,0.5)] hover:border-purple-500/50 active:scale-95"
                 aria-label="Previous post"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+                <div className="flex justify-center items-center h-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </div>
               </button>
               
               <button 
@@ -453,12 +455,14 @@ const Clipts = () => {
                     behavior: 'smooth'
                   });
                 }}
-                className="bg-black/30 rounded-full p-2 pointer-events-auto"
+                className="h-24 w-12 mr-2 bg-gradient-to-r from-indigo-900/70 to-purple-900/70 backdrop-blur-sm rounded-xl pointer-events-auto border border-purple-500/30 shadow-[0_0_15px_rgba(147,51,234,0.3)] transition-all duration-300 hover:shadow-[0_0_25px_rgba(147,51,234,0.5)] hover:border-purple-500/50 active:scale-95"
                 aria-label="Next post"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                <div className="flex justify-center items-center h-full">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
               </button>
             </div>
             
