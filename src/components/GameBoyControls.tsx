@@ -15,12 +15,89 @@ const GameBoyControls: React.FC = () => {
   // Toggle the active state of the CLIPT button
   const [isCliptActive, setIsCliptActive] = useState(false);
   
+  // Joystick animation states
+  const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
+  const [isJoystickActive, setIsJoystickActive] = useState(false);
+  
+  // Track touch events for swipe detection
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  
   useEffect(() => {
     // Check if we should disable the controls on certain routes
     const disabledRoutes = ['/auth', '/onboarding', '/messages'];
     const shouldDisable = disabledRoutes.some(route => location.pathname.startsWith(route));
     setEnabled(!shouldDisable);
   }, [location]);
+  
+  // Add touch event listeners for swipe detection
+  useEffect(() => {
+    const isCliptsPage = ['/clipts', '/squads-clipts'].some(route => location.pathname === route);
+    
+    if (isCliptsPage) {
+      const handleTouchStart = (e: TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+      };
+      
+      const handleTouchEnd = (e: TouchEvent) => {
+        touchEndX.current = e.changedTouches[0].clientX;
+        handleSwipe();
+      };
+      
+      document.addEventListener('touchstart', handleTouchStart);
+      document.addEventListener('touchend', handleTouchEnd);
+      
+      return () => {
+        document.removeEventListener('touchstart', handleTouchStart);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [location.pathname]);
+  
+  // Handle swipe gestures
+  const handleSwipe = () => {
+    const swipeThreshold = 50; // Minimum distance required for a swipe
+    const diffX = touchEndX.current - touchStartX.current;
+    
+    if (Math.abs(diffX) > swipeThreshold) {
+      if (diffX > 0) {
+        // Swipe right - previous post
+        animateJoystick(-1, 0);
+        setTimeout(() => navigatePost('prev'), 300);
+      } else {
+        // Swipe left - next post
+        animateJoystick(1, 0);
+        setTimeout(() => navigatePost('next'), 300);
+      }
+    }
+  };
+  
+  // Animate joystick movement
+  const animateJoystick = (dx: number, dy: number) => {
+    // Set joystick to active and move it
+    setIsJoystickActive(true);
+    setJoystickPosition({ x: dx * 10, y: dy * 10 });
+    
+    // Reset joystick position after animation
+    setTimeout(() => {
+      setJoystickPosition({ x: 0, y: 0 });
+      setIsJoystickActive(false);
+    }, 300);
+  };
+  
+  // Navigate between posts in clipts pages
+  const navigatePost = (direction: 'prev' | 'next') => {
+    // Check if we're on a clipts page
+    const isCliptsPage = ['/clipts', '/squads-clipts'].some(route => location.pathname === route);
+    
+    if (isCliptsPage) {
+      // Create and dispatch custom event for post navigation
+      const navigateEvent = new CustomEvent('navigatePost', {
+        detail: { direction }
+      });
+      document.dispatchEvent(navigateEvent);
+    }
+  };
   
   // Determine if we should show background based on current route
   const shouldHideBackground = [
@@ -32,6 +109,12 @@ const GameBoyControls: React.FC = () => {
   const handleDPadPress = (dx: number, dy: number) => {
     if (!enabled) return;
     
+    // Animate the joystick
+    animateJoystick(dx, dy);
+    
+    // Check if we're on a clipts page
+    const isCliptsPage = ['/clipts', '/squads-clipts'].some(route => location.pathname === route);
+    
     if (dy < 0) {
       // Up: Scroll up
       window.scrollBy({ top: -200, behavior: 'smooth' });
@@ -39,18 +122,22 @@ const GameBoyControls: React.FC = () => {
       // Down: Scroll down
       window.scrollBy({ top: 200, behavior: 'smooth' });
     } else if (dx < 0) {
-      // Left: Previous page or handle video scrubbing
+      // Left: Previous page, post, or handle video scrubbing
       const activeVideo = document.querySelector('video:focus') as HTMLVideoElement;
       if (activeVideo) {
         dispatchVideoControl('backward');
+      } else if (isCliptsPage) {
+        navigatePost('prev');
       } else {
         navigate(-1);
       }
     } else if (dx > 0) {
-      // Right: Next page or handle video scrubbing
+      // Right: Next page, post, or handle video scrubbing
       const activeVideo = document.querySelector('video:focus') as HTMLVideoElement;
       if (activeVideo) {
         dispatchVideoControl('forward');
+      } else if (isCliptsPage) {
+        navigatePost('next');
       } else if (location.pathname === '/') {
         navigate('/explore');
       }
@@ -85,11 +172,47 @@ const GameBoyControls: React.FC = () => {
         {/* D-Pad / Joystick - Left edge */}
         <div className="left-control-area">
           <div className="d-pad">
-            <div className="d-pad-center" ref={joystickRef}>
+            {/* D-pad Up */}
+            <button 
+              className="d-pad-button up"
+              onClick={() => handleDPadPress(0, -1)}
+              aria-label="D-pad up"
+            ></button>
+            
+            {/* D-pad Right */}
+            <button 
+              className="d-pad-button right"
+              onClick={() => handleDPadPress(1, 0)}
+              aria-label="D-pad right"
+            ></button>
+            
+            {/* D-pad Down */}
+            <button 
+              className="d-pad-button down"
+              onClick={() => handleDPadPress(0, 1)}
+              aria-label="D-pad down"
+            ></button>
+            
+            {/* D-pad Left */}
+            <button 
+              className="d-pad-button left"
+              onClick={() => handleDPadPress(-1, 0)}
+              aria-label="D-pad left"
+            ></button>
+            
+            {/* D-pad Center with animated joystick */}
+            <div 
+              className={`d-pad-center ${isJoystickActive ? 'active' : ''}`} 
+              ref={joystickRef}
+              style={{
+                transform: `translate(${joystickPosition.x}px, ${joystickPosition.y}px)`,
+                transition: isJoystickActive ? 'transform 0.15s ease-out' : 'transform 0.2s ease-in-out'
+              }}
+            >
               <button
-                className="d-pad-button"
+                className="d-pad-button center"
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent joystick movement
+                  e.stopPropagation();
                   handleDPadPress(0, 0);
                 }}
                 aria-label="D-pad center button"
