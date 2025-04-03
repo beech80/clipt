@@ -240,24 +240,29 @@
   transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Circular button layout */
-.action-buttons.circular-style {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 200px;
-  height: 200px;
+/* Xbox action button styles - diamond formation */
+.action-buttons.xbox-style {
+  display: grid;
+  grid-template-areas:
+    ". up ."
+    "left center right"
+    ". down .";
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 5px;
+  width: 120px;
+  height: 120px;
   position: relative;
 }
 
-.action-buttons.circular-style .action-button {
-  width: 50px;
-  height: 50px;
+.action-buttons.xbox-style .action-button {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: #333;
-  border: 2px solid;
-  position: absolute;
+  border: none;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.5);
+  position: relative;
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
@@ -266,7 +271,6 @@
   color: white;
   font-weight: bold;
   overflow: visible;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .action-button:active {
@@ -274,44 +278,38 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Like button (top) */
-.action-buttons.circular-style .action-button.x {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(30, 30, 40, 0.8);
-  border-color: #ff3e84;
+.action-buttons.xbox-style .action-button.x {
+  grid-area: left;
+  background: linear-gradient(135deg, #0066cc, #0044aa);
+  justify-self: end;
 }
 
 /* Button label styling */
-.action-buttons.circular-style .button-label {
-  display: none; /* Hide button labels */
+.action-buttons.xbox-style .action-button span.button-label {
+  position: absolute;
+  bottom: -16px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.7);
 }
 
-/* Trophy button (bottom right) */
-.action-buttons.circular-style .action-button.y {
-  bottom: 10px;
-  right: 0;
-  background: rgba(30, 30, 40, 0.8);
-  border-color: #ffcc00;
+.action-buttons.xbox-style .action-button.y {
+  grid-area: up;
+  background: linear-gradient(135deg, #ffcc00, #ff9900);
+  justify-self: center;
 }
 
-/* Save button (left middle) */
-.action-buttons.circular-style .action-button.b {
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  background: rgba(30, 30, 40, 0.8);
-  border-color: #8a2be2;
+.action-buttons.xbox-style .action-button.b {
+  grid-area: right;
+  background: linear-gradient(135deg, #cc0000, #990000);
+  justify-self: start;
 }
 
-/* Comment button (right middle) */
-.action-buttons.circular-style .action-button.a {
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  background: rgba(30, 30, 40, 0.8);
-  border-color: #3498db;
+.action-buttons.xbox-style .action-button.a {
+  grid-area: down;
+  background: linear-gradient(135deg, #00cc00, #009900);
+  justify-self: center;
 }
 
 /* Xbox controller matte texture overlay */
@@ -329,38 +327,74 @@
 }
 
 /* Active states for controller buttons */
-.action-buttons.circular-style .action-button svg.active {
+.action-buttons.xbox-style .action-button svg.active {
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
   transform: scale(1.1);
 }
 
-.action-buttons.circular-style .action-button:active {
+.action-buttons.xbox-style .action-button:active {
   transform: scale(0.9);
-  box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
 
-/* CLIPT central button */
-.clipt-button {
-  position: absolute;
+/* Center area with CLIPT and menu buttons */
+.center-control-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 15px;
+}
+
+/* Central CLIPT button */
+.central-button {
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background: rgba(20, 20, 30, 0.9);
-  border: 2px solid;
+  background: #1e1e2e;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+  border: 2px solid transparent;
   border-image: linear-gradient(to right, #ff3e84, #3498db) 1;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-  transform: translate(-50%, -50%);
-  top: 50%;
-  left: 50%;
+  transition: all 0.2s ease;
+  margin-bottom: 10px;
 }
 
-.clipt-button:active {
-  transform: translate(-50%, -50%) scale(0.95);
+.central-button:active {
+  transform: scale(0.95);
+}
+
+/* Post and Select buttons */
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.menu-button {
+  width: 60px;
+  height: 30px;
+  border-radius: 15px;
+  background: #1e1e2e;
+  color: white;
+  border: 1px solid #444;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.menu-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }

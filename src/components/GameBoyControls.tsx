@@ -456,16 +456,8 @@ const GameBoyControls: React.FC = () => {
 
           {/* Action Buttons - Right edge */}
           <div className="right-control-area">
-            {/* Circular action buttons */}
-            <div className="action-buttons circular-style">
-              {/* CLIPT central button */}
-              <button 
-                className="clipt-button"
-                onClick={handleCliptPress}
-                aria-label="CLIPT button"
-              >
-                CLIPT
-              </button>
+            {/* Diamond formation action buttons */}
+            <div className="action-buttons xbox-style">
               {/* X Button - Like */}
               <button 
                 className="action-button x" 
@@ -475,7 +467,7 @@ const GameBoyControls: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isLiked ? 'active' : ''} width="20" height="20">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
-  
+                <span className="button-label">X</span>
               </button>
               
               {/* Y Button - Rank */}
@@ -492,7 +484,7 @@ const GameBoyControls: React.FC = () => {
                   <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
                   <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
                 </svg>
-  
+                <span className="button-label">Y</span>
               </button>
               
               {/* B Button - Save */}
@@ -504,7 +496,7 @@ const GameBoyControls: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isSaved ? 'active' : ''} width="20" height="20">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                 </svg>
-  
+                <span className="button-label">B</span>
               </button>
               
               {/* A Button - Comment */}
@@ -516,13 +508,34 @@ const GameBoyControls: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isCommenting ? 'active' : ''} width="20" height="20">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-  
+                <span className="button-label">A</span>
               </button>
               
               {/* Xbox controller texture overlay */}
               <div className="matte-texture"></div>
             </div>
         </div>
+        
+        {/* Center Area - CLIPT button and menu buttons */}
+        <div className="center-control-area">
+          <button 
+            className="central-button"
+            onClick={handleCliptPress}
+            aria-label="CLIPT button"
+          >
+            CLIPT
+          </button>
+          
+          <div className="menu-buttons">
+            <button className="menu-button" onClick={() => navigate('/select')} aria-label="Select">
+              SELECT
+            </button>
+            <button className="menu-button" onClick={() => navigate('/create')} aria-label="Post">
+              POST
+            </button>
+          </div>
+        </div>
+        
         </div>
       </div>
     </div>
