@@ -263,7 +263,7 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
                 onError={() => setIsMediaError(true)}
                 className={`w-full h-full ${isCliptsPage ? 'object-cover' : 'object-cover md:object-contain'}`}
                 autoPlay={true}
-                controls={true}
+                controls={!isCliptsPage} /* Hide controls on Clipts page */
                 muted={false}
                 loop={true}
               />
