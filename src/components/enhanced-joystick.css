@@ -267,7 +267,7 @@
   height: 18px;
 }
 
-/* Rainbow rim for action buttons, matching the CLIPT button EXACTLY */
+/* Rainbow rim for action buttons, exactly like the CLIPT button */
 .action-buttons.modern-style .action-button::before {
   content: '';
   position: absolute;
@@ -277,9 +277,9 @@
   bottom: -1.5px;
   border-radius: 50%;
   background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
-  /* Perfectly matching CLIPT button proportions with a precise 2px thick rainbow rim */
-  -webkit-mask: radial-gradient(transparent 23px, #000 23px, #000 25px, transparent 25px);
-  mask: radial-gradient(transparent 23px, #000 23px, #000 25px, transparent 25px);
+  /* Make the rim thickness proportional to the CLIPT button's rim */
+  -webkit-mask: radial-gradient(transparent 21px, #000 21px, #000 25px, transparent 25px);
+  mask: radial-gradient(transparent 21px, #000 21px, #000 25px, transparent 25px);
   animation: ringRotation 12s linear infinite;
   z-index: 0;
 }
