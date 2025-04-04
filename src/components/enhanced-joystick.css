@@ -299,12 +299,29 @@
   justify-content: center;
   cursor: pointer;
   text-transform: uppercase;
-  overflow: hidden;
+  overflow: visible; /* Changed to visible to show the ring */
   border: none;
   bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: auto; /* Enable interaction */
+  z-index: 1; /* Ensure button stays above the ring */
+}
+
+.clipt-button::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: conic-gradient(from 0deg, #ff0080, #ff8c00, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff0080);
+  animation: ringRotation 4s linear infinite;
+  z-index: 0;
+  opacity: 0.8;
+  filter: blur(1px);
 }
 
 .clipt-button::after {
@@ -331,6 +348,15 @@
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+@keyframes ringRotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 
