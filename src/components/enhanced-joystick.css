@@ -284,22 +284,20 @@
   background: rgb(16, 18, 33); /* Dark navy background to match image */
   color: white;
   font-family: sans-serif;
+  font-weight: bold;
   font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
   text-transform: uppercase;
   overflow: visible; /* Changed to visible to show the ring */
   border: none;
-  bottom: 100px;
+  bottom: 120px; /* Adjusted to match image */
   left: 50%;
   transform: translateX(-50%);
   pointer-events: auto; /* Enable interaction */
   z-index: 1001; /* Higher z-index to ensure button visibility */
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Rainbow ring ONLY around the rim, matching the image exactly */
