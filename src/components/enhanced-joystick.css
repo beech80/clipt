@@ -320,40 +320,22 @@
   position: relative;
 }
 
-/* No rainbow ring around entire button - removing this */
-
-/* Rainbow ring around the text */
-.clipt-text-with-ring {
-  position: relative;
-  display: inline-block;
-  font-weight: 700;
-  z-index: 2;
-}
-
-.clipt-text-with-ring::before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  border-radius: 4px;
-  background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
-  animation: ringRotation 8s linear infinite;
-  z-index: -1;
-}
-
-.clipt-text-with-ring::after {
+/* Rainbow ring around the entire button to match image */
+.clipt-button::before {
   content: '';
   position: absolute;
   top: -2px;
   left: -2px;
   right: -2px;
   bottom: -2px;
-  border-radius: 3px;
-  background: rgb(16, 18, 33);
-  z-index: -1;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
+  animation: ringRotation 12s linear infinite;
+  z-index: 0;
+  opacity: 1;
 }
+
+/* Removed text ring styling as we're using the full button ring */
 
 @keyframes gradientBorder {
   0% {

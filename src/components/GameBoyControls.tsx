@@ -344,7 +344,7 @@ const GameBoyControls: React.FC = () => {
 
       {/* CLIPT button based on Image 2 */}
       <button className="clipt-button" onClick={() => navigate('/')} aria-label="CLIPT button">
-        <span className="clipt-text-with-ring">CLIPT</span>
+        CLIPT
       </button>
 
       {/* Menu buttons below CLIPT (from Image 2) */}
