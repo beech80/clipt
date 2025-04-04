@@ -370,7 +370,7 @@
   padding: 0;
   background: transparent;
   z-index: 1000;
-  height: 150px; /* Increased height to ensure buttons are visible */
+  height: 0; /* No height to prevent blocking content */
   pointer-events: none; /* This makes the container not block video interaction */
   overflow: visible;
 }
