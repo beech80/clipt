@@ -266,7 +266,7 @@
   height: 18px;
 }
 
-/* Rainbow rim for action buttons, matching the CLIPT button */
+/* Rainbow rim for action buttons, matching the CLIPT button EXACTLY */
 .action-buttons.modern-style .action-button::before {
   content: '';
   position: absolute;
@@ -276,8 +276,8 @@
   bottom: -1.5px;
   border-radius: 50%;
   background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
-  -webkit-mask: radial-gradient(transparent 24px, #000 24px, #000 25.5px, transparent 25.5px);
-  mask: radial-gradient(transparent 24px, #000 24px, #000 25.5px, transparent 25.5px);
+  -webkit-mask: radial-gradient(transparent 22.5px, #000 22.5px, #000 25px, transparent 25px);
+  mask: radial-gradient(transparent 22.5px, #000 22.5px, #000 25px, transparent 25px);
   animation: ringRotation 12s linear infinite;
   z-index: 0;
 }
