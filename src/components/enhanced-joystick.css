@@ -37,15 +37,9 @@
   cursor: pointer;
 }
 
-/* Small center dot */
+/* Small center dot - removed as requested */
 .joystick-inner::before {
-  content: '';
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: white;
-  opacity: 0.7;
+  display: none;
 }
 
 .joystick-inner::after {
