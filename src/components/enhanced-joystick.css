@@ -301,7 +301,7 @@
   text-transform: uppercase;
   overflow: hidden;
   border: none;
-  bottom: 30px;
+  bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
   pointer-events: auto; /* Enable interaction */
