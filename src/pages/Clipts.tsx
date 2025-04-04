@@ -405,60 +405,7 @@ const Clipts = () => {
               </div>
             </div>
             
-            {/* Navigation controls - Sides of the screen */}
-            <div className="absolute left-0 right-0 top-0 bottom-0 flex justify-between items-center pointer-events-none z-10">
-              <button 
-                onClick={() => {
-                  setCurrentPostIndex(prev => 
-                    prev > 0 ? prev - 1 : rawPosts.length - 1
-                  );
-                  document.querySelector('.snap-mandatory')?.scrollTo({
-                    left: (currentPostIndex - 1) * window.innerWidth,
-                    behavior: 'smooth'
-                  });
-                }}
-                className="h-full w-1/4 flex items-center justify-start pl-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
-                aria-label="Previous post"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" 
-                  className="h-10 w-10 transition-all duration-300 hover:scale-110" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="rgba(216, 180, 254, 0.9)"
-                  style={{
-                    filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
-                  }}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              
-              <button 
-                onClick={() => {
-                  setCurrentPostIndex(prev => 
-                    prev < rawPosts.length - 1 ? prev + 1 : 0
-                  );
-                  document.querySelector('.snap-mandatory')?.scrollTo({
-                    left: (currentPostIndex + 1) * window.innerWidth,
-                    behavior: 'smooth'
-                  });
-                }}
-                className="h-full w-1/4 flex items-center justify-end pr-8 pointer-events-auto transition-all duration-300 active:scale-95 bg-transparent"
-                aria-label="Next post"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" 
-                  className="h-10 w-10 transition-all duration-300 hover:scale-110" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="rgba(216, 180, 254, 0.9)"
-                  style={{
-                    filter: "drop-shadow(0 0 15px rgba(168, 85, 247, 0.9)) drop-shadow(0 0 5px rgba(255, 0, 255, 0.7))"
-                  }}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
+            {/* Navigation controls have been removed as requested */}
             
             {/* Add custom CSS for hiding scrollbar but keeping functionality */}
             <style dangerouslySetInnerHTML={{ __html: `
