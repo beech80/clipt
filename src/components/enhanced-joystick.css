@@ -298,7 +298,7 @@
   left: 50%;
   transform: translateX(-50%);
   pointer-events: auto; /* Enable interaction */
-  z-index: 1; /* Ensure button stays above the ring */
+  z-index: 1001; /* Higher z-index to ensure button visibility */
   position: relative;
 }
 
@@ -370,7 +370,7 @@
   padding: 0;
   background: transparent;
   z-index: 1000;
-  height: 0; /* No height to prevent blocking content */
+  height: 150px; /* Increased height to ensure buttons are visible */
   pointer-events: none; /* This makes the container not block video interaction */
   overflow: visible;
 }
