@@ -17,6 +17,9 @@ const GameBoyControls: React.FC = () => {
   const [saveActive, setSaveActive] = useState(false);
   const [rankActive, setRankActive] = useState(false);
   
+  // Game menu state
+  const [menuVisible, setMenuVisible] = useState(false);
+  
   // Track current post ID if on a post page
   const [currentPostId, setCurrentPostId] = useState<string | null>(null);
   
@@ -349,7 +352,11 @@ const GameBoyControls: React.FC = () => {
 
       {/* Menu buttons below CLIPT (from Image 2) */}
       <div className="menu-buttons">
-        <button className="menu-button menu-left" onClick={() => navigate('/select')} aria-label="Menu">
+        <button 
+          className="menu-button menu-left" 
+          onClick={() => setMenuVisible(!menuVisible)} 
+          aria-label="Toggle game menu"
+        >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -363,6 +370,33 @@ const GameBoyControls: React.FC = () => {
           </svg>
         </button>
       </div>
+
+      {/* Game Menu */}
+      {menuVisible && (
+        <div className="game-menu">
+          <div className="game-menu-content">
+            <h2>Game Menu</h2>
+            <ul>
+              <li>
+                <button onClick={() => { navigate('/'); setMenuVisible(false); }}>Home</button>
+              </li>
+              <li>
+                <button onClick={() => { navigate('/select'); setMenuVisible(false); }}>Select Game</button>
+              </li>
+              <li>
+                <button onClick={() => { navigate('/profile'); setMenuVisible(false); }}>Profile</button>
+              </li>
+              <li>
+                <button onClick={() => { navigate('/leaderboard'); setMenuVisible(false); }}>Leaderboard</button>
+              </li>
+              <li>
+                <button onClick={() => { navigate('/settings'); setMenuVisible(false); }}>Settings</button>
+              </li>
+            </ul>
+            <button className="close-menu-btn" onClick={() => setMenuVisible(false)}>Close</button>
+          </div>
+        </div>
+      )}
 
       {/* Diamond action buttons based on Image 3 */}
       <div className="action-buttons modern-style">
