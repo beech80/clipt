@@ -288,12 +288,12 @@
   height: 70px;
   padding: 0;
   border-radius: 50%;
-  background: transparent; /* Transparent background */
+  background: rgb(16, 18, 33); /* Dark navy background to match image */
   color: white;
-  font-family: 'Montserrat', 'Orbitron', sans-serif;
+  font-family: sans-serif;
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -306,7 +306,6 @@
   transform: translateX(-50%);
   pointer-events: auto; /* Enable interaction */
   z-index: 1; /* Ensure button stays above the ring */
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
 }
 
 .clipt-button::before {
@@ -318,7 +317,7 @@
   bottom: -2px;
   border-radius: 50%;
   background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
-  animation: ringRotation 8s linear infinite;
+  animation: ringRotation 12s linear infinite;
   z-index: 0;
   opacity: 1;
 }
