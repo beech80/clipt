@@ -164,8 +164,8 @@
 
 .action-buttons.modern-style {
   position: absolute;
-  width: 140px; /* Wider to match image 2's spread-out diamond */
-  height: 140px; /* Taller to match image 2's spread-out diamond */
+  width: 160px; /* Further widened to exactly match image 2's spread-out diamond */
+  height: 160px; /* Further heightened to exactly match image 2's spread-out diamond */
   background: transparent;
   right: 50px;
   bottom: 30px; /* Positioned at the same level as other elements */
