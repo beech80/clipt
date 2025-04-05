@@ -164,8 +164,8 @@
 
 .action-buttons.modern-style {
   position: absolute;
-  width: 200px; /* Width for diamond layout like in image 2 */
-  height: 200px; /* Height for diamond layout like in image 2 */
+  width: 240px; /* Wider to match image 1's larger diamond layout */
+  height: 240px; /* Taller to match image 1's larger diamond layout */
   background: transparent;
   right: 50px;
   bottom: 30px; /* Positioned at the same level as other elements */
@@ -173,8 +173,8 @@
 
 .action-buttons.modern-style .action-button {
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   background: rgb(16, 18, 33); /* Dark navy background to perfectly match CLIPT button */
   border: none;
