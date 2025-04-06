@@ -207,28 +207,10 @@
   height: 12px;
 }
 
-.action-buttons.modern-style .action-button.x {
+.action-buttons.modern-style .action-button.y {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  color: #ff3e4e;
-}
-
-.action-buttons.modern-style .action-button.x svg {
-  stroke: #ff3e4e;
-  fill: none;
-  width: 18px;
-  height: 18px;
-}
-
-.action-buttons.modern-style .action-button.x svg {
-  color: #1e90ff;
-}
-
-.action-buttons.modern-style .action-button.y {
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
   color: #ffcc00;
 }
 
@@ -240,13 +222,27 @@
 }
 
 .action-buttons.modern-style .action-button.b {
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #00a0ff;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  color: #ff3e4e;
 }
 
 .action-buttons.modern-style .action-button.b svg {
+  stroke: #ff3e4e;
+  fill: none;
+  width: 18px;
+  height: 18px;
+}
+
+.action-buttons.modern-style .action-button.x {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  color: #00a0ff;
+}
+
+.action-buttons.modern-style .action-button.x svg {
   stroke: #00a0ff;
   fill: none;
   width: 18px;
@@ -254,10 +250,17 @@
 }
 
 .action-buttons.modern-style .action-button.a {
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   color: #1f8130;
+}
+
+.action-buttons.modern-style .action-button.a svg {
+  stroke: #1f8130;
+  fill: none;
+  width: 18px;
+  height: 18px;
 }
 
 .action-buttons.modern-style .action-button.a svg {
