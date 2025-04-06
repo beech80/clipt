@@ -398,8 +398,51 @@ const GameBoyControls: React.FC = () => {
         </div>
       )}
 
-      {/* Action buttons area */}
+      {/* Diamond action buttons based on the reference image */}
       <div className="action-buttons modern-style">
+        {/* Save button (right - red) */}
+        <button 
+          className={`action-button save-button right ${saveActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('save')}
+          aria-label="Save post"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v12h14V6H5zm8 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+          </svg>
+        </button>
+        
+        {/* Like button (top - green) */}
+        <button 
+          className={`action-button like-button top ${likeActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('like')}
+          aria-label="Like post"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </button>
+        
+        {/* Comment button (left - blue) */}
+        <button 
+          className={`action-button comment-button left ${commentActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('comment')}
+          aria-label="Comment"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
+        
+        {/* Trophy button (bottom - yellow) */}
+        <button 
+          className={`action-button trophy-button bottom ${rankActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('rank')}
+          aria-label="Rank post"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2zM6 9H4.5a2.5 2.5 0 0 1 0-5H6m12 5h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C8.55 18.37 8 18.97 8 19.69V22m6-7.34V17c0 .55.47.98.97 1.21c.48.16 1.03.76 1.03 1.48V22"/>
+          </svg>
+        </button>
         
         {/* Green POST button underneath */}
         <button 

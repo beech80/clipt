@@ -180,116 +180,117 @@
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  position: absolute;
-  cursor: pointer;
+  border: none;
+  background-color: #333;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  overflow: visible;
-  transition: all 0.2s ease;
-  background-color: rgba(10, 10, 20, 0.8);
-  color: white;
-  position: relative; /* For absolute positioning of the rainbow rim */
-  border: none;
+  font-weight: bold;
+  font-size: 14px;
+  position: absolute;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .action-buttons.modern-style .action-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
 }
 
-.action-buttons.modern-style .action-button:active {
-  transform: scale(0.95);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-.action-buttons.modern-style .action-button svg {
-  width: 24px;
-  height: 24px;
-  display: block; /* Show the SVG icons along with letters */
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
-  stroke-width: 2;
-}
-
-.action-buttons.modern-style .action-button.y {
+.action-buttons.modern-style .action-button.bottom {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.action-buttons.modern-style .action-button.y::after {
-  content: 'Y';
+.action-buttons.modern-style .action-button.bottom::before {
+  content: '';
   position: absolute;
-  font-size: 28px;
-  font-weight: bold;
-  color: #ffdd00; /* Yellow */
-  filter: drop-shadow(0 0 2px rgba(255, 221, 0, 0.5));
-  z-index: 3;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, #ffdd00, #ffe633, #ffef66, #ffdd00);
+  border-radius: 50%;
+  z-index: -1;
+  animation: rotate 3s linear infinite;
 }
 
-.action-buttons.modern-style .action-button.b {
-  top: calc(50% - 40px);
+.action-buttons.modern-style .action-button.trophy-button svg {
+  color: #ffdd00; /* Yellow */
+}
+
+.action-buttons.modern-style .action-button.right {
+  top: 50%;
   right: 0;
   transform: translateY(-50%);
 }
 
-.action-buttons.modern-style .action-button.b::after {
-  content: 'B';
+.action-buttons.modern-style .action-button.right::before {
+  content: '';
   position: absolute;
-  font-size: 28px;
-  font-weight: bold;
-  color: #ff2040; /* Red */
-  filter: drop-shadow(0 0 2px rgba(255, 32, 64, 0.5));
-  z-index: 3;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, #ff4d4d, #ff6b6b, #ff8989, #ff4d4d);
+  border-radius: 50%;
+  z-index: -1;
+  animation: rotate 3s linear infinite;
 }
 
-.action-buttons.modern-style .action-button.x {
-  top: calc(50% - 40px);
+.action-buttons.modern-style .action-button.save-button svg {
+  color: #ff4d4d; /* Red */
+}
+
+.action-buttons.modern-style .action-button.left {
+  top: 50%;
   left: 0;
   transform: translateY(-50%);
 }
 
-.action-buttons.modern-style .action-button.x::after {
-  content: 'X';
+.action-buttons.modern-style .action-button.left::before {
+  content: '';
   position: absolute;
-  font-size: 28px;
-  font-weight: bold;
-  color: #00a8ff; /* Blue */
-  filter: drop-shadow(0 0 2px rgba(0, 168, 255, 0.5));
-  z-index: 3;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, #4287f5, #42a5f5, #42c5f5, #4287f5);
+  border-radius: 50%;
+  z-index: -1;
+  animation: rotate 3s linear infinite;
 }
 
-.action-buttons.modern-style .action-button.a {
+.action-buttons.modern-style .action-button.comment-button svg {
+  color: #4287f5; /* Blue */
+}
+
+.action-buttons.modern-style .action-button.top {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.action-buttons.modern-style .action-button.a::after {
-  content: 'A';
+.action-buttons.modern-style .action-button.top::before {
+  content: '';
   position: absolute;
-  font-size: 28px;
-  font-weight: bold;
-  color: #25aa35; /* Green */
-  filter: drop-shadow(0 0 2px rgba(37, 170, 53, 0.5));
-  z-index: 3;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, #4caf50, #6abf6e, #88cf8c, #4caf50);
+  border-radius: 50%;
+  z-index: -1;
+  animation: rotate 3s linear infinite;
+}
+
+.action-buttons.modern-style .action-button.like-button svg {
+  color: #4caf50; /* Green */
 }
 
 /* Rainbow rim effect for action buttons */
@@ -301,20 +302,13 @@
   right: -3px;
   bottom: -3px;
   border-radius: 50%;
-  background: linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff00ff);
-  background-size: 200% 200%;
-  z-index: 1;
-  animation: ringRotation 4s linear infinite;
-}
-
-/* Animation for rainbow rim rotation */
-@keyframes ringRotation {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  background: linear-gradient(90deg, #00c9ff, #e100ff, #ff0, #20ff00, #00c9ff);
+  background-size: 300% 300%;
+  z-index: -1;
+  -webkit-mask: radial-gradient(transparent 33px, #000 33px, #000 35px, transparent 35px);
+  mask: radial-gradient(transparent 33px, #000 33px, #000 35px, transparent 35px);
+  animation: ringRotation 12s linear infinite;
+  z-index: 0;
 }
 
 /* Green POST Button Styling */
@@ -461,6 +455,15 @@
 }
 
 @keyframes ringRotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate {
   0% {
     transform: rotate(0deg);
   }
