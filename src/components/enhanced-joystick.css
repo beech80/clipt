@@ -164,17 +164,17 @@
 
 .action-buttons.modern-style {
   position: absolute;
-  width: 200px; /* Diamond layout width */
-  height: 200px; /* Diamond layout height */
+  width: 140px; /* Diamond layout width to match image */
+  height: 140px; /* Diamond layout height to match image */
   background: transparent;
-  right: 20px; /* Moved closer to right edge */
-  bottom: 20px; /* Moved closer to bottom edge */
+  right: 10px; /* Positioned at the right edge to match image */
+  bottom: 10px; /* Positioned at the bottom edge to match image */
 }
 
 .action-buttons.modern-style .action-button {
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   background: rgb(16, 18, 33); /* Dark navy background to perfectly match CLIPT button */
   border: none;
