@@ -164,11 +164,11 @@
 
 .action-buttons.modern-style {
   position: absolute;
-  width: 200px; /* Wider to match image 1's larger diamond layout */
-  height: 200px; /* Taller to match image 1's larger diamond layout */
+  width: 200px; /* Diamond layout width */
+  height: 200px; /* Diamond layout height */
   background: transparent;
-  right: 50px;
-  bottom: 30px; /* Positioned at the same level as other elements */
+  right: 20px; /* Moved closer to right edge */
+  bottom: 20px; /* Moved closer to bottom edge */
 }
 
 .action-buttons.modern-style .action-button {
