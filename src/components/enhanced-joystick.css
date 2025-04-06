@@ -236,7 +236,7 @@
 }
 
 .action-buttons.modern-style .action-button.b {
-  top: 50%;
+  top: calc(50% - 40px);
   right: 0;
   transform: translateY(-50%);
 }
@@ -255,7 +255,7 @@
 }
 
 .action-buttons.modern-style .action-button.x {
-  top: 50%;
+  top: calc(50% - 40px);
   left: 0;
   transform: translateY(-50%);
 }
