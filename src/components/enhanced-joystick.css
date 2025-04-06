@@ -349,8 +349,8 @@
   }
 }
 
-.clipt-button:hover, .clipt-button:focus {
-  transform: scale(1.05);
+.clipt-button:hover, .clipt-button:focus, .clipt-button:active {
+  transform: translateX(-50%); /* Keep centered without scaling */
 }
 
 /* Button activation effects */
