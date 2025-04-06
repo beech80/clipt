@@ -398,7 +398,7 @@ const GameBoyControls: React.FC = () => {
         </div>
       )}
 
-      {/* Diamond action buttons based on the new image */}
+      {/* Diamond action buttons based on the Xbox controller layout */}
       <div className="action-buttons modern-style">
         {/* Save button (top - green/A) */}
         <button 
@@ -435,7 +435,7 @@ const GameBoyControls: React.FC = () => {
           </svg>
         </button>
         
-        {/* Trophy button (bottom - yellow/Y) */}
+        {/* Trophy/Rank button (bottom - yellow/Y) */}
         <button 
           className={`action-button y ${rankActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('rank')}

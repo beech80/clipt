@@ -205,12 +205,15 @@
 }
 
 .action-buttons.modern-style .action-button svg {
-  width: 28px;
-  height: 28px;
-  display: none; /* Hide the SVG icons to show letters instead */
-  position: relative;
+  width: 24px;
+  height: 24px;
+  display: block; /* Show the SVG icons along with letters */
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 2;
-  stroke-width: 2.5;
+  stroke-width: 2;
 }
 
 .action-buttons.modern-style .action-button.y {
@@ -224,9 +227,12 @@
   position: absolute;
   font-size: 28px;
   font-weight: bold;
-  color: #ffdd00;
+  color: #ffdd00; /* Yellow */
   filter: drop-shadow(0 0 2px rgba(255, 221, 0, 0.5));
   z-index: 3;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .action-buttons.modern-style .action-button.b {
@@ -240,9 +246,12 @@
   position: absolute;
   font-size: 28px;
   font-weight: bold;
-  color: #ff2040;
+  color: #ff2040; /* Red */
   filter: drop-shadow(0 0 2px rgba(255, 32, 64, 0.5));
   z-index: 3;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .action-buttons.modern-style .action-button.x {
@@ -256,9 +265,12 @@
   position: absolute;
   font-size: 28px;
   font-weight: bold;
-  color: #00a8ff;
+  color: #00a8ff; /* Blue */
   filter: drop-shadow(0 0 2px rgba(0, 168, 255, 0.5));
   z-index: 3;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .action-buttons.modern-style .action-button.a {
@@ -272,9 +284,27 @@
   position: absolute;
   font-size: 28px;
   font-weight: bold;
-  color: #25aa35;
+  color: #25aa35; /* Green */
   filter: drop-shadow(0 0 2px rgba(37, 170, 53, 0.5));
   z-index: 3;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Rainbow rim effect for action buttons */
+.action-buttons.modern-style .action-button::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff, #ff00ff);
+  background-size: 200% 200%;
+  z-index: 1;
+  animation: ringRotation 4s linear infinite;
 }
 
 /* Animation for rainbow rim rotation */
