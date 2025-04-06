@@ -273,6 +273,75 @@
   }
 }
 
+/* Green POST Button Styling */
+.action-buttons.modern-style .post-button {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 10, 0.85);
+  color: white;
+  border: none;
+  z-index: 100;
+  overflow: visible;
+  transition: all 0.2s ease;
+  position: relative;
+  gap: 3px;
+}
+
+.action-buttons.modern-style .post-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
+  -webkit-mask: radial-gradient(transparent 33px, #000 33px, #000 36px, transparent 36px);
+  mask: radial-gradient(transparent 33px, #000 33px, #000 36px, transparent 36px);
+  animation: ringRotation 12s linear infinite;
+  z-index: 0;
+}
+
+.action-buttons.modern-style .post-button:hover {
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+}
+
+.action-buttons.modern-style .post-button:active {
+  transform: translateX(-50%) scale(0.95);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.action-buttons.modern-style .post-button svg {
+  width: 24px;
+  height: 24px;
+  stroke: #25aa35;
+  fill: none;
+  filter: drop-shadow(0 0 2px rgba(37, 170, 53, 0.5));
+  position: relative;
+  z-index: 2;
+  stroke-width: 2;
+}
+
+.action-buttons.modern-style .post-button span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #25aa35;
+  filter: drop-shadow(0 0 2px rgba(37, 170, 53, 0.5));
+  position: relative;
+  z-index: 2;
+}
+
 /* Rainbow rim effect for action buttons */
 .action-buttons.modern-style .action-button::before {
   content: '';
