@@ -181,7 +181,7 @@
   height: 70px;
   border-radius: 50%;
   border: none;
-  background-color: #333;
+  background-color: #111;
   color: white;
   display: flex;
   align-items: center;
@@ -190,8 +190,7 @@
   font-size: 14px;
   position: absolute;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  transition: transform 0.15s ease;
   overflow: hidden;
   position: relative;
   z-index: 1;
@@ -207,21 +206,9 @@
   transform: translateX(-50%);
 }
 
-.action-buttons.modern-style .action-button.bottom::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  background: linear-gradient(45deg, #ffdd00, #ffe633, #ffef66, #ffdd00);
-  border-radius: 50%;
-  z-index: -1;
-  animation: rotate 3s linear infinite;
-}
-
+/* Trophy button style */
 .action-buttons.modern-style .action-button.trophy-button svg {
-  color: #ffdd00; /* Yellow */
+  color: white;
 }
 
 .action-buttons.modern-style .action-button.right {
@@ -230,21 +217,9 @@
   transform: translateY(-50%);
 }
 
-.action-buttons.modern-style .action-button.right::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  background: linear-gradient(45deg, #ff4d4d, #ff6b6b, #ff8989, #ff4d4d);
-  border-radius: 50%;
-  z-index: -1;
-  animation: rotate 3s linear infinite;
-}
-
+/* Save button style */
 .action-buttons.modern-style .action-button.save-button svg {
-  color: #ff4d4d; /* Red */
+  color: white;
 }
 
 .action-buttons.modern-style .action-button.left {
@@ -253,21 +228,9 @@
   transform: translateY(-50%);
 }
 
-.action-buttons.modern-style .action-button.left::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  background: linear-gradient(45deg, #4287f5, #42a5f5, #42c5f5, #4287f5);
-  border-radius: 50%;
-  z-index: -1;
-  animation: rotate 3s linear infinite;
-}
-
+/* Comment button style */
 .action-buttons.modern-style .action-button.comment-button svg {
-  color: #4287f5; /* Blue */
+  color: white;
 }
 
 .action-buttons.modern-style .action-button.top {
@@ -276,39 +239,33 @@
   transform: translateX(-50%);
 }
 
-.action-buttons.modern-style .action-button.top::before {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  background: linear-gradient(45deg, #4caf50, #6abf6e, #88cf8c, #4caf50);
-  border-radius: 50%;
-  z-index: -1;
-  animation: rotate 3s linear infinite;
-}
-
+/* Like button style */
 .action-buttons.modern-style .action-button.like-button svg {
-  color: #4caf50; /* Green */
+  color: white;
 }
 
-/* Rainbow rim effect for action buttons */
 .action-buttons.modern-style .action-button::before {
   content: '';
   position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
   border-radius: 50%;
-  background: linear-gradient(90deg, #00c9ff, #e100ff, #ff0, #20ff00, #00c9ff);
-  background-size: 300% 300%;
+  background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
   z-index: -1;
-  -webkit-mask: radial-gradient(transparent 33px, #000 33px, #000 35px, transparent 35px);
-  mask: radial-gradient(transparent 33px, #000 33px, #000 35px, transparent 35px);
-  animation: ringRotation 12s linear infinite;
-  z-index: 0;
+  animation: ringRotation 8s linear infinite;
+}
+
+.action-buttons.modern-style .action-button svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+  position: relative;
+  z-index: 2;
+  stroke-width: 0;
+  fill: white;
+  color: white;
 }
 
 /* Green POST Button Styling */
