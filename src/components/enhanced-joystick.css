@@ -207,6 +207,14 @@
 }
 
 /* Trophy button style */
+.action-buttons.modern-style .action-button.trophy-button {
+  background-color: #111;
+}
+
+.action-buttons.modern-style .action-button.trophy-button::before {
+  background: linear-gradient(90deg, #ffbb00, #ffd700, #ffbb00);
+}
+
 .action-buttons.modern-style .action-button.trophy-button svg {
   color: white;
 }
@@ -218,6 +226,14 @@
 }
 
 /* Save button style */
+.action-buttons.modern-style .action-button.save-button {
+  background-color: #111;
+}
+
+.action-buttons.modern-style .action-button.save-button::before {
+  background: linear-gradient(90deg, #00a651, #00c853, #00a651);
+}
+
 .action-buttons.modern-style .action-button.save-button svg {
   color: white;
 }
@@ -229,6 +245,14 @@
 }
 
 /* Comment button style */
+.action-buttons.modern-style .action-button.comment-button {
+  background-color: #111;
+}
+
+.action-buttons.modern-style .action-button.comment-button::before {
+  background: linear-gradient(90deg, #0066cc, #1a8cff, #0066cc);
+}
+
 .action-buttons.modern-style .action-button.comment-button svg {
   color: white;
 }
@@ -240,6 +264,14 @@
 }
 
 /* Like button style */
+.action-buttons.modern-style .action-button.like-button {
+  background-color: #111;
+}
+
+.action-buttons.modern-style .action-button.like-button::before {
+  background: linear-gradient(90deg, #e30b5c, #ff1744, #e30b5c);
+}
+
 .action-buttons.modern-style .action-button.like-button svg {
   color: white;
 }
@@ -252,9 +284,8 @@
   right: -2px;
   bottom: -2px;
   border-radius: 50%;
-  background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
   z-index: -1;
-  animation: ringRotation 8s linear infinite;
+  animation: none;
 }
 
 .action-buttons.modern-style .action-button svg {

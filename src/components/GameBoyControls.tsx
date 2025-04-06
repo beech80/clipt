@@ -308,13 +308,20 @@ const GameBoyControls: React.FC = () => {
   };
 
   // Handle action button click
-  const handleActionButtonClick = (action: 'like' | 'comment' | 'rank' | 'save') => {
+  const handleActionButtonClick = (action: 'like' | 'comment' | 'rank' | 'save' | 'post') => {
+    // Allow post button to work without a post ID
+    if (action === 'post') {
+      navigate('/create');
+      return;
+    }
+    
+    // Other actions require a post ID
     if (!currentPostId) return;
     
+    // Handle the appropriate action
     switch(action) {
       case 'like':
         setLikeActive(!likeActive);
-        // Like post logic would go here
         console.log('Like post action for:', currentPostId);
         break;
       case 'comment':
@@ -398,22 +405,22 @@ const GameBoyControls: React.FC = () => {
         </div>
       )}
 
-      {/* Diamond action buttons based on the reference image */}
+      {/* Diamond action buttons in Xbox controller format */}
       <div className="action-buttons modern-style">
-        {/* Save button (right - red) */}
+        {/* Comment button (top - blue) */}
         <button 
-          className={`action-button save-button right ${saveActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('save')}
-          aria-label="Save post"
+          className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('comment')}
+          aria-label="Comment"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v12h14V6H5zm8 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
         </button>
         
-        {/* Like button (top - green) */}
+        {/* Like button (left - red) */}
         <button 
-          className={`action-button like-button top ${likeActive ? 'active' : ''}`}
+          className={`action-button like-button left ${likeActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('like')}
           aria-label="Like post"
         >
@@ -422,14 +429,14 @@ const GameBoyControls: React.FC = () => {
           </svg>
         </button>
         
-        {/* Comment button (left - blue) */}
+        {/* Save button (right - green) */}
         <button 
-          className={`action-button comment-button left ${commentActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('comment')}
-          aria-label="Comment"
+          className={`action-button save-button right ${saveActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('save')}
+          aria-label="Save post"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v12h14V6H5zm8 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
           </svg>
         </button>
         
