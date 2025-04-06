@@ -400,42 +400,7 @@ const GameBoyControls: React.FC = () => {
 
       {/* Diamond action buttons based on Image 3 */}
       <div className="action-buttons modern-style">
-        {/* Heart button (top) */}
-        <button 
-          className={`action-button x ${likeActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('like')}
-          aria-label="Like post"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-          </svg>
-        </button>
-        
-        {/* Comment button (right) */}
-        <button 
-          className={`action-button b ${commentActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('comment')}
-          aria-label="Comment"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-        </button>
-        
-        {/* Plus button (left) */}
-        <button 
-          className={`action-button a ${saveActive ? 'active' : ''}`}
-          onClick={() => handleActionButtonClick('save')}
-          aria-label="Save post"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="12" y1="8" x2="12" y2="16"></line>
-            <line x1="8" y1="12" x2="16" y2="12"></line>
-          </svg>
-        </button>
-        
-        {/* Trophy button (bottom) */}
+        {/* Trophy button (top) */}
         <button 
           className={`action-button y ${rankActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('rank')}
@@ -448,6 +413,41 @@ const GameBoyControls: React.FC = () => {
             <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C8.55 18.37 8 18.97 8 19.69V22"></path>
             <path d="M14 14.66V17c0 .55.47.98.97 1.21C15.45 18.37 16 18.97 16 19.69V22"></path>
             <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+          </svg>
+        </button>
+        
+        {/* Like button (right) */}
+        <button 
+          className={`action-button b ${likeActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('like')}
+          aria-label="Like post"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </button>
+        
+        {/* Comment button (left) */}
+        <button 
+          className={`action-button x ${commentActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('comment')}
+          aria-label="Comment"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
+        
+        {/* Save button (bottom) */}
+        <button 
+          className={`action-button a ${saveActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('save')}
+          aria-label="Save post"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="12" y1="8" x2="12" y2="16"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
           </svg>
         </button>
       </div>
