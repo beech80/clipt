@@ -175,8 +175,8 @@
 }
 
 .action-buttons.modern-style .action-button {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   position: absolute;
   cursor: pointer;
@@ -184,14 +184,12 @@
   align-items: center;
   justify-content: center;
   z-index: 100;
-  overflow: hidden;
+  overflow: visible;
   transition: all 0.2s ease;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+  background-color: rgba(0, 0, 10, 0.85);
   color: white;
-  font-weight: bold;
-  font-family: Arial, sans-serif;
-  font-size: 16px;
-  border: 2px solid rgba(0, 0, 0, 0.3);
+  position: relative; /* For absolute positioning of the rainbow rim */
+  border: none;
 }
 
 .action-buttons.modern-style .action-button:hover {
@@ -205,61 +203,90 @@
 }
 
 .action-buttons.modern-style .action-button svg {
-  width: 15px;
-  height: 15px;
-  display: none; /* Hide the SVG icons to show the letters instead */
+  width: 16px;
+  height: 16px;
+  display: block; /* Show the SVG icons */
+  position: relative;
+  z-index: 2;
+  stroke-width: 2.5;
 }
 
 .action-buttons.modern-style .action-button.y {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #ffcc00;
+  background-color: rgba(10, 10, 20, 0.8);
 }
 
-.action-buttons.modern-style .action-button.y::after {
-  content: 'Y';
+.action-buttons.modern-style .action-button.y svg {
+  stroke: #ffdd00;
+  fill: none;
+  filter: drop-shadow(0 0 2px rgba(255, 221, 0, 0.5));
 }
 
 .action-buttons.modern-style .action-button.b {
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  background-color: #ff3e4e;
+  background-color: rgba(10, 10, 20, 0.8);
 }
 
-.action-buttons.modern-style .action-button.b::after {
-  content: 'B';
+.action-buttons.modern-style .action-button.b svg {
+  stroke: #ff2040;
+  fill: none;
+  filter: drop-shadow(0 0 2px rgba(255, 32, 64, 0.5));
 }
 
 .action-buttons.modern-style .action-button.x {
   top: 50%;
   left: 0;
   transform: translateY(-50%);
-  background-color: #00a0ff;
+  background-color: rgba(10, 10, 20, 0.8);
 }
 
-.action-buttons.modern-style .action-button.x::after {
-  content: 'X';
+.action-buttons.modern-style .action-button.x svg {
+  stroke: #00a8ff;
+  fill: none;
+  filter: drop-shadow(0 0 2px rgba(0, 168, 255, 0.5));
 }
 
 .action-buttons.modern-style .action-button.a {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #1f8130;
+  background-color: rgba(10, 10, 20, 0.8);
 }
 
-.action-buttons.modern-style .action-button.a::after {
-  content: 'A';
+.action-buttons.modern-style .action-button.a svg {
+  stroke: #25aa35;
+  fill: none;
+  filter: drop-shadow(0 0 2px rgba(37, 170, 53, 0.5));
 }
 
+/* Animation for rainbow rim rotation */
+@keyframes ringRotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 
-
-.action-buttons.modern-style .action-button::after {
-  font-size: 18px;
-  font-weight: bold;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+/* Rainbow rim effect for action buttons */
+.action-buttons.modern-style .action-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
+  -webkit-mask: radial-gradient(transparent 19px, #000 19px, #000 22px, transparent 22px);
+  mask: radial-gradient(transparent 19px, #000 19px, #000 22px, transparent 22px);
+  animation: ringRotation 12s linear infinite;
+  z-index: 0;
 }
 
 /* CLIPT Button based on Image 2 */
