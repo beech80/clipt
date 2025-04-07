@@ -608,7 +608,9 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('comment')}
           aria-label="Comment"
         >
-          <MessageSquare size={20} fill="#1a8cff" color="#1a8cff" strokeWidth={1.5} />
+          <div className="button-icon-container blue">
+            <MessageSquare size={18} fill="white" color="white" strokeWidth={1.5} />
+          </div>
         </button>
         
         {/* Like button (left - red) */}
@@ -617,7 +619,9 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('like')}
           aria-label="Like post"
         >
-          <Heart size={20} fill="#ff3366" color="#ff3366" strokeWidth={1.5} />
+          <div className="button-icon-container red">
+            <Heart size={18} fill="white" color="white" strokeWidth={1.5} />
+          </div>
         </button>
         
         {/* Save button (right - green) - changed from follow to save */}
@@ -626,7 +630,9 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('save')}
           aria-label="Save video to bookmarks"
         >
-          <Bookmark size={20} fill="#00cc66" color="#00cc66" strokeWidth={1.5} />
+          <div className="button-icon-container green">
+            <Bookmark size={18} fill="white" color="white" strokeWidth={1.5} />
+          </div>
         </button>
         
         {/* Trophy button (bottom - yellow) */}
@@ -635,10 +641,12 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('rank')}
           aria-label="Rank post"
         >
-          <Award size={20} fill="#ffcc00" color="#ffcc00" strokeWidth={1.5} />
-          {rankActive && currentRank > 0 && (
-            <span className="rank-indicator">{currentRank}</span>
-          )}
+          <div className="button-icon-container yellow">
+            <Award size={18} fill="white" color="white" strokeWidth={1.5} />
+            {rankActive && currentRank > 0 && (
+              <span className="rank-indicator">{currentRank}</span>
+            )}
+          </div>
         </button>
       </div>
     </div>
