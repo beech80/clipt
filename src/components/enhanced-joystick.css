@@ -997,38 +997,20 @@
   z-index: 2;
 }
 
-/* Button icon containers for colored backgrounds */
-.button-icon-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+/* Action button styles for icons with no backgrounds */
+.action-button svg {
   position: relative;
   z-index: 2;
-}
-
-.button-icon-container.blue {
-  background-color: #1a8cff;
-}
-
-.button-icon-container.red {
-  background-color: #ff3366;
-}
-
-.button-icon-container.green {
-  background-color: #00cc66;
-}
-
-.button-icon-container.yellow {
-  background-color: #ffcc00;
 }
 
 /* Rainbow outline around action buttons */
 .action-button {
   position: relative;
   padding: 0;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-button::before {
