@@ -959,6 +959,18 @@
   animation: ringRotation 12s linear infinite;
 }
 
+.action-button::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  background-color: rgb(15, 16, 36);
+  z-index: -1;
+}
+
 .action-button {
   width: 42px;
   height: 42px;
@@ -973,13 +985,14 @@
   transition: transform 0.15s;
   z-index: 5;
   background-color: rgb(15, 16, 36);
+  box-shadow: none;
 }
 
 
 
 .action-buttons.diamond-layout .action-button svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   position: relative;
   z-index: 2;
 }
