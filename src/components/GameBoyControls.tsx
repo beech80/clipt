@@ -399,8 +399,8 @@ const GameBoyControls: React.FC = () => {
 
       {/* Note: Game Menu moved to a separate route page */}
 
-      {/* Action buttons with rainbow rims in Xbox-style layout */}
-      <div className="action-buttons xbox-layout">
+      {/* Action buttons with rainbow rims in diamond layout */}
+      <div className="action-buttons diamond-layout">
         {/* Comment button (top - blue) */}
         <button 
           className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
