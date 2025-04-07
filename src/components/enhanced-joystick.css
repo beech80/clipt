@@ -901,25 +901,25 @@
 .action-button.top {
   grid-area: top;
   justify-self: center;
-  background-color: #1a8cff;
+  background-color: transparent;
 }
 
 .action-button.left {
   grid-area: left;
   justify-self: center;
-  background-color: #ff3366;
+  background-color: transparent;
 }
 
 .action-button.right {
   grid-area: right;
   justify-self: center;
-  background-color: #00cc66;
+  background-color: transparent;
 }
 
 .action-button.bottom {
   grid-area: bottom;
   justify-self: center;
-  background-color: #ffcc00;
+  background-color: transparent;
 }
 
 /* Scale icons to be more visible */
