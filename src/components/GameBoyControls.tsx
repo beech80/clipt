@@ -383,10 +383,10 @@ const GameBoyControls: React.FC = () => {
           </svg>
         </button>
         
-        {/* Center button - Camera/POST - Updated to match image 2 */}
+        {/* Center button - Camera/POST - Updated to navigate directly to clip editor */}
         <button 
           className="menu-button camera-button"
-          onClick={() => navigate('/post/new')}
+          onClick={() => navigate('/clip-editor/new')}
           aria-label="Post a new clip"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
