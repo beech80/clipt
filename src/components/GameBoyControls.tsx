@@ -392,19 +392,9 @@ const GameBoyControls: React.FC = () => {
     setMenuVisible(false);
   };
 
-  // Handle the select button (now share options)
+  // Handle the select button (menu navigation)
   const handleSelectButtonClick = () => {
-    // Show share options toast
-    toast.success('Share options', {
-      description: 'Share to social media',
-      action: {
-        label: 'Copy Link',
-        onClick: () => {
-          // Would normally copy link to clipboard
-          toast.success('Link copied to clipboard');
-        }
-      },
-    });
+    navigate('/game-menu');
   };
 
   // Handle action button click
@@ -560,12 +550,12 @@ const GameBoyControls: React.FC = () => {
         <button 
           className="menu-button menu-left" 
           onClick={handleSelectButtonClick} 
-          aria-label="Share options"
+          aria-label="Toggle game menu"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9b59b6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="1"></circle>
-            <circle cx="12" cy="5" r="1"></circle>
-            <circle cx="12" cy="19" r="1"></circle>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
         
