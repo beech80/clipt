@@ -954,7 +954,7 @@
   right: -2px;
   bottom: -2px;
   border-radius: 50%;
-  background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
+  background: conic-gradient(from 0deg, #ff00f5, #0092ff, #00ff00, #ffea00, #ff0000, #ff00f5);
   z-index: -1;
   animation: ringRotation 12s linear infinite;
 }
