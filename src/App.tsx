@@ -65,6 +65,7 @@ const VideoDebug = React.lazy(() => import('./pages/VideoDebug'));
 const StreamSetup = React.lazy(() => import('./pages/StreamSetup'));
 const StreamView = React.lazy(() => import('./pages/StreamView'));
 const Saved = React.lazy(() => import('./pages/Saved'));
+const ClipEditor = React.lazy(() => import('./pages/ClipEditor'));
 
 // Protected route component to prevent redirecting authenticated users to login/signup
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -154,6 +155,7 @@ function AppContent() {
       {/* <Route path="/posts" element={<Home />} /> */}
       <Route path="/trophies" element={<TopClipts />} />
       <Route path="/saved" element={<Saved />} />
+      <Route path="/clip-editor/:id" element={<ClipEditor />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/game-menu" element={<GameMenu />} />
       <Route path="*" element={<NotFound />} />
