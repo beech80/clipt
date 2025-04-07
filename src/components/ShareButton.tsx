@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Share2, Check, Copy, Twitter, Facebook, Link as LinkIcon, MessageCircle } from 'lucide-react';
+import { Share2, Check, Copy, Twitter, Facebook, Link as LinkIcon, MessageCircle, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -144,7 +144,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '', iconO
             }
           }}
         >
-          <Share2 className={`h-6 w-6 text-purple-400 group-hover:text-purple-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90 ${iconClassName}`} />
+          <MoreVertical className={`h-6 w-6 text-purple-400 group-hover:text-purple-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90 ${iconClassName}`} />
           {!iconOnly && (
             <span className="text-base font-medium text-gray-400 group-hover:text-purple-300 ml-1">
               Share
