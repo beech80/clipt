@@ -996,3 +996,50 @@
   position: relative;
   z-index: 2;
 }
+
+/* Button icon containers for colored backgrounds */
+.button-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+}
+
+.button-icon-container.blue {
+  background-color: #1a8cff;
+}
+
+.button-icon-container.red {
+  background-color: #ff3366;
+}
+
+.button-icon-container.green {
+  background-color: #00cc66;
+}
+
+.button-icon-container.yellow {
+  background-color: #ffcc00;
+}
+
+/* Rainbow outline around action buttons */
+.action-button {
+  position: relative;
+  padding: 0;
+}
+
+.action-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
+  animation: ringRotation 12s linear infinite;
+  z-index: 1;
+}
