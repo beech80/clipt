@@ -387,10 +387,45 @@ const GameBoyControls: React.FC = () => {
 
       {/* Game Menu - Updated to match Image 1 */}
       {menuVisible && (
-        <div className="game-menu">
+        <div className="game-menu" onClick={(e) => {
+          // Close the menu if clicking on the overlay (outside of the content)
+          if (e.target === e.currentTarget) {
+            setMenuVisible(false);
+          }
+        }}>
           <div className="game-menu-content">
             <h2>GAME MENU</h2>
             <div className="menu-grid">
+              {/* Home */}
+              <div className="menu-item" onClick={() => { navigate('/'); setMenuVisible(false); }}>
+                <div className="menu-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  </svg>
+                </div>
+                <div className="menu-text">
+                  <h3>Home</h3>
+                  <p>Main feed</p>
+                </div>
+                <div className="menu-arrow">▶</div>
+              </div>
+
+              {/* Select Game */}
+              <div className="menu-item" onClick={() => { navigate('/select-game'); setMenuVisible(false); }}>
+                <div className="menu-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                  </svg>
+                </div>
+                <div className="menu-text">
+                  <h3>Select Game</h3>
+                  <p>Choose your game</p>
+                </div>
+                <div className="menu-arrow">▶</div>
+              </div>
+
               {/* Settings */}
               <div className="menu-item" onClick={() => { navigate('/settings'); setMenuVisible(false); }}>
                 <div className="menu-icon">
