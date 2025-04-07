@@ -726,11 +726,12 @@
 }
 
 .post-action-button {
-  width: 65px;
-  height: 65px;
-  border-radius: 50%;
+  width: 80px;
+  height: 40px;
+  border-radius: 20px;
   border: none;
   background-color: #111144;
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -739,6 +740,7 @@
   transition: transform 0.15s ease;
   overflow: hidden;
   z-index: 1;
+  font-weight: bold;
 }
 
 .post-action-button::before {
@@ -748,7 +750,7 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  border-radius: 50%;
+  border-radius: 20px;
   z-index: -1;
   background: linear-gradient(90deg, #ff00cc, #3393ff, #00ffa2, #ffcc00, #ff00cc);
   animation: rainbow-border 3s linear infinite;
@@ -756,8 +758,9 @@
 }
 
 .post-action-button svg {
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
 }
 
 .post-button {
@@ -891,20 +894,24 @@
   stroke: #ffcc00;
 }
 
-/* Horizontal button layout matching the new image */
-.action-buttons.horizontal-style {
+/* Diamond layout matching both images */
+.action-buttons.diamond-layout {
   position: fixed;
   bottom: 80px;
   right: 30px;
-  width: 220px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 10px;
+  width: 200px;
+  height: 200px;
+  background: transparent;
+  display: grid;
+  grid-template-areas:
+    ". top ."
+    "left . right"
+    ". bottom .";
+  gap: 15px;
   z-index: 1000;
 }
 
-.action-buttons.horizontal-style .action-button {
+.action-buttons.diamond-layout .action-button {
   width: 65px;
   height: 65px;
   border-radius: 50%;
@@ -920,7 +927,7 @@
   z-index: 1;
 }
 
-.action-buttons.horizontal-style .action-button::before {
+.action-buttons.diamond-layout .action-button::before {
   content: '';
   position: absolute;
   top: -2px;
@@ -934,21 +941,29 @@
   background-size: 200% 200%;
 }
 
-/* Positioning for horizontal layout */
-.action-buttons.horizontal-style .action-button.top, 
-.action-buttons.horizontal-style .action-button.left, 
-.action-buttons.horizontal-style .action-button.right {
-  flex: 0 0 auto;
+/* Positioning for diamond layout */
+.action-buttons.diamond-layout .action-button.top {
+  grid-area: top;
+  justify-self: center;
 }
 
-.action-buttons.horizontal-style .action-button.bottom {
-  margin-top: 5px;
-  margin-left: auto;
-  margin-right: auto;
+.action-buttons.diamond-layout .action-button.left {
+  grid-area: left;
+  justify-self: center;
+}
+
+.action-buttons.diamond-layout .action-button.right {
+  grid-area: right;
+  justify-self: center;
+}
+
+.action-buttons.diamond-layout .action-button.bottom {
+  grid-area: bottom;
+  justify-self: center;
 }
 
 /* Scale icons to be more visible */
-.action-buttons.horizontal-style .action-button svg {
+.action-buttons.diamond-layout .action-button svg {
   width: 28px;
   height: 28px;
 }
