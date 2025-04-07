@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Video } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface VideoUploadProps {
   selectedVideo: File | null;
@@ -19,7 +22,10 @@ const VideoUpload = ({
   uploadProgress = 0,
   setUploadProgress = () => {} 
 }: VideoUploadProps) => {
-  const handleVideoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isUploading, setIsUploading] = useState(false);
+  const handleVideoSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 100000000) { // 100MB limit
@@ -40,8 +46,78 @@ const VideoUpload = ({
         return;
       }
 
-      setUploadProgress(0);
-      onVideoSelect(file);
+      try {
+        setIsUploading(true);
+        setUploadProgress(0);
+        onVideoSelect(file);
+
+        // Start the upload process immediately
+        const toastId = toast.loading("Uploading video...");
+        
+        // Upload the video file to storage
+        const fileName = `${user.id}-${Date.now()}-${file.name}`;
+        const filePath = `uploads/videos/${fileName}`;
+        
+        // Set up progress monitoring
+        const uploadProgress = (progress: number) => {
+          setUploadProgress(progress);
+        };
+        
+        // Upload to storage
+        const { data, error } = await supabase.storage
+          .from('media')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+            onUploadProgress: (event) => {
+              const progress = Math.round((event.loaded / event.total) * 100);
+              uploadProgress(progress);
+            }
+          });
+
+        if (error) {
+          throw error;
+        }
+        
+        // Get the public URL
+        const { data: urlData } = await supabase.storage
+          .from('media')
+          .getPublicUrl(filePath);
+        
+        if (!urlData?.publicUrl) {
+          throw new Error('Failed to get public URL');
+        }
+        
+        // Create a temporary clip record
+        const { data: clipData, error: clipError } = await supabase
+          .from('clips')
+          .insert([{
+            user_id: user.id,
+            video_url: urlData.publicUrl,
+            status: 'draft',
+            created_at: new Date().toISOString()
+          }])
+          .select()
+          .single();
+        
+        if (clipError) {
+          throw clipError;
+        }
+
+        toast.dismiss(toastId);
+        toast.success("Video uploaded! Redirecting to editor...");
+        
+        // Navigate to the clip editor with the new clip ID
+        setTimeout(() => {
+          navigate(`/clip-editor/${clipData.id}`);
+        }, 1000);
+      } catch (error) {
+        console.error('Error uploading video:', error);
+        toast.error(`Upload failed: ${error.message || 'Unknown error'}`);
+        setIsUploading(false);
+        setUploadProgress(0);
+        onVideoSelect(null);
+      }
     }
   };
 
@@ -89,9 +165,10 @@ const VideoUpload = ({
         variant="ghost"
         onClick={() => videoInputRef.current?.click()}
         className="text-muted-foreground"
+        disabled={isUploading}
       >
         <Video className="w-4 h-4 mr-2" />
-        Add Video
+        {isUploading ? 'Uploading...' : 'Add Video'}
       </Button>
       <input
         type="file"

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Gamepad2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Gamepad2, ChevronLeft, ChevronRight, Edit } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import PhotoCollage from './PhotoCollage';
 import { debugVideoElement } from '@/utils/debugVideos';
 import FallbackVideoPlayer from '../video/FallbackVideoPlayer';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface PostContentProps {
   imageUrl?: string | null;
@@ -16,6 +18,7 @@ interface PostContentProps {
 }
 
 const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage = false }: PostContentProps) => {
+  const navigate = useNavigate();
   const [isMediaLoaded, setIsMediaLoaded] = useState(false);
   const [isMediaError, setIsMediaError] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -259,17 +262,39 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
               )}
               {videoUrl && (
                 <div className={`relative w-full overflow-hidden ${hasMultipleImages ? '' : aspectRatioClass}`}>
-                  <FallbackVideoPlayer 
-                    videoUrl={videoUrl} 
-                    postId={postId}
-                    onLoad={handleMediaLoad}
-                    onError={() => handleVideoError(null)}
-                    controls={!isCliptsPage} // No controls on Clipts page
-                    autoPlay={true} // Always attempt autoplay
-                    muted={compact}
-                    loop={true}
-                    className={`${isCliptsPage ? 'object-cover w-screen h-screen fixed inset-0' : 'object-cover w-full h-full rounded-none'}`}
-                  />
+                  <div className="group relative">
+                    <FallbackVideoPlayer 
+                      videoUrl={videoUrl} 
+                      postId={postId}
+                      onLoad={handleMediaLoad}
+                      onError={() => handleVideoError(null)}
+                      controls={!isCliptsPage} // No controls on Clipts page
+                      autoPlay={true} // Always attempt autoplay
+                      muted={compact}
+                      loop={true}
+                      className={`${isCliptsPage ? 'object-cover w-screen h-screen fixed inset-0' : 'object-cover w-full h-full rounded-none cursor-pointer'}`}
+                      onClick={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        navigate(`/clip-editor/${postId}`);
+                      }}
+                    />
+                    
+                    {/* Edit button overlay */}
+                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="bg-gaming-800/80 hover:bg-gaming-700 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/clip-editor/${postId}`);
+                        }}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit Clip
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               )}
             </>

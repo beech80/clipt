@@ -12,6 +12,7 @@ interface FallbackVideoPlayerProps {
   controls?: boolean;
   muted?: boolean;
   loop?: boolean;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 const videoTypes = [
@@ -38,6 +39,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
   controls = true,
   muted = true,
   loop = true,
+  onClick,
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -275,11 +277,13 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
           width: '100%', 
           height: '100%', 
           objectFit: 'contain',
-          visibility: 'visible' /* Ensure video is visible */
+          visibility: 'visible' /* Ensure video is visible */,
+          cursor: onClick ? 'pointer' : 'default'
         }}
         onLoadedData={handleLoadSuccess}
         onCanPlay={handleLoadSuccess}
         onPlay={() => setShowPlayButton(false)}
+        onClick={onClick}
         onError={() => {
           console.error(`Video error for attempt ${attemptCount}`);
           tryNextFallback();
