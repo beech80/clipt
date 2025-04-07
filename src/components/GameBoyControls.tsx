@@ -372,15 +372,14 @@ const GameBoyControls: React.FC = () => {
         </button>
 
         <button 
-          className="post-button"
+          className="action-button post-action-button"
           onClick={() => handleActionButtonClick('post')}
           aria-label="Post new content"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#00aaff" stroke="#00aaff" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
             <circle cx="12" cy="13" r="4"></circle>
           </svg>
-          <span>POST</span>
         </button>
       </div>
 
@@ -411,8 +410,8 @@ const GameBoyControls: React.FC = () => {
         </div>
       )}
 
-      {/* Diamond action buttons in Xbox controller format with rainbow rims */}
-      <div className="action-buttons modern-style">
+      {/* Action buttons with rainbow rims in horizontal layout */}
+      <div className="action-buttons horizontal-style">
         {/* Comment button (top - blue) */}
         <button 
           className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
