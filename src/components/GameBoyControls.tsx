@@ -371,6 +371,17 @@ const GameBoyControls: React.FC = () => {
           </svg>
         </button>
 
+        <button 
+          className="post-button"
+          onClick={() => handleActionButtonClick('post')}
+          aria-label="Post new content"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          <span>POST</span>
+        </button>
       </div>
 
       {/* Game Menu */}
@@ -401,7 +412,7 @@ const GameBoyControls: React.FC = () => {
       )}
 
       {/* Diamond action buttons in Xbox controller format with rainbow rims */}
-      <div className="action-buttons simple-diamond">
+      <div className="action-buttons modern-style">
         {/* Comment button (top - blue) */}
         <button 
           className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
@@ -444,19 +455,6 @@ const GameBoyControls: React.FC = () => {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffcc00" stroke="#ffcc00" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 2H6v7a6 6 0 0 0 12 0V2zM6 9H4.5a2.5 2.5 0 0 1 0-5H6m12 5h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C8.55 18.37 8 18.97 8 19.69V22m6-7.34V17c0 .55.47.98.97 1.21c.48.16 1.03.76 1.03 1.48V22"/>
           </svg>
-        </button>
-        
-        {/* Green POST button underneath */}
-        <button 
-          className="post-button"
-          onClick={() => handleActionButtonClick('post')}
-          aria-label="Post new content"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-            <circle cx="12" cy="13" r="4"></circle>
-          </svg>
-          <span>POST</span>
         </button>
       </div>
     </div>
