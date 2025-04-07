@@ -35,6 +35,7 @@ const AllStreamers = React.lazy(() => import('./pages/AllStreamers'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Menu = React.lazy(() => import('./pages/Menu'));
 const Profile = React.lazy(() => import('./pages/Profile'));
+const GameMenu = React.lazy(() => import('./pages/GameMenu'));
 const Notifications = React.lazy(() => import('./pages/Notifications'));
 // Fix the problematic imports with more reliable patterns
 const Streaming = React.lazy(() => 
@@ -154,6 +155,7 @@ function AppContent() {
       <Route path="/trophies" element={<TopClipts />} />
       <Route path="/saved" element={<Saved />} />
       <Route path="/notifications" element={<Notifications />} />
+      <Route path="/game-menu" element={<GameMenu />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
