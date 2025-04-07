@@ -170,9 +170,12 @@
   width: 180px;
   height: 180px;
   background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template-areas:
+    ". top ."
+    "left . right"
+    ". bottom .";
+  gap: 15px;
   z-index: 1000;
 }
 
@@ -201,9 +204,8 @@
 }
 
 .action-buttons.modern-style .action-button.bottom {
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  grid-area: bottom;
+  justify-self: center;
 }
 
 /* Trophy button style */
@@ -211,18 +213,15 @@
   background-color: #111;
 }
 
-.action-buttons.modern-style .action-button.trophy-button::before {
-  background: linear-gradient(90deg, #ffbb00, #ffd700, #ffbb00);
-}
+/* Don't need individual button gradients as we're using the rainbow effect for all */
 
 .action-buttons.modern-style .action-button.trophy-button svg {
   color: white;
 }
 
 .action-buttons.modern-style .action-button.right {
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
+  grid-area: right;
+  justify-self: center;
 }
 
 /* Save button style */
@@ -230,18 +229,15 @@
   background-color: #111;
 }
 
-.action-buttons.modern-style .action-button.save-button::before {
-  background: linear-gradient(90deg, #00a651, #00c853, #00a651);
-}
+/* Don't need individual button gradients as we're using the rainbow effect for all */
 
 .action-buttons.modern-style .action-button.save-button svg {
   color: white;
 }
 
 .action-buttons.modern-style .action-button.left {
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
+  grid-area: left;
+  justify-self: center;
 }
 
 /* Comment button style */
@@ -249,18 +245,15 @@
   background-color: #111;
 }
 
-.action-buttons.modern-style .action-button.comment-button::before {
-  background: linear-gradient(90deg, #0066cc, #1a8cff, #0066cc);
-}
+/* Don't need individual button gradients as we're using the rainbow effect for all */
 
 .action-buttons.modern-style .action-button.comment-button svg {
   color: white;
 }
 
 .action-buttons.modern-style .action-button.top {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  grid-area: top;
+  justify-self: center;
 }
 
 /* Like button style */
@@ -268,9 +261,7 @@
   background-color: #111;
 }
 
-.action-buttons.modern-style .action-button.like-button::before {
-  background: linear-gradient(90deg, #e30b5c, #ff1744, #e30b5c);
-}
+/* Don't need individual button gradients as we're using the rainbow effect for all */
 
 .action-buttons.modern-style .action-button.like-button svg {
   color: white;
@@ -285,7 +276,9 @@
   bottom: -2px;
   border-radius: 50%;
   z-index: -1;
-  animation: none;
+  background: linear-gradient(90deg, #ff00cc, #3393ff, #00ffa2, #ffcc00, #ff00cc);
+  animation: rainbow-border 3s linear infinite;
+  background-size: 200% 200%;
 }
 
 .action-buttons.modern-style .action-button svg {
@@ -707,4 +700,63 @@
   to {
     opacity: 1;
   }
+}
+
+@keyframes rainbow-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* POST button styles */
+.post-button {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: #111;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  font-weight: bold;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.post-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 20px;
+  z-index: -1;
+  background: linear-gradient(90deg, #ff00cc, #3393ff, #00ffa2, #ffcc00, #ff00cc);
+  animation: rainbow-border 3s linear infinite;
+  background-size: 200% 200%;
+}
+
+.post-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.post-button:hover {
+  transform: scale(1.05);
 }

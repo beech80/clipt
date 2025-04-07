@@ -400,9 +400,18 @@ const GameBoyControls: React.FC = () => {
         </div>
       )}
 
-      {/* Diamond action buttons in Xbox controller format */}
+      {/* Diamond action buttons in Xbox controller format with rainbow rims */}
       <div className="action-buttons modern-style">
-
+        {/* Comment button (top - blue) */}
+        <button 
+          className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
+          onClick={() => handleActionButtonClick('comment')}
+          aria-label="Comment"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#1a8cff" stroke="#1a8cff" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
         
         {/* Like button (left - red) */}
         <button 
@@ -410,19 +419,19 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('like')}
           aria-label="Like post"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ff3366" stroke="#ff3366" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
           </svg>
         </button>
         
-        {/* Save button (right - green) */}
+        {/* Follow button (right - green) */}
         <button 
-          className={`action-button save-button right ${saveActive ? 'active' : ''}`}
+          className={`action-button follow-button right ${saveActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('save')}
-          aria-label="Save post"
+          aria-label="Follow user"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm0 2v12h14V6H5zm8 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm0 6a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#00cc66" stroke="#00cc66" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm9 11v-1a7 7 0 0 0-7-7h-4a7 7 0 0 0-7 7v1h2v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1h2z"/>
           </svg>
         </button>
         
@@ -432,7 +441,7 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('rank')}
           aria-label="Rank post"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffcc00" stroke="#ffcc00" strokeWidth="0" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 2H6v7a6 6 0 0 0 12 0V2zM6 9H4.5a2.5 2.5 0 0 1 0-5H6m12 5h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C8.55 18.37 8 18.97 8 19.69V22m6-7.34V17c0 .55.47.98.97 1.21c.48.16 1.03.76 1.03 1.48V22"/>
           </svg>
         </button>
