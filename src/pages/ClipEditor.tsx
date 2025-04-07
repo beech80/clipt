@@ -305,8 +305,10 @@ const ClipEditor = () => {
     }
     
     // Validate file size (100MB limit)
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error('Video file size must be less than 100MB');
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      toast.error(`Video file size must be less than 100MB. Your file is ${sizeMB}MB.`);
       return;
     }
     
@@ -320,13 +322,26 @@ const ClipEditor = () => {
       setIsUploading(true);
       setUploadProgress(0);
       
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('You must be logged in to upload videos');
+      }
+      
+      // Check file size again (max 100MB)
+      const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error(`File size exceeds the 100MB limit (Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB)`);
+      }
+      
       // Create a new clip ID
       const newClipId = uuidv4();
       setClipId(newClipId);
       
       // Generate file path
       const fileExt = file.name.split('.').pop();
-      const filePath = `clips/${newClipId}.${fileExt}`;
+      const filePath = `clips/${user.id}/${newClipId}.${fileExt}`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -351,8 +366,11 @@ const ClipEditor = () => {
         .from('clips')
         .insert({
           id: newClipId,
+          user_id: user.id,  // Add user_id to fix row-level security policy
           video_url: videoUrl,
-          status: 'draft'
+          title: file.name.split('.')[0], // Use filename as initial title
+          status: 'draft',
+          created_at: new Date().toISOString()
         });
       
       if (dbError) throw dbError;
