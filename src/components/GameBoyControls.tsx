@@ -419,7 +419,7 @@ const GameBoyControls: React.FC = () => {
           aria-label="Like post"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ff3366" stroke="none">
-            <path d="M12 8 C14 8 16 10 16 12 C16 14 14 16 12 18 C10 16 8 14 8 12 C8 10 10 8 12 8 Z" />
+            <path d="M12 8 C13.5 8 15 9 15 11 C15 12 14 13 13 13.5 C12.5 14 12 14 12 14 C12 14 11.5 14 11 13.5 C10 13 9 12 9 11 C9 9 10.5 8 12 8 Z" />
           </svg>
         </button>
         
@@ -430,7 +430,7 @@ const GameBoyControls: React.FC = () => {
           aria-label="Save video to bookmarks"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#00cc66" stroke="none">
-            <path d="M9 8 L15 8 L15 16 L12 13 L9 16 Z" />
+            <path d="M10 8 L14 8 L14 15 L12 13 L10 15 Z" />
           </svg>
         </button>
         
@@ -441,10 +441,9 @@ const GameBoyControls: React.FC = () => {
           aria-label="Rank post"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffcc00" stroke="none">
-            <path d="M12 8 L14.5 11 L12.5 11 L12.5 13 L11.5 13 L11.5 11 L9.5 11 Z" />
-            <rect x="10.5" y="13" width="3" height="1" />
-            <rect x="11" y="14" width="2" height="2.5" />
-            <rect x="9.5" y="16.5" width="5" height="1" />
+            <path d="M12 8 L14 10.5 L12 10.5 L12 12 L12 13 L11.5 13 L11.5 12 L11.5 10.5 L10 10.5 Z" />
+            <rect x="11" y="13" width="2" height="2" />
+            <rect x="10" y="15" width="4" height="1" />
           </svg>
         </button>
       </div>
