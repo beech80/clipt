@@ -28,8 +28,8 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
   const [retryCount, setRetryCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   
-  // For Clipts page, we want videos to fill the entire screen
-  const aspectRatioClass = isCliptsPage ? 'h-screen' : 'aspect-video';
+  // For Clipts page, we want videos to fill the screen but maintain aspect ratio
+  const aspectRatioClass = isCliptsPage ? 'h-auto max-h-screen' : 'aspect-video';
 
   // Fetch multiple images if available
   useEffect(() => {
@@ -226,26 +226,17 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
 
   return (
     <div className="relative w-full h-full">
-      {/* Media Content */}
       {videoUrl ? (
-        <div className={`relative w-full ${isCliptsPage ? 'h-full' : 'h-full'}`} style={{ 
-          aspectRatio: isCliptsPage ? '16/9' : '1/1', 
-          maxHeight: isCliptsPage ? 'none' : (compact ? '360px' : '90vh'),
-          display: 'block', 
-          minHeight: isCliptsPage ? 'calc(100vh - 120px)' : (compact ? '360px' : '360px'),
-          overflow: 'hidden',
-          width: '100%',
-          backgroundColor: 'transparent'
-        }}>
+        <div className="relative w-full h-full">
           {isMediaError ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
               <div className="text-center p-4">
                 <p>Unable to play video.</p>
-                <button 
+                <button
                   onClick={() => {
                     setIsMediaError(false);
                     setIsMediaLoaded(false);
-                    setRetryCount(prev => prev + 1); // Increment retry counter
+                    setRetryCount(prev => prev + 1);
                   }}
                   className="mt-2 px-2 py-1 bg-purple-700 rounded text-white text-xs"
                 >
@@ -254,50 +245,48 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
               </div>
             </div>
           ) : (
-            <>
-              {!isMediaLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-                  <div className="animate-pulse text-white">Loading video...</div>
+            <div className="group relative w-full h-full">
+              <video
+                key={`video-${postId}-${retryCount}`}
+                ref={videoRef}
+                src={videoUrl}
+                className={`w-full ${aspectRatioClass} object-contain bg-black`}
+                playsInline
+                loop
+                muted={false}
+                controls={!isCliptsPage}
+                autoPlay
+                onPlay={() => console.log(`Video playing: ${postId}`)}
+                onPause={() => console.log(`Video paused: ${postId}`)}
+                onLoadedData={handleMediaLoad}
+                onError={handleVideoError}
+                onClick={(e) => {
+                  // Only redirect to edit if not on Clipts page
+                  if (!isCliptsPage) {
+                    e.preventDefault();
+                    navigate(`/clip-editor/${postId}`);
+                  }
+                }}
+              />
+
+              {/* Only show edit button if not on Clipts page */}
+              {!isCliptsPage && (
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="bg-gaming-800/80 hover:bg-gaming-700 text-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/clip-editor/${postId}`);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Clip
+                  </Button>
                 </div>
               )}
-              {videoUrl && (
-                <div className={`relative w-full overflow-hidden ${hasMultipleImages ? '' : aspectRatioClass}`}>
-                  <div className="group relative">
-                    <FallbackVideoPlayer 
-                      videoUrl={videoUrl} 
-                      postId={postId}
-                      onLoad={handleMediaLoad}
-                      onError={() => handleVideoError(null)}
-                      controls={!isCliptsPage} // No controls on Clipts page
-                      autoPlay={true} // Always attempt autoplay
-                      muted={compact}
-                      loop={true}
-                      className={`${isCliptsPage ? 'object-cover w-screen h-screen fixed inset-0' : 'object-cover w-full h-full rounded-none cursor-pointer'}`}
-                      onClick={(e: React.MouseEvent) => {
-                        e.preventDefault();
-                        navigate(`/clip-editor/${postId}`);
-                      }}
-                    />
-                    
-                    {/* Edit button overlay */}
-                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="bg-gaming-800/80 hover:bg-gaming-700 text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/clip-editor/${postId}`);
-                        }}
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Clip
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </>
+            </div>
           )}
         </div>
       ) : imageUrls.length > 0 ? (
