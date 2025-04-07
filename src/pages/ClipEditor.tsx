@@ -500,37 +500,50 @@ const ClipEditor = () => {
             </div>
             
             <div className="p-4">
-              {videoUrl && (
-                <div className="flex flex-col sm:flex-row gap-4 items-center mb-4">
-                  <Button 
-                    variant="outline"
-                    onClick={handleTrim}
-                    className="flex-1 gap-2"
-                    disabled={!videoLoaded || (trimStart === 0 && trimEnd === videoDuration)}
-                  >
-                    <Scissors className="w-4 h-4" />
-                    Apply Trim
-                  </Button>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={handleUndo}
-                      disabled={historyIndex <= 0}
-                    >
-                      <Undo className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={handleRedo}
-                      disabled={historyIndex >= editHistory.length - 1}
-                    >
-                      <Redo className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
+              {/* Action Buttons */}
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline" 
+                  onClick={handleTrim}
+                  disabled={!videoLoaded || trimPreviewActive || trimStart === 0 && trimEnd === videoDuration}
+                >
+                  <Scissors className="w-4 h-4 mr-2" />
+                  Apply Trim
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={handleUndo}
+                  disabled={!videoLoaded || historyIndex <= 0}
+                >
+                  <Undo className="w-4 h-4 mr-2" />
+                  Undo
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={handleRedo}
+                  disabled={!videoLoaded || historyIndex >= editHistory.length - 1}
+                >
+                  <Redo className="w-4 h-4 mr-2" />
+                  Redo
+                </Button>
+                
+                <Button
+                  variant="default"
+                  className="ml-auto bg-purple-600 hover:bg-purple-700"
+                  onClick={() => {
+                    if (clipId && videoUrl) {
+                      navigate(`/new-post?clipId=${clipId}&videoUrl=${encodeURIComponent(videoUrl)}`);
+                    } else {
+                      toast.error('Please upload and edit a video first');
+                    }
+                  }}
+                  disabled={!videoLoaded || !clipId || !videoUrl}
+                >
+                  Next: Add Caption
+                </Button>
+              </div>
               
               {videoUrl && (
                 <div className="flex gap-4">

@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Heart, MessageSquare, Award, Bookmark } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 import './enhanced-joystick.css';
 
 const GameBoyControls: React.FC = () => {
@@ -17,12 +19,15 @@ const GameBoyControls: React.FC = () => {
   const [commentActive, setCommentActive] = useState(false);
   const [saveActive, setSaveActive] = useState(false);
   const [rankActive, setRankActive] = useState(false);
+  const [currentRank, setCurrentRank] = useState(0);
   
   // Game menu state
   const [menuVisible, setMenuVisible] = useState(false);
   
   // Track current post ID if on a post page
   const [currentPostId, setCurrentPostId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentPost, setCurrentPost] = useState<any>(null);
   
   // Enhanced joystick animation states
   const [joystickPosition, setJoystickPosition] = useState({ x: 0, y: 0 });
@@ -46,8 +51,80 @@ const GameBoyControls: React.FC = () => {
       setCurrentPostId(match[1]);
     } else {
       setCurrentPostId(null);
+      setLikeActive(false);
+      setSaveActive(false);
+      setRankActive(false);
+      setCurrentRank(0);
     }
   }, [location.pathname]);
+  
+  // Get current user and fetch post data when post ID changes
+  useEffect(() => {
+    const fetchUserAndPostData = async () => {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+      
+      // If we have a post ID, fetch the post data
+      if (currentPostId && user) {
+        // Fetch post data
+        const { data: post, error } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('id', currentPostId)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching post:', error);
+          return;
+        }
+        
+        if (post) {
+          setCurrentPost(post);
+          
+          // Check if user has liked this post
+          const { data: likeData } = await supabase
+            .from('post_likes')
+            .select('*')
+            .eq('post_id', currentPostId)
+            .eq('user_id', user.id)
+            .single();
+            
+          setLikeActive(!!likeData);
+          
+          // Check if user has saved this post
+          const { data: saveData } = await supabase
+            .from('post_saves')
+            .select('*')
+            .eq('post_id', currentPostId)
+            .eq('user_id', user.id)
+            .single();
+            
+          setSaveActive(!!saveData);
+          
+          // Check if user has ranked this post and get current rank
+          const { data: rankData } = await supabase
+            .from('post_ranks')
+            .select('rank_value')
+            .eq('post_id', currentPostId)
+            .eq('user_id', user.id)
+            .single();
+            
+          if (rankData) {
+            setRankActive(true);
+            setCurrentRank(rankData.rank_value);
+          } else {
+            setRankActive(false);
+            setCurrentRank(0);
+          }
+        }
+      }
+    };
+    
+    fetchUserAndPostData();
+  }, [currentPostId]);
 
   // Setup joystick interaction with touch/mouse events
   useEffect(() => {
@@ -321,36 +398,157 @@ const GameBoyControls: React.FC = () => {
   };
 
   // Handle action button click
-  const handleActionButtonClick = (action: 'like' | 'comment' | 'rank' | 'save' | 'post') => {
+  const handleActionButtonClick = async (action: 'like' | 'comment' | 'rank' | 'save' | 'post') => {
     // Allow post button to work without a post ID
     if (action === 'post') {
-      navigate('/post/new');
+      navigate('/clip-editor/new');
       return;
     }
     
-    // Other actions require a post ID
-    if (!currentPostId) return;
+    // Other actions require a post ID and a user ID
+    if (!currentPostId || !currentUserId) {
+      if (!currentUserId) {
+        toast.error('You must be logged in to perform this action');
+      }
+      return;
+    }
     
     // Handle the appropriate action
     switch(action) {
       case 'like':
-        setLikeActive(!likeActive);
-        console.log('Like post action for:', currentPostId);
+        try {
+          if (likeActive) {
+            // Unlike the post
+            const { error } = await supabase
+              .from('post_likes')
+              .delete()
+              .eq('post_id', currentPostId)
+              .eq('user_id', currentUserId);
+              
+            if (error) throw error;
+            
+            // Update total likes count in posts table
+            await supabase.rpc('decrement_post_likes', { post_id: currentPostId });
+            
+            setLikeActive(false);
+            toast.success('Post unliked');
+          } else {
+            // Like the post
+            const { error } = await supabase
+              .from('post_likes')
+              .insert({ post_id: currentPostId, user_id: currentUserId });
+              
+            if (error) throw error;
+            
+            // Update total likes count in posts table
+            await supabase.rpc('increment_post_likes', { post_id: currentPostId });
+            
+            setLikeActive(true);
+            toast.success('Post liked');
+          }
+        } catch (error) {
+          console.error('Error toggling like:', error);
+          toast.error('Failed to update like status');
+        }
         break;
+        
       case 'comment':
-        setCommentActive(!commentActive);
-        // Comment logic - navigate to comments
+        // Navigate to comments page
         navigate(`/comments/${currentPostId}`);
         break;
+        
       case 'save':
-        setSaveActive(!saveActive);
-        // Save video logic would go here
-        console.log('Save video action for:', currentPostId);
+        try {
+          if (saveActive) {
+            // Unsave the post
+            const { error } = await supabase
+              .from('post_saves')
+              .delete()
+              .eq('post_id', currentPostId)
+              .eq('user_id', currentUserId);
+              
+            if (error) throw error;
+            
+            // Update total saves count in posts table
+            await supabase.rpc('decrement_post_saves', { post_id: currentPostId });
+            
+            setSaveActive(false);
+            toast.success('Video removed from saved items');
+          } else {
+            // Save the post
+            const { error } = await supabase
+              .from('post_saves')
+              .insert({ post_id: currentPostId, user_id: currentUserId });
+              
+            if (error) throw error;
+            
+            // Update total saves count in posts table
+            await supabase.rpc('increment_post_saves', { post_id: currentPostId });
+            
+            setSaveActive(true);
+            toast.success('Video saved to your collection');
+          }
+        } catch (error) {
+          console.error('Error saving video:', error);
+          toast.error('Failed to save video');
+        }
         break;
+        
       case 'rank':
-        setRankActive(!rankActive);
-        // Ranking system logic would go here
-        console.log('Rank post action for:', currentPostId);
+        try {
+          // Toggle through ranks (0, 1, 2, 3) where 0 means no rank
+          let newRank = 0;
+          
+          if (!rankActive) {
+            // First rank = 1
+            newRank = 1;
+          } else if (currentRank < 3) {
+            // Increment rank
+            newRank = currentRank + 1;
+          } else {
+            // Reset rank (remove ranking)
+            newRank = 0;
+          }
+          
+          if (newRank === 0) {
+            // Remove rank
+            const { error } = await supabase
+              .from('post_ranks')
+              .delete()
+              .eq('post_id', currentPostId)
+              .eq('user_id', currentUserId);
+              
+            if (error) throw error;
+            
+            setRankActive(false);
+            setCurrentRank(0);
+            toast.success('Rank removed');
+          } else {
+            // Add or update rank
+            const { error } = await supabase
+              .from('post_ranks')
+              .upsert({ 
+                post_id: currentPostId, 
+                user_id: currentUserId,
+                rank_value: newRank
+              });
+              
+            if (error) throw error;
+            
+            setRankActive(true);
+            setCurrentRank(newRank);
+            toast.success(`Rank updated to ${newRank} ⭐`);
+          }
+          
+          // Update average rank in posts table
+          const { data, error } = await supabase
+            .rpc('update_post_rank', { post_id: currentPostId });
+            
+          if (error) throw error;
+        } catch (error) {
+          console.error('Error updating rank:', error);
+          toast.error('Failed to update rank');
+        }
         break;
     }
   };
@@ -436,6 +634,9 @@ const GameBoyControls: React.FC = () => {
           aria-label="Rank post"
         >
           <Award size={20} fill="#ffcc00" color="#ffcc00" strokeWidth={1.5} />
+          {rankActive && currentRank > 0 && (
+            <span className="rank-indicator">{currentRank}</span>
+          )}
         </button>
       </div>
     </div>
