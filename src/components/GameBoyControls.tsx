@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Heart, MessageSquare, Award, Bookmark } from 'lucide-react';
 import './enhanced-joystick.css';
 
 const GameBoyControls: React.FC = () => {
@@ -407,9 +408,7 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('comment')}
           aria-label="Comment"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#1a8cff" stroke="none">
-            <rect x="9" y="9" width="6" height="6" rx="0" />
-          </svg>
+          <MessageSquare size={20} fill="#1a8cff" color="#1a8cff" strokeWidth={1.5} />
         </button>
         
         {/* Like button (left - red) */}
@@ -418,9 +417,7 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('like')}
           aria-label="Like post"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ff3366" stroke="none">
-            <path d="M12 8 C13.5 8 15 9 15 11 C15 12 14 13 13 13.5 C12.5 14 12 14 12 14 C12 14 11.5 14 11 13.5 C10 13 9 12 9 11 C9 9 10.5 8 12 8 Z" />
-          </svg>
+          <Heart size={20} fill="#ff3366" color="#ff3366" strokeWidth={1.5} />
         </button>
         
         {/* Save button (right - green) - changed from follow to save */}
@@ -429,9 +426,7 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('save')}
           aria-label="Save video to bookmarks"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#00cc66" stroke="none">
-            <path d="M10 8 L14 8 L14 15 L12 13 L10 15 Z" />
-          </svg>
+          <Bookmark size={20} fill="#00cc66" color="#00cc66" strokeWidth={1.5} />
         </button>
         
         {/* Trophy button (bottom - yellow) */}
@@ -440,11 +435,7 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('rank')}
           aria-label="Rank post"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffcc00" stroke="none">
-            <path d="M12 8 L14 10.5 L12 10.5 L12 12 L12 13 L11.5 13 L11.5 12 L11.5 10.5 L10 10.5 Z" />
-            <rect x="11" y="13" width="2" height="2" />
-            <rect x="10" y="15" width="4" height="1" />
-          </svg>
+          <Award size={20} fill="#ffcc00" color="#ffcc00" strokeWidth={1.5} />
         </button>
       </div>
     </div>
