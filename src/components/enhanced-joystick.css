@@ -760,3 +760,92 @@
 .post-button:hover {
   transform: scale(1.05);
 }
+
+/* Simple Diamond Layout matching Image 2 */
+.action-buttons.simple-diamond {
+  position: fixed;
+  top: 150px;
+  right: 20px;
+  width: 200px;
+  height: 200px;
+  background: transparent;
+  display: grid;
+  grid-template-areas:
+    ". top ."
+    "left . right"
+    ". bottom .";
+  gap: 20px;
+  z-index: 1000;
+}
+
+.action-buttons.simple-diamond .action-button {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background-color: #111;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.action-buttons.simple-diamond .action-button.top {
+  grid-area: top;
+  justify-self: center;
+  border: 2px solid #1a8cff;
+  background-color: transparent;
+}
+
+.action-buttons.simple-diamond .action-button.left {
+  grid-area: left;
+  justify-self: center;
+  border: 2px solid #ff3366;
+  background-color: transparent;
+}
+
+.action-buttons.simple-diamond .action-button.right {
+  grid-area: right;
+  justify-self: center;
+  border: 2px solid #ffcc00;
+  background-color: transparent;
+}
+
+.action-buttons.simple-diamond .action-button.bottom {
+  grid-area: bottom;
+  justify-self: center;
+  border: 2px solid #00cc66;
+  background-color: transparent;
+}
+
+/* Override the before elements to use simple colored borders instead of rainbow */
+.action-buttons.simple-diamond .action-button::before {
+  display: none; /* Remove rainbow effect for this layout */
+}
+
+.action-buttons.simple-diamond .action-button.comment-button svg {
+  fill: #1a8cff;
+  stroke: #1a8cff;
+}
+
+.action-buttons.simple-diamond .action-button.like-button svg {
+  fill: #ff3366;
+  stroke: #ff3366;
+}
+
+.action-buttons.simple-diamond .action-button.follow-button svg {
+  fill: #00cc66;
+  stroke: #00cc66;
+}
+
+.action-buttons.simple-diamond .action-button.trophy-button svg {
+  fill: #ffcc00;
+  stroke: #ffcc00;
+}

@@ -401,7 +401,7 @@ const GameBoyControls: React.FC = () => {
       )}
 
       {/* Diamond action buttons in Xbox controller format with rainbow rims */}
-      <div className="action-buttons modern-style">
+      <div className="action-buttons simple-diamond">
         {/* Comment button (top - blue) */}
         <button 
           className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
