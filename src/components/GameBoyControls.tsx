@@ -380,6 +380,7 @@ const GameBoyControls: React.FC = () => {
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
             <circle cx="12" cy="13" r="4"></circle>
           </svg>
+          <span>POST</span>
         </button>
       </div>
 
@@ -410,8 +411,8 @@ const GameBoyControls: React.FC = () => {
         </div>
       )}
 
-      {/* Action buttons with rainbow rims in horizontal layout */}
-      <div className="action-buttons horizontal-style">
+      {/* Action buttons with rainbow rims in diamond layout */}
+      <div className="action-buttons diamond-layout">
         {/* Comment button (top - blue) */}
         <button 
           className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
