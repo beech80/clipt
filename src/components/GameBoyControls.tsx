@@ -307,6 +307,13 @@ const GameBoyControls: React.FC = () => {
     requestAnimationFrame(animateScroll);
   };
 
+  // Handle menu item click
+  const handleMenuItemClick = (path: string) => {
+    console.log('Navigating to:', path);
+    navigate(path);
+    setMenuVisible(false);
+  };
+
   // Handle action button click
   const handleActionButtonClick = (action: 'like' | 'comment' | 'rank' | 'save' | 'post') => {
     // Allow post button to work without a post ID
@@ -393,11 +400,11 @@ const GameBoyControls: React.FC = () => {
             setMenuVisible(false);
           }
         }}>
-          <div className="game-menu-content">
+          <div className="game-menu-content" onClick={(e) => e.stopPropagation()}>
             <h2>GAME MENU</h2>
             <div className="menu-grid">
               {/* Home */}
-              <div className="menu-item" onClick={() => { navigate('/'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -412,7 +419,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Select Game */}
-              <div className="menu-item" onClick={() => { navigate('/select-game'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/select-game'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
@@ -427,7 +434,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Settings */}
-              <div className="menu-item" onClick={() => { navigate('/settings'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/settings'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -442,7 +449,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Streaming */}
-              <div className="menu-item" onClick={() => { navigate('/streaming'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/streaming'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
@@ -457,7 +464,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Profile */}
-              <div className="menu-item" onClick={() => { navigate('/profile'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/profile'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -472,7 +479,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Messages */}
-              <div className="menu-item" onClick={() => { navigate('/messages'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/messages'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -486,7 +493,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Notifications */}
-              <div className="menu-item" onClick={() => { navigate('/notifications'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/notifications'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -501,7 +508,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Discovery */}
-              <div className="menu-item" onClick={() => { navigate('/discovery'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/discovery'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
@@ -516,7 +523,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Top Clipts */}
-              <div className="menu-item" onClick={() => { navigate('/top-clipts'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/top-clipts'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -530,7 +537,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Squads Clipts */}
-              <div className="menu-item" onClick={() => { navigate('/squads-clipts'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/squads-clipts'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -547,7 +554,7 @@ const GameBoyControls: React.FC = () => {
               </div>
 
               {/* Clipts */}
-              <div className="menu-item" onClick={() => { navigate('/clipts'); setMenuVisible(false); }}>
+              <div className="menu-item" onClick={(e) => { e.stopPropagation(); handleMenuItemClick('/clipts'); }}>
                 <div className="menu-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
