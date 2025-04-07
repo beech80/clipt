@@ -725,6 +725,41 @@
   align-items: center;
 }
 
+.post-action-button {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  border: none;
+  background-color: #111144;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.post-action-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  z-index: -1;
+  background: linear-gradient(90deg, #ff00cc, #3393ff, #00ffa2, #ffcc00, #ff00cc);
+  animation: rainbow-border 3s linear infinite;
+  background-size: 200% 200%;
+}
+
+.post-action-button svg {
+  width: 28px;
+  height: 28px;
+}
+
 .post-button {
   width: 100px;
   height: 40px;
@@ -854,4 +889,66 @@
 .action-buttons.simple-diamond .action-button.trophy-button svg {
   fill: #ffcc00;
   stroke: #ffcc00;
+}
+
+/* Horizontal button layout matching the new image */
+.action-buttons.horizontal-style {
+  position: fixed;
+  bottom: 80px;
+  right: 30px;
+  width: 220px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.action-buttons.horizontal-style .action-button {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  border: none;
+  background-color: #111144;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.action-buttons.horizontal-style .action-button::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  z-index: -1;
+  background: linear-gradient(90deg, #ff00cc, #3393ff, #00ffa2, #ffcc00, #ff00cc);
+  animation: rainbow-border 3s linear infinite;
+  background-size: 200% 200%;
+}
+
+/* Positioning for horizontal layout */
+.action-buttons.horizontal-style .action-button.top, 
+.action-buttons.horizontal-style .action-button.left, 
+.action-buttons.horizontal-style .action-button.right {
+  flex: 0 0 auto;
+}
+
+.action-buttons.horizontal-style .action-button.bottom {
+  margin-top: 5px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Scale icons to be more visible */
+.action-buttons.horizontal-style .action-button svg {
+  width: 28px;
+  height: 28px;
 }
