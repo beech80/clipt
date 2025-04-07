@@ -458,40 +458,17 @@ const GameBoyControls: React.FC = () => {
         break;
         
       case 'save':
-        try {
-          if (saveActive) {
-            // Unsave the post
-            const { error } = await supabase
-              .from('post_saves')
-              .delete()
-              .eq('post_id', currentPostId)
-              .eq('user_id', currentUserId);
-              
-            if (error) throw error;
-            
-            // Update total saves count in posts table
-            await supabase.rpc('decrement_post_saves', { post_id: currentPostId });
-            
-            setSaveActive(false);
-            toast.success('Video removed from saved items');
-          } else {
-            // Save the post
-            const { error } = await supabase
-              .from('post_saves')
-              .insert({ post_id: currentPostId, user_id: currentUserId });
-              
-            if (error) throw error;
-            
-            // Update total saves count in posts table
-            await supabase.rpc('increment_post_saves', { post_id: currentPostId });
-            
-            setSaveActive(true);
-            toast.success('Video saved to your collection');
-          }
-        } catch (error) {
-          console.error('Error saving video:', error);
-          toast.error('Failed to save video');
-        }
+        // Show share menu options
+        toast.success('Share menu opened', {
+          description: 'Share options would appear here',
+          action: {
+            label: 'Copy Link',
+            onClick: () => {
+              // Would normally copy link to clipboard
+              toast.success('Link copied to clipboard');
+            }
+          },
+        });
         break;
         
       case 'rank':
@@ -620,13 +597,17 @@ const GameBoyControls: React.FC = () => {
           <Heart size={18} fill="#ff3366" color="#ff3366" strokeWidth={1.5} />
         </button>
         
-        {/* Save button (right - green) - changed from follow to save */}
+        {/* Share button (right - green) - changed from save to share/more options */}
         <button 
-          className={`action-button save-button right ${saveActive ? 'active' : ''}`}
+          className={`action-button share-button right ${saveActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('save')}
-          aria-label="Save video to bookmarks"
+          aria-label="Share or more options"
         >
-          <Bookmark size={18} fill="#00cc66" color="#00cc66" strokeWidth={1.5} />
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#00cc66" stroke="#00cc66" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="12" cy="5" r="1"></circle>
+            <circle cx="12" cy="19" r="1"></circle>
+          </svg>
         </button>
         
         {/* Trophy button (bottom - yellow) */}
