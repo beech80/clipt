@@ -4,6 +4,7 @@ export const extractMentions = (content: string): string[] => {
   const mentionRegex = /@(\w+)/g;
   const matches = content.match(mentionRegex);
   return matches ? matches.map(match => match.slice(1)) : [];
+  return matches ? matches.map(match => match.slice(1)) : [];
 };
 
 export const linkifyMentions = (content: string): string => {

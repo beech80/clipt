@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,17 +11,36 @@ import { allGames } from '@/data/gamesList';
 
 const NewPost = () => {
   const navigate = useNavigate();
-  const [postDestination, setPostDestination] = useState('home');
+  const location = useLocation();
+  const [postDestination, setPostDestination] = useState('clipts'); // Default to clipts for edited videos
   const [description, setDescription] = useState('');
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [clipId, setClipId] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   
   // Add game selection state
   const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
   const [gameSearch, setGameSearch] = useState('');
   const [gameSearchResults, setGameSearchResults] = useState<typeof allGames>([]);
   const [showGameSearch, setShowGameSearch] = useState(false);
+  
+  // Check for clip parameters from ClipEditor
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const clipIdParam = params.get('clipId');
+    const videoUrlParam = params.get('videoUrl');
+    
+    if (clipIdParam && videoUrlParam) {
+      setClipId(clipIdParam);
+      setVideoUrl(videoUrlParam);
+      setPostDestination('clipts');
+      
+      // No need to add to mediaPreviewUrls - we'll handle it separately
+      toast.success('Video ready for posting! Add a caption and select a game.');
+    }
+  }, [location.search]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -119,14 +138,13 @@ const NewPost = () => {
       return;
     }
     
-    if (mediaFiles.length === 0) {
-      toast.error('Please upload at least one media file');
+    if (!selectedGame) {
+      toast.error('Please select a game');
       return;
     }
     
-    // Check if game is selected
-    if (!selectedGame) {
-      toast.error('Please select a game for your post');
+    if (mediaFiles.length === 0 && !videoUrl) {
+      toast.error('Please add media to your post');
       return;
     }
     
@@ -142,83 +160,86 @@ const NewPost = () => {
       // Show loading toast
       const uploadToast = toast.loading('Creating your post...');
       
-      // Get user info
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) {
-        toast.error('You must be logged in to create a post');
-        return;
-      }
-      
-      const userId = session.session.user.id;
-      
-      // Upload files to storage
-      const uploadedUrls = [];
-      for (let i = 0; i < mediaFiles.length; i++) {
-        const file = mediaFiles[i];
-        const timestamp = Date.now() + i;
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${userId}/${timestamp}.${fileExt}`;
+      try {
+        // 1. Get current user info
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('You must be logged in to create a post');
         
-        // Upload file
-        const { error: uploadError } = await supabase.storage
-          .from('media')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+        let postVideoUrl = videoUrl; // Use existing video URL from clip if available
+        let imageUrls = [];
+        
+        // 2. Upload files if they exist and we don't already have a video from ClipEditor
+        if (mediaFiles.length > 0 && !postVideoUrl) {
+          for (let i = 0; i < mediaFiles.length; i++) {
+            const file = mediaFiles[i];
+            const timestamp = Date.now() + i;
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${user.id}/${timestamp}.${fileExt}`;
+            
+            // Upload file
+            const { error: uploadError } = await supabase.storage
+              .from('media')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false,
+              });
+            
+            if (uploadError) throw uploadError;
+            
+            const { data: { publicUrl } } = supabase.storage
+              .from('media')
+              .getPublicUrl(filePath);
+            
+            if (file.type.startsWith('video/')) {
+              postVideoUrl = publicUrl;
+            } else {
+              imageUrls.push(publicUrl);
+            }
+          }
+        }
+        
+        // 3. Create post record
+        const postData = {
+          user_id: user.id,
+          content: description,
+          game_id: selectedGame.id,
+          game_name: selectedGame.name,
+          video_url: postVideoUrl,
+          clip_id: clipId, // Link to the clip if it exists
+          images: imageUrls.length > 0 ? imageUrls : null,
+          is_published: true,
+          post_type: postDestination === 'clipts' ? 'clip' : 'regular'
+        };
+        
+        // Create post in database
+        const { data: post, error: postError } = await supabase
+          .from('posts')
+          .insert([postData])
+          .select()
+          .single();
           
-        if (uploadError) {
-          toast.error(`Failed to upload file: ${uploadError.message}`, { id: uploadToast });
+        if (postError) {
+          console.error('Failed to create post:', postError);
+          toast.error(`Failed to create post: ${postError.message}`, { id: uploadToast });
           return;
         }
         
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('media')
-          .getPublicUrl(filePath);
-          
-        uploadedUrls.push(publicUrl);
-      }
-      
-      // Prepare post data
-      const postData = {
-        content: description,
-        user_id: userId,
-        post_type: postDestination,
-        is_published: true,
-        // Store all image URLs in media_urls field as JSON
-        media_urls: JSON.stringify(uploadedUrls),
-        // For clips, set the first URL as thumbnail
-        thumbnail_url: postDestination === 'clipts' ? uploadedUrls[0] : null,
-        // Add game information - store only the ID
-        game_id: selectedGame.id
-      };
-      
-      // Create post in database
-      const { data: post, error: postError } = await supabase
-        .from('posts')
-        .insert([postData])
-        .select()
-        .single();
+        // Clear cache to ensure latest posts appear immediately
+        // No need to wait for this to complete
+        try {
+          console.log('Post created successfully, triggering cache refresh');
+        } catch (e) {
+          console.error('Error refreshing cache, but post was created:', e);
+        }
         
-      if (postError) {
-        console.error('Failed to create post:', postError);
-        toast.error(`Failed to create post: ${postError.message}`, { id: uploadToast });
-        return;
+        toast.success(`Post created and will appear in ${postDestination === 'clipts' ? 'Clipts' : 'Home Feed'}`, { id: uploadToast });
+        
+        // Navigate with refresh parameter to ensure latest posts are shown
+        navigate(`/${postDestination === 'clipts' ? 'clipts' : ''}?refresh=${Date.now()}`);
+      } catch (error) {
+        console.error('Error creating post:', error);
+        toast.error('Failed to create post. Please try again.');
       }
-      
-      // Clear cache to ensure latest posts appear immediately
-      // No need to wait for this to complete
-      try {
-        console.log('Post created successfully, triggering cache refresh');
-      } catch (e) {
-        console.error('Error refreshing cache, but post was created:', e);
-      }
-      
-      toast.success(`Post created and will appear in ${postDestination === 'home' ? 'Home' : 'Clipts'}`, { id: uploadToast });
-      
-      // Navigate with refresh parameter to ensure latest posts are shown
-      navigate(`/${postDestination === 'clipts' ? 'clipts' : ''}?refresh=${Date.now()}`);
     } catch (error) {
       console.error('Error creating post:', error);
       toast.error('Failed to create post. Please try again.');
@@ -226,113 +247,80 @@ const NewPost = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c]">
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-black/40 backdrop-blur-lg border-b border-white/10">
-        <div className="flex items-center justify-center max-w-7xl mx-auto relative">
+    <div className="bg-black min-h-screen text-white">
+      <div className="max-w-xl mx-auto p-4 pb-24">
+        <div className="flex items-center justify-between mb-4">
           <BackButton />
-          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-            <Camera className="text-purple-400" size={24} />
-            New Post
-          </h1>
+          <h1 className="text-xl font-bold">New Post</h1>
+          <div className="w-8"></div> {/* Spacer for alignment */}
         </div>
-      </div>
-
-      <div className="container mx-auto px-4 pt-24 pb-20 max-w-xl">
-        <div className="bg-black/30 backdrop-blur-sm rounded-xl p-6 border border-white/10 shadow-xl">
-          {/* Post Destination Toggle */}
-          <div className="mb-6">
-            <p className="text-white text-sm mb-2">Post to:</p>
-            <div className="flex space-x-2">
-              <Button 
-                variant={postDestination === 'home' ? "default" : "outline"}
-                className={postDestination === 'home' 
-                  ? "bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2" 
-                  : "bg-gray-800/50 border-gray-700 text-gray-300 flex items-center gap-2"
-                }
-                onClick={() => setPostDestination('home')}
-              >
-                <ImageIcon size={16} />
-                Home Feed
-              </Button>
-              <Button 
-                variant={postDestination === 'clipts' ? "default" : "outline"}
-                className={postDestination === 'clipts' 
-                  ? "bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2" 
-                  : "bg-gray-800/50 border-gray-700 text-gray-300 flex items-center gap-2"
-                }
-                onClick={() => setPostDestination('clipts')}
-              >
-                <Video size={16} />
-                Clipts
-              </Button>
-            </div>
-            {postDestination === 'clipts' && (
-              <p className="text-amber-400 text-xs mt-2">Note: Only video content is allowed in Clipts</p>
-            )}
-          </div>
-          
-          {/* Game Selection Field */}
-          <div className="mb-4">
-            <label className="block text-white font-medium mb-2">
-              Select Game <span className="text-red-400">*</span>
-            </label>
-            
-            {selectedGame ? (
-              <div className="flex items-center justify-between bg-gray-800/50 p-2 rounded">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gray-800 rounded flex items-center justify-center">
-                    <Gamepad2 className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="ml-2 text-white">{selectedGame.name}</span>
-                </div>
-                <button 
-                  type="button"
-                  onClick={() => setSelectedGame(null)} 
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
+        
+        {/* Post Destination Tabs */}
+        <div className="flex mb-6 bg-gray-800/50 p-1 rounded-lg">
+          <button
+            className={`flex-1 py-2 rounded-md ${postDestination === 'home' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}
+            onClick={() => !videoUrl && setPostDestination('home')}
+            disabled={!!videoUrl} // Disable switching to home if we have a video from editor
+          >
+            Home Feed
+          </button>
+          <button
+            className={`flex-1 py-2 rounded-md ${postDestination === 'clipts' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}
+            onClick={() => setPostDestination('clipts')}
+          >
+            Clipts
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Game Selection Field */}
+            <div className="mb-4">
+              <label className="block text-white font-medium mb-2">
+                Select Game <span className="text-red-400">*</span>
+              </label>
               <div className="relative">
-                <div 
-                  className="flex items-center justify-between bg-gray-800/50 p-2 rounded cursor-pointer"
-                  onClick={() => setShowGameSearch(!showGameSearch)}
-                >
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-gray-800 rounded flex items-center justify-center">
-                      <Gamepad2 className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="ml-2 text-gray-400">Select a game...</span>
+                <div className="relative">
+                  <Input
+                    type="text"
+                    className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-400 pr-10"
+                    placeholder="Search for a game..."
+                    value={selectedGame ? selectedGame.name : gameSearch}
+                    onChange={(e) => {
+                      setSelectedGame(null);
+                      handleGameSearch(e.target.value);
+                    }}
+                    onFocus={() => setShowGameSearch(true)}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    {selectedGame ? (
+                      <button
+                        type="button"
+                        className="text-gray-400 hover:text-white"
+                        onClick={() => setSelectedGame(null)}
+                      >
+                        <X size={16} />
+                      </button>
+                    ) : (
+                      <Search size={16} className="text-gray-400" />
+                    )}
                   </div>
-                  <Search className="h-4 w-4 text-gray-400" />
                 </div>
-                
+
+                {/* Search Results */}
                 {showGameSearch && (
-                  <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-white/10 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    <div className="p-2">
-                      <input
-                        type="text"
-                        placeholder="Search for a game..."
-                        value={gameSearch}
-                        onChange={(e) => handleGameSearch(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-800 text-white border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-white"
-                        autoFocus
-                      />
-                    </div>
-                    
+                  <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
                     {gameSearchResults.length > 0 ? (
-                      <div className="divide-y divide-gray-800">
-                        {gameSearchResults.map((game) => (
-                          <div
-                            key={game.id}
-                            onClick={() => handleGameSelect(game)}
-                            className="p-2 hover:bg-gray-900 cursor-pointer"
-                          >
-                            <span className="text-white">{game.name}</span>
-                          </div>
-                        ))}
-                      </div>
+                      gameSearchResults.map((game) => (
+                        <div
+                          key={game.id}
+                          className="p-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                          onClick={() => handleGameSelect(game)}
+                        >
+                          <Gamepad2 size={16} className="text-purple-400" />
+                          <span>{game.name}</span>
+                        </div>
+                      ))
                     ) : (
                       gameSearch.trim() && (
                         <div className="p-2 text-center text-gray-400">
@@ -343,17 +331,18 @@ const NewPost = () => {
                   </div>
                 )}
               </div>
-            )}
-            
-            <p className="text-xs text-red-400 mt-1">
-              * You must select a game for your post
-            </p>
-          </div>
-          
-          <form className="space-y-4" onSubmit={handleSubmit}>
+              {postDestination === 'clipts' && (
+                <p className="text-xs text-gray-400 mt-1">
+                  <Video className="inline-block mr-1" size={14} />
+                  Only video uploads are allowed for Clipts
+                </p>
+              )}
+            </div>
+
+            {/* Description Field */}
             <div>
               <Textarea 
-                placeholder="Share your gaming moment..." 
+                placeholder="Share your gaming moment..."
                 className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-400 min-h-[120px]"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
@@ -361,33 +350,44 @@ const NewPost = () => {
             </div>
             
             {/* Media Preview */}
-            {mediaPreviewUrls.length > 0 && (
+            {(mediaPreviewUrls.length > 0 || videoUrl) && (
               <div className="grid grid-cols-3 gap-2">
-                {mediaPreviewUrls.map((url, index) => (
-                  <div key={index} className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
-                    {mediaFiles[index]?.type.startsWith('video/') ? (
-                      <video 
-                        src={url} 
-                        className="w-full h-full object-cover"
-                        controls
-                      />
-                    ) : (
-                      <img 
-                        src={url} 
-                        alt={`Upload preview ${index+1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                    <button 
-                      type="button"
-                      className="absolute top-1 right-1 bg-black/70 text-white p-1 rounded-full"
-                      onClick={() => removeFile(index)}
-                    >
-                      <X size={14} />
-                    </button>
+                {videoUrl ? (
+                  <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden col-span-3">
+                    <video 
+                      src={videoUrl} 
+                      className="w-full h-full object-cover"
+                      controls
+                    />
+                    {/* No remove button for clips from editor */}
                   </div>
-                ))}
-                {mediaPreviewUrls.length < 5 && (
+                ) : (
+                  mediaPreviewUrls.map((url, index) => (
+                    <div key={index} className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
+                      {mediaFiles[index]?.type.startsWith('video/') ? (
+                        <video 
+                          src={url} 
+                          className="w-full h-full object-cover"
+                          controls
+                        />
+                      ) : (
+                        <img 
+                          src={url} 
+                          alt={`Upload preview ${index+1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      <button 
+                        type="button"
+                        className="absolute top-1 right-1 bg-black/70 text-white p-1 rounded-full"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))
+                )}
+                {!videoUrl && mediaPreviewUrls.length < 5 && (
                   <div 
                     className="aspect-video border-2 border-dashed border-gray-700 rounded-lg flex items-center justify-center cursor-pointer hover:border-purple-500/50 transition-colors"
                     onClick={() => fileInputRef.current?.click()}
@@ -399,7 +399,7 @@ const NewPost = () => {
             )}
             
             {/* Media Upload Area */}
-            {mediaPreviewUrls.length === 0 && (
+            {mediaPreviewUrls.length === 0 && !videoUrl && (
               <div 
                 className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center cursor-pointer hover:border-purple-500/50 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
