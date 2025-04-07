@@ -5,7 +5,7 @@
   position: absolute;
   width: 75px;
   height: 75px;
-  background: #111144;
+  background: transparent;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -40,7 +40,7 @@
 .joystick-inner {
   width: 25px;
   height: 25px;
-  background: rgb(16, 18, 33); /* Same dark navy as CLIPT button */
+  background: transparent;
   border-radius: 50%;
   position: relative;
   display: flex;
@@ -388,7 +388,7 @@
   height: 70px;
   padding: 0;
   border-radius: 50%;
-  background: rgb(16, 18, 33); /* Dark navy background to match image */
+  background: transparent;
   color: white;
   font-family: sans-serif;
   font-weight: bold;
@@ -509,7 +509,7 @@
   width: 65px;
   height: 65px;
   border-radius: 50%;
-  background: #111144; /* Same as action buttons */
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -524,7 +524,7 @@
 
 /* Menu buttons styling to match CLIPT button with rainbow rim */
 .menu-button {
-  background: #111144; /* Same as action buttons */
+  background: transparent;
   border: none;
   box-shadow: none;
   position: relative;
@@ -822,7 +822,7 @@
   height: 65px;
   border-radius: 50%;
   border: none;
-  background-color: #111144;
+  background-color: transparent;
   color: white;
   display: flex;
   align-items: center;
@@ -967,7 +967,7 @@
   right: 2px;
   bottom: 2px;
   border-radius: 50%;
-  background-color: rgb(15, 16, 36);
+  background-color: transparent;
   z-index: -1;
 }
 
@@ -984,7 +984,7 @@
   overflow: visible;
   transition: transform 0.15s;
   z-index: 5;
-  background-color: rgb(15, 16, 36);
+  background-color: transparent;
   box-shadow: none;
 }
 

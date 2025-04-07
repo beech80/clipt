@@ -381,7 +381,8 @@ const ClipEditor = () => {
       toast.success('Video uploaded successfully!');
     } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error(`Upload failed: ${error.message}`);
+      const errorMessage = error?.message || 'An unknown error occurred';
+      toast.error(`Upload failed: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }
