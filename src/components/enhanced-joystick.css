@@ -991,8 +991,8 @@
 
 
 .action-buttons.diamond-layout .action-button svg {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   position: relative;
   z-index: 2;
 }
@@ -1001,9 +1001,10 @@
 .action-button svg {
   position: relative;
   z-index: 2;
+  stroke-width: 1.5;
 }
 
-/* Rainbow outline around action buttons */
+/* Rainbow outline around action buttons - Exactly matching CLIPT button */
 .action-button {
   position: relative;
   padding: 0;
@@ -1011,17 +1012,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  overflow: visible;
+  z-index: 1000;
 }
 
+/* Match exact CLIPT button styling for the rainbow border */
 .action-button::before {
   content: '';
   position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
+  top: -1.5px;
+  left: -1.5px;
+  right: -1.5px;
+  bottom: -1.5px;
   border-radius: 50%;
   background: conic-gradient(from 0deg, rgb(255, 0, 128), rgb(255, 60, 0), rgb(255, 200, 0), rgb(0, 220, 0), rgb(0, 180, 255), rgb(100, 0, 255), rgb(255, 0, 200), rgb(255, 0, 128));
+  -webkit-mask: radial-gradient(transparent 20px, #000 20px, #000 21.5px, transparent 21.5px);
+  mask: radial-gradient(transparent 20px, #000 20px, #000 21.5px, transparent 21.5px);
   animation: ringRotation 12s linear infinite;
-  z-index: 1;
+  z-index: 0;
+}
+
+/* Add hover and active states like CLIPT button */
+.action-button:hover {
+  transform: scale(1.05);
+}
+
+.action-button:active {
+  transform: scale(0.95);
 }
