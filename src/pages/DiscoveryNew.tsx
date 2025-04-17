@@ -7,7 +7,7 @@ import '../styles/discovery-retro.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes } from '@fortawesome/free-solid-svg-icons';
 import CliptLogoSVG from '../assets/clipt_logo_text.svg'; 
-import RealtimeChat from '../components/RealtimeChat';
+import RealtimeChat from '../components/messages/RealtimeChat';
 
 const DiscoveryNew = () => {
   // Game search state
