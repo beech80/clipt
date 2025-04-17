@@ -9,14 +9,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { CheckCircle2, Shield } from 'lucide-react';
 
 export const TwoFactorSettings = () => {
-  const { is2FAEnabled, toggle2FA } = useAuthSecurity();
+  const { is2FAEnabled, isContactVerified, toggle2FA, verifyContact, isLoading: securityLoading } = useAuthSecurity();
   const [isLoading, setIsLoading] = useState(false);
   const [contactMethod, setContactMethod] = useState<'email' | 'phone'>('email');
   const [contactValue, setContactValue] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const [savedContactInfo, setSavedContactInfo] = useState<{method: 'email' | 'phone', value: string} | null>(null);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
 
   // Get current user and their 2FA contact info
   useEffect(() => {
@@ -47,36 +50,27 @@ export const TwoFactorSettings = () => {
   }, []);
 
   const handleToggle2FA = async () => {
-    // Don't allow enabling 2FA without contact info
-    if (!is2FAEnabled && !contactValue) {
-      toast.error('Please enter your contact information first');
+    // Don't allow enabling 2FA without verified contact info
+    if (!is2FAEnabled && !isContactVerified) {
+      toast.error('Please verify your contact information first');
       return;
     }
     
     setIsLoading(true);
     await toggle2FA(!is2FAEnabled);
+    setIsLoading(false);
+  };
+
+  const handleVerifyContact = async () => {
+    if (!userId || !contactValue || !savedContactInfo) return;
     
-    // Save contact info when enabling 2FA
-    if (!is2FAEnabled && userId) {
-      const { error } = await supabase
-        .from('two_factor_auth')
-        .upsert({ 
-          user_id: userId,
-          contact_method: contactMethod,
-          contact_value: contactValue,
-          is_enabled: true
-        });
-        
-      if (error) {
-        toast.error('Failed to save contact information');
-        console.error('Error saving contact info:', error);
-      } else {
-        setSavedContactInfo({
-          method: contactMethod,
-          value: contactValue
-        });
-        toast.success('Contact information saved successfully');
-      }
+    setIsLoading(true);
+    const success = await verifyContact(contactMethod, contactValue);
+    
+    if (success) {
+      setShowVerification(false);
+      setVerificationCode('');
+      toast.success('Contact information verified successfully');
     }
     
     setIsLoading(false);
@@ -122,7 +116,10 @@ export const TwoFactorSettings = () => {
         method: contactMethod,
         value: contactValue
       });
-      toast.success('Contact information saved successfully');
+      
+      // Show verification dialog
+      setShowVerification(true);
+      toast.success('A verification code has been sent to your ' + contactMethod);
     }
     
     setIsLoading(false);
@@ -204,11 +201,47 @@ export const TwoFactorSettings = () => {
           </Button>
           
           {savedContactInfo && (
-            <Alert className="bg-green-950/30 border-green-800 text-green-400">
-              <AlertDescription>
-                Your {savedContactInfo.method} ({savedContactInfo.value}) is saved for verification.
+            <Alert className={isContactVerified ? "bg-green-950/30 border-green-800 text-green-400" : "bg-amber-950/30 border-amber-800 text-amber-400"}>
+              <AlertDescription className="flex items-center gap-2">
+                {isContactVerified ? (
+                  <>
+                    <CheckCircle2 size={16} className="text-green-400" />
+                    Your {savedContactInfo.method} ({savedContactInfo.value}) is verified and ready for 2FA.
+                  </>
+                ) : (
+                  <>
+                    Your {savedContactInfo.method} ({savedContactInfo.value}) is saved but needs verification.
+                  </>
+                )}
               </AlertDescription>
             </Alert>
+          )}
+          
+          {/* Verification code input */}
+          {showVerification && savedContactInfo && !isContactVerified && (
+            <div className="mt-4 p-4 border border-orange-500/30 rounded-md bg-orange-500/5">
+              <h4 className="text-sm font-medium mb-2">Verify your {contactMethod}</h4>
+              <p className="text-xs text-muted-foreground mb-3">
+                A verification code has been sent to your {contactMethod}.
+                Enter the 6-digit code below to verify.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  maxLength={6}
+                  placeholder="6-digit code"
+                  className="text-base"
+                />
+                <Button 
+                  onClick={handleVerifyContact}
+                  disabled={isLoading || verificationCode.length !== 6}
+                  size="sm"
+                >
+                  Verify
+                </Button>
+              </div>
+            </div>
           )}
         </div>
         
@@ -222,22 +255,23 @@ export const TwoFactorSettings = () => {
           <Switch
             checked={is2FAEnabled}
             onCheckedChange={handleToggle2FA}
-            disabled={isLoading || !contactValue}
+            disabled={isLoading || !isContactVerified}
           />
         </div>
         
         {is2FAEnabled && (
-          <Alert>
-            <AlertDescription>
+          <Alert className="bg-green-950/30 border-green-800 text-green-400">
+            <AlertDescription className="flex items-center gap-2">
+              <CheckCircle2 size={16} />
               Two-factor authentication is enabled. You'll need to enter a verification code when signing in.
             </AlertDescription>
           </Alert>
         )}
         
-        {!contactValue && (
+        {!isContactVerified && (
           <Alert variant="destructive">
             <AlertDescription>
-              You need to enter your contact information before enabling 2FA.
+              You need to verify your contact information before enabling 2FA.
             </AlertDescription>
           </Alert>
         )}

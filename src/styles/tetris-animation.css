@@ -1,0 +1,116 @@
+/* Tetris Animation Styles */
+.tetris-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.tetris-block {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(111, 76, 255, 0.5), inset 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+.tetris-block.t-shape {
+  clip-path: polygon(0% 33%, 33% 33%, 33% 0%, 67% 0%, 67% 33%, 100% 33%, 100% 67%, 67% 67%, 67% 100%, 33% 100%, 33% 67%, 0% 67%);
+}
+
+.tetris-block.l-shape {
+  clip-path: polygon(0% 0%, 33% 0%, 33% 67%, 100% 67%, 100% 100%, 0% 100%);
+}
+
+.tetris-block.z-shape {
+  clip-path: polygon(0% 0%, 67% 0%, 67% 33%, 100% 33%, 100% 100%, 33% 100%, 33% 67%, 0% 67%);
+}
+
+.tetris-block.square {
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+.tetris-block.i-shape {
+  height: 120px;
+  clip-path: polygon(33% 0%, 67% 0%, 67% 100%, 33% 100%);
+}
+
+.tetris-block img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+}
+
+.tetris-block .streamer-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 3px;
+  font-size: 8px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.tetris-base {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(to right, #6f4cff, #4c4cff, #6f4cff);
+  clip-path: polygon(0 0, 10% 50%, 20% 0, 30% 50%, 40% 0, 50% 50%, 60% 0, 70% 50%, 80% 0, 90% 50%, 100% 0, 100% 100%, 0 100%);
+  box-shadow: 0 -5px 20px rgba(111, 76, 255, 0.5);
+}
+
+.tetris-logo {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Press Start 2P', cursive, sans-serif;
+  font-size: 18px;
+  color: #6f4cff;
+  text-shadow: 0 0 5px #4c4cff;
+  letter-spacing: 1px;
+}
+
+@keyframes fallAnimation {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+  }
+  100% {
+    transform: translateY(calc(100vh - 100px)) rotate(360deg);
+  }
+}
+
+.final-stack {
+  position: absolute;
+  bottom: 50px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.final-stack .tetris-block {
+  position: relative;
+  margin: 0 5px;
+  animation: none;
+  transform: none;
+}

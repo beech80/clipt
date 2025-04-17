@@ -850,18 +850,18 @@ const UserProfile = () => {
 
               {/* User info */}
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-2xl md:text-3xl font-bold">{profileData?.display_name || profileData?.username}</h1>
-                <p className="text-indigo-300 mb-2">@{profileData?.username}</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-black bg-gray-200/80 px-3 py-1 rounded">{profileData?.display_name || profileData?.username}</h1>
+                <p className="text-black mb-2 bg-gray-100/90 px-2 py-1 rounded inline-block">@{profileData?.username}</p>
 
                 {/* Stream title if streaming */}
                 {profileData?.stream_title && (
                   <div className="mb-3 bg-red-500/20 rounded-md p-2 border border-red-500/30">
-                    <p className="font-semibold">Currently streaming: {profileData.stream_title}</p>
+                    <p className="font-semibold text-black">Currently streaming: <span className="bg-gray-100 px-2 py-1 rounded inline-block">{profileData.stream_title}</span></p>
                     <p className="text-sm">{profileData?.stream_id} viewers</p>
                   </div>
                 )}
 
-                <p className="text-sm md:text-base whitespace-pre-wrap">{profileData?.bio || ""}</p>
+                <p className="text-sm md:text-base whitespace-pre-wrap text-black bg-gray-100/70 p-2 rounded mt-2">{profileData?.bio || ""}</p>
 
                 <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
                   {/* Edit profile button when viewing own profile */}

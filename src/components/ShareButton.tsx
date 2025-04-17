@@ -144,9 +144,9 @@ const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '', iconO
             }
           }}
         >
-          <MoreVertical className={`h-6 w-6 text-purple-400 group-hover:text-purple-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90 ${iconClassName}`} />
+          <MoreVertical className={`h-6 w-6 text-orange-400 group-hover:text-orange-300 transition-transform duration-200 group-hover:scale-110 group-active:scale-90 ${iconClassName}`} />
           {!iconOnly && (
-            <span className="text-base font-medium text-gray-400 group-hover:text-purple-300 ml-1">
+            <span className="text-base font-medium text-gray-400 group-hover:text-orange-300 ml-1">
               Share
             </span>
           )}
@@ -172,7 +172,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ postId, className = '', iconO
               trackShareAchievement();
             }}
           >
-            <MessageCircle className="h-4 w-4 text-purple-400" />
+            <MessageCircle className="h-4 w-4 text-orange-400" />
             <span>Send as Message</span>
           </DropdownMenuItem>
           

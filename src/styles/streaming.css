@@ -15,7 +15,7 @@
   left: 0;
   width: 120px;
   height: 2px;
-  background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+  background: linear-gradient(90deg, #E67E22, #D35400);
   box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
 }
 
@@ -134,7 +134,7 @@
 }
 
 .streaming-select-item[data-state="checked"] svg {
-  color: #8b5cf6;
+  color: #E67E22;
 }
 
 @keyframes fadeIn {
@@ -185,7 +185,7 @@
 }
 
 .streaming-tab-button[data-state="active"] svg {
-  color: #8b5cf6;
+  color: #E67E22;
 }
 
 .streaming-tab-button:hover:not([data-state="active"]) {

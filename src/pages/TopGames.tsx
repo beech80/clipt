@@ -9,7 +9,7 @@ const TopGames = () => {
         <div className="flex items-center justify-center max-w-7xl mx-auto relative">
           <BackButton />
           <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-            <Gamepad2 className="text-purple-400" size={24} />
+            <Gamepad2 className="text-orange-400" size={24} />
             Top Games
           </h1>
         </div>
@@ -18,7 +18,7 @@ const TopGames = () => {
       <div className="container mx-auto px-4 pt-24 pb-20 max-w-2xl">
         <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-white/10 shadow-xl overflow-hidden p-8">
           <div className="flex flex-col items-center justify-center py-10 text-center px-4">
-            <Gamepad2 size={64} className="text-purple-400 mb-6" />
+            <Gamepad2 size={64} className="text-orange-400 mb-6" />
             <h2 className="text-3xl font-bold text-white mb-4 pixel-font">Coming Soon!</h2>
             <p className="text-gray-300 mb-6">
               We're working on bringing you the best game discovery experience.

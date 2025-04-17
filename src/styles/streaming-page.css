@@ -1,0 +1,188 @@
+/* Streaming page styles */
+.streaming-page-container {
+  background-color: #0e0e1a;
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Tab navigation */
+.streaming-tabs {
+  display: flex;
+  justify-content: center;
+  margin-top: 120px;
+  margin-bottom: 30px;
+  width: 100%;
+  gap: 20px;
+}
+
+.streaming-tab {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.streaming-tab.active {
+  background-color: #FF6B00;
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.5);
+}
+
+/* Grid layouts */
+.streamers-grid,
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  width: 100%;
+  padding: 0 10px;
+}
+
+/* Card styles */
+.streamer-card,
+.category-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  aspect-ratio: 16/9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 107, 0, 0.2);
+}
+
+.streamer-card:hover,
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(255, 107, 0, 0.3);
+  border-color: #FF6B00;
+}
+
+.streamer-card-content,
+.category-card-content {
+  padding: 15px;
+  text-align: center;
+}
+
+.streamer-name,
+.category-name {
+  font-weight: bold;
+  font-size: 18px;
+  color: white;
+  margin-bottom: 5px;
+}
+
+.streamer-game {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+}
+
+/* Settings page styles - make EVERYTHING orange instead of purple */
+
+/* Target all possible settings elements */
+.settings-page *,
+.settings-container *,
+[class*='settings'] *,
+[id*='settings'] *,
+[class*='account'] *,
+[id*='account'] *,
+[class*='option'] *,
+[id*='option'] *,
+.settings-icon,
+.toggle,
+.toggle-switch,
+.switch,
+.button,
+.btn,
+.tab,
+.nav-item,
+.header-icon,
+button,
+.icon,
+.svg-icon,
+.progress-bar {
+  /* Replace purple with orange */
+  --highlight: #FF6B00 !important;
+  --purple: #FF6B00 !important;
+  --primary: #FF6B00 !important;
+  --accent: #FF6B00 !important;
+  --purple-500: #FF6B00 !important;
+  --purple-600: #FF6B00 !important;
+  --purple-700: #FF6B00 !important;
+  --purple-800: #FF6B00 !important;
+  --purple-900: #FF6B00 !important;
+}
+
+/* Force all SVG elements to be orange */
+svg,
+.settings-page svg,
+.settings-container svg,
+[class*='settings'] svg,
+[id*='settings'] svg {
+  color: #FF6B00 !important;
+  fill: #FF6B00 !important;
+  stroke: #FF6B00 !important;
+}
+
+/* Make all buttons orange */
+.settings-button,
+[class*='settings'] button,
+[id*='settings'] button,
+button[type='submit'],
+.primary-button,
+.action-button,
+.confirm-button,
+.submit-button,
+.save-button {
+  background-color: #FF6B00 !important;
+  color: white !important;
+  border-color: #FF8C00 !important;
+}
+
+/* Toggle switches in settings */
+.toggle-switch,
+.toggle-switch.active,
+.toggle.active,
+.switch.active,
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background-color: #FF6B00 !important;
+  border-color: #FF8C00 !important;
+}
+
+/* Account header and borders */
+.settings-header,
+.account-header,
+.settings-card,
+.settings-section,
+.card-header,
+.settings-panel {
+  border-color: #FF6B00 !important;
+}
+
+/* Text highlighting and focus states */
+*:focus,
+.focused,
+.selected,
+.active {
+  outline-color: #FF6B00 !important;
+  border-color: #FF6B00 !important;
+}
+
+/* Progress bars and sliders */
+progress::-webkit-progress-value,
+.progress-bar .value,
+input[type="range"]::-webkit-slider-thumb {
+  background-color: #FF6B00 !important;
+}

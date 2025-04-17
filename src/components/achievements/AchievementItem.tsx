@@ -106,9 +106,7 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
       <div className="flex gap-4">
         {/* Achievement Icon */}
         <div className="relative">
-          <div className={`w-16 h-16 rounded-md flex items-center justify-center ${
-            currentValue >= target_value ? 'bg-yellow-500/20' : 'bg-gray-800/50'
-          }`}>
+          <div className={`w-16 h-16 rounded-md flex items-center justify-center ${currentValue >= target_value ? 'bg-yellow-900/20' : 'bg-gray-800/50'}`}>
             {getAchievementIcon(name, category)}
             {currentValue < target_value && (
               <div className="absolute inset-0 bg-black/60 rounded-md flex items-center justify-center">
@@ -121,19 +119,15 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
         {/* Achievement Details */}
         <div className="flex-1">
           <div className="flex justify-between items-start mb-1">
-            <h3 className={`font-bold ${currentValue >= target_value ? 'text-yellow-400' : 'text-gray-300'}`}>
-              {name}
-            </h3>
-            <div className={`px-2 py-1 rounded text-xs ${currentValue >= target_value ? 'bg-yellow-500/20 text-yellow-300' : 'bg-gray-800 text-gray-300'}`}>
-              {points} XP
-            </div>
+            <h3 className={`font-bold ${currentValue >= target_value ? 'text-yellow-300' : 'text-gray-300'}`}>{name}</h3>
+            <div className={`${currentValue >= target_value ? 'bg-yellow-900/30 text-yellow-300' : 'bg-gray-800 text-gray-300'} px-2 py-1 rounded text-xs`}>{points} XP</div>
           </div>
           
           <p className="text-sm text-gray-400 mb-2">{description}</p>
           
           {/* Progress Bar */}
           <div className="space-y-1">
-            <Progress value={progressPercentage} className={`h-2 ${currentValue >= target_value ? 'bg-yellow-500/20' : ''}`} />
+            <Progress value={progressPercentage} className={cn("h-2", currentValue >= target_value ? "bg-yellow-950" : "")} />
             <div className="flex justify-between text-xs text-gray-400">
               <span>{progressText}</span>
               <span>{Math.round(progressPercentage)}%</span>
@@ -142,24 +136,36 @@ const AchievementItem: React.FC<AchievementItemProps> = ({
         </div>
       </div>
       
-      {showDetails && (
-        <div className="mt-2 pt-3 border-t border-gray-700/30">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gray-800/30 p-2 rounded">
-              <div className="text-xs text-gray-400 mb-1">Required Skill</div>
-              <div className="text-sm text-gray-200">{getSkillForAchievement(name)}</div>
-            </div>
-            <div className="bg-gray-800/30 p-2 rounded">
-              <div className="text-xs text-gray-400 mb-1">Difficulty</div>
-              <div className="text-sm text-gray-200">{getDifficultyForAchievement(name)}</div>
-            </div>
+      {/* Always show trophy details section */}
+      <div className="mt-2 pt-3 border-t border-gray-700/30">
+        {/* Skill and Difficulty row - always visible */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-gray-800/30 p-2 rounded">
+            <div className="text-xs text-gray-400 mb-1">Trophy Type</div>
+            <div className="text-sm text-gray-200">{getSkillForAchievement(name)}</div>
           </div>
-          <div className="mt-3 bg-gray-800/30 p-2 rounded">
-            <div className="text-xs text-gray-400 mb-1">How to unlock</div>
-            <div className="text-sm text-gray-200">{description}</div>
+          <div className="bg-gray-800/30 p-2 rounded">
+            <div className="text-xs text-gray-400 mb-1">Difficulty</div>
+            <div className="text-sm text-gray-200">{getDifficultyForAchievement(name)}</div>
           </div>
         </div>
-      )}
+        
+        {/* How to unlock - always visible */}
+        <div className="mt-3 bg-gray-800/30 p-2 rounded">
+          <div className="text-xs text-gray-400 mb-1">How to earn this trophy</div>
+          <div className="text-sm text-gray-200">{description}</div>
+        </div>
+        
+        {/* Additional details only shown when showDetails is true */}
+        {showDetails && (
+          <div className="mt-3 bg-gray-800/30 p-2 rounded">
+            <div className="text-xs text-gray-400 mb-1">Reward</div>
+            <div className="text-sm text-gray-200">
+              {category === 'trophy' ? 'Exclusive Trophy Badge' : `${points} XP Points`}
+            </div>
+          </div>
+        )}
+      </div>
     </Card>
   );
 };

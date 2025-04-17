@@ -42,14 +42,17 @@ const RetroSearchPage = () => {
   }, []);
 
   // Query for IGDB games with fixed implementation
+  // Make sure searchTerm is always defined for React Query
+  const effectiveSearchTerm = searchTerm || '';
+
   const { data: igdbGames, isLoading: igdbGamesLoading, error: igdbGamesError, refetch: refetchIgdbGames } = useQuery({
-    queryKey: ['igdb', 'games', 'search', searchTerm || ''],
+    queryKey: ['igdb', 'games', 'search', effectiveSearchTerm],
     queryFn: async () => {
-      console.log('IGDB Query executing for search term:', searchTerm);
+      console.log('IGDB Query executing for search term:', effectiveSearchTerm);
       
       try {
         // Call the improved IGDB service directly
-        const games = await igdbService.searchGames(searchTerm, {
+        const games = await igdbService.searchGames(effectiveSearchTerm, {
           sort: 'popularity desc',
           limit: 12 // Increased from 10 to 12 for more results
         });
@@ -96,13 +99,13 @@ const RetroSearchPage = () => {
 
   // Query for streamers with search term
   const { data: streamersSearchData, isLoading: streamersSearchLoading, error: streamersSearchError, refetch: refetchStreamers } = useQuery<any[]>({
-    queryKey: ['streamers', 'search', searchTerm || ''],
+    queryKey: ['streamers', 'search', effectiveSearchTerm],
     queryFn: async () => {
-      if (!searchTerm || searchTerm.length < 2) {
+      if (!effectiveSearchTerm || effectiveSearchTerm.length < 2) {
         return [];
       }
 
-      const formattedSearchTerm = searchTerm.trim();
+      const formattedSearchTerm = effectiveSearchTerm.trim();
       
       console.log('Searching streamers for term:', formattedSearchTerm);
       
@@ -133,8 +136,8 @@ const RetroSearchPage = () => {
       
       return data || [];
     },
-    staleTime: searchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
-    enabled: Boolean(searchTerm), // Fixed boolean conversion
+    staleTime: effectiveSearchTerm ? 10000 : 60000, // Cache results for 10s when searching, 60s otherwise
+    enabled: effectiveSearchTerm.length > 0, // Only enable if there's a search term
   });
   
   // Separate query for top streamers (not search-dependent)
@@ -161,7 +164,7 @@ const RetroSearchPage = () => {
       return data || [];
     },
     staleTime: 60000, // Cache results for 60s
-    enabled: !searchTerm, // Keep as is as this should evaluate to boolean
+    enabled: effectiveSearchTerm.length === 0, // Only enable for empty search
   });
 
   // Better filtering for games that prioritizes search results
@@ -170,7 +173,7 @@ const RetroSearchPage = () => {
     console.log('getFilteredGames called, igdbGames:', igdbGames);
     
     // If search term is entered, prioritize IGDB search results
-    if (searchTerm && searchTerm.trim().length > 0) {
+    if (effectiveSearchTerm && effectiveSearchTerm.trim().length > 0) {
       if (igdbGames && igdbGames.length > 0) {
         // Return more results for a better browsing experience
         console.log('Returning IGDB search results:', igdbGames.slice(0, 10));
@@ -181,7 +184,7 @@ const RetroSearchPage = () => {
       } else {
         // If IGDB failed, fall back to mock data
         console.log('No IGDB results found, returning mock data');
-        return igdbService.getMockGamesBySearch(searchTerm, 10);
+        return igdbService.getMockGamesBySearch(effectiveSearchTerm, 10);
       }
     } 
     // If no search term, show top games
@@ -204,18 +207,18 @@ const RetroSearchPage = () => {
   const displayGames = getFilteredGames();
   
   // Get the appropriate streamers data based on search state
-  const displayStreamers = searchTerm 
+  const displayStreamers = effectiveSearchTerm 
     ? (streamersSearchData || []).slice(0, 5)  // Show more streamers in search results
     : (topStreamersData || []).slice(0, 5);
   
   // Combine loading states for better UI feedback
-  const isGamesLoading = gamesLoading || (searchTerm ? (igdbGamesLoading) : topGamesLoading);
-  const isStreamersLoading = streamersLoading || (searchTerm ? (streamersSearchLoading) : topStreamersLoading);
+  const isGamesLoading = gamesLoading || (effectiveSearchTerm ? (igdbGamesLoading) : topGamesLoading);
+  const isStreamersLoading = streamersLoading || (effectiveSearchTerm ? (streamersSearchLoading) : topStreamersLoading);
 
   // Debug logging for search functionality
   useEffect(() => {
     console.log('Search state:', { 
-      term: searchTerm, 
+      term: effectiveSearchTerm, 
       igdbGamesCount: igdbGames?.length || 0,
       topGamesCount: topGames?.length || 0,
       displayGamesCount: displayGames?.length || 0,
@@ -279,8 +282,8 @@ const RetroSearchPage = () => {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim().length > 0) {
-      console.log('Search submitted:', searchTerm);
+    if (effectiveSearchTerm && effectiveSearchTerm.trim().length > 0) {
+      console.log('Search submitted:', effectiveSearchTerm);
       // Invalidate queries to force a refresh
       queryClient.invalidateQueries({ 
         queryKey: ['igdb', 'games', 'search'], 
@@ -298,8 +301,8 @@ const RetroSearchPage = () => {
 
   const clearSearch = () => {
     setSearchTerm('');
-    queryClient.invalidateQueries(['topGames']);
-    queryClient.invalidateQueries(['topStreamers']);
+    queryClient.invalidateQueries({ queryKey: ['games', 'top-searched'] });
+    queryClient.invalidateQueries({ queryKey: ['streamers', 'top'] });
     
     // Focus the search input after clearing
     if (searchInputRef.current) {

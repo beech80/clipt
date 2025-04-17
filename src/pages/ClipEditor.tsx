@@ -1,19 +1,25 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { toast } from "sonner";
+import { Toaster, toast } from 'sonner';
+import { FaPlay, FaPause, FaSave, FaUpload, FaUndo, FaRedo, FaCheck, FaTimes } from 'react-icons/fa';
 import { Loader2, Save, Undo, Redo, Download, Scissors, Play, Pause, Check, ChevronLeft, Upload } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import FallbackVideoPlayer from "@/components/video/FallbackVideoPlayer";
+import "@/components/video-fixes.css";
+import "@/components/force-video-visibility.css";
+import BasicVideoPlayer from "@/components/BasicVideoPlayer";
+import EditorVideoPlayer from "@/components/video/EditorVideoPlayer";
 import { Json } from "@/integrations/supabase/types";
 import { formatTime } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ClipEditingSession {
   id?: string;
@@ -45,6 +51,8 @@ const ClipEditor = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoObjectUrl, setVideoObjectUrl] = useState<string>("");
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   
   // Trim related states
   const [trimStart, setTrimStart] = useState(0); // In seconds
@@ -52,655 +60,597 @@ const ClipEditor = () => {
   const [trimPreviewActive, setTrimPreviewActive] = useState(false);
   const [originalVideo, setOriginalVideo] = useState<Blob | null>(null);
   
-  // Determine if we're in "new" mode
-  const isNewMode = id === 'new';
+  // Define the state for edit mode
+  const [isNewMode, setIsNewMode] = useState(id === 'new');
 
-  // Load clip data
-  const { data: clipData, isLoading: clipLoading } = useQuery({
-    queryKey: ['clip', id],
-    queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('clips')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('Error loading clip:', error);
-        throw error;
-      }
-    },
-    enabled: !!id && id !== 'new',
-    onSuccess: (data) => {
-      if (data?.video_url) {
-        setVideoUrl(data.video_url);
-        setClipId(data.id);
-      }
+  // Handle file selection for upload with enhanced reliability
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    const acceptedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+    if (!acceptedTypes.includes(file.type)) {
+      toast.error('Please select a valid video file (MP4, WebM, MOV, or AVI)');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
-  });
+    
+    // Validate file size (max 50MB for Supabase free tier)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      toast.error(`File size exceeds 50MB limit (${(file.size / (1024 * 1024)).toFixed(2)}MB)`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    
+    console.log('Uploading file:', file.name, file.type, file.size);
+    toast.info(`Starting upload of ${file.name}`);
+    
+    // Simple reset of states first
+    setVideoDuration(0);
+    setTrimStart(0);
+    setTrimEnd(0);
+    
+    // Create a quick preview to check if the file is valid
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      const testVideo = document.createElement('video');
+      testVideo.src = objectUrl;
+      testVideo.muted = true;
+      testVideo.preload = 'metadata'; // Just load metadata first
+      testVideo.onloadedmetadata = () => {
+        console.log('Video metadata loaded, duration:', testVideo.duration);
+        // Success! File is valid
+      };
+      testVideo.onerror = () => {
+        toast.error('This video file appears to be corrupted or unsupported');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      };
+      // Will immediately release the URL when done testing
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (e) {
+      console.error('Error previewing file:', e);
+      toast.error('Could not preview this file'); 
+      return;
+    }
+    
+    // Continue with upload
+    uploadVideo(file);
+  };
 
-  // Load editing session
-  const { data: session, isLoading: sessionLoading } = useQuery({
-    queryKey: ['editing-session', id],
-    queryFn: async () => {
-      try {
-        const { data: dbData, error } = await supabase
-          .from('clip_editing_sessions')
-          .select('*')
-          .eq('clip_id', id)
-          .single();
+  // Upload video to storage and create post record - LOCAL FIRST APPROACH
+  const uploadVideo = async (file: File) => {
+    // This is a unique ID for the primary toast notification
+    const toastId = `upload-${Date.now()}`;
+    toast.loading('Loading video for editing...', { id: toastId });
+    
+    try {
+      // ================ STEP 1: LOCAL SETUP (HAPPENS IMMEDIATELY) ================
+      // Create immediate local preview - this is the most critical part
+      const immediatePreviewUrl = URL.createObjectURL(file);
+      setVideoObjectUrl(immediatePreviewUrl);
+      setVideoUrl(immediatePreviewUrl); 
+      setVideoLoaded(true);
+      setVideoBlob(file); 
+      setOriginalVideo(file);
+      setIsNewMode(false); // Force UI to show editing mode immediately
+      
+      // Setup a video element to get metadata
+      const videoElement = document.createElement('video');
+      videoElement.src = immediatePreviewUrl;
+      videoElement.muted = true;
+      videoElement.onloadedmetadata = () => {
+        setVideoDuration(videoElement.duration);
+        setTrimEnd(videoElement.duration);
+        toast.success('Video ready for editing!', { id: toastId });
         
-        if (error && error.code !== 'PGRST116') throw error;
-        
-        if (dbData) {
-          const parsedHistory = (dbData.edit_history as unknown as any[][]) || [];
-
-          // Apply previous trim settings if they exist
-          if (dbData.trim_start !== undefined && dbData.trim_end !== undefined) {
-            setTrimStart(dbData.trim_start);
-            setTrimEnd(dbData.trim_end || videoDuration);
+        // Add a tip about trim feature
+        setTimeout(() => {
+          toast.info('Tip: You can trim this video using the controls on the right', { duration: 5000 });
+        }, 2000);
+      };
+      
+      // Show user immediate success - the most important part is done
+      toast.success('Video loaded successfully!', { id: toastId });
+      
+      // ================ STEP 2: OPTIONAL CLOUD UPLOAD (CAN FAIL) ================
+      // This part is completely optional - if it fails, user can still edit locally
+      // We'll attempt this in the background using a non-blocking approach
+      
+      // Add a skip button for cloud upload
+      const skipToastId = 'skip-upload-' + Date.now();
+      toast.loading(
+        <div>
+          Cloud upload starting... 
+          <button 
+            className="ml-2 px-2 py-1 bg-gray-700 rounded text-white text-xs" 
+            onClick={() => {
+              toast.dismiss(skipToastId);
+              toast.success('Cloud upload skipped. You can still edit locally!', { duration: 3000 });
+            }}
+          >
+            Skip cloud upload
+          </button>
+        </div>, 
+        { id: skipToastId, duration: 30000 }
+      );
+      
+      // Now do the cloud upload in a non-blocking way
+      setTimeout(async () => {
+        try {
+          // Auth check
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) {
+            toast.error('Not signed in - using local mode only', { id: skipToastId });
+            return;
           }
-
-          return {
-            ...dbData,
-            edit_history: parsedHistory
-          } as ClipEditingSession;
+          
+          // Generate filename and path
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${uuidv4()}.${fileExt}`;
+          const filePath = `uploads/${user.id}/${fileName}`;
+          
+          toast.loading('Uploading to cloud...', { id: skipToastId });
+          
+          // Actual upload - but with a shorter timeout and upsert true
+          const uploadController = new AbortController();
+          const timeoutId = setTimeout(() => uploadController.abort(), 15000); // 15 second timeout
+          
+          try {
+            const { error } = await supabase.storage
+              .from('videos')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: true,
+                abortSignal: uploadController.signal,
+              });
+              
+            if (error) throw error;
+            
+            // Get URL - this should be quick
+            const { data: { publicUrl } } = supabase.storage.from('videos').getPublicUrl(filePath);
+            if (!publicUrl) throw new Error('Failed to get public URL');
+            
+            // Quick DB insert
+            const { data: dbData, error: dbError } = await supabase
+              .from('posts')
+              .insert([{
+                user_id: user.id,
+                video_url: publicUrl,
+                status: 'draft',
+                title: file.name.split('.')[0]
+              }])
+              .select('id')
+              .single();
+            
+            if (dbError) throw dbError;
+            
+            // Success path
+            setClipId(dbData.id);
+            setVideoUrl(publicUrl); // Store URL but keep using object URL for better performance
+            navigate(`/edit/${dbData.id}`, { replace: true });
+            toast.success('Cloud save complete!', { id: skipToastId });
+          } catch (cloudError: any) {
+            console.error('Cloud process error:', cloudError);
+            toast.error(`Cloud save failed: ${cloudError.message || 'Unknown error'}`, { id: skipToastId, duration: 3000 });
+          } finally {
+            clearTimeout(timeoutId);
+          }
+        } catch (e) {
+          console.error('Background upload error:', e);
+          toast.error('Failed to save to cloud (local only mode)', { id: skipToastId, duration: 3000 });
         }
-        return null;
-      } catch (error) {
-        console.error('Error loading editing session:', error);
-        throw error;
+      }, 1000); // 1 second delay before starting cloud upload
+      
+      return true; // Local setup was successful
+    } catch (error: any) {
+      // Something went wrong with the local setup (very unlikely)
+      console.error('Video loading error:', error);
+      toast.error(`Could not load video: ${error.message || 'Unknown error'}`, { id: toastId });
+      return false;
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
-    },
-    enabled: !!id && id !== 'new' && !!clipId
-  });
-
-  // Save session mutation
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      try {
-        const sessionData = {
-          clip_id: clipId,
-          effects: [],
-          edit_history: editHistory,
-          trim_start: trimStart,
-          trim_end: trimEnd,
-          status: 'draft'
-        };
-
-        const { error } = await supabase
-          .from('clip_editing_sessions')
-          .upsert(sessionData);
-
-        if (error) throw error;
-        return true;
-      } catch (error) {
-        console.error('Error saving session:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      toast.success('Edits saved successfully!');
-    },
-    onError: (error) => {
-      console.error('Save error:', error);
-      toast.error('Failed to save edits');
     }
-  });
-
-  // Publish clip mutation
-  const publishMutation = useMutation({
-    mutationFn: async () => {
-      try {
-        const { error } = await supabase
-          .from('clips')
-          .update({ status: 'published' })
-          .eq('id', clipId);
-
-        if (error) throw error;
-        return true;
-      } catch (error) {
-        console.error('Publish error:', error);
-        throw error;
-      }
-    },
-    onSuccess: (data: any) => {
-      toast.success('Clip published successfully!');
-      // Navigate to view the published clip
-      navigate('/clip/' + clipId);
-    },
-    onError: (error) => {
-      console.error('Publish error:', error);
-      toast.error('Failed to publish clip');
-    }
-  });
-
+  };
+  
   // Handle video metadata loaded
   const handleVideoLoaded = () => {
     if (videoRef.current) {
       const duration = videoRef.current.duration;
+      console.log('Video loaded with duration:', duration);
+      
       setVideoDuration(duration);
+      setVideoLoaded(true);
       
       // Initialize trim end to full duration if not set
       if (trimEnd === 0) {
         setTrimEnd(duration);
       }
       
-      setVideoLoaded(true);
-    }
-  };
-
-  // Handle video time update
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const currentTime = videoRef.current.currentTime;
-      setCurrentTime(currentTime);
+      // Start playing automatically
+      try {
+        const playPromise = videoRef.current.play();
+        
+        // Handle play promise for browsers that return one
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.error('Auto-play prevented', err);
+            // Show play button or instructions if autoplay fails
+            toast.info('Click the play button to view the video');
+          });
+        }
+      } catch (err) {
+        console.error('Error in play attempt', err);
+      }
       
-      // If in trim preview mode, loop the video within trim points
-      if (trimPreviewActive) {
-        if (currentTime >= trimEnd) {
-          videoRef.current.currentTime = trimStart;
-        } else if (currentTime < trimStart) {
-          videoRef.current.currentTime = trimStart;
-        }
-      }
+      // Make sure video is visible
+      videoRef.current.style.display = 'block';
+      videoRef.current.style.height = '70vh';
+      videoRef.current.style.objectFit = 'cover';
     }
-  };
-
-  // Handle play/pause
-  const togglePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        if (trimPreviewActive && currentTime >= trimEnd) {
-          videoRef.current.currentTime = trimStart;
-        }
-        videoRef.current.play();
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  // Enable/disable trim preview mode
-  const toggleTrimPreview = () => {
-    if (!videoLoaded) return;
-    
-    const newPreviewState = !trimPreviewActive;
-    setTrimPreviewActive(newPreviewState);
-    
-    if (videoRef.current) {
-      if (newPreviewState) {
-        // Enter preview mode, set video to start at trim start
-        videoRef.current.currentTime = trimStart;
-      }
-    }
-  };
-
-  // Apply trim to create a new video
-  const handleTrim = () => {
-    // For now, we'll just save the trim points
-    // In a real implementation, you would actually create a new trimmed video here
-    saveMutation.mutate();
-    toast.success('Trim points saved!');
-  };
-
-  const handleUndo = () => {
-    if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
-      // Apply the previous state
-    }
-  };
-
-  const handleRedo = () => {
-    if (historyIndex < editHistory.length - 1) {
-      setHistoryIndex(historyIndex + 1);
-      // Apply the next state
-    }
-  };
-
-  // Video event handlers
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    const onEnded = () => {
-      setIsPlaying(false);
-      if (trimPreviewActive) {
-        video.currentTime = trimStart;
-        video.play().catch(e => console.error('Error auto-playing video:', e));
-      }
-    };
-
-    video.addEventListener('play', onPlay);
-    video.addEventListener('pause', onPause);
-    video.addEventListener('ended', onEnded);
-    video.addEventListener('loadedmetadata', handleVideoLoaded);
-    video.addEventListener('timeupdate', handleTimeUpdate);
-
-    return () => {
-      video.removeEventListener('play', onPlay);
-      video.removeEventListener('pause', onPause);
-      video.removeEventListener('ended', onEnded);
-      video.removeEventListener('loadedmetadata', handleVideoLoaded);
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-    };
-  }, [trimPreviewActive, trimStart]);
-
-  // Handle file selection for upload
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Validate file is a video
-    if (!file.type.startsWith('video/')) {
-      toast.error('Please select a valid video file');
-      return;
-    }
-    
-    // Validate file size (100MB limit)
-    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
-    if (file.size > MAX_FILE_SIZE) {
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      toast.error(`Video file size must be less than 100MB. Your file is ${sizeMB}MB.`);
-      return;
-    }
-    
-    // Start upload process
-    await uploadVideo(file);
   };
   
-  // Upload video to storage and create clip record
-  const uploadVideo = async (file: File) => {
-    try {
-      setIsUploading(true);
-      setUploadProgress(0);
-      
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('You must be logged in to upload videos');
+  // Handle play/pause
+  const togglePlayPause = () => {
+    if (!videoRef.current) return;
+    
+    if (isPlaying) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play().catch(err => {
+        console.error('Error playing video:', err);
+      });
+    }
+  };
+  
+  // Toggle trim preview mode
+  const toggleTrimPreview = () => {
+    setTrimPreviewActive(!trimPreviewActive);
+    
+    // Reset video position when toggling preview
+    if (videoRef.current) {
+      if (!trimPreviewActive) { // About to turn preview ON
+        videoRef.current.currentTime = trimStart;
+      } else { // About to turn preview OFF
+        videoRef.current.currentTime = 0;
       }
-      
-      // Check file size again (max 100MB)
-      const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
-      if (file.size > MAX_FILE_SIZE) {
-        throw new Error(`File size exceeds the 100MB limit (Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB)`);
-      }
-      
-      // Create a new clip ID
-      const newClipId = uuidv4();
-      setClipId(newClipId);
-      
-      // Generate file path
-      const fileExt = file.name.split('.').pop();
-      const filePath = `clips/${user.id}/${newClipId}.${fileExt}`;
-      
-      // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from('videos')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
-      
-      if (uploadError) throw uploadError;
-      
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('videos')
-        .getPublicUrl(filePath);
-      
-      const videoUrl = urlData.publicUrl;
-      setVideoUrl(videoUrl);
-      
-      // Create clip record in database
-      const { error: dbError } = await supabase
-        .from('clips')
-        .insert({
-          id: newClipId,
-          user_id: user.id,  // Add user_id to fix row-level security policy
-          video_url: videoUrl,
-          title: file.name.split('.')[0], // Use filename as initial title
-          status: 'draft',
-          created_at: new Date().toISOString()
-        });
-      
-      if (dbError) throw dbError;
-      
-      // Update URL to reflect the new clip ID
-      navigate(`/clip-editor/${newClipId}`, { replace: true });
-      
-      toast.success('Video uploaded successfully!');
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      const errorMessage = error?.message || 'An unknown error occurred';
-      toast.error(`Upload failed: ${errorMessage}`);
-    } finally {
-      setIsUploading(false);
     }
   };
 
-  // Loading state
-  if (clipLoading || sessionLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
-  }
+  // Apply trim to create a new video with draft preview - simplified and more reliable
+  const handleTrim = async () => {
+    if (!videoBlob || !videoLoaded || trimStart >= trimEnd) {
+      toast.error('Cannot trim: Invalid video or trim points');
+      return;
+    }
+
+    const trimToastId = 'trim-' + Date.now();
+    toast.loading('Creating draft trim...', { id: trimToastId, duration: 2000 });
+    
+    try {
+      // First show a draft preview by force-enabling trim preview mode
+      setTrimPreviewActive(true);
+      
+      // Create a drafted thumbnail for the trimmed video (visual feedback)
+      if (videoRef.current) {
+        // Force seek to trim start to show the beginning of trimmed clip
+        videoRef.current.currentTime = trimStart;
+        
+        // Show "DRAFT" as an overlay element rather than trying to modify the video
+        toast.success('DRAFT TRIM PREVIEW ACTIVE', { 
+          id: 'draft-indicator',
+          duration: 3000,
+          position: 'top-center',
+          style: { 
+            background: 'rgba(255,255,255,0.3)', 
+            backdropFilter: 'blur(4px)',
+            fontSize: '20px',
+            fontWeight: 'bold'
+          }
+        });
+      }
+      
+      // Local application of trim settings
+      // This works even if we can't connect to the database
+      setTimeout(() => {
+        toast.success('Trim preview applied!', { id: trimToastId });
+        
+        // Try to save to database if we have a clip ID
+        if (clipId) {
+          const dbToastId = 'db-trim-' + Date.now();
+          toast.loading('Saving trim settings to cloud...', { id: dbToastId });
+          
+          supabase
+            .from('posts')
+            .update({
+              trim_start: trimStart,
+              trim_end: trimEnd,
+              status: 'trimmed'
+            })
+            .eq('id', clipId)
+            .then(({ error }) => {
+              if (error) {
+                console.error('Error saving trim settings:', error);
+                toast.error('Cloud save failed, but trim is applied locally', { id: dbToastId });
+                
+                // Still navigate to post form even if cloud save failed
+                setTimeout(() => navigate(`/post-form?clipId=${clipId}`), 1000);
+              } else {
+                toast.success('Trim settings saved to cloud!', { id: dbToastId });
+                
+                // Navigate to post form after successful save with a slight delay to show the success message
+                setTimeout(() => navigate(`/post-form?clipId=${clipId}`), 1000);
+              }
+            })
+            .catch(err => {
+              console.error('Exception saving trim:', err);
+              toast.error('Cloud save error, but trim is applied locally', { id: dbToastId });
+              
+              // Still navigate to post form even if there was an error
+              setTimeout(() => navigate(`/post-form?clipId=${clipId}`), 1000);
+            });
+        } else {
+          // If we don't have a clip ID but we have a videoBlob, we can still create a post
+          toast.info('Trim applied locally only', { duration: 2000 });
+          
+          // Generate a temporary ID for new clips
+          const tempId = uuidv4();
+          setClipId(tempId);
+          
+          // Navigate to post form with the temporary ID
+          setTimeout(() => navigate(`/post-form?clipId=${tempId}`), 1000);
+        }
+      }, 1500);
+    } catch (error) {
+      console.error('Error during trim operation:', error);
+      toast.error('Trim operation failed, but you can try again', { id: trimToastId });
+      setTrimPreviewActive(false); // Disable preview mode on error
+    }
+  };
+
+  // Additional useEffect to handle video availability
+  useEffect(() => {
+    if (videoObjectUrl || videoUrl) {
+      // If we have a video, ensure we're in edit mode
+      if (isNewMode) {
+        setIsNewMode(false);
+      }
+    }
+  }, [videoObjectUrl, videoUrl]);
 
   return (
-    <div className="container py-6 px-4 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="gap-1">
-          <ChevronLeft className="w-4 h-4" /> Back
-        </Button>
-        <h1 className="text-2xl font-bold mt-2">Clip Editor</h1>
-        <p className="text-muted-foreground">Trim and edit your gameplay clip</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Video Preview */}
-        <div className="md:col-span-2">
-          <Card className="overflow-hidden">
-            <div className="relative aspect-video bg-black overflow-hidden rounded-t-lg">
-              {isNewMode && !videoUrl ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
-                  <input
-                    type="file"
-                    accept="video/*"
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  {isUploading ? (
-                    <div className="w-full max-w-md">
-                      <div className="mb-2 flex justify-between text-sm">
-                        <span>Uploading video...</span>
-                        <span>{Math.round(uploadProgress)}%</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2.5">
-                        <div 
-                          className="bg-gaming-600 h-2.5 rounded-full" 
-                          style={{ width: `${uploadProgress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <h3 className="text-lg font-semibold mb-2">Upload Your Gameplay Clip</h3>
-                      <p className="text-muted-foreground mb-4">Select a video file to upload and edit</p>
-                      <Button 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="bg-gaming-600 hover:bg-gaming-700"
-                      >
-                        <Upload className="w-4 h-4 mr-2" /> Select Video
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ) : clipLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : videoUrl ? (
-                <div className="relative w-full h-full">
-                  <FallbackVideoPlayer
-                    videoUrl={videoUrl}
-                    className="w-full h-full object-contain"
-                    controls={false}
-                    autoPlay={false}
-                    muted={false}
-                    loop={false}
-                    ref={videoRef}
-                  />
-                  
-                  {/* Video Controls */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                    <div className="flex items-center justify-between text-white gap-2">
-                      <Button variant="ghost" size="icon" onClick={togglePlayPause} className="text-white hover:bg-white/20">
-                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                      </Button>
-                      
-                      <div className="flex-1 mx-2">
-                        <div className="relative h-1 bg-white/30 rounded-full overflow-hidden">
-                          <div 
-                            className="absolute top-0 left-0 h-full bg-white"
-                            style={{ width: `${(currentTime / videoDuration) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                      
-                      <span className="text-xs">{formatTime(currentTime)} / {formatTime(videoDuration)}</span>
-                      
-                      <Button 
-                        onClick={toggleTrimPreview} 
-                        variant={trimPreviewActive ? "default" : "outline"}
-                        className="p-1 hover:bg-white/20 rounded"
-                        title={trimPreviewActive ? 'Exit trim preview' : 'Preview trim'}
-                      >
-                        <Scissors className="w-5 h-5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-muted-foreground">No video available</p>
-                </div>
-              )}
-            </div>
-            
-            <div className="p-4">
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline" 
-                  onClick={handleTrim}
-                  disabled={!videoLoaded || trimPreviewActive || trimStart === 0 && trimEnd === videoDuration}
-                >
-                  <Scissors className="w-4 h-4 mr-2" />
-                  Apply Trim
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={handleUndo}
-                  disabled={!videoLoaded || historyIndex <= 0}
-                >
-                  <Undo className="w-4 h-4 mr-2" />
-                  Undo
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={handleRedo}
-                  disabled={!videoLoaded || historyIndex >= editHistory.length - 1}
-                >
-                  <Redo className="w-4 h-4 mr-2" />
-                  Redo
-                </Button>
-                
-                <Button
-                  variant="default"
-                  className="ml-auto bg-purple-600 hover:bg-purple-700"
-                  onClick={() => {
-                    if (clipId && videoUrl) {
-                      navigate(`/new-post?clipId=${clipId}&videoUrl=${encodeURIComponent(videoUrl)}`);
-                    } else {
-                      toast.error('Please upload and edit a video first');
-                    }
-                  }}
-                  disabled={!videoLoaded || !clipId || !videoUrl}
-                >
-                  Next: Add Caption
-                </Button>
-              </div>
-              
-              {videoUrl && (
-                <div className="flex gap-4">
-                  <Button
-                    variant="default"
-                    className="flex-1"
-                    onClick={() => saveMutation.mutate()}
-                    disabled={saveMutation.isPending}
-                  >
-                    {saveMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-2" />
-                    )}
-                    Save Draft
-                  </Button>
-                  
-                  <Button
-                    variant="default"
-                    className="flex-1 bg-gaming-600 hover:bg-gaming-700"
-                    onClick={() => publishMutation.mutate()}
-                    disabled={publishMutation.isPending}
-                  >
-                    {publishMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Check className="w-4 h-4 mr-2" />
-                    )}
-                    Publish
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Card>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6">
+      <Toaster position="top-center" />
+      <h1 className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
+        Clip Editor Studio
+      </h1>
+      
+      {/* Enhanced Video Upload Zone with Animation */}
+      {!videoLoaded && (
+        <motion.div 
+          className="mb-8 p-8 border-2 border-dashed border-violet-500/50 rounded-lg text-center cursor-pointer bg-black/70 backdrop-blur hover:border-violet-400" 
+          onClick={() => fileInputRef.current?.click()}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(139, 92, 246, 0.3)" }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Upload className="w-12 h-12 mx-auto mb-4 text-violet-500" />
+          <h2 className="text-xl font-bold mb-2 text-white">Upload Your Video</h2>
+          <p className="text-gray-400">Click to browse or drop your video file here</p>
+          <p className="text-xs text-gray-500 mt-2">MP4, WebM, or MOV up to 50MB</p>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="video/mp4,video/webm,video/quicktime,video/x-msvideo"
+            className="hidden"
+          />
+        </motion.div>
+      )}
+      
+      {isNewMode && (
+        <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-700 rounded-lg mb-8 hover:border-purple-500 transition-all">
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className={`px-8 py-4 rounded-lg flex items-center space-x-3 text-lg font-medium transition-all ${isUploading 
+              ? 'bg-blue-700 text-white cursor-wait' 
+              : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white transform hover:scale-105'}`}
+            disabled={isUploading}
+          >
+            <FaUpload className="mr-2" />
+            <span>
+              {isUploading 
+                ? `Uploading (${Math.round(uploadProgress)}%)` 
+                : 'Upload Video'}
+            </span>
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="video/*"
+            className="hidden"
+          />
+          <p className="mt-4 text-gray-400 text-sm">Max 50MB - MP4, WebM, MOV</p>
         </div>
-        
-        {/* Trim Settings */}
-        <div className="md:col-span-1">
-          <Card className="p-4 h-full">
-            <h3 className="text-lg font-semibold mb-4">Trim Settings</h3>
-            
-            <div className="space-y-6">
-              {/* Trim Controls */}
+      )}
+      
+      {(videoObjectUrl || videoUrl) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+          <div className="md:col-span-2">
+            <Card className="p-4 h-full overflow-hidden">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Trim Video Clip</h4>
-                </div>
+                <h3 className="text-lg font-semibold">Preview</h3>
                 
-                {/* Start Time */}
-                <div className="space-y-2">
-                  <Label htmlFor="trimStart">Start Time</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="trimStart"
-                      type="number"
-                      min={0}
-                      max={trimEnd}
-                      step={0.1}
-                      value={trimStart.toFixed(1)}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        setTrimStart(value > trimEnd ? trimEnd : value);
-                      }}
-                      disabled={!videoLoaded}
-                    />
-                    <span className="text-sm text-muted-foreground w-20">
-                      {formatTime(trimStart)}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* End Time */}
-                <div className="space-y-2">
-                  <Label htmlFor="trimEnd">End Time</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="trimEnd"
-                      type="number"
-                      min={trimStart}
-                      max={videoDuration}
-                      step={0.1}
-                      value={trimEnd.toFixed(1)}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        setTrimEnd(value < trimStart ? trimStart : (value > videoDuration ? videoDuration : value));
-                      }}
-                      disabled={!videoLoaded}
-                    />
-                    <span className="text-sm text-muted-foreground w-20">
-                      {formatTime(trimEnd)}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Trim Slider */}
-                <div className="pt-4">
-                  <Slider
-                    value={[trimStart, trimEnd]}
-                    min={0}
-                    max={videoDuration || 100}
-                    step={0.1}
-                    onValueChange={([start, end]) => {
-                      setTrimStart(start);
-                      setTrimEnd(end);
-                    }}
-                    disabled={!videoLoaded}
-                  />
-                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                    <span>{formatTime(0)}</span>
-                    <span>{formatTime(videoDuration)}</span>
-                  </div>
-                </div>
-                
-                {/* Trim Preview Button */}
-                <Button 
-                  onClick={toggleTrimPreview} 
-                  variant={trimPreviewActive ? "default" : "outline"}
-                  className="w-full mt-2"
-                  disabled={!videoLoaded}
+                {/* Video Display */}
+                <div 
+                  className="relative overflow-hidden rounded-lg bg-black trim-preview video-player-container" 
+                  style={{ display: 'block' }}
                 >
-                  {trimPreviewActive ? (
+                  {videoUrl || videoObjectUrl ? (
                     <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Exit Preview Mode
+                      <BasicVideoPlayer
+                        ref={videoRef}
+                        src={videoObjectUrl || videoUrl}
+                        onLoaded={(duration) => {
+                          setVideoDuration(duration);
+                          setVideoLoaded(true);
+                          if (trimEnd === 0) {
+                            setTrimEnd(duration);
+                          }
+                        }}
+                        controls={!trimPreviewActive}
+                        autoPlay={isPlaying}
+                        muted={false}
+                        loop={trimPreviewActive}
+                        className="video-player"
+                      />
+                      
+                      {/* Play/Pause button */}
+                      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="bg-black/70 hover:bg-black/90"
+                          onClick={togglePlayPause}
+                        >
+                          {isPlaying ? (
+                            <><FaPause className="mr-2" /> Pause</>
+                          ) : (
+                            <><FaPlay className="mr-2" /> Play</>
+                          )}
+                        </Button>
+                      </div>
                     </>
                   ) : (
-                    <>
-                      <Play className="w-4 h-4 mr-2" />
-                      Preview Trimmed Clip
-                    </>
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-muted-foreground">No video selected</p>
+                    </div>
                   )}
-                </Button>
-              </div>
-              
-              {/* Trim Info */}
-              <div className="p-3 bg-muted/50 rounded-md">
-                <h4 className="text-sm font-medium mb-2">Trim Summary</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Original Duration:</span>
-                    <span>{formatTime(videoDuration)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">New Duration:</span>
-                    <span>{formatTime(trimEnd - trimStart)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Reduction:</span>
-                    <span>{videoDuration ? `${Math.round(100 - ((trimEnd - trimStart) / videoDuration * 100))}%` : '0%'}</span>
-                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
+          
+          <div className="md:col-span-1">
+            <Card className="p-4 h-full">
+              <h3 className="text-lg font-semibold mb-4">Trim Settings</h3>
+              
+              <div className="space-y-6">
+                {/* Trim Controls */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Trim Video Clip</h4>
+                  </div>
+                  
+                  {/* Start Time */}
+                  <div className="space-y-2">
+                    <Label htmlFor="trimStart">Start Time</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="trimStart"
+                        type="number"
+                        min={0}
+                        max={trimEnd}
+                        step={0.1}
+                        value={trimStart.toFixed(1)}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          setTrimStart(value > trimEnd ? trimEnd : value);
+                        }}
+                        disabled={!videoLoaded}
+                      />
+                      <span className="text-sm text-muted-foreground w-20">
+                        {formatTime(trimStart)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* End Time */}
+                  <div className="space-y-2">
+                    <Label htmlFor="trimEnd">End Time</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="trimEnd"
+                        type="number"
+                        min={trimStart}
+                        max={videoDuration}
+                        step={0.1}
+                        value={trimEnd.toFixed(1)}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          setTrimEnd(value < trimStart ? trimStart : (value > videoDuration ? videoDuration : value));
+                        }}
+                        disabled={!videoLoaded}
+                      />
+                      <span className="text-sm text-muted-foreground w-20">
+                        {formatTime(trimEnd)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Trim Slider */}
+                  <div className="pt-4">
+                    <Slider
+                      value={[trimStart, trimEnd]}
+                      min={0}
+                      max={videoDuration || 100}
+                      step={0.1}
+                      onValueChange={([start, end]) => {
+                        setTrimStart(start);
+                        setTrimEnd(end);
+                      }}
+                      disabled={!videoLoaded}
+                    />
+                    <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                      <span>{formatTime(0)}</span>
+                      <span>{formatTime(videoDuration)}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Trim Preview Button */}
+                  <Button 
+                    onClick={toggleTrimPreview} 
+                    variant={trimPreviewActive ? "default" : "outline"}
+                    className="w-full mt-2"
+                    disabled={!videoLoaded}
+                  >
+                    {trimPreviewActive ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Exit Preview Mode
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        Preview Trimmed Clip
+                      </>
+                    )}
+                  </Button>
+                  
+                  {/* Apply Trim Button */}
+                  <Button 
+                    onClick={handleTrim} 
+                    variant="default"
+                    className="w-full mt-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    disabled={!videoLoaded || trimStart >= trimEnd}
+                  >
+                    <Scissors className="w-4 h-4 mr-2" />
+                    Apply Trim (Works Offline)
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

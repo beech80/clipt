@@ -4,12 +4,53 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { BackButton } from '@/components/ui/back-button';
-import { Camera, Upload, X, Video, Image as ImageIcon, Search, Gamepad2 } from 'lucide-react';
+import { Camera, Upload, X, Video, Image as ImageIcon, Search, Gamepad2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { allGames } from '@/data/gamesList';
+import { motion, AnimatePresence } from 'framer-motion';
+import '../stars-bg.css';
 
 const NewPost = () => {
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  } as const;
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: "spring", stiffness: 300, damping: 25 }
+    }
+  } as const;
+  
+  const shimmerVariants = {
+    hidden: { backgroundPosition: '200% 0' },
+    visible: { 
+      backgroundPosition: '-200% 0',
+      transition: { repeat: Infinity, duration: 3, ease: "linear" }
+    }
+  } as const;
+  
+  const pulseVariants = {
+    hidden: { scale: 0.97, opacity: 0.7 },
+    visible: { 
+      scale: 1, 
+      opacity: 1,
+      transition: { 
+        repeat: Infinity, 
+        repeatType: "reverse" as const, 
+        duration: 1.5 
+      }
+    }
+  } as const;
+
   const navigate = useNavigate();
   const location = useLocation();
   const [postDestination, setPostDestination] = useState('clipts'); // Default to clipts for edited videos
@@ -51,13 +92,14 @@ const NewPost = () => {
       return;
     }
     
-    // Validate file types based on destination
-    if (postDestination === 'clipts') {
-      const invalidFiles = files.filter(file => !file.type.startsWith('video/'));
-      if (invalidFiles.length > 0) {
-        toast.error('Only video files are allowed for Clipts');
-        return;
-      }
+    // Validate file types - allow both images and videos always
+    const validFiles = files.filter(file => 
+      file.type.startsWith('image/') || file.type.startsWith('video/')
+    );
+    
+    if (validFiles.length !== files.length) {
+      toast.error('Only image and video files are supported');
+      return;
     }
     
     // Validate file size
@@ -247,8 +289,25 @@ const NewPost = () => {
   };
 
   return (
-    <div className="bg-black min-h-screen text-white">
-      <div className="max-w-xl mx-auto p-4 pb-24">
+    <motion.div 
+      className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-white overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="stars-bg">
+          <div className="stars-small"></div>
+          <div className="stars-medium"></div>
+          <div className="stars-large"></div>
+        </div>
+      </div>
+      <motion.div 
+        className="container max-w-md mx-auto p-4 pt-12 relative z-10"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <div className="flex items-center justify-between mb-4">
           <BackButton />
           <h1 className="text-xl font-bold">New Post</h1>
@@ -272,26 +331,46 @@ const NewPost = () => {
           </button>
         </div>
         
-        <div className="space-y-4">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+        <motion.div 
+          className="p-6 bg-gray-900/80 backdrop-blur-sm rounded-lg border border-gray-800 shadow-xl relative overflow-hidden"
+          variants={itemVariants}
+        >
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-r from-purple-800/10 via-blue-800/5 to-purple-800/10 pointer-events-none"
+            variants={shimmerVariants}
+            initial="hidden"
+            animate="visible"
+            style={{ backgroundSize: '200% 100%' }}
+          ></motion.div>
+          <motion.form 
+            onSubmit={handleSubmit} 
+            className="space-y-6 relative z-10"
+            variants={containerVariants}
+          >
             {/* Game Selection Field */}
             <div className="mb-4">
               <label className="block text-white font-medium mb-2">
                 Select Game <span className="text-red-400">*</span>
               </label>
-              <div className="relative">
+              <motion.div className="mb-2" variants={itemVariants}>
                 <div className="relative">
-                  <Input
-                    type="text"
-                    className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-400 pr-10"
-                    placeholder="Search for a game..."
-                    value={selectedGame ? selectedGame.name : gameSearch}
-                    onChange={(e) => {
-                      setSelectedGame(null);
-                      handleGameSearch(e.target.value);
-                    }}
-                    onFocus={() => setShowGameSearch(true)}
-                  />
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Input
+                      type="text"
+                      className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-400 pr-10"
+                      placeholder="Search for a game..."
+                      value={selectedGame ? selectedGame.name : gameSearch}
+                      onChange={(e) => {
+                        setSelectedGame(null);
+                        handleGameSearch(e.target.value);
+                      }}
+                      onFocus={() => setShowGameSearch(true)}
+                    />
+                  </motion.div>
+                  
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                     {selectedGame ? (
                       <button
@@ -306,31 +385,31 @@ const NewPost = () => {
                     )}
                   </div>
                 </div>
+              </motion.div>
 
-                {/* Search Results */}
-                {showGameSearch && (
-                  <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
-                    {gameSearchResults.length > 0 ? (
-                      gameSearchResults.map((game) => (
-                        <div
-                          key={game.id}
-                          className="p-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2"
-                          onClick={() => handleGameSelect(game)}
-                        >
-                          <Gamepad2 size={16} className="text-purple-400" />
-                          <span>{game.name}</span>
-                        </div>
-                      ))
-                    ) : (
-                      gameSearch.trim() && (
-                        <div className="p-2 text-center text-gray-400">
-                          No games found matching "{gameSearch}"
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
+              {/* Search Results */}
+              {showGameSearch && (
+                <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+                  {gameSearchResults.length > 0 ? (
+                    gameSearchResults.map((game) => (
+                      <div
+                        key={game.id}
+                        className="p-2 hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                        onClick={() => handleGameSelect(game)}
+                      >
+                        <Gamepad2 size={16} className="text-purple-400" />
+                        <span>{game.name}</span>
+                      </div>
+                    ))
+                  ) : (
+                    gameSearch.trim() && (
+                      <div className="p-2 text-center text-gray-400">
+                        No games found matching "{gameSearch}"
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
               {postDestination === 'clipts' && (
                 <p className="text-xs text-gray-400 mt-1">
                   <Video className="inline-block mr-1" size={14} />
@@ -340,18 +419,26 @@ const NewPost = () => {
             </div>
 
             {/* Description Field */}
-            <div>
-              <Textarea 
-                placeholder="Share your gaming moment..."
-                className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-400 min-h-[120px]"
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-              />
-            </div>
+            <motion.div variants={itemVariants} className="space-y-2">
+              <label className="block text-white font-medium mb-2 flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-purple-400" /> Caption
+              </label>
+              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                <Textarea 
+                  placeholder="Share your gaming moment..."
+                  className="bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-400 min-h-[120px]"
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                />
+              </motion.div>
+            </motion.div>
             
             {/* Media Preview */}
             {(mediaPreviewUrls.length > 0 || videoUrl) && (
-              <div className="grid grid-cols-3 gap-2">
+              <motion.div 
+                className="grid grid-cols-3 gap-2"
+                variants={itemVariants}
+              >
                 {videoUrl ? (
                   <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden col-span-3">
                     <video 
@@ -395,47 +482,135 @@ const NewPost = () => {
                     <Upload className="h-8 w-8 text-gray-400" />
                   </div>
                 )}
-              </div>
+              </motion.div>
             )}
             
             {/* Media Upload Area */}
             {mediaPreviewUrls.length === 0 && !videoUrl && (
-              <div 
+              <motion.div
+                variants={itemVariants}
+                whileHover={{ 
+                  scale: 1.02, 
+                  boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)', 
+                  borderColor: 'rgba(168, 85, 247, 0.5)' 
+                }}
+                whileTap={{ scale: 0.98 }} 
                 className="border-2 border-dashed border-gray-700 rounded-lg p-8 text-center cursor-pointer hover:border-purple-500/50 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-400">
+                <motion.div
+                  variants={pulseVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <Upload className="mx-auto h-12 w-12 text-purple-400" />
+                </motion.div>
+                <motion.p 
+                  className="mt-2 text-sm text-gray-300"
+                  animate={{ 
+                    textShadow: ['0 0 0px rgba(168, 85, 247, 0)', '0 0 2px rgba(168, 85, 247, 0.5)', '0 0 0px rgba(168, 85, 247, 0)'] 
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
                   Drag and drop your media here, or click to browse
-                </p>
+                </motion.p>
                 <p className="mt-1 text-xs text-gray-500">
-                  {postDestination === 'clipts' 
-                    ? 'Supports: MP4, WEBM videos (max 50MB)'
-                    : 'Supports: JPG, PNG, GIF, MP4 (max 50MB, up to 5 files)'
-                  }
+                  Supports: JPG, PNG, GIF, MP4, WEBM (max 50MB, up to 5 files)
                 </p>
-              </div>
+              </motion.div>
             )}
             
             <input 
               type="file" 
               ref={fileInputRef}
               className="hidden"
-              accept={postDestination === 'clipts' ? 'video/*' : 'image/*,video/*'}
+              accept="image/*,video/*"
               onChange={handleFileChange}
               multiple={postDestination === 'home'}
             />
             
-            <Button 
-              type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-            >
-              Post
-            </Button>
-          </form>
-        </div>
-      </div>
-    </div>
+            <motion.div variants={itemVariants} className="pt-4">
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Button 
+                  type="submit"
+                  className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white relative overflow-hidden group font-medium"
+                >
+                  <motion.span 
+                    className="relative z-10 flex items-center justify-center gap-2"
+                    animate={{ textShadow: ['0 0 0px rgba(255,255,255,0.5)', '0 0 10px rgba(255,255,255,0.8)', '0 0 0px rgba(255,255,255,0.5)'] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Post Now
+                  </motion.span>
+                  <motion.span 
+                    className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-100" 
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "100%" }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  ></motion.span>
+                </Button>
+              </motion.div>
+            </motion.div>
+          </motion.form>
+        </motion.div>
+      </motion.div>
+      
+      {/* Add animated decorative elements */}
+      <motion.div 
+        className="fixed bottom-6 right-6 w-24 h-24 pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ 
+          opacity: [0.2, 0.5, 0.2], 
+          rotate: 360 
+        }}
+        transition={{ 
+          duration: 20, 
+          repeat: Infinity, 
+          ease: "linear" 
+        }}
+      >
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-purple-500/10 via-blue-500/5 to-purple-500/10 blur-lg" />
+      </motion.div>
+      
+      {/* Add another decorative element */}
+      <motion.div 
+        className="fixed top-20 left-10 w-32 h-32 pointer-events-none opacity-30"
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ 
+          opacity: 0.3, 
+          scale: 1,
+          rotate: -360 
+        }}
+        transition={{ 
+          duration: 30, 
+          repeat: Infinity, 
+          ease: "linear" 
+        }}
+      >
+        <div className="absolute inset-0 rounded-full border-4 border-blue-500/20 border-t-purple-500/40" />
+      </motion.div>
+      
+      {/* Add third decorative element */}
+      <motion.div
+        className="fixed bottom-20 left-10 w-24 h-24 pointer-events-none opacity-20"
+        initial={{ opacity: 0 }}
+        animate={{ 
+          opacity: [0.1, 0.3, 0.1], 
+          rotate: 180 
+        }}
+        transition={{ 
+          duration: 15, 
+          repeat: Infinity, 
+          ease: "linear" 
+        }}
+      >
+        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-blue-500/10 via-purple-500/5 to-blue-500/10 blur-xl" />
+      </motion.div>
+    </motion.div>
   );
 };
 

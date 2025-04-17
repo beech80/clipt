@@ -1,0 +1,226 @@
+/* Donation Panel Styles */
+.donation-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  background: rgba(34, 17, 17, 0.95);
+  border-radius: 1rem;
+  border: 2px solid #99DD55;
+  box-shadow: 0 0 30px rgba(153, 221, 85, 0.6);
+  z-index: 1500;
+  overflow: hidden;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.donation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(153, 221, 85, 0.5);
+  padding-bottom: 1rem;
+}
+
+.donation-header h3 {
+  margin: 0;
+  color: #99DD55;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1rem;
+  text-shadow: 0 0 10px rgba(153, 221, 85, 0.7);
+}
+
+.close-donation {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.streamer-donation-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.donation-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid #FF8833;
+}
+
+.streamer-donation-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.streamer-donation-info p {
+  margin: 0;
+  color: #99DD55;
+  font-size: 0.9rem;
+}
+
+.donation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.amount-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.amount-option {
+  background: #331111;
+  border: 1px solid #442222;
+  border-radius: 0.5rem;
+  padding: 0.75rem 0;
+  color: white;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.amount-option:hover {
+  background: #442222;
+}
+
+.amount-option.selected {
+  background: #FF8833;
+  color: white;
+  border-color: #FF8833;
+}
+
+.custom-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.custom-amount label {
+  color: white;
+  font-size: 0.9rem;
+}
+
+.custom-amount-input {
+  display: flex;
+  align-items: center;
+  background: #221111;
+  border: 1px solid #442222;
+  border-radius: 0.5rem;
+  padding: 0 0.75rem;
+}
+
+.custom-amount-input span {
+  color: #FF8833;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding-right: 0.5rem;
+}
+
+.custom-amount-input input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 0.75rem 0;
+  font-size: 1rem;
+  outline: none;
+}
+
+.donation-message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.donation-message label {
+  color: white;
+  font-size: 0.9rem;
+}
+
+.donation-message textarea {
+  background: #221111;
+  border: 1px solid #442222;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  color: white;
+  resize: none;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.donate-submit-button {
+  background: #FF3333;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.85rem;
+  color: white;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-top: 0.5rem;
+}
+
+.donate-submit-button:hover:not(:disabled) {
+  background: #FF4444;
+  transform: scale(1.02);
+}
+
+.donate-submit-button:disabled {
+  background: #662222;
+  cursor: not-allowed;
+}
+
+/* Bottom panel chat */
+.bottom-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70vh;
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+  border-left: none;
+  border-right: none;
+  width: 100%;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Follow button styles */
+.action-btn.follow.following {
+  background: #FF3333;
+  position: relative;
+}
+
+.action-btn.follow.following:after {
+  content: '✓';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  background: #99DD55;
+  border-radius: 50%;
+  font-size: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-weight: bold;
+  border: 1px solid #221111;
+}

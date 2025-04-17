@@ -1,0 +1,36 @@
+/* Hide only specific rainbow circular buttons while keeping essential UI visible */
+.video-actions .chat-button,
+.video-actions .like-button,
+.video-actions .share-button {
+  display: none !important;
+}
+
+/* Keep only the gameboy controller visible */
+.gameboy-controller {
+  display: flex !important;
+}
+
+/* Increase icon size in Xbox controller buttons for better visibility */
+.action-btn svg {
+  width: 22px !important;
+  height: 22px !important;
+  color: white !important;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.8)) !important;
+}
+
+/* Specific button color overrides to ensure Xbox colors */
+.action-btn.comment {
+  background: #107c10 !important; /* Xbox green */
+}
+
+.action-btn.donate {
+  background: #f25022 !important; /* Xbox orange/red */
+}
+
+.action-btn.follow {
+  background: #00a4ef !important; /* Xbox blue */
+}
+
+.action-btn.clipt {
+  background: #ffb900 !important; /* Xbox yellow */
+}

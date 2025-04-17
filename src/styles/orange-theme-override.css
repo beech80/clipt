@@ -1,0 +1,183 @@
+/* Global overrides to replace all purple elements with orange */
+
+:root {
+  --primary: #FF6B00 !important;
+  --primary-light: #FF8C00 !important;
+  --primary-dark: #E55A00 !important;
+  --primary-50: #FFF0E6 !important;
+  --primary-100: #FFE1CC !important;
+  --primary-200: #FFC499 !important;
+  --primary-300: #FFA666 !important;
+  --primary-400: #FF8733 !important;
+  --primary-500: #FF6B00 !important;
+  --primary-600: #E55A00 !important;
+  --primary-700: #CC4A00 !important;
+  --primary-800: #B23D00 !important;
+  --primary-900: #992D00 !important;
+  
+  /* Override purple variables */
+  --purple: #FF6B00 !important;
+  --purple-50: #FFF0E6 !important;
+  --purple-100: #FFE1CC !important;
+  --purple-200: #FFC499 !important;
+  --purple-300: #FFA666 !important;
+  --purple-400: #FF8733 !important;
+  --purple-500: #FF6B00 !important;
+  --purple-600: #E55A00 !important;
+  --purple-700: #CC4A00 !important;
+  --purple-800: #B23D00 !important;
+  --purple-900: #992D00 !important;
+  
+  --accent: #FF6B00 !important;
+  --highlight: #FF6B00 !important;
+}
+
+/* Target all settings page elements */
+.settings-page,
+.settings-container,
+[class*="settings"],
+[id*="settings"],
+[class*="option"],
+[id*="option"] {
+  background-color: #0e0e1a !important;
+}
+
+/* ONLY Settings buttons should be orange */
+.settings-page button,
+.settings-container button,
+[class*="settings"] button,
+[id*="settings"] button,
+.settings-button {
+  background-color: #FF6B00 !important;
+  border-color: #FF8C00 !important;
+  color: white !important;
+}
+
+/* ONLY Settings icons should be orange */
+.settings-page svg,
+.settings-container svg,
+[class*="settings"] svg,
+[id*="settings"] svg,
+.settings-icon {
+  color: #FF6B00 !important;
+  fill: #FF6B00 !important;
+  stroke: #FF6B00 !important;
+}
+
+/* Restore original gameboy buttons with rainbow colors */
+.gameboy-controller .action-btn,
+.controller-left button,
+.controller-right button {
+  background-color: initial !important;
+  border-color: initial !important;
+  color: initial !important;
+}
+
+/* Back button should have white icons */
+.back-button svg,
+.nav-button svg {
+  color: white !important;
+  fill: white !important;
+  stroke: white !important;
+}
+
+/* Discovery page buttons should be normal */
+.discovery-container button:not(.back-button):not(.orange-accent),
+.discovery-container .action-btn {
+  background-color: initial !important;
+  border-color: initial !important;
+}
+
+.discovery-container svg:not(.back-button svg):not(.orange-accent svg) {
+  color: initial !important;
+  fill: initial !important;
+  stroke: initial !important;
+}
+
+/* Headers and titles */
+h1, h2, h3, h4, h5, h6,
+.title,
+.header,
+.heading {
+  color: white !important;
+}
+
+/* Target any purple text */
+[style*="color: purple"],
+[style*="color: #800080"],
+[style*="color: rgb(128, 0, 128)"],
+[class*="purple"],
+[class*="Purple"] {
+  color: #FF6B00 !important;
+}
+
+/* Target any purple backgrounds */
+[style*="background-color: purple"],
+[style*="background-color: #800080"],
+[style*="background-color: rgb(128, 0, 128)"],
+[class*="purple-bg"],
+[class*="Purple-bg"] {
+  background-color: #FF6B00 !important;
+}
+
+/* Target any purple borders */
+[style*="border-color: purple"],
+[style*="border-color: #800080"],
+[style*="border-color: rgb(128, 0, 128)"],
+[class*="purple-border"],
+[class*="Purple-border"] {
+  border-color: #FF6B00 !important;
+}
+
+/* Toggle switches */
+.toggle,
+.switch,
+input[type="checkbox"],
+input[type="radio"] {
+  &:checked, &.active, &.on, &.selected {
+    background-color: #FF6B00 !important;
+    border-color: #FF8C00 !important;
+  }
+}
+
+/* Progress bars and sliders */
+progress,
+.progress,
+.progress-bar,
+input[type="range"] {
+  accent-color: #FF6B00 !important;
+  background-color: rgba(255, 107, 0, 0.2) !important;
+  
+  &::-webkit-progress-value,
+  &::-moz-progress-bar,
+  &::-webkit-slider-thumb,
+  &::-moz-range-thumb {
+    background-color: #FF6B00 !important;
+  }
+}
+
+/* Controller-specific styles to ensure red dot is gone */
+.gameboy-controller *,
+.controller-left *,
+.controller-right *,
+.clipt-screen *,
+.dpad * {
+  &::before,
+  &::after {
+    background: none !important;
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+}
+
+/* Ensure dpad has no red dots */
+.dpad {
+  position: relative;
+  
+  &::before,
+  &::after {
+    content: none !important;
+    display: none !important;
+  }
+}

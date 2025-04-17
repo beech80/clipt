@@ -21,6 +21,7 @@ export interface Database {
           is_private: boolean;
           enable_notifications: boolean;
           enable_sounds: boolean;
+          status: string;
         };
         Insert: {
           id: string;
@@ -36,6 +37,7 @@ export interface Database {
           is_private?: boolean;
           enable_notifications?: boolean;
           enable_sounds?: boolean;
+          status?: string;
         };
         Update: {
           id?: string;
@@ -51,6 +53,7 @@ export interface Database {
           is_private?: boolean;
           enable_notifications?: boolean;
           enable_sounds?: boolean;
+          status?: string;
         };
       };
       posts: {
@@ -68,6 +71,7 @@ export interface Database {
           views_count: number;
           game_id: string | null;
           is_published: boolean;
+          status: string | null;
         };
         Insert: {
           id?: string;
@@ -83,6 +87,7 @@ export interface Database {
           views_count?: number;
           game_id?: string | null;
           is_published?: boolean;
+          status?: string | null;
         };
         Update: {
           id?: string;
@@ -98,6 +103,7 @@ export interface Database {
           views_count?: number;
           game_id?: string | null;
           is_published?: boolean;
+          status?: string | null;
         };
       };
       games: {
@@ -196,6 +202,73 @@ export interface Database {
           user_id?: string;
           post_id?: string;
           saved_at?: string;
+        };
+      };
+      user_reports: {
+        Row: {
+          id: string;
+          reporter_id: string;
+          reported_user_id: string;
+          reason: string;
+          details: string | null;
+          status: string;
+          reviewed_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          reporter_id: string;
+          reported_user_id: string;
+          reason: string;
+          details?: string | null;
+          status?: string;
+          reviewed_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          reporter_id?: string;
+          reported_user_id?: string;
+          reason?: string;
+          details?: string | null;
+          status?: string;
+          reviewed_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      banned_users: {
+        Row: {
+          id: string;
+          user_id: string;
+          reason: string;
+          banned_by: string;
+          details: string | null;
+          ban_expiry: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          reason: string;
+          banned_by: string;
+          details?: string | null;
+          ban_expiry?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          reason?: string;
+          banned_by?: string;
+          details?: string | null;
+          ban_expiry?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
       // Other tables...

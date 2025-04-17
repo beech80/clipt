@@ -1,0 +1,239 @@
+/* Old-style GameBoy Controller Styling */
+
+/* Failsafe: Hide any span or element with arrow characters inside gameboy-controller */
+.gameboy-controller span, .gameboy-controller * {
+  /* Hide left/right arrows if present as text */
+  unicode-bidi: isolate;
+}
+.gameboy-controller span:contains('←'),
+.gameboy-controller span:contains('→'),
+.gameboy-controller *:contains('←'),
+.gameboy-controller *:contains('→') {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+
+.gameboy-controller {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 15px;
+  background: rgba(20, 20, 40, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  z-index: 50;
+  width: 340px;
+  max-width: 90vw;
+  border: 2px solid rgba(80, 80, 120, 0.4);
+}
+
+/* Left controller section with d-pad */
+.controller-left {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
+
+.dpad {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
+
+.dpad-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #333344;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.dpad-button:hover {
+  background: #43445a;
+  transform: scale(1.1);
+}
+
+.dpad-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Center section with CLIPT screen */
+.controller-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.clipt-screen {
+  background: #1c1c2c;
+  border-radius: 5px;
+  width: 90px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid #333344;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.clipt-screen-inner {
+  background: linear-gradient(135deg, #2c3e50, #4ca1af);
+  border-radius: 3px;
+  width: 80px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.clipt-screen span {
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: #fff;
+  text-shadow: 0 0 5px rgba(0, 200, 255, 0.8);
+  letter-spacing: 1px;
+}
+
+/* Right controller section with action buttons - Xbox style */
+.controller-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.action-pad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Xbox style buttons with letters */
+.action-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.action-btn svg {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Xbox style button colors */
+.action-btn.comment {
+  background: #107c10; /* Xbox green */
+}
+
+.action-btn.donate {
+  background: #f25022; /* Xbox orange/red */
+}
+
+.action-btn.follow {
+  background: #00a4ef; /* Xbox blue */
+}
+
+.action-btn.clipt {
+  background: #ffb900; /* Xbox yellow */
+}
+
+/* Add button letters in corners like Xbox */
+.action-btn::after {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 10px;
+  font-weight: bold;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+.action-btn.comment::after {
+  content: 'Y';
+}
+
+.action-btn.donate::after {
+  content: 'B';
+}
+
+.action-btn.clipt::after {
+  content: 'X';
+}
+
+.action-btn.follow::after {
+  content: 'A';
+}
+
+/* Make sure there's no red dot */
+.dpad::before,
+.dpad::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .gameboy-controller {
+    width: 300px;
+    padding: 10px;
+  }
+  
+  .dpad-button, .action-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .clipt-screen {
+    width: 80px;
+    height: 32px;
+  }
+  
+  .clipt-screen-inner {
+    width: 70px;
+    height: 24px;
+  }
+  
+  .clipt-screen span {
+    font-size: 16px;
+  }
+}

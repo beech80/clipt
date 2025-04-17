@@ -532,87 +532,96 @@ const GameBoyControls: React.FC = () => {
 
   return (
     <div className="gameboy-controls">
-      {/* Left control (Joystick) based on Image 1 */}
-      <div className={`joystick xbox-style ${isJoystickActive ? 'active' : ''} ${isTouched ? 'touched' : ''}`} ref={joystickRef} aria-label="Joystick control for navigation">
-        <div 
-          ref={joystickInnerRef} 
-          className={`joystick-inner ${momentumActive ? 'momentum' : ''}`}
-        ></div>
+      {/* Left joystick with rainbow border */}
+      <div className="left-joystick">
+        <div className={`joystick xbox-style rainbow-border ${isJoystickActive ? 'active' : ''} ${isTouched ? 'touched' : ''}`} ref={joystickRef} aria-label="Joystick control for navigation">
+          <div 
+            ref={joystickInnerRef} 
+            className={`joystick-inner ${momentumActive ? 'momentum' : ''}`}
+          ></div>
+        </div>
       </div>
-
-      {/* CLIPT button based on Image 2 */}
-      <button className="clipt-button" onClick={() => navigate('/')} aria-label="CLIPT button">
-        CLIPT
-      </button>
-
-      {/* Menu buttons below CLIPT (from Image 2) */}
-      <div className="menu-buttons">
+      
+      {/* Center controls layout */}
+      <div className="center-controls">
+        {/* CLIPT logo button with rainbow border */}
         <button 
-          className="menu-button menu-left" 
-          onClick={handleSelectButtonClick} 
-          aria-label="Toggle game menu"
+          className="clipt-logo-button rainbow-border" 
+          onClick={() => navigate('/clipts')}
+          aria-label="Go to Clipts"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
+          <span className="clipt-logo-text">CLIPT</span>
         </button>
         
-        {/* Center button - Camera/POST - Updated to navigate directly to clip editor with improved icon */}
-        <button 
-          className="menu-button camera-button"
-          onClick={() => navigate('/clip-editor/new')}
-          aria-label="Post a new clip"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-            <circle cx="12" cy="13" r="3" />
-            <line x1="8" y1="21" x2="16" y2="21" />
-            <line x1="12" y1="17" x2="12" y2="21" />
-          </svg>
-        </button>
-
+        {/* Menu and Camera buttons row */}
+        <div className="menu-camera-row">
+          {/* Menu button (hamburger) with rainbow border */}
+          <button 
+            className="control-button rainbow-border" 
+            onClick={handleSelectButtonClick} 
+            aria-label="Toggle game menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          
+          {/* Camera post button with rainbow border */}
+          <button 
+            className="control-button rainbow-border"
+            onClick={() => navigate('/post-selection')}
+            aria-label="Create a new post"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </button>
+        </div>
       </div>
+      
+      {/* Removed the navigation arrow buttons */}
 
       {/* Note: Game Menu moved to a separate route page */}
 
-      {/* Action buttons with rainbow rims in diamond layout */}
+      {/* Action buttons with rainbow borders in diamond layout */}
       <div className="action-buttons diamond-layout">
         {/* Comment button (top - blue) */}
         <button 
-          className={`action-button comment-button top ${commentActive ? 'active' : ''}`}
+          className={`action-button comment-button top rainbow-border ${commentActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('comment')}
           aria-label="Comment"
         >
-          <MessageSquare size={18} fill="#1a8cff" color="#1a8cff" strokeWidth={1.5} />
+          <MessageSquare size={20} fill="#1a8cff" color="#1a8cff" strokeWidth={1.5} />
         </button>
         
         {/* Like button (left - red) */}
         <button 
-          className={`action-button like-button left ${likeActive ? 'active' : ''}`}
+          className={`action-button like-button left rainbow-border ${likeActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('like')}
           aria-label="Like post"
         >
-          <Heart size={18} fill="#ff3366" color="#ff3366" strokeWidth={1.5} />
+          <Heart size={20} fill="#ff3366" color="#ff3366" strokeWidth={1.5} />
         </button>
         
         {/* Save button (right - green) */}
         <button 
-          className={`action-button save-button right ${saveActive ? 'active' : ''}`}
+          className={`action-button save-button right rainbow-border ${saveActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('save')}
           aria-label="Save video to bookmarks"
         >
-          <Bookmark size={18} fill="#00cc66" color="#00cc66" strokeWidth={1.5} />
+          <Bookmark size={20} fill="#00cc66" color="#00cc66" strokeWidth={1.5} />
         </button>
         
         {/* Trophy button (bottom - yellow) */}
         <button 
-          className={`action-button trophy-button bottom ${rankActive ? 'active' : ''}`}
+          className={`action-button trophy-button bottom rainbow-border ${rankActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('rank')}
           aria-label="Rank post"
         >
-          <Award size={18} fill="#ffcc00" color="#ffcc00" strokeWidth={1.5} />
+          <Award size={20} fill="#ffcc00" color="#ffcc00" strokeWidth={1.5} />
           {rankActive && currentRank > 0 && (
             <span className="rank-indicator">{currentRank}</span>
           )}

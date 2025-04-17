@@ -1,0 +1,527 @@
+/* Enhanced Retro Profile Styling */
+
+/* CRT screen effect with stronger scanlines and vignette */
+.profile-retro-screen {
+  position: relative;
+  background-color: #121212;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 
+    0 0 0 1px rgba(92, 225, 255, 0.3),
+    0 0 20px rgba(92, 225, 255, 0.2),
+    inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+/* Strong scanlines effect */
+.profile-retro-screen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.3) 0px,
+    rgba(0, 0, 0, 0.3) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 5;
+  animation: scanlineShift 8s linear infinite;
+}
+
+/* CRT screen edge vignette */
+.profile-retro-screen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 60%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Random CRT flicker effect */
+.crt-flicker {
+  position: relative;
+}
+
+.crt-flicker::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.03);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 4;
+  animation: randomFlicker 10s infinite;
+}
+
+/* Video noise overlay */
+.video-noise {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PC9maWx0ZXI+PGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSIxMDAiIGZpbGw9IiMwMDAiIGZpbHRlcj0idXJsKCNhKSIgb3BhY2l0eT0iLjA1Ii8+PC9zdmc+');
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.08;
+  animation: noiseShift 0.5s steps(2) infinite;
+}
+
+/* Neon glow text for headings */
+.neon-text {
+  color: #fff;
+  text-shadow: 
+    0 0 5px rgba(92, 225, 255, 0.7),
+    0 0 10px rgba(92, 225, 255, 0.5),
+    0 0 20px rgba(92, 225, 255, 0.3),
+    0 0 40px rgba(92, 225, 255, 0.1);
+  animation: neonPulse 3s infinite alternate;
+}
+
+.neon-text-purple {
+  color: #fff;
+  text-shadow: 
+    0 0 5px rgba(165, 92, 255, 0.7),
+    0 0 10px rgba(165, 92, 255, 0.5),
+    0 0 20px rgba(165, 92, 255, 0.3),
+    0 0 40px rgba(165, 92, 255, 0.1);
+  animation: neonPulsePurple 3s infinite alternate;
+}
+
+/* Cyberpunk gradient border */
+.cyber-border {
+  position: relative;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  background-clip: padding-box;
+}
+
+.cyber-border::before {
+  content: '';
+  position: absolute;
+  top: -3px; 
+  right: -3px;
+  bottom: -3px;
+  left: -3px;
+  z-index: -1;
+  border-radius: 8px;
+  background: linear-gradient(
+    45deg, 
+    #ff2f92, 
+    #5ce1ff, 
+    #a55cff, 
+    #5ce1ff,
+    #ff2f92
+  );
+  background-size: 400% 400%;
+  animation: gradientBorder 6s ease infinite;
+}
+
+/* Pixel card design */
+.pixel-card {
+  background-color: #1a1a1a;
+  border-radius: 0;
+  position: relative;
+  box-shadow: 
+    0 0 0 3px #333,
+    0 0 0 5px #000,
+    5px 5px 0 0 #000;
+  image-rendering: pixelated;
+  transform: scale(1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.pixel-card:hover {
+  transform: scale(1.03) translateY(-5px);
+  box-shadow: 
+    0 0 0 3px #5ce1ff,
+    0 0 0 5px #000,
+    8px 8px 0 0 #000;
+}
+
+/* Retro gaming button */
+.retro-gaming-btn {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  position: relative;
+  box-shadow: 
+    inset -4px -4px 0 0 #222,
+    inset 4px 4px 0 0 #555;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+.retro-gaming-btn:hover {
+  background: #222;
+  box-shadow: 
+    inset -4px -4px 0 0 #333,
+    inset 4px 4px 0 0 #777;
+}
+
+.retro-gaming-btn:active {
+  box-shadow: 
+    inset 4px 4px 0 0 #222,
+    inset -4px -4px 0 0 #555;
+  transform: translateY(2px);
+}
+
+/* Tab indicator with active glow */
+.tab-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-indicator.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #5ce1ff, #a55cff);
+  animation: tabPulse 2s infinite;
+}
+
+/* Glitch effect for images and avatars */
+.glitch-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.glitch-effect:hover::before,
+.glitch-effect:hover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.glitch-effect:hover::before {
+  background: rgba(0, 255, 255, 0.2);
+  left: 2px;
+  animation: glitchAnimation 0.3s infinite;
+  z-index: 1;
+}
+
+.glitch-effect:hover::after {
+  background: rgba(255, 0, 255, 0.2);
+  left: -2px;
+  animation: glitchAnimation 0.3s 0.1s infinite reverse;
+  z-index: 1;
+}
+
+/* Holographic effect for cards */
+.holographic-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #222 0%, #333 100%);
+}
+
+.holographic-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 25%, 
+    rgba(255, 255, 255, 0) 50%
+  );
+  transform: translateX(-50%) translateY(-50%) rotate(30deg);
+  animation: holoShine 5s linear infinite;
+}
+
+/* VHS tracking lines effect */
+.vhs-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.vhs-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.08);
+  z-index: 4;
+  transform: skewY(-5deg) translateY(-150px);
+  animation: trackingLines 7s cubic-bezier(0.77, 0, 0.18, 1) infinite;
+}
+
+/* Digital counter for stats */
+.digital-counter {
+  font-family: 'DSEG7 Classic', monospace;
+  background: #000;
+  color: #0f0;
+  padding: 5px 10px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.3);
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
+}
+
+/* Grid layout for posts with CRT effect */
+.retro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  background-color: #0a0a0a;
+  border-radius: 8px;
+  box-shadow: inset 0 0 30px #000;
+}
+
+/* Keyframe Animations */
+
+@keyframes scanlineShift {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+@keyframes randomFlicker {
+  0% { opacity: 0; }
+  5% { opacity: 0.1; }
+  6% { opacity: 0.05; }
+  11% { opacity: 0; }
+  50% { opacity: 0; }
+  51% { opacity: 0.15; }
+  52% { opacity: 0; }
+  85% { opacity: 0; }
+  86% { opacity: 0.1; }
+  87% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes neonPulse {
+  0% { text-shadow: 0 0 5px rgba(92, 225, 255, 0.7), 0 0 10px rgba(92, 225, 255, 0.5); }
+  100% { text-shadow: 0 0 10px rgba(92, 225, 255, 0.9), 0 0 20px rgba(92, 225, 255, 0.7), 0 0 30px rgba(92, 225, 255, 0.5); }
+}
+
+@keyframes neonPulsePurple {
+  0% { text-shadow: 0 0 5px rgba(165, 92, 255, 0.7), 0 0 10px rgba(165, 92, 255, 0.5); }
+  100% { text-shadow: 0 0 10px rgba(165, 92, 255, 0.9), 0 0 20px rgba(165, 92, 255, 0.7), 0 0 30px rgba(165, 92, 255, 0.5); }
+}
+
+@keyframes gradientBorder {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes noiseShift {
+  0% { transform: translateX(0) translateY(0); }
+  100% { transform: translateX(5px) translateY(5px); }
+}
+
+@keyframes tabPulse {
+  0% { opacity: 0.7; box-shadow: 0 0 5px rgba(92, 225, 255, 0.7); }
+  50% { opacity: 1; box-shadow: 0 0 15px rgba(92, 225, 255, 1); }
+  100% { opacity: 0.7; box-shadow: 0 0 5px rgba(92, 225, 255, 0.7); }
+}
+
+@keyframes glitchAnimation {
+  0% { transform: translateX(-2px); }
+  25% { transform: translateX(2px); }
+  50% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+  100% { transform: translateX(-2px); }
+}
+
+@keyframes holoShine {
+  0% { transform: translateX(-50%) translateY(-50%) rotate(30deg); }
+  100% { transform: translateX(50%) translateY(50%) rotate(30deg); }
+}
+
+@keyframes trackingLines {
+  0% { transform: skewY(-5deg) translateY(-150px); }
+  30% { transform: skewY(-5deg) translateY(calc(100% + 150px)); }
+  30.01% { transform: skewY(-5deg) translateY(-150px); }
+  60% { transform: skewY(-5deg) translateY(calc(100% + 150px)); opacity: 0.08; }
+  60.01% { transform: skewY(-5deg) translateY(-150px); opacity: 0; }
+  63% { opacity: 0; }
+  63.01% { opacity: 0.08; }
+  100% { transform: skewY(-5deg) translateY(calc(100% + 150px)); }
+}
+
+/* Specialized component styling */
+
+/* Profile header with neon lighting */
+.profile-header-retro {
+  background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+  border-radius: 8px;
+  border: 1px solid #333;
+  overflow: hidden;
+  position: relative;
+  padding: 1.5rem;
+}
+
+.profile-header-retro::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(92, 225, 255, 0.7), transparent);
+  z-index: 1;
+}
+
+/* Avatar with arcade cabinet style */
+.arcade-avatar {
+  border: 3px solid #333;
+  box-shadow: 
+    0 0 0 1px #000,
+    0 0 15px rgba(92, 225, 255, 0.5);
+  position: relative;
+}
+
+.arcade-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #5ce1ff, #a55cff);
+  z-index: -1;
+  animation: rotateGradient 3s linear infinite;
+}
+
+@keyframes rotateGradient {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Stats display with pixelated borders */
+.pixelated-stats {
+  background: #1a1a1a;
+  border: 2px solid #333;
+  border-radius: 0;
+  position: relative;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  image-rendering: pixelated;
+}
+
+.pixelated-stats::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #5ce1ff, #a55cff);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.pixelated-stats:hover::before {
+  opacity: 1;
+}
+
+/* Arcade machine header design */
+.arcade-header {
+  background-color: #0a0a0a;
+  border-radius: 8px 8px 0 0;
+  padding: 1rem;
+  border-bottom: 2px solid #5ce1ff;
+  text-align: center;
+  position: relative;
+}
+
+.arcade-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #5ce1ff, #a55cff, #5ce1ff);
+  animation: gradientMove 3s linear infinite;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* Video cassette design for posts */
+.video-cassette {
+  background: #222;
+  border-radius: 0;
+  border: 1px solid #444;
+  overflow: hidden;
+  position: relative;
+}
+
+.video-cassette::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: #111;
+  border-bottom: 1px solid #333;
+}
+
+.video-cassette::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: #111;
+  border-top: 1px solid #333;
+}
+
+.video-cassette-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  padding: 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+  .retro-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+}

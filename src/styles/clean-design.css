@@ -1,0 +1,182 @@
+/* Clean design without grid background */
+body {
+  background-color: #0e0e1a;
+  background-image: none !important; /* Remove any grid background */
+}
+
+.discovery-container::before {
+  display: none !important; /* Remove grid overlay */
+}
+
+/* Hide only streamer information display */
+.streamer-info,
+.streamer-top-info,
+.streamer-profile,
+.streamer-profile-top,
+.streamer-details,
+.streamer-name,
+.viewer-count {
+  display: none !important;
+}
+
+/* Hide avatar image */
+.streamer-avatar {
+  display: none !important;
+}
+
+/* Fully restore the controller and all its buttons */
+.gameboy-controller {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 100 !important;
+}
+
+.controller-left,
+.controller-right,
+.controller-center,
+.dpad,
+.clipt-screen,
+.action-pad {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Show all action buttons with proper styling */
+.action-btn,
+.action-btn.comment,
+.action-btn.donate,
+.action-btn.clipt,
+.action-btn.follow,
+.action-btn.like {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Fix specific button styles */
+.action-btn.comment {
+  background-color: #4a9eff !important;
+}
+
+.action-btn.donate {
+  background-color: #ff6b6b !important;
+}
+
+.action-btn.follow {
+  background-color: #6bff8a !important;
+}
+
+.action-btn.clipt {
+  background-color: #ffaa6b !important;
+}
+
+/* Center the Discovery and GameClipts headers */
+.discovery-header, .game-specific-header {
+  text-align: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  position: absolute !important;
+  top: 50px !important;
+  z-index: 100 !important;
+}
+
+.discovery-title, .game-title {
+  text-align: center !important;
+  font-size: 24px !important;
+  font-weight: bold !important;
+  color: white !important;
+  text-shadow: 0 0 10px rgba(255, 107, 0, 0.7) !important;
+}
+
+/* Orange themed elements */
+.orange-accent,
+.back-button.orange-accent,
+.top-corner-search-button.orange-accent,
+.record-button.orange-accent,
+.donate-submit-button.orange-accent {
+  background-color: #FF6B00 !important;
+  color: white !important;
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.5) !important;
+  border: 1px solid #FF8C00 !important;
+}
+
+.orange-accent:hover {
+  background-color: #FF8C00 !important;
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.7) !important;
+}
+
+/* Orange settings icons */
+.settings-icon {
+  color: #FF6B00 !important;
+  fill: #FF6B00 !important;
+}
+
+/* Completely remove red dot from controller - target all possible elements */
+.clipt-screen::before, 
+.clipt-screen::after,
+.clipt-screen-inner::before,
+.clipt-screen-inner::after,
+.dpad::before,
+.dpad::after,
+.dpad *::before,
+.dpad *::after,
+.dpad-center::before,
+.dpad-center::after,
+.controller-left *::before,
+.controller-left *::after,
+.controller-right *::before,
+.controller-right *::after,
+.gameboy-controller *::before,
+.gameboy-controller *::after,
+.gameboy-controller::before,
+.gameboy-controller::after {
+  display: none !important;
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Remove sample content from the results */
+.empty-content-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Simple game header for GameClipts page */
+.game-title-container.simplified {
+  padding: 1rem 0;
+  text-align: center;
+  width: 100%;
+}
+
+.clipts-label {
+  color: #FF6B00;
+  font-size: 1.5rem;
+  margin-left: 8px;
+}
+
+/* Clean and seamless UI */
+.crt-effect, .scanlines {
+  display: none !important;
+}
+
+/* Clean search overlay */
+.search-container {
+  border: 2px solid #FF6B00 !important;
+}
+
+.search-header h3 {
+  color: #FF6B00 !important;
+}

@@ -1,0 +1,36 @@
+/* Force all videos to be visible across the application */
+video {
+  display: block !important;
+  width: 100% !important;
+  min-height: 300px !important;
+  height: 70vh !important;
+  object-fit: cover !important;
+  background-color: black !important;
+}
+
+.video-player-container, 
+.trim-preview, 
+.basic-video-container {
+  display: block !important;
+  width: 100% !important;
+  min-height: 300px !important;
+  height: 70vh !important;
+  background-color: black !important;
+  position: relative !important;
+}
+
+/* Ensure videos are visible on all pages */
+*[class*="video"],
+*[id*="video"],
+video,
+video::-webkit-media-controls {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+/* Set explicit z-index to make sure videos appear above other elements */
+video {
+  z-index: 10 !important;
+  position: relative !important;
+}

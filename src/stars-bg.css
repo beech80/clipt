@@ -1,0 +1,63 @@
+.stars-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.stars-small, .stars-medium, .stars-large {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-repeat: repeat;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  opacity: 0.6;
+}
+
+.stars-small {
+  background-image: radial-gradient(1px 1px at 20px 30px, #eef, rgba(0,0,0,0)),
+                    radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                    radial-gradient(1px 1px at 90px 40px, #fef, rgba(0,0,0,0)),
+                    radial-gradient(1px 1px at 160px 120px, #ddf, rgba(0,0,0,0));
+  background-size: 200px 200px;
+  animation: stars-small-move 100s infinite;
+}
+
+.stars-medium {
+  background-image: radial-gradient(1.5px 1.5px at 150px 150px, #fff, rgba(0,0,0,0)),
+                    radial-gradient(1.5px 1.5px at 50px 180px, #ddf, rgba(0,0,0,0)),
+                    radial-gradient(1.5px 1.5px at 180px 80px, #eef, rgba(0,0,0,0)),
+                    radial-gradient(1.5px 1.5px at 220px 110px, #fff, rgba(0,0,0,0));
+  background-size: 250px 250px;
+  animation: stars-medium-move 150s infinite;
+}
+
+.stars-large {
+  background-image: radial-gradient(2px 2px at 100px 200px, #fff, rgba(0,0,0,0)),
+                    radial-gradient(2px 2px at 240px 250px, #ddf, rgba(0,0,0,0)),
+                    radial-gradient(2px 2px at 30px 300px, #fef, rgba(0,0,0,0)),
+                    radial-gradient(2px 2px at 300px 70px, #fff, rgba(0,0,0,0));
+  background-size: 350px 350px;
+  animation: stars-large-move 200s infinite;
+}
+
+@keyframes stars-small-move {
+  from { background-position: 0 0; }
+  to { background-position: 200px 200px; }
+}
+
+@keyframes stars-medium-move {
+  from { background-position: 0 0; }
+  to { background-position: 250px 250px; }
+}
+
+@keyframes stars-large-move {
+  from { background-position: 0 0; }
+  to { background-position: 350px 350px; }
+}

@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { v4 as uuidv4 } from 'uuid';
 
 interface VideoUploadProps {
   selectedVideo: File | null;
@@ -13,6 +14,7 @@ interface VideoUploadProps {
   videoInputRef: React.RefObject<HTMLInputElement>;
   uploadProgress?: number;
   setUploadProgress?: (progress: number) => void;
+  onChange: (url: string) => void;
 }
 
 const VideoUpload = ({ 
@@ -20,105 +22,159 @@ const VideoUpload = ({
   onVideoSelect, 
   videoInputRef,
   uploadProgress = 0,
-  setUploadProgress = () => {} 
+  setUploadProgress = () => {}, 
+  onChange
 }: VideoUploadProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
-  const handleVideoSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 100000000) { // 100MB limit
-        toast.error("Video size should be less than 100MB");
-        if (event.target) {
-          event.target.value = ''; // Reset input
-        }
+  const [fileUploadError, setFileUploadError] = useState("");
+  const [isParsing, setIsParsing] = useState(false);
+
+  // Main function to handle video file upload
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    console.log("File selected:", file);
+    setFileUploadError("");
+
+    if (!file) {
+      console.error("No file selected");
+      setFileUploadError("Please select a video file");
+      toast.error("Please select a video file");
+      return;
+    }
+
+    // More detailed file type validation
+    const validVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+    if (!validVideoTypes.includes(file.type)) {
+      console.error("Invalid file type:", file.type);
+      setFileUploadError(`Unsupported video format: ${file.type}. Please use MP4, WebM, or MOV formats.`);
+      toast.error(`Unsupported video format. Please use MP4, WebM, or MOV formats.`);
+      return;
+    }
+
+    // Add a maximum file size check (50MB)
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      console.error("File too large:", file.size);
+      setFileUploadError("Video file is too large (max 50MB)");
+      toast.error("Video file is too large (max 50MB)");
+      return;
+    }
+
+    setIsParsing(true);
+    setUploadProgress(0);
+    const toastId = toast.loading("Preparing video upload...");
+
+    try {
+      // First verify that we have a valid session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log("Session check:", sessionData, sessionError);
+      
+      if (sessionError || !sessionData?.session) {
+        console.error("Session error:", sessionError);
+        toast.error("Authentication error. Please sign in again.", { id: toastId });
+        setFileUploadError("Authentication error. Please sign in again.");
+        setIsParsing(false);
         return;
       }
 
-      // Check file type
-      const validTypes = ['video/mp4', 'video/webm', 'video/ogg'];
-      if (!validTypes.includes(file.type)) {
-        toast.error("Please upload a valid video file (MP4, WebM, or OGG)");
-        if (event.target) {
-          event.target.value = ''; // Reset input
-        }
-        return;
-      }
+      // Generate a unique file name
+      const fileName = `${uuidv4()}.${file.name.split(".").pop()}`;
+      const filePath = `${user?.id}/${fileName}`;
+      
+      toast.loading(`Processing video...`, { id: toastId });
+      
+      // Add a small delay to ensure storage is ready (sometimes helps with Supabase timing issues)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Upload the video to Supabase Storage with more robust error handling
+      const { data, error } = await supabase.storage
+        .from("videos")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+          onUploadProgress: (progress) => {
+            console.log("Upload progress:", progress);
+            const percentage = (progress.loaded / progress.total) * 100;
+            setUploadProgress(percentage);
+            toast.loading(`Uploading: ${Math.round(percentage)}%`, { id: toastId });
+          },
+        });
 
-      try {
-        setIsUploading(true);
-        setUploadProgress(0);
-        onVideoSelect(file);
-
-        // Start the upload process immediately
-        const toastId = toast.loading("Uploading video...");
+      if (error) {
+        console.error("Upload error:", error);
+        let errorMessage = "";
         
-        // Upload the video file to storage
-        const fileName = `${user.id}-${Date.now()}-${file.name}`;
-        const filePath = `uploads/videos/${fileName}`;
-        
-        // Set up progress monitoring
-        const uploadProgress = (progress: number) => {
-          setUploadProgress(progress);
-        };
-        
-        // Upload to storage
-        const { data, error } = await supabase.storage
-          .from('media')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false,
-            onUploadProgress: (event) => {
-              const progress = Math.round((event.loaded / event.total) * 100);
-              uploadProgress(progress);
-            }
-          });
-
-        if (error) {
-          throw error;
+        // Provide more specific error messages based on the error code
+        if (error.message.includes("storage quota")) {
+          errorMessage = "Storage quota exceeded. Please try a smaller file.";
+        } else if (error.message.includes("permission") || error.message.includes("not authorized")) {
+          errorMessage = "Permission denied. Please sign in again.";
+        } else if (error.message.includes("network")) {
+          errorMessage = "Network error. Please check your internet connection.";
+        } else {
+          errorMessage = error.message || "An error occurred during upload";
         }
         
-        // Get the public URL
-        const { data: urlData } = await supabase.storage
-          .from('media')
-          .getPublicUrl(filePath);
+        console.log('Video public URL obtained:', urlData.publicUrl);
         
-        if (!urlData?.publicUrl) {
-          throw new Error('Failed to get public URL');
+        // Validate the URL is accessible
+        try {
+          const checkResponse = await fetch(urlData.publicUrl, { method: 'HEAD' });
+          if (!checkResponse.ok) {
+            console.warn(`Video URL validation failed: ${checkResponse.status}`);
+          }
+        } catch (checkError) {
+          console.warn('Error checking video URL, continuing anyway:', checkError);
         }
         
-        // Create a temporary clip record
+        toast.loading("Creating clip record...", { id: toastId });
+        
+        // Create a temporary clip record with better error handling
         const { data: clipData, error: clipError } = await supabase
           .from('clips')
           .insert([{
             user_id: user.id,
             video_url: urlData.publicUrl,
-            status: 'draft',
-            created_at: new Date().toISOString()
-          }])
-          .select()
-          .single();
-        
-        if (clipError) {
-          throw clipError;
-        }
+          .from("videos")
+          .getPublicUrl(filePath);
 
-        toast.dismiss(toastId);
-        toast.success("Video uploaded! Redirecting to editor...");
-        
-        // Navigate to the clip editor with the new clip ID
-        setTimeout(() => {
-          navigate(`/clip-editor/${clipData.id}`);
-        }, 1000);
-      } catch (error) {
-        console.error('Error uploading video:', error);
-        toast.error(`Upload failed: ${error.message || 'Unknown error'}`);
-        setIsUploading(false);
-        setUploadProgress(0);
-        onVideoSelect(null);
+          if (urlError) {
+            console.error("Error getting public URL:", urlError);
+            toast.error("Video uploaded but unable to retrieve URL", { id: toastId });
+            setFileUploadError("Video uploaded but unable to retrieve URL");
+            setIsParsing(false);
+            return;
+          }
+
+          if (!publicUrlData?.publicUrl) {
+            console.error("Missing public URL in response");
+            toast.error("Video uploaded but URL is missing", { id: toastId });
+            setFileUploadError("Video uploaded but URL is missing");
+            setIsParsing(false);
+            return;
+          }
+
+          console.log("Public URL:", publicUrlData);
+          toast.success("Video uploaded successfully!", { id: toastId });
+          console.log("Setting video URL to:", publicUrlData.publicUrl);
+          onChange(publicUrlData.publicUrl);
+          setUploadProgress(100);
+        } catch (urlErr) {
+          console.error("Error processing public URL:", urlErr);
+          toast.error("Video uploaded but failed to process", { id: toastId });
+          setFileUploadError("Video uploaded but failed to process");
+        }
       }
+    } catch (err) {
+      console.error("Upload exception:", err);
+      toast.error("Upload failed: Server connection error. Please try again.", { id: toastId });
+      setFileUploadError("Upload failed: Server connection error. Please try again.");
+    } finally {
+      setIsParsing(false);
     }
+  };
   };
 
   return (
@@ -139,9 +195,12 @@ const VideoUpload = ({
             <div className="space-y-2">
               <Progress value={uploadProgress} className="h-2" />
               <p className="text-sm text-muted-foreground text-center">
-                Uploading: {uploadProgress}%
+                Uploading: {Math.round(uploadProgress)}%
               </p>
             </div>
+          )}
+          {fileUploadError && (
+            <p className="text-sm text-red-500 mt-1">{fileUploadError}</p>
           )}
           <Button
             type="button"
@@ -151,6 +210,7 @@ const VideoUpload = ({
             onClick={() => {
               onVideoSelect(null);
               setUploadProgress(0);
+              setFileUploadError("");
               if (videoInputRef.current) {
                 videoInputRef.current.value = '';
               }
@@ -165,17 +225,17 @@ const VideoUpload = ({
         variant="ghost"
         onClick={() => videoInputRef.current?.click()}
         className="text-muted-foreground"
-        disabled={isUploading}
+        disabled={isParsing}
       >
         <Video className="w-4 h-4 mr-2" />
-        {isUploading ? 'Uploading...' : 'Add Video'}
+        {isParsing ? 'Processing...' : 'Add Video'}
       </Button>
       <input
         type="file"
         ref={videoInputRef}
         className="hidden"
-        accept="video/mp4,video/webm,video/ogg"
-        onChange={handleVideoSelect}
+        accept="video/mp4,video/webm,video/ogg,video/quicktime"
+        onChange={handleVideoUpload}
       />
     </>
   );

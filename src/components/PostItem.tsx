@@ -139,6 +139,7 @@ const PostItem: React.FC<PostItemProps> = ({
   };
 
   const handleLikeToggle = async (e?: React.MouseEvent) => {
+    // Don't stop propagation completely to allow button clicks
     if (e) {
       e.stopPropagation();
     }
@@ -282,6 +283,7 @@ const PostItem: React.FC<PostItemProps> = ({
   };
 
   const handleCommentClick = (e?: React.MouseEvent) => {
+    // Only stop propagation but don't prevent default to allow button clicks
     if (e) {
       e.stopPropagation();
     }
@@ -329,8 +331,8 @@ const PostItem: React.FC<PostItemProps> = ({
 
   // Trophy handler - emergency fix with explicit checks
   const handleTrophyVote = async (e: React.MouseEvent) => {
+    // Only stop propagation but don't prevent default to allow button clicks
     e.stopPropagation();
-    e.preventDefault();
     
     // Make sure user is logged in
     if (!user) {
@@ -809,8 +811,8 @@ const PostItem: React.FC<PostItemProps> = ({
 
   // Save handler - emergency fix with explicit checks
   const handleSaveVideo = async (e: React.MouseEvent) => {
+    // Only stop propagation but don't prevent default to allow button clicks
     e.stopPropagation();
-    e.preventDefault();
     
     // Make sure user is logged in
     if (!user) {
@@ -1046,6 +1048,64 @@ const PostItem: React.FC<PostItemProps> = ({
         />
         
         {/* Removed overlay caption for a cleaner, more immersive UI */}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-between px-4 py-3 border-t border-gaming-400/20" style={{ position: 'relative', zIndex: 40 }}>
+        {/* Like Button */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleLikeToggle(e);
+          }}
+          className={`p-2 rounded-full transition-all duration-200 flex flex-col items-center ${liked ? 'text-red-500' : 'text-gaming-300 hover:text-red-400'}`}
+          disabled={likeLoading}
+          style={{ position: 'relative', zIndex: 50 }}
+        >
+          <Heart className={`h-6 w-6 ${liked ? 'fill-current animate-bounce-once' : ''}`} />
+          <span className="text-xs mt-0.5">{likesCount || 0}</span>
+        </button>
+        
+        {/* Comment Button */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCommentClick(e);
+          }}
+          className="p-2 rounded-full transition-all duration-200 flex flex-col items-center text-gaming-300 hover:text-blue-400"
+          style={{ position: 'relative', zIndex: 50 }}
+        >
+          <MessageSquare className="h-6 w-6" />
+          <span className="text-xs mt-0.5">{commentsCount || 0}</span>
+        </button>
+        
+        {/* Trophy Button */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleTrophyVote(e);
+          }}
+          className={`p-2 rounded-full transition-all duration-200 flex flex-col items-center ${hasTrophy ? 'text-yellow-500' : 'text-gaming-300 hover:text-yellow-400'}`}
+          disabled={trophyLoading}
+          style={{ position: 'relative', zIndex: 50 }}
+        >
+          <Trophy className={`h-6 w-6 ${hasTrophy ? 'fill-current animate-bounce-once' : ''}`} />
+          <span className="text-xs mt-0.5">{trophyCount || 0}</span>
+        </button>
+        
+        {/* Save Button */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSaveVideo(e);
+          }}
+          className={`p-2 rounded-full transition-all duration-200 flex flex-col items-center ${isSaved ? 'text-orange-500' : 'text-gaming-300 hover:text-orange-400'}`}
+          disabled={saveLoading}
+          style={{ position: 'relative', zIndex: 50 }}
+        >
+          <Bookmark className={`h-6 w-6 ${isSaved ? 'fill-current animate-bounce-once' : ''}`} />
+          <span className="text-xs mt-0.5">Save</span>
+        </button>
       </div>
 
       {/* Share Button and Caption for regular pages */}
