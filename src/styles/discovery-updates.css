@@ -138,21 +138,23 @@
   color: white;
 }
 
-/* Icon color classes for the GameBoy controller buttons - with increased specificity */
-.circular-nav-btn .orange-icon,
-.orange-icon {
-  color: #ff8c00 !important; /* Orange icons */
-}
-
-.circular-nav-btn .white-icon,
-.white-icon {
-  color: #ffffff !important; /* White icons */
-}
-
-.dollar-sign {
+/* Force color classes with maximum specificity for icons */
+.force-orange-icon {
   color: #ff8c00 !important;
-  font-weight: bold;
-  font-size: 1.2rem;
+  fill: #ff8c00 !important;
+  stroke: #ff8c00 !important;
+}
+
+.force-white-icon {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.force-orange-text {
+  color: #ff8c00 !important;
+  font-weight: bold !important;
+  font-size: 1.2rem !important;
 }
 
 /* Button style variations - exact match to image */
