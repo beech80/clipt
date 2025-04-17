@@ -259,10 +259,8 @@ function App() {
                 }}>
                   <AppContent />
                 </div>
-                {/* Only show GameBoyControls on Clipts and SquadsClipts pages */}
-                {(location.pathname === '/clipts' || location.pathname === '/squads-clipts') && (
-                  <GameBoyControls />
-                )}
+                {/* GameBoyControls is no longer shown on /clipts or /squads-clipts to keep those pages clean */}
+                {/* (Removed as per latest UI requirements) */}
                 {/* Show back button on all pages except Clipts and SquadsClipts */}
                 {!(location.pathname === '/clipts' || location.pathname === '/squads-clipts') && (
                   <BackButton />
