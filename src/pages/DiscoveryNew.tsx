@@ -1127,3 +1127,4 @@ const DiscoveryNew: React.FC = () => {
 
 export default DiscoveryNew;
 
+// Fixed JSX syntax
