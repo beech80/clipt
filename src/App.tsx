@@ -38,7 +38,7 @@ const TopClipts = React.lazy(() => import('./pages/TopClipts'));
 const SquadsClipts = React.lazy(() => import('./pages/SquadsClipts'));
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
 // Using minimal version with no complex styling to ensure it displays
-const Discovery = React.lazy(() => import('./pages/DiscoveryMinimal'));
+const DiscoveryNew = React.lazy(() => import('./pages/DiscoveryNew'));
 const Explore = React.lazy(() => import('./pages/Explore'));
 const AllStreamers = React.lazy(() => import('./pages/AllStreamers'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
@@ -137,7 +137,7 @@ const AppContent = () => {
         <Route path="/squads-clipts" element={<SuspenseBoundary loadingMessage="Loading squads clipts..."><SquadsClipts /></SuspenseBoundary>} />
         <Route path="/profile/:id?" element={<SuspenseBoundary loadingMessage="Loading profile..."><UserProfile /></SuspenseBoundary>} />
         {/* PRIMARY DISCOVERY ROUTE - updated with TikTok-style interface */}
-        <Route path="/discover" element={<SuspenseBoundary loadingMessage="Loading Discovery page..."><Discovery /></SuspenseBoundary>} />
+        <Route path="/discover" element={<SuspenseBoundary loadingMessage="Loading Discovery page..."><DiscoveryNew /></SuspenseBoundary>} />
         {/* Backup route in case the other one doesn't work */}
         <Route path="/discovery" element={<Navigate to="/discover" replace />} />
         <Route path="/explore" element={<SuspenseBoundary loadingMessage="Loading explore feed..."><Explore /></SuspenseBoundary>} />
