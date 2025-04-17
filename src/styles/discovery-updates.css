@@ -34,7 +34,7 @@
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid #FF8C00;
-  color: white;
+  color: #ff8c00; /* Orange icons for top buttons */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,6 +137,16 @@
 .circular-nav-btn.active {
   background-color: #8232d7; /* Purple highlight color */
   color: white;
+}
+
+.circular-nav-btn .orange-icon {
+  color: #ff8c00; /* Orange icon for active chat button */
+}
+
+.dollar-sign {
+  color: #ff8c00;
+  font-weight: bold;
+  font-size: 1.2rem;
 }
 
 /* Button style variations - exact match to image */
