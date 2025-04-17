@@ -668,14 +668,14 @@ const DiscoveryNew: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              )
-            )}
-              <div className="empty-content">
-                <div className="empty-message">
-                  <p>No content found for {selectedGame?.name}</p>
-                </div>
-              </div>
-            )
+               ) : (
+                 <div className="empty-content">
+                   <div className="empty-message">
+                     <p>No content found for {selectedGame?.name}</p>
+                   </div>
+                 </div>
+               )
+             )
           ) : (
             // General discovery feed (streamers only for now)
             {streamers.length > 0 && currentIndex < streamers.length ? (
@@ -777,16 +777,14 @@ const DiscoveryNew: React.FC = () => {
                   </div>
                 </div>
               </div>
-            ) : (
+             ) : (
               <div className="empty-content">
                 <div className="empty-message">
                   <p>No streams available</p>
                 </div>
               </div>
-            )}
-          </div>
-            )
-          )}
+             )
+           )}
           
           {/* Removed Navigation arrows as requested */}
           
