@@ -117,7 +117,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
   font-size: 1rem;
   margin: 0 4px;
   cursor: pointer;
@@ -139,17 +138,19 @@
   color: white;
 }
 
-/* Icon color classes for the GameBoy controller buttons */
+/* Icon color classes for the GameBoy controller buttons - with increased specificity */
+.circular-nav-btn .orange-icon,
 .orange-icon {
-  color: #ff8c00; /* Orange icons */
+  color: #ff8c00 !important; /* Orange icons */
 }
 
+.circular-nav-btn .white-icon,
 .white-icon {
-  color: #ffffff; /* White icons */
+  color: #ffffff !important; /* White icons */
 }
 
 .dollar-sign {
-  color: #ff8c00;
+  color: #ff8c00 !important;
   font-weight: bold;
   font-size: 1.2rem;
 }
