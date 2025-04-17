@@ -139,8 +139,13 @@
   color: white;
 }
 
-.circular-nav-btn .orange-icon {
-  color: #ff8c00; /* Orange icon for active chat button */
+/* Icon color classes for the GameBoy controller buttons */
+.orange-icon {
+  color: #ff8c00; /* Orange icons */
+}
+
+.white-icon {
+  color: #ffffff; /* White icons */
 }
 
 .dollar-sign {

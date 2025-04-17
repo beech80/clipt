@@ -325,11 +325,11 @@ const DiscoveryNew = () => {
             {/* GameBoy controller buttons based on the image - ALWAYS VISIBLE */}
             <div className="circular-nav-container">
               <button className="circular-nav-btn prev-btn" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
-                <FontAwesomeIcon icon={faChevronLeft} />
+                <FontAwesomeIcon icon={faChevronLeft} className="orange-icon" />
               </button>
               
               <button className="circular-nav-btn chat-circle active" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} size="lg" className="orange-icon" />
+                <FontAwesomeIcon icon={faComment} size="lg" className="white-icon" />
               </button>
               
               <button className="circular-nav-btn donate-circle">
@@ -337,15 +337,15 @@ const DiscoveryNew = () => {
               </button>
               
               <button className="circular-nav-btn profile-circle">
-                <FontAwesomeIcon icon={faUser} size="lg" />
+                <FontAwesomeIcon icon={faUser} size="lg" className="white-icon" />
               </button>
               
               <button className="circular-nav-btn scissors-circle">
-                <FontAwesomeIcon icon={faCut} size="lg" />
+                <FontAwesomeIcon icon={faCut} size="lg" className="orange-icon" />
               </button>
               
               <button className="circular-nav-btn next-btn" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
-                <FontAwesomeIcon icon={faChevronRight} />
+                <FontAwesomeIcon icon={faChevronRight} className="orange-icon" />
               </button>
             </div>
           </div>
