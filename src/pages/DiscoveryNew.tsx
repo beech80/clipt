@@ -325,27 +325,27 @@ const DiscoveryNew = () => {
             {/* GameBoy controller buttons based on the image - ALWAYS VISIBLE */}
             <div className="circular-nav-container">
               <button className="circular-nav-btn prev-btn" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
-                <FontAwesomeIcon icon={faChevronLeft} style={{color: '#ff8c00'}} />
+                <i className="force-orange-icon"><FontAwesomeIcon icon={faChevronLeft} /></i>
               </button>
               
               <button className="circular-nav-btn chat-circle active" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} size="lg" style={{color: '#ffffff'}} />
+                <i className="force-white-icon"><FontAwesomeIcon icon={faComment} size="lg" /></i>
               </button>
               
               <button className="circular-nav-btn donate-circle">
-                <span style={{color: '#ff8c00', fontWeight: 'bold', fontSize: '1.2rem'}}>$</span>
+                <span className="force-orange-text">$</span>
               </button>
               
               <button className="circular-nav-btn profile-circle">
-                <FontAwesomeIcon icon={faUser} size="lg" style={{color: '#ffffff'}} />
+                <i className="force-white-icon"><FontAwesomeIcon icon={faUser} size="lg" /></i>
               </button>
               
               <button className="circular-nav-btn scissors-circle">
-                <FontAwesomeIcon icon={faCut} size="lg" style={{color: '#ff8c00'}} />
+                <i className="force-orange-icon"><FontAwesomeIcon icon={faCut} size="lg" /></i>
               </button>
               
               <button className="circular-nav-btn next-btn" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
-                <FontAwesomeIcon icon={faChevronRight} style={{color: '#ff8c00'}} />
+                <i className="force-orange-icon"><FontAwesomeIcon icon={faChevronRight} /></i>
               </button>
             </div>
           </div>
