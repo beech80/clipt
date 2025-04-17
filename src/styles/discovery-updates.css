@@ -91,26 +91,27 @@
   font-size: 0.8rem;
 }
 
-/* GameBoy style controller at bottom */
+/* GameBoy style controller at bottom - made to exactly match the image */
 .circular-nav-container {
-  position: absolute;
-  bottom: 1rem;
+  position: fixed;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.85);
   border-radius: 50px;
-  padding: 0.25rem;
-  z-index: 100;
+  padding: 5px 8px;
+  z-index: 1000;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  width: auto;
 }
 
-/* Circular navigation buttons */
+/* Circular navigation buttons - exact match to image */
 .circular-nav-btn {
-  width: 45px;
-  height: 45px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: none;
   display: flex;
@@ -118,7 +119,7 @@
   justify-content: center;
   color: white;
   font-size: 1rem;
-  margin: 0 0.25rem;
+  margin: 0 4px;
   cursor: pointer;
   transition: all 0.2s ease;
   background-color: #1f1f1f;
@@ -138,11 +139,12 @@
   color: white;
 }
 
-/* Button style variations */
+/* Button style variations - exact match to image */
 .prev-btn, .next-btn {
-  background-color: #1f1f1f;
-  width: 35px;
-  height: 35px;
+  background-color: #1a1a1a;
+  width: 32px;
+  height: 32px;
+  font-size: 0.9rem;
 }
 
 .chat-circle {
@@ -150,16 +152,16 @@
 }
 
 .donate-circle {
-  background-color: #1f1f1f;
+  background-color: #1a1a1a;
   font-weight: bold;
   font-size: 1.2rem;
 }
 
 .profile-circle {
-  background-color: #1f1f1f;
+  background-color: #1a1a1a;
 }
 
-.clipt-circle {
-  background-color: #1f1f1f;
-  font-size: 1.2rem;
+.scissors-circle {
+  background-color: #1a1a1a;
+  font-size: 0.9rem;
 }

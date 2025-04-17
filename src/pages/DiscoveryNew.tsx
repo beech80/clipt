@@ -320,42 +320,34 @@ const DiscoveryNew = () => {
               )
             )}
            
-            {/* Navigation arrows (hidden but kept for functionality) */}
-            <button className="nav-arrow left hidden-arrow" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
-              <FontAwesomeIcon icon={faChevronLeft} />
-            </button>
-            <button className="nav-arrow right hidden-arrow" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
-              <FontAwesomeIcon icon={faChevronRight} />
-            </button>
+            {/* Remove hidden navigation arrows */}
             
-            {/* GameBoy controller buttons based on the provided image */}
-            {!searchModalOpen && (
-              <div className="circular-nav-container">
-                <button className="circular-nav-btn prev-btn" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
-                  <FontAwesomeIcon icon={faChevronLeft} />
-                </button>
-                
-                <button className="circular-nav-btn chat-circle active" onClick={toggleChat}>
-                  <FontAwesomeIcon icon={faComment} />
-                </button>
-                
-                <button className="circular-nav-btn donate-circle">
-                  $
-                </button>
-                
-                <button className="circular-nav-btn profile-circle">
-                  <FontAwesomeIcon icon={faUser} />
-                </button>
-                
-                <button className="circular-nav-btn clipt-circle">
-                  <FontAwesomeIcon icon={faCut} />
-                </button>
-                
-                <button className="circular-nav-btn next-btn" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
-                  <FontAwesomeIcon icon={faChevronRight} />
-                </button>
-              </div>
-            )}
+            {/* GameBoy controller buttons based on the image - ALWAYS VISIBLE */}
+            <div className="circular-nav-container">
+              <button className="circular-nav-btn prev-btn" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
+                <FontAwesomeIcon icon={faChevronLeft} />
+              </button>
+              
+              <button className="circular-nav-btn chat-circle active" onClick={toggleChat}>
+                <FontAwesomeIcon icon={faComment} />
+              </button>
+              
+              <button className="circular-nav-btn donate-circle">
+                $
+              </button>
+              
+              <button className="circular-nav-btn profile-circle">
+                <FontAwesomeIcon icon={faUser} />
+              </button>
+              
+              <button className="circular-nav-btn scissors-circle">
+                <FontAwesomeIcon icon={faCut} />
+              </button>
+              
+              <button className="circular-nav-btn next-btn" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
+                <FontAwesomeIcon icon={faChevronRight} />
+              </button>
+            </div>
           </div>
         </motion.div>
       
