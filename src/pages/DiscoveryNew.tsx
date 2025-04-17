@@ -518,19 +518,20 @@ const DiscoveryNew: React.FC = () => {
                         }}
                       />
                       <div className="streamer-details" style={{ flex: 1 }}>
-                        <h3 style={{ 
-                          color: '#111', 
-                          fontWeight: 'bold', 
+                        <h3 style={{
+                          color: '#fff',
+                          fontWeight: 'bold',
                           fontSize: '22px',
                           marginBottom: '3px',
-                          textShadow: '0 1px 1px rgba(255,255,255,0.7)',
-                          backgroundColor: '#333',
-                          color: 'white',
-                          padding: '6px 12px',
-                          borderRadius: '8px',
-                          border: '1px solid #ff5500',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                          display: 'inline-block'
+                          background: 'linear-gradient(90deg, #ff5500 0%, #ff9500 100%)',
+                          borderRadius: '10px',
+                          padding: '7px 18px',
+                          border: '2.5px solid #fff',
+                          boxShadow: '0 3px 12px rgba(255,85,0,0.18), 0 1.5px 0px #ff9500',
+                          letterSpacing: '1px',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.20)',
+                          display: 'inline-block',
+                          filter: 'brightness(1.08)'
                         }}>{(gameContent[currentIndex] as Streamer).display_name}</h3>
                         <p style={{ 
                           color: '#222', 
@@ -540,18 +541,21 @@ const DiscoveryNew: React.FC = () => {
                           alignItems: 'center',
                           gap: '5px'
                         }}>
-                          <span style={{ 
-                            backgroundColor: '#222', 
-                            padding: '5px 10px', 
-                            borderRadius: '6px', 
-                            border: '1px solid #ff5500',
-                            color: 'white',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                          <span style={{
+                            background: 'linear-gradient(90deg, #202040 0%, #ff5500 100%)',
+                            padding: '5px 14px',
+                            borderRadius: '8px',
+                            border: '2px solid #ff9500',
+                            color: '#fff',
+                            boxShadow: '0 2px 8px rgba(255,85,0,0.15)',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '5px'
+                            gap: '7px',
+                            fontWeight: 600,
+                            fontSize: '16px',
+                            textShadow: '0 1px 5px rgba(0,0,0,0.19)'
                           }}>
-                            <Gamepad size={16} style={{ color: '#ff5500' }} /> 
+                            <Gamepad size={16} style={{ color: '#fff', filter: 'drop-shadow(0 0 2px #ff5500)' }} />
                             {(gameContent[currentIndex] as Streamer).game}
                           </span>
                         </p>
@@ -565,6 +569,7 @@ const DiscoveryNew: React.FC = () => {
                         }}>
                           <Zap size={14} style={{ color: '#ff5500' }} /> {(gameContent[currentIndex] as Streamer).viewer_count?.toLocaleString()} viewers
                         </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -617,32 +622,38 @@ const DiscoveryNew: React.FC = () => {
                         }}
                       />
                       <div className="user-details" style={{ flex: 1 }}>
-                        <h3 style={{ 
+                        <h3 style={{
                           color: '#fff',
                           fontWeight: 'bold',
                           fontSize: '22px',
                           marginBottom: '3px',
-                          textShadow: '0 1px 1px rgba(0,0,0,0.7)',
-                          background: 'rgba(20,20,30,0.85)',
-                          borderRadius: '8px',
-                          padding: '4px 12px',
+                          background: 'linear-gradient(90deg, #ff5500 0%, #ff9500 100%)',
+                          borderRadius: '10px',
+                          padding: '7px 18px',
+                          border: '2.5px solid #fff',
+                          boxShadow: '0 3px 12px rgba(255,85,0,0.18), 0 1.5px 0px #ff9500',
+                          letterSpacing: '1px',
+                          textShadow: '0 2px 8px rgba(0,0,0,0.20)',
                           display: 'inline-block',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
+                          filter: 'brightness(1.08)'
                         }}>{(gameContent[currentIndex] as Clipt).user.display_name}</h3>
-                        <p style={{ 
+                        <p style={{
                           color: '#fff',
                           fontWeight: 'bold',
                           fontSize: '17px',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: '5px',
-                          background: 'rgba(20,20,30,0.85)',
+                          gap: '7px',
+                          background: 'linear-gradient(90deg, #202040 0%, #ff5500 100%)',
                           borderRadius: '8px',
-                          padding: '4px 12px',
+                          padding: '5px 14px',
                           margin: '6px 0',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.18)'
+                          boxShadow: '0 2px 8px rgba(255,85,0,0.13)',
+                          border: '2px solid #ff9500',
+                          textShadow: '0 1px 5px rgba(0,0,0,0.19)'
                         }}>
-                          <Scissors size={16} style={{ color: '#ff5500' }} /> {(gameContent[currentIndex] as Clipt).title}
+                          <Scissors size={16} style={{ color: '#fff', filter: 'drop-shadow(0 0 2px #ff5500)' }} />
+                          {(gameContent[currentIndex] as Clipt).title}
                         </p>
                         <div className="view-count" style={{ 
                           color: '#333',
@@ -658,7 +669,7 @@ const DiscoveryNew: React.FC = () => {
                   </div>
                 </div>
               )
-            ) : (
+            )}
               <div className="empty-content">
                 <div className="empty-message">
                   <p>No content found for {selectedGame?.name}</p>
@@ -667,7 +678,7 @@ const DiscoveryNew: React.FC = () => {
             )
           ) : (
             // General discovery feed (streamers only for now)
-            streamers.length > 0 && currentIndex < streamers.length ? (
+            {streamers.length > 0 && currentIndex < streamers.length ? (
               <div className="stream-wrapper">
                 <video 
                   src={streamers[currentIndex].stream_url} 
@@ -772,6 +783,8 @@ const DiscoveryNew: React.FC = () => {
                   <p>No streams available</p>
                 </div>
               </div>
+            )}
+          </div>
             )
           )}
           
