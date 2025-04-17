@@ -1,5 +1,16 @@
 /* New UI styles for updated Discovery page */
 
+/* Header layout */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  position: relative;
+  z-index: 10;
+}
+
 /* Smaller logo */
 .small-logo {
   height: 28px !important;
@@ -7,6 +18,11 @@
 }
 
 /* Icon-only buttons in header */
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
 .header-buttons {
   display: flex;
   gap: 0.75rem;
@@ -32,60 +48,118 @@
   box-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
 }
 
-/* Centered controller with compact buttons */
-.centered-controller {
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  bottom: 1.5rem !important;
-  width: auto !important;
-  padding: 0.5rem !important;
-  background: rgba(0, 0, 0, 0.6) !important;
+/* Hide regular arrows */
+.hidden-arrow {
+  opacity: 0;
+  pointer-events: none;
 }
 
-.compact-controller-buttons {
+/* Streamer info with background bars */
+.streamer-details {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
-.compact-action-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
+.streamer-text {
+  margin-left: 0.5rem;
+}
+
+.streamer-name-bar {
+  background: rgba(255, 140, 0, 0.8);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+}
+
+.streamer-name-bar h3 {
+  margin: 0;
+  color: #000;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.game-name-bar {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+}
+
+.game-name-bar p {
+  margin: 0;
+  color: white;
+  font-size: 0.8rem;
+}
+
+/* GameBoy style controller at bottom */
+.circular-nav-container {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50px;
+  padding: 0.25rem;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+/* Circular navigation buttons */
+.circular-nav-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.1rem;
-  font-weight: bold;
+  font-size: 1rem;
+  margin: 0 0.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  background-color: #1f1f1f;
 }
 
-.compact-action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+.circular-nav-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(130, 60, 215, 0.6);
 }
 
-.compact-action-btn:active {
-  transform: translateY(1px);
+.circular-nav-btn:active {
+  transform: scale(0.95);
 }
 
-/* Button colors matching Image 2 */
-.chat-btn {
-  background-color: #232323;
+.circular-nav-btn.active {
+  background-color: #8232d7; /* Purple highlight color */
+  color: white;
 }
 
-.donate-btn {
-  background-color: #3f3f3f;
+/* Button style variations */
+.prev-btn, .next-btn {
+  background-color: #1f1f1f;
+  width: 35px;
+  height: 35px;
 }
 
-.follow-btn {
-  background-color: #3f3f3f;
+.chat-circle {
+  background-color: #8232d7; /* Purple for active button */
 }
 
-.clipt-btn {
-  background-color: #232323;
+.donate-circle {
+  background-color: #1f1f1f;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.profile-circle {
+  background-color: #1f1f1f;
+}
+
+.clipt-circle {
+  background-color: #1f1f1f;
+  font-size: 1.2rem;
 }

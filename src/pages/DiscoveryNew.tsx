@@ -6,7 +6,7 @@ import axios from 'axios';
 import '../styles/discovery-retro.css';
 import '../styles/discovery-updates.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes, faUser, faCut } from '@fortawesome/free-solid-svg-icons';
 import CliptLogoSVG from '../assets/clipt_logo_text.svg'; 
 import RealtimeChat from '../components/messages/RealtimeChat';
 
@@ -181,20 +181,20 @@ const DiscoveryNew = () => {
             <div className="logo-container">
               <img src={CliptLogoSVG} alt="Clipt Logo" className="clipt-logo small-logo" />
             </div>
-            
-            <div className="header-buttons">
-              <button 
-                className="stream-button icon-button"
-              >
-                <FontAwesomeIcon icon={faVideo} />
-              </button>
-              
-              <button 
-                className="search-button icon-button"
-                onClick={() => setSearchModalOpen(true)}
-              >
-                <FontAwesomeIcon icon={faSearch} />
-              </button>
+            <div className="header-right">
+              <div className="header-buttons">
+                <button 
+                  className="stream-button icon-button"
+                >
+                  <FontAwesomeIcon icon={faVideo} />
+                </button>
+                <button 
+                  className="search-button icon-button"
+                  onClick={() => setSearchModalOpen(true)}
+                >
+                  <FontAwesomeIcon icon={faSearch} />
+                </button>
+              </div>
             </div>
           </div>
           
@@ -248,24 +248,30 @@ const DiscoveryNew = () => {
                     playsInline 
                     className="stream-video full-screen" 
                   />
-                  <div className="streamer-info">
-                    <div className="streamer-details">
-                      <div className="avatar">
-                        <img src={streamers[currentIndex].avatar_url} alt={`${streamers[currentIndex].username}'s avatar`} />
+                  {currentStreamer && (
+                    <div className="streamer-info">
+                      <div className="streamer-details">
+                        <div className="avatar">
+                          <img src={currentStreamer.avatar_url} alt={`${currentStreamer.username}'s avatar`} />
+                        </div>
+                        <div className="streamer-text">
+                          <div className="streamer-name-bar">
+                            <h3>{currentStreamer.username}</h3>
+                          </div>
+                          <div className="game-name-bar">
+                            <p>{selectedGame ? selectedGame.name : 'Streaming now'}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="streamer-text">
-                        <h3>{streamers[currentIndex].username}</h3>
-                        <p>{streamers[currentIndex].bio || 'Playing ' + selectedGame.name}</p>
-                      </div>
+                      <button 
+                        className="chat-button retro-button"
+                        onClick={toggleChat}
+                      >
+                        <FontAwesomeIcon icon={faComment} />
+                        <span>{isChatOpen ? 'Close Chat' : 'Open Chat'}</span>
+                      </button>
                     </div>
-                    <button 
-                      className="chat-button retro-button"
-                      onClick={toggleChat}
-                    >
-                      <FontAwesomeIcon icon={faComment} />
-                      <span>{isChatOpen ? 'Close Chat' : 'Open Chat'}</span>
-                    </button>
-                  </div>
+                  )}
                 </div>
               ) : (
                 <div className="empty-content">
@@ -314,53 +320,41 @@ const DiscoveryNew = () => {
               )
             )}
            
-            {/* Navigation arrows */}
-            <button className="nav-arrow left" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
+            {/* Navigation arrows (hidden but kept for functionality) */}
+            <button className="nav-arrow left hidden-arrow" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
               <FontAwesomeIcon icon={faChevronLeft} />
             </button>
-            <button className="nav-arrow right" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
+            <button className="nav-arrow right hidden-arrow" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
               <FontAwesomeIcon icon={faChevronRight} />
             </button>
             
-            {/* GameBoy Controller with action buttons */}
+            {/* GameBoy controller buttons based on the provided image */}
             {!searchModalOpen && (
-              <motion.div 
-                className="gameboy-controller centered-controller"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                <div className="compact-controller-buttons">
-                  <button 
-                    className="compact-action-btn chat-btn" 
-                    onClick={toggleChat}
-                    aria-label="Chat"
-                  >
-                    <FontAwesomeIcon icon={faComment} />
-                  </button>
-                  
-                  <button 
-                    className="compact-action-btn donate-btn"
-                    aria-label="Donate"
-                  >
-                    $
-                  </button>
-                  
-                  <button 
-                    className="compact-action-btn follow-btn"
-                    aria-label="Follow"
-                  >
-                    +
-                  </button>
-                  
-                  <button 
-                    className="compact-action-btn clipt-btn"
-                    aria-label="Clipt"
-                  >
-                    C
-                  </button>
-                </div>
-              </motion.div>
+              <div className="circular-nav-container">
+                <button className="circular-nav-btn prev-btn" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
+                  <FontAwesomeIcon icon={faChevronLeft} />
+                </button>
+                
+                <button className="circular-nav-btn chat-circle active" onClick={toggleChat}>
+                  <FontAwesomeIcon icon={faComment} />
+                </button>
+                
+                <button className="circular-nav-btn donate-circle">
+                  $
+                </button>
+                
+                <button className="circular-nav-btn profile-circle">
+                  <FontAwesomeIcon icon={faUser} />
+                </button>
+                
+                <button className="circular-nav-btn clipt-circle">
+                  <FontAwesomeIcon icon={faCut} />
+                </button>
+                
+                <button className="circular-nav-btn next-btn" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
+                  <FontAwesomeIcon icon={faChevronRight} />
+                </button>
+              </div>
             )}
           </div>
         </motion.div>
@@ -491,8 +485,13 @@ const DiscoveryNew = () => {
               transition={{ duration: 0.3 }}
             >
               <RealtimeChat 
-                streamerId={currentStreamer.id}
-                streamerName={currentStreamer.username}
+                partnerId={currentStreamer.id}
+                partnerInfo={{
+                  id: currentStreamer.id,
+                  username: currentStreamer.username,
+                  displayName: currentStreamer.username,
+                  avatarUrl: currentStreamer.avatar_url
+                }}
                 onClose={toggleChat}
               />
             </motion.div>
