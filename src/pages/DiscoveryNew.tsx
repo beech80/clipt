@@ -181,13 +181,22 @@ const DiscoveryNew = () => {
               <img src={CliptLogoSVG} alt="Clipt Logo" className="clipt-logo" />
             </div>
             
-            <button 
-              className="search-button retro-button"
-              onClick={() => setSearchModalOpen(true)}
-            >
-              <FontAwesomeIcon icon={faSearch} />
-              <span>Search</span>
-            </button>
+            <div className="header-buttons">
+              <button 
+                className="stream-button retro-button"
+              >
+                <FontAwesomeIcon icon={faVideo} />
+                <span>Streams</span>
+              </button>
+              
+              <button 
+                className="search-button retro-button"
+                onClick={() => setSearchModalOpen(true)}
+              >
+                <FontAwesomeIcon icon={faSearch} />
+                <span>Search</span>
+              </button>
+            </div>
           </div>
           
           {/* Game Info Bar (if game is selected) */}
@@ -306,39 +315,62 @@ const DiscoveryNew = () => {
               )
             )}
            
-            {/* Removed Navigation arrows as requested */}
-           
-            {/* Old style GameBoy Controller with 4 buttons (only visible when not searching) */}
+            {/* Navigation arrows */}
+            <button className="nav-arrow left" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
+              <FontAwesomeIcon icon={faChevronLeft} />
+            </button>
+            <button className="nav-arrow right" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+            
+            {/* GameBoy Controller with action buttons */}
             {!searchModalOpen && (
               <motion.div 
-                className="controller-container"
+                className="gameboy-controller"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <div className="controller-buttons">
-                  <div className="controller-d-pad">
+                <div className="controller-left">
+                  <div className="dpad">
                     <button 
-                      className="d-pad-button d-pad-left"
+                      className="dpad-button"
                       onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)}
                       disabled={currentIndex === 0}
-                    ></button>
+                    >
+                      <FontAwesomeIcon icon={faChevronLeft} />
+                    </button>
                     <button
-                      className="d-pad-button d-pad-right"
+                      className="dpad-button"
                       onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)}
                       disabled={currentIndex === streamers.length - 1}
-                    ></button>
+                    >
+                      <FontAwesomeIcon icon={faChevronRight} />
+                    </button>
                   </div>
-                  <div className="controller-action-buttons">
-                    <button 
-                      className="action-button a-button"
-                      onClick={toggleChat}
-                    >A</button>
-                    <button 
-                      className="action-button b-button"
-                      onClick={() => setSearchModalOpen(true)}
-                    >B</button>
+                </div>
+                
+                <div className="controller-center">
+                  <div className="clipt-screen">
+                    <div className="clipt-screen-inner">
+                      CLIPT
+                    </div>
                   </div>
+                </div>
+                
+                <div className="controller-right">
+                  <button className="action-btn comment" onClick={toggleChat}>
+                    <FontAwesomeIcon icon={faComment} />
+                  </button>
+                  <button className="action-btn donate">
+                    $
+                  </button>
+                  <button className="action-btn follow">
+                    +
+                  </button>
+                  <button className="action-btn clipt">
+                    C
+                  </button>
                 </div>
               </motion.div>
             )}
