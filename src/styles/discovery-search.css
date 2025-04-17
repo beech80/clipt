@@ -1,0 +1,192 @@
+/* Top Corner Search Button */
+.top-corner-search-button {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(102, 68, 136, 0.7);
+  color: white;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  z-index: 1010;
+  transition: all 0.2s ease-in-out;
+}
+
+.top-corner-search-button:hover {
+  background: rgba(102, 68, 136, 0.9);
+  transform: scale(1.05);
+}
+
+.top-corner-search-button:active {
+  transform: scale(0.95);
+}
+
+/* Fix overflow issues */
+.no-overflow {
+  overflow: hidden;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.search-button-highlight {
+  border: 2px solid #E67E22;
+}
+
+/* Search Overlay */
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 10vh;
+  overflow-y: auto;
+}
+
+.search-container {
+  width: 90%;
+  max-width: 600px;
+  background: #221133;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 0 20px rgba(102, 68, 136, 0.8);
+  border: 2px solid #664488;
+}
+
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.search-header h3 {
+  font-size: 1.5rem;
+  color: #ffffff;
+  margin: 0;
+}
+
+.close-search {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-search:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.search-input-container {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9988aa;
+}
+
+.search-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border-radius: 8px;
+  border: 1px solid #664488;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 1rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #9370DB;
+  box-shadow: 0 0 10px rgba(147, 112, 219, 0.5);
+}
+
+.search-results {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.result-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.result-item.game {
+  border-left: 3px solid #4CAF50;
+}
+
+.result-item.user {
+  border-left: 3px solid #2196F3;
+}
+
+.result-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.result-info {
+  flex: 1;
+}
+
+.result-name {
+  font-weight: bold;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.result-type {
+  font-size: 0.8rem;
+  color: #9988aa;
+}
+
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: #9988aa;
+  font-style: italic;
+}

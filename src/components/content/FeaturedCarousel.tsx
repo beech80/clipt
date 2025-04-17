@@ -1,31 +1,65 @@
-
-import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { useState } from "react";
-import { IGDBGame, igdbService } from "@/services/igdbService";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, X } from 'lucide-react';
+import { igdbService } from '@/services/igdbService';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
-export function FeaturedCarousel() {
+interface FeaturedCarouselProps {
+  searchTerm?: string | null;
+  onResultClick?: (game: any) => void;
+}
+
+export function FeaturedCarousel({ searchTerm: initialSearchTerm = '', onResultClick }: FeaturedCarouselProps) {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>(initialSearchTerm || '');
 
   const { data: searchResults, isLoading, error } = useQuery({
     queryKey: ['game-search', searchTerm],
-    queryFn: () => igdbService.searchGames(searchTerm),
+    queryFn: async () => {
+      if (!searchTerm || searchTerm.trim() === '') {
+        console.log('Search term is empty, returning empty results');
+        return [];
+      }
+      try {
+        console.log('Searching games with term:', searchTerm);
+        return await igdbService.searchGames(searchTerm);
+      } catch (error) {
+        console.error('Error searching games:', error);
+        return [];
+      }
+    },
     enabled: searchTerm.length > 2,
-    retry: 1,
-    onError: (error) => {
+    retry: 1
+  });
+
+  useEffect(() => {
+    if (error) {
       console.error('Search error:', error);
       toast.error("Failed to search games. Please try again.");
     }
-  });
+  }, [error]);
 
-  const handleGameClick = (gameId: number) => {
-    navigate(`/game/${gameId}`);
+  const handleClearSearch = () => {
+    setSearchTerm('');
+  };
+
+  const handleResultClick = (game: any) => {
+    if (onResultClick) {
+      onResultClick(game);
+    } else {
+      navigate(`/game/${game.id}`);
+      toast.success(`Opening ${game.name}`);
+    }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value || '';
+    setSearchTerm(newValue);
   };
 
   return (
@@ -39,15 +73,15 @@ export function FeaturedCarousel() {
                      placeholder:text-gaming-500 focus:ring-2 focus:ring-gaming-400 
                      transition-all duration-300 hover:bg-gaming-800/70"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleSearchChange}
         />
       </div>
 
-      {searchTerm.length > 2 && (
+      {effectiveSearchTerm.length > 2 && (
         <div className="relative">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
             </div>
           ) : error ? (
             <div className="text-center py-8 text-red-400">
@@ -75,7 +109,7 @@ export function FeaturedCarousel() {
                       <h3 className="font-semibold text-gaming-100">{game.name}</h3>
                       {game.rating && (
                         <div className="text-sm text-gaming-400">
-                          Rating: {Math.round(game.rating)}%
+                          Rating: {Math.round(Number(game.rating))}%
                         </div>
                       )}
                       {game.genres && game.genres.length > 0 && (
@@ -93,9 +127,9 @@ export function FeaturedCarousel() {
                 </Card>
               ))}
             </div>
-          ) : searchTerm.length > 2 && (
-            <div className="text-center py-8 text-gaming-400">
-              No games found matching "{searchTerm}"
+          ) : effectiveSearchTerm.length > 2 && (
+            <div className="text-center py-8 text-orange-400">
+              {searchResults && searchResults.length === 0 ? `No games found matching "${effectiveSearchTerm}"` : ''}
             </div>
           )}
         </div>

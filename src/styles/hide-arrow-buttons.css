@@ -1,0 +1,134 @@
+/* Hide arrow navigation buttons on Discovery page - Comprehensive selectors */
+
+/* Target all buttons with arrow SVG icons */
+.gameboy-controller svg[data-lucide="chevron-left"],
+.gameboy-controller svg[data-lucide="chevron-right"],
+.gameboy-controller svg[data-lucide="arrow-left"],
+.gameboy-controller svg[data-lucide="arrow-right"],
+.discovery-container svg[data-lucide="chevron-left"],
+.discovery-container svg[data-lucide="chevron-right"],
+.discovery-container svg[data-lucide="arrow-left"],
+.discovery-container svg[data-lucide="arrow-right"],
+button svg[data-lucide="chevron-left"],
+button svg[data-lucide="chevron-right"],
+button svg[data-lucide="arrow-left"],
+button svg[data-lucide="arrow-right"],
+[data-lucide="chevron-left"],
+[data-lucide="chevron-right"],
+[data-lucide="arrow-left"],
+[data-lucide="arrow-right"] {
+  display: none !important;
+}
+
+/* Target the parent buttons or elements containing these arrows */
+.gameboy-controller button:has(svg[data-lucide="chevron-left"]),
+.gameboy-controller button:has(svg[data-lucide="chevron-right"]),
+.gameboy-controller button:has(svg[data-lucide="arrow-left"]),
+.gameboy-controller button:has(svg[data-lucide="arrow-right"]),
+.discovery-container button:has(svg[data-lucide]),
+.discovery-container [role="button"],
+.discovery-container .navigation-arrow,
+.discovery-container .arrow-button,
+.discovery-container .direction-button,
+.discovery-container .chevron-button,
+button:has(svg[data-lucide="chevron-left"]),
+button:has(svg[data-lucide="chevron-right"]),
+button:has(svg[data-lucide="arrow-left"]),
+button:has(svg[data-lucide="arrow-right"]) {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Specifically target the circular navigation buttons at the bottom of the Discovery page */
+.gameboy-controls > .left-side-placeholder,
+.gameboy-controls > .right-side-placeholder,
+.discovery-container .navigation-btn,
+.gameboy-controller .direction-btn,
+.controller-left button,
+.controller-right button,
+div[class*="navigation"] button,
+button[aria-label*="previous"],
+button[aria-label*="next"],
+button.prev-btn,
+button.next-btn,
+div[class*="arrow"] button,
+div[class*="Arrow"] button,
+button[class*="arrow"],
+button[class*="Arrow"],
+/* Target any button with circular shape at the bottom */
+.gameboy-controls button.circular,
+.discovery-container button.circular,
+/* Target buttons that are positioned at the bottom corners */
+.discovery-container > div > div > [role="button"],
+.discovery-container > div[class*="bottom"] button,
+/* Very specific button types from the screenshot */
+[class*="message-circle"],
+[class*="dollar-sign"],
+[class*="users"],
+[class*="scissors"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Target buttons by position in the gameboy controller */
+.gameboy-controller > div:first-child button,
+.gameboy-controller > div:last-child button,
+.gameboy-controller > button:first-child,
+.gameboy-controller > button:last-child,
+.controller-navigation > button:first-child,
+.controller-navigation > button:last-child {
+  display: none !important;
+}
+
+/* Target navigation buttons */
+.nav-button.prev, 
+.nav-button.next,
+button.nav-prev,
+button.nav-next,
+button[aria-label="Previous"],
+button[aria-label="Next"],
+button.prev-button,
+button.next-button {
+  display: none !important;
+}
+
+/* Target all divs with chevron icons */
+div:has(> svg[data-lucide="chevron-left"]),
+div:has(> svg[data-lucide="chevron-right"]),
+div:has(> svg[data-lucide="arrow-left"]),
+div:has(> svg[data-lucide="arrow-right"]) {
+  display: none !important;
+}
+
+/* Adjust spacing if needed */
+.gameboy-controller {
+  justify-content: center !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+/* Target the specific chevron icons in the navigation */
+.navigation-controls svg[data-lucide="chevron-left"],
+.navigation-controls svg[data-lucide="chevron-right"],
+button > svg[data-lucide="chevron-left"],
+button > svg[data-lucide="chevron-right"] {
+  display: none !important;
+}
+
+/* This is a more direct method if the buttons have a specific class */
+.rainbow-border.prev-arrow-button,
+.rainbow-border.next-arrow-button,
+.dpad button:first-child,
+.dpad button:last-child {
+  display: none !important;
+}
+
+/* Extra selector to ensure we get the arrows */
+.enhanced-joystick ~ *:has(svg[data-lucide="chevron-left"]),
+.enhanced-joystick ~ *:has(svg[data-lucide="chevron-right"]) {
+  display: none !important;
+}

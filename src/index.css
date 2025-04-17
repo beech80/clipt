@@ -6,26 +6,27 @@
 
 @layer base {
   :root {
-    --background: 240 27% 8%;
-    --foreground: 255 39% 63%;
-    --card: 240 27% 12%;
-    --card-foreground: 255 39% 63%;
-    --popover: 240 27% 12%;
-    --popover-foreground: 255 39% 63%;
-    --primary: 255 39% 37%;
-    --primary-foreground: 255 39% 63%;
-    --secondary: 240 27% 16%;
-    --secondary-foreground: 255 39% 63%;
-    --muted: 240 27% 16%;
-    --muted-foreground: 255 39% 45%;
-    --accent: 240 27% 16%;
-    --accent-foreground: 255 39% 63%;
+    /* Three-color scheme: darker tan background, black text, darker orange UI */
+    --background: 34 25% 65%; /* #BBA78F in HSL (darker tan) */
+    --foreground: 0 0% 0%; /* #000000 pure black */
+    --card: 34 25% 70%;
+    --card-foreground: 0 0% 0%; /* black */
+    --popover: 34 25% 70%;
+    --popover-foreground: 0 0% 0%; /* black */
+    --primary: 21 78% 52%; /* #E67E22 Darker orange for buttons and primary elements */
+    --primary-foreground: 0 0% 0%; /* black */
+    --secondary: 28 90% 52%; /* #F39C12 Medium orange */
+    --secondary-foreground: 0 0% 0%; /* black */
+    --muted: 34 25% 60%;
+    --muted-foreground: 0 0% 0%; /* black */
+    --accent: 16 77% 42%; /* #D35400 Very dark orange for accents */
+    --accent-foreground: 0 0% 0%; /* black */
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 255 39% 63%;
-    --border: 240 27% 16%;
-    --input: 240 27% 16%;
-    --ring: 255 39% 37%;
-    --radius: 0rem;
+    --destructive-foreground: 0 0% 100%; /* white for destructive action text */
+    --border: 21 78% 52%; /* #E67E22 Darker orange for borders */
+    --input: 34 25% 65%;
+    --ring: 21 78% 52%; /* #E67E22 Darker orange for focus rings */
+    --radius: 0.375rem;
   }
 }
 
@@ -48,10 +49,10 @@
     margin: 0;
     padding: 0;
     padding-bottom: 250px; /* Add extra padding to ensure content isn't hidden behind gameboy UI */
-    background-color: var(--background-override, #1A1F2C);
+    background-color: var(--background-override, #BBA78F);
     background-image: 
-      radial-gradient(at 100% 0%, rgba(155, 135, 245, 0.15) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, rgba(107, 81, 201, 0.12) 0px, transparent 50%);
+      radial-gradient(at 100% 0%, rgba(230, 126, 34, 0.15) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(211, 84, 0, 0.12) 0px, transparent 50%);
     /* Ensure the background doesn't extend beyond the content */
     background-attachment: fixed;
   }
@@ -104,34 +105,34 @@
 
 .gaming-card {
   @apply relative overflow-hidden rounded-none border-2 border-gaming-400 bg-[#1A1F2C] p-4 transition-all hover:border-gaming-500;
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+  box-shadow: 0 0 15px rgba(230, 126, 34, 0.3);
 }
 
 .gaming-gradient {
-  @apply bg-gradient-to-r from-gaming-400 to-gaming-500 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-[#E67E22] to-[#D35400] bg-clip-text text-transparent;
 }
 
 .gaming-button {
   @apply inline-flex items-center justify-center rounded-none border-2 px-4 py-2 text-sm font-medium 
     transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-95 
     disabled:pointer-events-none disabled:opacity-50 touch-manipulation;
-  border-color: var(--button-override, #9b87f5);
+  border-color: var(--button-override, #E67E22);
   background-color: var(--background-override, #1A1F2C);
   color: var(--text-override, #FFFFFF);
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+  box-shadow: 0 0 15px rgba(230, 126, 34, 0.3);
 }
 
 .gaming-button:hover {
-  border-color: var(--button-override, #8B5CF6);
+  border-color: var(--button-override, #D35400);
 }
 
 .glass-card {
-  @apply bg-[#1A1F2C] border-2 border-[#9b87f5] rounded-none;
-  box-shadow: 0 0 15px rgba(155, 135, 245, 0.3);
+  @apply bg-[#1A1F2C] border-2 border-[#E67E22] rounded-none;
+  box-shadow: 0 0 15px rgba(230, 126, 34, 0.3);
 }
 
 .hover-glow {
-  @apply transition-all hover:shadow-lg hover:shadow-[#9b87f5]/20;
+  @apply transition-all hover:shadow-lg hover:shadow-[#E67E22]/20;
 }
 
 .retro-screen {

@@ -1,0 +1,199 @@
+/* Advanced Search Styling */
+
+.advanced-search-container {
+  background: linear-gradient(to bottom, #000000, #0e0a1d);
+  min-height: 100vh;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #4eedff, #b14cff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: bold;
+}
+
+.search-box {
+  transform: translateY(0);
+  transition: transform 0.3s ease-out;
+}
+
+.search-box:focus-within {
+  transform: translateY(-5px);
+}
+
+.search-icon-container {
+  background: linear-gradient(135deg, #0f8b9e, #175a66);
+}
+
+/* Search tabs animation */
+.search-tabs button {
+  position: relative;
+  overflow: hidden;
+}
+
+.search-tabs button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.search-tabs button:hover::after {
+  width: 80%;
+}
+
+/* User cards styling */
+.user-card {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.3);
+}
+
+.user-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 120%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(124, 58, 237, 0.2),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 0.75s;
+  z-index: 1;
+}
+
+.user-card:hover::before {
+  left: 150%;
+}
+
+/* Game cards styling */
+.game-card {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.game-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
+}
+
+/* Quick search buttons */
+.quick-search-btn {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-search-btn:hover {
+  transform: translateY(-2px);
+}
+
+.quick-search-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.quick-search-btn:hover::before {
+  left: 100%;
+}
+
+/* Loading animation */
+.loading-container {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Checkbox styling */
+.checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #4b5563;
+  border-radius: 3px;
+  background-color: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.checkbox:checked {
+  background-color: #1a2b40;
+  border-color: #4eedff;
+}
+
+.checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  color: #4eedff;
+  font-size: 12px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+  .users-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .games-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .users-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .games-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .search-tabs button {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .search-tabs button svg {
+    display: none;
+  }
+}

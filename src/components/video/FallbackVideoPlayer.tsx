@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import VideoProxy from '../post/VideoProxy';
+import { Bookmark } from 'lucide-react';
+import { saveClipt } from '@/lib/savedClipts';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FallbackVideoPlayerProps {
   videoUrl: string;
@@ -250,7 +253,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
         />
         
         {!isLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
             <div className="animate-pulse">Loading video...</div>
           </div>
         )}
@@ -260,7 +263,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
 
   // Render HTML5 video with multiple sources
   return (
-    <div className="relative w-full h-full bg-black">
+    <div className="relative w-full h-full bg-black rounded-lg overflow-hidden">
       <video
         ref={videoRef}
         className={className}
@@ -278,7 +281,8 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
           height: '100%', 
           objectFit: 'contain',
           visibility: 'visible' /* Ensure video is visible */,
-          cursor: onClick ? 'pointer' : 'default'
+          cursor: onClick ? 'pointer' : 'default',
+          borderRadius: '0.75rem' /* Add rounded corners to the video itself */
         }}
         onLoadedData={handleLoadSuccess}
         onCanPlay={handleLoadSuccess}
@@ -302,7 +306,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
 
       {/* Loading indicator */}
       {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
           <div className="animate-pulse">Loading video...</div>
         </div>
       )}
@@ -310,7 +314,7 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
       {/* Manual play button overlay for browsers that block autoplay */}
       {showPlayButton && (
         <div 
-          className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer z-10"
+          className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer z-10 rounded-lg"
           onClick={() => {
             if (videoRef.current) {
               videoRef.current.play()
@@ -326,6 +330,61 @@ const FallbackVideoPlayer: React.FC<FallbackVideoPlayerProps> = ({
           </div>
         </div>
       )}
+      
+      {/* Save button */}
+      {postId && (
+        <SaveButton postId={postId} videoUrl={videoUrl} />
+      )}
+    </div>
+  );
+};
+
+// Save Button Component for saving clipts
+const SaveButton = ({ postId, videoUrl }: { postId: string, videoUrl: string }) => {
+  const { user } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const handleSave = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent video click
+    
+    if (!user) {
+      toast("Sign in to save clipts", {
+        description: "Create an account to save your favorite clipts",
+        action: {
+          label: "Sign In",
+          onClick: () => window.location.href = "/login"
+        }
+      });
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      // Extract thumbnail from video if possible
+      let thumbnailUrl = videoUrl;
+      if (videoUrl.endsWith('.mp4')) {
+        thumbnailUrl = videoUrl.replace('.mp4', '.jpg');
+      }
+      
+      await saveClipt(user.id, postId, thumbnailUrl, videoUrl);
+    } catch (error) {
+      console.error('Error saving clipt:', error);
+      toast.error('Failed to save clipt');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  return (
+    <div 
+      className="absolute top-2 right-2 z-20 p-1.5 bg-black/50 backdrop-blur-sm rounded-full cursor-pointer"
+      onClick={handleSave}
+    >
+      <Bookmark 
+        className={`w-5 h-5 ${isSaving ? 'text-purple-300 animate-pulse' : 'text-white'}`} 
+        fill={isSaving ? "#d8b4fe" : "none"}
+      />
     </div>
   );
 };

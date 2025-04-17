@@ -144,3 +144,21 @@
     max-height: 70vh;
   }
 }
+
+/* Custom orange toggle switch styling */
+.orange-toggle [data-state="checked"] {
+  background-color: #FF5500 !important;
+}
+
+.orange-toggle [data-state="unchecked"] {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.orange-toggle [data-state="checked"] span:last-child {
+  transform: translateX(100%);
+  background-color: white !important;
+}
+
+.orange-toggle span:last-child {
+  background-color: #f5f5f5 !important;
+}

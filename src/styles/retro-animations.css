@@ -1,0 +1,223 @@
+/* Retro Animations CSS */
+
+/* Glowing text animation */
+@keyframes textGlow {
+  0% { text-shadow: 0 0 5px rgba(230, 126, 34, 0.5); }
+  50% { text-shadow: 0 0 15px rgba(230, 126, 34, 0.8), 0 0 20px rgba(230, 126, 34, 0.5); }
+  100% { text-shadow: 0 0 5px rgba(230, 126, 34, 0.5); }
+}
+
+.text-glow-blue {
+  animation: textGlow 2s infinite;
+  /* Class name kept for compatibility, but using orange glow */
+}
+
+@keyframes textGlowPink {
+  0% { text-shadow: 0 0 5px rgba(211, 84, 0, 0.5); }
+  50% { text-shadow: 0 0 15px rgba(211, 84, 0, 0.8), 0 0 20px rgba(211, 84, 0, 0.5); }
+  100% { text-shadow: 0 0 5px rgba(211, 84, 0, 0.5); }
+  /* Renamed but kept for compatibility, now using dark orange */
+}
+
+.text-glow-pink {
+  animation: textGlowPink 2s infinite;
+  /* Class name kept for compatibility, but using dark orange glow */
+}
+
+/* Retro scan line effect */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanlines::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 0, 0, 0.05) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* CRT flicker effect */
+@keyframes flicker {
+  0% { opacity: 0.97; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.94; }
+  15% { opacity: 0.98; }
+  20% { opacity: 0.93; }
+  25% { opacity: 0.95; }
+  30% { opacity: 0.97; }
+  35% { opacity: 0.94; }
+  40% { opacity: 0.98; }
+  45% { opacity: 0.94; }
+  50% { opacity: 0.95; }
+  55% { opacity: 0.98; }
+  60% { opacity: 0.96; }
+  65% { opacity: 0.97; }
+  70% { opacity: 0.95; }
+  75% { opacity: 0.94; }
+  80% { opacity: 0.98; }
+  85% { opacity: 0.95; }
+  90% { opacity: 0.96; }
+  95% { opacity: 0.94; }
+  100% { opacity: 0.95; }
+}
+
+.crt-flicker {
+  animation: flicker 3s linear infinite;
+}
+
+/* Arcade cabinet hover effect */
+.arcade-cabinet {
+  transition: all 0.3s ease;
+  transform: perspective(800px) rotateX(0);
+}
+
+.arcade-cabinet:hover {
+  transform: perspective(800px) rotateX(5deg) scale(1.03);
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Pixel animations */
+@keyframes pixelate {
+  0% { filter: none; }
+  25% { filter: blur(1px); }
+  50% { filter: none; }
+  75% { filter: blur(1px); }
+  100% { filter: none; }
+}
+
+.pixel-animate {
+  animation: pixelate 8s infinite;
+}
+
+/* Section transitions */
+.section-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.section-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.section-exit {
+  opacity: 1;
+}
+
+.section-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Gradient background animation */
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-bg {
+  background: linear-gradient(-45deg, #D35400, #E67E22, #BBA78F, #F39C12);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+
+/* Retro button hover effects */
+.retro-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.retro-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: all 0.5s ease;
+}
+
+.retro-button:hover::after {
+  opacity: 1;
+  transform: rotate(45deg) translate(0, 0);
+}
+
+/* Profile page tab animations */
+.tab-indicator {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.tab-button {
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  transform: translateY(-2px);
+}
+
+.tab-button:active {
+  transform: translateY(1px);
+}
+
+/* Game card hover effect */
+.game-card {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.game-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 20px 30px rgba(230, 126, 34, 0.4);
+}
+
+/* Loading spinner animation */
+@keyframes spinPixel {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.pixel-spinner {
+  animation: spinPixel 1.5s steps(4) infinite;
+}
+
+/* Retro fade in animation */
+@keyframes retroFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 0.5;
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+.retro-fade-in {
+  animation: retroFadeIn 0.5s ease-out forwards;
+}

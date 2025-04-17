@@ -1,0 +1,502 @@
+/* Profile Retro Animations */
+
+/* Add scanlines with reduced opacity for the profile page */
+.profile-scanlines {
+  position: relative;
+  background-color: #151515;
+  overflow: hidden;
+}
+
+.profile-scanlines::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0.15;
+}
+
+.profile-scanlines::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.15) 90%
+  );
+  pointer-events: none;
+  z-index: 9;
+  animation: crtFlicker 10s infinite;
+}
+
+@keyframes crtFlicker {
+  0% { opacity: 0.9; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.9; }
+}
+
+/* Glowing avatar effect */
+.avatar-glow {
+  position: relative;
+}
+
+.avatar-glow::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(92, 225, 255, 0.7) 0%,
+    rgba(92, 225, 255, 0) 70%
+  );
+  z-index: -1;
+  opacity: 0;
+  animation: pulse-glow 3s infinite;
+}
+
+@keyframes pulse-glow {
+  0% { opacity: 0.3; transform: scale(0.95); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+  100% { opacity: 0.3; transform: scale(0.95); }
+}
+
+/* Enhanced tab buttons */
+.profile-tab {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.profile-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: all 0.5s;
+}
+
+.profile-tab:hover::before {
+  left: 100%;
+}
+
+.profile-tab.active {
+  box-shadow: 0 0 10px rgba(92, 225, 255, 0.7);
+}
+
+/* Post cabinet */
+.post-cabinet {
+  background-color: #202020;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(92, 225, 255, 0.1);
+  height: 250px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.post-cabinet::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent
+  );
+  transition: 0.5s;
+  opacity: 0;
+}
+
+.post-cabinet:hover::after {
+  left: 100%;
+  opacity: 1;
+}
+
+/* Glitch hover effect */
+.glitch-hover:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    transparent 0%,
+    rgba(92, 225, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: glitchScan 1.5s infinite;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes glitchScan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* Follow button */
+.follow-button {
+  background: linear-gradient(145deg, #3a3a3a, #202020);
+  color: #fff;
+  border: 1px solid rgba(92, 225, 255, 0.5);
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.follow-button:hover {
+  background: linear-gradient(145deg, #444444, #2a2a2a);
+  box-shadow: 0 0 10px rgba(92, 225, 255, 0.5);
+}
+
+.follow-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(92, 225, 255, 0.4) 0%, rgba(92, 225, 255, 0) 60%);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.follow-button:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Retro button */
+.retro-button {
+  background: linear-gradient(to bottom, #534da1, #36234d);
+  color: white;
+  border: 2px solid #5ce1ff;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(92, 225, 255, 0.5);
+  transition: all 0.3s;
+}
+
+.retro-button:hover {
+  background: linear-gradient(to bottom, #645dc1, #46335d);
+  box-shadow: 0 0 15px rgba(92, 225, 255, 0.8);
+  transform: translateY(-2px);
+}
+
+.retro-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 5px rgba(92, 225, 255, 0.5);
+}
+
+.retro-button::before {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: radial-gradient(circle, rgba(92, 225, 255, 0.8) 0%, rgba(92, 225, 255, 0) 70%);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.retro-button:hover::before {
+  transform: scale(1);
+  opacity: 0.2;
+}
+
+/* Arcade posts display */
+.posts-arcade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  position: relative;
+}
+
+/* Gameboy button styles */
+.gameboy-button {
+  background: linear-gradient(145deg, #3a3a3a, #202020);
+  color: #fff;
+  border: 2px solid rgba(92, 225, 255, 0.5);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.gameboy-button:hover {
+  background: linear-gradient(145deg, #444444, #2a2a2a);
+  box-shadow: 0 0 10px rgba(92, 225, 255, 0.5);
+}
+
+.gameboy-button:active {
+  transform: scale(0.95);
+}
+
+.gameboy-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(92, 225, 255, 0.4) 0%, rgba(92, 225, 255, 0) 60%);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.3s;
+}
+
+.gameboy-button:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Trophy case styling */
+.trophy-case {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.trophy-case::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Avatar glow effect */
+.avatar-glow {
+  position: relative;
+}
+
+.avatar-glow::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(92, 225, 255, 0.5) 0%, rgba(92, 225, 255, 0) 70%);
+  z-index: -1;
+  animation: avatarPulse 3s infinite alternate;
+}
+
+@keyframes avatarPulse {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.1); }
+}
+
+.trophy-case:hover {
+  backdrop-filter: blur(0);
+  transform: scale(1.02);
+}
+
+/* Saved posts arcade cabinet */
+.arcade-cabinet-saved {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(92, 225, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.arcade-cabinet-saved:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(92, 225, 255, 0.5);
+  transform: translateY(-5px) scale(1.03);
+}
+
+/* Retro tabs */
+.profile-tab {
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-tab.active {
+  background: linear-gradient(145deg, #534da1, #36234d);
+  box-shadow: 0 0 10px rgba(92, 225, 255, 0.3);
+  border: 1px solid rgba(92, 225, 255, 0.3);
+}
+
+.profile-tab.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(92, 225, 255, 0.2), 
+    transparent
+  );
+  animation: tabShine 2s infinite;
+}
+
+@keyframes tabShine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+/* Loading animation */
+.empty-animation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.pixel-spinner {
+  margin: 0 auto;
+  display: block;
+  position: relative;
+}
+
+.pixel-spinner::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(92, 225, 255, 0.7) 0%,
+    rgba(92, 225, 255, 0) 70%
+  );
+  animation: spinnerGlow 1.5s infinite;
+}
+
+@keyframes spinnerGlow {
+  0% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.5; transform: scale(0.9); }
+}
+
+/* Stats counter hover effect */
+.stats-counter {
+  transition: transform 0.2s ease;
+  position: relative;
+}
+
+.stats-counter:hover {
+  transform: scale(1.05);
+}
+
+.stats-counter:hover::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: rgba(92, 225, 255, 0.1);
+  border-radius: 4px;
+  z-index: -1;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.5; transform: scale(1); }
+}
+
+/* Follow button retro effects */
+.follow-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.follow-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.5s ease;
+}
+
+.follow-button:hover::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Post loading animation */
+@keyframes post-loading {
+  0% { transform: translateY(15px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.post-loading {
+  animation: post-loading 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Empty state animation */
+@keyframes empty-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.empty-animation {
+  animation: empty-pulse 3s infinite;
+}

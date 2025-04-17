@@ -1,0 +1,229 @@
+/* Profile Effects CSS */
+
+.profile-banner {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e0030 0%, #150050 100%);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-banner::before {
+  content: '';
+  position: absolute;
+  width: 150%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 30% 50%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 70% 50%, rgba(0, 255, 255, 0.1) 0%, transparent 40%);
+  animation: shimmerBackground 10s infinite linear;
+}
+
+.profile-avatar {
+  position: relative;
+  z-index: 1;
+  border: 3px solid #E67E22;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+  transition: all 0.3s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+  border-color: #d946ef;
+}
+
+.profile-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #F39C12, #E67E22, #D35400, #E67E22, #F39C12);
+  background-size: 200% 200%;
+  z-index: -1;
+  animation: gradientBorder 3s infinite linear;
+  opacity: 0.7;
+}
+
+.profile-stats {
+  position: relative;
+  overflow: hidden;
+  background: rgba(30, 30, 60, 0.4);
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-stats::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(45deg);
+  transition: all 0.3s ease;
+  animation: shimmer 5s infinite linear;
+}
+
+.profile-tab-list {
+  position: relative;
+  background: rgba(20, 20, 40, 0.6);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-tab-list::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(100, 50, 255, 0.1), rgba(50, 255, 200, 0.1));
+}
+
+.profile-tab {
+  position: relative;
+  transition: all 0.3s ease;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.profile-tab[data-state="active"] {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.6), rgba(217, 70, 239, 0.6));
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.profile-tab[data-state="active"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, #F39C12, #E67E22, #D35400);
+  opacity: 0.2;
+  z-index: -1;
+}
+
+.profile-post-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .profile-post-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+}
+
+.profile-post-item {
+  position: relative;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.profile-post-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.6));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.profile-post-item:hover::before {
+  opacity: 1;
+}
+
+.profile-post-item:hover {
+  transform: scale(1.03);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.profile-post-item.video::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.profile-post-item.video:hover::after {
+  opacity: 1;
+  background: rgba(139, 92, 246, 0.8);
+}
+
+.profile-empty-state {
+  background: linear-gradient(135deg, rgba(20, 20, 40, 0.6), rgba(30, 30, 60, 0.6));
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-empty-state::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.15), transparent 70%),
+    radial-gradient(circle at 80% 70%, rgba(217, 70, 239, 0.15), transparent 70%);
+}
+
+.profile-bio {
+  position: relative;
+  background: rgba(20, 20, 40, 0.4);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.arcade-grid {
+  position: relative;
+}
+
+.arcade-grid::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  background: linear-gradient(90deg, #F39C12, #E67E22, #D35400);
+  border-radius: 12px;
+  z-index: -1;
+  opacity: 0.7;
+  filter: blur(8px);
+}
+
+@keyframes shimmerBackground {
+  0% { transform: translateX(-30%) translateY(-20%) rotate(0deg); }
+  100% { transform: translateX(-30%) translateY(-20%) rotate(360deg); }
+}
+
+@keyframes gradientBorder {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}

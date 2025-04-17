@@ -1,161 +1,91 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../components/enhanced-joystick.css';
+import { 
+  Settings, Search, Film, Home, User, MessageSquare, 
+  Users, Gamepad, Sparkles, ChevronRight, Layers, Award
+} from 'lucide-react';
+import '../styles/game-dashboard.css';
 
 const GameMenu: React.FC = () => {
   const navigate = useNavigate();
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  
+  // Define app pages
+  const appPages = [
+    { id: 1, name: 'Settings', path: '/settings', icon: Settings, description: 'Configure your experience' },
+    { id: 2, name: 'Profile', path: '/profile', icon: User, description: 'View your profile and stats' },
+    { id: 3, name: 'DISCOVERY PAGE', path: '/discover', icon: Search, description: 'Discover your new favorite streamer' },
+    { id: 4, name: 'Clipts', path: '/clipts', icon: Film, description: 'View short gaming clips' },
+    { id: 5, name: 'Streaming', path: '/streams', icon: Layers, description: 'Watch live streams' },
+    { id: 6, name: 'Squads Clipts', path: '/squads-clipts', icon: Users, description: 'View your squad\'s best clips' },
+    { id: 7, name: 'Top Clipts', path: '/top-clipts', icon: Sparkles, description: 'Hall of fame clips' }
+  ];
 
-  const handleMenuItemClick = (path: string) => {
+  const handleNavigation = (path: string) => {
     navigate(path);
   };
+  
+  useEffect(() => {
+    // Add background animation effect
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      
+      document.documentElement.style.setProperty('--mouse-x', x.toString());
+      document.documentElement.style.setProperty('--mouse-y', y.toString());
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   return (
-    <div className="game-menu-page">
-      <div className="game-menu-content">
-        <h2>GAME MENU</h2>
-        <div className="menu-grid">
-
-          {/* Settings */}
-          <div className="menu-item" onClick={() => handleMenuItemClick('/settings')}>
-            <div className="menu-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-            </div>
-            <div className="menu-text">
-              <h3>Settings</h3>
-              <p>Configure your game</p>
-            </div>
-            <div className="menu-arrow">▶</div>
-          </div>
-
-          {/* Streaming */}
-          <div className="menu-item" onClick={() => handleMenuItemClick('/streaming')}>
-            <div className="menu-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-                <polyline points="17 2 12 7 7 2"></polyline>
-              </svg>
-            </div>
-            <div className="menu-text">
-              <h3>Streaming</h3>
-              <p>Live gameplay</p>
-            </div>
-            <div className="menu-arrow">▶</div>
-          </div>
-
-          {/* Profile */}
-          <div className="menu-item" onClick={() => handleMenuItemClick('/profile')}>
-            <div className="menu-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </div>
-            <div className="menu-text">
-              <h3>Profile</h3>
-              <p>Your player stats</p>
-            </div>
-            <div className="menu-arrow">▶</div>
-          </div>
-
-          {/* Messages */}
-          <div className="menu-item" onClick={() => handleMenuItemClick('/messages')}>
-            <div className="menu-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </div>
-            <div className="menu-text">
-              <h3>Messages</h3>
-              <p>Chat with players</p>
-            </div>
-            <div className="menu-arrow">▶</div>
-          </div>
-
-          {/* Notifications */}
-          <div className="menu-item" onClick={() => handleMenuItemClick('/notifications')}>
-            <div className="menu-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-              </svg>
-            </div>
-            <div className="menu-text">
-              <h3>Notifications</h3>
-              <p>Your notifications</p>
-            </div>
-            <div className="menu-arrow">▶</div>
-          </div>
-
-          {/* Discovery */}
-          <div className="menu-item" onClick={() => handleMenuItemClick('/discover')}>
-            <div className="menu-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </div>
-            <div className="menu-text">
-              <h3>Discovery</h3>
-              <p>Find new games</p>
-            </div>
-            <div className="menu-arrow">▶</div>
-          </div>
-
-          {/* Top Clipts */}
-          <div className="menu-item" onClick={() => handleMenuItemClick('/top-clipts')}>
-            <div className="menu-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
-            </div>
-            <div className="menu-text">
-              <h3>Top Clipts</h3>
-              <p>Hall of fame</p>
-            </div>
-            <div className="menu-arrow">▶</div>
-          </div>
-
-          {/* Squads Clipts */}
-          <div className="menu-item" onClick={() => handleMenuItemClick('/squads-clipts')}>
-            <div className="menu-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            </div>
-            <div className="menu-text">
-              <h3>Squads Clipts</h3>
-              <p>Your squads clipts</p>
-            </div>
-            <div className="menu-arrow">▶</div>
-          </div>
-
-          {/* Clipts */}
-          <div className="menu-item" onClick={() => handleMenuItemClick('/clipts')}>
-            <div className="menu-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
-                <line x1="7" y1="2" x2="7" y2="22"></line>
-                <line x1="17" y1="2" x2="17" y2="22"></line>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <line x1="2" y1="7" x2="7" y2="7"></line>
-                <line x1="2" y1="17" x2="7" y2="17"></line>
-                <line x1="17" y1="17" x2="22" y2="17"></line>
-                <line x1="17" y1="7" x2="22" y2="7"></line>
-              </svg>
-            </div>
-            <div className="menu-text">
-              <h3>Clipts</h3>
-              <p>View all clipts</p>
-            </div>
-            <div className="menu-arrow">▶</div>
-          </div>
+    <div className="menu-container">
+      {/* Animated background */}
+      <div className="menu-bg">
+        <div className="menu-particles"></div>
+        <div className="menu-glow"></div>
+      </div>
+      
+      {/* App Logo */}
+      <div className="menu-header">
+        <div className="app-logo">
+          <Sparkles size={32} className="logo-icon" />
+          <h1 className="logo-text">CLIPT</h1>
         </div>
+      </div>
+      
+      {/* Main Navigation Menu */}
+      <div className="main-navigation">
+        {appPages.map((page, index) => (
+          <div 
+            key={page.id}
+            className={`menu-item ${page.name === 'DISCOVERY PAGE' ? 'discovery-highlight' : ''} ${hoverIndex === index ? 'active' : ''}`}
+            onClick={() => handleNavigation(page.path)}
+            onMouseEnter={() => setHoverIndex(index)}
+            onMouseLeave={() => setHoverIndex(null)}
+          >
+            <div className="item-content">
+              <div className="item-icon">
+                <page.icon size={24} />
+              </div>
+              <div className="item-details">
+                <h3 className="item-name">{page.name}</h3>
+                <p className="item-description">{page.description}</p>
+              </div>
+              <div className="item-arrow">
+                <ChevronRight size={20} />
+              </div>
+            </div>
+            <div className="item-highlight"></div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Bottom info */}
+      <div className="menu-footer">
+        <p className="version-info">CLIPT v2.5 • Gaming Edition</p>
+        <p className="copyright">© 2025 Clipt, Inc. All rights reserved.</p>
       </div>
     </div>
   );

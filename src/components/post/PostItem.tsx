@@ -15,6 +15,8 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "../ui/dropdown-menu";
 import { Textarea } from "../ui/textarea";
+import SuspenseBoundary from '@/components/common/SuspenseBoundary';
+import { LoadingFallback } from '@/components/ui/LoadingStates';
 
 interface PostItemProps {
   post: Post;
@@ -234,13 +236,17 @@ const PostItem = ({ post }: PostItemProps) => {
       </div>
 
       {/* Post Content */}
-      <div className="relative aspect-video">
+      <SuspenseBoundary 
+        loadingMessage="Loading post content..." 
+        loadingVariant="pulse"
+        errorMessage="Post content failed to load. Please try again."
+      >
         <PostContent
           imageUrl={post.image_url}
           videoUrl={post.video_url}
           postId={post.id}
         />
-      </div>
+      </SuspenseBoundary>
 
       {/* Interaction Counts */}
       <div className="px-4 py-3 flex items-center space-x-6 border-t border-gaming-400/20">

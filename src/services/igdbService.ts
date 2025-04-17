@@ -22,12 +22,14 @@ interface SearchOptions {
 }
 
 class IGDBService {
-  async searchGames(query: string, options: SearchOptions = {}): Promise<IGDBGame[]> {
+  async searchGames(query: string | undefined | null, options: SearchOptions = {}): Promise<IGDBGame[]> {
     try {
-      console.log('IGDB searchGames called with query:', query);
+      // Ensure query is never undefined or null
+      const safeQuery = query || '';
+      console.log('IGDB searchGames called with query:', safeQuery);
       
       // Handle search query - properly escape it to prevent injection and query errors
-      const cleanQuery = query?.trim().replace(/"/g, '\\"') || '';
+      const cleanQuery = safeQuery?.trim().replace(/"/g, '\"') || '';
       
       // For empty queries, return popular games
       if (!cleanQuery) {
@@ -38,9 +40,9 @@ class IGDBService {
       // Build search query with improved pattern matching
       // Use multiple query conditions to ensure we get more comprehensive results
       // First try exact match, then alternative search patterns
-      const searchTerm = cleanQuery.length > 2 
+      const searchTerm = cleanQuery && cleanQuery.length > 2 
         ? `where (name ~ "${cleanQuery}"* | name ~ "*${cleanQuery}*" | alternative_names.name ~ "*${cleanQuery}*" | keywords.name ~ "*${cleanQuery}*") & cover != null;`
-        : `where name ~ "*${cleanQuery}*" & cover != null;`;
+        : `where name ~ "*${cleanQuery || ''}*" & cover != null;`;
       
       // Set up sorting with proper defaults - prioritize relevance when searching
       const sortOption = cleanQuery
@@ -335,8 +337,10 @@ class IGDBService {
   }
 
   // Helper method to get mock games by search query for fallback
-  getMockGamesBySearch(query: string, limit: number = 10): IGDBGame[] {
-    console.log('Using mock games for search:', query);
+  getMockGamesBySearch(query: string | undefined | null, limit: number = 10): IGDBGame[] {
+    // Ensure query is never undefined or null
+    const safeQuery = query || '';
+    console.log('Using mock games for search:', safeQuery);
     
     const mockGames: IGDBGame[] = [
       {
@@ -402,7 +406,7 @@ class IGDBService {
     ];
     
     // Filter the mock games by the search query
-    const lowercaseQuery = query.toLowerCase();
+    const lowercaseQuery = safeQuery.toLowerCase();
     const filteredGames = mockGames.filter(game => 
       game.name.toLowerCase().includes(lowercaseQuery) ||
       (game.summary && game.summary.toLowerCase().includes(lowercaseQuery)) ||

@@ -8,6 +8,7 @@ import { debugVideoElement } from '@/utils/debugVideos';
 import FallbackVideoPlayer from '../video/FallbackVideoPlayer';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import VideoProxy from './VideoProxy';
 
 interface PostContentProps {
   imageUrl?: string | null;
@@ -28,8 +29,8 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
   const [retryCount, setRetryCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   
-  // For Clipts page, we want videos to fill the screen but maintain aspect ratio
-  const aspectRatioClass = isCliptsPage ? 'h-auto max-h-screen' : 'aspect-video';
+  // For Clipts page, we need to ensure video fills the screen properly
+  const aspectRatioClass = isCliptsPage ? 'h-full w-full' : 'aspect-video';
 
   // Fetch multiple images if available
   useEffect(() => {
@@ -76,12 +77,71 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
   }, [postId, videoUrl]);
 
   // Additional check for video URL
+  // Enhanced video loading with multiple fallback attempts
   useEffect(() => {
     if (videoUrl && !isMediaLoaded && !isMediaError) {
       // Run initial debugging on the video element
       debugVideoElement(videoUrl);
+      console.log('PostContent: Running video debug for URL:', videoUrl);
+      
+      // Try to preload the video using Image/fetch to check availability
+      if (videoRef.current) {
+        videoRef.current.load();
+        console.log('Forced video preload');
+      }
+      
+      // Attempt to fetch the video header to check if URL is accessible
+      try {
+        fetch(videoUrl, { method: 'HEAD' })
+          .then(response => {
+            if (response.ok) {
+              console.log(`Video URL is accessible: ${videoUrl}, status: ${response.status}`);
+            } else {
+              console.warn(`Video URL check failed: ${videoUrl}, status: ${response.status}`);
+            }
+          })
+          .catch(err => {
+            console.warn('Error checking video URL:', err);
+          });
+      } catch (e) {
+        console.warn('Exception checking video URL:', e);
+      }
     }
-  }, [videoUrl, isMediaLoaded, isMediaError]);
+  }, [videoUrl, isMediaLoaded, isMediaError, retryCount]);
+  
+  // Handle user interaction to enable autoplay across browsers
+  useEffect(() => {
+    const forceAutoplay = () => {
+      if (videoRef.current) {
+        console.log('Forcing video autoplay on user interaction');
+        videoRef.current.muted = true; // Temporarily mute to ensure autoplay works
+        videoRef.current.play()
+          .then(() => {
+            // Once playing, unmute if on the Clipts page
+            if (isCliptsPage) {
+              videoRef.current!.muted = false;
+            }
+            console.log('Video autoplay successful');
+          })
+          .catch(err => {
+            console.error('Autoplay failed even with muting:', err);
+          });
+      }
+    };
+
+    // Try to force autoplay on component mount
+    forceAutoplay();
+
+    // Add event listener for user interaction
+    const handleInteraction = () => forceAutoplay();
+    document.addEventListener('click', handleInteraction, { once: true });
+    document.addEventListener('touchstart', handleInteraction, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+  }, [isCliptsPage, videoUrl]);
 
   useEffect(() => {
     // Check if the video needs to be manually started after loading
@@ -230,13 +290,14 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
         <div className="relative w-full h-full">
           {isMediaError ? (
             <div className="absolute inset-0 flex items-center justify-center text-red-500">
-              <div className="text-center p-4">
-                <p>Unable to play video.</p>
+              <div className="flex flex-col items-center space-y-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+                <p>Error loading video</p>
                 <button
                   onClick={() => {
                     setIsMediaError(false);
                     setIsMediaLoaded(false);
-                    setRetryCount(prev => prev + 1);
+                    setRetryCount((prev) => prev + 1);
                   }}
                   className="mt-2 px-2 py-1 bg-purple-700 rounded text-white text-xs"
                 >
@@ -245,31 +306,74 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
               </div>
             </div>
           ) : (
-            <div className="group relative w-full h-full">
-              <video
-                key={`video-${postId}-${retryCount}`}
-                ref={videoRef}
-                src={videoUrl}
-                className={`w-full ${aspectRatioClass} object-contain bg-black`}
-                playsInline
-                loop
-                muted={false}
-                controls={!isCliptsPage}
-                autoPlay
-                onPlay={() => console.log(`Video playing: ${postId}`)}
-                onPause={() => console.log(`Video paused: ${postId}`)}
-                onLoadedData={handleMediaLoad}
-                onError={handleVideoError}
-                onClick={(e) => {
-                  // Only redirect to edit if not on Clipts page
-                  if (!isCliptsPage) {
-                    e.preventDefault();
-                    navigate(`/clip-editor/${postId}`);
-                  }
-                }}
-              />
+            <div className="group relative w-full h-full flex items-center justify-center bg-black overflow-hidden">
+              {/* Use VideoProxy component for more reliable video display */}
+              {retryCount < 2 ? (
+                // Simplified direct video approach with fixed dimensions
+                <video 
+                  key={`video-${postId}-${retryCount}`}
+                  ref={videoRef}
+                  src={videoUrl}
+                  className="w-full h-full object-cover"
+                  style={{ 
+                    height: '70vh', 
+                    maxHeight: '90vh',
+                    minHeight: '300px',
+                    width: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                    backgroundColor: 'black'
+                  }}
+                  playsInline
+                  autoPlay
+                  loop
+                  muted={false}
+                  controls={isCliptsPage ? false : true}
+                  preload="auto"
+                  onLoadedData={handleMediaLoad}
+                  onError={(e) => {
+                    console.error(`Video error for post ${postId}:`, e);
+                    // Try VideoProxy after first failure
+                    setRetryCount(prev => prev + 1);
+                  }}
+                  onClick={(e) => {
+                    // Only navigate to edit page if not on Clipts page
+                    if (!isCliptsPage) {
+                      e.preventDefault();
+                      navigate(`/clip-editor/${postId}`);
+                    }
+                  }}
+                />
+              ) : (
+                // Use VideoProxy as fallback - this component handles multiple loading strategies
+                <VideoProxy
+                  src={videoUrl}
+                  className="w-full h-full object-cover"
+                  controls={isCliptsPage ? false : true}
+                  autoPlay={true}
+                  loop={true}
+                  muted={false}
+                  playsInline={true}
+                  onLoad={() => handleMediaLoad()}
+                  onError={() => {
+                    console.error(`VideoProxy error for ${postId}`);
+                    setIsMediaError(true);
+                    setIsMediaLoaded(false);
+                    toast.error("Could not load video");
+                  }}
+                />
+              )}              
+              
+              {/* Debugging info - hidden by default */}
+              {false && (
+                <div className="absolute bottom-0 left-0 bg-black/70 text-white text-xs p-1">
+                  Post ID: {postId}<br/>
+                  Video: {videoUrl ? 'Yes' : 'No'}<br/>
+                  Loaded: {isMediaLoaded ? 'Yes' : 'No'}<br/>
+                  Error: {isMediaError ? 'Yes' : 'No'}<br/>
+                </div>
+              )}
 
-              {/* Only show edit button if not on Clipts page */}
               {!isCliptsPage && (
                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
@@ -361,10 +465,34 @@ const PostContent = ({ imageUrl, videoUrl, postId, compact = false, isCliptsPage
         </div>
       )}
 
-      {/* Error State */}
+      {/* Error State with Retry Button */}
       {isMediaError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <Badge variant="destructive" className="px-3 py-1">Media unavailable</Badge>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 z-10">
+          <Badge variant="destructive" className="px-3 py-1 mb-4">Media unavailable</Badge>
+          <button 
+            onClick={() => {
+              setIsMediaError(false);
+              setIsMediaLoaded(false);
+              setRetryCount(prev => prev + 1);
+              // Force a new video element to be created
+              if (videoRef.current) {
+                try {
+                  videoRef.current.load();
+                  const playPromise = videoRef.current.play();
+                  if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                      console.log('Retry play failed:', error);
+                    });
+                  }
+                } catch (err) {
+                  console.error('Error during retry:', err);
+                }
+              }
+            }} 
+            className="px-4 py-2 bg-purple-700 hover:bg-purple-600 rounded text-white font-medium"
+          >
+            Try Again
+          </button>
         </div>
       )}
     </div>

@@ -9,7 +9,7 @@ const TabsNavigation: React.FC = () => {
   const getTabClass = (path: string) => {
     const isActive = location.pathname === path;
     return `flex flex-col items-center ${
-      isActive ? 'text-purple-400 border-b-2 border-purple-400 -mb-3 pb-1' : 'text-gray-400'
+      isActive ? 'text-orange-400 border-b-2 border-orange-400 -mb-3 pb-1' : 'text-gray-400'
     }`;
   };
   

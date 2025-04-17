@@ -1,0 +1,255 @@
+/* Notification Effects CSS */
+
+.notification-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.notification-card {
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.notification-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(100, 50, 255, 0.1), rgba(50, 255, 200, 0.1));
+  z-index: -1;
+}
+
+.notification-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.2);
+}
+
+.notification-card.unread {
+  border-left: 3px solid #E67E22;
+}
+
+.notification-card.unread::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #E67E22;
+  animation: pulse 1.5s infinite;
+}
+
+.notification-header {
+  padding: 12px 16px;
+  background: rgba(20, 20, 40, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notification-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F39C12, #E67E22);
+  color: white;
+}
+
+.notification-tabs {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.notification-tabs::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(90deg, #F39C12, #E67E22, #F39C12);
+  z-index: -1;
+  border-radius: 10px;
+  opacity: 0.6;
+}
+
+.notification-tab-header {
+  background: rgba(30, 30, 60, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.notification-tab-trigger {
+  position: relative;
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.notification-tab-trigger[data-state="active"] {
+  background: linear-gradient(135deg, #F39C12, #E67E22);
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.notification-tab-trigger[data-state="active"]::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: #E67E22;
+}
+
+.notification-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.notification-badge::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right, 
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+.achievement-notification {
+  background: radial-gradient(circle at center, rgba(255, 215, 0, 0.2), transparent 70%);
+}
+
+.like-notification {
+  background: radial-gradient(circle at center, rgba(255, 105, 180, 0.1), transparent 70%);
+}
+
+.comment-notification {
+  background: radial-gradient(circle at center, rgba(100, 200, 255, 0.1), transparent 70%);
+}
+
+.follow-notification {
+  background: radial-gradient(circle at center, rgba(50, 205, 50, 0.1), transparent 70%);
+}
+
+.notification-empty {
+  position: relative;
+  overflow: hidden;
+  padding: 48px 24px;
+  text-align: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(30, 30, 60, 0.5), rgba(20, 20, 40, 0.5));
+}
+
+.notification-empty::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(139, 92, 246, 0.2), transparent 60%);
+  animation: rotate 20s linear infinite;
+}
+
+.notification-avatar {
+  position: relative;
+  overflow: hidden;
+}
+
+.notification-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+.mark-all-button {
+  background: linear-gradient(135deg, #F39C12, #E67E22);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.mark-all-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transition: all 0.5s ease;
+}
+
+.mark-all-button:hover::before {
+  left: 100%;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(139, 92, 246, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+  20% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,103 @@
+      {/* Search panel - slides in from the right */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            className="fixed top-0 right-0 h-full w-96 bg-black bg-opacity-90 z-20 backdrop-blur-sm border-l border-gray-800"
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          >
+            <div className="h-full flex flex-col p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-lg text-purple-400">
+                  Find Games & Streamers
+                </h3>
+                <button
+                  onClick={() => setSearchOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search games or streamers..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-800 border border-gray-700 rounded-full focus:outline-none focus:border-purple-500 text-white"
+                />
+              </div>
+              
+              {searchResults.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-400 mb-2">Popular Games</h4>
+                  <div className="space-y-2">
+                    {searchResults.map((game) => (
+                      <div 
+                        key={game.id}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors"
+                        onClick={() => handleGameSelect(game)}
+                      >
+                        <div className="w-12 h-12 rounded overflow-hidden bg-gray-700 flex-shrink-0">
+                          <img 
+                            src={game.cover || `https://picsum.photos/100/100?random=${game.id}`} 
+                            alt={game.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = `https://picsum.photos/100/100?random=${game.id}`;
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-purple-300 truncate">{game.name}</div>
+                          <div className="flex items-center text-xs text-gray-400">
+                            <Gamepad size={12} className="mr-1" />
+                            <span>{(game.viewerCount || 0).toLocaleString()} watching</span>
+                          </div>
+                        </div>
+                        <ChevronRight size={16} className="text-gray-500" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div>
+                <h4 className="text-sm font-medium text-gray-400 mb-2">Sample Game Library</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {gameLibrary.map((game) => (
+                    <div 
+                      key={game.id}
+                      className="flex flex-col items-center cursor-pointer group"
+                      onClick={() => handleGameSelect(game)}
+                    >
+                      <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-800 mb-1 group-hover:ring-2 ring-purple-500 transition-all">
+                        <img 
+                          src={game.cover || `https://picsum.photos/100/100?random=${game.id}`}
+                          alt={game.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = `https://picsum.photos/100/100?random=${game.id}`;
+                          }}
+                        />
+                      </div>
+                      <div className="text-xs text-center text-gray-300 group-hover:text-purple-300 transition-colors truncate w-full">
+                        {game.name}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default DiscoveryMinimal;

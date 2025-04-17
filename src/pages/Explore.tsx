@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gamepad2, Trophy, Users as UsersIcon, Star, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase'; 
 import GameCard from '@/components/GameCard';
 import StreamerCard from '@/components/StreamerCard';
 import { allGames } from '@/data/gamesList';
+import '@/styles/retro-animations.css';
 
 interface Game {
   id: string;
@@ -25,6 +27,52 @@ interface Streamer {
 }
 
 const Explore = () => {
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 24
+      }
+    },
+    hover: {
+      scale: 1.05,
+      boxShadow: '0 0 15px rgba(92, 225, 255, 0.5)',
+      transition: {
+        type: 'spring',
+        stiffness: 400,
+        damping: 10
+      }
+    },
+    tap: { scale: 0.95 }
+  };
+
+  const glowVariants = {
+    initial: { opacity: 0.5 },
+    animate: {
+      opacity: [0.5, 1, 0.5],
+      transition: {
+        repeat: Infinity,
+        duration: 2,
+        ease: 'easeInOut'
+      }
+    }
+  };
+  
   const navigate = useNavigate();
   const [topGames, setTopGames] = useState<Game[]>([]);
   const [topStreamers, setTopStreamers] = useState<Streamer[]>([]);
@@ -161,30 +209,30 @@ const Explore = () => {
   const getFallbackStreamers = (): Streamer[] => {
     return [
       {
-        id: 'streamer1',
-        username: 'Coming Soon',
-        display_name: 'Coming Soon',
-        avatar_url: 'https://i.imgur.com/zUwHCoQ.jpeg',
+        id: 'user1',
+        username: 'gamer1',
+        display_name: 'Pro Gamer',
+        avatar_url: '',
         streaming_url: '',
         current_game: 'Coming Soon',
         is_live: false,
         follower_count: 0
       },
       {
-        id: 'streamer2',
-        username: 'Coming Soon',
-        display_name: 'Coming Soon',
-        avatar_url: 'https://i.imgur.com/zUwHCoQ.jpeg',
+        id: 'user2',
+        username: 'gamer2',
+        display_name: 'Elite Player',
+        avatar_url: '',
         streaming_url: '',
         current_game: 'Coming Soon',
         is_live: false,
         follower_count: 0
       },
       {
-        id: 'streamer3',
-        username: 'Coming Soon',
-        display_name: 'Coming Soon',
-        avatar_url: 'https://i.imgur.com/zUwHCoQ.jpeg',
+        id: 'user3',
+        username: 'gamer3',
+        display_name: 'Game Master',
+        avatar_url: '',
         streaming_url: '',
         current_game: 'Coming Soon',
         is_live: false,
@@ -192,409 +240,348 @@ const Explore = () => {
       }
     ];
   };
-
+  
   // Completely rewritten search function with expanded game list and app-specific users
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) return;
-    
+  const handleSearch = (query: string) => {
     setIsSearching(true);
     
-    try {
-      let gamesData = [];
-      let usersData = [];
-      
+    // Simple debounce for search
+    const timer = setTimeout(() => {
       try {
-        const { data: dbGamesData, error: gamesError } = await supabase
-          .from('games')
-          .select('id, name, cover_url')
-          .ilike('name', `%${searchTerm}%`)
-          .limit(10);
-          
-        if (!gamesError && dbGamesData && dbGamesData.length > 0) {
-          gamesData = dbGamesData.map(game => ({
+        // Filter games from the complete games list
+        const filteredGames = allGames
+          .filter(game => 
+            game.name.toLowerCase().includes(query.toLowerCase())
+          )
+          .slice(0, 5)
+          .map(game => ({
             id: game.id,
             name: game.name,
-            cover_url: game.cover_url,
+            cover_url: game.cover_url || '',
             post_count: 0
           }));
-          
-          trackUserActivity('search', 'multiple', 'game');
-        }
         
-        const { data: dbUsersData, error: usersError } = await supabase
-          .from('profiles')
-          .select('id, username, display_name, avatar_url')
-          .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
-          .limit(10);
-          
-        if (!usersError && dbUsersData && dbUsersData.length > 0) {
-          usersData = dbUsersData.map(user => ({
-            id: user.id,
-            username: user.username,
-            display_name: user.display_name,
-            avatar_url: user.avatar_url,
+        // Mock user search for now - in the future this will query Supabase
+        const mockUsers = [
+          {
+            id: 'user1',
+            username: 'progamer',
+            display_name: 'Pro Gamer',
+            avatar_url: '',
             streaming_url: '',
-            current_game: '',
+            current_game: 'Fortnite',
             is_live: false,
             follower_count: 0
-          }));
-          
-          trackUserActivity('search', 'multiple', 'user');
-        }
-      } catch (dbError) {
-        console.log('Database search not available, using fallback data');
-      }
-      
-      const appUsers = [
-        {
-          id: 'user1',
-          username: 'ninja',
-          display_name: 'Ninja',
-          avatar_url: 'https://i.imgur.com/UYVnrVE.jpeg',
-          streaming_url: 'https://twitch.tv/ninja',
-          current_game: 'Fortnite',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user2',
-          username: 'shroud',
-          display_name: 'Shroud',
-          avatar_url: 'https://i.imgur.com/xILQwCi.jpeg',
-          streaming_url: 'https://twitch.tv/shroud',
-          current_game: 'Valorant',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user3',
-          username: 'pokimane',
-          display_name: 'Pokimane',
-          avatar_url: 'https://i.imgur.com/WVJnSA3.jpeg',
-          streaming_url: 'https://twitch.tv/pokimane', 
-          current_game: 'Just Chatting',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user4',
-          username: 'timthetatman',
-          display_name: 'TimTheTatman',
-          avatar_url: 'https://i.imgur.com/5L69dNP.jpeg',
-          streaming_url: 'https://youtube.com/timthetatman',
-          current_game: 'Call of Duty',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user5',
-          username: 'drlupo',
-          display_name: 'DrLupo',
-          avatar_url: 'https://i.imgur.com/QcKPLAk.jpeg',
-          streaming_url: 'https://youtube.com/drlupo',
-          current_game: 'Destiny 2',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user6',
-          username: 'xqc',
-          display_name: 'xQc',
-          avatar_url: 'https://i.imgur.com/y2OHAMY.jpeg',
-          streaming_url: 'https://twitch.tv/xqc',
-          current_game: 'Just Chatting',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user7',
-          username: 'summit1g',
-          display_name: 'Summit1g',
-          avatar_url: 'https://i.imgur.com/9iUxMW8.jpeg',
-          streaming_url: 'https://twitch.tv/summit1g',
-          current_game: 'Grand Theft Auto V',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user8',
-          username: 'valkyrae',
-          display_name: 'Valkyrae',
-          avatar_url: 'https://i.imgur.com/rT8C1sK.jpeg',
-          streaming_url: 'https://youtube.com/valkyrae',
-          current_game: 'Valorant',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user9',
-          username: 'nickmercs',
-          display_name: 'NICKMERCS',
-          avatar_url: 'https://i.imgur.com/UWY6dHy.jpeg',
-          streaming_url: 'https://twitch.tv/nickmercs',
-          current_game: 'Apex Legends',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user10',
-          username: 'lirik',
-          display_name: 'LIRIK',
-          avatar_url: 'https://i.imgur.com/GUUYdGv.jpeg',
-          streaming_url: 'https://twitch.tv/lirik',
-          current_game: 'Just Chatting',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user11',
-          username: 'sykkuno',
-          display_name: 'Sykkuno',
-          avatar_url: 'https://i.imgur.com/EhDckhY.jpeg',
-          streaming_url: 'https://youtube.com/sykkuno',
-          current_game: 'Among Us',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user12',
-          username: 'ludwig',
-          display_name: 'Ludwig',
-          avatar_url: 'https://i.imgur.com/mndCTlF.jpeg',
-          streaming_url: 'https://youtube.com/ludwig',
-          current_game: 'Chess',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user13',
-          username: 'hasanabi',
-          display_name: 'HasanAbi',
-          avatar_url: 'https://i.imgur.com/XqGI2D2.jpeg',
-          streaming_url: 'https://twitch.tv/hasanabi',
-          current_game: 'Just Chatting',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user14',
-          username: 'amouranth',
-          display_name: 'Amouranth',
-          avatar_url: 'https://i.imgur.com/Yy2ruyX.jpeg',
-          streaming_url: 'https://twitch.tv/amouranth',
-          current_game: 'Just Chatting',
-          is_live: false,
-          follower_count: 0
-        },
-        {
-          id: 'user15',
-          username: 'mizkif',
-          display_name: 'Mizkif',
-          avatar_url: 'https://i.imgur.com/jRzVmwk.jpeg',
-          streaming_url: 'https://twitch.tv/mizkif',
-          current_game: 'Just Chatting',
-          is_live: false,
-          follower_count: 0
-        }
-      ];
-
-      if (gamesData.length === 0) {
-        const formattedGames = allGames.map(game => ({
-          ...game,
-          post_count: 0
-        }));
+          },
+          {
+            id: 'user2',
+            username: 'streamqueen',
+            display_name: 'Stream Queen',
+            avatar_url: '',
+            streaming_url: '',
+            current_game: 'Apex Legends',
+            is_live: false,
+            follower_count: 0
+          },
+          {
+            id: 'user3',
+            username: 'gamemaster',
+            display_name: 'Game Master',
+            avatar_url: '',
+            streaming_url: '',
+            current_game: 'Minecraft',
+            is_live: false,
+            follower_count: 0
+          }
+        ];
         
-        const searchTermLower = searchTerm.toLowerCase();
+        const filteredUsers = mockUsers.filter(user => 
+          user.username.toLowerCase().includes(query.toLowerCase()) ||
+          user.display_name.toLowerCase().includes(query.toLowerCase())
+        );
         
-        gamesData = formattedGames.filter(game => {
-          const nameLower = game.name.toLowerCase();
-          return nameLower === searchTermLower || 
-                 nameLower.startsWith(searchTermLower) || 
-                 nameLower.includes(searchTermLower);
+        setSearchResults({
+          games: filteredGames,
+          streamers: filteredUsers
         });
-      }
-      
-      if (usersData.length === 0) {
-        const searchTermLower = searchTerm.toLowerCase();
-        
-        usersData = appUsers.filter(user => {
-          const usernameLower = user.username.toLowerCase();
-          const displayNameLower = user.display_name.toLowerCase();
-          
-          return usernameLower === searchTermLower || 
-                 displayNameLower === searchTermLower ||
-                 usernameLower.startsWith(searchTermLower) || 
-                 displayNameLower.startsWith(searchTermLower) ||
-                 usernameLower.includes(searchTermLower) || 
-                 displayNameLower.includes(searchTermLower);
-        });
-      }
-      
-      // Remove duplicate game names by creating a map of unique names
-      const uniqueGames: {[name: string]: Game} = {};
-      gamesData.forEach(game => {
-        // If this name doesn't exist yet or this game has a higher priority (lower index)
-        if (!uniqueGames[game.name.toLowerCase()]) {
-          uniqueGames[game.name.toLowerCase()] = game;
-        }
-      });
-      
-      // Convert back to array and sort alphabetically
-      const uniqueGamesArray = Object.values(uniqueGames).sort((a, b) => 
-        a.name.localeCompare(b.name)
-      );
-      
-      setSearchResults({
-        games: uniqueGamesArray,
-        streamers: usersData
-      });
-      
-    } catch (error) {
-      console.error('Error searching:', error);
-      
-      setSearchResults({
-        games: [],
-        streamers: []
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchTerm.trim()) {
-        handleSearch();
-      } else {
-        setSearchResults({games: [], streamers: []});
+      } catch (error) {
+        console.error('Error during search:', error);
+      } finally {
+        setIsSearching(false);
       }
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  };
 
   return (
-    <div className="min-h-screen bg-[#0f112a] text-white pb-24">
-      <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-[#141644] border-b-4 border-[#4a4dff] shadow-[0_4px_0_0_#000]">
-        <div className="flex items-center justify-center max-w-7xl mx-auto relative">
-          <h1 className="text-3xl font-bold text-white pixel-font retro-text-shadow">EXPLORE</h1>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 pt-24 pb-4 max-w-4xl">
-        <div className="mb-6 relative">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search games or users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#1a1c42] border-2 border-[#4a4dff] rounded-lg p-3 text-white pl-10 shadow-neon focus:outline-none focus:ring-2 focus:ring-[#5ce1ff] focus:border-transparent"
-            />
-            <Search className="absolute left-3 top-3.5 text-[#5ce1ff]" size={18} />
-          </div>
+    <motion.div 
+      className="bg-[#080a1f] min-h-screen py-6 text-white scanlines"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div 
+        className="container mx-auto px-4 max-w-4xl"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div 
+          className="flex items-center justify-between mb-6"
+          variants={itemVariants}
+        >
+          <motion.h1 
+            className="text-3xl font-bold text-[#5ce1ff] pixel-font retro-text-shadow text-glow-blue"
+            initial={{ x: -50 }}
+            animate={{ x: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 15
+            }}
+          >EXPLORE</motion.h1>
           
-          {searchTerm.trim() && (
-            <div className="absolute w-full bg-[#1a1c42] border-2 border-[#4a4dff] rounded-lg mt-2 shadow-xl z-50 max-h-96 overflow-y-auto">
-              {isSearching ? (
-                <div className="p-4 text-center">
-                  <div className="w-8 h-8 border-t-4 border-[#5ce1ff] border-solid rounded-full animate-spin mx-auto"></div>
-                  <p className="mt-2 text-[#5ce1ff]">Searching...</p>
-                </div>
-              ) : (
-                <>
-                  {searchResults.games.length === 0 && searchResults.streamers.length === 0 ? (
-                    <div className="p-4 text-center text-gray-400">No results found</div>
-                  ) : (
-                    <>
-                      {searchResults.games.length > 0 && (
-                        <div className="p-2">
-                          <h3 className="px-2 py-1 text-[#5ce1ff] font-bold">Games</h3>
-                          <div className="divide-y divide-[#4a4dff]/30">
-                            {searchResults.games.map(game => (
-                              <div 
-                                key={game.id}
-                                onClick={() => navigate(`/game/${game.id}`)}
-                                className="flex items-center p-2 hover:bg-[#262966] cursor-pointer"
-                              >
-                                <span className="px-2 py-1">{game.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {searchResults.streamers.length > 0 && (
-                        <div className="p-2">
-                          <h3 className="px-2 py-1 text-[#ff66c4] font-bold">Users</h3>
-                          <div className="divide-y divide-[#ff66c4]/30">
-                            {searchResults.streamers.map(streamer => (
-                              <div 
-                                key={streamer.id}
-                                onClick={() => navigate(`/profile/${streamer.id}`)}
-                                className="flex items-center p-2 hover:bg-[#262966] cursor-pointer"
-                              >
-                                <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-                                  {streamer.avatar_url ? (
-                                    <img src={streamer.avatar_url} alt={streamer.username} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full bg-purple-900 flex items-center justify-center">
-                                      <UsersIcon className="w-5 h-5 text-purple-300" />
-                                    </div>
-                                  )}
-                                </div>
-                                <span>{streamer.display_name || streamer.username}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-        </div>
-        
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-10">
-            <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-            <p className="mt-4 text-xl text-[#5ce1ff] pixel-font">Loading awesome content...</p>
-          </div>
-        ) : (
-          <>
-            <div className="mb-10">
-              <div className="flex items-center mb-6">
-                <Gamepad2 className="w-8 h-8 mr-3 text-[#5ce1ff]" />
-                <h2 className="text-2xl font-bold text-[#5ce1ff] pixel-font retro-text-shadow">TOP GAMES</h2>
-              </div>
-              
-              <div className="bg-[#1a1c42] border-4 border-[#4a4dff] rounded-lg p-2 shadow-[0_6px_0_0_#000] mb-4">
-                <div className="bg-[#0f112a] p-4 rounded text-center">
-                  <p className="text-xl text-[#5ce1ff] pixel-font mb-6">Coming Soon!</p>
-                  <p className="text-sm text-gray-400">Stay tuned for the most popular games on the platform.</p>
-                </div>
-              </div>
+          <motion.div 
+            className="relative"
+            variants={itemVariants}
+            whileHover="hover"
+            whileTap="tap"
+          >
+            <div className="flex items-center bg-[#1a1c42] rounded-full pr-3 border-2 border-[#4a4dff] focus-within:border-[#5ce1ff] transition-colors">
+              <input
+                type="text"
+                placeholder="Search games or users..."
+                className="bg-transparent py-2 pl-4 pr-10 text-white outline-none w-[200px] sm:w-[250px]"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (e.target.value) {
+                    handleSearch(e.target.value);
+                  } else {
+                    setIsSearching(false);
+                    setSearchResults({games: [], streamers: []});
+                  }
+                }}
+              />
+              <motion.div
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <Search className="text-[#5ce1ff] w-5 h-5" />
+              </motion.div>
             </div>
             
-            <div>
-              <div className="flex items-center mb-6">
-                <UsersIcon className="w-8 h-8 mr-3 text-[#ff66c4]" />
-                <h2 className="text-2xl font-bold text-[#ff66c4] pixel-font retro-text-shadow">TOP USERS</h2>
-              </div>
+            <AnimatePresence>
+              {isSearching && (
+                <motion.div 
+                  className="absolute top-full mt-2 w-full bg-[#1a1c42] border-2 border-[#4a4dff] rounded-lg shadow-xl z-10 max-h-[70vh] overflow-y-auto"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ type: "spring", damping: 20 }}
+                >
+                  <motion.div 
+                    className="sticky top-0 bg-[#262966] p-2 text-center"
+                    animate={{ backgroundColor: ["#262966", "#313aa3", "#262966"] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <motion.p 
+                      className="text-sm text-gray-300"
+                      animate={{ opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      Searching...
+                    </motion.p>
+                  </motion.div>
+                  
+                  {searchResults.games.length > 0 && (
+                    <div className="p-2">
+                      <h3 className="px-2 py-1 text-[#5ce1ff] font-bold">Games</h3>
+                      <div className="divide-y divide-[#4a4dff]/30">
+                        {searchResults.games.map(game => (
+                          <div 
+                            key={game.id}
+                            onClick={() => navigate(`/game/${game.id}`)}
+                            className="flex items-center p-2 hover:bg-[#262966] cursor-pointer"
+                          >
+                            <span className="px-2 py-1">{game.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {searchResults.streamers.length > 0 && (
+                    <div className="p-2">
+                      <h3 className="px-2 py-1 text-[#ff66c4] font-bold">Users</h3>
+                      <div className="divide-y divide-[#ff66c4]/30">
+                        {searchResults.streamers.map(streamer => (
+                          <div 
+                            key={streamer.id}
+                            onClick={() => navigate(`/profile/${streamer.id}`)}
+                            className="flex items-center p-2 hover:bg-[#262966] cursor-pointer"
+                          >
+                            <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+                              {streamer.avatar_url ? (
+                                <img src={streamer.avatar_url} alt={streamer.username} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-purple-900 flex items-center justify-center">
+                                  <UsersIcon className="w-5 h-5 text-purple-300" />
+                                </div>
+                              )}
+                            </div>
+                            <span>{streamer.display_name || streamer.username}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {searchResults.games.length === 0 && searchResults.streamers.length === 0 && !isSearching && (
+                    <div className="p-4 text-center text-gray-400">
+                      No results found
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </motion.div>
+        
+        {loading ? (
+          <motion.div 
+            className="flex flex-col items-center justify-center py-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <motion.div 
+              className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full pixel-spinner"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            ></motion.div>
+            <motion.p 
+              className="mt-4 text-xl text-[#5ce1ff] pixel-font"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              Loading awesome content...
+            </motion.p>
+          </motion.div>
+        ) : (
+          <>
+            <motion.div 
+              className="mb-10"
+              variants={itemVariants}
+            >
+              <motion.div 
+                className="flex items-center mb-6"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <motion.div
+                  whileHover={{ rotate: 15 }}
+                  transition={{ type: "spring", stiffness: 500 }}
+                >
+                  <Gamepad2 className="w-8 h-8 mr-3 text-[#5ce1ff]" />
+                </motion.div>
+                <motion.h2 
+                  className="text-2xl font-bold text-[#5ce1ff] pixel-font retro-text-shadow text-glow-blue"
+                >
+                  TOP GAMES
+                </motion.h2>
+              </motion.div>
               
-              <div className="bg-[#1a1c42] border-4 border-[#ff66c4] rounded-lg p-2 shadow-[0_6px_0_0_#000]">
-                <div className="bg-[#0f112a] p-4 rounded text-center">
-                  <p className="text-xl text-[#ff66c4] pixel-font mb-6">Coming Soon!</p>
-                  <p className="text-sm text-gray-400">Follow your favorite content creators when we launch.</p>
-                </div>
-              </div>
-            </div>
+              <motion.div 
+                className="bg-[#1a1c42] border-4 border-[#4a4dff] rounded-lg p-2 shadow-[0_6px_0_0_#000] mb-4 arcade-cabinet"
+                whileHover={{
+                  boxShadow: "0 12px 0 0 #000, 0 0 20px 0 rgba(74, 77, 255, 0.8)",
+                  y: -5
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              >
+                <motion.div 
+                  className="bg-[#0f112a] p-4 rounded text-center overflow-hidden gradient-bg"
+                >
+                  <motion.p 
+                    className="text-xl text-[#5ce1ff] pixel-font mb-6"
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    Coming Soon!
+                  </motion.p>
+                  <motion.p 
+                    className="text-sm text-gray-400"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    Stay tuned for the most popular games on the platform.
+                  </motion.p>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+            
+            <motion.div
+              variants={itemVariants}
+              initial="hidden"
+              animate="visible"
+              transition={{ delay: 0.4 }}
+            >
+              <motion.div 
+                className="flex items-center mb-6"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                <motion.div
+                  whileHover={{ rotate: 15 }}
+                  transition={{ type: "spring", stiffness: 500 }}
+                >
+                  <UsersIcon className="w-8 h-8 mr-3 text-[#ff66c4]" />
+                </motion.div>
+                <motion.h2 
+                  className="text-2xl font-bold text-[#ff66c4] pixel-font retro-text-shadow text-glow-pink"
+                >
+                  TOP USERS
+                </motion.h2>
+              </motion.div>
+              
+              <motion.div 
+                className="bg-[#1a1c42] border-4 border-[#ff66c4] rounded-lg p-2 shadow-[0_6px_0_0_#000] arcade-cabinet"
+                whileHover={{
+                  boxShadow: "0 12px 0 0 #000, 0 0 20px 0 rgba(255, 102, 196, 0.8)",
+                  y: -5
+                }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              >
+                <motion.div 
+                  className="bg-[#0f112a] p-4 rounded text-center overflow-hidden gradient-bg"
+                >
+                  <motion.p 
+                    className="text-xl text-[#ff66c4] pixel-font mb-6"
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    Coming Soon!
+                  </motion.p>
+                  <motion.p 
+                    className="text-sm text-gray-400"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    Follow your favorite content creators when we launch.
+                  </motion.p>
+                </motion.div>
+              </motion.div>
+            </motion.div>
           </>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

@@ -59,13 +59,13 @@ export default function GamePage() {
       <div className="sticky top-0 z-50 bg-black/40 backdrop-blur-lg border-b border-white/10">
         <div className="container mx-auto max-w-4xl py-3">
           <div className="flex items-center gap-4">
-            <BackButton className="text-white hover:text-purple-300" />
+            <BackButton className="text-white hover:text-orange-300" />
             <div className="flex flex-col">
               <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                <Gamepad2 className="text-purple-400 h-5 w-5" />
+                <Gamepad2 className="text-orange-400 h-5 w-5" />
                 {game?.name || "Game"}
               </h1>
-              <p className="text-purple-300 text-sm mt-1 flex items-center">
+              <p className="text-orange-300 text-sm mt-1 flex items-center">
                 CLIPTS
               </p>
             </div>
@@ -82,7 +82,7 @@ export default function GamePage() {
 
         <div className="space-y-6">
           <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-            <FilmIcon className="h-5 w-5 text-purple-400" />
+            <FilmIcon className="h-5 w-5 text-orange-400" />
             Latest Clips
           </h2>
           
@@ -100,7 +100,7 @@ export default function GamePage() {
             </div>
           ) : (
             <div className="text-center bg-black/30 backdrop-blur-sm rounded-xl p-12 border border-white/10">
-              <p className="text-purple-300 font-medium text-lg mb-2">No clips found</p>
+              <p className="text-orange-300 font-medium text-lg mb-2">No clips found</p>
               <p className="text-gray-400">Be the first to share a clip for this game!</p>
             </div>
           )}

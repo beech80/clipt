@@ -1,0 +1,61 @@
+/* Global styling for Clipt videos */
+.clipt-video, 
+.clipt-video-container,
+.video-player,
+.video-container,
+.clip-container,
+.clipt-container {
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+}
+
+/* Add rounded corners to all video elements */
+video {
+  border-radius: 0.75rem !important;
+}
+
+/* Add rounded corners to all clipt thumbnails and containers */
+.clipt-thumbnail,
+.clip-card,
+.clipt-card,
+.saved-clipt-card,
+.clip-thumbnail,
+.clipt-thumbnail-container,
+.video-thumbnail {
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+}
+
+/* Make sure the inner elements keep the rounded look */
+.clipt-thumbnail img,
+.clip-card img,
+.clipt-card img,
+.saved-clipt-card img,
+.video-thumbnail img {
+  border-radius: 0.75rem !important;
+}
+
+/* Add rounded corners to all clipt overlay elements */
+.clipt-overlay,
+.clip-overlay,
+.video-overlay {
+  border-radius: 0.75rem !important;
+}
+
+/* Ensure proper styling on profile page */
+.clip-card .clip-thumbnail-container,
+.saved-clipt-card .saved-clipt-thumbnail,
+.clipt-card .clipt-thumbnail {
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+  position: relative;
+}
+
+/* Add shadow effects for a more polished look */
+.clip-card:hover,
+.clipt-card:hover,
+.saved-clipt-card:hover {
+  box-shadow: 0 0 20px rgba(157, 0, 255, 0.5) !important;
+  transform: translateY(-5px) !important;
+  transition: all 0.3s ease !important;
+}

@@ -30,14 +30,17 @@ interface GameGridProps {
 export function GameGrid({ searchTerm = "", sortBy = "name", filters = {} }: GameGridProps) {
   const navigate = useNavigate();
   
+  // Ensure searchTerm is never undefined
+  const effectiveSearchTerm = searchTerm || '';
+  
   const { data: games, isLoading } = useQuery({
-    queryKey: ['games', searchTerm, sortBy, filters],
+    queryKey: ['games', effectiveSearchTerm, sortBy, filters],
     queryFn: async () => {
       let query = `fields name,cover.url,summary,rating,first_release_date,genres.name,id;
                    where version_parent = null`;
       
-      if (searchTerm) {
-        query += ` & name ~ "*${searchTerm}*"`;
+      if (effectiveSearchTerm) {
+        query += ` & name ~ "*${effectiveSearchTerm}*"`;
       }
 
       if (filters.releaseYear && filters.releaseYear !== 'all') {

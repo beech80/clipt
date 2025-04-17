@@ -1,0 +1,94 @@
+/* Orange accent styles for buttons and UI elements */
+
+/* Orange accented buttons */
+.orange-accent {
+  background-color: #FF6B00 !important;
+  color: white !important;
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.5) !important;
+  border: 1px solid #FF8C00 !important;
+}
+
+.orange-accent:hover {
+  background-color: #FF8C00 !important;
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.7) !important;
+}
+
+/* Game title styling */
+.game-title {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-shadow: 0 0 15px rgba(255, 107, 0, 0.7);
+}
+
+.game-title-container.simplified {
+  padding: 1rem 0;
+  text-align: center;
+  width: 100%;
+}
+
+.clipts-label {
+  color: #FF6B00;
+  font-size: 1.5rem;
+  margin-left: 8px;
+}
+
+/* Orange search container */
+.search-container {
+  border: 2px solid #FF6B00 !important;
+  box-shadow: 0 0 20px rgba(255, 107, 0, 0.3) !important;
+}
+
+.search-header h3 {
+  color: #FF6B00 !important;
+}
+
+.close-search:hover {
+  background: rgba(255, 107, 0, 0.2) !important;
+}
+
+/* Clean and simple pages */
+.game-clipts-container {
+  background-color: #1a1a2e;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px;
+}
+
+/* Orange back button */
+.back-button.orange-accent {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+/* Orange top corner search button */
+.top-corner-search-button.orange-accent {
+  background-color: #FF6B00 !important;
+}
+
+/* Remove extra content for clean pages */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 70vh;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.empty-state p {
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
