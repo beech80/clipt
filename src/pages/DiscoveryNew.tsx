@@ -306,128 +306,91 @@ const DiscoveryNew = () => {
               )
             )}
            
-           {/* Removed Navigation arrows as requested */}
+            {/* Removed Navigation arrows as requested */}
            
-           {/* Old style GameBoy Controller with 4 buttons (only visible when not searching) */}
-           {!searchModalOpen && (
-  <motion.div 
-    className="controller-container"
-    initial={{ opacity: 0, y: 50 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.5 }}
-  >
-    <div className="controller-buttons">
-      <div className="controller-d-pad">
-        <button 
-          className="d-pad-button d-pad-left"
-          onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)}
-          disabled={currentIndex === 0}
-        ></button>
-        <button
-          className="d-pad-button d-pad-right"
-          onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)}
-          disabled={currentIndex === streamers.length - 1}
-        ></button>
-      </div>
-      <div className="controller-action-buttons">
-        <button 
-          className="action-button a-button"
-          onClick={toggleChat}
-        >A</button>
-        <button 
-          className="action-button b-button"
-          onClick={() => setSearchModalOpen(true)}
-        >B</button>
-      </div>
-    </div>
-  </motion.div>
-)}
-        </div>
-      </motion.div>
-      
-      {/* Bottom Half Search Panel */}
-      <AnimatePresence>
-        {searchModalOpen && (
-          <motion.div 
-            className="search-panel"
-            initial={{ opacity: 0, y: '100%' }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: '100%' }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="search-container">
-              <div className="search-header">
-                <h2>Find Games</h2>
-                <button 
-                  className="close-button"
-                  onClick={() => setSearchModalOpen(false)}
-                >
-                  <FontAwesomeIcon icon={faTimes} />
-                </button>
-              </div>
-              
-              <div className="search-input-container">
-                <FontAwesomeIcon icon={faSearch} className="search-icon" />
-                <input
-                  type="text"
-                  placeholder="Search for games..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  ref={searchInputRef}
-                  autoFocus
-                  className="search-input"
-                />
-              </div>
-              
-              {/* Trending games section */}
-              {!searchQuery && (
-                <div className="trending-games">
-                  <h3>Trending Games</h3>
-                  <div className="trending-games-grid">
-                    {trendingGames.map(game => (
-                      <div 
-                        key={game.id} 
-                        className="trending-game-item"
-                        onClick={() => handleGameSelect(game)}
-                      >
-                        <div className="game-cube">
-                          {game.cover_url ? (
-                            <img src={game.cover_url} alt={`${game.name} cover`} />
-                          ) : (
-                            <div className="no-cover">
-                              <FontAwesomeIcon icon={faGamepad} />
-                            </div>
-                          )}
-                        </div>
-                        <div className="trending-game-info">
-                          <h4>{game.name}</h4>
-                          <div className="game-stats">
-                            <span>
-                              <FontAwesomeIcon icon={faVideo} />
-                              {formatNumber(game.post_count || 0)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+            {/* Old style GameBoy Controller with 4 buttons (only visible when not searching) */}
+            {!searchModalOpen && (
+              <motion.div 
+                className="controller-container"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <div className="controller-buttons">
+                  <div className="controller-d-pad">
+                    <button 
+                      className="d-pad-button d-pad-left"
+                      onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)}
+                      disabled={currentIndex === 0}
+                    ></button>
+                    <button
+                      className="d-pad-button d-pad-right"
+                      onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)}
+                      disabled={currentIndex === streamers.length - 1}
+                    ></button>
+                  </div>
+                  <div className="controller-action-buttons">
+                    <button 
+                      className="action-button a-button"
+                      onClick={toggleChat}
+                    >A</button>
+                    <button 
+                      className="action-button b-button"
+                      onClick={() => setSearchModalOpen(true)}
+                    >B</button>
                   </div>
                 </div>
-              )}
-              
-              {/* Search results */}
-              {searchQuery && (
-                <div className="search-results">
-                  {isSearching ? (
-                    <div className="loading">Searching...</div>
-                  ) : searchResults.length > 0 ? (
-                    <div className="results-grid">
-                      {searchResults.map(game => (
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+      
+        {/* Bottom Half Search Panel */}
+        <AnimatePresence>
+          {searchModalOpen && (
+            <motion.div 
+              className="search-panel"
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="search-container">
+                <div className="search-header">
+                  <h2>Find Games</h2>
+                  <button 
+                    className="close-button"
+                    onClick={() => setSearchModalOpen(false)}
+                  >
+                    <FontAwesomeIcon icon={faTimes} />
+                  </button>
+                </div>
+                
+                <div className="search-input-container">
+                  <FontAwesomeIcon icon={faSearch} className="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search for games..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    ref={searchInputRef}
+                    autoFocus
+                    className="search-input"
+                  />
+                </div>
+                
+                {/* Trending games section */}
+                {!searchQuery && (
+                  <div className="trending-games">
+                    <h3>Trending Games</h3>
+                    <div className="trending-games-grid">
+                      {trendingGames.map(game => (
                         <div 
                           key={game.id} 
-                          className="game-result-item"
+                          className="trending-game-item"
                           onClick={() => handleGameSelect(game)}
                         >
-                          <div className="game-cover">
+                          <div className="game-cube">
                             {game.cover_url ? (
                               <img src={game.cover_url} alt={`${game.name} cover`} />
                             ) : (
@@ -436,7 +399,7 @@ const DiscoveryNew = () => {
                               </div>
                             )}
                           </div>
-                          <div className="game-info">
+                          <div className="trending-game-info">
                             <h4>{game.name}</h4>
                             <div className="game-stats">
                               <span>
@@ -448,36 +411,74 @@ const DiscoveryNew = () => {
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className="no-results">
-                      <p>No games found matching "{searchQuery}"</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
-      {/* Chat panel */}
-      <AnimatePresence>
-        {isChatOpen && currentStreamer && (
-          <motion.div 
-            className="chat-panel"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: '40%' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <RealtimeChat 
-              streamerId={currentStreamer.id}
-              streamerName={currentStreamer.username}
-              onClose={toggleChat}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  </div>
+                )}
+                
+                {/* Search results */}
+                {searchQuery && (
+                  <div className="search-results">
+                    {isSearching ? (
+                      <div className="loading">Searching...</div>
+                    ) : searchResults.length > 0 ? (
+                      <div className="results-grid">
+                        {searchResults.map(game => (
+                          <div 
+                            key={game.id} 
+                            className="game-result-item"
+                            onClick={() => handleGameSelect(game)}
+                          >
+                            <div className="game-cover">
+                              {game.cover_url ? (
+                                <img src={game.cover_url} alt={`${game.name} cover`} />
+                              ) : (
+                                <div className="no-cover">
+                                  <FontAwesomeIcon icon={faGamepad} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="game-info">
+                              <h4>{game.name}</h4>
+                              <div className="game-stats">
+                                <span>
+                                  <FontAwesomeIcon icon={faVideo} />
+                                  {formatNumber(game.post_count || 0)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="no-results">
+                        <p>No games found matching "{searchQuery}"</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Chat panel */}
+        <AnimatePresence>
+          {isChatOpen && currentStreamer && (
+            <motion.div 
+              className="chat-panel"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: '40%' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <RealtimeChat 
+                streamerId={currentStreamer.id}
+                streamerName={currentStreamer.username}
+                onClose={toggleChat}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
