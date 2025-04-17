@@ -675,7 +675,7 @@ const DiscoveryNew: React.FC = () => {
                    </div>
                  </div>
                )
-             )
+             }
           ) : (
             // General discovery feed (streamers only for now)
             {streamers.length > 0 && currentIndex < streamers.length ? (
