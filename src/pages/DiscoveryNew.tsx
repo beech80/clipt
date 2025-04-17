@@ -1228,3 +1228,4 @@ const DiscoveryNew: React.FC = () => {
 };
 
 export default DiscoveryNew;
+
