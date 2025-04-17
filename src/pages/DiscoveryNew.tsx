@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { debounce } from 'lodash';
 import axios from 'axios';
 import '../styles/discovery-retro.css';
+import '../styles/discovery-updates.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes } from '@fortawesome/free-solid-svg-icons';
 import CliptLogoSVG from '../assets/clipt_logo_text.svg'; 
@@ -178,23 +179,21 @@ const DiscoveryNew = () => {
         >
           <div className="header">
             <div className="logo-container">
-              <img src={CliptLogoSVG} alt="Clipt Logo" className="clipt-logo" />
+              <img src={CliptLogoSVG} alt="Clipt Logo" className="clipt-logo small-logo" />
             </div>
             
             <div className="header-buttons">
               <button 
-                className="stream-button retro-button"
+                className="stream-button icon-button"
               >
                 <FontAwesomeIcon icon={faVideo} />
-                <span>Streams</span>
               </button>
               
               <button 
-                className="search-button retro-button"
+                className="search-button icon-button"
                 onClick={() => setSearchModalOpen(true)}
               >
                 <FontAwesomeIcon icon={faSearch} />
-                <span>Search</span>
               </button>
             </div>
           </div>
@@ -326,49 +325,38 @@ const DiscoveryNew = () => {
             {/* GameBoy Controller with action buttons */}
             {!searchModalOpen && (
               <motion.div 
-                className="gameboy-controller"
+                className="gameboy-controller centered-controller"
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <div className="controller-left">
-                  <div className="dpad">
-                    <button 
-                      className="dpad-button"
-                      onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)}
-                      disabled={currentIndex === 0}
-                    >
-                      <FontAwesomeIcon icon={faChevronLeft} />
-                    </button>
-                    <button
-                      className="dpad-button"
-                      onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)}
-                      disabled={currentIndex === streamers.length - 1}
-                    >
-                      <FontAwesomeIcon icon={faChevronRight} />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="controller-center">
-                  <div className="clipt-screen">
-                    <div className="clipt-screen-inner">
-                      CLIPT
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="controller-right">
-                  <button className="action-btn comment" onClick={toggleChat}>
+                <div className="compact-controller-buttons">
+                  <button 
+                    className="compact-action-btn chat-btn" 
+                    onClick={toggleChat}
+                    aria-label="Chat"
+                  >
                     <FontAwesomeIcon icon={faComment} />
                   </button>
-                  <button className="action-btn donate">
+                  
+                  <button 
+                    className="compact-action-btn donate-btn"
+                    aria-label="Donate"
+                  >
                     $
                   </button>
-                  <button className="action-btn follow">
+                  
+                  <button 
+                    className="compact-action-btn follow-btn"
+                    aria-label="Follow"
+                  >
                     +
                   </button>
-                  <button className="action-btn clipt">
+                  
+                  <button 
+                    className="compact-action-btn clipt-btn"
+                    aria-label="Clipt"
+                  >
                     C
                   </button>
                 </div>

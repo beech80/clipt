@@ -1,0 +1,91 @@
+/* New UI styles for updated Discovery page */
+
+/* Smaller logo */
+.small-logo {
+  height: 28px !important;
+  width: auto !important;
+}
+
+/* Icon-only buttons in header */
+.header-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #FF8C00;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  background: rgba(255, 140, 0, 0.2);
+  box-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+}
+
+/* Centered controller with compact buttons */
+.centered-controller {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  bottom: 1.5rem !important;
+  width: auto !important;
+  padding: 0.5rem !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+}
+
+.compact-controller-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.compact-action-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.compact-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.compact-action-btn:active {
+  transform: translateY(1px);
+}
+
+/* Button colors matching Image 2 */
+.chat-btn {
+  background-color: #232323;
+}
+
+.donate-btn {
+  background-color: #3f3f3f;
+}
+
+.follow-btn {
+  background-color: #3f3f3f;
+}
+
+.clipt-btn {
+  background-color: #232323;
+}
