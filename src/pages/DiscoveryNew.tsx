@@ -784,7 +784,7 @@ const DiscoveryNew: React.FC = () => {
                 </div>
               </div>
              )
-           }}
+           )
           
           {/* Removed Navigation arrows as requested */}
           
