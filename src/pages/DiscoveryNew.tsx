@@ -186,13 +186,13 @@ const DiscoveryNew = () => {
                 <button 
                   className="stream-button icon-button"
                 >
-                  <FontAwesomeIcon icon={faVideo} size="lg" />
+                  <FontAwesomeIcon icon={faVideo} size="lg" color="#ff8c00" />
                 </button>
                 <button 
                   className="search-button icon-button"
                   onClick={() => setSearchModalOpen(true)}
                 >
-                  <FontAwesomeIcon icon={faSearch} size="lg" />
+                  <FontAwesomeIcon icon={faSearch} size="lg" color="#ff8c00" />
                 </button>
               </div>
             </div>
@@ -325,27 +325,27 @@ const DiscoveryNew = () => {
             {/* GameBoy controller buttons based on the image - ALWAYS VISIBLE */}
             <div className="circular-nav-container">
               <button className="circular-nav-btn prev-btn" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
-                <i className="force-orange-icon"><FontAwesomeIcon icon={faChevronLeft} /></i>
+                <FontAwesomeIcon icon={faChevronLeft} color="#ff8c00" />
               </button>
               
               <button className="circular-nav-btn chat-circle active" onClick={toggleChat}>
-                <i className="force-white-icon"><FontAwesomeIcon icon={faComment} size="lg" /></i>
+                <FontAwesomeIcon icon={faComment} size="lg" color="#ffffff" />
               </button>
               
               <button className="circular-nav-btn donate-circle">
-                <span className="force-orange-text">$</span>
+                <span style={{color: '#ff8c00', fontWeight: 'bold', fontSize: '1.2rem'}}>$</span>
               </button>
               
               <button className="circular-nav-btn profile-circle">
-                <i className="force-white-icon"><FontAwesomeIcon icon={faUser} size="lg" /></i>
+                <FontAwesomeIcon icon={faUser} size="lg" color="#ffffff" />
               </button>
               
               <button className="circular-nav-btn scissors-circle">
-                <i className="force-orange-icon"><FontAwesomeIcon icon={faCut} size="lg" /></i>
+                <FontAwesomeIcon icon={faCut} size="lg" color="#ff8c00" />
               </button>
               
               <button className="circular-nav-btn next-btn" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
-                <i className="force-orange-icon"><FontAwesomeIcon icon={faChevronRight} /></i>
+                <FontAwesomeIcon icon={faChevronRight} color="#ff8c00" />
               </button>
             </div>
           </div>
