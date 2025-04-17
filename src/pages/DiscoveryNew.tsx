@@ -186,13 +186,13 @@ const DiscoveryNew = () => {
                 <button 
                   className="stream-button icon-button"
                 >
-                  <FontAwesomeIcon icon={faVideo} />
+                  <FontAwesomeIcon icon={faVideo} size="lg" />
                 </button>
                 <button 
                   className="search-button icon-button"
                   onClick={() => setSearchModalOpen(true)}
                 >
-                  <FontAwesomeIcon icon={faSearch} />
+                  <FontAwesomeIcon icon={faSearch} size="lg" />
                 </button>
               </div>
             </div>
@@ -329,19 +329,19 @@ const DiscoveryNew = () => {
               </button>
               
               <button className="circular-nav-btn chat-circle active" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} />
+                <FontAwesomeIcon icon={faComment} size="lg" className="orange-icon" />
               </button>
               
               <button className="circular-nav-btn donate-circle">
-                $
+                <span className="dollar-sign">$</span>
               </button>
               
               <button className="circular-nav-btn profile-circle">
-                <FontAwesomeIcon icon={faUser} />
+                <FontAwesomeIcon icon={faUser} size="lg" />
               </button>
               
               <button className="circular-nav-btn scissors-circle">
-                <FontAwesomeIcon icon={faCut} />
+                <FontAwesomeIcon icon={faCut} size="lg" />
               </button>
               
               <button className="circular-nav-btn next-btn" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
