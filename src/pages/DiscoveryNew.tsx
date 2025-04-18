@@ -330,7 +330,7 @@ const DiscoveryNew = () => {
               </button>
               
               <button className="circular-nav-btn chat-circle active" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} size="lg" color="#ffffff" style={{color: '#ffffff'}} />
+                <FontAwesomeIcon icon={faComment} size="lg" color="#000000" />
               </button>
               
               <button className="circular-nav-btn donate-circle">
@@ -338,11 +338,11 @@ const DiscoveryNew = () => {
               </button>
               
               <button className="circular-nav-btn profile-circle">
-                <FontAwesomeIcon icon={faUser} size="lg" color="#ffffff" style={{color: '#ffffff'}} />
+                <FontAwesomeIcon icon={faUser} size="lg" color="#000000" />
               </button>
               
               <button className="circular-nav-btn scissors-circle">
-                <FontAwesomeIcon icon={faCut} size="lg" color="#ff8c00" style={{color: '#ff8c00'}} />
+                <FontAwesomeIcon icon={faCut} size="lg" color="#000000" />
               </button>
               
               <button className="circular-nav-btn next-btn" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1} style={{color: '#ff8c00'}}>
