@@ -938,5 +938,6 @@ const UserProfile = () => {
       {/* Content Area */}
       {renderTabContent()}
     </div>
-</>;
+  </>;
+);
 export default UserProfile;
