@@ -1,12 +1,12 @@
-/* Custom styles for the Discovery page navigation buttons with maximum horizontal spread */
+/* Custom styles for the Discovery page navigation buttons using table for extreme spacing */
 .discovery-navigation {
-  display: flex;
-  justify-content: space-evenly; /* Maximum spread across entire width */
+  display: table;
+  table-layout: fixed; /* Force equal column widths */
+  width: 100%;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  width: 100%;
   background-color: #6A5C4E; /* Brown/gray color */
   padding: 15px 0; /* Vertical padding only */
   z-index: 1000;
@@ -20,15 +20,28 @@
   background-color: transparent;
   border: none;
   color: #ffffff; /* Pure white */
-  font-size: 28px; /* Even larger font size for better visibility */
+  font-size: 28px; /* Large font size for better visibility */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
-  margin: 0;
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8)); /* White glow for all buttons */
+  margin: 0 auto; /* Center horizontally in grid cell */
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8)); /* White glow */
+}
+
+/* Table cell styling */
+.nav-cell {
+  text-align: center;
+  padding: 0;
+}
+
+/* Ensure link elements are centered */
+.discovery-navigation a {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 /* Hide screen reader text but keep it for accessibility */
