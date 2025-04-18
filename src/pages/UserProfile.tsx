@@ -597,12 +597,12 @@ const UserProfile = () => {
                       name={a.achievement?.name || 'Achievement'}
                       desc={a.achievement?.description || ''}
                       progress={a.currentValue}
-    if (post.video_url) {
-      return (
-        <div className="relative">
-          <video
-            src={post.video_url}
-            className="w-full h-full object-cover"
+                      target={a.achievement?.target_value}
+                      completed={a.completed}
+                    />
+                  ))}
+                </div>
+              </div>
             muted
             playsInline
           />
