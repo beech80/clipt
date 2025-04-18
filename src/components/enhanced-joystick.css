@@ -995,6 +995,9 @@
   height: 22px;
   position: relative;
   z-index: 2;
+  color: #ff6600 !important;
+  fill: #ff6600 !important;
+  stroke: #ff6600 !important;
 }
 
 /* Action button styles for icons with no backgrounds */
