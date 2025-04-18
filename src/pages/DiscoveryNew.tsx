@@ -329,32 +329,7 @@ const DiscoveryNew = () => {
            
             {/* Remove hidden navigation arrows */}
             
-            {/* Simplified GameBoy controller buttons to match the image exactly */}
-            <div className="gameboy-controller">
-              <button className="gameboy-btn left-arrow" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
-                <FontAwesomeIcon icon={faChevronLeft} style={{ color: '#ffffff' }} />
-              </button>
-              
-              <button className="gameboy-btn chat-btn" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} style={{ color: '#ffffff' }} />
-              </button>
-              
-              <button className="gameboy-btn donate-btn" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
-                <span style={{ color: '#ff6600', fontWeight: 'bold' }}>$</span>
-              </button>
-              
-              <button className="gameboy-btn user-btn" onClick={() => currentStreamer && window.open(`/profile/${currentStreamer.id}`, '_self')}>
-                <FontAwesomeIcon icon={faUser} style={{ color: '#ffffff' }} />
-              </button>
-              
-              <button className="gameboy-btn scissors-btn" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-                <FontAwesomeIcon icon={faCut} style={{ color: '#ffffff' }} />
-              </button>
-              
-              <button className="gameboy-btn right-arrow" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
-                <FontAwesomeIcon icon={faChevronRight} style={{ color: '#ffffff' }} />
-              </button>
-            </div>
+            {/* Gameboy controller removed as requested */}
           </div>
         </motion.div>
       
