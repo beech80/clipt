@@ -511,12 +511,12 @@ const UserProfile = () => {
     
     if (!postsToRender || postsToRender.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-300 bg-[#001133] rounded-md border-2 border-[#4488cc] my-4">
-          <FileText className="h-16 w-16 mb-6 text-gray-300 opacity-50" />
+        <div className="profile-empty-state flex flex-col items-center justify-center py-16 my-4 shadow-orange-glow">
+          <FileText className="h-16 w-16 mb-6 text-[#ff6600] drop-shadow-orange-glow opacity-80" />
           
           {activeTab === 'posts' && (
             <div className="text-center max-w-md">
-              <p className="text-xl font-semibold mb-2">This user hasn't posted anything yet</p>
+              <p className="text-xl font-semibold mb-2 font-retro text-[#ff6600] animate-pulse-slow">This user hasn't posted anything yet</p>
               <p className="text-gray-400">When they share posts, you'll see them here.</p>
             </div>
           )}
@@ -870,7 +870,7 @@ const UserProfile = () => {
                   {user && user.id === profileData?.id ? (
                     <button
                       onClick={() => navigate("/settings")}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition"
+                      className="px-4 py-2 bg-[#ff6600] hover:bg-[#ff9900] rounded-lg text-white font-bold shadow-orange-glow transition font-retro tracking-wider border-2 border-orange-700 focus:outline-none focus:ring-2 focus:ring-[#ff9900] active:scale-95"
                     >
                       Edit Profile
                     </button>
@@ -879,13 +879,14 @@ const UserProfile = () => {
                       {/* Follow button when viewing someone else's profile */}
                       <button
                         onClick={handleFollowToggle}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md text-white font-medium transition"
+                        className="px-4 py-2 bg-[#ff6600] hover:bg-[#ff9900] rounded-lg text-white font-bold shadow-orange-glow transition font-retro tracking-wider border-2 border-orange-700 focus:outline-none focus:ring-2 focus:ring-[#ff9900] active:scale-95"
                       >
                         {profileData?.is_following ? 'Unfollow' : 'Follow'}
                       </button>
                       
                       {/* Message button when viewing someone else's profile */}
                       <button 
+                        className="px-4 py-2 bg-[#ff6600] hover:bg-[#ff9900] rounded-lg text-white font-bold shadow-orange-glow transition font-retro tracking-wider border-2 border-orange-700 focus:outline-none focus:ring-2 focus:ring-[#ff9900] active:scale-95"
                         className="px-4 py-2 bg-transparent border border-orange-500 hover:bg-orange-500/20 rounded-md text-[#ff6600] font-bold transition"
                         onClick={() => navigate(`/messages/new/${profileData?.id}`)}
                       >
