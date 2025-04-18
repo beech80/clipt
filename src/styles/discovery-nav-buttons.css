@@ -36,12 +36,14 @@
   text-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
 }
 
-/* Ensure icons are ALWAYS white - forceful override */
+/* Ensure icons are ALWAYS white with orange glow - forceful override */
 .nav-button svg,
 .nav-button i {
   color: #ffffff !important; /* Force white color */
   fill: #ffffff !important;
   stroke: #ffffff !important;
+  filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.7)) !important; /* Orange glow */
+  text-shadow: 0 0 5px rgba(255, 140, 0, 0.5) !important; /* Additional orange glow */
 }
 
 /* Dollar sign special styling */
