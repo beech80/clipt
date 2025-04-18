@@ -894,14 +894,46 @@ const UserProfile = () => {
                     activeTab === 'posts'
                       ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
                       : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
-{{ ... }}
-          onClick={() => setActiveTab('posts')}
-        >
-          <Grid className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
-          Posts
-        </button>
-        <button
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
+                  }`}
+                  onClick={() => setActiveTab('posts')}
+                >
+                  <Grid className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
+                  Posts
+                </button>
+                <button
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
+                    activeTab === 'clips'
+                      ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
+                      : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
+                  }`}
+                  onClick={() => setActiveTab('clips')}
+                >
+                  <ListVideo className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
+                  Clipts
+                </button>
+                <button
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
+                    activeTab === 'saved'
+                      ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
+                      : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
+                  }`}
+                  onClick={() => setActiveTab('saved')}
+                >
+                  <Bookmark className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
+                  Saved
+                </button>
+                <button
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
+                    activeTab === 'achievements'
+                      ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
+                      : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
+                  }`}
+                  onClick={() => setActiveTab('achievements')}
+                >
+                  <Trophy className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
+                  Trophies
+                </button>
+              </div>
             activeTab === 'clips'
               ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
               : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
