@@ -1,0 +1,36 @@
+/* Special icon color rules with max specificity to force colors */
+
+/* Force orange icons */
+svg[data-icon="chevron-left"],
+svg[data-icon="cut"],
+svg[data-icon="chevron-right"],
+svg[data-icon="search"],
+svg[data-icon="video"] {
+  color: #ff8c00 !important;
+  fill: #ff8c00 !important;
+}
+
+/* Force white icons */
+svg[data-icon="comment"],
+svg[data-icon="user"] {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Dollar sign */
+.donate-circle span {
+  color: #ff8c00 !important;
+  font-weight: bold !important;
+  font-size: 1.5rem !important;
+}
+
+/* Extra specificity for the chat icon */
+.chat-circle svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* Extra specificity for buttons */
+.circular-nav-btn {
+  color: inherit !important;
+}
