@@ -45,12 +45,27 @@
 
 /* All icons white except donate */
 .gameboy-btn svg {
-  color: #fff;
+  color: #fff !important;
+  fill: #fff !important;
 }
 
-/* Donate button $ - orange text */
+/* Force Lucide icons in GameBoyControls to white */
+.gameboy-action-icon {
+  color: #fff !important;
+  fill: #fff !important;
+}
+
+/* If you want a special orange dollar icon, use this class on the icon */
+.gameboy-action-icon.dollar {
+  color: #ff8c00 !important;
+  fill: #ff8c00 !important;
+}
+
+/* Donate button $ - orange icon and text */
+.donate-btn svg,
 .donate-btn span {
-  color: #ff8c00;
+  color: #ff8c00 !important;
+  fill: #ff8c00 !important;
   font-weight: bold;
   font-size: 20px;
 }
