@@ -472,7 +472,7 @@ const DiscoveryNew = () => {
           )}
         </AnimatePresence>
         
-        {/* Bottom Navigation Bar - Simplified */}
+        {/* Bottom Navigation Bar - Only Essential Buttons */}
         <div className="discovery-navigation">
           <Link to="/">
             <button className="nav-button">
@@ -482,30 +482,21 @@ const DiscoveryNew = () => {
           
           <button className="nav-button" onClick={toggleChat}>
             <FontAwesomeIcon icon={faComment} />
-            <span className="sr-only">Chat</span>
           </button>
           
           <button className="nav-button dollar" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
             <FontAwesomeIcon icon={faDollarSign} />
-            <span className="sr-only">Donate</span>
           </button>
           
           <Link to="/profile">
             <button className="nav-button">
               <FontAwesomeIcon icon={faUser} />
-              <span className="sr-only">Profile</span>
             </button>
           </Link>
-          
-          <button className="nav-button cut-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-            <FontAwesomeIcon icon={faCut} />
-            <span className="sr-only">Clips</span>
-          </button>
           
           <Link to="/discovery">
             <button className="nav-button">
               <FontAwesomeIcon icon={faChevronRight} />
-              <span className="sr-only">Next</span>
             </button>
           </Link>
         </div>

@@ -1,14 +1,14 @@
-/* Custom styles for the Discovery page navigation buttons with all buttons clearly visible */
+/* Custom styles for the Discovery page navigation buttons with maximum spacing */
 .discovery-navigation {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around; /* Maximum spacing */
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   width: 100%;
   background-color: #6A5C4E; /* Brown/gray color */
-  padding: 15px 8%; /* Increased horizontal padding to push buttons inward */
+  padding: 15px 0; /* Vertical padding only */
   z-index: 1000;
   overflow: visible;
   border-bottom: 3px solid #FF8C00; /* Orange highlight at bottom */
@@ -27,7 +27,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
-  margin: 0;
+  margin: 0 25px; /* Add significant horizontal margin */
 }
 
 /* Hide screen reader text but keep it for accessibility */
