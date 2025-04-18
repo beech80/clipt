@@ -12,17 +12,31 @@ import { toast } from 'react-hot-toast';
 import { followService } from '@/services/followService';
 import { format, formatDistanceToNow } from 'date-fns';
 import '@/styles/profile-orange-retro.css';
+import RetroProgressBar from '@/components/achievements/RetroProgressBar';
 
-// Simple presentational component for an achievement
-const AchievementItem = ({ name, desc }: { name: string; desc: string }) => (
-  <div className="mb-2 px-4 py-3 bg-[#1a0e03] rounded-lg border-2 border-[#ff6600] shadow-orange-glow flex flex-col gap-1">
-    <div className="flex items-center gap-2">
-      <span className="text-xl">🏆</span>
-      <span className="font-retro text-lg text-[#ff6600] drop-shadow-orange-glow">{name}</span>
+// Enhanced AchievementItem with progress bar
+const AchievementItem = ({ name, desc, progress, target, completed }: { name: string; desc: string; progress?: number; target?: number; completed?: boolean }) => {
+  const pct = progress !== undefined && target ? Math.round((progress / target) * 100) : completed ? 100 : 0;
+  return (
+    <div className="mb-2 px-4 py-3 bg-[#1a0e03] rounded-lg border-2 border-[#ff6600] shadow-orange-glow flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <span className="text-xl">🏆</span>
+        <span className="font-retro text-lg text-[#ff6600] drop-shadow-orange-glow">{name}</span>
+      </div>
+      <div className="text-orange-200 text-sm font-mono mt-1">{desc}</div>
+      {typeof progress === 'number' && typeof target === 'number' && target > 1 && (
+        <div className="mt-2">
+          <RetroProgressBar value={pct} label={`${progress} / ${target}`} />
+        </div>
+      )}
+      {completed && (!progress || !target) && (
+        <div className="mt-2">
+          <RetroProgressBar value={100} label="Completed!" />
+        </div>
+      )}
     </div>
-    <div className="text-orange-200 text-sm font-mono mt-1">{desc}</div>
-  </div>
-);
+  );
+};
 
 interface ProfileData {
   id: string;
