@@ -937,7 +937,7 @@ const UserProfile = () => {
 
       {/* Content Area */}
       {renderTabContent()}
-    </div>    </div>
+    </div>
   </>
 );
 
