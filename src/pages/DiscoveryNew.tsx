@@ -5,7 +5,7 @@ import { debounce } from 'lodash';
 import axios from 'axios';
 import '../styles/discovery-retro.css';
 import '../styles/discovery-updates.css';
-import '../styles/force-icon-colors.css';
+import '../styles/gameboy-controller-new.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes, faUser, faCut } from '@fortawesome/free-solid-svg-icons';
 import CliptLogoSVG from '../assets/clipt_logo_text.svg'; 
@@ -323,30 +323,30 @@ const DiscoveryNew = () => {
            
             {/* Remove hidden navigation arrows */}
             
-            {/* GameBoy controller buttons based on the image - ALWAYS VISIBLE */}
-            <div className="circular-nav-container">
-              <button className="circular-nav-btn prev-btn" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0} style={{color: '#ff8c00'}}>
-                <FontAwesomeIcon icon={faChevronLeft} color="#ff8c00" size="lg" />
+            {/* Simplified GameBoy controller buttons to match the image exactly */}
+            <div className="gameboy-controller">
+              <button className="gameboy-btn left-arrow" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
+                <FontAwesomeIcon icon={faChevronLeft} />
               </button>
               
-              <button className="circular-nav-btn chat-circle active" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} size="lg" color="#000000" />
+              <button className="gameboy-btn chat-btn" onClick={toggleChat}>
+                <FontAwesomeIcon icon={faComment} />
               </button>
               
-              <button className="circular-nav-btn donate-circle">
-                <span style={{color: '#ff8c00', fontWeight: 'bold', fontSize: '1.5rem'}}>$</span>
+              <button className="gameboy-btn donate-btn">
+                <span>$</span>
               </button>
               
-              <button className="circular-nav-btn profile-circle">
-                <FontAwesomeIcon icon={faUser} size="lg" color="#000000" />
+              <button className="gameboy-btn user-btn">
+                <FontAwesomeIcon icon={faUser} />
               </button>
               
-              <button className="circular-nav-btn scissors-circle">
-                <FontAwesomeIcon icon={faCut} size="lg" color="#000000" />
+              <button className="gameboy-btn scissors-btn">
+                <FontAwesomeIcon icon={faCut} />
               </button>
               
-              <button className="circular-nav-btn next-btn" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1} style={{color: '#ff8c00'}}>
-                <FontAwesomeIcon icon={faChevronRight} color="#ff8c00" size="lg" />
+              <button className="gameboy-btn right-arrow" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
+                <FontAwesomeIcon icon={faChevronRight} />
               </button>
             </div>
           </div>
