@@ -1,32 +1,46 @@
-/* Custom styles for the Discovery page navigation buttons to match first image exactly */
+/* Custom styles for the Discovery page navigation buttons with all buttons clearly visible */
 .discovery-navigation {
   display: flex;
-  justify-content: space-evenly; /* Maximum even spacing */
+  justify-content: space-between;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   width: 100%;
-  background-color: #6A5C4E; /* Brown/gray color from first image */
-  padding: 15px 0; /* More vertical padding */
+  background-color: #6A5C4E; /* Brown/gray color */
+  padding: 15px 8%; /* Increased horizontal padding to push buttons inward */
   z-index: 1000;
-  overflow: hidden;
+  overflow: visible;
   border-bottom: 3px solid #FF8C00; /* Orange highlight at bottom */
 }
 
 .nav-button {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   background-color: transparent;
   border: none;
   color: #ffffff; /* Pure white */
-  font-size: 18px;
+  font-size: 24px; /* Larger font size for visibility */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin: 0 30px; /* Significantly increased spacing */
+  padding: 0;
+  margin: 0;
+}
+
+/* Hide screen reader text but keep it for accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 .nav-button:hover, .nav-button:active {
@@ -43,12 +57,28 @@
   stroke: #ffffff !important;
 }
 
-/* Dollar sign special styling */
+/* Special button styling to ensure key buttons are clearly visible */
+/* Dollar sign button (orange) */
 .nav-button.dollar svg,
 .nav-button.dollar i {
   color: #FF8C00 !important; /* Orange color */
   fill: #FF8C00 !important;
   stroke: #FF8C00 !important;
+  filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.7)) !important; /* Orange glow */
+}
+
+/* Chat button styling */
+.nav-button svg[data-icon="comment"] {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) !important;
+}
+
+/* Scissors/clipt button styling */
+.nav-button.cut-button svg {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) !important;
 }
 
 /* Active button styling */
