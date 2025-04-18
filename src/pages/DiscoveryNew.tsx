@@ -472,7 +472,38 @@ const DiscoveryNew = () => {
           )}
         </AnimatePresence>
         
-        {/* Navigation bar removed as requested */}
+        {/* Bottom Navigation Bar */}
+        <div className="discovery-navigation">
+          <Link to="/">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faArrowLeft} />
+            </button>
+          </Link>
+          
+          <button className="nav-button" onClick={toggleChat}>
+            <FontAwesomeIcon icon={faComment} />
+          </button>
+          
+          <button className="nav-button dollar" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
+            <FontAwesomeIcon icon={faDollarSign} />
+          </button>
+          
+          <Link to="/profile">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faUser} />
+            </button>
+          </Link>
+          
+          <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
+            <FontAwesomeIcon icon={faCut} />
+          </button>
+          
+          <Link to="/discovery">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );
