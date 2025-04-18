@@ -1,4 +1,6 @@
 import React, { useState, useEffect, lazy } from 'react';
+import { Search, Tv } from 'lucide-react'; // Lucide icons for visual mockup
+
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import Welcome from './pages/Welcome';
 import PageTransition from '@/components/PageTransition';
@@ -118,8 +120,24 @@ const AppContent = () => {
   }
 
   return (
-    <PageTransition>
-      <Routes>
+    <>
+      {/* Visual mockup of streaming/search buttons as circles with icons */}
+      <div style={rowStyle as React.CSSProperties}>
+        <div style={iconCircleStyle as React.CSSProperties}>
+          <svg width={80} height={80}>
+            <circle cx={40} cy={40} r={38} stroke="#ff8c00" strokeWidth={2} fill="none" />
+          </svg>
+          <Search style={iconStyle as React.CSSProperties} />
+        </div>
+        <div style={iconCircleStyle as React.CSSProperties}>
+          <svg width={80} height={80}>
+            <circle cx={40} cy={40} r={38} stroke="#ff8c00" strokeWidth={2} fill="none" />
+          </svg>
+          <Tv style={iconStyle as React.CSSProperties} />
+        </div>
+      </div>
+      <PageTransition>
+        <Routes>
         <Route path="/" element={<SuspenseBoundary><LandingPage /></SuspenseBoundary>} />
         <Route path="/home" element={<Navigate to="/clipts" replace />} />
         <Route path="/auth" element={<SuspenseBoundary><Auth /></SuspenseBoundary>} />
