@@ -19,7 +19,7 @@
   height: 40px;
   background-color: transparent;
   border: none;
-  color: #ffffff; /* Pure white */
+  color: #FF8C00; /* Orange color for all buttons */
   font-size: 28px; /* Large font size for better visibility */
   display: flex;
   align-items: center;
@@ -28,7 +28,7 @@
   transition: all 0.2s ease;
   padding: 0;
   margin: 0 auto; /* Center horizontally in grid cell */
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8)); /* White glow */
+  filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.8)); /* Orange glow */
 }
 
 /* Table cell styling */
@@ -63,21 +63,21 @@
   text-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
 }
 
-/* Ensure icons are ALWAYS white - forceful override */
+/* Ensure icons are ALWAYS orange - forceful override */
 .nav-button svg,
 .nav-button i {
-  color: #ffffff !important; /* Force white color */
-  fill: #ffffff !important;
-  stroke: #ffffff !important;
+  color: #FF8C00 !important; /* Force orange color */
+  fill: #FF8C00 !important;
+  stroke: #FF8C00 !important;
 }
 
 /* Special button styling for each specific button type */
 /* Chat button */
 .nav-button.chat-button svg {
-  color: #FFFFFF !important;
-  fill: #FFFFFF !important;
-  stroke: #FFFFFF !important;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9)) !important;
+  color: #FF8C00 !important;
+  fill: #FF8C00 !important;
+  stroke: #FF8C00 !important;
+  filter: drop-shadow(0 0 5px rgba(255, 140, 0, 0.9)) !important;
 }
 
 /* Dollar sign button (orange) */
@@ -90,18 +90,18 @@
 
 /* Profile button */
 .nav-button.profile-button svg {
-  color: #FFFFFF !important;
-  fill: #FFFFFF !important;
-  stroke: #FFFFFF !important;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9)) !important;
+  color: #FF8C00 !important;
+  fill: #FF8C00 !important;
+  stroke: #FF8C00 !important;
+  filter: drop-shadow(0 0 5px rgba(255, 140, 0, 0.9)) !important;
 }
 
 /* Scissors/clipt button */
 .nav-button.cut-button svg {
-  color: #FFFFFF !important;
-  fill: #FFFFFF !important;
-  stroke: #FFFFFF !important;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9)) !important;
+  color: #FF8C00 !important;
+  fill: #FF8C00 !important;
+  stroke: #FF8C00 !important;
+  filter: drop-shadow(0 0 5px rgba(255, 140, 0, 0.9)) !important;
 }
 
 /* Active button styling */
