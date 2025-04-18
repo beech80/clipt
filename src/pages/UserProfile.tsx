@@ -589,48 +589,14 @@ const UserProfile = () => {
                   {getPostMediaContent(post)}
                   
                   {/* Post type indicator */}
-                  <div className="absolute top-2 right-2 bg-[#000A20] bg-opacity-90 px-2 py-1 rounded text-xs text-white border border-[#4488cc]">
-                    {post.post_type === 'clip' ? 'CLIP' : 'POST'}
-                  </div>
                 </div>
-              )}
-              {/* List all achievements, grouped by category, with progress bars */}
-              <div className="space-y-8">
-                {Object.entries(
-                  achievements.reduce((acc, a) => {
-                    const cat = a.achievement?.category || 'General';
-                    if (!acc[cat]) acc[cat] = [];
-                    acc[cat].push(a);
-                    return acc;
-                  }, {} as Record<string, typeof achievements>)
-                ).map(([cat, group]) => (
-                  <div key={cat}>
-                    <div className="text-2xl font-retro text-[#ff6600] mb-3 border-b-2 border-[#ff6600] pb-1 drop-shadow-orange-glow flex items-center">
-                      {cat}
-                    </div>
-                    <div className="space-y-2">
-                      {group.map((a, i) => (
-                        <AchievementItem
-                          key={a.achievement?.id || i}
-                          name={a.achievement?.name || 'Achievement'}
-                          desc={a.achievement?.description || ''}
-                          progress={a.currentValue}
-                          target={a.achievement?.target_value}
-                          completed={a.completed}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-      </div>
-    );
-  };
-
-  // Helper to extract the right media content from a post
-  const getPostMediaContent = (post: Post) => {
-    // First try video_url
+                <div className="space-y-2">
+                  {group.map((a, i) => (
+                    <AchievementItem
+                      key={a.achievement?.id || i}
+                      name={a.achievement?.name || 'Achievement'}
+                      desc={a.achievement?.description || ''}
+                      progress={a.currentValue}
     if (post.video_url) {
       return (
         <div className="relative">
