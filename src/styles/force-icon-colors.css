@@ -1,20 +1,18 @@
-/* Special icon color rules with max specificity to force colors */
+/* Special icon color rules with max specificity to force colors - matching image exactly */
 
-/* Force orange icons */
+/* Force orange icons - ONLY arrows and dollar sign are orange */
 svg[data-icon="chevron-left"],
-svg[data-icon="cut"],
-svg[data-icon="chevron-right"],
-svg[data-icon="search"],
-svg[data-icon="video"] {
+svg[data-icon="chevron-right"] {
   color: #ff8c00 !important;
   fill: #ff8c00 !important;
 }
 
-/* Force white icons */
+/* Force black/dark icons for the function buttons */
 svg[data-icon="comment"],
-svg[data-icon="user"] {
-  color: #ffffff !important;
-  fill: #ffffff !important;
+svg[data-icon="user"],
+svg[data-icon="cut"] {
+  color: #000000 !important;
+  fill: #000000 !important;
 }
 
 /* Dollar sign */
@@ -24,10 +22,11 @@ svg[data-icon="user"] {
   font-size: 1.5rem !important;
 }
 
-/* Extra specificity for the chat icon */
-.chat-circle svg {
-  color: #ffffff !important;
-  fill: #ffffff !important;
+/* Header buttons stay orange */
+svg[data-icon="search"],
+svg[data-icon="video"] {
+  color: #ff8c00 !important;
+  fill: #ff8c00 !important;
 }
 
 /* Extra specificity for buttons */
