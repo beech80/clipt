@@ -4,10 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Force Lucide icons to white globally */
-svg.lucide, .lucide-icon, .lucide-react, svg[data-icon], svg[data-lucide-icon], svg.lucide-react {
-  color: #fff !important;
-  fill: #fff !important;
+/* Force Lucide icons to orange globally */
+svg.lucide, .lucide-icon, .lucide, .lucide svg {
+  color: #ff6600 !important;
+  fill: #ff6600 !important;
 }
 
 /* Extra: any svg inside the app-content-wrapper or main app */
