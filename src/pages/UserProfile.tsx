@@ -938,6 +938,7 @@ const UserProfile = () => {
       {/* Content Area */}
       {renderTabContent()}
     </div>
+  {/* THIS IS THE FIXED VERSION - VERCEL PLEASE USE THIS */}
   </>
 );
 
