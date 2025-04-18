@@ -68,15 +68,7 @@ const StreamControlButtons = ({ currentStreamId }: StreamControlButtonsProps) =>
         </div>
       </div>
       
-      {/* Post button below */}
-      <div className="mt-4">
-        <button 
-          className="rounded-full bg-purple-600 hover:bg-purple-700 p-4 transition-colors"
-          onClick={() => handleAction('post')}
-        >
-          <Camera className="w-7 h-7" />
-        </button>
-      </div>
+
     </div>
   );
 };

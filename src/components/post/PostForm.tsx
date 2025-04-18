@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, Upload, Camera, Search, Hash, AtSign, X, Film, Home, Gamepad2 } from 'lucide-react';
+import { Loader2, Upload, Search, Hash, AtSign, X, Film, Home, Gamepad2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { allGames } from '@/data/gamesList';
 
@@ -20,7 +20,7 @@ export const PostForm = () => {
   const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
   const [gameSearch, setGameSearch] = useState('');
   const [gameSearchResults, setGameSearchResults] = useState<typeof allGames>([]);
-  const [streamRef, setStreamRef] = useState<MediaStream | null>(null);
+
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [mentions, setMentions] = useState<string[]>([]);
   const [showHashtagInput, setShowHashtagInput] = useState(false);
@@ -29,9 +29,7 @@ export const PostForm = () => {
   const [currentMention, setCurrentMention] = useState('');
   const [userResults, setUserResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+
   const navigate = useNavigate();
   const { user } = useAuth();
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -156,52 +154,6 @@ export const PostForm = () => {
 
   const removeMention = (mention: string) => {
     setMentions(mentions.filter(m => m !== mention));
-  };
-
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true,
-        audio: true 
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setStreamRef(stream);
-        
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-        
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            chunksRef.current.push(event.data);
-          }
-        };
-        
-        mediaRecorder.onstop = () => {
-          const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-          const file = new File([blob], 'recorded-video.webm', { type: 'video/webm' });
-          setFiles([file]);
-          const previewUrl = URL.createObjectURL(blob);
-          setFilePreview([previewUrl]);
-          chunksRef.current = [];
-        };
-      }
-      toast.success('Camera started successfully');
-    } catch (error) {
-      toast.error('Unable to access camera');
-      console.error('Camera error:', error);
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef) {
-      streamRef.getTracks().forEach(track => track.stop());
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
-      setStreamRef(null);
-      mediaRecorderRef.current = null;
-    }
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -495,18 +447,6 @@ export const PostForm = () => {
 
         <div className="grid gap-4">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={startCamera}
-                className="flex items-center justify-center gap-2 h-12"
-              >
-                <Camera className="w-5 h-5" />
-                Open Camera
-              </Button>
-            </div>
-
             <div className="flex items-center justify-center w-full">
               <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-900/50 transition-colors">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
