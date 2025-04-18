@@ -1,17 +1,29 @@
-/* Custom styles for the Discovery page navigation buttons with maximum spacing */
+/* Custom styles for the Discovery page navigation buttons with groups */
 .discovery-navigation {
   display: flex;
-  justify-content: space-around; /* Maximum spacing */
+  justify-content: space-between;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   width: 100%;
   background-color: #6A5C4E; /* Brown/gray color */
-  padding: 15px 0; /* Vertical padding only */
+  padding: 15px 20px; /* Vertical and horizontal padding */
   z-index: 1000;
   overflow: visible;
   border-bottom: 3px solid #FF8C00; /* Orange highlight at bottom */
+}
+
+/* Navigation groups */
+.nav-group {
+  display: flex;
+}
+
+/* Center group with main buttons */
+.center-group {
+  display: flex;
+  justify-content: center;
+  gap: 40px; /* Large gap between center buttons */
 }
 
 .nav-button {
@@ -20,14 +32,15 @@
   background-color: transparent;
   border: none;
   color: #ffffff; /* Pure white */
-  font-size: 24px; /* Larger font size for visibility */
+  font-size: 28px; /* Even larger font size for better visibility */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
-  margin: 0 25px; /* Add significant horizontal margin */
+  margin: 0;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8)); /* White glow for all buttons */
 }
 
 /* Hide screen reader text but keep it for accessibility */
@@ -57,28 +70,37 @@
   stroke: #ffffff !important;
 }
 
-/* Special button styling to ensure key buttons are clearly visible */
+/* Special button styling for each specific button type */
+/* Chat button */
+.nav-button.chat-button svg {
+  color: #FFFFFF !important;
+  fill: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9)) !important;
+}
+
 /* Dollar sign button (orange) */
-.nav-button.dollar svg,
-.nav-button.dollar i {
+.nav-button.dollar-button svg {
   color: #FF8C00 !important; /* Orange color */
   fill: #FF8C00 !important;
   stroke: #FF8C00 !important;
-  filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.7)) !important; /* Orange glow */
+  filter: drop-shadow(0 0 5px rgba(255, 140, 0, 0.9)) !important; /* Orange glow */
 }
 
-/* Chat button styling */
-.nav-button svg[data-icon="comment"] {
+/* Profile button */
+.nav-button.profile-button svg {
   color: #FFFFFF !important;
   fill: #FFFFFF !important;
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) !important;
+  stroke: #FFFFFF !important;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9)) !important;
 }
 
-/* Scissors/clipt button styling */
+/* Scissors/clipt button */
 .nav-button.cut-button svg {
   color: #FFFFFF !important;
   fill: #FFFFFF !important;
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.9)) !important;
+  stroke: #FFFFFF !important;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9)) !important;
 }
 
 /* Active button styling */

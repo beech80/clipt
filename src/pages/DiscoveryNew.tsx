@@ -472,33 +472,43 @@ const DiscoveryNew = () => {
           )}
         </AnimatePresence>
         
-        {/* Bottom Navigation Bar - Only Essential Buttons */}
+        {/* Bottom Navigation Bar with ALL Required Buttons */}
         <div className="discovery-navigation">
-          <Link to="/">
-            <button className="nav-button">
-              <FontAwesomeIcon icon={faArrowLeft} />
+          <div className="nav-group left-group">
+            <Link to="/">
+              <button className="nav-button">
+                <FontAwesomeIcon icon={faArrowLeft} />
+              </button>
+            </Link>
+          </div>
+          
+          <div className="nav-group center-group">  
+            <button className="nav-button chat-button" onClick={toggleChat}>
+              <FontAwesomeIcon icon={faComment} />
             </button>
-          </Link>
-          
-          <button className="nav-button" onClick={toggleChat}>
-            <FontAwesomeIcon icon={faComment} />
-          </button>
-          
-          <button className="nav-button dollar" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
-            <FontAwesomeIcon icon={faDollarSign} />
-          </button>
-          
-          <Link to="/profile">
-            <button className="nav-button">
-              <FontAwesomeIcon icon={faUser} />
+            
+            <button className="nav-button dollar-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
+              <FontAwesomeIcon icon={faDollarSign} />
             </button>
-          </Link>
-          
-          <Link to="/discovery">
-            <button className="nav-button">
-              <FontAwesomeIcon icon={faChevronRight} />
+            
+            <Link to="/profile">
+              <button className="nav-button profile-button">
+                <FontAwesomeIcon icon={faUser} />
+              </button>
+            </Link>
+            
+            <button className="nav-button cut-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
+              <FontAwesomeIcon icon={faCut} />
             </button>
-          </Link>
+          </div>
+          
+          <div className="nav-group right-group">
+            <Link to="/discovery">
+              <button className="nav-button">
+                <FontAwesomeIcon icon={faChevronRight} />
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
