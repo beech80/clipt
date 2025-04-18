@@ -890,7 +890,6 @@ const UserProfile = () => {
           </div>
         </div>
       </div>
-
       {/* Navigation Tabs */}
       <div className="flex mb-6 border-b border-white/10 overflow-x-auto">
         <button
@@ -942,7 +941,7 @@ const UserProfile = () => {
       {/* Content Area */}
       {renderTabContent()}
     </div>
-  );
+  </>);
 };
 
 export default UserProfile;
