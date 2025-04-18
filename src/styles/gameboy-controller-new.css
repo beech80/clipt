@@ -37,9 +37,10 @@
   height: 16px;
 }
 
-/* Left and right arrow buttons - orange */
+/* Orange icons */
 .left-arrow svg, 
-.right-arrow svg {
+.right-arrow svg,
+.scissors-btn svg {
   color: #ff8c00;
 }
 
@@ -57,11 +58,6 @@
 
 /* User button - black icon */
 .user-btn svg {
-  color: #000;
-}
-
-/* Scissors button - black icon */
-.scissors-btn svg {
   color: #000;
 }
 

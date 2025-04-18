@@ -333,15 +333,15 @@ const DiscoveryNew = () => {
                 <FontAwesomeIcon icon={faComment} />
               </button>
               
-              <button className="gameboy-btn donate-btn">
+              <button className="gameboy-btn donate-btn" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
                 <span>$</span>
               </button>
               
-              <button className="gameboy-btn user-btn">
+              <button className="gameboy-btn user-btn" onClick={() => currentStreamer && window.open(`/profile/${currentStreamer.id}`, '_self')}>
                 <FontAwesomeIcon icon={faUser} />
               </button>
               
-              <button className="gameboy-btn scissors-btn">
+              <button className="gameboy-btn scissors-btn" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
                 <FontAwesomeIcon icon={faCut} />
               </button>
               
