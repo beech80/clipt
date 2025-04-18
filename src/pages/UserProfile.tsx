@@ -593,55 +593,37 @@ const UserProfile = () => {
                     {post.post_type === 'clip' ? 'CLIP' : 'POST'}
                   </div>
                 </div>
-                
-                {/* Post info */}
-                <div className="p-3">
-                  {/* User info */}
-                  <div className="flex items-center space-x-2 mb-2">
-                    <img
-                      src={post.avatar_url || '/default-avatar.png'}
-                      alt={post.username || "User"}
-                      className="w-6 h-6 rounded-full border border-[#4488cc]"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/default-avatar.png';
-                      }}
-                    />
-                    <span className="text-white text-sm font-medium truncate">
-                      {post.display_name || post.username || post.profiles?.username || "User"}
-                    </span>
-                  </div>
-                  
-                  {/* Post content - Limit to two lines */}
-                  <p className="text-gray-300 text-sm mb-3 line-clamp-2">
-                    {post.content || ""}
-                  </p>
-                  
-                  {/* Engagement stats - Madden 95 style */}
-                  <div className="flex items-center justify-between mt-2 border-t border-[#4488cc] pt-2">
-                    {/* Likes */}
-                    <div className="flex items-center text-xs text-gray-300 gap-1">
-                      <Heart className={`h-4 w-4 ${post.liked_by_current_user ? 'text-red-500 fill-red-500' : 'text-gray-400'}`} />
-                      <span>{post.likes_count || 0}</span>
+              )}
+              {/* List all achievements, grouped by category, with progress bars */}
+              <div className="space-y-8">
+                {Object.entries(
+                  achievements.reduce((acc, a) => {
+                    const cat = a.achievement?.category || 'General';
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(a);
+                    return acc;
+                  }, {} as Record<string, typeof achievements>)
+                ).map(([cat, group]) => (
+                  <div key={cat}>
+                    <div className="text-2xl font-retro text-[#ff6600] mb-3 border-b-2 border-[#ff6600] pb-1 drop-shadow-orange-glow flex items-center">
+                      {cat}
                     </div>
-                    
-                    {/* Comments */}
-                    <div className="flex items-center text-xs text-gray-300 gap-1">
-                      <MessageSquare className="h-4 w-4 text-gray-400" />
-                      <span>{post.comments_count || 0}</span>
-                    </div>
-                    
-                    {/* Trophy count */}
-                    <div className="flex items-center text-xs text-gray-300 gap-1">
-                      <Trophy className="h-4 w-4 text-yellow-500" />
-                      <span>{post.trophy_count || 0}</span>
+                    <div className="space-y-2">
+                      {group.map((a, i) => (
+                        <AchievementItem
+                          key={a.achievement?.id || i}
+                          name={a.achievement?.name || 'Achievement'}
+                          desc={a.achievement?.description || ''}
+                          progress={a.currentValue}
+                          target={a.achievement?.target_value}
+                          completed={a.completed}
+                        />
+                      ))}
                     </div>
                   </div>
-                </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
       </div>
     );
   };
@@ -875,22 +857,90 @@ const UserProfile = () => {
         />
 
         {/* Profile info */}
-        <div className="container mx-auto px-4 relative -mt-16">
-          <div className="bg-[#18120b]/80 backdrop-blur-md rounded-lg p-6 border border-orange-500/60 shadow-lg shadow-orange-900/20">
-            <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-              {/* Avatar */}
-              <div className="relative">
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-orange-500 shadow-[0_0_24px_#ff6600b0]">
-                  <img
-                    src={profileData?.avatar_url || "https://placehold.co/200/1a237e/ffffff?text=User"}
-                    alt={profileData?.username}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "https://placehold.co/200/1a237e/ffffff?text=User";
-                    }}
-                  />
+        <div className="container mx-auto px-4 relative -mt-24">
+          <div className="profile-retro-glass-card bg-[#18120b]/70 backdrop-blur-xl rounded-2xl p-8 border-4 border-[#ff6600] shadow-[0_0_40px_#ff6600bb,0_0_0_8px_#1a0e03] max-w-4xl mx-auto flex flex-col md:flex-row gap-8 items-center md:items-start">
+            {/* Avatar */}
+            <div className="relative flex flex-col items-center">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-8 border-[#ff9900] shadow-[0_0_48px_#ff6600cc,0_0_0_12px_#1a0e03] bg-gradient-to-br from-[#ff6600] to-[#1a0e03]">
+                <img
+                  src={profileData?.avatar_url || "https://placehold.co/200/1a237e/ffffff?text=User"}
+                  alt={profileData?.username}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://placehold.co/200/1a237e/ffffff?text=User";
+                  }}
+                />
+              </div>
+              {/* Streaming indicator */}
+              {profileData?.stream_id && (
+                <div className="absolute -top-3 -right-3 bg-red-500 text-white text-xs font-bold rounded-full px-3 py-1 flex items-center gap-1 shadow-lg animate-pulse">
+                  <span className="rounded-full h-2 w-2 bg-white mr-1"></span>
+                  LIVE
                 </div>
+              )}
+            </div>
+            {/* User info and stats */}
+            <div className="flex-1 flex flex-col gap-4 items-center md:items-start">
+              <h1 className="text-4xl md:text-5xl font-extrabold text-[#ff6600] drop-shadow-orange-glow font-retro px-4 py-2 rounded-xl bg-[#1a0e03]/60 border-2 border-[#ff9900] shadow-[0_0_12px_#ff6600bb] text-center md:text-left">
+                {profileData?.display_name || profileData?.username}
+              </h1>
+              <p className="text-[#ff9900] text-lg mb-2 bg-[#1a0900]/80 px-3 py-1 rounded font-mono text-center md:text-left">@{profileData?.username}</p>
+              {profileData?.stream_title && (
+                <div className="mb-2 bg-red-500/20 rounded-md p-2 border border-red-500/30">
+                  <p className="font-semibold text-black">Currently streaming: <span className="bg-gray-100 px-2 py-1 rounded inline-block">{profileData.stream_title}</span></p>
+                  <p className="text-sm">{profileData?.stream_id} viewers</p>
+                </div>
+              )}
+              <p className="text-base md:text-lg whitespace-pre-wrap text-black bg-gray-100/70 p-3 rounded-xl mt-2 w-full max-w-xl text-center md:text-left">{profileData?.bio || ""}</p>
+              {/* Stats and buttons */}
+              <div className="flex flex-col md:flex-row gap-4 w-full items-center md:items-end justify-between mt-4">
+                <div className="flex gap-8 text-center">
+                  <div>
+                    <div className="text-3xl font-extrabold text-[#ffb347] drop-shadow-orange-glow">{posts.length + clips.length}</div>
+                    <div className="text-orange-200 text-base font-retro">Posts</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-extrabold text-[#ffb347] drop-shadow-orange-glow">{profileData?.followers_count || 0}</div>
+                    <div className="text-orange-200 text-base font-retro">Followers</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-extrabold text-[#ffb347] drop-shadow-orange-glow">{profileData?.following_count || 0}</div>
+                    <div className="text-orange-200 text-base font-retro">Following</div>
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-4 md:mt-0 justify-center">
+                  {user && user.id === profileData?.id ? (
+                    <button
+                      onClick={() => navigate("/settings")}
+                      className="px-6 py-2 bg-[#ff6600] hover:bg-[#ff9900] rounded-lg text-white font-bold shadow-orange-glow transition font-retro tracking-wider border-2 border-orange-700 focus:outline-none focus:ring-2 focus:ring-[#ff9900] active:scale-95 text-lg"
+                    >
+                      Edit Profile
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleFollowToggle}
+                        className="px-6 py-2 bg-[#ff6600] hover:bg-[#ff9900] rounded-lg text-white font-bold shadow-orange-glow transition font-retro tracking-wider border-2 border-orange-700 focus:outline-none focus:ring-2 focus:ring-[#ff9900] active:scale-95 text-lg"
+                      >
+                        {profileData?.is_following ? 'Unfollow' : 'Follow'}
+                      </button>
+                      <button
+                        className="px-6 py-2 bg-transparent border-2 border-orange-500 hover:bg-orange-500/20 rounded-lg text-[#ff6600] font-bold font-retro transition text-lg"
+                        onClick={() => navigate(`/messages/new/${profileData?.id}`)}
+                      >
+                        Message
+                      </button>
+                    </>
+                  )}
+                  <button className="px-6 py-2 bg-transparent border-2 border-orange-500 hover:bg-orange-500/20 rounded-lg text-[#ff6600] font-bold font-retro transition text-lg">
+                    Share Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
                 {/* Streaming indicator */}
                 {profileData?.stream_id && (
