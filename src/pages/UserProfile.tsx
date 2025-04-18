@@ -11,6 +11,7 @@ import AchievementDisplay, { ACHIEVEMENT_CATEGORIES } from '@/components/achieve
 import { toast } from 'react-hot-toast';
 import { followService } from '@/services/followService';
 import { format, formatDistanceToNow } from 'date-fns';
+import '@/styles/profile-orange-retro.css';
 
 interface ProfileData {
   id: string;
@@ -807,15 +808,16 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a237e] to-[#0d1b3c] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#18120b] via-[#332012] to-[#1a0900] text-white">
       <div className="w-full relative">
         {/* Banner - replacing placeholder with a gradient background */}
         <div 
-          className="w-full h-[200px] bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-800"
+          className="w-full h-[200px] bg-gradient-to-r from-[#ff6600] via-[#ff9900] to-[#ff6600] shadow-lg shadow-orange-900/40"
           style={{ 
             backgroundImage: profileData?.banner_url ? 
-              `url('${profileData.banner_url}')` : 
-              'none',
+              `linear-gradient(90deg, #ff6600 0%, #ff9900 50%, #ff6600 100%), url('${profileData.banner_url}')` : 
+              'linear-gradient(90deg, #ff6600 0%, #ff9900 100%)',
+            backgroundBlendMode: profileData?.banner_url ? 'multiply, normal' : 'normal',
             backgroundSize: 'cover',
             backgroundPosition: 'center'
           }} 
@@ -823,11 +825,11 @@ const UserProfile = () => {
 
         {/* Profile info */}
         <div className="container mx-auto px-4 relative -mt-16">
-          <div className="bg-[#1a237e]/70 backdrop-blur-md rounded-lg p-6 border border-indigo-500/30">
+          <div className="bg-[#18120b]/80 backdrop-blur-md rounded-lg p-6 border border-orange-500/60 shadow-lg shadow-orange-900/20">
             <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-indigo-500">
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-orange-500 shadow-[0_0_24px_#ff6600b0]">
                   <img
                     src={profileData?.avatar_url || "https://placehold.co/200/1a237e/ffffff?text=User"}
                     alt={profileData?.username}
@@ -850,8 +852,8 @@ const UserProfile = () => {
 
               {/* User info */}
               <div className="flex-1 text-center md:text-left">
-                <h1 className="text-2xl md:text-3xl font-bold text-black bg-gray-200/80 px-3 py-1 rounded">{profileData?.display_name || profileData?.username}</h1>
-                <p className="text-black mb-2 bg-gray-100/90 px-2 py-1 rounded inline-block">@{profileData?.username}</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-[#ff6600] drop-shadow-orange-glow font-retro px-3 py-1 rounded animate-pulse-slow">{profileData?.display_name || profileData?.username}</h1>
+                <p className="text-[#ff9900] mb-2 bg-[#1a0900]/80 px-2 py-1 rounded inline-block font-mono">@{profileData?.username}</p>
 
                 {/* Stream title if streaming */}
                 {profileData?.stream_title && (
@@ -884,7 +886,7 @@ const UserProfile = () => {
                       
                       {/* Message button when viewing someone else's profile */}
                       <button 
-                        className="px-4 py-2 bg-transparent border border-indigo-500 hover:bg-indigo-500/20 rounded-md text-white font-medium transition"
+                        className="px-4 py-2 bg-transparent border border-orange-500 hover:bg-orange-500/20 rounded-md text-[#ff6600] font-bold transition"
                         onClick={() => navigate(`/messages/new/${profileData?.id}`)}
                       >
                         Message
@@ -893,27 +895,27 @@ const UserProfile = () => {
                   )}
 
                   {/* Share profile button - always shown */}
-                  <button className="px-4 py-2 bg-transparent border border-indigo-500 hover:bg-indigo-500/20 rounded-md text-white font-medium transition">
+                  <button className="px-4 py-2 bg-transparent border border-orange-500 hover:bg-orange-500/20 rounded-md text-[#ff6600] font-bold transition">
                     Share Profile
                   </button>
                 </div>
               </div>
 
               {/* Stats */}
-              <div className="flex gap-6 text-center mt-4 md:mt-0">
+              <div className="flex gap-6 text-center mt-4 md:mt-0 text-orange-400">
                 <div>
                   <div className="text-xl font-bold">
                     {posts.length + clips.length}
                   </div>
-                  <div className="text-indigo-300 text-sm">Posts</div>
+                  <div className="text-orange-300 text-sm">Posts</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold">{profileData?.followers_count || 0}</div>
-                  <div className="text-indigo-300 text-sm">Followers</div>
+                  <div className="text-orange-300 text-sm">Followers</div>
                 </div>
                 <div>
                   <div className="text-xl font-bold">{profileData?.following_count || 0}</div>
-                  <div className="text-indigo-300 text-sm">Following</div>
+                  <div className="text-orange-300 text-sm">Following</div>
                 </div>
               </div>
             </div>
@@ -924,47 +926,47 @@ const UserProfile = () => {
       {/* Navigation Tabs */}
       <div className="flex mb-6 border-b border-white/10 overflow-x-auto">
         <button
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
             activeTab === 'posts'
-              ? 'text-purple-400 border-b-2 border-purple-400'
-              : 'text-gray-400 hover:text-gray-200'
+              ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
+              : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
           }`}
           onClick={() => setActiveTab('posts')}
         >
-          <Grid className="h-4 w-4" />
+          <Grid className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
           Posts
         </button>
         <button
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
             activeTab === 'clips'
-              ? 'text-purple-400 border-b-2 border-purple-400'
-              : 'text-gray-400 hover:text-gray-200'
+              ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
+              : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
           }`}
           onClick={() => setActiveTab('clips')}
         >
-          <ListVideo className="h-4 w-4" />
+          <ListVideo className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
           Clipts
         </button>
         <button
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
             activeTab === 'saved'
-              ? 'text-purple-400 border-b-2 border-purple-400'
-              : 'text-gray-400 hover:text-gray-200'
+              ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
+              : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
           }`}
           onClick={() => setActiveTab('saved')}
         >
-          <Bookmark className="h-4 w-4" />
+          <Bookmark className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
           Saved
         </button>
         <button
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-medium ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
             activeTab === 'achievements'
-              ? 'text-purple-400 border-b-2 border-purple-400'
-              : 'text-gray-400 hover:text-gray-200'
+              ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
+              : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
           }`}
           onClick={() => setActiveTab('achievements')}
         >
-          <Trophy className="h-4 w-4" />
+          <Trophy className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
           Trophies
         </button>
       </div>
