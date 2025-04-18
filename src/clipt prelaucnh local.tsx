@@ -127,13 +127,13 @@ const AppContent = () => {
           <svg width={80} height={80}>
             <circle cx={40} cy={40} r={38} stroke="#ff8c00" strokeWidth={2} fill="none" />
           </svg>
-          <Search style={iconStyle as React.CSSProperties} />
+          <Search style={iconStyle as React.CSSProperties} color="#fff" fill="#fff" className="lucide" />
         </div>
         <div style={iconCircleStyle as React.CSSProperties}>
           <svg width={80} height={80}>
             <circle cx={40} cy={40} r={38} stroke="#ff8c00" strokeWidth={2} fill="none" />
           </svg>
-          <Tv style={iconStyle as React.CSSProperties} />
+          <Tv style={iconStyle as React.CSSProperties} color="#fff" fill="#fff" className="lucide" />
         </div>
       </div>
       <PageTransition>
