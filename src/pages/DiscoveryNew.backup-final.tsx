@@ -670,114 +670,12 @@ const DiscoveryNew: React.FC = () => {
                 </div>
                ) : (
                  <div className="empty-content">
-                   <div className="empty-message">
-                     <p>No content found for {selectedGame?.name}</p>
-                   </div>
-                 </div>
-               )
-             }
-          ) : (
-            // General discovery feed (streamers only for now)
-            {streamers.length > 0 && currentIndex < streamers.length ? (
-              <div className="stream-wrapper">
-                <video 
-                  src={streamers[currentIndex].stream_url} 
-                  autoPlay 
-                  loop 
-                  muted 
-                  playsInline
-                  className="stream-video full-screen"
-                />
-                <div className="streamer-content">
-                  {/* TV Icon to go to Streaming Page */}
-                  <div className="streaming-icon" style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 20 }}>
-                    <button 
-                      onClick={() => goToStreaming(streamers[currentIndex].id)}
-                      style={{ background: 'rgba(0,0,0,0.5)', borderRadius: '50%', padding: '8px', border: 'none', cursor: 'pointer' }}>
-                      <Monitor color="white" size={24} />
-                    </button>
-                  </div>
-                  <div className="streamer-info" style={{ color: 'black' }}>
-                    <div className="streamer-profile" style={{
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(220,220,220,0.85) 100%)',
-                      backdropFilter: 'blur(5px)',
-                      borderRadius: '12px',
-                      padding: '10px 15px',
-                      boxShadow: '0 4px 6px rgba(0,0,0,0.1), 0 0 0 1px rgba(255,85,0,0.2), 0 0 15px rgba(255,85,0,0.15)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      maxWidth: '85%',
-                      margin: '0 auto',
-                      border: '2px solid rgba(255,105,48,0.5)',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{ 
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '3px',
-                        background: 'linear-gradient(90deg, #ff5500, #ff9500, #ff5500)',
-                        zIndex: 1
-                      }}></div>
-                      <img 
-                        src={streamers[currentIndex].avatar_url} 
-                        alt={streamers[currentIndex].display_name} 
-                        className="profile-avatar"
-                        style={{
-                          width: '60px',
-                          height: '60px',
-                          borderRadius: '50%',
-                          border: '3px solid rgba(255,85,0,0.8)',
-                          boxShadow: '0 0 10px rgba(255,85,0,0.3)'
-                        }}
-                      />
-                      <div className="streamer-details" style={{ flex: 1 }}>
-                        <h3 style={{ 
-                          color: '#fff',
-                          fontWeight: 'bold',
-                          fontSize: '22px',
-                          marginBottom: '3px',
-                          textShadow: '0 1px 1px rgba(0,0,0,0.7)',
-                          background: 'rgba(20,20,30,0.85)',
-                          borderRadius: '8px',
-                          padding: '4px 12px',
-                          display: 'inline-block',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.25)'
-                        }}>{streamers[currentIndex].display_name}</h3>
-                        <p style={{ 
-                          color: '#fff',
-                          fontWeight: 'bold',
-                          fontSize: '17px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          background: 'rgba(20,20,30,0.85)',
-                          borderRadius: '8px',
-                          padding: '4px 12px',
-                          margin: '6px 0',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.18)'
-                        }}>
-                          <Gamepad size={16} style={{ color: '#ff5500' }} /> {streamers[currentIndex].game}
-                        </p>
-                        <div className="view-count" style={{ 
-                          color: '#333',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          fontSize: '14px',
-                          marginTop: '3px'
-                        }}>
-                          <Zap size={14} style={{ color: '#ff5500' }} /> {streamers[currentIndex].viewer_count?.toLocaleString()} viewers
-                        </div>
-                      </div>
+                    <div className="empty-message">
+                      <p>No content found for {selectedGame?.name}</p>
                     </div>
                   </div>
-                </div>
-              </div>
-             ) : (
+                )
+              )           ) : (
               <div className="empty-content">
                 <div className="empty-message">
                   <p>No streams available</p>
@@ -1228,3 +1126,5 @@ const DiscoveryNew: React.FC = () => {
 };
 
 export default DiscoveryNew;
+
+// Fixed JSX syntax

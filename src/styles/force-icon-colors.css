@@ -1,35 +1,69 @@
-/* Special icon color rules with max specificity to force colors - matching image exactly */
+/* Complete styling overhaul for GameBoy controller buttons to match image exactly */
 
-/* Force orange icons - ONLY arrows and dollar sign are orange */
-svg[data-icon="chevron-left"],
-svg[data-icon="chevron-right"] {
+/* GameBoy controller container */
+.circular-nav-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1d1d1d !important;
+  border-radius: 50px;
+  padding: 6px;
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  min-width: 320px;
+}
+
+/* All circular buttons */
+.circular-nav-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  margin: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #262626 !important;
+  cursor: pointer;
+}
+
+/* Icon sizing */
+.circular-nav-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Orange icons - ONLY arrows and dollar sign */
+.prev-btn svg,
+.next-btn svg {
   color: #ff8c00 !important;
   fill: #ff8c00 !important;
 }
 
-/* Force black/dark icons for the function buttons */
-svg[data-icon="comment"],
-svg[data-icon="user"],
-svg[data-icon="cut"] {
+/* Dollar sign styling */
+.donate-circle span {
+  color: #ff8c00 !important;
+  font-weight: bold !important;
+  font-size: 20px !important;
+  display: block;
+  line-height: 100%;
+}
+
+/* Dark icons - comment, user, scissors */
+.chat-circle svg,
+.profile-circle svg,
+.scissors-circle svg {
   color: #000000 !important;
   fill: #000000 !important;
 }
 
-/* Dollar sign */
-.donate-circle span {
-  color: #ff8c00 !important;
-  font-weight: bold !important;
-  font-size: 1.5rem !important;
-}
-
-/* Header buttons stay orange */
-svg[data-icon="search"],
-svg[data-icon="video"] {
+/* Keep header icons orange */
+.header-buttons svg {
   color: #ff8c00 !important;
   fill: #ff8c00 !important;
-}
-
-/* Extra specificity for buttons */
-.circular-nav-btn {
-  color: inherit !important;
 }

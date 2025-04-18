@@ -1,15 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
+const fs = require('fs');
+const path = require('path');
+
+// File paths
+const filePath = path.join(__dirname, 'src', 'pages', 'DiscoveryNew.tsx');
+const backupPath = path.join(__dirname, 'src', 'pages', 'DiscoveryNew.final.bak');
+
+// Read the current file
+console.log('Reading DiscoveryNew.tsx...');
+let content = fs.readFileSync(filePath, 'utf8');
+
+// Create a backup
+console.log('Creating backup...');
+fs.writeFileSync(backupPath, content);
+
+// Completely rewrite the file with proper JSX structure
+console.log('Creating final fixed version...');
+
+const fixedContent = `import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { debounce } from 'lodash';
 import axios from 'axios';
 import '../styles/discovery-retro.css';
-import '../styles/discovery-updates.css';
-import '../styles/gameboy-controller-new.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes, faUser, faCut } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes } from '@fortawesome/free-solid-svg-icons';
 import CliptLogoSVG from '../assets/clipt_logo_text.svg'; 
-import RealtimeChat from '../components/messages/RealtimeChat';
+import RealtimeChat from '../components/RealtimeChat';
 
 const DiscoveryNew = () => {
   // Game search state
@@ -40,7 +56,7 @@ const DiscoveryNew = () => {
   useEffect(() => {
     const fetchTrendingGames = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/game/trending?limit=3`);
+        const response = await axios.get(\`\${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/game/trending?limit=3\`);
         setTrendingGames(response.data);
       } catch (error) {
         console.error('Error fetching trending games:', error);
@@ -54,10 +70,10 @@ const DiscoveryNew = () => {
   useEffect(() => {
     const fetchStreamers = async () => {
       try {
-        let url = `${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/streamers`;
+        let url = \`\${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/streamers\`;
         
         if (selectedGame) {
-          url = `${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/streamers/game/${selectedGame.id}`;
+          url = \`\${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/streamers/game/\${selectedGame.id}\`;
         }
 
         const response = await axios.get(url);
@@ -94,7 +110,7 @@ const DiscoveryNew = () => {
       try {
         setIsSearching(true);
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/game/search?q=${query}&limit=20`
+          \`\${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/game/search?q=\${query}&limit=20\`
         );
         setSearchResults(response.data);
       } catch (error) {
@@ -179,28 +195,17 @@ const DiscoveryNew = () => {
           style={{ height: isChatOpen ? '60%' : '100%' }}
         >
           <div className="header">
-            <div className="logo-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70px', marginTop: '18px', marginBottom: '8px' }}>
-              <img src={CliptLogoSVG} alt="Clipt Logo" className="clipt-logo small-logo lowered-logo" style={{ marginTop: '18px' }} />
+            <div className="logo-container">
+              <img src={CliptLogoSVG} alt="Clipt Logo" className="clipt-logo" />
             </div>
-            <div className="header-right">
-              <div className="header-buttons">
-                <button 
-                  className="stream-button icon-button"
-                  title="Streaming"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <FontAwesomeIcon icon={faVideo} size="lg" color="#ff8c00" />
-                </button>
-                <button 
-                  className="search-button icon-button"
-                  title="Search"
-                  onClick={() => setSearchModalOpen(true)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <FontAwesomeIcon icon={faSearch} size="lg" color="#ff8c00" />
-                </button>
-              </div>
-            </div>
+            
+            <button 
+              className="search-button retro-button"
+              onClick={() => setSearchModalOpen(true)}
+            >
+              <FontAwesomeIcon icon={faSearch} />
+              <span>Search</span>
+            </button>
           </div>
           
           {/* Game Info Bar (if game is selected) */}
@@ -208,7 +213,7 @@ const DiscoveryNew = () => {
             <div className="game-info-bar">
               <div className="game-cover">
                 {selectedGame.cover_url && (
-                  <img src={selectedGame.cover_url} alt={`${selectedGame.name} cover`} />
+                  <img src={selectedGame.cover_url} alt={\`\${selectedGame.name} cover\`} />
                 )}
               </div>
               <div className="game-details">
@@ -253,30 +258,24 @@ const DiscoveryNew = () => {
                     playsInline 
                     className="stream-video full-screen" 
                   />
-                  {currentStreamer && (
-                    <div className="streamer-info">
-                      <div className="streamer-details">
-                        <div className="avatar">
-                          <img src={currentStreamer.avatar_url} alt={`${currentStreamer.username}'s avatar`} />
-                        </div>
-                        <div className="streamer-text">
-                          <div className="streamer-name-bar">
-                            <h3>{currentStreamer.username}</h3>
-                          </div>
-                          <div className="game-name-bar">
-                            <p>{selectedGame ? selectedGame.name : 'Streaming now'}</p>
-                          </div>
-                        </div>
+                  <div className="streamer-info">
+                    <div className="streamer-details">
+                      <div className="avatar">
+                        <img src={streamers[currentIndex].avatar_url} alt={\`\${streamers[currentIndex].username}'s avatar\`} />
                       </div>
-                      <button 
-                        className="chat-button retro-button"
-                        onClick={toggleChat}
-                      >
-                        <FontAwesomeIcon icon={faComment} />
-                        <span>{isChatOpen ? 'Close Chat' : 'Open Chat'}</span>
-                      </button>
+                      <div className="streamer-text">
+                        <h3>{streamers[currentIndex].username}</h3>
+                        <p>{streamers[currentIndex].bio || 'Playing ' + selectedGame.name}</p>
+                      </div>
                     </div>
-                  )}
+                    <button 
+                      className="chat-button retro-button"
+                      onClick={toggleChat}
+                    >
+                      <FontAwesomeIcon icon={faComment} />
+                      <span>{isChatOpen ? 'Close Chat' : 'Open Chat'}</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="empty-content">
@@ -300,7 +299,7 @@ const DiscoveryNew = () => {
                   <div className="streamer-info">
                     <div className="streamer-details">
                       <div className="avatar">
-                        <img src={streamers[currentIndex].avatar_url} alt={`${streamers[currentIndex].username}'s avatar`} />
+                        <img src={streamers[currentIndex].avatar_url} alt={\`\${streamers[currentIndex].username}'s avatar\`} />
                       </div>
                       <div className="streamer-text">
                         <h3>{streamers[currentIndex].username}</h3>
@@ -325,34 +324,42 @@ const DiscoveryNew = () => {
               )
             )}
            
-            {/* Remove hidden navigation arrows */}
-            
-            {/* Simplified GameBoy controller buttons to match the image exactly */}
-            <div className="gameboy-controller">
-              <button className="gameboy-btn left-arrow" onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={currentIndex === 0}>
-                <FontAwesomeIcon icon={faChevronLeft} />
-              </button>
-              
-              <button className="gameboy-btn chat-btn" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} />
-              </button>
-              
-              <button className="gameboy-btn donate-btn" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
-                <span>$</span>
-              </button>
-              
-              <button className="gameboy-btn user-btn" onClick={() => currentStreamer && window.open(`/profile/${currentStreamer.id}`, '_self')}>
-                <FontAwesomeIcon icon={faUser} />
-              </button>
-              
-              <button className="gameboy-btn scissors-btn" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-                <FontAwesomeIcon icon={faCut} />
-              </button>
-              
-              <button className="gameboy-btn right-arrow" onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)} disabled={currentIndex === streamers.length - 1}>
-                <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </div>
+            {/* Removed Navigation arrows as requested */}
+           
+            {/* Old style GameBoy Controller with 4 buttons (only visible when not searching) */}
+            {!searchModalOpen && (
+              <motion.div 
+                className="controller-container"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <div className="controller-buttons">
+                  <div className="controller-d-pad">
+                    <button 
+                      className="d-pad-button d-pad-left"
+                      onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)}
+                      disabled={currentIndex === 0}
+                    ></button>
+                    <button
+                      className="d-pad-button d-pad-right"
+                      onClick={() => currentIndex < streamers.length - 1 && setCurrentIndex(currentIndex + 1)}
+                      disabled={currentIndex === streamers.length - 1}
+                    ></button>
+                  </div>
+                  <div className="controller-action-buttons">
+                    <button 
+                      className="action-button a-button"
+                      onClick={toggleChat}
+                    >A</button>
+                    <button 
+                      className="action-button b-button"
+                      onClick={() => setSearchModalOpen(true)}
+                    >B</button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
       
@@ -403,7 +410,7 @@ const DiscoveryNew = () => {
                         >
                           <div className="game-cube">
                             {game.cover_url ? (
-                              <img src={game.cover_url} alt={`${game.name} cover`} />
+                              <img src={game.cover_url} alt={\`\${game.name} cover\`} />
                             ) : (
                               <div className="no-cover">
                                 <FontAwesomeIcon icon={faGamepad} />
@@ -440,7 +447,7 @@ const DiscoveryNew = () => {
                           >
                             <div className="game-cover">
                               {game.cover_url ? (
-                                <img src={game.cover_url} alt={`${game.name} cover`} />
+                                <img src={game.cover_url} alt={\`\${game.name} cover\`} />
                               ) : (
                                 <div className="no-cover">
                                   <FontAwesomeIcon icon={faGamepad} />
@@ -482,13 +489,8 @@ const DiscoveryNew = () => {
               transition={{ duration: 0.3 }}
             >
               <RealtimeChat 
-                partnerId={currentStreamer.id}
-                partnerInfo={{
-                  id: currentStreamer.id,
-                  username: currentStreamer.username,
-                  displayName: currentStreamer.username,
-                  avatarUrl: currentStreamer.avatar_url
-                }}
+                streamerId={currentStreamer.id}
+                streamerName={currentStreamer.username}
                 onClose={toggleChat}
               />
             </motion.div>
@@ -499,4 +501,10 @@ const DiscoveryNew = () => {
   );
 };
 
-export default DiscoveryNew;
+export default DiscoveryNew;`;
+
+// Write fixed content to file
+console.log('Writing fixed content to file...');
+fs.writeFileSync(filePath, fixedContent);
+
+console.log('Done! Fixed all JSX syntax issues in DiscoveryNew.tsx');
