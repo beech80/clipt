@@ -10,14 +10,38 @@ html, body {
   overflow-y: auto;
   background: #0e0e1a !important; /* fallback solid background */
   background-image: none !important;
+  position: fixed; /* Prevent body from scrolling */
 }
 
 #root, .app, .main-content, .page-wrapper {
   min-height: 100vh;
   min-width: 100vw;
+  max-height: 100vh; /* Prevent scrolling past content */
+  max-width: 100vw;
   background: inherit;
   position: relative;
   overflow-x: hidden;
+  overflow-y: auto; /* Allow scrolling within components */
+}
+
+/* Ensure content containers don't scroll past their bounds */
+.discovery-container, .profile-container, .game-container, .stream-container {
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  background-color: #0e0e1a;
+}
+
+/* Ensure the background is always visible */
+.app-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  background-color: #0e0e1a;
 }
 
 /* Prevent scrolling when modal or overlay is open (add .no-scroll to body via JS if needed) */

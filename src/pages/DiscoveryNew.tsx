@@ -6,8 +6,9 @@ import axios from 'axios';
 import '../styles/discovery-retro.css';
 import '../styles/discovery-updates.css';
 import '../styles/gameboy-controller-new.css';
+import '../styles/discovery-nav-buttons.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes, faUser, faCut } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes, faUser, faCut, faHome, faDollarSign, faCog, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import CliptLogoSVG from '../assets/clipt_logo_text.svg'; 
 import RealtimeChat from '../components/messages/RealtimeChat';
 
@@ -494,6 +495,35 @@ const DiscoveryNew = () => {
             </motion.div>
           )}
         </AnimatePresence>
+        
+        {/* Bottom Navigation Bar - matching the image */}
+        <div className="discovery-navigation">
+          <Link to="/">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faArrowLeft} />
+            </button>
+          </Link>
+          
+          <button className="nav-button" onClick={toggleChat}>
+            <FontAwesomeIcon icon={faComment} />
+          </button>
+          
+          <button className="nav-button dollar">
+            <FontAwesomeIcon icon={faDollarSign} />
+          </button>
+          
+          <Link to="/profile">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faUser} />
+            </button>
+          </Link>
+          
+          <Link to="/settings">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faCog} />
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );
