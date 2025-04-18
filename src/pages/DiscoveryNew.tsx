@@ -7,6 +7,7 @@ import '../styles/discovery-retro.css';
 import '../styles/discovery-updates.css';
 import '../styles/gameboy-controller-new.css';
 import '../styles/discovery-nav-buttons.css';
+import '../styles/gameboy-buttons-override.css'; // Strong button color overrides
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes, faUser, faCut, faHome, faDollarSign, faCog, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import CliptLogoSVG from '../assets/clipt_logo_text.svg'; 
