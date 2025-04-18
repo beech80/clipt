@@ -12,6 +12,7 @@
   border-top: 2px solid #FF6600;
   box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2);
   z-index: 1000;
+  overflow: hidden; /* Prevent any overflow */
 }
 
 .nav-button {
@@ -20,19 +21,28 @@
   border-radius: 50%;
   background-color: transparent;
   border: none;
-  color: white;
-  font-size: 20px;
+  color: #ffffff; /* Bright white */
+  font-size: 22px; /* Slightly larger */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.7)); /* Stronger glow */
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.8); /* Text glow for icons */
 }
 
 .nav-button:hover, .nav-button:active {
   color: #FF6600;
   transform: scale(1.1);
   text-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+}
+
+/* Ensure icons are never black by forcing white color */
+.nav-button svg {
+  color: #ffffff !important; /* Force white color */
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 /* Active button styling */
