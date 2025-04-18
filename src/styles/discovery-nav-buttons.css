@@ -1,14 +1,14 @@
 /* Custom styles for the Discovery page navigation buttons to match first image exactly */
 .discovery-navigation {
   display: flex;
-  justify-content: space-around; /* More even spacing */
+  justify-content: space-evenly; /* Maximum even spacing */
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   width: 100%;
   background-color: #6A5C4E; /* Brown/gray color from first image */
-  padding: 12px 0; /* Slightly more vertical padding */
+  padding: 15px 0; /* More vertical padding */
   z-index: 1000;
   overflow: hidden;
   border-bottom: 3px solid #FF8C00; /* Orange highlight at bottom */
@@ -26,7 +26,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin: 0 15px; /* Increased horizontal margin for more spacing */
+  margin: 0 30px; /* Significantly increased spacing */
 }
 
 .nav-button:hover, .nav-button:active {
