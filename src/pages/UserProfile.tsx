@@ -13,6 +13,17 @@ import { followService } from '@/services/followService';
 import { format, formatDistanceToNow } from 'date-fns';
 import '@/styles/profile-orange-retro.css';
 
+// Simple presentational component for an achievement
+const AchievementItem = ({ name, desc }: { name: string; desc: string }) => (
+  <div className="mb-2 px-4 py-3 bg-[#1a0e03] rounded-lg border-2 border-[#ff6600] shadow-orange-glow flex flex-col gap-1">
+    <div className="flex items-center gap-2">
+      <span className="text-xl">🏆</span>
+      <span className="font-retro text-lg text-[#ff6600] drop-shadow-orange-glow">{name}</span>
+    </div>
+    <div className="text-orange-200 text-sm font-mono mt-1">{desc}</div>
+  </div>
+);
+
 interface ProfileData {
   id: string;
   username: string;
@@ -748,49 +759,75 @@ const UserProfile = () => {
       case 'achievements':
         return (
           <div className="p-4">
-            {/* Achievement category filters */}
-            <div className="mb-6 overflow-x-auto">
-              <div className="flex space-x-2 pb-2">
-                <Button 
-                  variant={selectedAchievementCategory === null ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedAchievementCategory(null)}
-                  className="whitespace-nowrap"
-                >
-                  All Achievements
-                </Button>
-                
-                {Object.entries(ACHIEVEMENT_CATEGORIES).map(([key, category]) => {
-                  // Check if there are achievements in this category
-                  const hasAchievements = achievements?.some(
-                    a => a.achievement?.category === key
-                  );
-                  
-                  if (!hasAchievements) return null;
-                  
-                  const CategoryIcon = category.icon;
-                  
-                  return (
-                    <Button
-                      key={key}
-                      variant={selectedAchievementCategory === key ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSelectedAchievementCategory(key)}
-                      className="whitespace-nowrap"
-                    >
-                      <CategoryIcon className="h-4 w-4 mr-2" />
-                      {category.title}
-                    </Button>
-                  );
-                })}
+            <div className="max-h-[70vh] overflow-y-auto pr-1 space-y-8">
+              {/* Trophy & Weekly Top 10 Achievements */}
+              <div>
+                <div className="text-2xl font-retro text-[#ff6600] mb-3 border-b-2 border-[#ff6600] pb-1 drop-shadow-orange-glow flex items-center">🏆 Trophy & Weekly Top 10 Achievements</div>
+                <AchievementItem name="First Taste of Gold" desc="Earn 10 trophies on a single post." />
+                <AchievementItem name="Crowd Favorite" desc="Get 50 trophies on a post." />
+                <AchievementItem name="Viral Sensation" desc="Reach 100 trophies on a single post." />
+                <AchievementItem name="Content King" desc="Earn 500 trophies on a post." />
+                <AchievementItem name="Clipt Icon" desc="Reach 1,000 trophies on a post—true viral status." />
+                <AchievementItem name="Breaking In" desc="Rank in the Top 10 of the weekly leaderboard for the first time." />
+                <AchievementItem name="Back-to-Back" desc="Stay in the Top 10 for 2 consecutive weeks." />
+                <AchievementItem name="Hot Streak" desc="Maintain a Top 10 spot for 5 weeks straight." />
+                <AchievementItem name="Unstoppable" desc="Stay in the Top 10 for 10 consecutive weeks." />
+                <AchievementItem name="Clipt Hall of Fame" desc="Rank in the Top 10 for 25 weeks total." />
               </div>
-            </div>
-            
-            <div className="max-h-[70vh] overflow-y-auto pr-1">
-              <AchievementDisplay 
-                achievements={achievements || []} 
-                filter={selectedAchievementCategory}
-              />
+              {/* Follower Achievements */}
+              <div>
+                <div className="text-2xl font-retro text-[#ff6600] mb-3 border-b-2 border-[#ff6600] pb-1 drop-shadow-orange-glow flex items-center">📈 Follower Achievements</div>
+                <AchievementItem name="Rising Star" desc="Hit 1,000 followers on Clipt." />
+                <AchievementItem name="Trending Now" desc="Reach 5,000 followers—people love your content." />
+                <AchievementItem name="Influencer Status" desc="Gain 10,000 followers and grow your community." />
+                <AchievementItem name="Clipt Famous" desc="Surpass 50,000 followers—your name is known." />
+                <AchievementItem name="Elite Creator" desc="Reach 100,000 followers and be among the platform’s best." />
+              </div>
+              {/* Streaming Subscriber Achievements */}
+              <div>
+                <div className="text-2xl font-retro text-[#ff6600] mb-3 border-b-2 border-[#ff6600] pb-1 drop-shadow-orange-glow flex items-center">🎥 Streaming Subscriber Achievements</div>
+                <AchievementItem name="First Supporter" desc="Gain your first subscriber on your streaming channel." />
+                <AchievementItem name="Small but Mighty" desc="Hit 10 subscribers—your community is growing." />
+                <AchievementItem name="Streaming Star" desc="Reach 100 subscribers—your audience is loyal." />
+                <AchievementItem name="Big League Streamer" desc="Gain 1,000 subscribers and solidify your name." />
+                <AchievementItem name="Streaming Legend" desc="Surpass 10,000 subscribers—you’re a household name." />
+              </div>
+              {/* Engagement Booster Achievements */}
+              <div>
+                <div className="text-2xl font-retro text-[#ff6600] mb-3 border-b-2 border-[#ff6600] pb-1 drop-shadow-orange-glow flex items-center">1️⃣ Engagement Booster Achievements</div>
+                <AchievementItem name="Hype Squad" desc="Leave 50 comments on other creators’ posts." />
+                <AchievementItem name="Super Supporter" desc="Give out 100 trophies to different posts." />
+                <AchievementItem name="Engagement Master" desc="Your comments have 1,000 total likes." />
+                <AchievementItem name="Conversation Starter" desc="Get 100 replies to your comments." />
+                <AchievementItem name="Community Builder" desc="Start a trending discussion (a post with 500+ comments)." />
+              </div>
+              {/* Sharing & Promotion Achievements */}
+              <div>
+                <div className="text-2xl font-retro text-[#ff6600] mb-3 border-b-2 border-[#ff6600] pb-1 drop-shadow-orange-glow flex items-center">2️⃣ Sharing & Promotion Achievements</div>
+                <AchievementItem name="Signal Booster" desc="Share 10 posts from other creators." />
+                <AchievementItem name="Clipt Evangelist" desc="Invite 5 friends who create an account." />
+                <AchievementItem name="The Connector" desc="Tag 100 different users in posts or comments." />
+                <AchievementItem name="Trendsetter" desc="A post you shared helps another user reach Top 10 for the week." />
+                <AchievementItem name="Algorithm Whisperer" desc="Share a post that reaches 10,000+ views within 24 hours." />
+              </div>
+              {/* Collab & Creator Support Achievements */}
+              <div>
+                <div className="text-2xl font-retro text-[#ff6600] mb-3 border-b-2 border-[#ff6600] pb-1 drop-shadow-orange-glow flex items-center">3️⃣ Collab & Creator Support Achievements</div>
+                <AchievementItem name="Duo Dynamic" desc="Collaborate on a post with another creator that gets 50+ trophies." />
+                <AchievementItem name="Mentor Mode" desc="Shout out a smaller creator (under 500 followers) and help them grow to 1,000+." />
+                <AchievementItem name="The Networker" desc="Get tagged in 100 different posts by other creators." />
+                <AchievementItem name="Creator Spotlight" desc="Your engagement helps three different creators break into the weekly Top 10." />
+                <AchievementItem name="Industry Connector" desc="Get featured in a major gaming or streaming-related article." />
+              </div>
+              {/* Hidden & Special Achievements */}
+              <div>
+                <div className="text-2xl font-retro text-[#ff6600] mb-3 border-b-2 border-[#ff6600] pb-1 drop-shadow-orange-glow flex items-center">4️⃣ Hidden & Special Achievements</div>
+                <AchievementItem name="OG Clipt Creator" desc="Join Clipt within the first 3 months of launch." />
+                <AchievementItem name="Day One Grinder" desc="Upload a post on launch day." />
+                <AchievementItem name="Mystery Viral" desc="A random old post of yours goes viral again after 30+ days." />
+                <AchievementItem name="Shadow Supporter" desc="Consistently like and comment on another creator’s posts for a month." />
+                <AchievementItem name="The Legend of Clipt" desc="Your name is mentioned 1,000+ times in posts or comments." />
+              </div>
             </div>
           </div>
         );
