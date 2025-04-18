@@ -497,7 +497,34 @@ const DiscoveryNew = () => {
           )}
         </AnimatePresence>
         
-        {/* Navigation buttons removed as requested */}
+        {/* Bottom Navigation Bar - matching the image */}
+        <div className="discovery-navigation">
+          <Link to="/">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faArrowLeft} />
+            </button>
+          </Link>
+          
+          <button className="nav-button" onClick={toggleChat}>
+            <FontAwesomeIcon icon={faComment} />
+          </button>
+          
+          <button className="nav-button dollar">
+            <FontAwesomeIcon icon={faDollarSign} />
+          </button>
+          
+          <Link to="/profile">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faUser} />
+            </button>
+          </Link>
+          
+          <Link to="/settings">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faCog} />
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );
