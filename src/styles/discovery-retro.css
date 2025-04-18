@@ -148,13 +148,13 @@
   transform: translateX(-50%);
   z-index: 100;
   display: flex;
-  background: #221111;
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 1rem;
-  border-bottom: 4px solid #FF9933;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
-  gap: 1.5rem;
+  border: 1px solid rgba(255, 140, 0, 0.3);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+  gap: 1rem;
   align-items: center;
   width: auto;
 }
@@ -1489,6 +1489,15 @@
 
 .nav-arrow.right {
   right: 20px;
+}
+
+.nav-arrow.clipt-logo {
+  height: 40px;
+}
+
+.small-logo {
+  height: 30px;
+  width: auto;
 }
 
 /* Action buttons */
