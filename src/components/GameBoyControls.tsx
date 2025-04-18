@@ -594,34 +594,34 @@ const GameBoyControls: React.FC = () => {
           onClick={() => handleActionButtonClick('comment')}
           aria-label="Comment"
         >
-          <MessageSquare size={20} fill="#1a8cff" color="#1a8cff" strokeWidth={1.5} />
+          <MessageSquare size={20} strokeWidth={1.5} className="gameboy-action-icon" />
         </button>
         
-        {/* Like button (left - red) */}
+        {/* Like button (left - white) */}
         <button 
           className={`action-button like-button left rainbow-border ${likeActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('like')}
           aria-label="Like post"
         >
-          <Heart size={20} fill="#ff3366" color="#ff3366" strokeWidth={1.5} />
+          <Heart size={20} strokeWidth={1.5} className="gameboy-action-icon" />
         </button>
         
-        {/* Save button (right - green) */}
+        {/* Save button (right - white) */}
         <button 
           className={`action-button save-button right rainbow-border ${saveActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('save')}
           aria-label="Save video to bookmarks"
         >
-          <Bookmark size={20} fill="#00cc66" color="#00cc66" strokeWidth={1.5} />
+          <Bookmark size={20} strokeWidth={1.5} className="gameboy-action-icon" />
         </button>
         
-        {/* Trophy button (bottom - yellow) */}
+        {/* Trophy button (bottom - white) */}
         <button 
           className={`action-button trophy-button bottom rainbow-border ${rankActive ? 'active' : ''}`}
           onClick={() => handleActionButtonClick('rank')}
           aria-label="Rank post"
         >
-          <Award size={20} fill="#ffcc00" color="#ffcc00" strokeWidth={1.5} />
+          <Award size={20} strokeWidth={1.5} className="gameboy-action-icon" />
           {rankActive && currentRank > 0 && (
             <span className="rank-indicator">{currentRank}</span>
           )}
