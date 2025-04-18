@@ -472,43 +472,37 @@ const DiscoveryNew = () => {
           )}
         </AnimatePresence>
         
-        {/* Bottom Navigation Bar with ALL Required Buttons */}
+        {/* Bottom Navigation Bar - Completely Spread Out */}
         <div className="discovery-navigation">
-          <div className="nav-group left-group">
-            <Link to="/">
-              <button className="nav-button">
-                <FontAwesomeIcon icon={faArrowLeft} />
-              </button>
-            </Link>
-          </div>
+          <Link to="/">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faArrowLeft} />
+            </button>
+          </Link>
           
-          <div className="nav-group center-group">  
-            <button className="nav-button chat-button" onClick={toggleChat}>
-              <FontAwesomeIcon icon={faComment} />
-            </button>
-            
-            <button className="nav-button dollar-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
-              <FontAwesomeIcon icon={faDollarSign} />
-            </button>
-            
-            <Link to="/profile">
-              <button className="nav-button profile-button">
-                <FontAwesomeIcon icon={faUser} />
-              </button>
-            </Link>
-            
-            <button className="nav-button cut-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-              <FontAwesomeIcon icon={faCut} />
-            </button>
-          </div>
+          <button className="nav-button chat-button" onClick={toggleChat}>
+            <FontAwesomeIcon icon={faComment} />
+          </button>
           
-          <div className="nav-group right-group">
-            <Link to="/discovery">
-              <button className="nav-button">
-                <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </Link>
-          </div>
+          <button className="nav-button dollar-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
+            <FontAwesomeIcon icon={faDollarSign} />
+          </button>
+          
+          <Link to="/profile">
+            <button className="nav-button profile-button">
+              <FontAwesomeIcon icon={faUser} />
+            </button>
+          </Link>
+          
+          <button className="nav-button cut-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
+            <FontAwesomeIcon icon={faCut} />
+          </button>
+          
+          <Link to="/discovery">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+          </Link>
         </div>
       </div>
     </div>
