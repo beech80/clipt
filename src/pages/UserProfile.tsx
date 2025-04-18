@@ -868,36 +868,33 @@ const UserProfile = () => {
                   </button>
                 </div>
               </div>
-
-              {/* Stats */}
-              <div className="flex gap-6 text-center mt-4 md:mt-0 text-orange-400">
-                <div>
-                  <div className="text-xl font-bold">
-                    {posts.length + clips.length}
+              <div>
+                {/* Stats */}
+                <div className="flex gap-6 text-center mt-4 md:mt-0 text-orange-400">
+                  <div>
+                    <div className="text-xl font-bold">
+                      {posts.length + clips.length}
+                    </div>
+                    <div className="text-orange-300 text-sm">Posts</div>
                   </div>
-                  <div className="text-orange-300 text-sm">Posts</div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold">{profileData?.followers_count || 0}</div>
-                  <div className="text-orange-300 text-sm">Followers</div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold">{profileData?.following_count || 0}</div>
-                  <div className="text-orange-300 text-sm">Following</div>
+                  <div>
+                    <div className="text-xl font-bold">{profileData?.followers_count || 0}</div>
+                    <div className="text-orange-300 text-sm">Followers</div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold">{profileData?.following_count || 0}</div>
+                    <div className="text-orange-300 text-sm">Following</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Navigation Tabs */}
-      <div className="flex mb-6 border-b border-white/10 overflow-x-auto">
-        <button
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
-            activeTab === 'posts'
-              ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
-              : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
-          }`}
+              {/* Navigation Tabs */}
+              <div className="flex mb-6 border-b border-white/10 overflow-x-auto">
+                <button
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-bold font-mono tracking-wide transition-all duration-150 ${
+                    activeTab === 'posts'
+                      ? 'text-[#ff6600] border-b-2 border-[#ff6600] bg-orange-900/10 shadow-orange-glow'
+                      : 'text-orange-200 hover:text-[#ff9900] hover:bg-orange-900/10'
+{{ ... }}
           onClick={() => setActiveTab('posts')}
         >
           <Grid className="h-4 w-4 text-[#ff6600] drop-shadow-orange-glow" />
