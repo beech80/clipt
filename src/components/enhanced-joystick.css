@@ -1021,7 +1021,7 @@
   z-index: 1000;
 }
 
-/* Match exact CLIPT button styling for the rainbow border */
+/* Default rainbow border for most pages */
 .action-button::before {
   content: '';
   position: absolute;
@@ -1035,6 +1035,69 @@
   mask: radial-gradient(transparent 20px, #000 20px, #000 21.5px, transparent 21.5px);
   animation: ringRotation 12s linear infinite;
   z-index: 0;
+}
+
+/* Specific colors for Clipts and SquadsClipts pages */
+body[data-current-page="clipts"] .action-button.top::before,
+body[data-current-page="squads-clipts"] .action-button.top::before {
+  /* Blue */
+  background: #0095FF;
+  animation: none;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  -webkit-mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+  mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+}
+
+body[data-current-page="clipts"] .action-button.left::before,
+body[data-current-page="squads-clipts"] .action-button.left::before {
+  /* Red */
+  background: #FF3C00;
+  animation: none;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  -webkit-mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+  mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+}
+
+body[data-current-page="clipts"] .action-button.right::before,
+body[data-current-page="squads-clipts"] .action-button.right::before {
+  /* Yellow */
+  background: #FFCC00;
+  animation: none;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  -webkit-mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+  mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+}
+
+body[data-current-page="clipts"] .action-button.bottom::before,
+body[data-current-page="squads-clipts"] .action-button.bottom::before {
+  /* Green */
+  background: #00DD00;
+  animation: none;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  -webkit-mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+  mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+}
+
+/* Update icon colors to be more visible against colored buttons */
+body[data-current-page="clipts"] .action-button svg,
+body[data-current-page="squads-clipts"] .action-button svg {
+  color: white !important;
+  fill: white !important;
+  stroke: white !important;
+  stroke-width: 2;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
 }
 
 /* Add hover and active states like CLIPT button */
