@@ -1,14 +1,44 @@
 /* Modern Profile Top Section Styling */
 .profile-header-container {
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
-  margin-top: 56px; /* Space for the fixed header */
-  padding-top: 16px;
+  margin-top: 56px;
   background: linear-gradient(180deg, #1A0F08 0%, #121212 100%);
   border-bottom: 3px solid #FF5500;
   box-shadow: 0 2px 20px rgba(255, 85, 0, 0.15);
+  min-height: 260px;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.profile-float-card {
+  position: absolute;
+  left: 50%;
+  top: 70px;
+  transform: translateX(-50%) translateY(0);
+  background: rgba(24, 15, 8, 0.85);
+  border-radius: 22px;
+  box-shadow: 0 8px 32px 0 rgba(255, 85, 0, 0.25), 0 0 0 4px rgba(255, 140, 0, 0.15), 0 1.5px 0 0 #FF5500;
+  border: 2.5px solid #FF5500;
+  padding: 32px 32px 22px;
+  min-width: 320px;
+  max-width: 95vw;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: profilePopIn 0.9s cubic-bezier(0.7,1.7,0.2,1) 1;
+  backdrop-filter: blur(7px) saturate(1.2);
+  -webkit-backdrop-filter: blur(7px) saturate(1.2);
+}
+
+@keyframes profilePopIn {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.7) translateY(-40px); }
+  70% { opacity: 1; transform: translateX(-50%) scale(1.05) translateY(10px); }
+  100% { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+}
+
 
 .profile-cover-image {
   width: 100%;
