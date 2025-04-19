@@ -170,6 +170,47 @@ const DiscoveryNew = () => {
     setIsChatOpen(!isChatOpen);
   };
 
+  // Follow a streamer
+  const followStreamer = (streamerId) => {
+    if (!streamerId) return;
+    
+    // Show visual feedback that follow action was triggered
+    const followButton = document.querySelector('.nav-button:nth-child(2)');
+    if (followButton) {
+      followButton.classList.add('button-flash');
+      setTimeout(() => followButton.classList.remove('button-flash'), 500);
+    }
+    
+    // In a real implementation, this would call the API to follow the streamer
+    console.log(`Following streamer with ID: ${streamerId}`);
+    // Example API call (commented out)
+    // axios.post(`${process.env.REACT_APP_API_URL}/api/streamers/${streamerId}/follow`)
+    //   .then(response => console.log('Followed successfully'))
+    //   .catch(error => console.error('Error following streamer:', error));
+  };
+
+  // Create a clip of the last minute
+  const createClip = (streamerId) => {
+    if (!streamerId) return;
+    
+    // Show visual feedback that clip creation was triggered
+    const clipButton = document.querySelector('.nav-button:nth-child(4)');
+    if (clipButton) {
+      clipButton.classList.add('button-flash');
+      setTimeout(() => clipButton.classList.remove('button-flash'), 500);
+    }
+    
+    // In a real implementation, this would trigger clip creation of the last minute
+    console.log(`Creating clip for streamer with ID: ${streamerId}`);
+    // Example API call (commented out)
+    // axios.post(`${process.env.REACT_APP_API_URL}/api/clips/create`, {
+    //   streamerId: streamerId,
+    //   duration: 60 // 60 seconds (1 minute)
+    // })
+    //   .then(response => console.log('Clip created successfully', response.data))
+    //   .catch(error => console.error('Error creating clip:', error));
+  };
+
   return (
     <div className="discovery-page">
       <div className="discovery-container">
@@ -186,8 +227,8 @@ const DiscoveryNew = () => {
               <div className="header-circular-buttons">
                 <button 
                   className="circular-button camera-button"
-                  title="Camera/Streaming"
-                  onClick={() => window.open(`/clips/${currentStreamer?.id || ''}`, '_self')}
+                  title="Browse Live Streams"
+                  onClick={() => window.open('/streams', '_self')}
                 >
                   <FontAwesomeIcon icon={faVideo} size="lg" />
                 </button>
@@ -478,26 +519,24 @@ const DiscoveryNew = () => {
             </button>
           </Link>
           
-          {/* Follow/Profile */}
-          <Link to="/profile" className="nav-link">
-            <button className="nav-button">
-              <FontAwesomeIcon icon={faUser} />
-            </button>
-          </Link>
+          {/* Follow Current Streamer */}
+          <button className="nav-button" onClick={() => currentStreamer && followStreamer(currentStreamer.id)}>
+            <FontAwesomeIcon icon={faUser} />
+          </button>
           
-          {/* Chat */}
+          {/* Chat for Current Stream */}
           <button className="nav-button" onClick={toggleChat}>
             <FontAwesomeIcon icon={faComment} />
           </button>
           
-          {/* Donate */}
-          <button className="nav-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
+          {/* Donate to Current Streamer */}
+          <button className="nav-button" onClick={() => currentStreamer && window.open(`https://donate.clipt.tv/streamers/${currentStreamer.id}`, '_blank')}>
             <FontAwesomeIcon icon={faDollarSign} />
           </button>
           
-          {/* TV */}
-          <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-            <FontAwesomeIcon icon={faVideo} />
+          {/* Record Clip (last minute) */}
+          <button className="nav-button" onClick={() => currentStreamer && createClip(currentStreamer.id)}>
+            <FontAwesomeIcon icon={faCut} />
           </button>
           
           {/* Right Arrow */}
