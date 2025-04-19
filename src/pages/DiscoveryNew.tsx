@@ -9,7 +9,7 @@ import '../styles/gameboy-controller-new.css';
 import '../styles/discovery-nav-buttons.css';
 import '../styles/gameboy-buttons-override.css'; // Strong button color overrides
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes, faUser, faCut, faHome, faDollarSign, faCog, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faGamepad, faVideo, faChevronLeft, faChevronRight, faComment, faTimes, faUser, faCut, faHome, faDollarSign, faCog, faArrowLeft, faHeart } from '@fortawesome/free-solid-svg-icons';
 import CliptLogoSVG from '../assets/clipt_logo_text.svg'; 
 import RealtimeChat from '../components/messages/RealtimeChat';
 
@@ -84,23 +84,46 @@ const DiscoveryNew = () => {
     }
   }, [currentIndex, streamers]);
 
-  // Search games with debounce
-  const searchGames = useRef(
+  // State for search tabs
+  const [activeSearchTab, setActiveSearchTab] = useState('games'); // 'games', 'streamers', 'clips'
+  const [streamerResults, setStreamerResults] = useState([]);
+  const [clipResults, setClipResults] = useState([]);
+  
+  // Search with debounce - supports games, streamers, and clips (up to 200+ results)
+  const searchAll = useRef(
     debounce(async (query) => {
       if (!query) {
         setSearchResults([]);
+        setStreamerResults([]);
+        setClipResults([]);
         setIsSearching(false);
         return;
       }
 
       try {
         setIsSearching(true);
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/game/search?q=${query}&limit=20`
-        );
-        setSearchResults(response.data);
+        
+        // Parallel search requests for better performance
+        const [gamesResponse, streamersResponse, clipsResponse] = await Promise.all([
+          // Search games (increased limit to 200)
+          axios.get(
+            `${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/game/search?q=${query}&limit=200`
+          ),
+          // Search streamers (up to 200)
+          axios.get(
+            `${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/streamers/search?q=${query}&limit=200`
+          ),
+          // Search clips (up to 200)
+          axios.get(
+            `${process.env.REACT_APP_API_URL || 'https://clipt-api-prod.azurewebsites.net'}/api/clips/search?q=${query}&limit=200`
+          )
+        ]);
+        
+        setSearchResults(gamesResponse.data);
+        setStreamerResults(streamersResponse.data);
+        setClipResults(clipsResponse.data);
       } catch (error) {
-        console.error('Error searching games:', error);
+        console.error('Error searching content:', error);
       } finally {
         setIsSearching(false);
       }
@@ -111,7 +134,12 @@ const DiscoveryNew = () => {
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    searchGames(query);
+    searchAll(query);
+  };
+  
+  // Handle search tab change
+  const handleSearchTabChange = (tab) => {
+    setActiveSearchTab(tab);
   };
 
   // Handle game selection
@@ -345,14 +373,11 @@ const DiscoveryNew = () => {
                   onClick={() => window.open('/livestreams', '_self')}
                   aria-label="Go to livestreams"
                   style={{
-                    backgroundColor: '#3498db',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '10px 15px',
-                    borderRadius: '50%',
-                    cursor: 'pointer',
+                    background: 'linear-gradient(135deg, #FF8C00, #FF4500)',
+                    boxShadow: '0 0 15px rgba(255, 140, 0, 0.6)',
+                    border: '2px solid #FF8C00',
                     fontSize: '16px',
-                    fontWeight: 'bold',
+                    fontWeight: 'bold'
                   }}
                 >
                   <FontAwesomeIcon icon={faVideo} size="lg" />
@@ -518,9 +543,24 @@ const DiscoveryNew = () => {
                 </div>
                 
                 <div className="cool-tabs">
-                  <button className="tab-button active glow-effect">Games</button>
-                  <button className="tab-button glow-effect">Streamers</button>
-                  <button className="tab-button glow-effect">Clips</button>
+                  <button 
+                    className={`tab-button ${activeSearchTab === 'games' ? 'active' : ''} glow-effect`}
+                    onClick={() => handleSearchTabChange('games')}
+                  >
+                    <FontAwesomeIcon icon={faGamepad} style={{marginRight: '5px'}} /> Games
+                  </button>
+                  <button 
+                    className={`tab-button ${activeSearchTab === 'streamers' ? 'active' : ''} glow-effect`}
+                    onClick={() => handleSearchTabChange('streamers')}
+                  >
+                    <FontAwesomeIcon icon={faUser} style={{marginRight: '5px'}} /> Streamers
+                  </button>
+                  <button 
+                    className={`tab-button ${activeSearchTab === 'clips' ? 'active' : ''} glow-effect`}
+                    onClick={() => handleSearchTabChange('clips')}
+                  >
+                    <FontAwesomeIcon icon={faVideo} style={{marginRight: '5px'}} /> Clips
+                  </button>
                 </div>
                 
                 <div className="search-input-container">
@@ -575,40 +615,126 @@ const DiscoveryNew = () => {
                 {searchQuery && (
                   <div className="search-results">
                     {isSearching ? (
-                      <div className="loading">Searching...</div>
-                    ) : searchResults.length > 0 ? (
-                      <div className="results-grid">
-                        {searchResults.map(game => (
-                          <div 
-                            key={game.id} 
-                            className="game-result-item"
-                            onClick={() => handleGameSelect(game)}
-                          >
-                            <div className="game-cover">
-                              {game.cover_url ? (
-                                <img src={game.cover_url} alt={`${game.name} cover`} />
-                              ) : (
-                                <div className="no-cover">
-                                  <FontAwesomeIcon icon={faGamepad} />
-                                </div>
-                              )}
-                            </div>
-                            <div className="game-info">
-                              <h4>{game.name}</h4>
-                              <div className="game-stats">
-                                <span>
-                                  <FontAwesomeIcon icon={faVideo} />
-                                  {formatNumber(game.post_count || 0)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="loading">
+                        <div className="search-loader">
+                          <div className="loader-circle"></div>
+                          <div className="loader-text">Searching...</div>
+                        </div>
                       </div>
                     ) : (
-                      <div className="no-results">
-                        <p>No games found matching "{searchQuery}"</p>
-                      </div>
+                      <>
+                        {/* Games Tab */}
+                        {activeSearchTab === 'games' && (
+                          <div className="results-grid">
+                            {searchResults.length > 0 ? (
+                              searchResults.map(game => (
+                                <div 
+                                  key={game.id} 
+                                  className="game-result-item"
+                                  onClick={() => handleGameSelect(game)}
+                                >
+                                  <div className="game-cover">
+                                    {game.cover_url ? (
+                                      <img src={game.cover_url} alt={`${game.name} cover`} />
+                                    ) : (
+                                      <div className="no-cover">
+                                        <FontAwesomeIcon icon={faGamepad} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="game-info">
+                                    <h4>{game.name}</h4>
+                                    <div className="game-stats">
+                                      <span>
+                                        <FontAwesomeIcon icon={faVideo} className="stat-icon" />
+                                        {formatNumber(game.post_count || 0)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="no-results">
+                                <p>No games found matching "{searchQuery}"</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Streamers Tab */}
+                        {activeSearchTab === 'streamers' && (
+                          <div className="results-grid">
+                            {streamerResults.length > 0 ? (
+                              streamerResults.map(streamer => (
+                                <div 
+                                  key={streamer.id} 
+                                  className="streamer-result-item"
+                                  onClick={() => window.open(`/streamers/${streamer.username}`, '_self')}
+                                >
+                                  <div className="streamer-avatar">
+                                    {streamer.avatar_url ? (
+                                      <img src={streamer.avatar_url} alt={`${streamer.username}'s avatar`} />
+                                    ) : (
+                                      <div className="no-avatar">
+                                        <FontAwesomeIcon icon={faUser} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="streamer-info">
+                                    <h4>{streamer.username}</h4>
+                                    <div className="streamer-stats">
+                                      <span>
+                                        <FontAwesomeIcon icon={faHeart} className="stat-icon" />
+                                        {formatNumber(streamer.followers_count || 0)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="no-results">
+                                <p>No streamers found matching "{searchQuery}"</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Clips Tab */}
+                        {activeSearchTab === 'clips' && (
+                          <div className="results-grid">
+                            {clipResults.length > 0 ? (
+                              clipResults.map(clip => (
+                                <div 
+                                  key={clip.id} 
+                                  className="clip-result-item"
+                                  onClick={() => window.open(`/clips/${clip.id}`, '_self')}
+                                >
+                                  <div className="clip-thumbnail">
+                                    {clip.thumbnail_url ? (
+                                      <img src={clip.thumbnail_url} alt={`Clip thumbnail`} />
+                                    ) : (
+                                      <div className="no-thumbnail">
+                                        <FontAwesomeIcon icon={faVideo} />
+                                      </div>
+                                    )}
+                                    <div className="clip-duration">{Math.floor(clip.duration)}s</div>
+                                  </div>
+                                  <div className="clip-info">
+                                    <h4>{clip.title || 'Untitled Clip'}</h4>
+                                    <div className="clip-creator">
+                                      <span>{clip.creator_name || 'Unknown'}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="no-results">
+                                <p>No clips found matching "{searchQuery}"</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
