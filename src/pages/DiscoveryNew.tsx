@@ -485,33 +485,21 @@ const DiscoveryNew = () => {
             {/* Middle 4 Buttons in Order: Follow, Chat, Donate, Clipt */}
             <div className="middle-buttons">
               <Link to="/profile" className="nav-link">
-                <button className="nav-button labeled-button">
-                  <div className="icon-container">
-                    <FontAwesomeIcon icon={faUser} />
-                  </div>
-                  <span className="button-label">Follow</span>
+                <button className="nav-button">
+                  <FontAwesomeIcon icon={faUser} />
                 </button>
               </Link>
               
-              <button className="nav-button labeled-button" onClick={toggleChat}>
-                <div className="icon-container">
-                  <FontAwesomeIcon icon={faComment} />
-                </div>
-                <span className="button-label">Chat</span>
+              <button className="nav-button" onClick={toggleChat}>
+                <FontAwesomeIcon icon={faComment} />
               </button>
               
-              <button className="nav-button labeled-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
-                <div className="icon-container">
-                  <FontAwesomeIcon icon={faDollarSign} />
-                </div>
-                <span className="button-label">Donate</span>
+              <button className="nav-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
+                <FontAwesomeIcon icon={faDollarSign} />
               </button>
               
-              <button className="nav-button labeled-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-                <div className="icon-container">
-                  <FontAwesomeIcon icon={faCut} />
-                </div>
-                <span className="button-label">Clipt</span>
+              <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
+                <FontAwesomeIcon icon={faCut} />
               </button>
             </div>
             
