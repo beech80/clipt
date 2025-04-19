@@ -9,8 +9,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import RetroArcadeProfile from "@/components/profile/RetroArcadeProfile";
 import { getSavedClipts } from '@/lib/savedClipts';
 import '../styles/profile-retro-arcade.css';
-import { Gamepad, Medal, Clock, User, MessageSquare, Settings } from 'lucide-react';
-import { createGlobalStyle, keyframes } from "styled-components";
+import '../styles/profile-top-section.css';
+import { Gamepad, Medal, Clock, User, MessageSquare, Settings, Users, Heart, Camera, Trophy, Edit, Link, ExternalLink, Mail, MapPin, Calendar } from 'lucide-react';
+import { createGlobalStyle, keyframes, css } from "styled-components";
 
 // Animations
 const pulse = keyframes`
@@ -97,7 +98,10 @@ const Profile = () => {
     { id: 2, name: 'Content Creator', description: 'Post your first clip', icon: 'VideoIcon', points: 25 },
     { id: 3, name: 'Popular Player', description: 'Reach 10 followers', icon: 'UserPlus', points: 100 },
     { id: 4, name: 'Like Machine', description: 'Get 50 likes on your content', icon: 'Heart', points: 75 },
-    { id: 5, name: 'Collector', description: 'Save 20 clips from others', icon: 'Bookmark', points: 40 }
+    { id: 5, name: 'Collector', description: 'Save 20 clips from others', icon: 'Bookmark', points: 40 },
+    { id: 6, name: 'Stream Star', description: 'Complete your first livestream', icon: 'Video', points: 80 },
+    { id: 7, name: 'Community Leader', description: 'Create a gaming community', icon: 'Users', points: 120 },
+    { id: 8, name: 'Clip Master', description: 'Create 50+ clips', icon: 'Scissors', points: 150 }
   ];
 
   // Create sample posts for testing
@@ -488,6 +492,150 @@ const Profile = () => {
               </div>
             </div>
             
+            {/* Profile tabs */}
+            <div className="fixed top-0 left-0 right-0 z-50 px-2 py-1" style={{ 
+              background: '#1A0F08', 
+              borderBottom: '2px solid rgba(255, 85, 0, 0.3)', 
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)' 
+            }}>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <Button 
+                    variant="ghost" 
+                    className="p-2"
+                    onClick={() => navigate(-1)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </Button>
+                  <h1 className="text-xl font-bold">{profile?.username || 'Profile'}</h1>
+                </div>
+                {isOwnProfile && (
+                  <Button 
+                    variant="ghost" 
+                    className="p-2"
+                    onClick={() => navigate('/profile/edit')}
+                  >
+                    <Settings className="w-5 h-5" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Profile Top Section */}
+            <div className="profile-header-container">
+              {/* Cover Image */}
+              <div className="profile-cover-image" style={profile?.cover_image ? { backgroundImage: `url(${profile.cover_image})` } : {}}></div>
+              <div className="profile-header-overlay"></div>
+
+              <div className="profile-content">
+                {/* Profile Avatar */}
+                <div className="profile-avatar-container">
+                  <div className="profile-avatar-glow"></div>
+                  <img 
+                    src={profile?.avatar_url || 'https://i.imgur.com/6VBx3io.png'} 
+                    alt="Profile" 
+                    className="profile-avatar" 
+                  />
+                  {isOwnProfile && (
+                    <button className="edit-avatar-button">
+                      <Camera size={16} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Profile Info */}
+                <div className="profile-info">
+                  <h1 className="profile-name">{profile?.full_name || 'Gaming Pro'}</h1>
+                  <div className="profile-username">@{profile?.username || 'gamer'}</div>
+                  <p className="profile-bio">
+                    {profile?.bio || 'Professional gamer with a passion for FPS and strategy games. I stream regularly and love to connect with my fellow gamers! Check out my latest clips and join me on my next stream.'}
+                  </p>
+
+                  {/* Stats Section */}
+                  <div className="profile-stats">
+                    <div className="stat-item">
+                      <div className="stat-value">{followersCount || '12.5K'}</div>
+                      <div className="stat-label">Followers</div>
+                    </div>
+                    <div className="stat-item">
+                      <div className="stat-value">{followingCount || '543'}</div>
+                      <div className="stat-label">Following</div>
+                    </div>
+                    <div className="stat-item">
+                      <div className="stat-value">{userPosts.length || '85'}</div>
+                      <div className="stat-label">Clips</div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="action-buttons">
+                    {!isOwnProfile ? (
+                      <>
+                        <button className="action-button primary-button">
+                          <Users size={18} />
+                          Follow
+                        </button>
+                        <button className="action-button secondary-button">
+                          <MessageSquare size={18} />
+                          Message
+                        </button>
+                      </>
+                    ) : (
+                      <button className="action-button secondary-button" onClick={() => navigate('/profile/edit')}>
+                        <Edit size={18} />
+                        Edit Profile
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Profile Details */}
+                  <div className="profile-details">
+                    {profile?.location && (
+                      <div className="detail-item">
+                        <MapPin size={18} />
+                        <span>{profile.location}</span>
+                      </div>
+                    )}
+                    <div className="detail-item">
+                      <Link size={18} />
+                      <span>twitch.tv/{profile?.username || 'gamer'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <Calendar size={18} />
+                      <span>Joined January 2023</span>
+                    </div>
+                  </div>
+
+                  {/* Achievements Preview */}
+                  <div className="achievement-preview">
+                    <div className="achievement-header">
+                      <div className="achievement-title">
+                        <Trophy size={18} />
+                        <span>Achievements</span>
+                      </div>
+                      <div className="view-all">
+                        <span>View All</span>
+                        <ExternalLink size={14} />
+                      </div>
+                    </div>
+                    <div className="achievements-row">
+                      {createSampleAchievements().slice(0, 5).map(achievement => (
+                        <div key={achievement.id} className="achievement-card">
+                          <div className="achievement-card-icon">
+                            <Trophy size={16} />
+                          </div>
+                          <div className="achievement-card-title">{achievement.name}</div>
+                          <div className="achievement-card-points">{achievement.points} pts</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Navigation Tabs */}
             <div className="fixed bottom-0 left-0 right-0 px-2 py-1" style={{ 
               background: '#1A0F08', 
