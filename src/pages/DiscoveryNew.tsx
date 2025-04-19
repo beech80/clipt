@@ -185,21 +185,20 @@ const DiscoveryNew = () => {
               <img src={CliptLogoSVG} alt="Clipt Logo" className="clipt-logo small-logo lowered-logo" style={{ marginTop: '18px' }} />
             </div>
             <div className="header-right">
-              <div className="header-buttons">
+              <div className="header-circular-buttons">
                 <button 
-                  className="stream-button icon-button"
-                  title="Streaming"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  className="circular-button camera-button"
+                  title="Camera/Streaming"
+                  onClick={() => window.open(`/clips/${currentStreamer?.id || ''}`, '_self')}
                 >
-                  <FontAwesomeIcon icon={faVideo} size="lg" color="#ff8c00" />
+                  <FontAwesomeIcon icon={faVideo} size="lg" />
                 </button>
                 <button 
-                  className="search-button icon-button"
+                  className="circular-button search-button"
                   title="Search"
                   onClick={() => setSearchModalOpen(true)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <FontAwesomeIcon icon={faSearch} size="lg" color="#ff8c00" />
+                  <FontAwesomeIcon icon={faSearch} size="lg" />
                 </button>
               </div>
             </div>
