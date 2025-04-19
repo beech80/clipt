@@ -1,52 +1,28 @@
-/* Clean horizontal navigation bar styles */
-.discovery-navigation-container {
+/* Single row navigation styles */
+.single-row-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   width: 100%;
   background-color: #6A5C4E; /* Brown/gray color */
-  padding: 15px 10px; /* More padding for better spacing */
+  padding: 15px 25px; /* Increased horizontal padding for spacing from edges */
   z-index: 1000;
   overflow: visible;
   border-bottom: 3px solid #FF8C00; /* Orange highlight at bottom */
-  text-align: center; /* Center all contents */
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3); /* Add shadow for emphasis */
-}
-
-.navigation-row {
-  display: grid;
-  grid-template-columns: 1fr 4fr 1fr; /* Three-section layout: left arrow, middle section, right arrow */
-  align-items: center;
-  width: 100%;
-  margin: 0;
-  padding: 0 15px; /* Add padding on the sides to push away from edges */
-}
-
-/* Middle section containing the 4 main buttons */
-.navigation-row > :nth-child(2),
-.navigation-row > :nth-child(3),
-.navigation-row > :nth-child(4),
-.navigation-row > :nth-child(5) {
-  display: grid;
-  grid-column: 2; /* All 4 middle buttons placed in the middle column */
-}
-
-/* Create 4-column grid for the middle section */
-.middle-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  width: 100%;
-  gap: 15px;
-}
-
-.navigation-row .nav-link,
-.navigation-row .nav-button {
+  
+  /* Complete flat horizontal layout */
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
+}
+
+/* Nav links should be flexbox for proper alignment */
+.nav-link {
+  display: flex;
   justify-content: center;
-  width: 100%;
+  align-items: center;
 }
 
 .nav-button {
