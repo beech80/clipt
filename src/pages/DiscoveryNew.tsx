@@ -170,6 +170,14 @@ const DiscoveryNew = () => {
     setIsChatOpen(!isChatOpen);
   };
 
+  // States for enhanced modals
+  const [showDonationModal, setShowDonationModal] = useState(false);
+  const [showClipLengthModal, setShowClipLengthModal] = useState(false);
+  const [followStatus, setFollowStatus] = useState({});
+  const [donationAmount, setDonationAmount] = useState(5);
+  const [clipLength, setClipLength] = useState(60); // Default 60 seconds
+  const [clipTargetStreamer, setClipTargetStreamer] = useState(null);
+
   // Follow a streamer
   const followStreamer = (streamerId) => {
     if (!streamerId) return;
@@ -181,31 +189,99 @@ const DiscoveryNew = () => {
       setTimeout(() => followButton.classList.remove('button-flash'), 500);
     }
     
+    // Toggle follow status for this streamer
+    setFollowStatus(prev => ({
+      ...prev,
+      [streamerId]: !prev[streamerId]
+    }));
+    
+    // Show follow confirmation with animation
+    const confirmationEl = document.createElement('div');
+    confirmationEl.className = 'follow-confirmation';
+    confirmationEl.innerText = followStatus[streamerId] ? 'Unfollowed!' : 'Followed!';
+    document.body.appendChild(confirmationEl);
+    
+    // Animate and remove
+    setTimeout(() => {
+      confirmationEl.classList.add('show');
+      setTimeout(() => {
+        confirmationEl.classList.remove('show');
+        setTimeout(() => document.body.removeChild(confirmationEl), 300);
+      }, 1000);
+    }, 10);
+    
     // In a real implementation, this would call the API to follow the streamer
-    console.log(`Following streamer with ID: ${streamerId}`);
+    console.log(`${followStatus[streamerId] ? 'Unfollowing' : 'Following'} streamer with ID: ${streamerId}`);
     // Example API call (commented out)
-    // axios.post(`${process.env.REACT_APP_API_URL}/api/streamers/${streamerId}/follow`)
-    //   .then(response => console.log('Followed successfully'))
-    //   .catch(error => console.error('Error following streamer:', error));
+    // axios.post(`${process.env.REACT_APP_API_URL}/api/streamers/${streamerId}/${followStatus[streamerId] ? 'unfollow' : 'follow'}`)
+    //   .then(response => console.log(`${followStatus[streamerId] ? 'Unfollowed' : 'Followed'} successfully`))
+    //   .catch(error => console.error(`Error ${followStatus[streamerId] ? 'unfollowing' : 'following'} streamer:`, error));
   };
 
-  // Create a clip of the last minute
+  // Handle donation submission
+  const handleDonationSubmit = (streamerId) => {
+    if (!streamerId) return;
+    
+    // Show processing animation
+    const donationConfirmEl = document.createElement('div');
+    donationConfirmEl.className = 'donation-confirmation';
+    donationConfirmEl.innerHTML = `<div class="donation-icon">💰</div><p>Thank you for donating $${donationAmount.toFixed(2)}!</p>`;
+    document.body.appendChild(donationConfirmEl);
+    
+    // Animate and hide modal
+    setTimeout(() => {
+      donationConfirmEl.classList.add('show');
+      setTimeout(() => {
+        donationConfirmEl.classList.remove('show');
+        setTimeout(() => document.body.removeChild(donationConfirmEl), 300);
+      }, 2000);
+    }, 10);
+    
+    setShowDonationModal(false);
+    console.log(`Donating $${donationAmount} to streamer with ID: ${streamerId}`);
+  };
+
+  // Create a clip with selected length
   const createClip = (streamerId) => {
     if (!streamerId) return;
     
-    // Show visual feedback that clip creation was triggered
-    const clipButton = document.querySelector('.nav-button:nth-child(4)');
+    // Set the target streamer and show length selection modal
+    setClipTargetStreamer(streamerId);
+    setShowClipLengthModal(true);
+    
+    // Show visual feedback that clip menu was triggered
+    const clipButton = document.querySelector('.nav-button:nth-child(5)');
     if (clipButton) {
       clipButton.classList.add('button-flash');
       setTimeout(() => clipButton.classList.remove('button-flash'), 500);
     }
+  };
+  
+  // Handle clip creation with selected length
+  const handleClipCreate = () => {
+    if (!clipTargetStreamer) return;
     
-    // In a real implementation, this would trigger clip creation of the last minute
-    console.log(`Creating clip for streamer with ID: ${streamerId}`);
+    // Show confirmation animation
+    const clipConfirmEl = document.createElement('div');
+    clipConfirmEl.className = 'clip-confirmation';
+    clipConfirmEl.innerHTML = `<div class="clip-icon">✂️</div><p>Clip created! (${clipLength}s)</p>`;
+    document.body.appendChild(clipConfirmEl);
+    
+    // Animate and remove
+    setTimeout(() => {
+      clipConfirmEl.classList.add('show');
+      setTimeout(() => {
+        clipConfirmEl.classList.remove('show');
+        setTimeout(() => document.body.removeChild(clipConfirmEl), 300);
+      }, 2000);
+    }, 10);
+    
+    setShowClipLengthModal(false);
+    console.log(`Creating ${clipLength}s clip for streamer with ID: ${clipTargetStreamer}`);
     // Example API call (commented out)
     // axios.post(`${process.env.REACT_APP_API_URL}/api/clips/create`, {
-    //   streamerId: streamerId,
-    //   duration: 60 // 60 seconds (1 minute)
+    //   streamerId: clipTargetStreamer,
+    //   duration: clipLength
     // })
     //   .then(response => console.log('Clip created successfully', response.data))
     //   .catch(error => console.error('Error creating clip:', error));
@@ -430,7 +506,7 @@ const DiscoveryNew = () => {
               exit={{ opacity: 0, y: '100%' }}
               transition={{ duration: 0.3 }}
             >
-              <div className="search-container retro-glass">
+              <div className="search-container retro-glass neon-border">
                 <div className="search-header">
                   <h2><FontAwesomeIcon icon={faSearch} className="search-title-icon" /> Explore</h2>
                   <button 
@@ -442,9 +518,9 @@ const DiscoveryNew = () => {
                 </div>
                 
                 <div className="cool-tabs">
-                  <button className="tab-button active">Games</button>
-                  <button className="tab-button">Streamers</button>
-                  <button className="tab-button">Clips</button>
+                  <button className="tab-button active glow-effect">Games</button>
+                  <button className="tab-button glow-effect">Streamers</button>
+                  <button className="tab-button glow-effect">Clips</button>
                 </div>
                 
                 <div className="search-input-container">
@@ -574,7 +650,8 @@ const DiscoveryNew = () => {
           
           {/* Follow Current Streamer */}
           <button className="nav-button" onClick={() => currentStreamer && followStreamer(currentStreamer.id)}>
-            <FontAwesomeIcon icon={faUser} />
+            <FontAwesomeIcon icon={followStatus[currentStreamer?.id] ? faUser : faUser} style={{ color: followStatus[currentStreamer?.id] ? '#ff7700' : 'white' }} />
+            {followStatus[currentStreamer?.id] && <span className="follow-indicator"></span>}
           </button>
           
           {/* Chat for Current Stream */}
@@ -582,8 +659,8 @@ const DiscoveryNew = () => {
             <FontAwesomeIcon icon={faComment} />
           </button>
           
-          {/* Donate to Current Streamer */}
-          <button className="nav-button" onClick={() => currentStreamer && window.open(`https://donate.clipt.tv/streamers/${currentStreamer.id}`, '_blank')}>
+          {/* Donate to Current Streamer - Now opens modal */}
+          <button className="nav-button" onClick={() => currentStreamer && setShowDonationModal(true)}>
             <FontAwesomeIcon icon={faDollarSign} />
           </button>
           
@@ -597,6 +674,100 @@ const DiscoveryNew = () => {
             <FontAwesomeIcon icon={faChevronRight} />
           </button>
         </div>
+        
+        {/* Donation Modal */}
+        {showDonationModal && (
+          <div className="modal-overlay">
+            <div className="donation-modal retro-glass">
+              <div className="donation-modal-header">
+                <h3>Support {currentStreamer?.username}</h3>
+                <button className="close-modal" onClick={() => setShowDonationModal(false)}>
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
+              </div>
+              
+              <div className="donation-avatar">
+                <img src={currentStreamer?.avatar_url} alt={`${currentStreamer?.username}'s avatar`} />
+              </div>
+              
+              <div className="donation-amount-selector">
+                <h4>Select Amount</h4>
+                <div className="amount-buttons">
+                  {[2, 5, 10, 20, 50, 100].map(amount => (
+                    <button 
+                      key={amount}
+                      className={`amount-button ${donationAmount === amount ? 'selected' : ''}`}
+                      onClick={() => setDonationAmount(amount)}
+                    >
+                      ${amount}
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="custom-amount">
+                  <label>Custom Amount:</label>
+                  <div className="input-with-dollar">
+                    <span>$</span>
+                    <input 
+                      type="number" 
+                      min="1" 
+                      value={donationAmount} 
+                      onChange={(e) => setDonationAmount(Number(e.target.value))}
+                      placeholder="Enter amount"
+                    />
+                  </div>
+                </div>
+                
+                <button 
+                  className="submit-donation"
+                  onClick={() => handleDonationSubmit(currentStreamer?.id)}
+                >
+                  <FontAwesomeIcon icon={faDollarSign} /> Send Donation
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Clip Length Selection Modal */}
+        {showClipLengthModal && (
+          <div className="modal-overlay">
+            <div className="clip-modal retro-glass">
+              <div className="clip-modal-header">
+                <h3>Create Clip</h3>
+                <button className="close-modal" onClick={() => setShowClipLengthModal(false)}>
+                  <FontAwesomeIcon icon={faTimes} />
+                </button>
+              </div>
+              
+              <div className="clip-length-selector">
+                <h4>Select Clip Length</h4>
+                <div className="length-buttons">
+                  {[15, 30, 60, 120, 300].map(length => (
+                    <button 
+                      key={length}
+                      className={`length-button ${clipLength === length ? 'selected' : ''}`}
+                      onClick={() => setClipLength(length)}
+                    >
+                      {length >= 60 ? `${Math.floor(length/60)}m${length%60 ? ` ${length%60}s` : ''}` : `${length}s`}
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="clip-preview">
+                  <p>This will clip the last <span className="highlight">{clipLength}</span> seconds of the stream</p>
+                </div>
+                
+                <button 
+                  className="create-clip-button"
+                  onClick={handleClipCreate}
+                >
+                  <FontAwesomeIcon icon={faCut} /> Create Clip
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
