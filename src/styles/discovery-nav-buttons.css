@@ -30,6 +30,39 @@
   align-items: center;
 }
 
+/* Circular buttons in top header */
+.header-circular-buttons {
+  display: flex;
+  gap: 15px;
+  margin-right: 15px;
+}
+
+.circular-button {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #1f1f1f;
+  border: 2px solid #FF8C00;
+  color: #FF8C00;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 8px rgba(255, 140, 0, 0.6);
+}
+
+.circular-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 12px rgba(255, 140, 0, 0.8);
+}
+
+.circular-button svg {
+  color: #FF8C00 !important;
+  filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.8));
+}
+
 .nav-button {
   width: 60px;
   height: 60px;
