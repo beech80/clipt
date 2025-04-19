@@ -1,4 +1,4 @@
-/* Custom styles for the Discovery page navigation buttons with flex layout and extra visible buttons */
+/* Clean horizontal navigation bar styles */
 .discovery-navigation-container {
   position: fixed;
   bottom: 0;
@@ -6,69 +6,63 @@
   right: 0;
   width: 100%;
   background-color: #6A5C4E; /* Brown/gray color */
-  padding: 15px 0; /* Vertical padding only */
+  padding: 10px 0; /* Reduced vertical padding */
   z-index: 1000;
   overflow: visible;
   border-bottom: 3px solid #FF8C00; /* Orange highlight at bottom */
+  text-align: center; /* Center all contents */
 }
 
-.discovery-navigation-wrapper {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.discovery-button-row {
+.navigation-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: space-evenly; /* Equal spacing between all items */
+  align-items: center; /* Align all items vertically */
   width: 100%;
-  padding: 0 20px;
+  max-width: 800px; /* Limit width for better spacing control */
+  margin: 0 auto; /* Center the row */
 }
 
 .nav-button {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   background-color: transparent;
   border: none;
   color: #FF8C00; /* Orange color for all buttons */
-  font-size: 28px; /* Large font size for better visibility */
+  font-size: 24px; /* Consistent font size */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
   padding: 0;
-  margin: 0 auto; /* Center horizontally in grid cell */
+  margin: 0;
   filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.8)); /* Orange glow */
+  position: relative; /* For positioning labels */
 }
 
-/* Extra visible buttons styling */
-.nav-button.extra-visible {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+/* Labeled button styling */
+.nav-button.labeled-button {
   width: auto;
-  min-width: 80px;
-  height: auto;
-  padding: 5px 10px;
-  border-radius: 8px;
-  background-color: rgba(255, 140, 0, 0.2);
-  border: 2px solid #FF8C00;
+  min-width: 60px;
+  text-align: center;
+}
+
+.icon-container {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Button label styling */
 .button-label {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
-  margin-top: 5px;
   color: #FF8C00;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-}
-
-/* Make icons larger in extra visible buttons */
-.icon-large {
-  font-size: 32px;
+  display: block;
+  margin-top: 2px;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 /* Ensure link elements take proper space */
