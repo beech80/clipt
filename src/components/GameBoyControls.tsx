@@ -43,9 +43,13 @@ const GameBoyControls: React.FC = () => {
   const scrollDirectionRef = useRef<'up' | 'down' | 'none'>('none');
   const lastScrollTime = useRef(Date.now());
   
-  // Extract post ID from URL if on a post page
+  // Extract post ID from URL if on a post page and set data-current-page attribute
   useEffect(() => {
     const match = location.pathname.match(/\/post\/([^/?#]+)/);
+    const currentPage = location.pathname.replace('/', '');
+    
+    // Set data-current-page attribute on body for page-specific styling
+    document.body.setAttribute('data-current-page', currentPage);
     
     if (match && match[1]) {
       setCurrentPostId(match[1]);
