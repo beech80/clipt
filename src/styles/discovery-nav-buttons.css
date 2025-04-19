@@ -16,12 +16,28 @@
 
 .navigation-row {
   display: grid;
-  grid-template-columns: repeat(6, 1fr); /* 6 equal columns for 6 buttons */
+  grid-template-columns: 1fr 4fr 1fr; /* Three-section layout: left arrow, middle section, right arrow */
   align-items: center;
   width: 100%;
   margin: 0;
-  column-gap: 15px; /* Force more spacing between columns */
-  padding: 0 25px; /* Add padding on the sides to push away from edges */
+  padding: 0 15px; /* Add padding on the sides to push away from edges */
+}
+
+/* Middle section containing the 4 main buttons */
+.navigation-row > :nth-child(2),
+.navigation-row > :nth-child(3),
+.navigation-row > :nth-child(4),
+.navigation-row > :nth-child(5) {
+  display: grid;
+  grid-column: 2; /* All 4 middle buttons placed in the middle column */
+}
+
+/* Create 4-column grid for the middle section */
+.middle-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+  gap: 15px;
 }
 
 .navigation-row .nav-link,
