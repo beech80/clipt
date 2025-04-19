@@ -1,17 +1,29 @@
-/* Custom styles for the Discovery page navigation buttons using table for extreme spacing */
-.discovery-navigation {
-  display: table;
-  table-layout: fixed; /* Force equal column widths */
-  width: 100%;
+/* Custom styles for the Discovery page navigation buttons with flex layout and extra visible buttons */
+.discovery-navigation-container {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
+  width: 100%;
   background-color: #6A5C4E; /* Brown/gray color */
   padding: 15px 0; /* Vertical padding only */
   z-index: 1000;
   overflow: visible;
   border-bottom: 3px solid #FF8C00; /* Orange highlight at bottom */
+}
+
+.discovery-navigation-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.discovery-button-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 20px;
 }
 
 .nav-button {
@@ -31,17 +43,39 @@
   filter: drop-shadow(0 0 3px rgba(255, 140, 0, 0.8)); /* Orange glow */
 }
 
-/* Table cell styling */
-.nav-cell {
-  text-align: center;
-  padding: 0;
+/* Extra visible buttons styling */
+.nav-button.extra-visible {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
+  min-width: 80px;
+  height: auto;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background-color: rgba(255, 140, 0, 0.2);
+  border: 2px solid #FF8C00;
 }
 
-/* Ensure link elements are centered */
-.discovery-navigation a {
+/* Button label styling */
+.button-label {
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 5px;
+  color: #FF8C00;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Make icons larger in extra visible buttons */
+.icon-large {
+  font-size: 32px;
+}
+
+/* Ensure link elements take proper space */
+.nav-link {
   display: flex;
   justify-content: center;
-  width: 100%;
+  align-items: center;
 }
 
 /* Hide screen reader text but keep it for accessibility */

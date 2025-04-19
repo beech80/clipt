@@ -472,52 +472,44 @@ const DiscoveryNew = () => {
           )}
         </AnimatePresence>
         
-        {/* Bottom Navigation Bar - Table Layout for Extreme Spacing */}
-        <table className="discovery-navigation">
-          <tr>
-            <td className="nav-cell">
-              <Link to="/">
+        {/* Bottom Navigation Bar - Extra Visible Buttons with Labels */}
+        <div className="discovery-navigation-container"> 
+          <div className="discovery-navigation-wrapper">
+            <div className="discovery-button-row">
+              <Link to="/" className="nav-link">
                 <button className="nav-button">
                   <FontAwesomeIcon icon={faArrowLeft} />
                 </button>
               </Link>
-            </td>
-            
-            <td className="nav-cell">
-              <button className="nav-button chat-button" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} />
+              
+              <button className="nav-button chat-button extra-visible" onClick={toggleChat}>
+                <FontAwesomeIcon icon={faComment} className="icon-large" />
+                <span className="button-label">CHAT</span>
               </button>
-            </td>
-            
-            <td className="nav-cell">
-              <button className="nav-button dollar-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
-                <FontAwesomeIcon icon={faDollarSign} />
+              
+              <button className="nav-button dollar-button extra-visible" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
+                <FontAwesomeIcon icon={faDollarSign} className="icon-large" />
+                <span className="button-label">DONATE</span>
               </button>
-            </td>
-            
-            <td className="nav-cell">
-              <Link to="/profile">
+              
+              <Link to="/profile" className="nav-link">
                 <button className="nav-button profile-button">
                   <FontAwesomeIcon icon={faUser} />
                 </button>
               </Link>
-            </td>
-            
-            <td className="nav-cell">
+              
               <button className="nav-button cut-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
                 <FontAwesomeIcon icon={faCut} />
               </button>
-            </td>
-            
-            <td className="nav-cell">
-              <Link to="/discovery">
+              
+              <Link to="/discovery" className="nav-link">
                 <button className="nav-button">
                   <FontAwesomeIcon icon={faChevronRight} />
                 </button>
               </Link>
-            </td>
-          </tr>
-        </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
