@@ -472,42 +472,44 @@ const DiscoveryNew = () => {
           )}
         </AnimatePresence>
         
-        {/* Bottom Navigation Bar - Extra Visible Buttons with Labels */}
+        {/* Bottom Navigation Bar - Neat Horizontal Line */}
         <div className="discovery-navigation-container"> 
-          <div className="discovery-navigation-wrapper">
-            <div className="discovery-button-row">
-              <Link to="/" className="nav-link">
-                <button className="nav-button">
-                  <FontAwesomeIcon icon={faArrowLeft} />
-                </button>
-              </Link>
-              
-              <button className="nav-button chat-button extra-visible" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} className="icon-large" />
-                <span className="button-label">CHAT</span>
+          <div className="navigation-row">
+            <Link to="/" className="nav-link">
+              <button className="nav-button">
+                <FontAwesomeIcon icon={faArrowLeft} />
               </button>
-              
-              <button className="nav-button dollar-button extra-visible" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
-                <FontAwesomeIcon icon={faDollarSign} className="icon-large" />
-                <span className="button-label">DONATE</span>
+            </Link>
+            
+            <button className="nav-button labeled-button" onClick={toggleChat}>
+              <div className="icon-container">
+                <FontAwesomeIcon icon={faComment} />
+              </div>
+              <span className="button-label">Chat</span>
+            </button>
+            
+            <button className="nav-button labeled-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
+              <div className="icon-container">
+                <FontAwesomeIcon icon={faDollarSign} />
+              </div>
+              <span className="button-label">Donate</span>
+            </button>
+            
+            <Link to="/profile" className="nav-link">
+              <button className="nav-button">
+                <FontAwesomeIcon icon={faUser} />
               </button>
-              
-              <Link to="/profile" className="nav-link">
-                <button className="nav-button profile-button">
-                  <FontAwesomeIcon icon={faUser} />
-                </button>
-              </Link>
-              
-              <button className="nav-button cut-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-                <FontAwesomeIcon icon={faCut} />
+            </Link>
+            
+            <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
+              <FontAwesomeIcon icon={faCut} />
+            </button>
+            
+            <Link to="/discovery" className="nav-link">
+              <button className="nav-button">
+                <FontAwesomeIcon icon={faChevronRight} />
               </button>
-              
-              <Link to="/discovery" className="nav-link">
-                <button className="nav-button">
-                  <FontAwesomeIcon icon={faChevronRight} />
-                </button>
-              </Link>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
