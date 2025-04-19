@@ -1,4 +1,4 @@
-/* Single row navigation styles */
+/* Single row navigation styles with extreme spacing */
 .single-row-nav {
   position: fixed;
   bottom: 0;
@@ -6,16 +6,17 @@
   right: 0;
   width: 100%;
   background-color: #6A5C4E; /* Brown/gray color */
-  padding: 15px 25px; /* Increased horizontal padding for spacing from edges */
+  padding: 15px 40px; /* Much larger horizontal padding for extreme spacing from edges */
   z-index: 1000;
   overflow: visible;
   border-bottom: 3px solid #FF8C00; /* Orange highlight at bottom */
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3); /* Add shadow for emphasis */
   
-  /* Complete flat horizontal layout */
+  /* Complete flat horizontal layout with extreme spacing */
   display: flex;
-  justify-content: space-between;
+  justify-content: space-evenly; /* Force equal spacing between items */
   align-items: center;
+  gap: 20px; /* Add additional gap between each item */
 }
 
 /* Nav links should be flexbox for proper alignment */
