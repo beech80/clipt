@@ -523,12 +523,14 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Profile Top Section */}
+            {/* New Direct Profile Top Section */}
             <div className="profile-header-container">
-              {/* Cover Image */}
-              <div className="profile-cover-image" style={profile?.cover_image ? { backgroundImage: `url(${profile.cover_image})` } : {}}></div>
-              <div className="profile-header-overlay"></div>
-
+              {/* Cover Image with Pattern */}
+              <div className="profile-cover-image">
+                <div className="profile-cover-pattern"></div>
+              </div>
+            
+              {/* User Profile Content */}
               <div className="profile-content">
                 {/* Profile Avatar */}
                 <div className="profile-avatar-container">
