@@ -481,12 +481,10 @@ const DiscoveryNew = () => {
             </button>
           </Link>
           
-          {/* Follow */}
-          <Link to="/profile" className="nav-link">
-            <button className="nav-button">
-              <FontAwesomeIcon icon={faUser} />
-            </button>
-          </Link>
+          {/* Search */}
+          <button className="nav-button" onClick={() => setSearchModalOpen(true)}>
+            <FontAwesomeIcon icon={faSearch} />
+          </button>
           
           {/* Chat */}
           <button className="nav-button" onClick={toggleChat}>
@@ -498,9 +496,9 @@ const DiscoveryNew = () => {
             <FontAwesomeIcon icon={faDollarSign} />
           </button>
           
-          {/* Clipt */}
+          {/* TV */}
           <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-            <FontAwesomeIcon icon={faCut} />
+            <FontAwesomeIcon icon={faVideo} />
           </button>
           
           {/* Right Arrow */}
