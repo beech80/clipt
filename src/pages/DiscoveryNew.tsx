@@ -267,6 +267,17 @@ const DiscoveryNew = () => {
                   className="circular-button camera-button"
                   title="Browse Live Streams"
                   onClick={() => window.open('/livestreams', '_self')}
+                  aria-label="Go to livestreams"
+                  style={{
+                    backgroundColor: '#3498db',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '10px 15px',
+                    borderRadius: '50%',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
                 >
                   <FontAwesomeIcon icon={faVideo} size="lg" />
                 </button>
