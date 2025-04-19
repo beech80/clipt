@@ -266,7 +266,7 @@ const DiscoveryNew = () => {
                 <button 
                   className="circular-button camera-button"
                   title="Browse Live Streams"
-                  onClick={() => window.open('/streams', '_self')}
+                  onClick={() => window.open('/livestreams', '_self')}
                 >
                   <FontAwesomeIcon icon={faVideo} size="lg" />
                 </button>
