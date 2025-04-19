@@ -482,8 +482,17 @@ const DiscoveryNew = () => {
               </button>
             </Link>
             
-            {/* Middle 4 Buttons */}
+            {/* Middle 4 Buttons in Order: Follow, Chat, Donate, Clipt */}
             <div className="middle-buttons">
+              <Link to="/profile" className="nav-link">
+                <button className="nav-button labeled-button">
+                  <div className="icon-container">
+                    <FontAwesomeIcon icon={faUser} />
+                  </div>
+                  <span className="button-label">Follow</span>
+                </button>
+              </Link>
+              
               <button className="nav-button labeled-button" onClick={toggleChat}>
                 <div className="icon-container">
                   <FontAwesomeIcon icon={faComment} />
@@ -498,14 +507,11 @@ const DiscoveryNew = () => {
                 <span className="button-label">Donate</span>
               </button>
               
-              <Link to="/profile" className="nav-link">
-                <button className="nav-button">
-                  <FontAwesomeIcon icon={faUser} />
-                </button>
-              </Link>
-              
-              <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-                <FontAwesomeIcon icon={faCut} />
+              <button className="nav-button labeled-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
+                <div className="icon-container">
+                  <FontAwesomeIcon icon={faCut} />
+                </div>
+                <span className="button-label">Clipt</span>
               </button>
             </div>
             
