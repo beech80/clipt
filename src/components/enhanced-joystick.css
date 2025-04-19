@@ -1037,67 +1037,45 @@
   z-index: 0;
 }
 
-/* Specific colors for Clipts and SquadsClipts pages */
-body[data-current-page="clipts"] .action-button.top::before,
-body[data-current-page="squads-clipts"] .action-button.top::before {
+/* Colored icons for Clipts and SquadsClipts pages */
+body[data-current-page="clipts"] .action-button.top svg,
+body[data-current-page="squads-clipts"] .action-button.top svg {
   /* Blue */
-  background: #0095FF;
-  animation: none;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  -webkit-mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
-  mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+  color: #0095FF !important;
+  fill: #0095FF !important;
+  stroke: #0095FF !important;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 3px rgba(0, 149, 255, 0.7));
 }
 
-body[data-current-page="clipts"] .action-button.left::before,
-body[data-current-page="squads-clipts"] .action-button.left::before {
+body[data-current-page="clipts"] .action-button.left svg,
+body[data-current-page="squads-clipts"] .action-button.left svg {
   /* Red */
-  background: #FF3C00;
-  animation: none;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  -webkit-mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
-  mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+  color: #FF3C00 !important;
+  fill: #FF3C00 !important;
+  stroke: #FF3C00 !important;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 3px rgba(255, 60, 0, 0.7));
 }
 
-body[data-current-page="clipts"] .action-button.right::before,
-body[data-current-page="squads-clipts"] .action-button.right::before {
+body[data-current-page="clipts"] .action-button.right svg,
+body[data-current-page="squads-clipts"] .action-button.right svg {
   /* Yellow */
-  background: #FFCC00;
-  animation: none;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  -webkit-mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
-  mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
+  color: #FFCC00 !important;
+  fill: #FFCC00 !important;
+  stroke: #FFCC00 !important;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 3px rgba(255, 204, 0, 0.7));
 }
 
-body[data-current-page="clipts"] .action-button.bottom::before,
-body[data-current-page="squads-clipts"] .action-button.bottom::before {
+body[data-current-page="clipts"] .action-button.bottom svg,
+body[data-current-page="squads-clipts"] .action-button.bottom svg {
   /* Green */
-  background: #00DD00;
-  animation: none;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  -webkit-mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
-  mask: radial-gradient(transparent 18px, #000 18px, #000 21.5px, transparent 21.5px);
-}
-
-/* Update icon colors to be more visible against colored buttons */
-body[data-current-page="clipts"] .action-button svg,
-body[data-current-page="squads-clipts"] .action-button svg {
-  color: white !important;
-  fill: white !important;
-  stroke: white !important;
-  stroke-width: 2;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+  color: #00DD00 !important;
+  fill: #00DD00 !important;
+  stroke: #00DD00 !important;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 3px rgba(0, 221, 0, 0.7));
 }
 
 /* Add hover and active states like CLIPT button */
