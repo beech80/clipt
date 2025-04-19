@@ -472,44 +472,43 @@ const DiscoveryNew = () => {
           )}
         </AnimatePresence>
         
-        {/* Bottom Navigation Bar - Arrow + 4 Buttons + Arrow Pattern */}
-        <div className="discovery-navigation-container"> 
-          <div className="navigation-row">
-            {/* Left Arrow */}
-            <Link to="/" className="nav-link">
-              <button className="nav-button">
-                <FontAwesomeIcon icon={faArrowLeft} />
-              </button>
-            </Link>
-            
-            {/* Middle 4 Buttons in Order: Follow, Chat, Donate, Clipt */}
-            <div className="middle-buttons">
-              <Link to="/profile" className="nav-link">
-                <button className="nav-button">
-                  <FontAwesomeIcon icon={faUser} />
-                </button>
-              </Link>
-              
-              <button className="nav-button" onClick={toggleChat}>
-                <FontAwesomeIcon icon={faComment} />
-              </button>
-              
-              <button className="nav-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
-                <FontAwesomeIcon icon={faDollarSign} />
-              </button>
-              
-              <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-                <FontAwesomeIcon icon={faCut} />
-              </button>
-            </div>
-            
-            {/* Right Arrow */}
-            <Link to="/discovery" className="nav-link">
-              <button className="nav-button">
-                <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </Link>
-          </div>
+        {/* Completely Flattened Navigation Bar - Single Row */}
+        <div className="single-row-nav"> 
+          {/* Left Arrow */}
+          <Link to="/" className="nav-link">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faArrowLeft} />
+            </button>
+          </Link>
+          
+          {/* Follow */}
+          <Link to="/profile" className="nav-link">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faUser} />
+            </button>
+          </Link>
+          
+          {/* Chat */}
+          <button className="nav-button" onClick={toggleChat}>
+            <FontAwesomeIcon icon={faComment} />
+          </button>
+          
+          {/* Donate */}
+          <button className="nav-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
+            <FontAwesomeIcon icon={faDollarSign} />
+          </button>
+          
+          {/* Clipt */}
+          <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
+            <FontAwesomeIcon icon={faCut} />
+          </button>
+          
+          {/* Right Arrow */}
+          <Link to="/discovery" className="nav-link">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+          </Link>
         </div>
       </div>
     </div>
