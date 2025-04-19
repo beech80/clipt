@@ -481,10 +481,12 @@ const DiscoveryNew = () => {
             </button>
           </Link>
           
-          {/* Search */}
-          <button className="nav-button" onClick={() => setSearchModalOpen(true)}>
-            <FontAwesomeIcon icon={faSearch} />
-          </button>
+          {/* Follow/Profile */}
+          <Link to="/profile" className="nav-link">
+            <button className="nav-button">
+              <FontAwesomeIcon icon={faUser} />
+            </button>
+          </Link>
           
           {/* Chat */}
           <button className="nav-button" onClick={toggleChat}>
