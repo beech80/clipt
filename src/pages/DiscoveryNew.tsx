@@ -370,7 +370,7 @@ const DiscoveryNew = () => {
                 <button 
                   className="circular-button camera-button"
                   title="Browse Live Streams"
-                  onClick={() => window.open('/streaming/0ee7b95c-c51d-4fc5-abe9-ed42f9466b35', '_self')}
+                  onClick={() => window.open('/streaming', '_self')}
                   aria-label="Go to livestreams"
                   style={{
                     background: 'linear-gradient(135deg, #FF8C00, #FF4500)',
