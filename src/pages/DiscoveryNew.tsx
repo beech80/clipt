@@ -211,6 +211,44 @@ const DiscoveryNew = () => {
     //   .catch(error => console.error('Error creating clip:', error));
   };
 
+  // Navigate to previous streamer with smooth animation
+  const goToPreviousStreamer = () => {
+    if (streamers.length <= 1) return;
+    
+    const newIndex = (currentIndex - 1 + streamers.length) % streamers.length;
+    
+    // Show visual feedback for navigation
+    setSwipeDirection('right');
+    setSwipeProgress(100);
+    
+    // Transition with animation
+    setTimeout(() => {
+      setCurrentIndex(newIndex);
+      setCurrentStreamer(streamers[newIndex]);
+      setSwipeDirection(null);
+      setSwipeProgress(0);
+    }, 300);
+  };
+
+  // Navigate to next streamer with smooth animation
+  const goToNextStreamer = () => {
+    if (streamers.length <= 1) return;
+    
+    const newIndex = (currentIndex + 1) % streamers.length;
+    
+    // Show visual feedback for navigation
+    setSwipeDirection('left');
+    setSwipeProgress(100);
+    
+    // Transition with animation
+    setTimeout(() => {
+      setCurrentIndex(newIndex);
+      setCurrentStreamer(streamers[newIndex]);
+      setSwipeDirection(null);
+      setSwipeProgress(0);
+    }, 300);
+  };
+
   return (
     <div className="discovery-page">
       <div className="discovery-container">
@@ -381,9 +419,9 @@ const DiscoveryNew = () => {
               exit={{ opacity: 0, y: '100%' }}
               transition={{ duration: 0.3 }}
             >
-              <div className="search-container">
+              <div className="search-container retro-glass">
                 <div className="search-header">
-                  <h2>Find Games</h2>
+                  <h2><FontAwesomeIcon icon={faSearch} className="search-title-icon" /> Explore</h2>
                   <button 
                     className="close-button"
                     onClick={() => setSearchModalOpen(false)}
@@ -392,16 +430,22 @@ const DiscoveryNew = () => {
                   </button>
                 </div>
                 
+                <div className="cool-tabs">
+                  <button className="tab-button active">Games</button>
+                  <button className="tab-button">Streamers</button>
+                  <button className="tab-button">Clips</button>
+                </div>
+                
                 <div className="search-input-container">
-                  <FontAwesomeIcon icon={faSearch} className="search-icon" />
+                  <FontAwesomeIcon icon={faSearch} className="search-icon pulse-glow" />
                   <input
                     type="text"
-                    placeholder="Search for games..."
+                    placeholder="Search anything..."
                     value={searchQuery}
                     onChange={handleSearchChange}
                     ref={searchInputRef}
                     autoFocus
-                    className="search-input"
+                    className="search-input neon-glow"
                   />
                 </div>
                 
@@ -512,12 +556,10 @@ const DiscoveryNew = () => {
         
         {/* Completely Flattened Navigation Bar - Single Row */}
         <div className="single-row-nav"> 
-          {/* Left Arrow */}
-          <Link to="/" className="nav-link">
-            <button className="nav-button">
-              <FontAwesomeIcon icon={faArrowLeft} />
-            </button>
-          </Link>
+          {/* Left Arrow - Previous Streamer */}
+          <button className="nav-button" onClick={goToPreviousStreamer}>
+            <FontAwesomeIcon icon={faArrowLeft} />
+          </button>
           
           {/* Follow Current Streamer */}
           <button className="nav-button" onClick={() => currentStreamer && followStreamer(currentStreamer.id)}>
@@ -539,12 +581,10 @@ const DiscoveryNew = () => {
             <FontAwesomeIcon icon={faCut} />
           </button>
           
-          {/* Right Arrow */}
-          <Link to="/discovery" className="nav-link">
-            <button className="nav-button">
-              <FontAwesomeIcon icon={faChevronRight} />
-            </button>
-          </Link>
+          {/* Right Arrow - Next Streamer */}
+          <button className="nav-button" onClick={goToNextStreamer}>
+            <FontAwesomeIcon icon={faChevronRight} />
+          </button>
         </div>
       </div>
     </div>
