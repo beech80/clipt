@@ -472,39 +472,44 @@ const DiscoveryNew = () => {
           )}
         </AnimatePresence>
         
-        {/* Bottom Navigation Bar - Neat Horizontal Line */}
+        {/* Bottom Navigation Bar - Arrow + 4 Buttons + Arrow Pattern */}
         <div className="discovery-navigation-container"> 
           <div className="navigation-row">
+            {/* Left Arrow */}
             <Link to="/" className="nav-link">
               <button className="nav-button">
                 <FontAwesomeIcon icon={faArrowLeft} />
               </button>
             </Link>
             
-            <button className="nav-button labeled-button" onClick={toggleChat}>
-              <div className="icon-container">
-                <FontAwesomeIcon icon={faComment} />
-              </div>
-              <span className="button-label">Chat</span>
-            </button>
-            
-            <button className="nav-button labeled-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
-              <div className="icon-container">
-                <FontAwesomeIcon icon={faDollarSign} />
-              </div>
-              <span className="button-label">Donate</span>
-            </button>
-            
-            <Link to="/profile" className="nav-link">
-              <button className="nav-button">
-                <FontAwesomeIcon icon={faUser} />
+            {/* Middle 4 Buttons */}
+            <div className="middle-buttons">
+              <button className="nav-button labeled-button" onClick={toggleChat}>
+                <div className="icon-container">
+                  <FontAwesomeIcon icon={faComment} />
+                </div>
+                <span className="button-label">Chat</span>
               </button>
-            </Link>
+              
+              <button className="nav-button labeled-button" onClick={() => window.open('https://donate.clipt.tv', '_blank')}>
+                <div className="icon-container">
+                  <FontAwesomeIcon icon={faDollarSign} />
+                </div>
+                <span className="button-label">Donate</span>
+              </button>
+              
+              <Link to="/profile" className="nav-link">
+                <button className="nav-button">
+                  <FontAwesomeIcon icon={faUser} />
+                </button>
+              </Link>
+              
+              <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
+                <FontAwesomeIcon icon={faCut} />
+              </button>
+            </div>
             
-            <button className="nav-button" onClick={() => currentStreamer && window.open(`/clips/${currentStreamer.id}`, '_self')}>
-              <FontAwesomeIcon icon={faCut} />
-            </button>
-            
+            {/* Right Arrow */}
             <Link to="/discovery" className="nav-link">
               <button className="nav-button">
                 <FontAwesomeIcon icon={faChevronRight} />
