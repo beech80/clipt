@@ -181,9 +181,7 @@ const DiscoveryNew = () => {
           style={{ height: isChatOpen ? '60%' : '100%' }}
         >
           <div className="header">
-            <div className="logo-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '70px', marginTop: '18px', marginBottom: '8px' }}>
-              <img src={CliptLogoSVG} alt="Clipt Logo" className="clipt-logo small-logo lowered-logo" style={{ marginTop: '18px' }} />
-            </div>
+            <div className="header-spacer"></div>
             <div className="header-right">
               <div className="header-circular-buttons">
                 <button 

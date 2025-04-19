@@ -30,6 +30,12 @@
   align-items: center;
 }
 
+/* Header layout styles */
+.header-spacer {
+  width: 100px; /* Match approximate logo width */
+  height: 70px;
+}
+
 /* Circular buttons in top header */
 .header-circular-buttons {
   display: flex;
