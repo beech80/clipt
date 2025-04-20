@@ -237,34 +237,37 @@ const Profile = () => {
               color: 'white'
             }}
           >
-            <header className="arcade-bg-animated" style={{
-  width: '100%',
-  position: 'relative',
-  marginBottom: '0',
-  padding: '36px 0 16px',
-  zIndex: 30,
-  borderBottom: '2.5px solid #FF5500',
-  boxShadow: '0 8px 32px 0 rgba(255, 85, 0, 0.15)',
-  background: 'linear-gradient(120deg, #2A1A12 60%, #121212 100%)',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-}}>
-  <div className="arcade-neon-text" style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '2px', textAlign: 'center', lineHeight: 1, marginBottom: '4px', textShadow: '0 0 16px #FF5500, 0 0 32px #FFB000' }}>
-    {profile?.display_name || 'User Profile'}
+            <div className="profile-header-container">
+  <div className="profile-cover-image">
+    <div className="profile-cover-pattern"></div>
   </div>
-  <div style={{ fontFamily: 'monospace', color: '#FFB000', fontSize: '1.2rem', opacity: 0.85, textAlign: 'center', marginBottom: '4px', textShadow: '0 0 10px #FFB000' }}>
-    @{profile?.username || 'username'}
-  </div>
-  {profile?.tagline && (
-    <div style={{ color: '#fff', fontSize: '1.05rem', opacity: 0.7, fontStyle: 'italic', marginTop: '2px', textShadow: '0 0 8px #FF5500' }}>
-      {profile.tagline}
+  <div className="profile-float-card">
+    <div className="profile-avatar-container">
+      <div className="profile-avatar-glow"></div>
+      {profile?.avatar_url ? (
+        <img className="profile-avatar" src={profile.avatar_url} alt="Profile" />
+      ) : (
+        <div className="profile-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', color: '#fff', background: '#222' }}>
+          <User size={44} />
+        </div>
+      )}
     </div>
-  )}
-  <div className="arcade-neon-glow" style={{ pointerEvents: 'none' }} />
-</header>
-<div style={{ padding: '0' }}>
+    <div className="profile-info">
+      <div className="profile-name arcade-neon-text">
+        {profile?.display_name || 'User Profile'}
+      </div>
+      <div className="profile-username" style={{ color: '#FFB000', fontFamily: 'monospace', textShadow: '0 0 8px #FFB000' }}>
+        @{profile?.username || 'username'}
+      </div>
+      {profile?.tagline && (
+        <div className="profile-bio" style={{ color: '#fff', opacity: 0.7, fontStyle: 'italic', marginTop: '2px', textShadow: '0 0 8px #FF5500' }}>
+          {profile.tagline}
+        </div>
+      )}
+    </div>
+  </div>
+</div>
+<div className="profile-content" style={{ padding: '0' }}>
   {/* --- End Profile Header --- */}
 
               {/* Custom header with profile info */}
