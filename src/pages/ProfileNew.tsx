@@ -238,6 +238,8 @@ const Profile = () => {
             }}
           >
             <div style={{ padding: '0' }}>
+  {/* --- Profile Header (Arcade/Neon) --- */}
+
               {/* Custom header with profile info */}
               <div className="relative overflow-hidden w-full" style={{ 
                 background: '#121212',
@@ -271,6 +273,22 @@ const Profile = () => {
                   }} />
                 </div>
                 <div className="flex flex-col items-center justify-center relative z-10 gap-2">
+  {/* Arcade Neon Profile Header */}
+  <div className="arcade-bg-animated" style={{ width: '100%', position: 'relative', marginBottom: '10px', padding: '12px 0 4px', zIndex: 20 }}>
+    <div className="arcade-neon-text" style={{ fontSize: '2.1rem', fontWeight: 900, letterSpacing: '2px', textAlign: 'center', lineHeight: 1, marginBottom: '2px', textShadow: '0 0 12px #FF5500, 0 0 24px #FFB000' }}>
+      {profile?.display_name || 'User Profile'}
+    </div>
+    <div style={{ fontFamily: 'monospace', color: '#FFB000', fontSize: '1.1rem', opacity: 0.82, textAlign: 'center', marginBottom: '2px', textShadow: '0 0 8px #FFB000' }}>
+      @{profile?.username || 'username'}
+    </div>
+    {/* Tagline/status */}
+    {profile?.tagline && (
+      <div style={{ color: '#fff', fontSize: '1rem', opacity: 0.7, fontStyle: 'italic', marginTop: '2px', textShadow: '0 0 6px #FF5500' }}>
+        {profile.tagline}
+      </div>
+    )}
+    <div className="arcade-neon-glow" style={{ pointerEvents: 'none' }} />
+  </div>
                   <div style={{ 
                     width: '110px', 
                     height: '110px', 
