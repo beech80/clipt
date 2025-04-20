@@ -135,7 +135,7 @@ const AppContent = () => {
         <Route path="/clipts" element={<SuspenseBoundary loadingMessage="Loading clipts..."><Clipts /></SuspenseBoundary>} />
         <Route path="/top-clipts" element={<SuspenseBoundary loadingMessage="Loading top clipts..."><TopClipts /></SuspenseBoundary>} />
         <Route path="/squads-clipts" element={<SuspenseBoundary loadingMessage="Loading squads clipts..."><SquadsClipts /></SuspenseBoundary>} />
-        <Route path="/profile/:id?" element={<SuspenseBoundary loadingMessage="Loading profile..."><UserProfile /></SuspenseBoundary>} />
+        <Route path="/profile/:id?" element={<SuspenseBoundary loadingMessage="Loading profile..."><Profile /></SuspenseBoundary>} />
         {/* PRIMARY DISCOVERY ROUTE - updated with TikTok-style interface */}
         <Route path="/discover" element={<SuspenseBoundary loadingMessage="Loading Discovery page..."><DiscoveryNew /></SuspenseBoundary>} />
         {/* Backup route in case the other one doesn't work */}
@@ -144,7 +144,6 @@ const AppContent = () => {
         <Route path="/streamers" element={<SuspenseBoundary loadingMessage="Loading streamers..."><AllStreamers /></SuspenseBoundary>} />
         <Route path="/stream/:id" element={<SuspenseBoundary loadingMessage="Loading stream..."><StreamView /></SuspenseBoundary>} />
         <Route path="/menu" element={<Navigate to="/clipts" replace />} />
-        <Route path="/profile" element={<SuspenseBoundary><Profile /></SuspenseBoundary>} />
         <Route path="/profile/edit" element={
           <ErrorBoundary fallback={<div className="p-4 text-red-500">Error loading profile editor</div>}>
             <EditProfile />
