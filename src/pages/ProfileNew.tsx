@@ -524,65 +524,74 @@ const Profile = () => {
             </div>
 
             {/* New Direct Profile Top Section */}
-            <div className="profile-header-container">
-              {/* Cover Image with Pattern */}
-              <div className="profile-cover-image">
-                <div className="profile-cover-pattern"></div>
-              </div>
-            
-              {/* User Profile Content */}
-              <div className="profile-content">
-                {/* Profile Avatar */}
-                <div className="profile-avatar-container">
-                  <div className="profile-avatar-glow"></div>
-                  <img 
-                    src={profile?.avatar_url || 'https://i.imgur.com/6VBx3io.png'} 
-                    alt="Profile" 
-                    className="profile-avatar" 
-                  />
-                  {isOwnProfile && (
-                    <button className="edit-avatar-button">
-                      <Camera size={16} />
-                    </button>
-                  )}
-                </div>
+            <div className="profile-header-container arcade-bg-animated">
+  {/* Animated Arcade/Retro Neon Background */}
+  <div className="profile-cover-image">
+    <div className="profile-cover-pattern arcade-pixel-pattern"></div>
+    <div className="arcade-neon-glow"></div>
+  </div>
 
-                {/* Profile Info */}
-                <div className="profile-info">
-                  <h1 className="profile-name">{profile?.full_name || 'Gaming Pro'}</h1>
-                  <div className="profile-username">@{profile?.username || 'gamer'}</div>
-                  <p className="profile-bio">
-                    {profile?.bio || 'Professional gamer with a passion for FPS and strategy games. I stream regularly and love to connect with my fellow gamers! Check out my latest clips and join me on my next stream.'}
-                  </p>
+  {/* User Profile Content */}
+  <div className="profile-content glassmorphic-card">
+    {/* Profile Avatar with Level Ring and Animation */}
+    <div className="profile-avatar-container">
+      <div className="profile-avatar-glow animated-glow"></div>
+      <div className="profile-avatar-level-ring">
+        <svg width="150" height="150">
+          <circle cx="75" cy="75" r="65" stroke="#FF7700" strokeWidth="7" fill="none" style={{ filter: 'drop-shadow(0 0 14px #FF5500)' }} />
+        </svg>
+        <img
+          src={profile?.avatar_url || 'https://i.imgur.com/6VBx3io.png'}
+          alt="Profile"
+          className="profile-avatar arcade-avatar-bounce"
+        />
+        {isOwnProfile && (
+          <button className="edit-avatar-button">
+            <Camera size={16} />
+          </button>
+        )}
+      </div>
+    </div>
 
-                  {/* Stats Section */}
-                  <div className="profile-stats">
-                    <div className="stat-item">
-                      <div className="stat-value">{followersCount || '12.5K'}</div>
-                      <div className="stat-label">Followers</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-value">{followingCount || '543'}</div>
-                      <div className="stat-label">Following</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-value">{userPosts.length || '85'}</div>
-                      <div className="stat-label">Clips</div>
-                    </div>
-                  </div>
+    {/* Profile Info */}
+    <div className="profile-info">
+      <h1 className="profile-name arcade-neon-text">{profile?.full_name || 'Gaming Pro'}</h1>
+      <div className="profile-username">@{profile?.username || 'gamer'}</div>
+      <p className="profile-bio">
+        {profile?.bio || 'Professional gamer with a passion for FPS and strategy games. I stream regularly and love to connect with my fellow gamers! Check out my latest clips and join me on my next stream.'}
+      </p>
 
-                  {/* Action Buttons */}
-                  <div className="action-buttons">
-                    {!isOwnProfile ? (
-                      <>
-                        <button className="action-button primary-button">
-                          <Users size={18} />
-                          Follow
-                        </button>
-                        <button className="action-button secondary-button">
-                          <MessageSquare size={18} />
-                          Message
-                        </button>
+      {/* Stats Section with Icons */}
+      <div className="profile-stats">
+        <div className="stat-item animated-stat">
+          <Users size={20} className="stat-icon" />
+          <div className="stat-value">{followersCount || '12.5K'}</div>
+          <div className="stat-label">Followers</div>
+        </div>
+        <div className="stat-item animated-stat">
+          <User size={20} className="stat-icon" />
+          <div className="stat-value">{followingCount || '543'}</div>
+          <div className="stat-label">Following</div>
+        </div>
+        <div className="stat-item animated-stat">
+          <Camera size={20} className="stat-icon" />
+          <div className="stat-value">{userPosts.length || '85'}</div>
+          <div className="stat-label">Clips</div>
+        </div>
+      </div>
+
+      {/* Action Buttons - Arcade Style */}
+      <div className="action-buttons">
+        {!isOwnProfile ? (
+          <>
+            <button className="action-button primary-button arcade-glow">
+              <Users size={18} />
+              Follow
+            </button>
+            <button className="action-button secondary-button arcade-glow">
+              <MessageSquare size={18} />
+              Message
+            </button>
                       </>
                     ) : (
                       <button className="action-button secondary-button" onClick={() => navigate('/profile/edit')}>
