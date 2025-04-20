@@ -46,7 +46,7 @@ const Explore = React.lazy(() => import('./pages/Explore'));
 const AllStreamers = React.lazy(() => import('./pages/AllStreamers'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Menu = React.lazy(() => import('./pages/Menu'));
-const Profile = React.lazy(() => import('./pages/Profile'));
+const Profile = React.lazy(() => import('./pages/ProfileNew'));
 const GameMenu = React.lazy(() => import('./pages/GameMenu'));
 const Notifications = React.lazy(() => import('./pages/Notifications'));
 // Fix the problematic imports with more reliable patterns
