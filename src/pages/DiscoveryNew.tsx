@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { debounce } from 'lodash';
 import axios from 'axios';
@@ -737,9 +737,9 @@ const DiscoveryNew = () => {
                       </>
                     )}
                   </div>
-                )}
-              </div>
-            </motion.div>
+                )
+       </div>
+      </motion.div>
           )}
         </AnimatePresence>
         
