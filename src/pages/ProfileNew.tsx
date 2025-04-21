@@ -298,8 +298,8 @@ const Profile = () => {
             console.error("Error fetching following:", error);
           }
           
-          // For demo purposes, generate sample achievements
-          setAchievements(createSampleAchievements());
+          // Use the trophies data defined above
+          setAchievements(trophies);
         }
       } catch (error) {
         console.error("Error in fetchProfileData:", error);
