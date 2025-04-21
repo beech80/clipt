@@ -32,7 +32,9 @@ import {
   Target, 
   Award, 
   Gift, 
-  Flame 
+  Flame,
+  Share,
+  UserPlus
 } from 'lucide-react';
 import { createGlobalStyle, keyframes } from "styled-components";
 
@@ -105,109 +107,247 @@ const Profile = () => {
     };
   }, []);
 
-  // Enhanced trophy data with progress values
+  // Comprehensive trophy and achievement system
   const trophies = [
+    // 🏆 Trophy & Weekly Top 10 Category
     {
       id: 1,
-      name: 'First Victory',
-      description: 'Win your first game',
+      name: 'First Taste of Gold',
+      description: 'Earn 10 trophies on a post',
       icon: 'Trophy',
       points: 50,
-      progress: 100, // Full progress (100%)
+      progress: 40, // 40% progress
       color: '#FF5500',
-      unlocked: true
+      category: 'trophy',
+      unlocked: false
     },
     {
       id: 2,
-      name: 'Content Creator',
-      description: 'Post your first clip',
-      icon: 'Camera',
-      points: 25,
-      progress: 100, // Full progress (100%)
+      name: 'Viral Sensation',
+      description: 'Get 100 trophies on a single post',
+      icon: 'Flame',
+      points: 100,
+      progress: 15, // 15% progress
       color: '#FF5500',
-      unlocked: true
+      category: 'trophy',
+      unlocked: false
     },
     {
       id: 3,
-      name: 'Popular Player',
-      description: 'Reach 10 followers',
-      icon: 'User',
-      points: 100,
-      progress: 30, // 30% progress
+      name: 'Breaking In',
+      description: 'Rank in the Top 10 of the weekly leaderboard once',
+      icon: 'Target',
+      points: 75,
+      progress: 0, // 0% progress
       color: '#FF5500',
+      category: 'trophy',
       unlocked: false
     },
     {
       id: 4,
-      name: 'Like Machine',
-      description: 'Get 50 likes on your content',
-      icon: 'Heart',
-      points: 75,
-      progress: 60, // 60% progress
+      name: 'Hot Streak',
+      description: 'Stay in the Top 10 for 5 weeks in a row',
+      icon: 'Zap',
+      points: 200,
+      progress: 0, // 0% progress
       color: '#FF5500',
+      category: 'trophy',
       unlocked: false
     },
+    
+    // 📈 Follower Growth Category
     {
       id: 5,
-      name: 'Collector',
-      description: 'Save 20 clips from others',
-      icon: 'Trophy',
-      points: 40,
-      progress: 75, // 75% progress
+      name: 'Rising Star',
+      description: 'Reach 1,000 followers',
+      icon: 'User',
+      points: 100,
+      progress: 30, // 30% progress
       color: '#FF5500',
+      category: 'followers',
       unlocked: false
     },
     {
       id: 6,
-      name: 'Stream Star',
-      description: 'Complete your first livestream',
-      icon: 'Zap',
-      points: 80,
-      progress: 0, // 0% progress
+      name: 'Influencer Status',
+      description: 'Gain 10,000 followers',
+      icon: 'Crown',
+      points: 300,
+      progress: 5, // 5% progress
       color: '#FF5500',
+      category: 'followers',
       unlocked: false
     },
+    
+    // 🎥 Streaming Subscriber Milestones
     {
       id: 7,
-      name: 'Community Leader',
-      description: 'Create a gaming community',
-      icon: 'Crown',
-      points: 120,
+      name: 'First Supporter',
+      description: 'Get your first streaming sub',
+      icon: 'Heart',
+      points: 50,
       progress: 0, // 0% progress
       color: '#FF5500',
+      category: 'streaming',
       unlocked: false
     },
     {
       id: 8,
-      name: 'Clip Master',
-      description: 'Create 50+ clips',
+      name: 'Streaming Star',
+      description: 'Reach 100 streaming subscribers',
       icon: 'Star',
-      points: 150,
+      points: 200,
       progress: 0, // 0% progress
       color: '#FF5500',
+      category: 'streaming',
       unlocked: false
     },
+    
+    // 🤝 Engagement Boosters
     {
       id: 9,
-      name: 'Daily Clipper',
-      description: 'Create clips for 7 consecutive days',
-      icon: 'Flame',
+      name: 'Hype Squad',
+      description: 'Leave 50 comments on others posts',
+      icon: 'MessageSquare',
       points: 60,
       progress: 40, // 40% progress
       color: '#FF5500',
+      category: 'engagement',
       unlocked: false
     },
     {
       id: 10,
-      name: 'Game Master',
-      description: 'Post clips from 5 different games',
-      icon: 'Target',
+      name: 'Super Supporter',
+      description: 'Give out 100 trophies',
+      icon: 'Gift',
       points: 90,
       progress: 20, // 20% progress
       color: '#FF5500',
+      category: 'engagement',
+      unlocked: false
+    },
+    {
+      id: 11,
+      name: 'Conversation Starter',
+      description: 'Receive 100 replies to your comments',
+      icon: 'MessageSquare',
+      points: 120,
+      progress: 10, // 10% progress
+      color: '#FF5500',
+      category: 'engagement',
+      unlocked: false
+    },
+    {
+      id: 12,
+      name: 'Community Builder',
+      description: 'Start a post that gets 500+ comments',
+      icon: 'Users',
+      points: 150,
+      progress: 5, // 5% progress
+      color: '#FF5500',
+      category: 'engagement',
+      unlocked: false
+    },
+    
+    // 📢 Sharing & Promotion
+    {
+      id: 13,
+      name: 'Signal Booster',
+      description: 'Share 10 other creators posts',
+      icon: 'Share',
+      points: 70,
+      progress: 30, // 30% progress
+      color: '#FF5500',
+      category: 'sharing',
+      unlocked: false
+    },
+    {
+      id: 14,
+      name: 'Clipt Evangelist',
+      description: 'Invite 5 friends to join Clipt',
+      icon: 'UserPlus',
+      points: 100,
+      progress: 40, // 40% progress
+      color: '#FF5500',
+      category: 'sharing',
+      unlocked: false
+    },
+    
+    // 🎮 Collab & Creator Support
+    {
+      id: 15,
+      name: 'Duo Dynamic',
+      description: 'Collab on a post that earns 50 trophies',
+      icon: 'Users',
+      points: 100,
+      progress: 0, // 0% progress
+      color: '#FF5500',
+      category: 'collab',
+      unlocked: false
+    },
+    {
+      id: 16,
+      name: 'Mentor Mode',
+      description: 'Help a small creator reach 1,000 followers',
+      icon: 'Award',
+      points: 200,
+      progress: 0, // 0% progress
+      color: '#FF5500',
+      category: 'collab',
+      unlocked: false
+    },
+    
+    // 🎉 Special & Hidden
+    {
+      id: 17,
+      name: 'OG Clipt Creator',
+      description: 'Joined within 3 months of launch',
+      icon: 'Star',
+      points: 100,
+      progress: 100, // 100% progress - already achieved
+      color: '#FF5500',
+      category: 'special',
+      unlocked: true
+    },
+    {
+      id: 18,
+      name: 'Day One Grinder',
+      description: 'Posted on Clipt's launch day',
+      icon: 'Calendar',
+      points: 150,
+      progress: 100, // 100% progress - already achieved
+      color: '#FF5500',
+      category: 'special',
+      unlocked: true
+    },
+    {
+      id: 19,
+      name: 'Mystery Viral',
+      description: 'An old post goes viral after 30 days',
+      icon: 'Zap',
+      points: 120,
+      progress: 0, // 0% progress
+      color: '#FF5500',
+      category: 'special',
+      unlocked: false
+    },
+    {
+      id: 20,
+      name: 'Shadow Supporter',
+      description: 'Consistently like/comment on someone for a month',
+      icon: 'Heart',
+      points: 80,
+      progress: 50, // 50% progress
+      color: '#FF5500',
+      category: 'special',
       unlocked: false
     },
   ];
+  
+  // Calculate overall achievement progress
+  const totalAchievements = trophies.length;
+  const achievedCount = trophies.filter(trophy => trophy.unlocked).length;
+  const overallProgress = Math.round((achievedCount / totalAchievements) * 100);
 
   // Create sample posts for testing
   const createSamplePosts = () => [
@@ -408,7 +548,7 @@ const Profile = () => {
             {/* Stats bar */}
             {/* Hidden stats bar */}
 
-            {/* Centered Trophies Header with Trophy Icon */}
+            {/* Centered Trophies Header with Trophy Icon & Progress Bar */}
             <div style={{ 
               marginBottom: '24px',
               backgroundColor: '#0A0A0A',
@@ -436,8 +576,70 @@ const Profile = () => {
                 fontWeight: 'bold',
                 color: 'white',
                 margin: 0,
+                marginBottom: '5px',
                 letterSpacing: '0.5px'
               }}>Trophies</h2>
+              
+              {/* Overall Achievement Progress Bar */}
+              <div style={{
+                width: '100%',
+                maxWidth: '240px',
+                marginTop: '5px',
+                marginBottom: '5px'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '5px'
+                }}>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    color: '#999'
+                  }}>
+                    Trophy Progress: {achievedCount}/{totalAchievements}
+                  </span>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    color: overallProgress >= 50 ? '#FFD700' : '#999'
+                  }}>
+                    {overallProgress}%
+                  </span>
+                </div>
+                
+                {/* Progress Bar Container */}
+                <div style={{
+                  width: '100%',
+                  height: '8px',
+                  backgroundColor: '#222',
+                  borderRadius: '4px',
+                  overflow: 'hidden'
+                }}>
+                  {/* Progress Bar Fill */}
+                  <div style={{
+                    width: `${overallProgress}%`,
+                    height: '100%',
+                    backgroundColor: '#FF5500',
+                    borderTopRightRadius: '4px',
+                    borderBottomRightRadius: '4px',
+                    transition: 'width 0.5s ease-in-out',
+                    boxShadow: overallProgress > 0 ? '0 0 8px rgba(255, 85, 0, 0.5)' : 'none'
+                  }} />
+                </div>
+                
+                {/* Trophy Rewards */}
+                <div style={{
+                  fontSize: '0.7rem',
+                  color: '#999',
+                  marginTop: '5px',
+                  textAlign: 'center'
+                }}>
+                  {overallProgress < 100 ? (
+                    `Complete all trophies to unlock exclusive rewards!`
+                  ) : (
+                    <span style={{ color: '#FFD700' }}>All trophies unlocked! Choose your elite reward!</span>
+                  )}
+                </div>
+              </div>
             </div>
             
             {/* Enhanced Trophies Display - Horizontal Scrollable with Progress Rings */}
