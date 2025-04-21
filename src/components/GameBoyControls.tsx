@@ -400,9 +400,9 @@ const GameBoyControls: React.FC = () => {
     }
   };
 
-  // Handle the select button (menu navigation)
+  // Handle the select button (menu toggle)
   const handleSelectButtonClick = () => {
-    navigate('/game-menu');
+    setMenuVisible(prev => !prev);
   };
 
   // Handle action button click
