@@ -42,8 +42,26 @@ import { createGlobalStyle, keyframes } from "styled-components";
 
 // Simplified animations
 const pulse = keyframes`
-  0% { opacity: 0.8; }
+  0% { opacity: 0.7; }
   100% { opacity: 1; }
+`;
+
+const indicatorLeft = keyframes`
+  0% { transform: rotate(135deg) translateX(0); }
+  50% { transform: rotate(135deg) translateX(-3px); }
+  100% { transform: rotate(135deg) translateX(0); }
+`;
+
+const indicatorRight = keyframes`
+  0% { transform: rotate(-45deg) translateX(0); }
+  50% { transform: rotate(-45deg) translateX(3px); }
+  100% { transform: rotate(-45deg) translateX(0); }
+`;
+
+const float = keyframes`
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0); }
 `;
 
 const GlobalStyle = createGlobalStyle`
@@ -53,8 +71,26 @@ const GlobalStyle = createGlobalStyle`
   }
   
   @keyframes pulse {
-    0% { opacity: 0.8; }
+    0% { opacity: 0.7; }
     100% { opacity: 1; }
+  }
+  
+  @keyframes indicatorLeft {
+    0% { transform: rotate(135deg) translateX(0); }
+    50% { transform: rotate(135deg) translateX(-3px); }
+    100% { transform: rotate(135deg) translateX(0); }
+  }
+  
+  @keyframes indicatorRight {
+    0% { transform: rotate(-45deg) translateX(0); }
+    50% { transform: rotate(-45deg) translateX(3px); }
+    100% { transform: rotate(-45deg) translateX(0); }
+  }
+  
+  @keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0); }
   }
 `;
 
@@ -756,12 +792,16 @@ const Profile = () => {
                 position: 'relative',
                 marginBottom: '30px', 
                 overflowX: 'auto', 
-                paddingBottom: '16px',
+                paddingBottom: '30px',
+                paddingTop: '10px',
                 WebkitOverflowScrolling: 'touch',
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',
-                borderLeft: '4px solid rgba(255, 85, 0, 0.3)',
-                borderRight: '4px solid rgba(255, 85, 0, 0.3)'
+                background: 'linear-gradient(to right, rgba(30, 15, 8, 0.9), rgba(20, 10, 5, 0.5) 10%, rgba(20, 10, 5, 0.5) 90%, rgba(30, 15, 8, 0.9))',
+                borderLeft: '4px solid rgba(255, 85, 0, 0.5)',
+                borderRight: '4px solid rgba(255, 85, 0, 0.5)',
+                boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.6)',
+                borderRadius: '4px'
               }}
             >
               {/* Scroll indicator arrows */}
@@ -792,10 +832,10 @@ const Profile = () => {
                 ‹
               </div>
               
-              {/* "Scroll for more" indicator */}
+              {/* Animated "Scroll for more" indicator */}
               <div style={{
                 position: 'absolute',
-                bottom: '2px',
+                bottom: '8px',
                 left: '50%',
                 transform: 'translateX(-50%)',
                 color: '#FF5500',
@@ -803,9 +843,35 @@ const Profile = () => {
                 opacity: 0.8,
                 pointerEvents: 'none',
                 zIndex: 2,
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                padding: '3px 12px',
+                background: 'rgba(30, 15, 5, 0.7)',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 85, 0, 0.3)',
+                animation: 'pulse 1.5s infinite alternate',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
               }}>
-                Scroll for more trophies
+                <div style={{
+                  display: 'inline-block',
+                  width: '12px',
+                  height: '12px',
+                  borderTop: '2px solid #FF5500',
+                  borderRight: '2px solid #FF5500',
+                  transform: 'rotate(135deg)',
+                  animation: 'indicatorLeft 1s infinite'
+                }}></div>
+                Swipe to see all trophies
+                <div style={{
+                  display: 'inline-block',
+                  width: '12px',
+                  height: '12px',
+                  borderTop: '2px solid #FF5500',
+                  borderRight: '2px solid #FF5500',
+                  transform: 'rotate(-45deg)',
+                  animation: 'indicatorRight 1s infinite'
+                }}></div>
               </div>
               <div style={{ 
                 display: 'flex', 
@@ -815,13 +881,22 @@ const Profile = () => {
                 minWidth: 'min-content'
               }}>
                 {achievements.map((trophy) => (
-                  <div key={trophy.id} style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    minWidth: '90px',
-                    opacity: trophy.progress > 0 ? 1 : 0.7
-                  }}>
+                  <div 
+                    key={trophy.id} 
+                    style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      minWidth: '110px',
+                      opacity: trophy.progress > 0 ? 1 : 0.7,
+                      transform: trophy.unlocked ? 'translateY(-5px)' : 'translateY(0)',
+                      transition: 'transform 0.3s ease, opacity 0.3s ease',
+                      padding: '8px',
+                      borderRadius: '8px',
+                      background: trophy.unlocked ? 'linear-gradient(to bottom, rgba(255, 85, 0, 0.1), transparent)' : 'transparent',
+                      boxShadow: trophy.unlocked ? '0 5px 15px rgba(255, 85, 0, 0.15)' : 'none'
+                    }}
+                  >
                     {/* Trophy with Progress Ring */}
                     <div style={{
                       position: 'relative',
@@ -843,16 +918,114 @@ const Profile = () => {
                         justifyContent: 'center',
                         boxShadow: trophy.unlocked ? '0 0 10px rgba(255, 85, 0, 0.4)' : 'none'
                       }}>
-                        {/* Trophy Icon */}
-                        {trophy.icon === 'Trophy' && <Trophy size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
-                        {trophy.icon === 'Camera' && <Camera size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
-                        {trophy.icon === 'User' && <User size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
-                        {trophy.icon === 'Heart' && <Heart size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
-                        {trophy.icon === 'Zap' && <Zap size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
-                        {trophy.icon === 'Crown' && <Crown size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
-                        {trophy.icon === 'Star' && <Star size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
-                        {trophy.icon === 'Target' && <Target size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
-                        {trophy.icon === 'Flame' && <Flame size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                        {/* Trophy Icon with 3D Effects */}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          width: '100%',
+                          height: '100%',
+                          filter: trophy.unlocked ? 'drop-shadow(0 0 8px rgba(255, 85, 0, 0.7))' : 'none',
+                          transform: trophy.unlocked ? 'scale(1.1)' : 'scale(1)',
+                          transition: 'transform 0.3s ease, filter 0.3s ease'
+                        }}>
+                          {trophy.icon === 'Trophy' && 
+                            <div style={{ position: 'relative' }}>
+                              <Trophy size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Camera' && 
+                            <div style={{ position: 'relative' }}>
+                              <Camera size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'User' && 
+                            <div style={{ position: 'relative' }}>
+                              <User size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Heart' && 
+                            <div style={{ position: 'relative' }}>
+                              <Heart size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Zap' && 
+                            <div style={{ position: 'relative' }}>
+                              <Zap size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Crown' && 
+                            <div style={{ position: 'relative' }}>
+                              <Crown size={32} color={trophy.unlocked ? '#FFD700' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Star' && 
+                            <div style={{ position: 'relative' }}>
+                              <Star size={32} color={trophy.unlocked ? '#FFD700' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Target' && 
+                            <div style={{ position: 'relative' }}>
+                              <Target size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Flame' && 
+                            <div style={{ position: 'relative' }}>
+                              <Flame size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'MessageSquare' && 
+                            <div style={{ position: 'relative' }}>
+                              <MessageSquare size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Gift' && 
+                            <div style={{ position: 'relative' }}>
+                              <Gift size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Award' && 
+                            <div style={{ position: 'relative' }}>
+                              <Award size={32} color={trophy.unlocked ? '#FFD700' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Users' && 
+                            <div style={{ position: 'relative' }}>
+                              <Users size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Share' && 
+                            <div style={{ position: 'relative' }}>
+                              <Share size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'UserPlus' && 
+                            <div style={{ position: 'relative' }}>
+                              <UserPlus size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                          {trophy.icon === 'Calendar' && 
+                            <div style={{ position: 'relative' }}>
+                              <Calendar size={32} color={trophy.unlocked ? '#FF5500' : '#777777'} style={{ position: 'relative', zIndex: 2 }} />
+                              {trophy.unlocked && <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle, rgba(255,85,0,0.3) 0%, rgba(255,85,0,0) 70%)', filter: 'blur(5px)', borderRadius: '50%', transform: 'scale(1.5)', zIndex: 1 }} />}
+                            </div>
+                          }
+                        </div>
                       </div>
                       
                       {/* SVG Progress Ring */}
