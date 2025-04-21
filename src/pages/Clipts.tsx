@@ -632,7 +632,7 @@ const Clipts = () => {
       </div>
 
       {/* Add the consistent navigation bar */}
-      <NavigationBar />
+      {/* NavigationBar removed to avoid conflicts */}
     </motion.div>
   );
 };
