@@ -1,4 +1,8 @@
+const fs = require('fs');
+const path = require('path');
 
+// Create a minimal working App component that will load correctly
+const minimalApp = `
 import React from 'react';
 import { useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -28,10 +32,10 @@ const LoadingFallback = () => (
     </div>
     <style>
       {
-        `@keyframes spin {
+        \`@keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
-        }`
+        }\`
       }
     </style>
   </div>
@@ -83,3 +87,42 @@ function App() {
 }
 
 export default App;
+`;
+
+// Path to App file
+const appFilePath = path.join(__dirname, 'src', 'App.tsx');
+const backupPath = path.join(__dirname, 'src', 'App.backup.tsx');
+
+// Create backup of existing App
+if (fs.existsSync(appFilePath)) {
+  console.log('Creating backup of original App.tsx...');
+  fs.copyFileSync(appFilePath, backupPath);
+}
+
+// Write minimal App
+console.log('Writing minimal App.tsx...');
+fs.writeFileSync(appFilePath, minimalApp);
+console.log('Minimal App.tsx created successfully!');
+console.log('You can now try building and deploying the app again.');
+console.log('To restore the original App, run: node restore-app.cjs');
+
+// Create a restore script
+const restoreScript = `
+const fs = require('fs');
+const path = require('path');
+
+const appFilePath = path.join(__dirname, 'src', 'App.tsx');
+const backupPath = path.join(__dirname, 'src', 'App.backup.tsx');
+
+if (fs.existsSync(backupPath)) {
+  console.log('Restoring original App.tsx...');
+  fs.copyFileSync(backupPath, appFilePath);
+  console.log('Original App.tsx restored successfully!');
+} else {
+  console.error('Backup file not found. Cannot restore the original App.');
+}
+`;
+
+const restoreScriptPath = path.join(__dirname, 'restore-app.cjs');
+fs.writeFileSync(restoreScriptPath, restoreScript);
+console.log('Restore script created at', restoreScriptPath);
