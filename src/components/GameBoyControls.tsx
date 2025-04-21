@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Heart, MessageSquare, Award, Bookmark } from 'lucide-react';
+import { Heart, MessageSquare, Award, Bookmark, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import './enhanced-joystick.css';
