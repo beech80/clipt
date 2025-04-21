@@ -34,7 +34,8 @@ import {
   Gift, 
   Flame,
   Share,
-  UserPlus
+  UserPlus,
+  Bookmark
 } from 'lucide-react';
 import { createGlobalStyle, keyframes } from "styled-components";
 
@@ -797,7 +798,7 @@ const Profile = () => {
                   }}
                   onClick={() => setActiveTab('clipts')}
                 >
-                  <Gamepad size={20} />
+                  <Camera size={20} />
                   <span>Clipts</span>
                 </button>
                 <button 
@@ -817,7 +818,7 @@ const Profile = () => {
                   }}
                   onClick={() => setActiveTab('saved')}
                 >
-                  <Heart size={20} />
+                  <Bookmark size={20} />
                   <span>Saved</span>
                 </button>
               </div>
@@ -837,7 +838,7 @@ const Profile = () => {
                     justifyContent: 'center',
                     gap: '8px'
                   }}>
-                    <Gamepad size={24} style={{ opacity: 0.8 }} />
+                    <Camera size={24} style={{ opacity: 0.8 }} />
                     <span>Clipts</span>
                   </h2>
                   <div style={{ 
@@ -859,7 +860,7 @@ const Profile = () => {
                       justifyContent: 'center',
                       marginBottom: '16px'
                     }}>
-                      <Gamepad size={30} color="#555" />
+                      <Camera size={30} color="#555" />
                     </div>
                     <p style={{ color: '#9e9e9e', textAlign: 'center' }}>No clipts available</p>
                   </div>
@@ -880,7 +881,7 @@ const Profile = () => {
                     justifyContent: 'center',
                     gap: '8px'
                   }}>
-                    <Heart size={22} style={{ opacity: 0.8 }} />
+                    <Bookmark size={22} style={{ opacity: 0.8 }} />
                     <span>Saved</span>
                   </h2>
                   <div style={{ 
@@ -902,7 +903,7 @@ const Profile = () => {
                       justifyContent: 'center',
                       marginBottom: '16px'
                     }}>
-                      <Heart size={26} color="#555" />
+                      <Bookmark size={26} color="#555" />
                     </div>
                     <p style={{ color: '#9e9e9e', textAlign: 'center' }}>No saved clipts yet</p>
                     <button 
