@@ -654,7 +654,7 @@ const GameBoyControls: React.FC = () => {
             </div>
           </div>
         </div>
-      )
+      )}
 
       {/* Action buttons with rainbow borders in diamond layout */}
       <div className="action-buttons diamond-layout">
