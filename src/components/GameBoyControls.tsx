@@ -391,9 +391,13 @@ const GameBoyControls: React.FC = () => {
 
   // Handle menu item click
   const handleMenuItemClick = (path: string) => {
-    console.log('Navigating to:', path);
     navigate(path);
     setMenuVisible(false);
+    
+    // Show a toast for certain navigation actions
+    if (path === '/messages') {
+      toast.success('Messages opened');
+    }
   };
 
   // Handle the select button (menu navigation)
@@ -548,13 +552,19 @@ const GameBoyControls: React.FC = () => {
       
       {/* Center controls layout */}
       <div className="center-controls">
-        {/* CLIPT logo button with rainbow border */}
+        {/* Camera button with rainbow border (replacing CLIPT logo) */}
         <button 
           className="clipt-logo-button rainbow-border" 
           onClick={() => navigate('/clipts')}
           aria-label="Go to Clipts"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '10px'
+          }}
         >
-          <span className="clipt-logo-text">CLIPT</span>
+          <Camera size={24} color="white" style={{ filter: 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.7))' }} />
         </button>
         
         {/* Menu and Camera buttons row */}
@@ -583,12 +593,68 @@ const GameBoyControls: React.FC = () => {
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
           </button>
+          
+          {/* Messages button with rainbow border */}
+          <button 
+            className="control-button rainbow-border"
+            onClick={() => navigate('/messages')}
+            aria-label="Go to Messages"
+            style={{ marginLeft: '8px' }}
+          >
+            <MessageSquare size={24} color="white" />
+          </button>
         </div>
       </div>
       
       {/* Removed the navigation arrow buttons */}
 
-      {/* Note: Game Menu moved to a separate route page */}
+      {/* Game Menu */}
+      {menuVisible && (
+        <div className="game-menu-overlay">
+          <div className="game-menu">
+            <div className="game-menu-header">
+              <h3>Menu</h3>
+              <button onClick={() => setMenuVisible(false)} className="close-menu-button">
+                &times;
+              </button>
+            </div>
+            <div className="game-menu-items">
+              <button onClick={() => handleMenuItemClick('/discover')} className="game-menu-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                Discover
+              </button>
+              <button onClick={() => handleMenuItemClick('/home')} className="game-menu-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                Home
+              </button>
+              <button onClick={() => handleMenuItemClick('/profile')} className="game-menu-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                Profile
+              </button>
+              <button onClick={() => handleMenuItemClick('/messages')} className="game-menu-item">
+                <MessageSquare size={18} />
+                Messages
+              </button>
+              <button onClick={() => handleMenuItemClick('/settings')} className="game-menu-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )
 
       {/* Action buttons with rainbow borders in diamond layout */}
       <div className="action-buttons diamond-layout">
