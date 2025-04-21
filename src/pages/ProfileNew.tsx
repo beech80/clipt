@@ -25,7 +25,14 @@ import {
   Link, 
   ExternalLink, 
   MapPin, 
-  Calendar 
+  Calendar,
+  Zap, 
+  Crown, 
+  Star, 
+  Target, 
+  Award, 
+  Gift, 
+  Flame 
 } from 'lucide-react';
 import { createGlobalStyle, keyframes } from "styled-components";
 
@@ -98,16 +105,108 @@ const Profile = () => {
     };
   }, []);
 
-  // Create sample achievements for testing
-  const createSampleAchievements = () => [
-    { id: 1, name: 'First Victory', description: 'Win your first game', icon: 'Trophy', points: 50 },
-    { id: 2, name: 'Content Creator', description: 'Post your first clip', icon: 'VideoIcon', points: 25 },
-    { id: 3, name: 'Popular Player', description: 'Reach 10 followers', icon: 'UserPlus', points: 100 },
-    { id: 4, name: 'Like Machine', description: 'Get 50 likes on your content', icon: 'Heart', points: 75 },
-    { id: 5, name: 'Collector', description: 'Save 20 clips from others', icon: 'Bookmark', points: 40 },
-    { id: 6, name: 'Stream Star', description: 'Complete your first livestream', icon: 'Video', points: 80 },
-    { id: 7, name: 'Community Leader', description: 'Create a gaming community', icon: 'Users', points: 120 },
-    { id: 8, name: 'Clip Master', description: 'Create 50+ clips', icon: 'Scissors', points: 150 }
+  // Enhanced trophy data with progress values
+  const trophies = [
+    {
+      id: 1,
+      name: 'First Victory',
+      description: 'Win your first game',
+      icon: 'Trophy',
+      points: 50,
+      progress: 100, // Full progress (100%)
+      color: '#FF5500',
+      unlocked: true
+    },
+    {
+      id: 2,
+      name: 'Content Creator',
+      description: 'Post your first clip',
+      icon: 'Camera',
+      points: 25,
+      progress: 100, // Full progress (100%)
+      color: '#FF5500',
+      unlocked: true
+    },
+    {
+      id: 3,
+      name: 'Popular Player',
+      description: 'Reach 10 followers',
+      icon: 'User',
+      points: 100,
+      progress: 30, // 30% progress
+      color: '#FF5500',
+      unlocked: false
+    },
+    {
+      id: 4,
+      name: 'Like Machine',
+      description: 'Get 50 likes on your content',
+      icon: 'Heart',
+      points: 75,
+      progress: 60, // 60% progress
+      color: '#FF5500',
+      unlocked: false
+    },
+    {
+      id: 5,
+      name: 'Collector',
+      description: 'Save 20 clips from others',
+      icon: 'Trophy',
+      points: 40,
+      progress: 75, // 75% progress
+      color: '#FF5500',
+      unlocked: false
+    },
+    {
+      id: 6,
+      name: 'Stream Star',
+      description: 'Complete your first livestream',
+      icon: 'Zap',
+      points: 80,
+      progress: 0, // 0% progress
+      color: '#FF5500',
+      unlocked: false
+    },
+    {
+      id: 7,
+      name: 'Community Leader',
+      description: 'Create a gaming community',
+      icon: 'Crown',
+      points: 120,
+      progress: 0, // 0% progress
+      color: '#FF5500',
+      unlocked: false
+    },
+    {
+      id: 8,
+      name: 'Clip Master',
+      description: 'Create 50+ clips',
+      icon: 'Star',
+      points: 150,
+      progress: 0, // 0% progress
+      color: '#FF5500',
+      unlocked: false
+    },
+    {
+      id: 9,
+      name: 'Daily Clipper',
+      description: 'Create clips for 7 consecutive days',
+      icon: 'Flame',
+      points: 60,
+      progress: 40, // 40% progress
+      color: '#FF5500',
+      unlocked: false
+    },
+    {
+      id: 10,
+      name: 'Game Master',
+      description: 'Post clips from 5 different games',
+      icon: 'Target',
+      points: 90,
+      progress: 20, // 20% progress
+      color: '#FF5500',
+      unlocked: false
+    },
   ];
 
   // Create sample posts for testing
@@ -309,17 +408,39 @@ const Profile = () => {
             {/* Stats bar */}
             {/* Hidden stats bar */}
 
-            {/* Trophies Header */}
+            {/* Centered Trophies Header with Trophy Icon */}
             <div style={{ 
-              marginBottom: '20px', 
-              backgroundColor: '#0c0c0c',
-              padding: '12px 16px',
-              borderBottom: '1px solid #222'
+              marginBottom: '24px',
+              backgroundColor: '#0A0A0A',
+              padding: '16px 10px',
+              borderBottom: '1px solid #333',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '10px'
             }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '4px' }}>Trophies</h2>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                backgroundColor: '#1F1200',
+                borderRadius: '50%',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: '0 0 15px rgba(255, 85, 0, 0.3)'
+              }}>
+                <Trophy size={28} color="#FF5500" />
+              </div>
+              <h2 style={{
+                fontSize: '1.3rem',
+                fontWeight: 'bold',
+                color: 'white',
+                margin: 0,
+                letterSpacing: '0.5px'
+              }}>Trophies</h2>
             </div>
             
-            {/* Trophies Display - Horizontal Scrollable */}
+            {/* Enhanced Trophies Display - Horizontal Scrollable with Progress Rings */}
             <div style={{ 
               marginBottom: '30px', 
               overflowX: 'auto', 
@@ -330,112 +451,122 @@ const Profile = () => {
             }}>
               <div style={{ 
                 display: 'flex', 
-                gap: '20px', 
+                gap: '22px', 
                 paddingLeft: '16px', 
                 paddingRight: '16px',
                 minWidth: 'min-content'
               }}>
-                {/* Trophy 1 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
-                  <div style={{ 
-                    height: '60px', 
-                    width: '60px', 
-                    borderRadius: '50%', 
-                    backgroundColor: '#FF5500', 
+                {trophies.map((trophy) => (
+                  <div key={trophy.id} style={{ 
                     display: 'flex', 
+                    flexDirection: 'column', 
                     alignItems: 'center', 
-                    justifyContent: 'center',
-                    marginBottom: '8px'
+                    minWidth: '90px',
+                    opacity: trophy.progress > 0 ? 1 : 0.7
                   }}>
-                    <Trophy size={30} color="white" />
+                    {/* Trophy with Progress Ring */}
+                    <div style={{
+                      position: 'relative',
+                      width: '70px',
+                      height: '70px',
+                      marginBottom: '10px'
+                    }}>
+                      {/* Circular background */}
+                      <div style={{
+                        position: 'absolute',
+                        width: '60px',
+                        height: '60px',
+                        top: '5px',
+                        left: '5px',
+                        borderRadius: '50%',
+                        backgroundColor: trophy.progress > 0 ? '#1F1200' : '#1A1A1A',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: trophy.unlocked ? '0 0 10px rgba(255, 85, 0, 0.4)' : 'none'
+                      }}>
+                        {/* Trophy Icon */}
+                        {trophy.icon === 'Trophy' && <Trophy size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                        {trophy.icon === 'Camera' && <Camera size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                        {trophy.icon === 'User' && <User size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                        {trophy.icon === 'Heart' && <Heart size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                        {trophy.icon === 'Zap' && <Zap size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                        {trophy.icon === 'Crown' && <Crown size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                        {trophy.icon === 'Star' && <Star size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                        {trophy.icon === 'Target' && <Target size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                        {trophy.icon === 'Flame' && <Flame size={28} color={trophy.unlocked ? '#FF5500' : '#777777'} />}
+                      </div>
+                      
+                      {/* SVG Progress Ring */}
+                      <svg width="70" height="70" viewBox="0 0 70 70" style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)' }}>
+                        {/* Full circle background (track) */}
+                        <circle 
+                          cx="35" 
+                          cy="35" 
+                          r="32" 
+                          fill="none" 
+                          stroke="#2A2A2A" 
+                          strokeWidth="5"
+                        />
+                        {/* Progress circle */}
+                        <circle 
+                          cx="35" 
+                          cy="35" 
+                          r="32" 
+                          fill="none" 
+                          stroke={trophy.unlocked ? '#FF5500' : '#555555'} 
+                          strokeWidth="5"
+                          strokeDasharray={`${2 * Math.PI * 32}`}
+                          strokeDashoffset={`${2 * Math.PI * 32 * (1 - trophy.progress / 100)}`}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      
+                      {/* Progress percentage - small display for incomplete trophies */}
+                      {trophy.progress > 0 && trophy.progress < 100 && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '-5px',
+                          right: '-5px',
+                          backgroundColor: '#FF5500',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          fontSize: '0.6rem',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          boxShadow: '0 0 6px rgba(0, 0, 0, 0.3)'
+                        }}>
+                          {trophy.progress}%
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Trophy Name and Points */}
+                    <p style={{
+                      color: trophy.unlocked ? 'white' : '#AAA',
+                      fontSize: '0.75rem',
+                      fontWeight: trophy.unlocked ? '600' : '400',
+                      textAlign: 'center',
+                      margin: '0',
+                      marginBottom: '4px'
+                    }}>
+                      {trophy.name}
+                    </p>
+                    <p style={{
+                      color: trophy.unlocked ? '#FFD700' : '#AA9500',
+                      fontSize: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '3px'
+                    }}>
+                      <Trophy size={10} color={trophy.unlocked ? '#FFD700' : '#AA9500'} />
+                      {trophy.points} pts
+                    </p>
                   </div>
-                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>First Victory</p>
-                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                    <Trophy size={10} color="#FFD700" /> 50 pts
-                  </p>
-                </div>
-
-                {/* Trophy 2 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
-                  <div style={{ 
-                    height: '60px', 
-                    width: '60px', 
-                    borderRadius: '50%', 
-                    backgroundColor: '#FF5500', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    marginBottom: '8px'
-                  }}>
-                    <Camera size={30} color="white" />
-                  </div>
-                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>Content Creator</p>
-                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                    <Trophy size={10} color="#FFD700" /> 25 pts
-                  </p>
-                </div>
-
-                {/* Trophy 3 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
-                  <div style={{ 
-                    height: '60px', 
-                    width: '60px', 
-                    borderRadius: '50%', 
-                    backgroundColor: '#FF5500', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    marginBottom: '8px'
-                  }}>
-                    <User size={30} color="white" />
-                  </div>
-                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>Popular Player</p>
-                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                    <Trophy size={10} color="#FFD700" /> 100 pts
-                  </p>
-                </div>
-
-                {/* Trophy 4 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
-                  <div style={{ 
-                    height: '60px', 
-                    width: '60px', 
-                    borderRadius: '50%', 
-                    backgroundColor: '#FF5500', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    marginBottom: '8px'
-                  }}>
-                    <Heart size={30} color="white" />
-                  </div>
-                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>Like Machine</p>
-                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                    <Trophy size={10} color="#FFD700" /> 75 pts
-                  </p>
-                </div>
-
-                {/* Trophy 5 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '90px' }}>
-                  <div style={{ 
-                    height: '60px', 
-                    width: '60px', 
-                    borderRadius: '50%', 
-                    backgroundColor: '#FF5500', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    marginBottom: '8px'
-                  }}>
-                    <Trophy size={30} color="white" />
-                  </div>
-                  <p style={{ color: 'white', fontSize: '0.75rem', textAlign: 'center', margin: '0', marginBottom: '2px' }}>Collector</p>
-                  <p style={{ color: '#FFD700', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                    <Trophy size={10} color="#FFD700" /> 40 pts
-                  </p>
-                </div>
-
-                {/* More trophies can be added here */}
+                ))}
               </div>
             </div>
 
