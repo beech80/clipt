@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useParams, useNavigate } from "react-router-dom";
-import { AnimateSharedLayout } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Profile as ProfileType } from "@/types/profile";
 import { motion, AnimatePresence } from 'framer-motion';
