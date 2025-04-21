@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Settings, Search, Film, Home, User, MessageSquare, 
-  Users, Gamepad, Sparkles, ChevronRight, Layers, Award
+  Users, Gamepad, Sparkles, ChevronRight, Layers, Award, Camera
 } from 'lucide-react';
 import '../styles/game-dashboard.css';
 
@@ -15,7 +15,7 @@ const GameMenu: React.FC = () => {
     { id: 1, name: 'Settings', path: '/settings', icon: Settings, description: 'Configure your experience' },
     { id: 2, name: 'Profile', path: '/profile', icon: User, description: 'View your profile and stats' },
     { id: 3, name: 'DISCOVERY PAGE', path: '/discover', icon: Search, description: 'Discover your new favorite streamer' },
-    { id: 4, name: 'Clipts', path: '/clipts', icon: Film, description: 'View short gaming clips' },
+    { id: 4, name: 'Clipts', path: '/clipts', icon: Camera, description: 'View short gaming clips' },
     { id: 5, name: 'Streaming', path: '/streams', icon: Layers, description: 'Watch live streams' },
     { id: 6, name: 'Squads Clipts', path: '/squads-clipts', icon: Users, description: 'View your squad\'s best clips' },
     { id: 7, name: 'Top Clipts', path: '/top-clipts', icon: Sparkles, description: 'Hall of fame clips' }
