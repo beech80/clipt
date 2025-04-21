@@ -97,22 +97,8 @@ const EditProfile = () => {
             backgroundColor: '#1A0F08', 
             borderBottom: '1px solid #FF5500'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <button 
-                style={{ 
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'white',
-                  padding: '8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                onClick={() => navigate('/profile')}
-              >
-                <ArrowLeft size={20} />
-              </button>
-              {/* Title removed */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+              {/* Back button and title removed */}
             </div>
           </div>
 
