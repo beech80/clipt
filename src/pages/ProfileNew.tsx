@@ -29,15 +29,10 @@ import {
 } from 'lucide-react';
 import { createGlobalStyle, keyframes } from "styled-components";
 
-// Animations
+// Simplified animations
 const pulse = keyframes`
-  0% { opacity: 0.6; transform: scale(1) rotate(-5deg); }
-  100% { opacity: 0.8; transform: scale(1.1) rotate(-2deg); }
-`;
-
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  0% { opacity: 0.8; }
+  100% { opacity: 1; }
 `;
 
 const GlobalStyle = createGlobalStyle`
@@ -47,13 +42,8 @@ const GlobalStyle = createGlobalStyle`
   }
   
   @keyframes pulse {
-    0% { opacity: 0.6; transform: scale(1) rotate(-5deg); }
-    100% { opacity: 0.8; transform: scale(1.1) rotate(-2deg); }
-  }
-  
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    0% { opacity: 0.8; }
+    100% { opacity: 1; }
   }
 `;
 
@@ -286,43 +276,43 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Profile Top Section - Arcade/Neon Header */}
-            <div className="profile-header-container arcade-bg-animated">
-              {/* Animated Arcade/Retro Neon Background */}
-              <div className="profile-cover-image">
-                <div className="profile-cover-pattern arcade-pixel-pattern"></div>
-                <div className="arcade-neon-glow"></div>
-              </div>
-
+            {/* Profile Top Section - Simplified Header */}
+            <div className="profile-header-container" style={{ background: '#1A0F08', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
               {/* User Profile Content */}
-              <div className="profile-float-card glassmorphic-card">
-                {/* Profile Avatar with Level Ring and Animation */}
-                <div className="profile-avatar-container">
-                  <div className="profile-avatar-glow animated-glow"></div>
-                  <div className="profile-avatar-level-ring">
-                    <svg width="150" height="150">
-                      <circle cx="75" cy="75" r="65" stroke="#FF7700" strokeWidth="7" fill="none" style={{ filter: 'drop-shadow(0 0 14px #FF5500)' }} />
-                    </svg>
-                    <img
-                      src={profile?.avatar_url || 'https://i.imgur.com/6VBx3io.png'}
-                      alt="Profile"
-                      className="profile-avatar arcade-avatar-bounce"
-                    />
-                    {isOwnProfile && (
-                      <button className="edit-avatar-button" onClick={() => navigate('/profile/edit')}>
-                        <Camera size={16} />
-                      </button>
-                    )}
-                  </div>
+              <div className="profile-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {/* Profile Avatar */}
+                <div style={{ position: 'relative', marginBottom: '16px' }}>
+                  <img
+                    src={profile?.avatar_url || 'https://i.imgur.com/6VBx3io.png'}
+                    alt="Profile"
+                    style={{ width: '120px', height: '120px', borderRadius: '60px', border: '3px solid #FF5500' }}
+                  />
+                  {isOwnProfile && (
+                    <button 
+                      style={{ 
+                        position: 'absolute', 
+                        bottom: '0', 
+                        right: '0', 
+                        backgroundColor: '#FF5500', 
+                        border: 'none', 
+                        borderRadius: '50%', 
+                        padding: '6px', 
+                        cursor: 'pointer' 
+                      }} 
+                      onClick={() => navigate('/profile/edit')}
+                    >
+                      <Camera size={16} color="white" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Profile Info */}
-                <div className="profile-info">
-                  <h1 className="profile-name arcade-neon-text">
+                <div style={{ textAlign: 'center' }}>
+                  <h1 style={{ color: 'white', fontSize: '1.5rem', marginBottom: '4px' }}>
                     {profile?.display_name || profile?.full_name || profile?.username || 'Gaming Pro'}
                   </h1>
-                  <div className="profile-username">@{profile?.username || 'gamer'}</div>
-                  <p className="profile-bio">
+                  <div style={{ color: '#9e9e9e', marginBottom: '8px' }}>@{profile?.username || 'gamer'}</div>
+                  <p style={{ color: '#e0e0e0', maxWidth: '400px' }}>
                     {profile?.bio || 'Professional gamer with a passion for games'}
                   </p>
                 </div>
@@ -330,79 +320,142 @@ const Profile = () => {
             </div>
 
             {/* Stats bar */}
-            <div className="profile-stats-bar">
-              <div className="stat-item animated-stat">
-                <div className="stat-value">{userPosts.length}</div>
-                <div className="stat-label">Posts</div>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-around', 
+              padding: '16px', 
+              backgroundColor: '#1A0F08', 
+              borderRadius: '8px', 
+              marginBottom: '20px' 
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ color: 'white', fontWeight: 'bold' }}>{userPosts.length}</div>
+                <div style={{ color: '#FF5500', fontSize: '0.8rem' }}>Posts</div>
               </div>
-              <div className="stat-item animated-stat">
-                <div className="stat-value">{followersCount}</div>
-                <div className="stat-label">Followers</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ color: 'white', fontWeight: 'bold' }}>{followersCount}</div>
+                <div style={{ color: '#FF5500', fontSize: '0.8rem' }}>Followers</div>
               </div>
-              <div className="stat-item animated-stat">
-                <div className="stat-value">{followingCount}</div>
-                <div className="stat-label">Following</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ color: 'white', fontWeight: 'bold' }}>{followingCount}</div>
+                <div style={{ color: '#FF5500', fontSize: '0.8rem' }}>Following</div>
               </div>
-              <div className="stat-item animated-stat">
-                <div className="stat-value">{achievements.length}</div>
-                <div className="stat-label">Trophies</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ color: 'white', fontWeight: 'bold' }}>{achievements.length}</div>
+                <div style={{ color: '#FF5500', fontSize: '0.8rem' }}>Trophies</div>
               </div>
             </div>
 
             {/* Tab Navigation */}
-            <div className="profile-tabs-container">
+            <div style={{ 
+              display: 'flex', 
+              borderBottom: '1px solid #333',
+              marginBottom: '20px'
+            }}>
               <button 
-                className={`profile-tab ${activeTab === 'clipts' ? 'active' : ''}`} 
+                style={{ 
+                  flex: 1,
+                  padding: '10px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === 'clipts' ? '2px solid #FF5500' : '2px solid transparent',
+                  color: activeTab === 'clipts' ? '#FF5500' : '#9e9e9e',
+                  fontWeight: activeTab === 'clipts' ? 'bold' : 'normal',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer'
+                }}
                 onClick={() => setActiveTab('clipts')}
               >
-                <Gamepad size={20} />
+                <Gamepad size={18} />
                 <span>Clipts</span>
               </button>
               <button 
-                className={`profile-tab ${activeTab === 'achievements' ? 'active' : ''}`} 
+                style={{ 
+                  flex: 1,
+                  padding: '10px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === 'achievements' ? '2px solid #FF5500' : '2px solid transparent',
+                  color: activeTab === 'achievements' ? '#FF5500' : '#9e9e9e',
+                  fontWeight: activeTab === 'achievements' ? 'bold' : 'normal',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer'
+                }}
                 onClick={() => setActiveTab('achievements')}
               >
-                <Trophy size={20} />
+                <Trophy size={18} />
                 <span>Trophies</span>
               </button>
               <button 
-                className={`profile-tab ${activeTab === 'saved' ? 'active' : ''}`} 
+                style={{ 
+                  flex: 1,
+                  padding: '10px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === 'saved' ? '2px solid #FF5500' : '2px solid transparent',
+                  color: activeTab === 'saved' ? '#FF5500' : '#9e9e9e',
+                  fontWeight: activeTab === 'saved' ? 'bold' : 'normal',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer'
+                }}
                 onClick={() => setActiveTab('saved')}
               >
-                <Heart size={20} />
+                <Heart size={18} />
                 <span>Saved</span>
               </button>
               <button 
-                className={`profile-tab ${activeTab === 'about' ? 'active' : ''}`} 
+                style={{ 
+                  flex: 1,
+                  padding: '10px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === 'about' ? '2px solid #FF5500' : '2px solid transparent',
+                  color: activeTab === 'about' ? '#FF5500' : '#9e9e9e',
+                  fontWeight: activeTab === 'about' ? 'bold' : 'normal',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '4px',
+                  cursor: 'pointer'
+                }}
                 onClick={() => setActiveTab('about')}
               >
-                <User size={20} />
+                <User size={18} />
                 <span>About</span>
               </button>
             </div>
 
             {/* Content Area */}
-            <div className="profile-content-area">
+            <div style={{ padding: '0 10px' }}>
               {activeTab === 'clipts' && (
-                <div className="tab-content">
-                  <h2 className="text-xl font-bold mb-4 text-white">Clipts</h2>
-                  <div className="content-grid">
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px', color: 'white' }}>Clipts</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px' }}>
                     {userPosts.map((post) => (
-                      <div key={post.id} className="content-card">
-                        <div className="relative pb-[100%] overflow-hidden">
+                      <div key={post.id} style={{ backgroundColor: '#1A0F08', borderRadius: '8px', overflow: 'hidden' }}>
+                        <div style={{ position: 'relative', paddingBottom: '100%', overflow: 'hidden' }}>
                           <img 
                             src={post.image_url} 
                             alt={post.title} 
-                            className="absolute inset-0 w-full h-full object-cover"
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         </div>
-                        <div className="p-3">
-                          <h3 className="text-white font-semibold mb-1">{post.title}</h3>
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-400 text-sm">{new Date(post.created_at).toLocaleDateString()}</span>
-                            <div className="flex items-center gap-1">
-                              <Heart size={14} className="text-orange-500" />
-                              <span className="text-sm text-gray-300">{post.likes_count}</span>
+                        <div style={{ padding: '12px' }}>
+                          <h3 style={{ color: 'white', fontWeight: '600', marginBottom: '4px', fontSize: '0.9rem' }}>{post.title}</h3>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ color: '#9e9e9e', fontSize: '0.8rem' }}>{new Date(post.created_at).toLocaleDateString()}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Heart size={14} color="#FF5500" />
+                              <span style={{ fontSize: '0.8rem', color: '#e0e0e0' }}>{post.likes_count}</span>
                             </div>
                           </div>
                         </div>
@@ -413,24 +466,24 @@ const Profile = () => {
               )}
               
               {activeTab === 'achievements' && (
-                <div className="tab-content">
-                  <h2 className="text-xl font-bold mb-4 text-white">Trophies</h2>
-                  <div className="content-grid">
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px', color: 'white' }}>Trophies</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px' }}>
                     {achievements.map((achievement) => (
-                      <div key={achievement.id} className="content-card">
-                        <div className="p-4 flex flex-col items-center gap-3">
-                          <div className="h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-yellow-500">
-                            {achievement.icon === 'Trophy' && <Trophy size={32} className="text-white" />}
-                            {achievement.icon === 'VideoIcon' && <Camera size={32} className="text-white" />}
-                            {achievement.icon === 'UserPlus' && <User size={32} className="text-white" />}
-                            {achievement.icon === 'Heart' && <Heart size={32} className="text-white" />}
-                            {achievement.icon === 'Bookmark' && <Trophy size={32} className="text-white" />}
+                      <div key={achievement.id} style={{ backgroundColor: '#1A0F08', borderRadius: '8px', padding: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ height: '56px', width: '56px', backgroundColor: '#FF5500', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {achievement.icon === 'Trophy' && <Trophy size={28} color="white" />}
+                            {achievement.icon === 'VideoIcon' && <Camera size={28} color="white" />}
+                            {achievement.icon === 'UserPlus' && <User size={28} color="white" />}
+                            {achievement.icon === 'Heart' && <Heart size={28} color="white" />}
+                            {achievement.icon === 'Bookmark' && <Trophy size={28} color="white" />}
                           </div>
-                          <h3 className="text-white font-semibold text-center">{achievement.name}</h3>
-                          <p className="text-gray-400 text-sm text-center">{achievement.description}</p>
-                          <div className="flex items-center gap-1 mt-2">
-                            <Trophy size={14} className="text-yellow-500" />
-                            <span className="text-yellow-500">{achievement.points} pts</span>
+                          <h3 style={{ color: 'white', fontWeight: '600', textAlign: 'center', fontSize: '0.9rem' }}>{achievement.name}</h3>
+                          <p style={{ color: '#9e9e9e', fontSize: '0.8rem', textAlign: 'center' }}>{achievement.description}</p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <Trophy size={14} color="#FFD700" />
+                            <span style={{ color: '#FFD700' }}>{achievement.points} pts</span>
                           </div>
                         </div>
                       </div>
@@ -440,35 +493,44 @@ const Profile = () => {
               )}
               
               {activeTab === 'saved' && (
-                <div className="tab-content">
-                  <h2 className="text-xl font-bold mb-4 text-white">Saved Clipts</h2>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px', color: 'white' }}>Saved Clipts</h2>
                   {savedCliptsData.length > 0 ? (
-                    <div className="content-grid">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px' }}>
                       {savedCliptsData.map((clipt) => (
-                        <div key={clipt.id} className="content-card">
-                          <div className="relative pb-[100%] overflow-hidden">
+                        <div key={clipt.id} style={{ backgroundColor: '#1A0F08', borderRadius: '8px', overflow: 'hidden' }}>
+                          <div style={{ position: 'relative', paddingBottom: '100%', overflow: 'hidden' }}>
                             <img 
                               src={clipt.image_url || "https://placehold.co/600x600/121212/FF5500?text=Saved+Clipt"} 
                               alt={clipt.title || "Saved Clipt"} 
-                              className="absolute inset-0 w-full h-full object-cover"
+                              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                           </div>
-                          <div className="p-3">
-                            <h3 className="text-white font-semibold mb-1">{clipt.title || "Awesome Clipt"}</h3>
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-400 text-sm">Saved</span>
-                              <Heart size={16} className="text-red-500" fill="#ef4444" />
+                          <div style={{ padding: '12px' }}>
+                            <h3 style={{ color: 'white', fontWeight: '600', marginBottom: '4px', fontSize: '0.9rem' }}>{clipt.title || "Awesome Clipt"}</h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ color: '#9e9e9e', fontSize: '0.8rem' }}>Saved</span>
+                              <Heart size={16} color="#ef4444" fill="#ef4444" />
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <Heart size={48} className="text-gray-500 mb-4" />
-                      <p className="text-gray-400">No saved clipts yet</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
+                      <Heart size={40} color="#666" style={{ marginBottom: '16px' }} />
+                      <p style={{ color: '#9e9e9e' }}>No saved clipts yet</p>
                       <button 
-                        className="mt-4 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg text-white font-semibold"
+                        style={{ 
+                          marginTop: '16px', 
+                          padding: '8px 16px', 
+                          backgroundColor: '#FF5500', 
+                          border: 'none',
+                          borderRadius: '6px', 
+                          color: 'white', 
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
                         onClick={() => navigate('/discovery')}
                       >
                         Discover Clipts
@@ -479,35 +541,35 @@ const Profile = () => {
               )}
               
               {activeTab === 'about' && (
-                <div className="tab-content">
-                  <h2 className="text-xl font-bold mb-4 text-white">About</h2>
-                  <div className="bg-[#2A1A12] p-4 rounded-lg border border-orange-500/30">
-                    <p className="text-white mb-4">{profile?.bio || "No bio available yet."}</p>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '16px', color: 'white' }}>About</h2>
+                  <div style={{ backgroundColor: '#1A0F08', padding: '16px', borderRadius: '8px', marginBottom: '16px' }}>
+                    <p style={{ color: 'white', marginBottom: '16px' }}>{profile?.bio || "No bio available yet."}</p>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                      <div className="flex flex-col gap-3">
-                        <h3 className="text-orange-500 font-semibold">Info</h3>
-                        <div className="flex items-center gap-2">
-                          <User className="text-orange-500" size={16} />
-                          <span className="text-gray-300">Username: @{profile?.username}</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginTop: '24px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <h3 style={{ color: '#FF5500', fontWeight: '600', fontSize: '1rem' }}>Info</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <User color="#FF5500" size={16} />
+                          <span style={{ color: '#e0e0e0' }}>Username: @{profile?.username}</span>
                         </div>
                         {profile?.location && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="text-orange-500" size={16} />
-                            <span className="text-gray-300">{profile.location}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <MapPin color="#FF5500" size={16} />
+                            <span style={{ color: '#e0e0e0' }}>{profile.location}</span>
                           </div>
                         )}
                       </div>
                       
-                      <div className="flex flex-col gap-3">
-                        <h3 className="text-orange-500 font-semibold">Stats</h3>
-                        <div className="flex items-center gap-2">
-                          <Trophy className="text-orange-500" size={16} />
-                          <span className="text-gray-300">{achievements.length} Achievements</span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <h3 style={{ color: '#FF5500', fontWeight: '600', fontSize: '1rem' }}>Stats</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Trophy color="#FF5500" size={16} />
+                          <span style={{ color: '#e0e0e0' }}>{achievements.length} Achievements</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="text-orange-500" size={16} />
-                          <span className="text-gray-300">{followersCount} Followers</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Users color="#FF5500" size={16} />
+                          <span style={{ color: '#e0e0e0' }}>{followersCount} Followers</span>
                         </div>
                       </div>
                     </div>
@@ -516,89 +578,112 @@ const Profile = () => {
               )}
             </div>
             
-            {/* Bottom Navigation */}
-            <div className="fixed bottom-0 left-0 right-0 px-2 py-1" style={{ 
-              background: '#1A0F08', 
-              borderTop: '2px solid rgba(255, 85, 0, 0.3)', 
-              boxShadow: '0 -4px 20px rgba(0,0,0,0.4)' 
+            {/* Bottom Navigation - Simplified */}
+            <div style={{ 
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: '8px 4px',
+              backgroundColor: '#1A0F08', 
+              borderTop: '1px solid #FF5500',
+              zIndex: 50
             }}>
-              <div className="flex justify-around items-center">
-                <Button 
-                  variant="ghost" 
-                  className="flex flex-col items-center justify-center p-2 text-xs text-gray-400 hover:text-orange-500 transition-all"
+              <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                <button 
                   style={{
-                    position: 'relative',
-                    overflow: 'hidden'
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '6px',
+                    color: '#9e9e9e',
+                    cursor: 'pointer'
                   }}
                   onClick={() => navigate('/clipts')}
                 >
-                  <Gamepad className="w-5 h-5 mb-1" style={{ color: '#9e9e9e' }} />
-                  <span>Clipts</span>
-                </Button>
+                  <Gamepad size={20} />
+                  <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Clipts</span>
+                </button>
                 
-                <Button 
-                  variant="ghost" 
-                  className="flex flex-col items-center justify-center p-2 text-xs text-gray-400 hover:text-orange-500 transition-all"
+                <button 
                   style={{
-                    position: 'relative',
-                    overflow: 'hidden'
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '6px',
+                    color: '#9e9e9e',
+                    cursor: 'pointer'
                   }}
                   onClick={() => navigate('/trophies')}
                 >
-                  <Medal className="w-5 h-5 mb-1" style={{ color: '#9e9e9e' }} />
-                  <span>Trophies</span>
-                </Button>
+                  <Medal size={20} />
+                  <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Trophies</span>
+                </button>
                 
-                <Button 
-                  variant="ghost" 
-                  className="flex flex-col items-center justify-center p-2 text-xs text-gray-400 hover:text-orange-500 transition-all"
+                <button 
                   style={{
-                    position: 'relative',
-                    overflow: 'hidden'
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '6px',
+                    color: '#9e9e9e',
+                    cursor: 'pointer'
                   }}
                   onClick={() => navigate('/discovery')}
                 >
-                  <Clock className="w-5 h-5 mb-1" style={{ color: '#9e9e9e' }} />
-                  <span>Discover</span>
-                </Button>
+                  <Clock size={20} />
+                  <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Discover</span>
+                </button>
                 
-                <Button 
-                  variant="ghost" 
-                  className={`flex flex-col items-center justify-center p-2 text-xs transition-all`}
+                <button 
                   style={{
-                    position: 'relative',
-                    overflow: 'hidden',
-                    color: isOwnProfile ? '#FF5500' : '#9e9e9e'
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '6px',
+                    color: isOwnProfile ? '#FF5500' : '#9e9e9e',
+                    cursor: 'pointer',
+                    position: 'relative'
                   }}
                   onClick={() => navigate(isOwnProfile ? '/profile' : `/profile/${user?.id}`)}
                 >
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '60%',
-                    height: '2px',
-                    background: isOwnProfile ? '#FF5500' : 'transparent',
-                    borderRadius: '2px',
-                    transition: 'all 0.3s ease'
-                  }} />
-                  <User className="w-5 h-5 mb-1" style={{ color: isOwnProfile ? '#FF5500' : '#9e9e9e' }} />
-                  <span>Profile</span>
-                </Button>
+                  {isOwnProfile && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      width: '20px',
+                      height: '2px',
+                      backgroundColor: '#FF5500'
+                    }} />
+                  )}
+                  <User size={20} />
+                  <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Profile</span>
+                </button>
                 
-                <Button 
-                  variant="ghost" 
-                  className="flex flex-col items-center justify-center p-2 text-xs text-gray-400 hover:text-orange-500 transition-all"
+                <button 
                   style={{
-                    position: 'relative',
-                    overflow: 'hidden'
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: '6px',
+                    color: '#9e9e9e',
+                    cursor: 'pointer'
                   }}
                   onClick={() => navigate('/messages')}
                 >
-                  <MessageSquare className="w-5 h-5 mb-1" style={{ color: '#9e9e9e' }} />
-                  <span>Chat</span>
-                </Button>
+                  <MessageSquare size={20} />
+                  <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Chat</span>
+                </button>
               </div>
             </div>
           </motion.div>
